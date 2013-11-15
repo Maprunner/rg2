@@ -273,7 +273,7 @@ jQuery(document).ready(function() {"use strict";
 			if (hours < 10) {
 				formattedtime = "0" + hours + ":";
 			} else {
-				formattedtime = hours;
+				formattedtime = hours + ":";
 			}
 			time = time - (hours * 3600);
 			var minutes = Math.floor(time / 60);
