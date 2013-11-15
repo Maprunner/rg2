@@ -45,24 +45,20 @@ html, body {
    display: none;
 }
 
-#btn-replay-type {
- padding-left : 0;
- padding-right : 0;
-
-}
-
 #rg2-clock {
    font-weight: bold;
    font-size: 2em;
- 	 text-align: center;
 }
 
 #spn-tail-length {
   width: 30px;
 }
 
-#rg2-tails-spinner {
+#spn-start-control {
+  width: 20px;
+}
 
+#rg2-tails-spinner {
   float: right;
 }
 
@@ -130,6 +126,11 @@ html, body {
    overflow: auto;
 }
 
+#rg2-replay-start-control {
+  float: right;  
+    
+}
+  
 .ani-para {
 	margin: auto;
 	padding: 5px;
