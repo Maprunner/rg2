@@ -1,0 +1,176 @@
+/*
+  Routegadget RG2 Custom CSS
+  */
+
+html, body {
+	width: 100%;
+  height: 100%;
+  margin: 0px;
+  border: 0;
+  display: block;
+  font: 16px/26px Helvetica, Helvetica Neue, Arial;
+}
+
+.rg2-logo img {
+  height: 19px;
+  width: 200px;
+}
+
+#rg2-header, #rg2-footer {
+    background: #002bd9;
+    color: white;	
+    position: relative;
+    height: 30px;
+}
+
+#rg2-header {
+    border-bottom: 4px solid black;
+    font-size: 1em;
+    vertical-align: middle;
+}
+
+#rg2-footer {
+   border-top: 4px solid black;	
+   font-size: 0.75em;
+   text-align: center;
+}
+
+#rg2-about {
+   float: right;
+   padding-right: 20px;
+}
+
+#rg2-about-dialog {
+	 font-size: 0.75em;
+   display: none;
+}
+
+#btn-replay-type {
+ padding-left : 0;
+ padding-right : 0;
+
+}
+
+#rg2-clock {
+   font-weight: bold;
+   font-size: 2em;
+ 	 text-align: center;
+}
+
+#spn-tail-length {
+  width: 30px;
+}
+
+#rg2-tails-spinner {
+
+  float: right;
+}
+
+#rg2-container {
+	 height: 500px;
+   width: 100%;
+   position: relative;
+   background: rgba(204, 204, 204, 1.0);
+}
+
+#rg2-info-panel {
+   font-size: 0.75em;
+   height: 99%;
+	 width: 300px;
+   position: absolute;
+   overflow: auto; /* add scroll bars if needed */
+	 z-index: 100;
+}
+
+#rg2-map-canvas {
+   position: absolute;
+   z-index: 50;
+}
+
+#rg2-button-bar {
+   padding : 0;
+   position: absolute;
+   top: 10px;
+   right: 10px;
+   height: auto;
+   width: auto;
+   z-index: 100;
+}
+
+#rg2-ani-bar {
+	 font-size: 0.65em;
+   padding : 0;
+   position: absolute;
+   bottom: 0px;
+   right: 20px;
+   z-index: 100;
+   background: rgba(204, 204, 204, 0.5);
+   padding: 5px;
+}
+
+#rg2-animation-names {
+   background: rgba(204, 204, 204, 0.75);
+   padding : 2px;
+   font: 0.75em;
+   text-align: left;
+}
+
+#rg2-track-names {
+   border: 1px solid #999999;
+   background: rgba(204, 204, 204, 0.75);
+   padding : 2px;
+   position: absolute;
+   font:0.75em/0.4em arial;
+   top: 50px;
+   right: 20px;
+   height: auto;
+   width: auto;
+   z-index: 100;
+   max-height: 600px;
+   overflow: auto;
+}
+
+.ani-para {
+	margin: auto;
+	padding: 5px;
+}
+.coursemenutable tr, td, th {
+	padding-left: 5px;
+	padding-right: 5px;
+	text-align: center;
+}
+
+p.showcourse {
+	padding-left: 5px;
+}
+
+/* apply style to first td or th element in table
+/ which is Name in this case
+*/
+table.resulttable td, 
+table.resulttable th {
+	padding-left: 10px;
+	padding-right: 5px;
+	text-align: left;
+	width: 70%;
+}
+
+table.resulttable td + td,
+table.resulttable th + th {
+	text-align: right;
+	width: 15%;
+}
+
+#rg2-result-list .ui-accordion,
+#rg2-result-list .ui-accordion-content {
+padding: 0;
+}
+
+#rg2-button-bar .ui-button-text-icon-primary,
+#rg2-button-bar .ui-button-text, 
+#rg2-button-bar .ui-button-text-icons,
+#rg2-button-bar .ui-button-text {
+	font-size: 0.75em;
+	padding: .2em .2em .2em 1em;
+
+}
