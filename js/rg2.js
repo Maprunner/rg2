@@ -621,8 +621,11 @@ jQuery(document).ready(function() {"use strict";
 					html += "<table class='resulttable'><tr><th>Name</th><th>Time</th><th>Track</th><th>Replay</th></tr>";
 					oldCourseName = temp.coursename;
 				}
-				html += "<tr><td>" + temp.name + "</td><td>" + temp.time + "</td>";
-
+				if (temp.comments !== "") {
+					html += "<tr><td><a href='#' title='" + temp.comments + "'>" + temp.name + "</a></td><td>" + temp.time + "</td>";
+      } else {
+					html += "<tr><td>" + temp.name + "</td><td>" + temp.time + "</td>";      	
+      }
 				if (temp.hasTrack) {
 					html += "<td><input class='showtrack' id=" + i + " type=checkbox name=result></input></td>";
 				} else {
@@ -652,6 +655,7 @@ jQuery(document).ready(function() {"use strict";
 		this.name = data.name;
 		this.starttime = parseInt(data.starttime, 10);
 		this.time = data.time;
+		this.comments = data.comments;
 		this.coursename = data.coursename;
 		if (this.coursename === "") {
 	    this.coursename = "GPS tracks";
@@ -1150,6 +1154,8 @@ jQuery(document).ready(function() {"use strict";
 		trackTransforms(ctx);
 		resizeCanvas();
 		
+		jQuery(document).tooltip();
+		    
 		jQuery("#rg2-about").click(function() {
 			displayAboutDialog();
 		});
