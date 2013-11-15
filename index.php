@@ -91,20 +91,27 @@
 			<button id="btn-zoom-out">Zoom out</button>
 		</div>
 		<div id="rg2-ani-bar">
-			<div class="keep-together">
+			<div>
 			<button id ="btn-start-stop">Run</button>
 			<button id="btn-faster">Faster</button>
 			<button id="btn-slower">Slower</button>
 		  </div>
-		  <div class="keep-together ani-para">
+		  <div class="ani-para">
 		  	<div id="btn-replay-type">
 			  <input type="radio" id="btn-real-time" value="btn-real-time" name="btn-replay-type" /><label for="btn-real-time">Real time</label>
         <input type="radio" id="btn-mass-start" value="btn-mass-start" name="btn-replay-type" /><label for="btn-mass-start">Mass start</label>
-       </div>
+        </div>
+        <div id="rg2-replay-start-control"> 
+          <p>Start at:
+          <select  id="rg2-control-select">
+            <option>S</option>
+          </select>
+          </p>
+        </div>
       </div>
       <div class="ani-para" id="rg2-clock"></div>
       <div class = "ani-para" id="rg2-clock-slider"></div>
-			<div class="keep-together ani-para">
+			<div class="ani-para">
 				<label for "btn-full-tails">Full tails</label>
 				<input type="checkbox" id="btn-full-tails" />
         <div id="rg2-tails-spinner">

@@ -23,6 +23,7 @@ jQuery(document).ready(function() {"use strict";
 		this.latestFinishSecs = 0;
 		this.tailLength = 0;
 		this.useFullTails = false;
+		this.massStartControl = 0;
 	}
 
 
@@ -142,7 +143,11 @@ jQuery(document).ready(function() {"use strict";
     setTailLength: function(minutes) {
       this.tailLength = 60 * minutes;	
       redraw(false);
-
+    },
+    
+    setStartControl: function (control) {
+    	this.massStartControl = parseInt(control, 10);
+			this.resetAnimationTime(0);    	
     },
     
 		setReplayType : function() {
@@ -150,7 +155,9 @@ jQuery(document).ready(function() {"use strict";
 			// only btn-mass-start and btn-real-time in the group
 			if (jQuery("#btn-replay-type :radio:checked").attr('id') === "btn-mass-start") {
 				this.realTime = false;
+				jQuery("#rg2-replay-start-control").show();
 			} else {
+				jQuery("#rg2-replay-start-control").hide();
 				this.realTime = true;
 			}
 			// go back to start
@@ -185,6 +192,7 @@ jQuery(document).ready(function() {"use strict";
 		},
 
 		runAnimation : function(fromTimer) {
+			
 			// only increment time if called from the timer and we haven't got to the end already
 			if (this.realTime) {
 				if (this.animationSecs < this.latestFinishSecs) {
@@ -221,7 +229,13 @@ jQuery(document).ready(function() {"use strict";
 				if (this.realTime) {
 					timeOffset = runner.starttime;
 				} else {
-					timeOffset = 0;
+					if ((this.massStartControl === 0) || (runner.splits.length < this.massStartControl)) {
+					  // no offset since we are starting from the start
+					  timeOffset = 0;
+					} else {
+						// offset needs to move forward (hence negative) to time at control
+					  timeOffset = -1 * runner.splits[this.massStartControl - 1];						
+					}
 				}
 				ctx.strokeStyle = runner.colour;
 				ctx.beginPath();
@@ -255,7 +269,12 @@ jQuery(document).ready(function() {"use strict";
 		// returns seconds as hh:mm:ss
 		formatSecsAsHHMMSS : function(time) {
 			var hours = Math.floor(time / 3600);
-			var formattedtime = hours + ":";
+			var formattedtime;
+			if (hours < 10) {
+				formattedtime = "0" + hours + ":";
+			} else {
+				formattedtime = hours;
+			}
 			time = time - (hours * 3600);
 			var minutes = Math.floor(time / 60);
 			if (minutes < 10) {
@@ -291,6 +310,7 @@ jQuery(document).ready(function() {"use strict";
 		// careful: we need the index into results, not the resultid from the text file
 		this.runnerid = resultid;
 		this.starttime = res.starttime;
+		this.splits = res.splits;
 		this.colour = animation.colours.getNextColour();
 		// get course details
 		var course = courses.getFullCourse(res.courseid);
@@ -908,6 +928,7 @@ jQuery(document).ready(function() {"use strict";
 		this.courses = [];
 		this.totaltracks = 0;
 		this.numberofcourses = 0;
+		this.highestControlNumber = 0;
 	}
 
 
@@ -938,12 +959,33 @@ jQuery(document).ready(function() {"use strict";
 		addCourse : function(courseObject) {
 			this.courses[courseObject.courseid] = courseObject;
 			this.numberofcourses++;
+			// the codes includes Start and Finish: we don't need F so subtract 1 to get controls
+			if (this.courses[courseObject.courseid].codes.length > this.highestControlNumber) {
+				this.highestControlNumber = this.courses[courseObject.courseid].codes.length - 1;
+				this.updateControlDropdown();
+			}
 		},
 
+		updateControlDropdown: function () {
+			jQuery("#rg2-control-select").empty();
+			var dropdown = document.getElementById("rg2-control-select");
+      for (var i = 0; i < this.highestControlNumber; i++) {
+        var opt = document.createElement("option"); 
+        opt.value = i;
+        if (i === 0) {
+        	opt.text = "S";
+        } else {
+        	opt.text = i;
+        }
+        dropdown.options.add(opt);
+      }
+		},
+		
 		deleteAllCourses : function() {
 			this.courses.length = 0;
 			this.numberofcourses = 0;
 			this.totaltracks = 0;
+			this.highestControlNumber = 0;
 		},
 
 		drawCourses : function() {
@@ -1189,6 +1231,10 @@ jQuery(document).ready(function() {"use strict";
 		jQuery("#btn-mass-start").prop('checked', true);
 		jQuery("#btn-replay-type").buttonset().click(function(event) {
 			animation.setReplayType();
+		});
+		
+		jQuery("#rg2-control-select").click(function(event) {
+			animation.setStartControl(jQuery("#rg2-control-select").val());
 		});
 
 		jQuery("#btn-zoom-in").button({
