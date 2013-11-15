@@ -26,11 +26,13 @@
 
   $output = array();
   $i = 0;
-   
+
+	$row = 0;
+		   
   switch ($type) {
 		
 	case 'events':
-	  $row = 0;
+
     
     if (($handle = fopen($url."kisat.txt", "r")) !== FALSE) {
       while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
@@ -126,7 +128,20 @@
     
 		
 	case 'results':
-	  $row = 0;  
+	  $comments = 0;  
+    $text = array();
+    // @ suppresses error report if file does not exist
+    if (($handle = @fopen($url."kommentit_".$id.".txt", "r")) !== FALSE) {
+      while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
+				if ($data[4] != "Type your comment") {
+				  $text[$comments]["resultid"] = $data[1];
+				  $text[$comments]["comments"] = $data[4];			
+          $comments++;
+				}
+      }
+      fclose($handle);
+		}
+		
     // @ suppresses error report if file does not exist
     if (($handle = @fopen($url."kilpailijat_".$id.".txt", "r")) !== FALSE) {
       while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
@@ -143,6 +158,12 @@
 				} else {
 					$detail["gpscoords"] = "";					
 				}
+				$detail["comments"] = "";
+				for ($i = 0; $i < $comments; $i++) {
+				  if ($detail["resultid"] == $text[$i]["resultid"]) {
+				    $detail["comments"] = $text[$i]["comments"];					
+					}
+				}	
 				$output[$row] = $detail;				
         $row++;
       }
