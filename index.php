@@ -50,9 +50,14 @@
 		<p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
 		<![endif]-->
 
-		<div id="rg2-header">
-			<img src='<?php echo $img_url."gadget.gif"; ?>' title="www.routegadget.net" alt="routegadget logo" class="rg2-logo">
-			Routegadget 2.0 Viewer <span id="rg2-event-title"></span><span id="rg2-about">About</span>
+		<div id="rg2-header-container">
+			<div  id="rg2-resize-info">
+				<a href="#"><img id="rg2-resize-info-icon" src='<?php echo $img_url."hide-info.png"; ?>'></a>
+			</div>
+			<div id="rg2-header"><span>Routegadget 2.0 Viewer </span><span id="rg2-event-title"></span>
+			</div>
+			<div id="rg2-about">About</div>
+		</div>
 		</div>
 		<div id="rg2-container">
 			<div id="rg2-info-panel">
@@ -84,7 +89,7 @@
 		  <div id="rg2-button-bar">
 			  <button id ="btn-toggle-controls">Show all controls</button>
 			  <button id ="btn-show-splits">Splits</button>
-			  <button id = "btn-zoom-in">Zoom in</button>
+			  <button id ="btn-zoom-in">Zoom in</button>
 			  <button id="btn-reset">Reset</button>
 			  <button id="btn-zoom-out">Zoom out</button>
 		  </div>
