@@ -54,7 +54,7 @@
 			<div  id="rg2-resize-info">
 				<a href="#"><img id="rg2-resize-info-icon" src='<?php echo $img_url."hide-info.png"; ?>'></a>
 			</div>
-			<div id="rg2-header"><span>Routegadget 2.0 Viewer </span><span id="rg2-event-title"></span>
+			<div id="rg2-header"><span id="rg2-event-title">Routegadget 2.0 Viewer</span>
 			</div>
 			<div id="rg2-about">About</div>
 		</div>
