@@ -1438,12 +1438,20 @@ jQuery(document).ready(function() {"use strict";
 		// place map in centre of canvas and scales it down to fit
 		var heightscale =  canvas.height / map.height;
 		var mapscale;
+		// don't stretch map: just shrink to fit
 		if (heightscale < 1) {
 			mapscale = heightscale;
 		} else {
 			mapscale = 1;
 		}
-		ctx.setTransform(mapscale, 0, 0, mapscale, 350, 0);
+		// move map into view on small screens
+		// avoid annoying jumps on larger screens
+		if ((infoPanelMaximised) || (window.innerWidth >= 800)) {
+			//350 is width of info panel
+			ctx.setTransform(mapscale, 0, 0, mapscale, 350, 0);
+		} else {
+			ctx.setTransform(mapscale, 0, 0, mapscale, 0, 0);			
+		}
 		ctx.save();
 		redraw(false);
 	}
@@ -1517,7 +1525,8 @@ jQuery(document).ready(function() {"use strict";
 		  jQuery("#rg2-resize-info-icon").attr("src", infoHideIconSrc);
 		  jQuery("#rg2-info-panel").show();
     }	
-    
+    // move map around if necesssary
+    resetMapState();
     
   }
   
@@ -1594,8 +1603,11 @@ jQuery(document).ready(function() {"use strict";
 				map.src = maps_url + "/" + events.getActiveMapID() + '.jpg';
 
 				// set title bar
-				jQuery("#rg2-event-title").text(events.getActiveEventName() + ": " + events.getActiveEventDate());
-
+				if (window.innerWidth >= 800) {
+				  jQuery("#rg2-event-title").text(events.getActiveEventName() + ": " + events.getActiveEventDate());
+        } else {
+				  jQuery("#rg2-event-title").text(events.getActiveEventName());
+        }
 				// get courses for event
 
 				jQuery.getJSON(json_url, {
