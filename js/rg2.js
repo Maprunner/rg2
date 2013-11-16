@@ -34,6 +34,7 @@ jQuery(document).ready(function() {"use strict";
 			this.runners.length = 0;
 			clearInterval(this.timer);
 			this.timer = null;
+  		this.updateAnimationDetails();
 		},
 
 		addRunner : function(runner) {
@@ -55,19 +56,75 @@ jQuery(document).ready(function() {"use strict";
 		},
 
 		getAnimationNames : function() {
-			var html = "<table>";
+			var html;
+			if (this.runners.length < 1) {
+				return "<p>Select runners on the Results tab.</p>";
+			}
+			html = "<table>";
 			for (var i = 0; i < this.runners.length; i++) {
 				html += "<tr><td>" + this.runners[i].coursename + "</td><td>" + this.runners[i].name;
 				html += "</td><td style='color:" + this.runners[i].colour + ";'>=====</td></tr>";
 			}
-			if (html === "<table>") {
-				html = "<p>Select runners on the Results tab.</p>";
-			} else {
-				html += "</table>";
-			}
+			html += "</table>";
 			return html;
 		},
 
+		getSplitsTable : function() {
+			var html;
+			var i;
+			var j;
+			var run;
+			if (this.runners.length < 1) {
+				return "<p>Select runners on Results tab.</p>";
+			}
+
+      var maxControls = 0;
+      var legSplit = [];
+      var prevControlSecs = 0;		
+			// find maximum number of controls to set size of table
+			for (i = 0; i < this.runners.length; i++) {
+				if (this.runners[i].splits.length > maxControls) {
+				   maxControls = this.runners[i].splits.length;
+				}
+			}
+			
+			html = "<table><tr><td>Course</td><td>Name</td>";
+			for (i = 0; i < (maxControls - 1); i++) {
+				html += "<td>" + (i + 1) + "</td>";
+			}
+			html += "<td>F</td></tr>";
+			for (i = 0; i < this.runners.length; i++) {
+				run = this.runners[i];
+				prevControlSecs = 0;
+				html += "<tr><td>" + run.coursename + "</td><td>" + run.name + "</td>";
+				for (j = 0; j < run.splits.length; j++) {
+					html += "<td>" + this.formatSecsAsMMSS(run.splits[j]) + "</td>";
+					legSplit[j] = run.splits[j] - prevControlSecs;
+					prevControlSecs = run.splits[j];
+				}
+			  html += "</tr><tr><td></td><td></td>";
+			  for (j = 0; j < run.splits.length; j++) {
+					html += "<td>" + this.formatSecsAsMMSS(legSplit[j]) + "</td>";
+				}
+			}
+			html += "</tr></table>";
+			return html;
+		},
+
+    formatSecsAsMMSS: function(secs) {
+			var formattedtime;
+			var minutes = Math.floor(secs / 60);
+			formattedtime = minutes;
+			var seconds = secs - (minutes * 60);
+			if (seconds < 10) {
+				formattedtime += ":0" + seconds;
+			} else {
+				formattedtime += ":" + seconds;
+			}
+			return formattedtime;   
+    	
+    },
+    
 		removeRunner : function(runnerid) {
 			for (var i = 0; i < this.runners.length; i++) {
 				if (this.runners[i].runnerid == runnerid) {
@@ -1191,6 +1248,7 @@ jQuery(document).ready(function() {"use strict";
 	function initialize() {
 
 		jQuery("#rg2-about-dialog").hide();
+		jQuery("#rg2-splits-display").hide();
   	jQuery("#rg2-track-names").hide();
   	
 		trackTransforms(ctx);
@@ -1285,7 +1343,27 @@ jQuery(document).ready(function() {"use strict";
 			animation.goSlower();
 		});
 
-		jQuery("#btn-toggle-controls").button({
+		jQuery("#btn-show-splits").button({
+			icons : {
+				primary : 'ui-icon-clock'
+			}
+		}).click(function() {
+		  jQuery("#rg2-splits-table").empty();
+		  jQuery("#rg2-splits-table").append(animation.getSplitsTable());
+		  jQuery("#rg2-splits-table").dialog({
+			  width: 'auto',
+			  buttons : {
+			   Ok : function() {
+			    jQuery(this).dialog('close');
+			   }
+			  }
+		  })
+		});
+		// enable once we have courses loaded
+		jQuery("#btn-show-splits").button("disable");
+
+
+  	jQuery("#btn-toggle-controls").button({
 			icons : {
 				primary : 'ui-icon-radio-off'
 			}
@@ -1541,6 +1619,7 @@ jQuery(document).ready(function() {"use strict";
 			results.addTracks(json.data);
 			createCourseMenu();
 			createResultMenu();
+			animation.updateAnimationDetails();	
 			jQuery('body').css('cursor', 'auto');
 			// enable Courses, Results and Replay tabs
 			jQuery("#rg2-info-panel").tabs("enable", 1);
@@ -1549,6 +1628,7 @@ jQuery(document).ready(function() {"use strict";
 			// open courses tab
 			jQuery("#rg2-info-panel").tabs("option", "active", 1);
 			jQuery("#rg2-info-panel").tabs("refresh");
+			jQuery("#btn-show-splits").button("enable");
 			redraw();
 		}).fail(function(jqxhr, textStatus, error) {
 			jQuery('body').css('cursor', 'auto');
@@ -1623,7 +1703,7 @@ jQuery(document).ready(function() {"use strict";
 
 		jQuery("#rg2-info-panel").tabs("refresh");
 
-		// checkbox on result tab to show a course
+		// checkbox to show a course
 		jQuery(".showcourse").click(function(event) {
 			if (event.target.checked) {
 				courses.putOnDisplay(event.target.id);
@@ -1632,7 +1712,7 @@ jQuery(document).ready(function() {"use strict";
 			}
 			redraw();
 		})
-		// checkbox on result tab to show a result
+		// checkbox to show a result
 		jQuery(".showtrack").click(function(event) {
 			if (event.target.checked) {
 				results.putOneTrackOnDisplay(event.target.id);
@@ -1641,7 +1721,7 @@ jQuery(document).ready(function() {"use strict";
 			}
 			redraw();
 		})
-		// checkbox on result tab to animate a result
+		// checkbox to animate a result
 		jQuery(".replay").click(function(event) {
 			if (event.target.checked) {
 				animation.addRunner(new Runner(event.target.id));
@@ -1650,6 +1730,6 @@ jQuery(document).ready(function() {"use strict";
 			}
 			redraw();
 		})
-	}
+	}	
 
 });

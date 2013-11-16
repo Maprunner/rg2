@@ -76,61 +76,56 @@
 				</div>
 				<div id="rg2-result-list"></div>
 				<div id="rg2-replay">
-
 					<div id="rg2-animation-names"></div>
 				</div> 
-		</div>
-
-		<canvas id="rg2-map-canvas">
-			Your browser does not support HTML5
-		</canvas>
-		<div id="rg2-button-bar">
-			<button id ="btn-toggle-controls">Show all controls</button>
-			<button id = "btn-zoom-in">Zoom in</button>
-			<button id="btn-reset">Reset</button>
-			<button id="btn-zoom-out">Zoom out</button>
-		</div>
-		<div id="rg2-ani-bar">
-			<div>
-			<button id ="btn-start-stop">Run</button>
-			<button id="btn-faster">Faster</button>
-			<button id="btn-slower">Slower</button>
 		  </div>
-		  <div class="ani-para">
-		  	<div id="btn-replay-type">
-			  <input type="radio" id="btn-real-time" value="btn-real-time" name="btn-replay-type" /><label for="btn-real-time">Real time</label>
-        <input type="radio" id="btn-mass-start" value="btn-mass-start" name="btn-replay-type" /><label for="btn-mass-start">Mass start</label>
+
+		  <canvas id="rg2-map-canvas">Your browser does not support HTML5</canvas>
+		  <div id="rg2-button-bar">
+			  <button id ="btn-toggle-controls">Show all controls</button>
+			  <button id ="btn-show-splits">Splits</button>
+			  <button id = "btn-zoom-in">Zoom in</button>
+			  <button id="btn-reset">Reset</button>
+			  <button id="btn-zoom-out">Zoom out</button>
+		  </div>
+		  <div id="rg2-ani-bar">
+			  <div>
+			    <button id ="btn-start-stop">Run</button>
+			    <button id="btn-faster">Faster</button>
+			    <button id="btn-slower">Slower</button>
+		    </div>
+		    <div class="ani-para">
+		  	  <div id="btn-replay-type">
+			      <input type="radio" id="btn-real-time" value="btn-real-time" name="btn-replay-type" /><label for="btn-real-time">Real time</label>
+            <input type="radio" id="btn-mass-start" value="btn-mass-start" name="btn-replay-type" /><label for="btn-mass-start">Mass start</label>
+          </div>
+          <div id="rg2-replay-start-control"> 
+            <p>Start at:
+            <select  id="rg2-control-select"><option>S</option></select>
+            </p>
+          </div>
         </div>
-        <div id="rg2-replay-start-control"> 
-          <p>Start at:
-          <select  id="rg2-control-select">
-            <option>S</option>
-          </select>
-          </p>
+        <div class="ani-para" id="rg2-clock"></div>
+        <div class = "ani-para" id="rg2-clock-slider"></div>
+			  <div class="ani-para">
+				  <label for "btn-full-tails">Full tails</label>
+				  <input type="checkbox" id="btn-full-tails" />
+          <div id="rg2-tails-spinner">
+            <input id="spn-tail-length" name="value" />
+         	  <label for="spn-tail-length">Tail length</label>
+          </div>
         </div>
       </div>
-      <div class="ani-para" id="rg2-clock"></div>
-      <div class = "ani-para" id="rg2-clock-slider"></div>
-			<div class="ani-para">
-				<label for "btn-full-tails">Full tails</label>
-				<input type="checkbox" id="btn-full-tails" />
-        <div id="rg2-tails-spinner">
-          <input id="spn-tail-length" name="value" />
-         	<label for="spn-tail-length">Tail length</label>
-        </div>
-      </div
-
-     </span>
-    </div>
-		<div id="rg2-track-names"></div>
-		<div id="rg2-about-dialog" title="Routegadget 2.0 Viewer: Version 0.1">
-			<p>This application allows you to view existing <a href="http://www.routegadget.net">Routegadget</a> information in any modern (HTML5-compliant) browser without the need for Java.</p>
-			<p>This is an early prototype to allow testing of the user interface, and the layout may still change quite a lot.
+		  <div id="rg2-track-names"></div>
+		  <div id="rg2-about-dialog" title="Routegadget 2.0 Viewer: Version 0.1">
+			 <p>This application allows you to view existing <a href="http://www.routegadget.net">Routegadget</a> information in any modern (HTML5-compliant) browser without the need for Java.</p>
+			 <p>This is an early prototype to allow testing of the user interface, and the layout may still change quite a lot.
 				 Later versions will allow you to create new events and upload routes, but for now it only works on events that have been set
 			 up in in the original Routegadget.</p>
 			<p>It does not currently work properly on iPads, tablets and phones because of problems with the touch interface and screen size. This is on the list of things to be looked at.</p>
 			<p><strong>Simon Errington</strong> (simon (at) maprunner.co.uk)</p>
-		 </div>
+		  </div>
+			<div id="rg2-splits-table" title="Splits display"></div>
 		</div>
 		<div id="rg2-footer"><?php echo FOOTER_TEXT; ?></div>
 
