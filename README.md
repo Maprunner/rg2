@@ -5,6 +5,11 @@ Routegadget is a Web application for drawing and comparing orienteering routes. 
 it is now used by [orienteering clubs around the world] (http://www.routegadget.net). This includes a very big user base
 in [Great Britain] (http://www.routegadget.co.uk/). 
 
+If you are still lost then try:
+
+* The original [Hertfordshire Orienteering Club Routegadget site] (http://www.happyherts.routegadget.co.uk/cgi-bin/reitti.cgi).
+* The new [Hertfordshire Orientering Club Routegadget 2.0 site] (http://www.happyherts.routegadget.co.uk/rg2/index.php).
+
 ## Why Routegadget 2.0?
 The original Routegadget makes extensive use of Java, and this has caused increasing difficulties.
 Routegadget 2.0 allows you to view existing Routegadget information in any modern (HTML5-compliant) browser without the need for Java.
