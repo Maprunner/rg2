@@ -1603,8 +1603,11 @@ jQuery(document).ready(function() {"use strict";
 				map.src = maps_url + "/" + events.getActiveMapID() + '.jpg';
 
 				// set title bar
-				jQuery("#rg2-event-title").text(events.getActiveEventName() + ": " + events.getActiveEventDate());
-
+				if (window.innerWidth >= 800) {
+				  jQuery("#rg2-event-title").text(events.getActiveEventName() + ": " + events.getActiveEventDate());
+        } else {
+				  jQuery("#rg2-event-title").text(events.getActiveEventName());
+        }
 				// get courses for event
 
 				jQuery.getJSON(json_url, {
