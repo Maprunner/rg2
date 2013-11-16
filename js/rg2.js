@@ -1242,6 +1242,13 @@ jQuery(document).ready(function() {"use strict";
 	var timer = 0;
 	// added to resultid when saving a GPS track
 	var GPS_RESULT_OFFSET = 50000;
+	var TAB_EVENTS = 0;
+	var TAB_COURSES = 1;
+	var TAB_RESULTS = 2;
+	var TAB_REPLAY = 3;
+	var infoPanelMaximised;
+	var infoHideIconSrc;
+	var infoShowIconSrc;
 
 	initialize();
 
@@ -1260,14 +1267,23 @@ jQuery(document).ready(function() {"use strict";
 			displayAboutDialog();
 		});
 
-		// start with Event list on Panel 0 active
+		// initially loaded file has a close icon
+		infoHideIconSrc = jQuery("#rg2-resize-info-icon").attr("src");
+		infoShowIconSrc = infoHideIconSrc.replace("hide-info", "show-info");
+						
+		jQuery("#rg2-resize-info").click(function() {
+			resizeInfoDisplay();
+		});
+
 		jQuery("#rg2-info-panel").tabs({
-	    active : 0,
+	    active : TAB_EVENTS,
 			heightStyle : "content"
 		});
+    infoPanelMaximised = true;
+				
 		// disable courses, results and replay until we have loaded some
 		jQuery("#rg2-info-panel").tabs({
-			disabled : [1, 2, 3]
+			disabled : [TAB_COURSES, TAB_RESULTS, TAB_REPLAY]
 		});
 
 		jQuery("#rg2-result-list").accordion({
@@ -1491,7 +1507,20 @@ jQuery(document).ready(function() {"use strict";
 		})
 	}
 
-
+  function resizeInfoDisplay() {
+    if (infoPanelMaximised) {
+    	infoPanelMaximised = false;
+		  jQuery("#rg2-resize-info-icon").attr("src", infoShowIconSrc);
+		  jQuery("#rg2-info-panel").hide();
+    } else {
+    	infoPanelMaximised = true;
+		  jQuery("#rg2-resize-info-icon").attr("src", infoHideIconSrc);
+		  jQuery("#rg2-info-panel").show();
+    }	
+    
+    
+  }
+  
 	var lastX = canvas.width / 2, lastY = canvas.height / 2;
 	var dragStart;
 	var dragged;
@@ -1621,12 +1650,11 @@ jQuery(document).ready(function() {"use strict";
 			createResultMenu();
 			animation.updateAnimationDetails();	
 			jQuery('body').css('cursor', 'auto');
-			// enable Courses, Results and Replay tabs
-			jQuery("#rg2-info-panel").tabs("enable", 1);
-			jQuery("#rg2-info-panel").tabs("enable", 2);
-			jQuery("#rg2-info-panel").tabs("enable", 3);
+			jQuery("#rg2-info-panel").tabs("enable", TAB_COURSES);
+			jQuery("#rg2-info-panel").tabs("enable", TAB_RESULTS);
+			jQuery("#rg2-info-panel").tabs("enable", TAB_REPLAY);
 			// open courses tab
-			jQuery("#rg2-info-panel").tabs("option", "active", 1);
+			jQuery("#rg2-info-panel").tabs("option", "active", TAB_COURSES);
 			jQuery("#rg2-info-panel").tabs("refresh");
 			jQuery("#btn-show-splits").button("enable");
 			redraw();

@@ -11,22 +11,26 @@ html, body {
   font: 16px/26px Helvetica, Helvetica Neue, Arial;
 }
 
-.rg2-logo img {
-  height: 19px;
-  width: 200px;
-}
-
-#rg2-header, #rg2-footer {
+#rg2-header-container, #rg2-footer {
     background: #002bd9;
     color: white;	
     position: relative;
     height: 30px;
 }
 
-#rg2-header {
+#rg2-header-container {
     border-bottom: 4px solid black;
-    font-size: 1em;
-    vertical-align: middle;
+}
+
+#rg2-resize-info {
+	position: absolute;
+  vertical-align: middle;
+}
+
+#rg2-header {
+	position: absolute;
+  vertical-align: middle;
+  left: 35px;
 }
 
 #rg2-footer {
@@ -35,8 +39,14 @@ html, body {
    text-align: center;
 }
 
+#rg2-resize-info {
+   padding-right: 10px;   
+}
+
+
 #rg2-about {
-   float: right;
+   position: absolute;	
+   right: 0px;
    padding-right: 20px;
 }
 
@@ -77,7 +87,7 @@ html, body {
 #rg2-info-panel {
    font-size: 0.75em;
    height: 99%;
-	 width: 300px;
+	 width: 350px;
    position: absolute;
    overflow: auto; /* add scroll bars if needed */
 	 z-index: 100;
