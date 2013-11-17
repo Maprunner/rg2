@@ -23,7 +23,10 @@ jQuery(document).ready(function() {"use strict";
 		this.latestFinishSecs = 0;
 		this.tailLength = 0;
 		this.useFullTails = false;
+		// control to start from if this option selected 
 		this.massStartControl = 0;
+    // run each leg as a mass start if true
+		this.massStartByControl = false;
 	}
 
 
@@ -35,7 +38,11 @@ jQuery(document).ready(function() {"use strict";
 			clearInterval(this.timer);
 			this.timer = null;
   		this.updateAnimationDetails();
-		},
+			jQuery("#btn-start-stop").button("option", "icons", {
+					primary : "ui-icon-play"
+  		});
+			jQuery("#btn-start-stop").button("option", "label", "Run");
+	  },
 
 		addRunner : function(runner) {
 			this.runners.push(runner);
@@ -204,6 +211,18 @@ jQuery(document).ready(function() {"use strict";
     
     setStartControl: function (control) {
     	this.massStartControl = parseInt(control, 10);
+			if (this.massStartControl === MASS_START_BY_CONTROL) {
+				this.massStartControl = 0;
+				this.massStartByControl = true;
+			  for (var i = 0; i < this.runners.length; i++) {
+				  this.runners[i].nextStopTime = parseInt(this.runners[i].splits[0], 10);
+			  }
+			} else {
+				this.massStartByControl = false;		
+			  for (var i = 0; i < this.runners.length; i++) {
+				  this.runners[i].nextStopTime = VERY_HIGH_TIME_IN_SECS;
+			  }
+			}
 			this.resetAnimationTime(0);    	
     },
     
@@ -212,7 +231,9 @@ jQuery(document).ready(function() {"use strict";
 			// only btn-mass-start and btn-real-time in the group
 			if (jQuery("#btn-replay-type :radio:checked").attr('id') === "btn-mass-start") {
 				this.realTime = false;
-				jQuery("#rg2-replay-start-control").show();
+				if (courses.getHighestControlNumber() > 0) {
+			    jQuery("#rg2-replay-start-control").show();
+			  }
 			} else {
 				jQuery("#rg2-replay-start-control").hide();
 				this.realTime = true;
@@ -282,7 +303,6 @@ jQuery(document).ready(function() {"use strict";
 			
 			for ( i = 0; i < this.runners.length; i++) {
 				runner = this.runners[i];
-				// need to draw full course even though runner has finished so that it stays on display
 				if (this.realTime) {
 					timeOffset = runner.starttime;
 				} else {
@@ -301,16 +321,50 @@ jQuery(document).ready(function() {"use strict";
 				// t runs as real time seconds or 0-based seconds depending on this.realTime
 				//runner.x[] is always indexed in 0-based time so needs to be adjusted for starttime offset
 				for ( t = tailStartTimeSecs; t <= this.animationSecs; t++) {
-					if (t > timeOffset) {
-						ctx.lineTo(runner.x[t - timeOffset], runner.y[t - timeOffset]);
+				if ((t > timeOffset) && ((t - timeOffset) < runner.nextStopTime)) {
+					ctx.lineTo(runner.x[t - timeOffset], runner.y[t - timeOffset]);
 					}
 				}
 				ctx.stroke();
 				ctx.fillStyle = runner.colour;
 				ctx.beginPath();				
-				ctx.arc(runner.x[t - timeOffset] + 3, runner.y[t - timeOffset], 6, 0, 2 * Math.PI, false);
+				if ((t - timeOffset) < runner.nextStopTime) {
+					t = t - timeOffset;
+				} else {
+					t = runner.nextStopTime;
+				}
+				ctx.arc(runner.x[t] + 3, runner.y[t], 6, 0, 2 * Math.PI, false);
 				ctx.fill();
 			}
+			if (this.massStartByControl) {
+			  this.checkForStopControl(this.animationSecs - timeOffset);
+			}
+		},
+		
+		// see if all runners have reached stop control and reset if they have
+		checkForStopControl: function (currentTime) {
+			var allAtControl = true;
+			var i;
+			// work out of everybody has got to the next control
+			for (i = 0; i < this.runners.length; i++) {
+				if (this.runners[i].nextStopTime >= currentTime) {
+					allAtControl = false;
+					break;
+			  }
+			}
+			if (allAtControl) {
+				//move on to next control
+			  this.massStartControl++;
+			  // find time at next control
+			  for (var i = 0; i < this.runners.length; i++) {
+			    if (this.massStartControl < (this.runners[i].splits.length - 1)) {
+			    	this.runners[i].nextStopTime = parseInt(this.runners[i].splits[this.massStartControl], 10);
+			    } else {
+			    	this.runners[i].nextStopTime = VERY_HIGH_TIME_IN_SECS;
+			    }				
+			  }
+			this.resetAnimationTime(0);
+			}			
 		},
 
 		goSlower : function() {
@@ -372,6 +426,8 @@ jQuery(document).ready(function() {"use strict";
 		// get course details
 		var course = courses.getFullCourse(res.courseid);
 		this.coursename = course.name;
+		// used to stop runners when doing replay by control
+		this.nextStopTime = VERY_HIGH_TIME_IN_SECS;
 		this.x = [];
 		this.y = [];
 		// x,y are indexed by time in seconds
@@ -742,9 +798,9 @@ jQuery(document).ready(function() {"use strict";
 		// calculated cumulative distance in pixels
 		this.cumulativedistance = [];
 		// set true if track includes all expected controls in correct order
+		// or is a GPS track
 		this.hasValidTrack = false;
 		this.displayTrack = false;
-		//this.hasTrack = false;
 		this.trackColour = 0;
 		// raw track data
 		this.trackx = [];
@@ -991,6 +1047,10 @@ jQuery(document).ready(function() {"use strict";
 			return this.courses[courseid].name;
 		},
 
+		getHighestControlNumber : function() {
+			return this.highestControlNumber;
+		},
+				
 		getFullCourse : function(courseid) {
 			return courses.courses[courseid];
 		},
@@ -1011,10 +1071,13 @@ jQuery(document).ready(function() {"use strict";
 		addCourse : function(courseObject) {
 			this.courses[courseObject.courseid] = courseObject;
 			this.numberofcourses++;
+      // allow for courses with no defined controls
+			if (this.courses[courseObject.courseid].codes !== undefined) {
+			  if (this.courses[courseObject.courseid].codes.length > this.highestControlNumber) {
 			// the codes includes Start and Finish: we don't need F so subtract 1 to get controls
-			if (this.courses[courseObject.courseid].codes.length > this.highestControlNumber) {
-				this.highestControlNumber = this.courses[courseObject.courseid].codes.length - 1;
-				this.updateControlDropdown();
+				  this.highestControlNumber = this.courses[courseObject.courseid].codes.length - 1;
+				  this.updateControlDropdown();
+			  }
 			}
 		},
 
@@ -1031,6 +1094,10 @@ jQuery(document).ready(function() {"use strict";
         }
         dropdown.options.add(opt);
       }
+      var opt = document.createElement("option"); 
+      opt.value = MASS_START_BY_CONTROL;
+      opt.text = "By control";
+      dropdown.options.add(opt);
 		},
 		
 		deleteAllCourses : function() {
@@ -1241,6 +1308,9 @@ jQuery(document).ready(function() {"use strict";
 	var TAB_COURSES = 1;
 	var TAB_RESULTS = 2;
 	var TAB_REPLAY = 3;
+	// dropdown selection value
+	var MASS_START_BY_CONTROL = 99999;
+	var VERY_HIGH_TIME_IN_SECS = 99999;
 	var infoPanelMaximised;
 	var infoHideIconSrc;
 	var infoShowIconSrc;
@@ -1765,6 +1835,12 @@ jQuery(document).ready(function() {"use strict";
 			}
 			redraw();
 		})
+		// hide control dropdown if we have no controls
+		if (courses.getHighestControlNumber() === 0) {
+		  jQuery("#rg2-replay-start-control").hide();
+		} else {
+		  jQuery("#rg2-replay-start-control").show();
+		}
 	}	
 
 });
