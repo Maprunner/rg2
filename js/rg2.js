@@ -393,7 +393,7 @@ jQuery(document).ready(function() {"use strict";
 		var t;
 		var xy;
 
-		if (res.validTrack) {
+		if (res.hasValidTrack) {
 			// x,y are indexed by time in seconds
 			this.x[0] = res.trackx[0];
 			this.y[0] = res.tracky[0];
@@ -703,7 +703,7 @@ jQuery(document).ready(function() {"use strict";
       } else {
 					html += "<tr><td>" + temp.name + "</td><td>" + temp.time + "</td>";      	
       }
-				if (temp.hasTrack) {
+				if (temp.hasValidTrack) {
 					html += "<td><input class='showtrack' id=" + i + " type=checkbox name=result></input></td>";
 				} else {
 					html += "<td></td>";
@@ -742,9 +742,9 @@ jQuery(document).ready(function() {"use strict";
 		// calculated cumulative distance in pixels
 		this.cumulativedistance = [];
 		// set true if track includes all expected controls in correct order
-		this.validTrack = false;
+		this.hasValidTrack = false;
 		this.displayTrack = false;
-		this.hasTrack = false;
+		//this.hasTrack = false;
 		this.trackColour = 0;
 		// raw track data
 		this.trackx = [];
@@ -760,8 +760,6 @@ jQuery(document).ready(function() {"use strict";
 		if (data.gpscoords.length > 0) {
 			this.addTrack(data.gpscoords);
 			courses.incrementTracksCount(this.courseid);
-			// check this later
-			this.validTrack = true;
 		}
 
 	}
@@ -771,14 +769,14 @@ jQuery(document).ready(function() {"use strict";
 		Constructor : Result,
 
 		putTrackOnDisplay : function() {
-			if (this.hasTrack) {
+			if (this.hasValidTrack) {
 				this.displayTrack = true;
 				this.trackColour = results.colours.getNextColour();
 			}
 		},
 
 		removeTrackFromDisplay : function() {
-			if (this.hasTrack) {
+			if (this.hasValidTrack) {
 				this.displayTrack = false;
 			}
 		},
@@ -817,9 +815,6 @@ jQuery(document).ready(function() {"use strict";
 				this.expandGPSTrack();
 			} else {
 				this.expandNormalTrack();
-			}
-			if (this.validTrack) {
-				this.hasTrack = true;
 			}
 		},
 
@@ -872,7 +867,7 @@ jQuery(document).ready(function() {"use strict";
 					nextcontrol++;
 					if (nextcontrol === course.x.length) {
 						// we have found all the controls
-						this.validTrack = true;
+						this.hasValidTrack = true;
 						break;
 					} else {
 						nextx = course.x[nextcontrol];
@@ -889,7 +884,7 @@ jQuery(document).ready(function() {"use strict";
 			for ( t = 0; t < this.trackx.length; t++) {
 				this.xysecs[t] = 3 * t;
 			}
-
+			this.hasValidTrack = true;
 		},
 
 		getCourseName : function() {
