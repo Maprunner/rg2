@@ -227,7 +227,9 @@ jQuery(document).ready(function() {"use strict";
 			// only btn-mass-start and btn-real-time in the group
 			if (jQuery("#btn-replay-type :radio:checked").attr('id') === "btn-mass-start") {
 				this.realTime = false;
-				jQuery("#rg2-replay-start-control").show();
+				if (courses.getHighestControlNumber() > 0) {
+			    jQuery("#rg2-replay-start-control").show();
+			  }
 			} else {
 				jQuery("#rg2-replay-start-control").hide();
 				this.realTime = true;
@@ -1040,7 +1042,11 @@ jQuery(document).ready(function() {"use strict";
 		getCourseName : function(courseid) {
 			return this.courses[courseid].name;
 		},
-		
+
+		getHighestControlNumber : function() {
+			return this.highestControlNumber;
+		},
+				
 		getFullCourse : function(courseid) {
 			return courses.courses[courseid];
 		},
@@ -1061,10 +1067,13 @@ jQuery(document).ready(function() {"use strict";
 		addCourse : function(courseObject) {
 			this.courses[courseObject.courseid] = courseObject;
 			this.numberofcourses++;
+      // allow for courses with no defined controls
+			if (this.courses[courseObject.courseid].codes !== undefined) {
+			  if (this.courses[courseObject.courseid].codes.length > this.highestControlNumber) {
 			// the codes includes Start and Finish: we don't need F so subtract 1 to get controls
-			if (this.courses[courseObject.courseid].codes.length > this.highestControlNumber) {
-				this.highestControlNumber = this.courses[courseObject.courseid].codes.length - 1;
-				this.updateControlDropdown();
+				  this.highestControlNumber = this.courses[courseObject.courseid].codes.length - 1;
+				  this.updateControlDropdown();
+			  }
 			}
 		},
 
@@ -1822,6 +1831,12 @@ jQuery(document).ready(function() {"use strict";
 			}
 			redraw();
 		})
+		// hide control dropdown if we have no controls
+		if (courses.getHighestControlNumber() === 0) {
+		  jQuery("#rg2-replay-start-control").hide();
+		} else {
+		  jQuery("#rg2-replay-start-control").show();
+		}
 	}	
 
 });
