@@ -38,7 +38,11 @@ jQuery(document).ready(function() {"use strict";
 			clearInterval(this.timer);
 			this.timer = null;
   		this.updateAnimationDetails();
-		},
+			jQuery("#btn-start-stop").button("option", "icons", {
+					primary : "ui-icon-play"
+  		});
+			jQuery("#btn-start-stop").button("option", "label", "Run");
+	  },
 
 		addRunner : function(runner) {
 			this.runners.push(runner);
