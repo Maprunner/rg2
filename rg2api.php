@@ -134,9 +134,12 @@
     // @ suppresses error report if file does not exist
     if (($handle = @fopen($url."kommentit_".$id.".txt", "r")) !== FALSE) {
       while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
-				if ($data[4] != "Type your comment") {
+				// remove null comments
+				if (strncmp($data[4], "Type your comment", 17) != 0) {
 				  $text[$comments]["resultid"] = $data[1];
-				  $text[$comments]["comments"] = $data[4];			
+				  // replace line break codes
+				  $text[$comments]["comments"] = str_replace("#cr##nl#", " ", $data[4]);			
+
           $comments++;
 				}
       }
