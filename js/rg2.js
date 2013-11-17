@@ -742,9 +742,9 @@ jQuery(document).ready(function() {"use strict";
 		// calculated cumulative distance in pixels
 		this.cumulativedistance = [];
 		// set true if track includes all expected controls in correct order
+		// or is a GPS track
 		this.hasValidTrack = false;
 		this.displayTrack = false;
-		//this.hasTrack = false;
 		this.trackColour = 0;
 		// raw track data
 		this.trackx = [];

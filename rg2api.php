@@ -40,7 +40,8 @@
 				$detail["id"] = $data[0];
 				$detail["mapid"] = $data[1];
 				$detail["status"] = $data[2];
-				$detail["name"] = $data[3];
+				// Issue #11: found a stray &#39; in a SUFFOC file
+				$detail["name"] = str_replace("&#39;", "'", $data[3]);
 				$detail["date"] = $data[4];
 				$detail["club"] = $data[5];
 				$detail["type"] = $data[6];
