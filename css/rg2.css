@@ -190,3 +190,7 @@ padding: 0;
 	padding: .2em .2em .2em 1em;
 
 }
+
+.ui-tooltip-content {
+	font-size: 0.75em;
+}
