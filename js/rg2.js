@@ -801,7 +801,8 @@ jQuery(document).ready(function() {"use strict";
 		this.name = data.name;
 		this.starttime = parseInt(data.starttime, 10);
 		this.time = data.time;
-	  this.comments = data.comments;
+    // escape single quotes so that tooltips show correctly
+	  this.comments = data.comments.replace("'", "&apos;");
 		this.coursename = data.coursename;
 		if (this.coursename === "") {
 			this.coursename = data.courseid;
