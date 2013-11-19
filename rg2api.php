@@ -135,17 +135,34 @@
     if (($handle = @fopen($url."kommentit_".$id.".txt", "r")) !== FALSE) {
       while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
 				// remove null comments
-				if (strncmp($data[4], "Type your comment", 17) != 0) {
+  			if (strncmp($data[4], "Type your comment", 17) != 0) {
 				  $text[$comments]["resultid"] = $data[1];
-				  // replace line break codes
-				  $text[$comments]["comments"] = str_replace("#cr##nl#", " ", $data[4]);			
-
+				  // replace carriage return and line break codes
+				  $temp = str_replace("#cr#", " ", $data[4]);			
+				  $temp = str_replace("#nl#", " ", $temp); 
+          
+          // this is a hack to handle non UTF-8 characters in comments for now.
+          // needs a proper look at in future, but for now just replace with ? 
+          
+          //reject overly long 2 byte sequences, as well as characters above U+10000 and replace with ?
+          $temp = preg_replace('/[\x00-\x08\x10\x0B\x0C\x0E-\x19\x7F]'.
+          '|[\x00-\x7F][\x80-\xBF]+'.
+          '|([\xC0\xC1]|[\xF0-\xFF])[\x80-\xBF]*'.
+          '|[\xC2-\xDF]((?![\x80-\xBF])|[\x80-\xBF]{2,})'.
+          '|[\xE0-\xEF](([\x80-\xBF](?![\x80-\xBF]))|(?![\x80-\xBF]{2})|[\x80-\xBF]{3,})/S',
+          '?', $temp );
+ 
+          //reject overly long 3 byte sequences and UTF-16 surrogates and replace with ?
+          $temp = preg_replace('/\xE0[\x80-\x9F][\x80-\xBF]'.
+          '|\xED[\xA0-\xBF][\x80-\xBF]/S','?', $temp );
+					
+				  $text[$comments]["comments"] = $temp; 
           $comments++;
 				}
       }
       fclose($handle);
 		}
-		
+
     // @ suppresses error report if file does not exist
     if (($handle = @fopen($url."kilpailijat_".$id.".txt", "r")) !== FALSE) {
       while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
@@ -201,5 +218,4 @@
 	
   header("Content-type: application/json"); 
   echo "{\"data\":" .json_encode($output). "}";
-  
 ?>
