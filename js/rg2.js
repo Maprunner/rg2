@@ -570,11 +570,19 @@ jQuery(document).ready(function() {"use strict";
 		},
 
 		getActiveEventDate : function() {
-			return this.events[this.activeEventID].date;
+			if (this.activeEventID !== null) {
+			  return this.events[this.activeEventID].date;
+			} else {
+				return "";
+			}
 		},
 
 		getActiveEventName : function() {
-			return this.events[this.activeEventID].name;
+			if (this.activeEventID !== null) {
+			  return this.events[this.activeEventID].name;
+			} else {
+				return "Routegadget 2.0";
+			}
 		},
 
 		setActiveEventID : function(id) {
@@ -1080,15 +1088,11 @@ jQuery(document).ready(function() {"use strict";
 
 		toggleControlDisplay : function() {
 			if (this.displayControls) {
-				jQuery("#btn-toggle-controls").button("option", "icons", {
-					primary : "ui-icon-radio-off"
-				});
-				jQuery("#btn-toggle-controls").button("option", "label", "Show controls");
+				jQuery("#btn-toggle-controls").removeClass("fa-ban").addClass("fa-circle-o");
+				jQuery("#btn-toggle-controls").prop("title", "Show controls");
 			} else {
-				jQuery("#btn-toggle-controls").button("option", "icons", {
-					primary : "ui-icon-cancel"
-				});
-				jQuery("#btn-toggle-controls").button("option", "label", "Hide controls");
+				jQuery("#btn-toggle-controls").removeClass("fa-circle-o").addClass("fa-ban");
+				jQuery("#btn-toggle-controls").prop("title", "Hide controls");
 			}
 			this.displayControls = !this.displayControls;
 		}
@@ -1387,6 +1391,10 @@ jQuery(document).ready(function() {"use strict";
 	// dropdown selection value
 	var MASS_START_BY_CONTROL = 99999;
 	var VERY_HIGH_TIME_IN_SECS = 99999;
+	// screen sizes for different layouts
+	var BIG_SCREEN_BREAK_POINT = 800;
+	var SMALL_SCREEN_BREAK_POINT = 500;
+	
 	var infoPanelMaximised;
 	var infoHideIconSrc;
 	var infoShowIconSrc;
@@ -1402,9 +1410,11 @@ jQuery(document).ready(function() {"use strict";
 		trackTransforms(ctx);
 		resizeCanvas();
 
-		jQuery(document).tooltip();
+    // stick with native tooltops for now
+    // since this caused trouble when changing titles
+		//jQuery(document).tooltip();
 
-		jQuery("#rg2-about").click(function() {
+		jQuery("#btn-about").click(function() {
 			displayAboutDialog();
 		});
 
@@ -1452,27 +1462,15 @@ jQuery(document).ready(function() {"use strict";
 			animation.setStartControl(jQuery("#rg2-control-select").val());
 		});
 
-		jQuery("#btn-zoom-in").button({
-			icons : {
-				primary : 'ui-icon-zoomin'
-			}
-		}).click(function() {
+		jQuery("#btn-zoom-in").click(function() {
 			zoom(1);
 		});
 
-		jQuery("#btn-reset").button({
-			icons : {
-				primary : 'ui-icon-arrowrefresh-1-s'
-			}
-		}).click(function() {
+		jQuery("#btn-reset").click(function() {
 			resetMapState();
 		});
 
-		jQuery("#btn-zoom-out").button({
-			icons : {
-				primary : 'ui-icon-zoomout'
-			}
-		}).click(function() {
+		jQuery("#btn-zoom-out").click(function() {
 			zoom(-1);
 		});
 
@@ -1500,11 +1498,7 @@ jQuery(document).ready(function() {"use strict";
 			animation.goSlower();
 		});
 
-		jQuery("#btn-show-splits").button({
-			icons : {
-				primary : 'ui-icon-clock'
-			}
-		}).click(function() {
+		jQuery("#btn-show-splits").click(function() {
 			jQuery("#rg2-splits-table").empty();
 			jQuery("#rg2-splits-table").append(animation.getSplitsTable());
 			jQuery("#rg2-splits-table").dialog({
@@ -1517,18 +1511,14 @@ jQuery(document).ready(function() {"use strict";
 			})
 		});
 		// enable once we have courses loaded
-		jQuery("#btn-show-splits").button("disable");
+		jQuery("#btn-show-splits").hide();
 
-		jQuery("#btn-toggle-controls").button({
-			icons : {
-				primary : 'ui-icon-radio-off'
-			}
-		}).click(function() {
+		jQuery("#btn-toggle-controls").click(function() {
 			controls.toggleControlDisplay();
 			redraw(false);
 		});
 		// enable once we have courses loaded
-		jQuery("#btn-toggle-controls").button("disable");
+		jQuery("#btn-toggle-controls").hide();
 
 		// set default to 0 secs = no tails
 		jQuery("#spn-tail-length").spinner({
@@ -1586,7 +1576,7 @@ jQuery(document).ready(function() {"use strict";
 		}
 		// move map into view on small screens
 		// avoid annoying jumps on larger screens
-		if ((infoPanelMaximised) || (window.innerWidth >= 800)) {
+		if ((infoPanelMaximised) || (window.innerWidth >= BIG_SCREEN_BREAK_POINT)) {
 			//350 is width of info panel
 			ctx.setTransform(mapscale, 0, 0, mapscale, 350, 0);
 		} else {
@@ -1602,6 +1592,18 @@ jQuery(document).ready(function() {"use strict";
 		jQuery("#rg2-container").css("height", winheight - 70);
 		canvas.width = winwidth - 10;
 		canvas.height = winheight - 70;
+		// set title bar
+		if (window.innerWidth >= BIG_SCREEN_BREAK_POINT) {
+			jQuery("#rg2-event-title").text(events.getActiveEventName() + " " + events.getActiveEventDate());
+			jQuery("#rg2-event-title").show();
+		} else if (window.innerWidth > SMALL_SCREEN_BREAK_POINT) {
+			jQuery("#rg2-event-title").text(events.getActiveEventName());				
+			jQuery("#rg2-event-title").show();
+		} else {
+			jQuery("#rg2-event-title").hide();
+		}
+
+
 		redraw(false);
 	}
 
@@ -1659,10 +1661,12 @@ jQuery(document).ready(function() {"use strict";
 		if (infoPanelMaximised) {
 			infoPanelMaximised = false;
 			jQuery("#rg2-resize-info-icon").attr("src", infoShowIconSrc);
+			jQuery("#rg2-resize-info").prop("title", "Show info panel");
 			jQuery("#rg2-info-panel").hide();
 		} else {
 			infoPanelMaximised = true;
 			jQuery("#rg2-resize-info-icon").attr("src", infoHideIconSrc);
+			jQuery("#rg2-resize-info").prop("title", "Hide info panel");
 			jQuery("#rg2-info-panel").show();
 		}
 		// move map around if necesssary
@@ -1741,10 +1745,14 @@ jQuery(document).ready(function() {"use strict";
 				map.src = maps_url + "/" + events.getActiveMapID() + '.jpg';
 
 				// set title bar
-				if (window.innerWidth >= 800) {
-					jQuery("#rg2-event-title").text(events.getActiveEventName() + ": " + events.getActiveEventDate());
+				if (window.innerWidth >= BIG_SCREEN_BREAK_POINT) {
+					jQuery("#rg2-event-title").text(events.getActiveEventName() +" " + events.getActiveEventDate());
+					jQuery("#rg2-event-title").show();
+				} else if (window.innerWidth > SMALL_SCREEN_BREAK_POINT) {
+					jQuery("#rg2-event-title").text(events.getActiveEventName());				
+					jQuery("#rg2-event-title").show();
 				} else {
-					jQuery("#rg2-event-title").text(events.getActiveEventName());
+					jQuery("#rg2-event-title").hide();
 				}
 				// get courses for event
 
@@ -1757,7 +1765,7 @@ jQuery(document).ready(function() {"use strict";
 						courses.addCourse(new Course(this));
 					});
 					courses.generateControlList();
-					jQuery("#btn-toggle-controls").button("enable");
+					jQuery("#btn-toggle-controls").show();
 					getResults();
 				}).fail(function(jqxhr, textStatus, error) {
 					jQuery('body').css('cursor', 'auto');
@@ -1806,7 +1814,7 @@ jQuery(document).ready(function() {"use strict";
 			// open courses tab
 			jQuery("#rg2-info-panel").tabs("option", "active", TAB_COURSES);
 			jQuery("#rg2-info-panel").tabs("refresh");
-			jQuery("#btn-show-splits").button("enable");
+			jQuery("#btn-show-splits").show();
 			redraw();
 		}).fail(function(jqxhr, textStatus, error) {
 			jQuery('body').css('cursor', 'auto');

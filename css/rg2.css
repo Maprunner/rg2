@@ -16,6 +16,7 @@ html, body {
     color: white;	
     position: relative;
     height: 30px;
+    font: 20px/30px Helvetica, Helvetica Neue, Arial;
 }
 
 #rg2-header-container {
@@ -31,6 +32,12 @@ html, body {
 	position: absolute;
   vertical-align: middle;
   left: 35px;
+}
+
+.rg2-header-button {
+	float: right;
+	width: 30px;
+	text-align: center;
 }
 
 #rg2-footer {

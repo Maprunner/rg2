@@ -43,6 +43,7 @@
 		<link rel="stylesheet" href="css/normalize.min.css">
 		<link rel="stylesheet" href="css/rg2.css">
 		<link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/themes/<?php echo $ui_theme; ?>/jquery-ui.min.css">
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
  
 	</head>
 	<body>
@@ -51,12 +52,16 @@
 		<![endif]-->
 
 		<div id="rg2-header-container">
-			<div  id="rg2-resize-info" title="Show/hide info panel">
-				<a href="#"><img id="rg2-resize-info-icon" src='<?php echo $img_url."hide-info.png"; ?>'></a>
+			<div  id="rg2-resize-info" title="Hide info panel">
+				<a href="#"><img id="rg2-resize-info-icon" class="hide" src='<?php echo $img_url."hide-info.png"; ?>'></a>
 			</div>
-			<div id="rg2-header"><span id="rg2-event-title">Routegadget 2.0 Viewer</span>
-			</div>
-			<div id="rg2-about">About</div>
+			<div id="rg2-header"><span id="rg2-event-title">Routegadget 2.0 Viewer</span></div>	
+			  <div class="rg2-header-button"><i id="btn-about"title = "Help" class="fa fa-question"></i></div>
+			  <div class="rg2-header-button"><i id="btn-zoom-out" title = "Zoom out" class="fa fa-search-minus"></i></div>
+			  <div class="rg2-header-button"><i id="btn-reset" title = "Reset" class="fa fa-undo"></i></div>
+			  <div class="rg2-header-button"><i id="btn-zoom-in" title = "Zoom in" class="fa fa-search-plus"></i></div>
+			  <div class="rg2-header-button"><i id="btn-show-splits" title = "Splits" class="fa fa-clock-o"></i></div>
+			  <div class="rg2-header-button"><i  id="btn-toggle-controls" title = "Show controls"class="fa fa-circle-o"></i></div>
 		</div>
 		</div>
 		<div id="rg2-container">
@@ -87,11 +92,6 @@
 
 		  <canvas id="rg2-map-canvas">Your browser does not support HTML5</canvas>
 		  <div id="rg2-button-bar">
-			  <button id ="btn-toggle-controls">Show all controls</button>
-			  <button id ="btn-show-splits">Splits</button>
-			  <button id ="btn-zoom-in">Zoom in</button>
-			  <button id="btn-reset">Reset</button>
-			  <button id="btn-zoom-out">Zoom out</button>
 		  </div>
 		  <div id="rg2-ani-bar">
 			  <div>
