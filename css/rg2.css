@@ -55,8 +55,26 @@ html, body {
    display: none;
 }
 
-#rg2-splits-table {
+.splitstable {
 	 font-size: 0.75em;
+}
+
+.splitstable th {
+  font-weight: bold;
+  background-color: white;
+}
+
+.splitsname-row {
+  background-color: #C0C0C0;
+}
+
+.splitstime-row {
+  background-color: #E0E0E0;
+}
+
+
+.splitsdistance-row {
+  background-color: white;
 }
 
 
@@ -150,6 +168,7 @@ html, body {
 	margin: auto;
 	padding: 5px;
 }
+
 .coursemenutable tr, td, th {
 	padding-left: 5px;
 	padding-right: 5px;
@@ -189,4 +208,8 @@ padding: 0;
 	font-size: 0.75em;
 	padding: .2em .2em .2em 1em;
 
+}
+
+.ui-tooltip-content {
+	font-size: 0.75em;
 }
