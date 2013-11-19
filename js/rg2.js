@@ -1147,7 +1147,8 @@ jQuery(document).ready(function() {"use strict";
 			this.courses[courseObject.courseid] = courseObject;
 			this.numberofcourses++;
 			// allow for courses with no defined controls
-			if (this.courses[courseObject.courseid].codes !== undefined) {
+			// careful here: != catches null and undefined, but !== just catches undefined
+			if (this.courses[courseObject.courseid].codes != undefined) {
 				if (this.courses[courseObject.courseid].codes.length > this.highestControlNumber) {
 					// the codes includes Start and Finish: we don't need F so subtract 1 to get controls
 					this.highestControlNumber = this.courses[courseObject.courseid].codes.length - 1;
