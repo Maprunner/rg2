@@ -173,7 +173,8 @@
 				$detail["name"] = $data[3];
 				$detail["starttime"] = $data[4];
 				$detail["time"] = $data[7];
-				$detail["splits"] = $data[8];
+				// trim trailing ; which create null fields when expanded
+				$detail["splits"] = rtrim($data[8], ";");
 				if (sizeof($data) > 9) {
 					$detail["gpscoords"] = $data[9];
 				} else {
