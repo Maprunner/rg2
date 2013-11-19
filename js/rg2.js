@@ -537,7 +537,7 @@ jQuery(document).ready(function() {"use strict";
 		this.legTrackDistance[0] = 0;
 		this.cumulativeTrackDistance[0] = 0;
 		
-		if (typeof(course.codes) !== "undefined") {
+		if (course.codes != undefined) {
   		for ( control = 1; control < course.codes.length; control++) {
 	  		this.cumulativeTrackDistance[control] = parseInt(cumulativeDistance[res.splits[control]], 10);
 		  	this.legTrackDistance[control] = this.cumulativeTrackDistance[control] - this.cumulativeTrackDistance[control - 1];
@@ -1147,7 +1147,8 @@ jQuery(document).ready(function() {"use strict";
 			this.courses[courseObject.courseid] = courseObject;
 			this.numberofcourses++;
 			// allow for courses with no defined controls
-			if (this.courses[courseObject.courseid].codes !== undefined) {
+			// careful here: != catches null and undefined, but !== just catches undefined
+			if (this.courses[courseObject.courseid].codes != undefined) {
 				if (this.courses[courseObject.courseid].codes.length > this.highestControlNumber) {
 					// the codes includes Start and Finish: we don't need F so subtract 1 to get controls
 					this.highestControlNumber = this.courses[courseObject.courseid].codes.length - 1;
@@ -1237,12 +1238,12 @@ jQuery(document).ready(function() {"use strict";
 			var y;
 			// for all courses
 			for (var i = 0; i < this.courses.length; i++) {
-				if (this.courses[i] !== undefined) {
+				if (this.courses[i] != undefined) {
 					codes = this.courses[i].codes;
 					x = this.courses[i].x;
 					y = this.courses[i].y;
 					// for all controls on course
-					if (codes !== undefined) {
+					if (codes != undefined) {
 						for (var j = 0; j < codes.length; j++) {
 							controls.addControl(codes[j], x[j], y[j]);
 						}
