@@ -94,25 +94,32 @@ jQuery(document).ready(function() {"use strict";
 					maxControls = this.runners[i].splits.length;
 				}
 			}
+			// allow for start and finish
+      maxControls -= 2;
 
-			html = "<table><tr><td>Course</td><td>Name</td>";
-			for ( i = 0; i < (maxControls - 1); i++) {
-				html += "<td>" + (i + 1) + "</td>";
+			html = "<table class='splitstable'><tr><th>Course</th><th>Name</th>";
+			for ( i = 1; i <= maxControls; i++) {
+				html += "<th>" + i + "</th>";
 			}
-			html += "<td>F</td></tr>";
+			html += "<th>F</th></tr>";
 			for ( i = 0; i < this.runners.length; i++) {
 				run = this.runners[i];
 				prevControlSecs = 0;
-				html += "<tr><td>" + run.coursename + "</td><td>" + run.name + "</td>";
-				for ( j = 0; j < run.splits.length; j++) {
+				html += "<tr class='splitsname-row'><td>" + run.coursename + "</td><td>" + run.name + "</td>";
+				for ( j = 1; j < run.splits.length; j++) {
 					html += "<td>" + this.formatSecsAsMMSS(run.splits[j]) + "</td>";
 					legSplit[j] = run.splits[j] - prevControlSecs;
 					prevControlSecs = run.splits[j];
 				}
-				html += "</tr><tr><td></td><td></td>";
-				for ( j = 0; j < run.splits.length; j++) {
+				html += "</tr><tr class='splitstime-row'><td></td><td></td>";
+				for ( j = 1; j < run.splits.length; j++) {
 					html += "<td>" + this.formatSecsAsMMSS(legSplit[j]) + "</td>";
 				}
+				html += "</tr><tr class='splitsdistance-row'><td></td><td>pixels</td>";
+				for ( j = 1; j < run.splits.length; j++) {
+					html += "<td>" + run.legTrackDistance[j] + "</td>";
+				}
+
 			}
 			html += "</tr></table>";
 			return html;
@@ -213,8 +220,9 @@ jQuery(document).ready(function() {"use strict";
 			if (this.massStartControl === MASS_START_BY_CONTROL) {
 				this.massStartControl = 0;
 				this.massStartByControl = true;
+				// get split time at control 1
 				for (var i = 0; i < this.runners.length; i++) {
-					this.runners[i].nextStopTime = parseInt(this.runners[i].splits[0], 10);
+					this.runners[i].nextStopTime = this.runners[i].splits[1];
 				}
 			} else {
 				this.massStartByControl = false;
@@ -310,7 +318,7 @@ jQuery(document).ready(function() {"use strict";
 						timeOffset = 0;
 					} else {
 						// offset needs to move forward (hence negative) to time at control
-						timeOffset = -1 * runner.splits[this.massStartControl - 1];
+						timeOffset = -1 * runner.splits[this.massStartControl];
 					}
 				}
 				ctx.strokeStyle = runner.colour;
@@ -356,8 +364,9 @@ jQuery(document).ready(function() {"use strict";
 				this.massStartControl++;
 				// find time at next control
 				for (var i = 0; i < this.runners.length; i++) {
-					if (this.massStartControl < (this.runners[i].splits.length - 1)) {
-						this.runners[i].nextStopTime = parseInt(this.runners[i].splits[this.massStartControl], 10);
+					if (this.massStartControl < (this.runners[i].splits.length)) {
+						// splits includes a start time so index to control is + 1 
+						this.runners[i].nextStopTime = this.runners[i].splits[this.massStartControl + 1];
 					} else {
 						this.runners[i].nextStopTime = VERY_HIGH_TIME_IN_SECS;
 					}
@@ -420,7 +429,7 @@ jQuery(document).ready(function() {"use strict";
 		// careful: we need the index into results, not the resultid from the text file
 		this.runnerid = resultid;
 		this.starttime = res.starttime;
-		this.splits = res.splits;
+    this.splits = res.splits;
 		this.colour = animation.colours.getNextColour();
 		// get course details
 		var course = courses.getFullCourse(res.courseid);
@@ -429,7 +438,10 @@ jQuery(document).ready(function() {"use strict";
 		this.nextStopTime = VERY_HIGH_TIME_IN_SECS;
 		this.x = [];
 		this.y = [];
-		// x,y are indexed by time in seconds
+		// x,y are indexed by time in seconds	
+		this.legTrackDistance = [];
+		this.cumulativeTrackDistance = [];
+		var cumulativeDistance = [];
 		this.x[0] = course.x[0];
 		this.y[0] = course.y[0];
 		var timeatprevcontrol = 0;
@@ -441,35 +453,50 @@ jQuery(document).ready(function() {"use strict";
 		var toy;
 		var fromx = course.x[0];
 		var fromy = course.y[0];
+		var fromdist;
 		var diffx;
 		var diffy;
 		var difft;
+		var diffdist;
 		var control;
 		var t;
 		var xy;
-
+		var dist;
+		var oldx = res.trackx[0];
+		var oldy = res.tracky[0];
+		var x = 0;
+		var y = 0;			
+		
 		if (res.hasValidTrack) {
 			// x,y are indexed by time in seconds
 			this.x[0] = res.trackx[0];
 			this.y[0] = res.tracky[0];
+			cumulativeDistance[0] = 0;
 			fromx = res.trackx[0];
 			fromy = res.tracky[0];
+			fromdist = 0;
+			dist = 0;
 			// for each point on track
 			for ( xy = 1; xy < res.xysecs.length; xy++) {
 				tox = res.trackx[xy];
 				toy = res.tracky[xy];
 				diffx = tox - fromx;
 				diffy = toy - fromy;
+				dist = dist + Math.sqrt(((tox - fromx) * (tox - fromx)) + ((toy - fromy) * (toy - fromy)));
+				diffdist = dist - fromdist;
 				timeatxy = res.xysecs[xy];
 				difft = timeatxy - timeatprevxy;
 				for ( t = timeatprevxy + 1; t < timeatxy; t++) {
 					this.x[t] = parseInt(fromx + ((t - timeatprevxy) * diffx / difft), 10);
 					this.y[t] = parseInt(fromy + ((t - timeatprevxy) * diffy / difft), 10);
+					cumulativeDistance[t] = parseInt(fromdist + ((t - timeatprevxy) * diffdist / difft), 10);
 				}
 				this.x[timeatxy] = tox;
 				this.y[timeatxy] = toy;
+				cumulativeDistance[timeatxy] = dist;
 				fromx = tox;
 				fromy = toy;
+				fromdist = dist;
 				timeatprevxy = timeatxy;
 			}
 		} else {
@@ -477,27 +504,46 @@ jQuery(document).ready(function() {"use strict";
 			// for each control (0 was Start)
 			this.x[0] = course.x[0];
 			this.y[0] = course.y[0];
+			cumulativeDistance[0] = 0;
 			fromx = course.x[0];
 			fromy = course.y[0];
+			fromdist = 0;
+			dist = 0;
 			for ( control = 1; control < course.codes.length; control++) {
 				tox = course.x[control];
 				toy = course.y[control];
 				diffx = tox - fromx;
 				diffy = toy - fromy;
-				// split times don't have a time for the start
-				timeatcontrol = parseInt(res.splits[control - 1], 10);
+				dist = dist + Math.sqrt(((tox - fromx) * (tox - fromx)) + ((toy - fromy) * (toy - fromy)));
+				diffdist = dist - fromdist;
+				timeatcontrol = res.splits[control];
 				difft = timeatcontrol - timeatprevcontrol;
 				for ( t = timeatprevcontrol + 1; t < timeatcontrol; t++) {
 					this.x[t] = parseInt(fromx + ((t - timeatprevcontrol) * diffx / difft), 10);
 					this.y[t] = parseInt(fromy + ((t - timeatprevcontrol) * diffy / difft), 10);
+					cumulativeDistance[t] = parseInt(fromdist + ((t - timeatprevxy) * diffdist / difft), 10);
 				}
 				this.x[timeatcontrol] = tox;
 				this.y[timeatcontrol] = toy;
+				cumulativeDistance[timeatcontrol] = dist;
 				fromx = tox;
 				fromy = toy;
+				fromdist = dist;
 				timeatprevcontrol = timeatcontrol;
 			}
 		}
+
+		// add track distances for each leg
+		this.legTrackDistance[0] = 0;
+		this.cumulativeTrackDistance[0] = 0;
+		
+		if (typeof(course.codes) !== "undefined") {
+  		for ( control = 1; control < course.codes.length; control++) {
+	  		this.cumulativeTrackDistance[control] = parseInt(cumulativeDistance[res.splits[control]], 10);
+		  	this.legTrackDistance[control] = this.cumulativeTrackDistance[control] - this.cumulativeTrackDistance[control - 1];
+		  }
+		}		
+
 		res = 0;
 		course = 0;
 	}
@@ -809,8 +855,14 @@ jQuery(document).ready(function() {"use strict";
 		}
 		this.courseid = parseInt(data.courseid, 10);
 		this.splits = data.splits.split(";");
+		// force to integers to avoid doing it every time we read it
+		for (var i = 0; i < this.splits.length; i++) {
+			this.splits[i] = parseInt(this.splits[i], 10);
+		}
+		// insert a 0 split at the start to make life much easier elsewhere
+		this.splits.splice(0, 0, 0);
 		// calculated cumulative distance in pixels
-		this.cumulativedistance = [];
+		this.cumulativeDistance = [];
 		// set true if track includes all expected controls in correct order
 		// or is a GPS track
 		this.hasValidTrack = false;
@@ -887,12 +939,11 @@ jQuery(document).ready(function() {"use strict";
 				this.expandNormalTrack();
 			}
 		},
-
+		
 		expandNormalTrack : function() {
 			// add times and distances at each position
 			this.xysecs[0] = 0;
-			this.cumulativedistance[0] = 0;
-
+			this.cumulativeDistance[0] = 0;
 			// get course details
 			var course = courses.getFullCourse(this.courseid);
 			// read through list of controls and copy in split times
@@ -917,21 +968,20 @@ jQuery(document).ready(function() {"use strict";
 				x = this.trackx[i];
 				y = this.tracky[i];
 				dist = dist + Math.sqrt(((x - oldx) * (x - oldx)) + ((y - oldy) * (y - oldy)));
-				this.cumulativedistance[i] = parseInt(dist, 10);
+				this.cumulativeDistance[i] = parseInt(dist, 10);
 				oldx = x;
 				oldy = y;
 				// track ends at control
 				if ((nextx == x) && (nexty == y)) {
-					// no split for start
-					this.xysecs[i] = parseInt(this.splits[nextcontrol - 1], 10);
+					this.xysecs[i] = parseInt(this.splits[nextcontrol], 10);
 					// go back and add interpolated time at each point based on cumulative distance
 					// this assumes uniform speed...
 					oldt = this.xysecs[previouscontrolindex];
 					deltat = this.xysecs[i] - oldt;
-					olddist = this.cumulativedistance[previouscontrolindex];
-					deltadist = this.cumulativedistance[i] - olddist;
+					olddist = this.cumulativeDistance[previouscontrolindex];
+					deltadist = this.cumulativeDistance[i] - olddist;
 					for (var j = previouscontrolindex; j <= i; j++) {
-						this.xysecs[j] = oldt + parseInt(((this.cumulativedistance[j] - olddist) * deltat / deltadist), 10);
+						this.xysecs[j] = oldt + parseInt(((this.cumulativeDistance[j] - olddist) * deltat / deltadist), 10);
 					}
 					previouscontrolindex = i;
 					nextcontrol++;
@@ -950,9 +1000,20 @@ jQuery(document).ready(function() {"use strict";
 
 		expandGPSTrack : function() {
 			var t;
+			var dist = 0;
+			var oldx = this.trackx[0];
+			var oldy = this.tracky[0];
+			var x = 0;
+			var y = 0;			
 			// in theory we get one point every three seconds
 			for ( t = 0; t < this.trackx.length; t++) {
 				this.xysecs[t] = 3 * t;
+				x = this.trackx[t];
+				y = this.tracky[t];
+				dist = dist + Math.sqrt(((x - oldx) * (x - oldx)) + ((y - oldy) * (y - oldy)));
+				this.cumulativeDistance[t] = parseInt(dist, 10);
+				oldx = x;
+				oldy = y;
 			}
 			this.hasValidTrack = true;
 		},
