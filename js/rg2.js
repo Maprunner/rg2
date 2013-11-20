@@ -23,7 +23,10 @@ jQuery(document).ready(function() {"use strict";
 		this.latestFinishSecs = 0;
 		this.tailLength = 0;
 		this.useFullTails = false;
+		// control to start from if this option selected
 		this.massStartControl = 0;
+		// run each leg as a mass start if true
+		this.massStartByControl = false;
 	}
 
 
@@ -34,7 +37,11 @@ jQuery(document).ready(function() {"use strict";
 			this.runners.length = 0;
 			clearInterval(this.timer);
 			this.timer = null;
-  		this.updateAnimationDetails();
+			this.updateAnimationDetails();
+			jQuery("#btn-start-stop").button("option", "icons", {
+				primary : "ui-icon-play"
+			});
+			jQuery("#btn-start-stop").button("option", "label", "Run");
 		},
 
 		addRunner : function(runner) {
@@ -78,40 +85,47 @@ jQuery(document).ready(function() {"use strict";
 				return "<p>Select runners on Results tab.</p>";
 			}
 
-      var maxControls = 0;
-      var legSplit = [];
-      var prevControlSecs = 0;		
+			var maxControls = 0;
+			var legSplit = [];
+			var prevControlSecs = 0;
 			// find maximum number of controls to set size of table
-			for (i = 0; i < this.runners.length; i++) {
+			for ( i = 0; i < this.runners.length; i++) {
 				if (this.runners[i].splits.length > maxControls) {
-				   maxControls = this.runners[i].splits.length;
+					maxControls = this.runners[i].splits.length;
 				}
 			}
-			
-			html = "<table><tr><td>Course</td><td>Name</td>";
-			for (i = 0; i < (maxControls - 1); i++) {
-				html += "<td>" + (i + 1) + "</td>";
+			// allow for start and finish
+      maxControls -= 2;
+
+			html = "<table class='splitstable'><tr><th>Course</th><th>Name</th>";
+			for ( i = 1; i <= maxControls; i++) {
+				html += "<th>" + i + "</th>";
 			}
-			html += "<td>F</td></tr>";
-			for (i = 0; i < this.runners.length; i++) {
+			html += "<th>F</th></tr>";
+			for ( i = 0; i < this.runners.length; i++) {
 				run = this.runners[i];
 				prevControlSecs = 0;
-				html += "<tr><td>" + run.coursename + "</td><td>" + run.name + "</td>";
-				for (j = 0; j < run.splits.length; j++) {
+				html += "<tr class='splitsname-row'><td>" + run.coursename + "</td><td>" + run.name + "</td>";
+				for ( j = 1; j < run.splits.length; j++) {
 					html += "<td>" + this.formatSecsAsMMSS(run.splits[j]) + "</td>";
 					legSplit[j] = run.splits[j] - prevControlSecs;
 					prevControlSecs = run.splits[j];
 				}
-			  html += "</tr><tr><td></td><td></td>";
-			  for (j = 0; j < run.splits.length; j++) {
+				html += "</tr><tr class='splitstime-row'><td></td><td></td>";
+				for ( j = 1; j < run.splits.length; j++) {
 					html += "<td>" + this.formatSecsAsMMSS(legSplit[j]) + "</td>";
 				}
+				html += "</tr><tr class='splitsdistance-row'><td></td><td>pixels</td>";
+				for ( j = 1; j < run.splits.length; j++) {
+					html += "<td>" + run.legTrackDistance[j] + "</td>";
+				}
+
 			}
 			html += "</tr></table>";
 			return html;
 		},
 
-    formatSecsAsMMSS: function(secs) {
+		formatSecsAsMMSS : function(secs) {
 			var formattedtime;
 			var minutes = Math.floor(secs / 60);
 			formattedtime = minutes;
@@ -121,10 +135,10 @@ jQuery(document).ready(function() {"use strict";
 			} else {
 				formattedtime += ":" + seconds;
 			}
-			return formattedtime;   
-    	
-    },
-    
+			return formattedtime;
+
+		},
+
 		removeRunner : function(runnerid) {
 			for (var i = 0; i < this.runners.length; i++) {
 				if (this.runners[i].runnerid == runnerid) {
@@ -187,32 +201,46 @@ jQuery(document).ready(function() {"use strict";
 			redraw(true);
 		},
 
+		setFullTails : function(fullTails) {
+			if (fullTails) {
+				this.useFullTails = true;
+			} else {
+				this.useFullTails = false;
+			}
+			redraw(false);
+		},
 
-    setFullTails: function(fullTails) {
-      if (fullTails) {
-      	this.useFullTails = true;
-      }	else {
-      	this.useFullTails = false;      	
-      }
-      redraw(false);
-    },
+		setTailLength : function(minutes) {
+			this.tailLength = 60 * minutes;
+			redraw(false);
+		},
 
-    setTailLength: function(minutes) {
-      this.tailLength = 60 * minutes;	
-      redraw(false);
-    },
-    
-    setStartControl: function (control) {
-    	this.massStartControl = parseInt(control, 10);
-			this.resetAnimationTime(0);    	
-    },
-    
+		setStartControl : function(control) {
+			this.massStartControl = parseInt(control, 10);
+			if (this.massStartControl === MASS_START_BY_CONTROL) {
+				this.massStartControl = 0;
+				this.massStartByControl = true;
+				// get split time at control 1
+				for (var i = 0; i < this.runners.length; i++) {
+					this.runners[i].nextStopTime = this.runners[i].splits[1];
+				}
+			} else {
+				this.massStartByControl = false;
+				for (var i = 0; i < this.runners.length; i++) {
+					this.runners[i].nextStopTime = VERY_HIGH_TIME_IN_SECS;
+				}
+			}
+			this.resetAnimationTime(0);
+		},
+
 		setReplayType : function() {
 			// change between real time and mass start
 			// only btn-mass-start and btn-real-time in the group
 			if (jQuery("#btn-replay-type :radio:checked").attr('id') === "btn-mass-start") {
 				this.realTime = false;
-				jQuery("#rg2-replay-start-control").show();
+				if (courses.getHighestControlNumber() > 0) {
+					jQuery("#rg2-replay-start-control").show();
+				}
 			} else {
 				jQuery("#rg2-replay-start-control").hide();
 				this.realTime = true;
@@ -249,7 +277,7 @@ jQuery(document).ready(function() {"use strict";
 		},
 
 		runAnimation : function(fromTimer) {
-			
+
 			// only increment time if called from the timer and we haven't got to the end already
 			if (this.realTime) {
 				if (this.animationSecs < this.latestFinishSecs) {
@@ -277,21 +305,20 @@ jQuery(document).ready(function() {"use strict";
 			if (this.useFullTails) {
 				tailStartTimeSecs = this.startSecs + 1;
 			} else {
-			  tailStartTimeSecs = Math.max(this.animationSecs - this.tailLength, this.startSecs + 1);	
+				tailStartTimeSecs = Math.max(this.animationSecs - this.tailLength, this.startSecs + 1);
 			}
-			
+
 			for ( i = 0; i < this.runners.length; i++) {
 				runner = this.runners[i];
-				// need to draw full course even though runner has finished so that it stays on display
 				if (this.realTime) {
 					timeOffset = runner.starttime;
 				} else {
 					if ((this.massStartControl === 0) || (runner.splits.length < this.massStartControl)) {
-					  // no offset since we are starting from the start
-					  timeOffset = 0;
+						// no offset since we are starting from the start
+						timeOffset = 0;
 					} else {
 						// offset needs to move forward (hence negative) to time at control
-					  timeOffset = -1 * runner.splits[this.massStartControl - 1];						
+						timeOffset = -1 * runner.splits[this.massStartControl];
 					}
 				}
 				ctx.strokeStyle = runner.colour;
@@ -301,15 +328,50 @@ jQuery(document).ready(function() {"use strict";
 				// t runs as real time seconds or 0-based seconds depending on this.realTime
 				//runner.x[] is always indexed in 0-based time so needs to be adjusted for starttime offset
 				for ( t = tailStartTimeSecs; t <= this.animationSecs; t++) {
-					if (t > timeOffset) {
+					if ((t > timeOffset) && ((t - timeOffset) < runner.nextStopTime)) {
 						ctx.lineTo(runner.x[t - timeOffset], runner.y[t - timeOffset]);
 					}
 				}
 				ctx.stroke();
 				ctx.fillStyle = runner.colour;
-				ctx.beginPath();				
-				ctx.arc(runner.x[t - timeOffset] + 3, runner.y[t - timeOffset], 6, 0, 2 * Math.PI, false);
+				ctx.beginPath();
+				if ((t - timeOffset) < runner.nextStopTime) {
+					t = t - timeOffset;
+				} else {
+					t = runner.nextStopTime;
+				}
+				ctx.arc(runner.x[t] + 3, runner.y[t], 6, 0, 2 * Math.PI, false);
 				ctx.fill();
+			}
+			if (this.massStartByControl) {
+				this.checkForStopControl(this.animationSecs - timeOffset);
+			}
+		},
+
+		// see if all runners have reached stop control and reset if they have
+		checkForStopControl : function(currentTime) {
+			var allAtControl = true;
+			var i;
+			// work out of everybody has got to the next control
+			for ( i = 0; i < this.runners.length; i++) {
+				if (this.runners[i].nextStopTime >= currentTime) {
+					allAtControl = false;
+					break;
+				}
+			}
+			if (allAtControl) {
+				//move on to next control
+				this.massStartControl++;
+				// find time at next control
+				for (var i = 0; i < this.runners.length; i++) {
+					if (this.massStartControl < (this.runners[i].splits.length)) {
+						// splits includes a start time so index to control is + 1 
+						this.runners[i].nextStopTime = this.runners[i].splits[this.massStartControl + 1];
+					} else {
+						this.runners[i].nextStopTime = VERY_HIGH_TIME_IN_SECS;
+					}
+				}
+				this.resetAnimationTime(0);
 			}
 		},
 
@@ -367,14 +429,19 @@ jQuery(document).ready(function() {"use strict";
 		// careful: we need the index into results, not the resultid from the text file
 		this.runnerid = resultid;
 		this.starttime = res.starttime;
-		this.splits = res.splits;
+    this.splits = res.splits;
 		this.colour = animation.colours.getNextColour();
 		// get course details
 		var course = courses.getFullCourse(res.courseid);
 		this.coursename = course.name;
+		// used to stop runners when doing replay by control
+		this.nextStopTime = VERY_HIGH_TIME_IN_SECS;
 		this.x = [];
 		this.y = [];
-		// x,y are indexed by time in seconds
+		// x,y are indexed by time in seconds	
+		this.legTrackDistance = [];
+		this.cumulativeTrackDistance = [];
+		var cumulativeDistance = [];
 		this.x[0] = course.x[0];
 		this.y[0] = course.y[0];
 		var timeatprevcontrol = 0;
@@ -386,35 +453,50 @@ jQuery(document).ready(function() {"use strict";
 		var toy;
 		var fromx = course.x[0];
 		var fromy = course.y[0];
+		var fromdist;
 		var diffx;
 		var diffy;
 		var difft;
+		var diffdist;
 		var control;
 		var t;
 		var xy;
-
-		if (res.validTrack) {
+		var dist;
+		var oldx = res.trackx[0];
+		var oldy = res.tracky[0];
+		var x = 0;
+		var y = 0;			
+		
+		if (res.hasValidTrack) {
 			// x,y are indexed by time in seconds
 			this.x[0] = res.trackx[0];
 			this.y[0] = res.tracky[0];
+			cumulativeDistance[0] = 0;
 			fromx = res.trackx[0];
 			fromy = res.tracky[0];
+			fromdist = 0;
+			dist = 0;
 			// for each point on track
 			for ( xy = 1; xy < res.xysecs.length; xy++) {
 				tox = res.trackx[xy];
 				toy = res.tracky[xy];
 				diffx = tox - fromx;
 				diffy = toy - fromy;
+				dist = dist + Math.sqrt(((tox - fromx) * (tox - fromx)) + ((toy - fromy) * (toy - fromy)));
+				diffdist = dist - fromdist;
 				timeatxy = res.xysecs[xy];
 				difft = timeatxy - timeatprevxy;
 				for ( t = timeatprevxy + 1; t < timeatxy; t++) {
 					this.x[t] = parseInt(fromx + ((t - timeatprevxy) * diffx / difft), 10);
 					this.y[t] = parseInt(fromy + ((t - timeatprevxy) * diffy / difft), 10);
+					cumulativeDistance[t] = parseInt(fromdist + ((t - timeatprevxy) * diffdist / difft), 10);
 				}
 				this.x[timeatxy] = tox;
 				this.y[timeatxy] = toy;
+				cumulativeDistance[timeatxy] = dist;
 				fromx = tox;
 				fromy = toy;
+				fromdist = dist;
 				timeatprevxy = timeatxy;
 			}
 		} else {
@@ -422,34 +504,53 @@ jQuery(document).ready(function() {"use strict";
 			// for each control (0 was Start)
 			this.x[0] = course.x[0];
 			this.y[0] = course.y[0];
+			cumulativeDistance[0] = 0;
 			fromx = course.x[0];
 			fromy = course.y[0];
+			fromdist = 0;
+			dist = 0;
 			for ( control = 1; control < course.codes.length; control++) {
 				tox = course.x[control];
 				toy = course.y[control];
 				diffx = tox - fromx;
 				diffy = toy - fromy;
-				// split times don't have a time for the start
-				timeatcontrol = parseInt(res.splits[control - 1], 10);
+				dist = dist + Math.sqrt(((tox - fromx) * (tox - fromx)) + ((toy - fromy) * (toy - fromy)));
+				diffdist = dist - fromdist;
+				timeatcontrol = res.splits[control];
 				difft = timeatcontrol - timeatprevcontrol;
 				for ( t = timeatprevcontrol + 1; t < timeatcontrol; t++) {
 					this.x[t] = parseInt(fromx + ((t - timeatprevcontrol) * diffx / difft), 10);
 					this.y[t] = parseInt(fromy + ((t - timeatprevcontrol) * diffy / difft), 10);
+					cumulativeDistance[t] = parseInt(fromdist + ((t - timeatprevxy) * diffdist / difft), 10);
 				}
 				this.x[timeatcontrol] = tox;
 				this.y[timeatcontrol] = toy;
+				cumulativeDistance[timeatcontrol] = dist;
 				fromx = tox;
 				fromy = toy;
+				fromdist = dist;
 				timeatprevcontrol = timeatcontrol;
 			}
 		}
+
+		// add track distances for each leg
+		this.legTrackDistance[0] = 0;
+		this.cumulativeTrackDistance[0] = 0;
+		
+		if (course.codes != undefined) {
+  		for ( control = 1; control < course.codes.length; control++) {
+	  		this.cumulativeTrackDistance[control] = parseInt(cumulativeDistance[res.splits[control]], 10);
+		  	this.legTrackDistance[control] = this.cumulativeTrackDistance[control] - this.cumulativeTrackDistance[control - 1];
+		  }
+		}		
+
 		res = 0;
 		course = 0;
 	}
 
 	function Events() {
 		this.events = [];
-	  this.activeEventID = null;
+		this.activeEventID = null;
 	}
 
 
@@ -459,38 +560,46 @@ jQuery(document).ready(function() {"use strict";
 		addEvent : function(eventObject) {
 			this.events.push(eventObject);
 		},
-				
-		getKartatEventID: function () {
+
+		getKartatEventID : function() {
 			return this.events[this.activeEventID].kartatid;
 		},
 
-		getActiveMapID: function () {
+		getActiveMapID : function() {
 			return this.events[this.activeEventID].mapid;
 		},
 
-		getActiveEventDate: function () {
-			return this.events[this.activeEventID].date;
+		getActiveEventDate : function() {
+			if (this.activeEventID !== null) {
+			  return this.events[this.activeEventID].date;
+			} else {
+				return "";
+			}
 		},
-		
-		getActiveEventName: function () {
-			return this.events[this.activeEventID].name;
+
+		getActiveEventName : function() {
+			if (this.activeEventID !== null) {
+			  return this.events[this.activeEventID].name;
+			} else {
+				return "Routegadget 2.0";
+			}
 		},
-						
-		setActiveEventID: function (id) {
+
+		setActiveEventID : function(id) {
 			this.activeEventID = id;
-		},	
-		
-		formatEventsAsMenu: function () {
-		  var html = '';
-		  for (var i = this.events.length - 1; i >= 0; i--) {
-			  html += "<li title='" + this.events[i].type + " event on " + this.events[i].date + "' id=" + i + "><a href='#" + i;
-			  html += "'><span class='ui-icon ui-icon-calendar'></span>" + this.events[i].name + "</a></li>";
-		  }
-		  return html;
-	  },
+		},
+
+		formatEventsAsMenu : function() {
+			var html = '';
+			for (var i = this.events.length - 1; i >= 0; i--) {
+				html += "<li title='" + this.events[i].type + " event on " + this.events[i].date + "' id=" + i + "><a href='#" + i;
+				html += "'><span class='ui-icon ui-icon-calendar'></span>" + this.events[i].name + "</a></li>";
+			}
+			return html;
+		},
 	}
 
-  function Event(data) {
+	function Event(data) {
 		this.kartatid = data.id;
 		this.mapid = data.mapid;
 		this.name = data.name;
@@ -520,11 +629,12 @@ jQuery(document).ready(function() {"use strict";
 		this.courses = 0;
 
 	}
-	
+
+
 	Event.prototype = {
 		Constructor : Event,
- }
- 
+	}
+
 	function Colours() {
 		// used to generate track colours: add extra colours as necessary
 		this.colours = ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#ff00ff", "#00ffff"];
@@ -569,16 +679,16 @@ jQuery(document).ready(function() {"use strict";
 			for (var i = 0; i < this.results.length; i++) {
 				this.results[i].drawTrack();
 			}
-		  jQuery("#rg2-track-names").empty();
-		  var html = this.getDisplayedTrackNames();
-		  if (html !== "") {
-		    jQuery("#rg2-track-names").empty();
-		  	jQuery("#rg2-track-names").append(html);
-		  	jQuery("#rg2-track-names").show();
-		  } else {
-		  	jQuery("#rg2-track-names").hide();
-		  }
-	  },
+			jQuery("#rg2-track-names").empty();
+			var html = this.getDisplayedTrackNames();
+			if (html !== "") {
+				jQuery("#rg2-track-names").empty();
+				jQuery("#rg2-track-names").append(html);
+				jQuery("#rg2-track-names").show();
+			} else {
+				jQuery("#rg2-track-names").hide();
+			}
+		},
 
 		putOneTrackOnDisplay : function(resultid) {
 			this.results[resultid].putTrackOnDisplay();
@@ -678,15 +788,28 @@ jQuery(document).ready(function() {"use strict";
 		getRunnerName : function(runner) {
 			return this.results[runner].name;
 		},
-
+		
+		sortByCourseIDThenResultID: function (a, b) {
+			if (a.courseid > b.courseid) {
+				return 1;
+			} else if (b.courseid > a.courseid) {
+				return -1;
+			} else {
+			  return a.resultid - b.resultid;
+			}
+   },
+    
 		formatResultListAsAccordion : function() {
+			// puts all GPS results at bottom of relevant course results
+      this.results.sort(this.sortByCourseIDThenResultID);
+		
 			var html = "";
 			var temp;
 			var firstCourse = true;
-			var oldCourseName = "";
+			var oldCourseID = 0;
 			for (var i = 0; i < this.results.length; i++) {
 				temp = this.results[i];
-				if (temp.coursename != oldCourseName) {
+				if (temp.courseid != oldCourseID) {
 					// found a new course so add header
 					if (firstCourse) {
 						firstCourse = false;
@@ -696,14 +819,14 @@ jQuery(document).ready(function() {"use strict";
 					html += "<h3>" + temp.coursename + "</h3><div>";
 					html += "<input class='showcourse' id=" + temp.courseid + " type=checkbox name=course> Show course</input>";
 					html += "<table class='resulttable'><tr><th>Name</th><th>Time</th><th>Track</th><th>Replay</th></tr>";
-					oldCourseName = temp.coursename;
+					oldCourseID = temp.courseid;
 				}
 				if (temp.comments !== "") {
 					html += "<tr><td><a href='#' title='" + temp.comments + "'>" + temp.name + "</a></td><td>" + temp.time + "</td>";
-      } else {
-					html += "<tr><td>" + temp.name + "</td><td>" + temp.time + "</td>";      	
-      }
-				if (temp.hasTrack) {
+				} else {
+					html += "<tr><td>" + temp.name + "</td><td>" + temp.time + "</td>";
+				}
+				if (temp.hasValidTrack) {
 					html += "<td><input class='showtrack' id=" + i + " type=checkbox name=result></input></td>";
 				} else {
 					html += "<td></td>";
@@ -732,19 +855,26 @@ jQuery(document).ready(function() {"use strict";
 		this.name = data.name;
 		this.starttime = parseInt(data.starttime, 10);
 		this.time = data.time;
-		this.comments = data.comments;
+    // escape single quotes so that tooltips show correctly
+	  this.comments = data.comments.replace("'", "&apos;");
 		this.coursename = data.coursename;
 		if (this.coursename === "") {
-	    this.coursename = "GPS tracks";
+			this.coursename = data.courseid;
 		}
 		this.courseid = parseInt(data.courseid, 10);
 		this.splits = data.splits.split(";");
+		// force to integers to avoid doing it every time we read it
+		for (var i = 0; i < this.splits.length; i++) {
+			this.splits[i] = parseInt(this.splits[i], 10);
+		}
+		// insert a 0 split at the start to make life much easier elsewhere
+		this.splits.splice(0, 0, 0);
 		// calculated cumulative distance in pixels
-		this.cumulativedistance = [];
+		this.cumulativeDistance = [];
 		// set true if track includes all expected controls in correct order
-		this.validTrack = false;
+		// or is a GPS track
+		this.hasValidTrack = false;
 		this.displayTrack = false;
-		this.hasTrack = false;
 		this.trackColour = 0;
 		// raw track data
 		this.trackx = [];
@@ -760,8 +890,6 @@ jQuery(document).ready(function() {"use strict";
 		if (data.gpscoords.length > 0) {
 			this.addTrack(data.gpscoords);
 			courses.incrementTracksCount(this.courseid);
-			// check this later
-			this.validTrack = true;
 		}
 
 	}
@@ -771,14 +899,14 @@ jQuery(document).ready(function() {"use strict";
 		Constructor : Result,
 
 		putTrackOnDisplay : function() {
-			if (this.hasTrack) {
+			if (this.hasValidTrack) {
 				this.displayTrack = true;
 				this.trackColour = results.colours.getNextColour();
 			}
 		},
 
 		removeTrackFromDisplay : function() {
-			if (this.hasTrack) {
+			if (this.hasValidTrack) {
 				this.displayTrack = false;
 			}
 		},
@@ -818,16 +946,12 @@ jQuery(document).ready(function() {"use strict";
 			} else {
 				this.expandNormalTrack();
 			}
-			if (this.validTrack) {
-				this.hasTrack = true;
-			}
 		},
-
+		
 		expandNormalTrack : function() {
 			// add times and distances at each position
 			this.xysecs[0] = 0;
-			this.cumulativedistance[0] = 0;
-
+			this.cumulativeDistance[0] = 0;
 			// get course details
 			var course = courses.getFullCourse(this.courseid);
 			// read through list of controls and copy in split times
@@ -852,27 +976,26 @@ jQuery(document).ready(function() {"use strict";
 				x = this.trackx[i];
 				y = this.tracky[i];
 				dist = dist + Math.sqrt(((x - oldx) * (x - oldx)) + ((y - oldy) * (y - oldy)));
-				this.cumulativedistance[i] = parseInt(dist, 10);
+				this.cumulativeDistance[i] = parseInt(dist, 10);
 				oldx = x;
 				oldy = y;
 				// track ends at control
 				if ((nextx == x) && (nexty == y)) {
-					// no split for start
-					this.xysecs[i] = parseInt(this.splits[nextcontrol - 1], 10);
+					this.xysecs[i] = parseInt(this.splits[nextcontrol], 10);
 					// go back and add interpolated time at each point based on cumulative distance
 					// this assumes uniform speed...
 					oldt = this.xysecs[previouscontrolindex];
 					deltat = this.xysecs[i] - oldt;
-					olddist = this.cumulativedistance[previouscontrolindex];
-					deltadist = this.cumulativedistance[i] - olddist;
+					olddist = this.cumulativeDistance[previouscontrolindex];
+					deltadist = this.cumulativeDistance[i] - olddist;
 					for (var j = previouscontrolindex; j <= i; j++) {
-						this.xysecs[j] = oldt + parseInt(((this.cumulativedistance[j] - olddist) * deltat / deltadist), 10);
+						this.xysecs[j] = oldt + parseInt(((this.cumulativeDistance[j] - olddist) * deltat / deltadist), 10);
 					}
 					previouscontrolindex = i;
 					nextcontrol++;
 					if (nextcontrol === course.x.length) {
 						// we have found all the controls
-						this.validTrack = true;
+						this.hasValidTrack = true;
 						break;
 					} else {
 						nextx = course.x[nextcontrol];
@@ -885,11 +1008,22 @@ jQuery(document).ready(function() {"use strict";
 
 		expandGPSTrack : function() {
 			var t;
+			var dist = 0;
+			var oldx = this.trackx[0];
+			var oldy = this.tracky[0];
+			var x = 0;
+			var y = 0;			
 			// in theory we get one point every three seconds
 			for ( t = 0; t < this.trackx.length; t++) {
 				this.xysecs[t] = 3 * t;
+				x = this.trackx[t];
+				y = this.tracky[t];
+				dist = dist + Math.sqrt(((x - oldx) * (x - oldx)) + ((y - oldy) * (y - oldy)));
+				this.cumulativeDistance[t] = parseInt(dist, 10);
+				oldx = x;
+				oldy = y;
 			}
-
+			this.hasValidTrack = true;
 		},
 
 		getCourseName : function() {
@@ -954,15 +1088,11 @@ jQuery(document).ready(function() {"use strict";
 
 		toggleControlDisplay : function() {
 			if (this.displayControls) {
-				jQuery("#btn-toggle-controls").button("option", "icons", {
-					primary : "ui-icon-radio-off"
-				});
-				jQuery("#btn-toggle-controls").button("option", "label", "Show controls");
+				jQuery("#btn-toggle-controls").removeClass("fa-ban").addClass("fa-circle-o");
+				jQuery("#btn-toggle-controls").prop("title", "Show controls");
 			} else {
-				jQuery("#btn-toggle-controls").button("option", "icons", {
-					primary : "ui-icon-cancel"
-				});
-				jQuery("#btn-toggle-controls").button("option", "label", "Hide controls");
+				jQuery("#btn-toggle-controls").removeClass("fa-circle-o").addClass("fa-ban");
+				jQuery("#btn-toggle-controls").prop("title", "Hide controls");
 			}
 			this.displayControls = !this.displayControls;
 		}
@@ -996,6 +1126,10 @@ jQuery(document).ready(function() {"use strict";
 			return this.courses[courseid].name;
 		},
 
+		getHighestControlNumber : function() {
+			return this.highestControlNumber;
+		},
+
 		getFullCourse : function(courseid) {
 			return courses.courses[courseid];
 		},
@@ -1016,28 +1150,36 @@ jQuery(document).ready(function() {"use strict";
 		addCourse : function(courseObject) {
 			this.courses[courseObject.courseid] = courseObject;
 			this.numberofcourses++;
-			// the codes includes Start and Finish: we don't need F so subtract 1 to get controls
-			if (this.courses[courseObject.courseid].codes.length > this.highestControlNumber) {
-				this.highestControlNumber = this.courses[courseObject.courseid].codes.length - 1;
-				this.updateControlDropdown();
+			// allow for courses with no defined controls
+			// careful here: != catches null and undefined, but !== just catches undefined
+			if (this.courses[courseObject.courseid].codes != undefined) {
+				if (this.courses[courseObject.courseid].codes.length > this.highestControlNumber) {
+					// the codes includes Start and Finish: we don't need F so subtract 1 to get controls
+					this.highestControlNumber = this.courses[courseObject.courseid].codes.length - 1;
+					this.updateControlDropdown();
+				}
 			}
 		},
 
-		updateControlDropdown: function () {
+		updateControlDropdown : function() {
 			jQuery("#rg2-control-select").empty();
 			var dropdown = document.getElementById("rg2-control-select");
-      for (var i = 0; i < this.highestControlNumber; i++) {
-        var opt = document.createElement("option"); 
-        opt.value = i;
-        if (i === 0) {
-        	opt.text = "S";
-        } else {
-        	opt.text = i;
-        }
-        dropdown.options.add(opt);
-      }
+			for (var i = 0; i < this.highestControlNumber; i++) {
+				var opt = document.createElement("option");
+				opt.value = i;
+				if (i === 0) {
+					opt.text = "S";
+				} else {
+					opt.text = i;
+				}
+				dropdown.options.add(opt);
+			}
+			var opt = document.createElement("option");
+			opt.value = MASS_START_BY_CONTROL;
+			opt.text = "By control";
+			dropdown.options.add(opt);
 		},
-		
+
 		deleteAllCourses : function() {
 			this.courses.length = 0;
 			this.numberofcourses = 0;
@@ -1100,12 +1242,12 @@ jQuery(document).ready(function() {"use strict";
 			var y;
 			// for all courses
 			for (var i = 0; i < this.courses.length; i++) {
-				if (this.courses[i] !== undefined) {
+				if (this.courses[i] != undefined) {
 					codes = this.courses[i].codes;
 					x = this.courses[i].x;
 					y = this.courses[i].y;
 					// for all controls on course
-					if (codes !== undefined) {
+					if (codes != undefined) {
 						for (var j = 0; j < codes.length; j++) {
 							controls.addControl(codes[j], x[j], y[j]);
 						}
@@ -1124,7 +1266,7 @@ jQuery(document).ready(function() {"use strict";
 					if (this.courses[i].trackcount > 0) {
 						html += "<td><input id=" + i + " class='tracklist' type=checkbox name=track></input></td>";
 					} else {
-						html += "<td></td>";						
+						html += "<td></td>";
 					}
 					html += "</tr>";
 				}
@@ -1133,9 +1275,9 @@ jQuery(document).ready(function() {"use strict";
 			html += "<tr><td>All</td>";
 			html += "<td><input class='allcourses' id=" + i + " type=checkbox name=course></input></td>";
 			if (this.totaltracks > 0) {
-			  html += "<td>" + this.totaltracks + "</td><td><input id=" + i + " class='alltracks' type=checkbox name=track></input></td>";
+				html += "<td>" + this.totaltracks + "</td><td><input id=" + i + " class='alltracks' type=checkbox name=track></input></td>";
 			} else {
-			  html += "<td>" + this.totaltracks + "</td><td></td>";				
+				html += "<td>" + this.totaltracks + "</td><td></td>";
 			}
 			html += "</tr></table>";
 			return html;
@@ -1246,6 +1388,13 @@ jQuery(document).ready(function() {"use strict";
 	var TAB_COURSES = 1;
 	var TAB_RESULTS = 2;
 	var TAB_REPLAY = 3;
+	// dropdown selection value
+	var MASS_START_BY_CONTROL = 99999;
+	var VERY_HIGH_TIME_IN_SECS = 99999;
+	// screen sizes for different layouts
+	var BIG_SCREEN_BREAK_POINT = 800;
+	var SMALL_SCREEN_BREAK_POINT = 500;
+	
 	var infoPanelMaximised;
 	var infoHideIconSrc;
 	var infoShowIconSrc;
@@ -1256,31 +1405,33 @@ jQuery(document).ready(function() {"use strict";
 
 		jQuery("#rg2-about-dialog").hide();
 		jQuery("#rg2-splits-display").hide();
-  	jQuery("#rg2-track-names").hide();
-  	
+		jQuery("#rg2-track-names").hide();
+
 		trackTransforms(ctx);
 		resizeCanvas();
-		
-		jQuery(document).tooltip();
-		    
-		jQuery("#rg2-about").click(function() {
+
+    // stick with native tooltops for now
+    // since this caused trouble when changing titles
+		//jQuery(document).tooltip();
+
+		jQuery("#btn-about").click(function() {
 			displayAboutDialog();
 		});
 
 		// initially loaded file has a close icon
 		infoHideIconSrc = jQuery("#rg2-resize-info-icon").attr("src");
 		infoShowIconSrc = infoHideIconSrc.replace("hide-info", "show-info");
-						
+
 		jQuery("#rg2-resize-info").click(function() {
 			resizeInfoDisplay();
 		});
 
 		jQuery("#rg2-info-panel").tabs({
-	    active : TAB_EVENTS,
+			active : TAB_EVENTS,
 			heightStyle : "content"
 		});
-    infoPanelMaximised = true;
-				
+		infoPanelMaximised = true;
+
 		// disable courses, results and replay until we have loaded some
 		jQuery("#rg2-info-panel").tabs({
 			disabled : [TAB_COURSES, TAB_RESULTS, TAB_REPLAY]
@@ -1306,32 +1457,20 @@ jQuery(document).ready(function() {"use strict";
 		jQuery("#btn-replay-type").buttonset().click(function(event) {
 			animation.setReplayType();
 		});
-		
+
 		jQuery("#rg2-control-select").click(function(event) {
 			animation.setStartControl(jQuery("#rg2-control-select").val());
 		});
 
-		jQuery("#btn-zoom-in").button({
-			icons : {
-				primary : 'ui-icon-zoomin'
-			}
-		}).click(function() {
+		jQuery("#btn-zoom-in").click(function() {
 			zoom(1);
 		});
 
-		jQuery("#btn-reset").button({
-			icons : {
-				primary : 'ui-icon-arrowrefresh-1-s'
-			}
-		}).click(function() {
+		jQuery("#btn-reset").click(function() {
 			resetMapState();
 		});
 
-		jQuery("#btn-zoom-out").button({
-			icons : {
-				primary : 'ui-icon-zoomout'
-			}
-		}).click(function() {
+		jQuery("#btn-zoom-out").click(function() {
 			zoom(-1);
 		});
 
@@ -1359,43 +1498,34 @@ jQuery(document).ready(function() {"use strict";
 			animation.goSlower();
 		});
 
-		jQuery("#btn-show-splits").button({
-			icons : {
-				primary : 'ui-icon-clock'
-			}
-		}).click(function() {
-		  jQuery("#rg2-splits-table").empty();
-		  jQuery("#rg2-splits-table").append(animation.getSplitsTable());
-		  jQuery("#rg2-splits-table").dialog({
-			  width: 'auto',
-			  buttons : {
-			   Ok : function() {
-			    jQuery(this).dialog('close');
-			   }
-			  }
-		  })
+		jQuery("#btn-show-splits").click(function() {
+			jQuery("#rg2-splits-table").empty();
+			jQuery("#rg2-splits-table").append(animation.getSplitsTable());
+			jQuery("#rg2-splits-table").dialog({
+				width : 'auto',
+				buttons : {
+					Ok : function() {
+						jQuery(this).dialog('close');
+					}
+				}
+			})
 		});
 		// enable once we have courses loaded
-		jQuery("#btn-show-splits").button("disable");
+		jQuery("#btn-show-splits").hide();
 
-
-  	jQuery("#btn-toggle-controls").button({
-			icons : {
-				primary : 'ui-icon-radio-off'
-			}
-		}).click(function() {
+		jQuery("#btn-toggle-controls").click(function() {
 			controls.toggleControlDisplay();
 			redraw(false);
 		});
 		// enable once we have courses loaded
-		jQuery("#btn-toggle-controls").button("disable");
-		
-		// set default to 0 secs = no tails 
+		jQuery("#btn-toggle-controls").hide();
+
+		// set default to 0 secs = no tails
 		jQuery("#spn-tail-length").spinner({
-			max: 600,
-			min:0,
-			spin: function(event, ui) {
-			  animation.setTailLength(ui.value);
+			max : 600,
+			min : 0,
+			spin : function(event, ui) {
+				animation.setTailLength(ui.value);
 			}
 		}).val(0);
 
@@ -1403,10 +1533,10 @@ jQuery(document).ready(function() {"use strict";
 		jQuery("#btn-full-tails").click(function(event) {
 			if (event.target.checked) {
 				animation.setFullTails(true);
-		    jQuery("#spn-tail-length").spinner("disable");
+				jQuery("#spn-tail-length").spinner("disable");
 			} else {
 				animation.setFullTails(false);
-		    jQuery("#spn-tail-length").spinner("enable");
+				jQuery("#spn-tail-length").spinner("enable");
 
 			}
 		});
@@ -1426,24 +1556,32 @@ jQuery(document).ready(function() {"use strict";
 			var err = textStatus + ", " + error;
 			console.log("Events request failed: " + err);
 		});
-		
+
 		// force redraw once map has loaded
 		map.addEventListener("load", function() {
 			resetMapState();
 		}, false);
-		
+
 	}
 
 	function resetMapState() {
 		// place map in centre of canvas and scales it down to fit
-		var heightscale =  canvas.height / map.height;
+		var heightscale = canvas.height / map.height;
 		var mapscale;
+		// don't stretch map: just shrink to fit
 		if (heightscale < 1) {
 			mapscale = heightscale;
 		} else {
 			mapscale = 1;
 		}
-		ctx.setTransform(mapscale, 0, 0, mapscale, 350, 0);
+		// move map into view on small screens
+		// avoid annoying jumps on larger screens
+		if ((infoPanelMaximised) || (window.innerWidth >= BIG_SCREEN_BREAK_POINT)) {
+			//350 is width of info panel
+			ctx.setTransform(mapscale, 0, 0, mapscale, 350, 0);
+		} else {
+			ctx.setTransform(mapscale, 0, 0, mapscale, 0, 0);
+		}
 		ctx.save();
 		redraw(false);
 	}
@@ -1454,12 +1592,24 @@ jQuery(document).ready(function() {"use strict";
 		jQuery("#rg2-container").css("height", winheight - 70);
 		canvas.width = winwidth - 10;
 		canvas.height = winheight - 70;
+		// set title bar
+		if (window.innerWidth >= BIG_SCREEN_BREAK_POINT) {
+			jQuery("#rg2-event-title").text(events.getActiveEventName() + " " + events.getActiveEventDate());
+			jQuery("#rg2-event-title").show();
+		} else if (window.innerWidth > SMALL_SCREEN_BREAK_POINT) {
+			jQuery("#rg2-event-title").text(events.getActiveEventName());				
+			jQuery("#rg2-event-title").show();
+		} else {
+			jQuery("#rg2-event-title").hide();
+		}
+
+
 		redraw(false);
 	}
 
 	/* called whenever anything changes enough to need screen redraw
-   * @param fromTimer {Boolean} true if called from timer: used to determine if animation time should be incremented
-	*/
+	 * @param fromTimer {Boolean} true if called from timer: used to determine if animation time should be incremented
+	 */
 	function redraw(fromTimer) {
 		// Clear the entire canvas
 		// first save current transformed state
@@ -1507,20 +1657,23 @@ jQuery(document).ready(function() {"use strict";
 		})
 	}
 
-  function resizeInfoDisplay() {
-    if (infoPanelMaximised) {
-    	infoPanelMaximised = false;
-		  jQuery("#rg2-resize-info-icon").attr("src", infoShowIconSrc);
-		  jQuery("#rg2-info-panel").hide();
-    } else {
-    	infoPanelMaximised = true;
-		  jQuery("#rg2-resize-info-icon").attr("src", infoHideIconSrc);
-		  jQuery("#rg2-info-panel").show();
-    }	
-    
-    
-  }
-  
+	function resizeInfoDisplay() {
+		if (infoPanelMaximised) {
+			infoPanelMaximised = false;
+			jQuery("#rg2-resize-info-icon").attr("src", infoShowIconSrc);
+			jQuery("#rg2-resize-info").prop("title", "Show info panel");
+			jQuery("#rg2-info-panel").hide();
+		} else {
+			infoPanelMaximised = true;
+			jQuery("#rg2-resize-info-icon").attr("src", infoHideIconSrc);
+			jQuery("#rg2-resize-info").prop("title", "Hide info panel");
+			jQuery("#rg2-info-panel").show();
+		}
+		// move map around if necesssary
+		resetMapState();
+
+	}
+
 	var lastX = canvas.width / 2, lastY = canvas.height / 2;
 	var dragStart;
 	var dragged;
@@ -1571,8 +1724,6 @@ jQuery(document).ready(function() {"use strict";
 	canvas.addEventListener('DOMMouseScroll', handleScroll, false);
 	canvas.addEventListener('mousewheel', handleScroll, false);
 
-	
-
 	function createEventMenu() {
 		//loads menu from populated events array
 		var html = events.formatEventsAsMenu();
@@ -1594,8 +1745,15 @@ jQuery(document).ready(function() {"use strict";
 				map.src = maps_url + "/" + events.getActiveMapID() + '.jpg';
 
 				// set title bar
-				jQuery("#rg2-event-title").text(events.getActiveEventName() + ": " + events.getActiveEventDate());
-
+				if (window.innerWidth >= BIG_SCREEN_BREAK_POINT) {
+					jQuery("#rg2-event-title").text(events.getActiveEventName() +" " + events.getActiveEventDate());
+					jQuery("#rg2-event-title").show();
+				} else if (window.innerWidth > SMALL_SCREEN_BREAK_POINT) {
+					jQuery("#rg2-event-title").text(events.getActiveEventName());				
+					jQuery("#rg2-event-title").show();
+				} else {
+					jQuery("#rg2-event-title").hide();
+				}
 				// get courses for event
 
 				jQuery.getJSON(json_url, {
@@ -1607,7 +1765,7 @@ jQuery(document).ready(function() {"use strict";
 						courses.addCourse(new Course(this));
 					});
 					courses.generateControlList();
-       		jQuery("#btn-toggle-controls").button("enable");
+					jQuery("#btn-toggle-controls").show();
 					getResults();
 				}).fail(function(jqxhr, textStatus, error) {
 					jQuery('body').css('cursor', 'auto');
@@ -1648,7 +1806,7 @@ jQuery(document).ready(function() {"use strict";
 			results.addTracks(json.data);
 			createCourseMenu();
 			createResultMenu();
-			animation.updateAnimationDetails();	
+			animation.updateAnimationDetails();
 			jQuery('body').css('cursor', 'auto');
 			jQuery("#rg2-info-panel").tabs("enable", TAB_COURSES);
 			jQuery("#rg2-info-panel").tabs("enable", TAB_RESULTS);
@@ -1656,7 +1814,7 @@ jQuery(document).ready(function() {"use strict";
 			// open courses tab
 			jQuery("#rg2-info-panel").tabs("option", "active", TAB_COURSES);
 			jQuery("#rg2-info-panel").tabs("refresh");
-			jQuery("#btn-show-splits").button("enable");
+			jQuery("#btn-show-splits").show();
 			redraw();
 		}).fail(function(jqxhr, textStatus, error) {
 			jQuery('body').css('cursor', 'auto');
@@ -1758,6 +1916,12 @@ jQuery(document).ready(function() {"use strict";
 			}
 			redraw();
 		})
-	}	
+		// hide control dropdown if we have no controls
+		if (courses.getHighestControlNumber() === 0) {
+			jQuery("#rg2-replay-start-control").hide();
+		} else {
+			jQuery("#rg2-replay-start-control").show();
+		}
+	}
 
 });
