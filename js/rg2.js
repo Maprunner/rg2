@@ -1069,20 +1069,49 @@ jQuery(document).ready(function() {"use strict";
 
 		drawControls : function() {
 			if (this.displayControls) {
+				var x;
+				var y;
+				var len = 40;
 				ctx.lineWidth = 2;
 				ctx.strokeStyle = '#b300ff';
 				ctx.font = '14pt Arial';
 				ctx.fillStyle = '#b300ff';
 				ctx.textAlign = "left";
 				ctx.globalAlpha = 1.0;
+				ctx.lineCap = 'round';
 				// set transparency of overprint
 				for (var i = 0; i < this.controls.length; i++) {
-					ctx.beginPath();
-					ctx.arc(this.controls[i].x, this.controls[i].y, 20, 0, 2 * Math.PI, false);
-					ctx.fillText(this.controls[i].code, this.controls[i].x + 20, this.controls[i].y + 20);
-					ctx.stroke();
-				}
-
+					// Assume things starting with 'F' are a Finish
+					if (this.controls[i].code.indexOf('F') == 0){
+					  ctx.beginPath();
+            ctx.arc(this.controls[i].x, this.controls[i].y, 16, 0, 2 * Math.PI, false);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(this.controls[i].x, this.controls[i].y, 24, 0, 2 * Math.PI, false);
+            ctx.fillText(this.controls[i].code, this.controls[i].x + 26, this.controls[i].y + 26);
+            ctx.stroke();         					
+					} else {
+					  // Assume things starting with 'S' are a Start					   
+					  if (this.controls[i].code.indexOf('S') == 0){
+              ctx.beginPath();
+              ctx.moveTo(this.controls[i].x, this.controls[i].y - (len / 2));
+              y = this.controls[i].y + (len / 2);
+              x = this.controls[i].x + (len * Math.sin(2 * Math.PI / 12));
+              ctx.lineTo(x, y);
+              x = x- (2 * (len * Math.sin(2 * Math.PI / 12)));
+              ctx.lineTo(x, y);
+              ctx.lineTo(this.controls[i].x, this.controls[i].y - (len / 2));              
+              ctx.fillText(this.controls[i].code, this.controls[i].x + 26, this.controls[i].y + 26);              
+              ctx.stroke();                  					    					  					  
+					  } else {
+					    // Else it's a normal control
+					    ctx.beginPath();
+              ctx.arc(this.controls[i].x, this.controls[i].y, 20, 0, 2 * Math.PI, false);
+              ctx.fillText(this.controls[i].code, this.controls[i].x + 20, this.controls[i].y + 20);
+              ctx.stroke();					    
+					}										
+				 }
+       }
 			}
 		},
 
@@ -1341,6 +1370,8 @@ jQuery(document).ready(function() {"use strict";
 							// finish circle
 							ctx.beginPath();
 							ctx.arc(temp.x, temp.y, 16, 0, 2 * Math.PI, false);
+							ctx.stroke();
+							ctx.beginPath();
 							ctx.arc(temp.x, temp.y, 24, 0, 2 * Math.PI, false);
 							ctx.stroke();
 							break;
