@@ -38,10 +38,8 @@ jQuery(document).ready(function() {"use strict";
 			clearInterval(this.timer);
 			this.timer = null;
 			this.updateAnimationDetails();
-			jQuery("#btn-start-stop").button("option", "icons", {
-				primary : "ui-icon-play"
-			});
-			jQuery("#btn-start-stop").button("option", "label", "Run");
+			jQuery("#btn-start-stop").removeClass("fa-pause").addClass("fa-play");
+			jQuery("#btn-start-stop").prop("title", "Run");
 		},
 
 		addRunner : function(runner) {
@@ -152,16 +150,12 @@ jQuery(document).ready(function() {"use strict";
 		toggleAnimation : function() {
 			if (this.timer === null) {
 				this.startAnimation();
-				jQuery("#btn-start-stop").button("option", "icons", {
-					primary : "ui-icon-stop"
-				});
-				jQuery("#btn-start-stop").button("option", "label", "Stop");
+			  jQuery("#btn-start-stop").removeClass("fa-play").addClass("fa-pause");
+			  jQuery("#btn-start-stop").prop("title", "Pause");
 			} else {
 				this.stopAnimation();
-				jQuery("#btn-start-stop").button("option", "icons", {
-					primary : "ui-icon-play"
-				});
-				jQuery("#btn-start-stop").button("option", "label", "Run");
+			  jQuery("#btn-start-stop").removeClass("fa-pause").addClass("fa-play");
+			  jQuery("#btn-start-stop").prop("title", "Run");
 			}
 		},
 
@@ -233,17 +227,23 @@ jQuery(document).ready(function() {"use strict";
 			this.resetAnimationTime(0);
 		},
 
-		setReplayType : function() {
-			// change between real time and mass start
-			// only btn-mass-start and btn-real-time in the group
-			if (jQuery("#btn-replay-type :radio:checked").attr('id') === "btn-mass-start") {
+		setReplayType : function(type) {
+			if (type === MASS_START_REPLAY) {
 				this.realTime = false;
+		    //jQuery("#btn-mass-start").css('color', 'green');
+		    //jQuery("#btn-real-time").css('color', 'white');
+		    jQuery("#btn-mass-start").addClass('active');
+		    jQuery("#btn-real-time").removeClass('active');
 				if (courses.getHighestControlNumber() > 0) {
 					jQuery("#rg2-replay-start-control").show();
 				}
 			} else {
-				jQuery("#rg2-replay-start-control").hide();
 				this.realTime = true;
+		    //jQuery("#btn-mass-start").css('color', 'white');
+		    //jQuery("#btn-real-time").css('color', 'green');
+		    jQuery("#btn-mass-start").removeClass('active');
+		    jQuery("#btn-real-time").addClass('active');
+				jQuery("#rg2-replay-start-control").hide();
 			}
 			// go back to start
 			this.resetAnimationTime(0);
@@ -1388,6 +1388,8 @@ jQuery(document).ready(function() {"use strict";
 	var TAB_COURSES = 1;
 	var TAB_RESULTS = 2;
 	var TAB_REPLAY = 3;
+	var MASS_START_REPLAY = 1;
+  var REAL_TIME_REPLAY = 2;
 	// dropdown selection value
 	var MASS_START_BY_CONTROL = 99999;
 	var VERY_HIGH_TIME_IN_SECS = 99999;
@@ -1453,9 +1455,15 @@ jQuery(document).ready(function() {"use strict";
 			}
 		});
 
-		jQuery("#btn-mass-start").prop('checked', true);
-		jQuery("#btn-replay-type").buttonset().click(function(event) {
-			animation.setReplayType();
+		jQuery("#btn-mass-start").addClass('active');
+		jQuery("#btn-real-time").removeClass('active');
+		
+		jQuery("#btn-mass-start").click(function(event) {
+			animation.setReplayType(MASS_START_REPLAY);
+		});
+
+		jQuery("#btn-real-time").click(function(event) {
+			animation.setReplayType(REAL_TIME_REPLAY);
 		});
 
 		jQuery("#rg2-control-select").click(function(event) {
@@ -1474,27 +1482,15 @@ jQuery(document).ready(function() {"use strict";
 			zoom(-1);
 		});
 
-		jQuery("#btn-start-stop").button({
-			icons : {
-				primary : 'ui-icon-play'
-			}
-		}).click(function() {
+		jQuery("#btn-start-stop").click(function() {
 			animation.toggleAnimation();
 		});
 
-		jQuery("#btn-faster").button({
-			icons : {
-				primary : 'ui-icon-plus'
-			}
-		}).click(function() {
+		jQuery("#btn-faster").click(function() {
 			animation.goFaster();
 		});
 
-		jQuery("#btn-slower").button({
-			icons : {
-				primary : 'ui-icon-minus'
-			}
-		}).click(function() {
+		jQuery("#btn-slower").click(function() {
 			animation.goSlower();
 		});
 
@@ -1635,11 +1631,11 @@ jQuery(document).ready(function() {"use strict";
 				animation.runAnimation(false);
 			}
 		} else {
-			ctx.fillStyle = "#cccccc";
+			ctx.fillStyle = "silver";
 			ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 			ctx.font = '30pt Arial';
 			ctx.textAlign = 'center';
-			ctx.fillStyle = "#222222";
+			ctx.fillStyle = "black";
 			ctx.fillText(mapLoadingText, (((canvas.width - 350) / 2) + 350), canvas.height / 2);
 		}
 

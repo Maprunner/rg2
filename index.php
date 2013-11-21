@@ -56,12 +56,12 @@
 				<a href="#"><img id="rg2-resize-info-icon" class="hide" src='<?php echo $img_url."hide-info.png"; ?>'></a>
 			</div>
 			<div id="rg2-header"><span id="rg2-event-title">Routegadget 2.0 Viewer</span></div>	
-			  <div class="rg2-header-button"><i id="btn-about"title = "Help" class="fa fa-question"></i></div>
-			  <div class="rg2-header-button"><i id="btn-zoom-out" title = "Zoom out" class="fa fa-search-minus"></i></div>
-			  <div class="rg2-header-button"><i id="btn-reset" title = "Reset" class="fa fa-undo"></i></div>
-			  <div class="rg2-header-button"><i id="btn-zoom-in" title = "Zoom in" class="fa fa-search-plus"></i></div>
-			  <div class="rg2-header-button"><i id="btn-show-splits" title = "Splits" class="fa fa-clock-o"></i></div>
-			  <div class="rg2-header-button"><i  id="btn-toggle-controls" title = "Show controls"class="fa fa-circle-o"></i></div>
+			  <div class="rg2-button"><i id="btn-about"title = "Help" class="fa fa-question"></i></div>
+			  <div class="rg2-button"><i id="btn-zoom-out" title = "Zoom out" class="fa fa-search-minus"></i></div>
+			  <div class="rg2-button"><i id="btn-reset" title = "Reset" class="fa fa-undo"></i></div>
+			  <div class="rg2-button"><i id="btn-zoom-in" title = "Zoom in" class="fa fa-search-plus"></i></div>
+			  <div class="rg2-button"><i id="btn-show-splits" title = "Splits" class="fa fa-list-alt"></i></div>
+			  <div class="rg2-button"><i  id="btn-toggle-controls" title = "Show controls"class="fa fa-circle-o"></i></div>
 		</div>
 		</div>
 		<div id="rg2-container">
@@ -91,46 +91,43 @@
 		  </div>
 
 		  <canvas id="rg2-map-canvas">Your browser does not support HTML5</canvas>
-		  <div id="rg2-button-bar">
+	  
+		  <div class="rg2-ani-row row-1">
+			  <div class="rg2-button"><i id="btn-slower" title = "Slower" class="fa fa-minus"></i></div>
+			  <div class="rg2-button"><i id="btn-start-stop" title = "Run" class="fa fa-play"></i></div>
+			  <div class="rg2-button"><i id="btn-faster" title = "Faster" class="fa fa-plus"></i></div>
+        <div id="rg2-clock"></div>
 		  </div>
-		  <div id="rg2-ani-bar">
-			  <div>
-			    <button id ="btn-start-stop">Run</button>
-			    <button id="btn-faster">Faster</button>
-			    <button id="btn-slower">Slower</button>
-		    </div>
-		    <div class="ani-para">
-		  	  <div id="btn-replay-type">
-			      <input type="radio" id="btn-real-time" value="btn-real-time" name="btn-replay-type" /><label for="btn-real-time">Real time</label>
-            <input type="radio" id="btn-mass-start" value="btn-mass-start" name="btn-replay-type" /><label for="btn-mass-start">Mass start</label>
-          </div>
-          <div id="rg2-replay-start-control"> 
-            <p>Start at:
-            <select  id="rg2-control-select"><option>S</option></select>
-            </p>
-          </div>
-        </div>
-        <div class="ani-para" id="rg2-clock"></div>
-        <div class = "ani-para" id="rg2-clock-slider"></div>
-			  <div class="ani-para">
-				  <label for "btn-full-tails">Full tails</label>
-				  <input type="checkbox" id="btn-full-tails" />
-          <div id="rg2-tails-spinner">
-            <input id="spn-tail-length" name="value" />
-         	  <label for="spn-tail-length">Tail length</label>
-          </div>
-        </div>
+		  <div class="rg2-ani-row row-2">
+          <div id="rg2-clock-slider"></div>
       </div>
+		  <div class="rg2-ani-row row-3">
+        <div id="rg2-replay-start-control">
+        	Start at: <select  id="rg2-control-select"><option>S</option></select>
+        </div>
+			  <div class="rg2-button"><i id="btn-real-time" title = "Real time" class="fa fa-clock-o"></i></div>
+			  <div class="rg2-button"><i id="btn-mass-start" title = "Mass start" class="fa fa-users"></i></div>
+		  </div>
+		  <div class="rg2-ani-row row-4">
+        <div id="rg2-tails-spinner">
+          <label for="spn-tail-length">Length</label>
+          <input id="spn-tail-length" name="value" />
+        </div>
+        <div id="rg2-tails-type">
+			    <label for "btn-full-tails">Full tails </label>
+			    <input type="checkbox" id="btn-full-tails" />
+			  </div>
+			</div>		   
 		  <div id="rg2-track-names"></div>
 		  <div id="rg2-about-dialog" title="Routegadget 2.0 Viewer: Version 0.1">
 			 <p>This application allows you to view existing <a href="http://www.routegadget.net">Routegadget</a> information in any modern (HTML5-compliant) browser without the need for Java.</p>
 			 <p>This is an early prototype to allow testing of the user interface, and the layout may still change quite a lot.
 				 Later versions will allow you to create new events and upload routes, but for now it only works on events that have been set
-			 up in in the original Routegadget.</p>
-			<p>It does not currently work properly on iPads, tablets and phones because of problems with the touch interface and screen size. This is on the list of things to be looked at.</p>
-			<p><strong>Simon Errington</strong> (simon (at) maprunner.co.uk)</p>
+			   up in in the original Routegadget.</p>
+			  <p>It does not currently work properly on iPads, tablets and phones because of problems with the touch interface and screen size. This is on the list of things to be looked at.</p>
+			  <p><strong>Simon Errington</strong> (simon (at) maprunner.co.uk)</p>
 		  </div>
-			<div id="rg2-splits-table" title="Splits display"></div>
+		  <div id="rg2-splits-table" title="Splits display"></div>
 		</div>
 		<div id="rg2-footer"><?php echo FOOTER_TEXT; ?></div>
 

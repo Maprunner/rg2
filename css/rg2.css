@@ -16,16 +16,50 @@ html, body {
     color: white;	
     position: relative;
     height: 30px;
-    font: 20px/30px Helvetica, Helvetica Neue, Arial;
 }
 
 #rg2-header-container {
     border-bottom: 4px solid black;
+    font-size: 20px;
+    line-height: 30px;
+}
+
+.rg2-ani-row {
+    background: silver;
+    color: white;	
+    position: absolute;
+    vertical-align: middle;
+    height: 36px;
+	  width: 240px;
+    right: 0px;
+	  border: 4px solid darkgray;
+  	z-index: 100;
+    line-height: 36px;
+}
+
+.row-1 {
+    bottom: 120px;
+    font-size: 20px;
+}
+
+.row-2 {
+    bottom: 80px;
+}
+
+.row-3 {
+    bottom: 40px;
+    color: black;
+}
+
+.row-4 {
+    bottom: 0px;
+    color: black;   
 }
 
 #rg2-resize-info {
 	position: absolute;
   vertical-align: middle;
+  padding-right: 10px;   
 }
 
 #rg2-header {
@@ -34,10 +68,17 @@ html, body {
   left: 35px;
 }
 
-.rg2-header-button {
+.rg2-button {
+  background: silver;
+  color: white;
 	float: right;
 	width: 30px;
 	text-align: center;
+	border-left: 4px solid darkgray;
+}
+
+.rg2-button:hover {
+  color: darkgray;
 }
 
 #rg2-footer {
@@ -45,11 +86,6 @@ html, body {
    font-size: 0.75em;
    text-align: center;
 }
-
-#rg2-resize-info {
-   padding-right: 10px;   
-}
-
 
 #rg2-about {
    position: absolute;	
@@ -87,26 +123,31 @@ html, body {
 
 #rg2-clock {
    font-weight: bold;
-   font-size: 2em;
+   font-size: 26px;
+   color: black;
+ 	 text-align: center;
+}
+
+#rg2-tails-type {
+	padding-left: 5px;
+	border-right: 4px solid darkgray;
+	width: 100px;
 }
 
 #spn-tail-length {
   width: 30px;
 }
 
-#spn-start-control {
-  width: 20px;
-}
-
 #rg2-tails-spinner {
   float: right;
+  padding-right: 5px;
 }
 
 #rg2-container {
 	 height: 500px;
    width: 100%;
    position: relative;
-   background: rgba(204, 204, 204, 1.0);
+   background: silver;
 }
 
 #rg2-info-panel {
@@ -123,27 +164,6 @@ html, body {
    z-index: 50;
 }
 
-#rg2-button-bar {
-   padding : 0;
-   position: absolute;
-   top: 10px;
-   right: 10px;
-   height: auto;
-   width: auto;
-   z-index: 100;
-}
-
-#rg2-ani-bar {
-	 font-size: 0.65em;
-   padding : 0;
-   position: absolute;
-   bottom: 0px;
-   right: 20px;
-   z-index: 100;
-   background: rgba(204, 204, 204, 0.5);
-   padding: 5px;
-}
-
 #rg2-animation-names {
    background: rgba(204, 204, 204, 0.75);
    padding : 2px;
@@ -152,7 +172,7 @@ html, body {
 }
 
 #rg2-track-names {
-   border: 1px solid #999999;
+   border: 1px solid darkgray;
    background: rgba(204, 204, 204, 0.75);
    padding : 2px;
    position: absolute;
@@ -167,15 +187,15 @@ html, body {
 }
 
 #rg2-replay-start-control {
-  float: right;  
-    
-}
-  
-.ani-para {
-	margin: auto;
-	padding: 5px;
+  float: left;
+  padding-left: 5px;    
 }
 
+/* mass start/real time icon colour */
+.active {
+	color: green;
+}
+ 
 .coursemenutable tr, td, th {
 	padding-left: 5px;
 	padding-right: 5px;
@@ -217,6 +237,74 @@ padding: 0;
 
 }
 
-.ui-tooltip-content {
-	font-size: 0.75em;
+#rg2-clock-slider {
+  margin: 10px 15px;
+}
+
+
+#rg2-clock-slider .ui-state-default {
+	background: silver;
+	border: 4px solid darkgray;
+}
+
+#rg2-clock-slider .ui-state-focus {
+	outline: none;
+}
+
+#rg2-clock-slider .ui-state-hover {
+	background: darkgray;
+}
+
+#rg2-clock-slider .ui-slider-handle {
+width: 15px;
+height: 20px;
+}
+
+#rg2-tails-spinner .ui-widget-content {
+  border: 2px solid darkgray;
+}
+
+#rg2-tails-spinner .ui-spinner {
+	display: inline;
+}
+
+#rg2-tails-spinner .ui-state-default {
+	background: silver;
+	colour: darkgray;
+}
+
+#rg2-tails-spinner .ui-state-active {
+	color: silver;
+}
+
+#rg2-tails-spinner .ui-spinner input {
+  font: 16px Helvetica, Helvetica Neue, Arial;
+  margin-bottom: 9px
+}
+
+/* spinner icons */
+#rg2-tails-spinner .ui-icon,
+#rg2-tails-spinner .ui-widget-content .ui-icon {
+	background-image: url(../img/ui-icons_222222_256x240.png);
+}
+#rg2-tails-spinner .ui-widget-header .ui-icon {
+	background-image: url(../img/ui-icons_222222_256x240.png);
+}
+#rg2-tails-spinner .ui-state-default .ui-icon {
+	background-image: url(../img/ui-icons_888888_256x240.png);
+}
+#rg2-tails-spinner .ui-state-hover .ui-icon,
+#rg2-tails-spinner .ui-state-focus .ui-icon {
+	background-image: url(../img/ui-icons_454545_256x240.png);
+}
+#rg2-tails-spinner .ui-state-active .ui-icon {
+	background-image: url(../img/ui-icons_454545_256x240.png);
+}
+#rg2-tails-spinner .ui-state-highlight .ui-icon {
+	background-image: url(../img/ui-icons_2e83ff_256x240.png);
+}
+
+#rg2-tails-spinner .ui-state-error .ui-icon,
+.ui-state-error-text .ui-icon {
+	background-image: url(../img/ui-icons_cd0a0a_256x240.png);
 }
