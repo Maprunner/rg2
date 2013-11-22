@@ -134,9 +134,10 @@
 			  </div>
 			</div>		   
 		  <div id="rg2-track-names"></div>
-		  <div id="rg2-about-dialog" title="Routegadget 2.0 Viewer: Version 0.1">
+		  <div id="rg2-about-dialog" title="Routegadget 2.0 Viewer: Version 0.2">
 			 <p>This application allows you to view existing <a href="http://www.routegadget.net">Routegadget</a> information in any modern (HTML5-compliant) browser without the need for Java.</p>
-			 <p>This is an early prototype to allow testing of the user interface, and the layout may still change quite a lot.
+			 <p>This is an early prototype to allow testing of the user interface. The latest version is available for
+			 	<a href="https://github.com/Maprunner/rg2/archive/master.zip"> download here</a>.
 				 Later versions will allow you to create new events and upload routes, but for now it only works on events that have been set
 			   up in in the original Routegadget.</p>
 			  <p>It does not currently work properly on iPads, tablets and phones because of problems with the touch interface and screen size. This is on the list of things to be looked at.</p>
