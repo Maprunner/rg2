@@ -1557,8 +1557,11 @@ jQuery(document).ready(function() {"use strict";
 							// finish circle
 							ctx.beginPath();
 							ctx.arc(temp.x, temp.y, FINISH_INNER_DIAMETER, 0, 2 * Math.PI, false);
+<<<<<<< HEAD
 							ctx.stroke();
 							ctx.beginPath();
+=======
+>>>>>>> 73586de3692a67a0665127dcc07eb547f20b3703
 							ctx.arc(temp.x, temp.y, FINISH_OUTER_DIAMETER, 0, 2 * Math.PI, false);
 							ctx.stroke();
 							break;
