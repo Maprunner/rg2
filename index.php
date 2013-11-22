@@ -62,6 +62,7 @@
 			  <div class="rg2-button"><i id="btn-zoom-in" title = "Zoom in" class="fa fa-search-plus"></i></div>
 			  <div class="rg2-button"><i id="btn-show-splits" title = "Splits" class="fa fa-list-alt"></i></div>
 			  <div class="rg2-button"><i  id="btn-toggle-controls" title = "Show controls"class="fa fa-circle-o"></i></div>
+		    <div class="rg2-button"><i id="btn-toggle-names" title = "Show runner names" class="fa fa-tag"></i></div> 
 		</div>
 		</div>
 		<div id="rg2-container">

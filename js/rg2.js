@@ -182,6 +182,7 @@ jQuery(document).ready(function() {"use strict";
 		this.massStartControl = 0;
 		// run each leg as a mass start if true
 		this.massStartByControl = false;
+	  this.displayNames = true;
 	}
 
 
@@ -426,7 +427,16 @@ jQuery(document).ready(function() {"use strict";
 			jQuery("#rg2-clock-slider").slider("value", this.animationSecs);
 			jQuery("#rg2-clock").text(this.formatSecsAsHHMMSS(this.animationSecs));
 		},
-
+    
+    toggleNameDisplay : function() {
+      if (this.displayNames) {        
+        jQuery("#btn-toggle-names").prop("title", "Show names");
+      } else {
+        jQuery("#btn-toggle-names").prop("title", "Hide names");
+      }
+      this.displayNames = !this.displayNames;
+    },
+		
 		runAnimation : function(fromTimer) {
 
 			// only increment time if called from the timer and we haven't got to the end already
@@ -493,6 +503,12 @@ jQuery(document).ready(function() {"use strict";
 				}
 				ctx.arc(runner.x[t] + (RUNNER_DOT_DIAMETER / 2), runner.y[t], RUNNER_DOT_DIAMETER, 0, 2 * Math.PI, false);
 				ctx.fill();
+			  if(this.displayNames) {
+			     ctx.fillStyle = "black";
+			     ctx.font = '14pt Arial';        
+           ctx.textAlign = "left";
+			     ctx.fillText(runner.name, runner.x[t] + 20, runner.y[t] + 20); 
+			  }			
 			}
 			if (this.massStartByControl) {
 				this.checkForStopControl(this.animationSecs - timeOffset);
@@ -1294,6 +1310,7 @@ jQuery(document).ready(function() {"use strict";
 			}
 			this.displayControls = !this.displayControls;
 		}
+	 
 	}
 
 	function Control(code, x, y) {
@@ -1747,6 +1764,13 @@ jQuery(document).ready(function() {"use strict";
 			animation.goSlower();
 		});
 
+		jQuery("#btn-toggle-names").click(function() {
+      animation.toggleNameDisplay();  
+      redraw(false);
+    });
+    // enable once we have courses loaded
+    jQuery("#btn-toggle-names").hide();
+		
 		jQuery("#btn-show-splits").click(function() {
 			jQuery("#rg2-splits-table").empty();
 			jQuery("#rg2-splits-table").append(animation.getSplitsTable());
@@ -2001,6 +2025,7 @@ jQuery(document).ready(function() {"use strict";
 				draw.resetDrawing();
 				results.deleteAllResults();
 				mapLoadingText = "Map loading...";
+				map.src = null;
 				redraw();
 				events.setActiveEventID(ui.item[0].id);
 				// load chosen map
@@ -2029,6 +2054,7 @@ jQuery(document).ready(function() {"use strict";
 					});
 					courses.generateControlList();
 					jQuery("#btn-toggle-controls").show();
+					jQuery("#btn-toggle-names").show();
 					getResults();
 				}).fail(function(jqxhr, textStatus, error) {
 					jQuery('body').css('cursor', 'auto');
