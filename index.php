@@ -79,6 +79,9 @@
 					<li>
 						<a href="#rg2-replay">Replay</a>
 					</li>
+					<li>
+						<a href="#rg2-draw">Draw</a>
+					</li>
 				</ul>
 				<div id="rg2-event-list"></div>
 				<div id="rg2-course-list">
@@ -88,6 +91,19 @@
 				<div id="rg2-replay">
 					<div id="rg2-animation-names"></div>
 				</div> 
+				<div id="rg2-draw">
+					<p>This function is still under development. You cannot yet save new routes. You can only add one route (plus one GPS route) per result.
+						If a route has already been added then your name will not appear in the drop-down list.</p>
+					<div id="rg2-select-course">
+        	  Select your course: <select  id="rg2-course-select"></select>
+          </div>
+					<div id="rg2-select-name">
+        	  Select your name: <select  id="rg2-name-select"></select>
+          </div>
+		      <button id ="btn-undo">Undo last point</button>
+		      <button id = "btn-save-route">Save</button>
+		      <p>Comments:</p><textarea id="rg2-comments" wrap="hard"></textarea>
+				</div>
 		  </div>
 
 		  <canvas id="rg2-map-canvas">Your browser does not support HTML5</canvas>

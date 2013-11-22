@@ -153,7 +153,7 @@ html, body {
 #rg2-info-panel {
    font-size: 0.75em;
    height: 99%;
-	 width: 350px;
+	 width: 360px;
    position: absolute;
    overflow: auto; /* add scroll bars if needed */
 	 z-index: 100;
@@ -190,6 +190,7 @@ html, body {
   float: left;
   padding-left: 5px;    
 }
+
 
 /* mass start/real time icon colour */
 .active {
