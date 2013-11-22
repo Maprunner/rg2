@@ -9,6 +9,161 @@
  */
 jQuery(document).ready(function() {"use strict";
 
+  // handle drawing of a new route
+  function Draw() {
+    this.courseid = null;
+    this.resultid = null;
+    this.controlx = [];
+    this.controly = [];
+    this.x = [];
+    this.y = [];
+    this.nextControl = 0;
+    this.trackColor = '#ff0000';
+    this.CLOSE_ENOUGH = 10;
+    this.drawingInProgress = false;
+  }
+  
+	Draw.prototype = {
+		Constructor : Draw,
+
+		drawingHappening: function () {
+		  return (TAB_DRAW === (jQuery("#rg2-info-panel").tabs( "option", "active" )));	
+		},
+		
+		resetDrawing: function () {
+		  this.controlx.length = 0;
+		  this.controly.length = 0;
+		  this.x.length = 0;
+		  this.y.length = 0;
+      this.courseid = null;
+      this.resultid = null;
+      this.nextPoint = 0;
+      jQuery("#rg2-name-select").prop('disabled', true);	
+      jQuery("#rg2-undo").prop('disabled', true);	
+   	  jQuery("#btn-save-route").button("disable");
+   	  jQuery("#btn-undo").button("disable");
+    },
+		
+		setCourse : function(courseid) {
+			if (!isNaN(courseid)) {
+				this.courseid = courseid;
+			  courses.putOnDisplay(courseid);
+			  redraw();
+		    var course = courses.getFullCourse(courseid);
+			  this.controlx = course.x;
+			  this.controly = course.y;
+			  this.x[0] = this.controlx[0];
+			  this.y[0] = this.controly[0];
+			  this.nextControl = 1;  
+			  results.createNameDropdown(courseid);
+ 	      jQuery("#rg2-name-select").prop('disabled', false);			
+		 }
+		},
+		
+		setName : function(resultid) {
+			if (!isNaN(resultid)) {
+			  this.resultid = resultid;
+        this.drawingInProgress = true;
+        redraw();
+		 }
+		},
+		
+		addNewPoint: function (evt) {
+		  if (this.drawingInProgress) {
+		  	var X = evt.offsetX || (evt.pageX - canvas.offsetLeft);
+		    var Y = evt.offsetY || (evt.pageY - canvas.offsetTop);
+		    var newXY = ctx.transformedPoint(X, Y);
+			  this.x.push(parseInt(newXY.x, 10));
+			  this.y.push(parseInt(newXY.y, 10));
+			  if (this.closeEnough(newXY.x, newXY.y)) {
+			    this.x.push(this.controlx[this.nextControl]);
+			    this.y.push(this.controly[this.nextControl]);				
+			    this.nextControl++;
+			    if (this.nextControl === this.controlx.length) {
+   	        jQuery("#btn-save-route").button("enable");
+   	      } 
+			  }
+			  if (this.x.length > 1) {
+   	      jQuery("#btn-undo").button("enable");
+   	    } else {
+   	      jQuery("#btn-undo").button("enable");   	  	
+   	    }
+        redraw();
+      }
+		},
+		
+		undoLastPoint: function () {
+			// remove last point if we have one
+			var points = this.x.length; 
+			if (points > 1) {
+				// are we undoing from a control?
+				if ((this.controlx[this.nextControl - 1] === this.x[points - 1]) && (this.controly[this.nextControl - 1] === this.y[points - 1])) {
+					this.nextControl--;
+				}
+        this.x.pop();
+        this.y.pop();   	    
+   	  }
+   	  // note that array length has changed so can't use points
+			if (this.x.length > 1) {
+   	    jQuery("#btn-undo").button("enable");
+   	  } else {
+   	    jQuery("#btn-undo").button("enable");   	  	
+   	  }
+   	  redraw();
+		},
+
+		saveRoute: function () {
+        alert("Are you sure?");
+		},
+		
+		
+		// snapto: test if drawn route is close enough to control
+		closeEnough: function (x, y) {
+      if (Math.abs(x - this.controlx[this.nextControl]) < this.CLOSE_ENOUGH) {
+        if (Math.abs(y - this.controly[this.nextControl]) < this.CLOSE_ENOUGH) {      	
+          return true;
+        }
+      }
+      return false;
+		},		
+		
+		drawNewTrack : function() {
+			ctx.lineWidth = 2;
+			ctx.strokeStyle = this.trackColor;
+			ctx.fillStyle = this.trackColour;
+			ctx.globalAlpha = 1.0;
+      // highlight next control
+      ctx.beginPath();
+			if (this.nextControl < (this.controlx.length - 1)) {
+        // normal control
+				ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], CONTROL_CIRCLE_DIAMETER, 0, 2 * Math.PI, false);
+			} else {
+				// finish
+				ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], FINISH_INNER_DIAMETER, 0, 2 * Math.PI, false);				
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], FINISH_OUTER_DIAMETER, 0, 2 * Math.PI, false);				
+			}
+			ctx.fillRect(this.controlx[this.nextControl] - 1, this.controly[this.nextControl] - 1, 3, 3)
+			ctx.stroke();
+			// dot at start of route
+			ctx.beginPath();
+			ctx.arc(this.x[0] + (RUNNER_DOT_DIAMETER/2), this.y[0], RUNNER_DOT_DIAMETER, 0, 2 * Math.PI, false);
+			ctx.fill();
+			// route itself
+			if (this.x.length > 1) {
+				ctx.beginPath();
+				ctx.moveTo(this.x[0], this.y[0]);
+				for (var i = 1; i < this.x.length; i++) {
+					// lines
+					ctx.lineTo(this.x[i], this.y[i]);
+				}
+				ctx.stroke();
+
+			}
+		},
+	}
+	
 	function Animation() {
 		this.runners = [];
 		this.timer = null;
@@ -230,20 +385,16 @@ jQuery(document).ready(function() {"use strict";
 		setReplayType : function(type) {
 			if (type === MASS_START_REPLAY) {
 				this.realTime = false;
-		    //jQuery("#btn-mass-start").css('color', 'green');
-		    //jQuery("#btn-real-time").css('color', 'white');
 		    jQuery("#btn-mass-start").addClass('active');
 		    jQuery("#btn-real-time").removeClass('active');
 				if (courses.getHighestControlNumber() > 0) {
-					jQuery("#rg2-replay-start-control").show();
+					jQuery("#rg2-control-select").prop('disabled', false);
 				}
 			} else {
 				this.realTime = true;
-		    //jQuery("#btn-mass-start").css('color', 'white');
-		    //jQuery("#btn-real-time").css('color', 'green');
 		    jQuery("#btn-mass-start").removeClass('active');
 		    jQuery("#btn-real-time").addClass('active');
-				jQuery("#rg2-replay-start-control").hide();
+				jQuery("#rg2-control-select").prop('disabled', true);
 			}
 			// go back to start
 			this.resetAnimationTime(0);
@@ -340,7 +491,7 @@ jQuery(document).ready(function() {"use strict";
 				} else {
 					t = runner.nextStopTime;
 				}
-				ctx.arc(runner.x[t] + 3, runner.y[t], 6, 0, 2 * Math.PI, false);
+				ctx.arc(runner.x[t] + (RUNNER_DOT_DIAMETER / 2), runner.y[t], RUNNER_DOT_DIAMETER, 0, 2 * Math.PI, false);
 				ctx.fill();
 			}
 			if (this.massStartByControl) {
@@ -839,7 +990,26 @@ jQuery(document).ready(function() {"use strict";
 				html += "</table></div></div>";
 			}
 			return html;
-		}
+		},
+		
+		createNameDropdown : function(courseid) {
+			jQuery("#rg2-name-select").empty();
+			var dropdown = document.getElementById("rg2-name-select");
+		  var opt = document.createElement("option");
+			opt.value = null;
+			opt.text = 'Select name';
+			dropdown.options.add(opt);
+			for (var i = 0; i < this.results.length; i++) {
+				// don't include result if it has a valid track already
+				if ((this.results[i].courseid === courseid) && (!this.results[i].hasValidTrack)) {
+				  var opt = document.createElement("option");
+				  opt.value = this.results[i].resultid;
+				  opt.text = this.results[i].name;
+				  dropdown.options.add(opt);
+				}
+			}
+			dropdown.options.add(opt);
+		},
 	};
 
 	function Result(data) {
@@ -1069,30 +1239,29 @@ jQuery(document).ready(function() {"use strict";
 
 		drawControls : function() {
 			if (this.displayControls) {
-				var x;
-				var y;
-				var len = 40;
+        var x;
+        var y;
+        var len = 40;
 				ctx.lineWidth = 2;
-				ctx.strokeStyle = '#b300ff';
+				ctx.strokeStyle = PURPLE;
 				ctx.font = '14pt Arial';
-				ctx.fillStyle = '#b300ff';
+				ctx.fillStyle = PURPLE;
 				ctx.textAlign = "left";
 				ctx.globalAlpha = 1.0;
 				ctx.lineCap = 'round';
-				// set transparency of overprint
-				for (var i = 0; i < this.controls.length; i++) {
-					// Assume things starting with 'F' are a Finish
-					if (this.controls[i].code.indexOf('F') == 0){
-					  ctx.beginPath();
+        for (var i = 0; i < this.controls.length; i++) {
+          // Assume things starting with 'F' are a Finish
+          if (this.controls[i].code.indexOf('F') == 0){
+            ctx.beginPath();
             ctx.arc(this.controls[i].x, this.controls[i].y, 16, 0, 2 * Math.PI, false);
             ctx.stroke();
             ctx.beginPath();
             ctx.arc(this.controls[i].x, this.controls[i].y, 24, 0, 2 * Math.PI, false);
             ctx.fillText(this.controls[i].code, this.controls[i].x + 26, this.controls[i].y + 26);
-            ctx.stroke();         					
-					} else {
-					  // Assume things starting with 'S' are a Start					   
-					  if (this.controls[i].code.indexOf('S') == 0){
+            ctx.stroke();                   
+          } else {
+            // Assume things starting with 'S' are a Start             
+            if (this.controls[i].code.indexOf('S') == 0){
               ctx.beginPath();
               ctx.moveTo(this.controls[i].x, this.controls[i].y - (len / 2));
               y = this.controls[i].y + (len / 2);
@@ -1102,17 +1271,17 @@ jQuery(document).ready(function() {"use strict";
               ctx.lineTo(x, y);
               ctx.lineTo(this.controls[i].x, this.controls[i].y - (len / 2));              
               ctx.fillText(this.controls[i].code, this.controls[i].x + 26, this.controls[i].y + 26);              
-              ctx.stroke();                  					    					  					  
-					  } else {
-					    // Else it's a normal control
-					    ctx.beginPath();
+              ctx.stroke();                                                        
+            } else {
+              // Else it's a normal control
+              ctx.beginPath();
               ctx.arc(this.controls[i].x, this.controls[i].y, 20, 0, 2 * Math.PI, false);
               ctx.fillText(this.controls[i].code, this.controls[i].x + 20, this.controls[i].y + 20);
-              ctx.stroke();					    
-					}										
-				 }
-       }
-			}
+              ctx.stroke();              
+            }
+          }
+        }
+      }
 		},
 
 		toggleControlDisplay : function() {
@@ -1188,8 +1357,28 @@ jQuery(document).ready(function() {"use strict";
 					this.updateControlDropdown();
 				}
 			}
+			this.updateCourseDropdown();
 		},
+		
+		updateCourseDropdown : function() {
+			jQuery("#rg2-course-select").empty();
+			var dropdown = document.getElementById("rg2-course-select");
+			var opt = document.createElement("option");
+			opt.value = null;
+			opt.text = "Select course";
+			dropdown.options.add(opt);
 
+			for (var i = 0; i < this.courses.length; i++) {
+				if (this.courses[i] != undefined) {
+				  var opt = document.createElement("option");
+				  opt.value = i;
+				  opt.text = this.courses[i].name;
+				  dropdown.options.add(opt);
+				}
+			}
+			dropdown.options.add(opt);
+		},
+		
 		updateControlDropdown : function() {
 			jQuery("#rg2-control-select").empty();
 			var dropdown = document.getElementById("rg2-control-select");
@@ -1216,10 +1405,10 @@ jQuery(document).ready(function() {"use strict";
 			this.highestControlNumber = 0;
 		},
 
-		drawCourses : function() {
+		drawCourses : function(intensity) {
 			for (var i = 0; i < this.courses.length; i++) {
 				if (this.courses[i] != undefined) {
-					this.courses[i].drawCourse();
+					this.courses[i].drawCourse(intensity);
 				}
 			}
 		},
@@ -1346,33 +1535,31 @@ jQuery(document).ready(function() {"use strict";
 		toggleDisplay : function() {
 			this.display = !this.display;
 		},
-		drawCourse : function() {
+		drawCourse : function(intensity) {
 			if (this.display) {
 				var temp;
 				ctx.lineWidth = 2;
-				ctx.strokeStyle = '#b300ff';
+				ctx.strokeStyle = PURPLE;
 				// purple
 				ctx.font = '20pt Arial';
-				ctx.fillStyle = '#b300ff';
-				// purple
-				ctx.globalAlpha = 1.0;
-				// set transparency of overprint
+				ctx.fillStyle = PURPLE;
+				ctx.globalAlpha = intensity;
 				for (var i = 0; i < this.coords.length; i++) {
 					temp = this.coords[i];
 					switch (temp.type) {
 						case 1:
 							// control circle
 							ctx.beginPath();
-							ctx.arc(temp.x, temp.y, 20, 0, 2 * Math.PI, false);
+							ctx.arc(temp.x, temp.y, CONTROL_CIRCLE_DIAMETER, 0, 2 * Math.PI, false);
 							ctx.stroke();
 							break;
 						case 2:
 							// finish circle
 							ctx.beginPath();
-							ctx.arc(temp.x, temp.y, 16, 0, 2 * Math.PI, false);
+							ctx.arc(temp.x, temp.y, FINISH_INNER_DIAMETER, 0, 2 * Math.PI, false);
 							ctx.stroke();
 							ctx.beginPath();
-							ctx.arc(temp.x, temp.y, 24, 0, 2 * Math.PI, false);
+							ctx.arc(temp.x, temp.y, FINISH_OUTER_DIAMETER, 0, 2 * Math.PI, false);
 							ctx.stroke();
 							break;
 						case 3:
@@ -1412,6 +1599,7 @@ jQuery(document).ready(function() {"use strict";
 	var results = new Results();
 	var controls = new Controls();
 	var animation = new Animation();
+  var draw = new Draw();
 	var timer = 0;
 	// added to resultid when saving a GPS track
 	var GPS_RESULT_OFFSET = 50000;
@@ -1419,6 +1607,7 @@ jQuery(document).ready(function() {"use strict";
 	var TAB_COURSES = 1;
 	var TAB_RESULTS = 2;
 	var TAB_REPLAY = 3;
+	var TAB_DRAW = 4;
 	var MASS_START_REPLAY = 1;
   var REAL_TIME_REPLAY = 2;
 	// dropdown selection value
@@ -1427,7 +1616,14 @@ jQuery(document).ready(function() {"use strict";
 	// screen sizes for different layouts
 	var BIG_SCREEN_BREAK_POINT = 800;
 	var SMALL_SCREEN_BREAK_POINT = 500;
-	
+	var PURPLE = '#b300ff';
+	var CONTROL_CIRCLE_DIAMETER = 20;
+	var FINISH_INNER_DIAMETER = 16;
+	var FINISH_OUTER_DIAMETER = 24;
+  var RUNNER_DOT_DIAMETER = 6;
+  // parameters for call to draw courses
+  var DIM = 0.5;
+  var FULL_INTENSITY = 1.0;
 	var infoPanelMaximised;
 	var infoHideIconSrc;
 	var infoShowIconSrc;
@@ -1461,13 +1657,17 @@ jQuery(document).ready(function() {"use strict";
 
 		jQuery("#rg2-info-panel").tabs({
 			active : TAB_EVENTS,
-			heightStyle : "content"
+			heightStyle : "content",
+      activate: function( event, ui ) {
+        tabActivated();	
+      }
 		});
+
 		infoPanelMaximised = true;
 
 		// disable courses, results and replay until we have loaded some
 		jQuery("#rg2-info-panel").tabs({
-			disabled : [TAB_COURSES, TAB_RESULTS, TAB_REPLAY]
+			disabled : [TAB_COURSES, TAB_RESULTS, TAB_REPLAY, TAB_DRAW]
 		});
 
 		jQuery("#rg2-result-list").accordion({
@@ -1497,9 +1697,31 @@ jQuery(document).ready(function() {"use strict";
 			animation.setReplayType(REAL_TIME_REPLAY);
 		});
 
-		jQuery("#rg2-control-select").click(function(event) {
+		jQuery("#rg2-control-select").prop('disabled', true)
+		  .click(function(event) {
 			animation.setStartControl(jQuery("#rg2-control-select").val());
 		});
+
+		jQuery("#rg2-name-select").prop('disabled', true)
+		  .click(function(event) {
+			draw.setName(parseInt(jQuery("#rg2-name-select").val(), 10));
+		});
+		
+		jQuery("#rg2-course-select").click(function(event) {
+			draw.setCourse(parseInt(jQuery("#rg2-course-select").val(), 10));
+		});
+
+		jQuery("#btn-save-route").button()
+		  .click(function() {
+			  draw.saveRoute();
+		});
+   	jQuery("#btn-save-route").button("disable");
+
+		jQuery("#btn-undo").button()
+		  .click(function() {
+			  draw.undoLastPoint();
+		});
+   	jQuery("#btn-undo").button("disable");
 
 		jQuery("#btn-zoom-in").click(function() {
 			zoom(1);
@@ -1604,8 +1826,7 @@ jQuery(document).ready(function() {"use strict";
 		// move map into view on small screens
 		// avoid annoying jumps on larger screens
 		if ((infoPanelMaximised) || (window.innerWidth >= BIG_SCREEN_BREAK_POINT)) {
-			//350 is width of info panel
-			ctx.setTransform(mapscale, 0, 0, mapscale, 350, 0);
+			ctx.setTransform(mapscale, 0, 0, mapscale, jQuery("#rg2-info-panel").outerWidth(), 0);
 		} else {
 			ctx.setTransform(mapscale, 0, 0, mapscale, 0, 0);
 		}
@@ -1634,6 +1855,16 @@ jQuery(document).ready(function() {"use strict";
 		redraw(false);
 	}
 
+  // called whenever the active tab changes to tidy up as necessary
+  function tabActivated() {
+  	var active = jQuery("#rg2-info-panel").tabs( "option", "active" );
+  	if (active === TAB_DRAW) {
+		  courses.removeAllFromDisplay();  		
+			jQuery("#rg2-track-names").hide();
+  	}
+  	redraw();
+  }
+
 	/* called whenever anything changes enough to need screen redraw
 	 * @param fromTimer {Boolean} true if called from timer: used to determine if animation time should be incremented
 	 */
@@ -1652,15 +1883,21 @@ jQuery(document).ready(function() {"use strict";
 
 		if (map.height > 0) {
 			ctx.drawImage(map, 0, 0);
-			courses.drawCourses();
-			results.drawTracks();
-			controls.drawControls();
-			// parameter determines if animation time is updated or not
-			if (fromTimer) {
-				animation.runAnimation(true);
+			if (draw.drawingHappening()) {
+				courses.drawCourses(DIM);			
+			  controls.drawControls();
+			  draw.drawNewTrack();
 			} else {
-				animation.runAnimation(false);
-			}
+				courses.drawCourses(FULL_INTENSITY);
+			  results.drawTracks();
+			  controls.drawControls();
+			  // parameter determines if animation time is updated or not
+			  if (fromTimer) {
+			  	animation.runAnimation(true);
+			  } else {
+				  animation.runAnimation(false);
+		  	}
+		  }
 		} else {
 			ctx.fillStyle = "silver";
 			ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -1724,10 +1961,8 @@ jQuery(document).ready(function() {"use strict";
 
 	canvas.addEventListener('mouseup', function(evt) {
 		dragStart = null;
-		// if mouse hasn't moved since mousedown then treat as a zoom request'
-		// no key zooms in, shift key zooms out
 		if (!dragged) {
-			zoom(evt.shiftKey ? -1 : 1);
+      draw.addNewPoint(evt);
 		}
 	}, false);
 
@@ -1763,6 +1998,7 @@ jQuery(document).ready(function() {"use strict";
 				courses.deleteAllCourses();
 				controls.deleteAllControls();
 				animation.resetAnimation();
+				draw.resetDrawing();
 				results.deleteAllResults();
 				mapLoadingText = "Map loading...";
 				redraw();
@@ -1838,6 +2074,7 @@ jQuery(document).ready(function() {"use strict";
 			jQuery("#rg2-info-panel").tabs("enable", TAB_COURSES);
 			jQuery("#rg2-info-panel").tabs("enable", TAB_RESULTS);
 			jQuery("#rg2-info-panel").tabs("enable", TAB_REPLAY);
+			//jQuery("#rg2-info-panel").tabs("enable", TAB_DRAW);
 			// open courses tab
 			jQuery("#rg2-info-panel").tabs("option", "active", TAB_COURSES);
 			jQuery("#rg2-info-panel").tabs("refresh");
@@ -1943,11 +2180,11 @@ jQuery(document).ready(function() {"use strict";
 			}
 			redraw();
 		})
-		// hide control dropdown if we have no controls
+		// disable control dropdown if we have no controls
 		if (courses.getHighestControlNumber() === 0) {
-			jQuery("#rg2-replay-start-control").hide();
+			jQuery("#rg2-control-select").prop('disabled', true);
 		} else {
-			jQuery("#rg2-replay-start-control").show();
+			jQuery("#rg2-control-select").prop('disabled', false);
 		}
 	}
 
