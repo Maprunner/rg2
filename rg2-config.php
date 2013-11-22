@@ -11,6 +11,11 @@
   //define('RG_BASE_DIRECTORY', 'C:/xampp/htdocs/HHRoutegadget');
   define('RG_BASE_DIRECTORY', 'http://www.happyherts.routegadget.co.uk');
 
+  //
+  // Set encoding for data
+  define('RG_INPUT_ENCODING', 'ISO-8859-1');
+  define('RG_OUTPUT_ENCOFING', 'UTF-8');
+
   // User interface colour theme: see gallery at http://jqueryui.com/themeroller/
   // Example define('UI_THEME', 'excite-bike');
   define('UI_THEME', 'excite-bike');

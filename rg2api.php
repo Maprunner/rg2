@@ -41,11 +41,12 @@
 				$detail["mapid"] = $data[1];
 				$detail["status"] = $data[2];
 				// Issue #11: found a stray &#39; in a SUFFOC file
+				$name = iconv( RG_INPUT_ENCODING, RG_OUTPUT_ENCODING, $data[3]);
 				$detail["name"] = str_replace("&#39;", "'", $data[3]);
 				$detail["date"] = $data[4];
-				$detail["club"] = $data[5];
+				$detail["club"] = iconv( RG_INPUT_ENCODING, RG_OUTPUT_ENCODING, $data[5]);
 				$detail["type"] = $data[6];
-				$detail["comment"] = $data[7];
+				$detail["comment"] = iconv( RG_INPUT_ENCODING, RG_OUTPUT_ENCODING, $data[7]);
 				$output[$row] = $detail;				
         $row++;
       }
@@ -107,7 +108,7 @@
         $detail = array();
 				$detail["courseid"] = $data[0];
 				$detail["status"] = $data[1];
-				$detail["name"] = $data[2];
+				$detail["name"] = iconv( RG_INPUT_ENCODING, RG_OUTPUT_ENCODING, $data[2]);
 				$detail["coords"] = $data[3];
 				if ($controlsFound) {
 					$detail["codes"] = $controls[$row];
@@ -138,24 +139,9 @@
   			if (strncmp($data[4], "Type your comment", 17) != 0) {
 				  $text[$comments]["resultid"] = $data[1];
 				  // replace carriage return and line break codes
-				  $temp = str_replace("#cr#", " ", $data[4]);			
-				  $temp = str_replace("#nl#", " ", $temp); 
-          
-          // this is a hack to handle non UTF-8 characters in comments for now.
-          // needs a proper look at in future, but for now just replace with ? 
-          
-          //reject overly long 2 byte sequences, as well as characters above U+10000 and replace with ?
-          $temp = preg_replace('/[\x00-\x08\x10\x0B\x0C\x0E-\x19\x7F]'.
-          '|[\x00-\x7F][\x80-\xBF]+'.
-          '|([\xC0\xC1]|[\xF0-\xFF])[\x80-\xBF]*'.
-          '|[\xC2-\xDF]((?![\x80-\xBF])|[\x80-\xBF]{2,})'.
-          '|[\xE0-\xEF](([\x80-\xBF](?![\x80-\xBF]))|(?![\x80-\xBF]{2})|[\x80-\xBF]{3,})/S',
-          '?', $temp );
- 
-          //reject overly long 3 byte sequences and UTF-16 surrogates and replace with ?
-          $temp = preg_replace('/\xE0[\x80-\x9F][\x80-\xBF]'.
-          '|\xED[\xA0-\xBF][\x80-\xBF]/S','?', $temp );
-					
+				  $temp = iconv( RG_INPUT_ENCODING, RG_OUTPUT_ENCODING, $data[4])	
+				  $temp = str_replace("#cr#", " ", $temp);			
+				  $temp = str_replace("#nl#", " ", $temp); 					
 				  $text[$comments]["comments"] = $temp; 
           $comments++;
 				}
@@ -169,8 +155,8 @@
         $detail = array();
 				$detail["resultid"] = $data[0];
 				$detail["courseid"] = $data[1];
-				$detail["coursename"] = $data[2];
-				$detail["name"] = $data[3];
+				$detail["coursename"] = iconv( RG_INPUT_ENCODING, RG_OUTPUT_ENCODING, $data[2]);
+				$detail["name"] = iconv( RG_INPUT_ENCODING, RG_OUTPUT_ENCODING, $data[3]);
 				$detail["starttime"] = $data[4];
 				$detail["time"] = $data[7];
 				// trim trailing ; which create null fields when expanded
@@ -183,7 +169,7 @@
 				$detail["comments"] = "";
 				for ($i = 0; $i < $comments; $i++) {
 				  if ($detail["resultid"] == $text[$i]["resultid"]) {
-				    $detail["comments"] = $text[$i]["comments"];					
+				    $detail["comments"] = iconv( RG_INPUT_ENCODING, RG_OUTPUT_ENCODING, $text[$i]["comments"]);					
 					}
 				}	
 				$output[$row] = $detail;				
@@ -201,7 +187,7 @@
         $detail = array();
 				$detail["trackid"] = $data[0];
 				$detail["resultid"] = $data[1];
-				$detail["name"] = $data[2];
+				$detail["name"] = iconv( RG_INPUT_ENCODING, RG_OUTPUT_ENCODING, $data[2]);
 				$detail["null"] = $data[3];
 				$detail["coords"] = $data[4];
 				$output[$row] = $detail;				
