@@ -505,7 +505,7 @@ jQuery(document).ready(function() {"use strict";
 				ctx.fill();
 			  if(this.displayNames) {     
 			     ctx.fillStyle = "black";
-			     ctx.font = '14pt Arial';        
+			     ctx.font = '20pt Arial';        
            ctx.textAlign = "left";			     			     			     			     
 			     ctx.fillText(runner.name, runner.x[t] + 15, runner.y[t] + 7); 
 			  }			
@@ -1276,9 +1276,8 @@ jQuery(document).ready(function() {"use strict";
         var y;        
 				ctx.lineWidth = OVERPRINT_LINE_THICKNESS;
 				ctx.strokeStyle = PURPLE;
-				ctx.font = '14pt Arial';
-				ctx.fillStyle = PURPLE;
-				ctx.textAlign = "left";
+				ctx.font = '20pt Arial';
+				ctx.fillStyle = PURPLE;				
 				ctx.globalAlpha = 1.0;				
         for (var i = 0; i < this.controls.length; i++) {
           // Assume things starting with 'F' are a Finish
@@ -1287,7 +1286,7 @@ jQuery(document).ready(function() {"use strict";
           } else {
             // Assume things starting with 'S' are a Start             
             if (this.controls[i].code.indexOf('S') == 0){
-              this.drawStartControl(this.controls[i].x, this.controls[i].y, this.controls[i].code);                                     
+              this.drawStartControl(this.controls[i].x, this.controls[i].y, this.controls[i].code, (6* Math.PI/4));                                     
             } else {
               // Else it's a normal control
               this.drawSingleControl(this.controls[i].x, this.controls[i].y, this.controls[i].code); 
@@ -1306,20 +1305,21 @@ jQuery(document).ready(function() {"use strict";
       ctx.stroke();
       //Draw the white halo around the control code                
       ctx.beginPath();
-      ctx.font = "14pt Arial";
+      ctx.textAlign = "left";
+      ctx.font = "20pt Arial";
       ctx.strokeStyle = "white";
       ctx.miterLimit = 2;
       ctx.lineJoin = "circle";
       ctx.lineWidth = 1.5;
-      ctx.strokeText(code, x + 20,y + 20);            
+      ctx.strokeText(code, x + 25,y + 20);            
       //Draw the purple control
       ctx.beginPath();
-      ctx.font = "14pt Arial";
+      ctx.font = "20pt Arial";
       ctx.fillStyle = PURPLE;
       ctx.strokeStyle = PURPLE;
       ctx.lineWidth = OVERPRINT_LINE_THICKNESS;
       ctx.arc(x, y, 20, 0, 2 * Math.PI, false);
-      ctx.fillText(code, x + 20, y + 20);
+      ctx.fillText(code, x + 25, y + 20);
       ctx.stroke();
     },
 		drawFinishControl : function (x, y, code) {
@@ -1334,16 +1334,16 @@ jQuery(document).ready(function() {"use strict";
 		  ctx.stroke();
 		  //Draw the white halo around the finish code
 		  ctx.beginPath();
-      ctx.font = "14pt Arial";
+      ctx.font = "20pt Arial";
+      ctx.textAlign = "left";
       ctx.strokeStyle = "white";
       ctx.miterLimit = 2;
       ctx.lineJoin = "circle";
       ctx.lineWidth = 1.5;
-      ctx.strokeText(code, x + 25,y + 20);
+      ctx.strokeText(code, x + 30,y + 20);
 		  ctx.stroke();
 		  //Draw the purple finish control
-		  ctx.beginPath();
-      ctx.font = "14pt Arial";
+		  ctx.beginPath();     
       ctx.fillStyle = PURPLE;
       ctx.strokeStyle = PURPLE;
       ctx.lineWidth = OVERPRINT_LINE_THICKNESS;
@@ -1351,65 +1351,64 @@ jQuery(document).ready(function() {"use strict";
       ctx.stroke();
       ctx.beginPath();
       ctx.arc(x, y, FINISH_OUTER_RADIUS, 0, 2 * Math.PI, false);
-      ctx.fillText(code, x + 25, y + 20);
+      ctx.fillText(code, x + 30, y + 20);
       ctx.stroke();		
 		},
-		drawStartControl : function(startx, starty, code) {
+		drawStartControl : function(startx, starty, code, angle) {
 		  //Draw the white halo around the start triangle
-		  var x;
-		  var y;
-		  var len = 40;
+		  var x = [];
+		  var y = [];
+		  var DEGREES_120 = (2 * Math.PI/3);
+		  angle = angle + (Math.PI /2);
 		  ctx.lineCap = 'round';
 		  ctx.strokeStyle = "white";
 		  ctx.lineWidth = OVERPRINT_LINE_THICKNESS + 2;
 		  ctx.beginPath();
-		  ctx.moveTo(startx, starty - (len / 2));            
-      y = starty + (len / 2);
-      x = startx + (len * Math.sin(2 * Math.PI / 12));
-      ctx.lineTo(x, y);
+		  x[0] = startx + (START_TRIANGLE_LENGTH * Math.sin(angle));
+		  y[0] = starty - (START_TRIANGLE_LENGTH * Math.cos(angle));
+		  ctx.moveTo(x[0], y[0]);            
+      x[1] = startx + (START_TRIANGLE_LENGTH * Math.sin(angle + DEGREES_120));
+      y[1] = starty - (START_TRIANGLE_LENGTH * Math.cos(angle + DEGREES_120));
+      ctx.lineTo(x[1], y[1]);
       ctx.stroke();
       ctx.beginPath();
-      ctx.moveTo(x,y);      
-      x = x- (2 * (len * Math.sin(2 * Math.PI / 12)));
-      ctx.lineTo(x, y);
+      ctx.moveTo(x[1],y[1]);      
+      x[2] = startx + (START_TRIANGLE_LENGTH * Math.sin(angle - DEGREES_120));
+      y[2] = starty - (START_TRIANGLE_LENGTH * Math.cos(angle - DEGREES_120));
+      ctx.lineTo(x[2], y[2]);
       ctx.stroke();
       ctx.beginPath();
-      ctx.moveTo(x,y);     
-      ctx.lineTo(startx, starty - (len / 2));                                 
+      ctx.moveTo(x[2],y[2]);     
+      ctx.lineTo(x[0], y[0]);                                 
       ctx.stroke();
 		  //Draw the white halo around the start code
 		  ctx.beginPath();
-      ctx.font = "14pt Arial";
+      ctx.font = "20pt Arial";
+      ctx.textAlign = "left";
       ctx.strokeStyle = "white";
       ctx.miterLimit = 2;
       ctx.lineJoin = "circle";
       ctx.lineWidth = 1.5;
-      ctx.strokeText(code, x + 20,y + 20);
+      ctx.strokeText(code, x[0] + 25, y[0] + 25);
       ctx.stroke();
       //Draw the purple start control
       ctx.strokeStyle = PURPLE;
       ctx.lineWidth = OVERPRINT_LINE_THICKNESS;
-      ctx.font = "14pt Arial";
+      ctx.font = "20pt Arial";
       ctx.fillStyle = PURPLE;
       ctx.beginPath();
-      ctx.moveTo(startx, starty - (len / 2));            
-      y = starty + (len / 2);
-      x = startx + (len * Math.sin(2 * Math.PI / 12));
-      ctx.lineTo(x, y);
+      ctx.moveTo(x[0], y[0]);          
+      ctx.lineTo(x[1], y[1]);
       ctx.stroke();
       ctx.beginPath();
-      ctx.moveTo(x,y);      
-      x = x- (2 * (len * Math.sin(2 * Math.PI / 12)));
-      ctx.lineTo(x, y);
+      ctx.moveTo(x[1], y[1]);
+      ctx.lineTo(x[2], y[2]);
       ctx.stroke();
       ctx.beginPath();
-      ctx.moveTo(x,y);     
-      ctx.lineTo(startx, starty - (len / 2));                                 
-      ctx.fillText(code, x +20, y + 20);
+      ctx.moveTo(x[2],y[2]);
+      ctx.lineTo(x[0], y[0]);                                 
+      ctx.fillText(code, x[0] +25, y[0] + 25);
       ctx.stroke();
-      
-		
-		
 		},
 		toggleControlDisplay : function() {
 			if (this.displayControls) {
@@ -1665,12 +1664,12 @@ jQuery(document).ready(function() {"use strict";
 		toggleDisplay : function() {
 			this.display = !this.display;
 		},
-		drawCourse : function(intensity) {
+		
+		drawCoursex : function(intensity) {
 			if (this.display) {
 				var temp;
 				ctx.lineWidth = OVERPRINT_LINE_THICKNESS;
-				ctx.strokeStyle = PURPLE;
-				// purple
+				ctx.strokeStyle = PURPLE;				
 				ctx.font = '20pt Arial';
 				ctx.fillStyle = PURPLE;
 				ctx.globalAlpha = intensity;
@@ -1685,12 +1684,7 @@ jQuery(document).ready(function() {"use strict";
 							break;
 						case 2:
 							// finish circle
-							ctx.beginPath();
-							ctx.arc(temp.x, temp.y, FINISH_INNER_RADIUS, 0, 2 * Math.PI, false);
-							ctx.stroke();
-							ctx.beginPath();
-							ctx.arc(temp.x, temp.y, FINISH_OUTER_RADIUS, 0, 2 * Math.PI, false);
-							ctx.stroke();
+							controls.drawFinishControl(temp.x, temp.y, "");
 							break;
 						case 3:
 							// text
@@ -1708,9 +1702,61 @@ jQuery(document).ready(function() {"use strict";
 					}
 				}
 			}
-		}
-	};
+		},
+		
+  drawCourse : function(intensity) {
+      if (this.display) {                                             
+        var angle;
+        var c1x;
+        var c1y;
+        var c2x;
+        var c2y;       
+        ctx.globalAlpha = intensity;        
+        angle = this.getAngle (this.x[0], this.y[0], this.x[1], this.y[1]);
+        controls.drawStartControl(this.x[0], this.y[0], "", angle);
+        for (var i = 1; i < (this.x.length - 1); i++) {          
+          controls.drawSingleControl(this.x[i], this.y[i], i);
+        }
+        controls.drawFinishControl(this.x[this.x.length - 1], this.y[this.y.length - 1], "");
+        for (i = 0; i < (this.x.length - 1); i++) {
+          angle = this.getAngle (this.x[i], this.y[i], this.x[i + 1], this.y[i + 1]);
+          if (i === 0) {
+            c1x = this.x[i] + (START_TRIANGLE_LENGTH * Math.cos(angle));  
+            c1y = this.y[i] + (START_TRIANGLE_LENGTH * Math.sin(angle));   
+          } else {
+            c1x = this.x[i] + (CONTROL_CIRCLE_RADIUS * Math.cos(angle));  
+            c1y = this.y[i] + (CONTROL_CIRCLE_RADIUS * Math.sin(angle));
+          }
+          //Assume the last control is a finish
+          if (i === this.x.length - 2) {
+           c2x = this.x[i + 1] - (FINISH_OUTER_RADIUS * Math.cos(angle));
+           c2y = this.y[i + 1] - (FINISH_OUTER_RADIUS * Math.sin(angle));        
+          } else {
+            c2x = this.x[i + 1] - (CONTROL_CIRCLE_RADIUS * Math.cos(angle));
+            c2y = this.y[i + 1] - (CONTROL_CIRCLE_RADIUS * Math.sin(angle)); 
+          }
+          ctx.lineWidth = OVERPRINT_LINE_THICKNESS;
+          ctx.strokeStyle = PURPLE;         
+          ctx.beginPath();
+          ctx.moveTo(c1x, c1y);
+          ctx.lineTo(c2x, c2y);
+          ctx.stroke();
+        
+       }
+        
+      }
+  },
+	getAngle : function(x1, y1, x2, y2) {
+	  var angle = Math.atan2((y2 - y1), (x2 - x1));
+	  if (angle < 0) {
+	    angle = angle + (2 * Math.PI);	  
+	  }	 	 
+	 return angle;
+	}
+	
+	}
 
+	
 	function CourseCoord(data) {
 		// store y and b as positive rather than negative to simplify screen drawing
 		this.type = parseInt(data[0], 10);
@@ -1750,6 +1796,7 @@ jQuery(document).ready(function() {"use strict";
 	var CONTROL_CIRCLE_RADIUS = 20;
 	var FINISH_INNER_RADIUS = 16.4;
 	var FINISH_OUTER_RADIUS = 23.4;
+	var START_TRIANGLE_LENGTH = 30;
   var RUNNER_DOT_RADIUS = 6;
   var OVERPRINT_LINE_THICKNESS = 2;
   var REPLAY_LINE_THICKNESS = 3;
