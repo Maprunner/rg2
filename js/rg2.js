@@ -835,7 +835,22 @@ jQuery(document).ready(function() {"use strict";
 		addResult : function(result) {
 			this.results.push(result);
 		},
-
+    
+    getResultsByCourseID : function(courseid) {
+      var count = 0;
+      for (var i = 0; i < this.results.length; i++) {
+        if (this.results[i].courseid === courseid) {
+          count++;
+        }
+      
+      }
+      return count;
+    },
+		
+		getTotalResultsByCourseID : function(courseid) {
+      return this.results.length;                       		
+		},
+		
 		getCourseID : function(resultid) {
 			return this.results[resultid].courseid;
 		},
@@ -1588,11 +1603,12 @@ jQuery(document).ready(function() {"use strict";
 		},
 
 		formatCoursesAsTable : function() {
-			var html = "<table class='coursemenutable'><tr><th>Course</th><th>Show</th><th>Tracks</th><th>Show</th></tr>";
+			var html = "<table class='coursemenutable'><tr><th>Course</th><th>Show</th><th>Runners</th><th>Tracks</th><th>Show</th></tr>";
 			for (var i = 0; i < this.courses.length; i++) {
 				if (this.courses[i] != undefined) {
 					html += "<tr><td>" + this.courses[i].name + "</td>";
 					html += "<td><input class='courselist' id=" + i + " type=checkbox name=course></input></td>";
+					html += "<td>" + results.getResultsByCourseID(i) + "</td>";
 					html += "<td>" + this.courses[i].trackcount + "</td>";
 					if (this.courses[i].trackcount > 0) {
 						html += "<td><input id=" + i + " class='tracklist' type=checkbox name=track></input></td>";
@@ -1605,6 +1621,7 @@ jQuery(document).ready(function() {"use strict";
 			// add bottom row for all courses checkboxes
 			html += "<tr><td>All</td>";
 			html += "<td><input class='allcourses' id=" + i + " type=checkbox name=course></input></td>";
+			html += "<td>" + results.getTotalResultsByCourseID() + "</td>";
 			if (this.totaltracks > 0) {
 				html += "<td>" + this.totaltracks + "</td><td><input id=" + i + " class='alltracks' type=checkbox name=track></input></td>";
 			} else {
