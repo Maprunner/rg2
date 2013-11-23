@@ -136,19 +136,19 @@ jQuery(document).ready(function() {"use strict";
       ctx.beginPath();
 			if (this.nextControl < (this.controlx.length - 1)) {
         // normal control
-				ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], CONTROL_CIRCLE_DIAMETER, 0, 2 * Math.PI, false);
+				ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], CONTROL_CIRCLE_RADIUS, 0, 2 * Math.PI, false);
 			} else {
 				// finish
-				ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], FINISH_INNER_DIAMETER, 0, 2 * Math.PI, false);				
+				ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], FINISH_INNER_RADIUS, 0, 2 * Math.PI, false);				
 				ctx.stroke();
 				ctx.beginPath();
-				ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], FINISH_OUTER_DIAMETER, 0, 2 * Math.PI, false);				
+				ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], FINISH_OUTER_RADIUS, 0, 2 * Math.PI, false);				
 			}
 			ctx.fillRect(this.controlx[this.nextControl] - 1, this.controly[this.nextControl] - 1, 3, 3)
 			ctx.stroke();
 			// dot at start of route
 			ctx.beginPath();
-			ctx.arc(this.x[0] + (RUNNER_DOT_DIAMETER/2), this.y[0], RUNNER_DOT_DIAMETER, 0, 2 * Math.PI, false);
+			ctx.arc(this.x[0] + (RUNNER_DOT_RADIUS/2), this.y[0], RUNNER_DOT_RADIUS, 0, 2 * Math.PI, false);
 			ctx.fill();
 			// route itself
 			if (this.x.length > 1) {
@@ -456,7 +456,7 @@ jQuery(document).ready(function() {"use strict";
 			jQuery("#rg2-clock-slider").slider("value", this.animationSecs);
 			jQuery("#rg2-clock").text(this.formatSecsAsHHMMSS(this.animationSecs));
 
-			ctx.lineWidth = 3;
+			ctx.lineWidth = REPLAY_LINE_THICKNESS;
 			ctx.globalAlpha = 1.0;
 			var runner;
 			var timeOffset;
@@ -501,7 +501,7 @@ jQuery(document).ready(function() {"use strict";
 				} else {
 					t = runner.nextStopTime;
 				}
-				ctx.arc(runner.x[t] + (RUNNER_DOT_DIAMETER / 2), runner.y[t], RUNNER_DOT_DIAMETER, 0, 2 * Math.PI, false);
+				ctx.arc(runner.x[t] + (RUNNER_DOT_RADIUS / 2), runner.y[t], RUNNER_DOT_RADIUS, 0, 2 * Math.PI, false);
 				ctx.fill();
 			  if(this.displayNames) {
 			     ctx.fillStyle = "black";
@@ -1258,50 +1258,144 @@ jQuery(document).ready(function() {"use strict";
 		drawControls : function() {
 			if (this.displayControls) {
         var x;
-        var y;
-        var len = 40;
-				ctx.lineWidth = 2;
+        var y;        
+				ctx.lineWidth = OVERPRINT_LINE_THICKNESS;
 				ctx.strokeStyle = PURPLE;
 				ctx.font = '14pt Arial';
 				ctx.fillStyle = PURPLE;
 				ctx.textAlign = "left";
-				ctx.globalAlpha = 1.0;
-				ctx.lineCap = 'round';
+				ctx.globalAlpha = 1.0;				
         for (var i = 0; i < this.controls.length; i++) {
           // Assume things starting with 'F' are a Finish
           if (this.controls[i].code.indexOf('F') == 0){
-            ctx.beginPath();
-            ctx.arc(this.controls[i].x, this.controls[i].y, 16, 0, 2 * Math.PI, false);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.arc(this.controls[i].x, this.controls[i].y, 24, 0, 2 * Math.PI, false);
-            ctx.fillText(this.controls[i].code, this.controls[i].x + 26, this.controls[i].y + 26);
-            ctx.stroke();                   
+            this.drawFinishControl(this.controls[i].x, this.controls[i].y, this.controls[i].code);                   
           } else {
             // Assume things starting with 'S' are a Start             
             if (this.controls[i].code.indexOf('S') == 0){
-              ctx.beginPath();
-              ctx.moveTo(this.controls[i].x, this.controls[i].y - (len / 2));
-              y = this.controls[i].y + (len / 2);
-              x = this.controls[i].x + (len * Math.sin(2 * Math.PI / 12));
-              ctx.lineTo(x, y);
-              x = x- (2 * (len * Math.sin(2 * Math.PI / 12)));
-              ctx.lineTo(x, y);
-              ctx.lineTo(this.controls[i].x, this.controls[i].y - (len / 2));              
-              ctx.fillText(this.controls[i].code, this.controls[i].x + 26, this.controls[i].y + 26);              
-              ctx.stroke();                                                        
+              this.drawStartControl(this.controls[i].x, this.controls[i].y, this.controls[i].code);                                     
             } else {
               // Else it's a normal control
-              ctx.beginPath();
-              ctx.arc(this.controls[i].x, this.controls[i].y, 20, 0, 2 * Math.PI, false);
-              ctx.fillText(this.controls[i].code, this.controls[i].x + 20, this.controls[i].y + 20);
-              ctx.stroke();              
+              this.drawSingleControl(this.controls[i].x, this.controls[i].y, this.controls[i].code); 
+                           
             }
           }
         }
       }
 		},
-
+    drawSingleControl : function (x, y, code) {
+      //Draw the white halo around the controls
+      ctx.beginPath();            
+      ctx.strokeStyle = "white";
+      ctx.lineWidth = OVERPRINT_LINE_THICKNESS + 2;
+      ctx.arc(x, y, 20, 0, 2 * Math.PI, false);             
+      ctx.stroke();
+      //Draw the white halo around the control code                
+      ctx.beginPath();
+      ctx.font = "14pt Arial";
+      ctx.strokeStyle = "white";
+      ctx.miterLimit = 2;
+      ctx.lineJoin = "circle";
+      ctx.lineWidth = 1.5;
+      ctx.strokeText(code, x + 20,y + 20);            
+      //Draw the purple control
+      ctx.beginPath();
+      ctx.font = "14pt Arial";
+      ctx.fillStyle = PURPLE;
+      ctx.strokeStyle = PURPLE;
+      ctx.lineWidth = OVERPRINT_LINE_THICKNESS;
+      ctx.arc(x, y, 20, 0, 2 * Math.PI, false);
+      ctx.fillText(code, x + 20, y + 20);
+      ctx.stroke();
+    },
+		drawFinishControl : function (x, y, code) {
+		  //Draw the white halo around the finish control
+		  ctx.strokeStyle = "white";
+		  ctx.lineWidth = OVERPRINT_LINE_THICKNESS + 2;
+		  ctx.beginPath();		  		  
+		  ctx.arc(x, y, FINISH_INNER_RADIUS, 0, 2 * Math.PI, false);
+      ctx.stroke();
+		  ctx.beginPath();
+      ctx.arc(x, y, FINISH_OUTER_RADIUS, 0, 2 * Math.PI, false);
+		  ctx.stroke();
+		  //Draw the white halo around the finish code
+		  ctx.beginPath();
+      ctx.font = "14pt Arial";
+      ctx.strokeStyle = "white";
+      ctx.miterLimit = 2;
+      ctx.lineJoin = "circle";
+      ctx.lineWidth = 1.5;
+      ctx.strokeText(code, x + 25,y + 20);
+		  ctx.stroke();
+		  //Draw the purple finish control
+		  ctx.beginPath();
+      ctx.font = "14pt Arial";
+      ctx.fillStyle = PURPLE;
+      ctx.strokeStyle = PURPLE;
+      ctx.lineWidth = OVERPRINT_LINE_THICKNESS;
+      ctx.arc(x, y, FINISH_INNER_RADIUS, 0, 2 * Math.PI, false);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(x, y, FINISH_OUTER_RADIUS, 0, 2 * Math.PI, false);
+      ctx.fillText(code, x + 25, y + 20);
+      ctx.stroke();		
+		},
+		drawStartControl : function(startx, starty, code) {
+		  //Draw the white halo around the start triangle
+		  var x;
+		  var y;
+		  var len = 40;
+		  ctx.lineCap = 'round';
+		  ctx.strokeStyle = "white";
+		  ctx.lineWidth = OVERPRINT_LINE_THICKNESS + 2;
+		  ctx.beginPath();
+		  ctx.moveTo(startx, starty - (len / 2));            
+      y = starty + (len / 2);
+      x = startx + (len * Math.sin(2 * Math.PI / 12));
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x,y);      
+      x = x- (2 * (len * Math.sin(2 * Math.PI / 12)));
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x,y);     
+      ctx.lineTo(startx, starty - (len / 2));                                 
+      ctx.stroke();
+		  //Draw the white halo around the start code
+		  ctx.beginPath();
+      ctx.font = "14pt Arial";
+      ctx.strokeStyle = "white";
+      ctx.miterLimit = 2;
+      ctx.lineJoin = "circle";
+      ctx.lineWidth = 1.5;
+      ctx.strokeText(code, x + 20,y + 20);
+      ctx.stroke();
+      //Draw the purple start control
+      ctx.strokeStyle = PURPLE;
+      ctx.lineWidth = OVERPRINT_LINE_THICKNESS;
+      ctx.font = "14pt Arial";
+      ctx.fillStyle = PURPLE;
+      ctx.beginPath();
+      ctx.moveTo(startx, starty - (len / 2));            
+      y = starty + (len / 2);
+      x = startx + (len * Math.sin(2 * Math.PI / 12));
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x,y);      
+      x = x- (2 * (len * Math.sin(2 * Math.PI / 12)));
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x,y);     
+      ctx.lineTo(startx, starty - (len / 2));                                 
+      ctx.fillText(code, x +20, y + 20);
+      ctx.stroke();
+      
+		
+		
+		},
 		toggleControlDisplay : function() {
 			if (this.displayControls) {
 				jQuery("#btn-toggle-controls").removeClass("fa-ban").addClass("fa-circle-o");
@@ -1557,7 +1651,7 @@ jQuery(document).ready(function() {"use strict";
 		drawCourse : function(intensity) {
 			if (this.display) {
 				var temp;
-				ctx.lineWidth = 2;
+				ctx.lineWidth = OVERPRINT_LINE_THICKNESS;
 				ctx.strokeStyle = PURPLE;
 				// purple
 				ctx.font = '20pt Arial';
@@ -1569,16 +1663,16 @@ jQuery(document).ready(function() {"use strict";
 						case 1:
 							// control circle
 							ctx.beginPath();
-							ctx.arc(temp.x, temp.y, CONTROL_CIRCLE_DIAMETER, 0, 2 * Math.PI, false);
+							ctx.arc(temp.x, temp.y, CONTROL_CIRCLE_RADIUS, 0, 2 * Math.PI, false);
 							ctx.stroke();
 							break;
 						case 2:
 							// finish circle
 							ctx.beginPath();
-							ctx.arc(temp.x, temp.y, FINISH_INNER_DIAMETER, 0, 2 * Math.PI, false);
+							ctx.arc(temp.x, temp.y, FINISH_INNER_RADIUS, 0, 2 * Math.PI, false);
 							ctx.stroke();
 							ctx.beginPath();
-							ctx.arc(temp.x, temp.y, FINISH_OUTER_DIAMETER, 0, 2 * Math.PI, false);
+							ctx.arc(temp.x, temp.y, FINISH_OUTER_RADIUS, 0, 2 * Math.PI, false);
 							ctx.stroke();
 							break;
 						case 3:
@@ -1636,17 +1730,20 @@ jQuery(document).ready(function() {"use strict";
 	var BIG_SCREEN_BREAK_POINT = 800;
 	var SMALL_SCREEN_BREAK_POINT = 500;
 	var PURPLE = '#b300ff';
-	var CONTROL_CIRCLE_DIAMETER = 20;
-	var FINISH_INNER_DIAMETER = 16;
-	var FINISH_OUTER_DIAMETER = 24;
-  var RUNNER_DOT_DIAMETER = 6;
+	var CONTROL_CIRCLE_RADIUS = 20;
+	var FINISH_INNER_RADIUS = 16.4;
+	var FINISH_OUTER_RADIUS = 23.4;
+  var RUNNER_DOT_RADIUS = 6;
+  var OVERPRINT_LINE_THICKNESS = 2;
+  var REPLAY_LINE_THICKNESS = 3;
+  var START_TRIANGLE_HEIGHT = 40;
   // parameters for call to draw courses
   var DIM = 0.5;
   var FULL_INTENSITY = 1.0;
 	var infoPanelMaximised;
 	var infoHideIconSrc;
 	var infoShowIconSrc;
-
+  
 	initialize();
 
 	function initialize() {
