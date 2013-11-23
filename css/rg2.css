@@ -120,6 +120,9 @@ html, body {
   background-color: white;
 }
 
+.showcourse {
+	float: right;
+}
 
 #rg2-clock {
    font-weight: bold;

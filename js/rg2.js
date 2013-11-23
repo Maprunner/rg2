@@ -503,11 +503,11 @@ jQuery(document).ready(function() {"use strict";
 				}
 				ctx.arc(runner.x[t] + (RUNNER_DOT_RADIUS / 2), runner.y[t], RUNNER_DOT_RADIUS, 0, 2 * Math.PI, false);
 				ctx.fill();
-			  if(this.displayNames) {
+			  if(this.displayNames) {     
 			     ctx.fillStyle = "black";
 			     ctx.font = '14pt Arial';        
-           ctx.textAlign = "left";
-			     ctx.fillText(runner.name, runner.x[t] + 20, runner.y[t] + 20); 
+           ctx.textAlign = "left";			     			     			     			     
+			     ctx.fillText(runner.name, runner.x[t] + 15, runner.y[t] + 7); 
 			  }			
 			}
 			if (this.massStartByControl) {
@@ -985,8 +985,8 @@ jQuery(document).ready(function() {"use strict";
 					} else {
 						html += "</table></div>";
 					}
-					html += "<h3>" + temp.coursename + "</h3><div>";
-					html += "<input class='showcourse' id=" + temp.courseid + " type=checkbox name=course> Show course</input>";
+					html += "<h3>" + temp.coursename;
+					html += "<input class='showcourse' id=" + temp.courseid + " type=checkbox name=course title='Show course'></input></h3><div>";
 					html += "<table class='resulttable'><tr><th>Name</th><th>Time</th><th>Track</th><th>Replay</th></tr>";
 					oldCourseID = temp.courseid;
 				}
@@ -2217,17 +2217,7 @@ jQuery(document).ready(function() {"use strict";
 		jQuery("#rg2-course-table").empty();
 		jQuery("#rg2-course-table").append(courses.formatCoursesAsTable());
 
-		// checkbox on course tab to show a course
-		jQuery(".courselist").click(function(event) {
-			if (event.target.checked) {
-				courses.putOnDisplay(parseInt(event.currentTarget.id, 10));
-			} else {
-				courses.removeFromDisplay(parseInt(event.currentTarget.id, 10));
-				// make sure the all checkbox is not checked
-				jQuery(".allcourses").prop('checked', false);
-			}
-			redraw();
-		})
+
 		// checkbox on course tab to show all courses
 		jQuery(".allcourses").click(function(event) {
 			if (event.target.checked) {
@@ -2270,7 +2260,18 @@ jQuery(document).ready(function() {"use strict";
 	function createResultMenu() {
 		//loads menu from populated result array
 		var html = results.formatResultListAsAccordion();
+    // checkbox on course tab to show a course
+    jQuery(".courselist").unbind('click').click(function(event) {
+      if (event.target.checked) {
+        courses.putOnDisplay(parseInt(event.currentTarget.id, 10));
+      } else {
+        courses.removeFromDisplay(parseInt(event.currentTarget.id, 10));
+        // make sure the all checkbox is not checked
+        jQuery(".allcourses").prop('checked', false);
+      }
+      redraw();
 
+    })
 		jQuery("#rg2-result-list").empty();
 		jQuery("#rg2-result-list").append(html);
 
@@ -2280,6 +2281,8 @@ jQuery(document).ready(function() {"use strict";
 
 		// checkbox to show a course
 		jQuery(".showcourse").click(function(event) {
+			//Prevent opening accordion when check box is clicked
+			event.stopPropagation();
 			if (event.target.checked) {
 				courses.putOnDisplay(event.target.id);
 			} else {
