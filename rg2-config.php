@@ -12,8 +12,10 @@
   define('RG_BASE_DIRECTORY', 'http://www.happyherts.routegadget.co.uk');
 
   //
-  // Set encoding for data
-  define('RG_INPUT_ENCODING', 'ISO-8859-1');
+  // Set encoding for input data default UTF-8
+  define('RG_INPUT_ENCODING', 'UTF-8');
+  //
+  // Set encoding for output data returned throug API
   define('RG_OUTPUT_ENCODING', 'UTF-8');
 
   // User interface colour theme: see gallery at http://jqueryui.com/themeroller/
