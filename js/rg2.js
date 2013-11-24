@@ -511,7 +511,7 @@ jQuery(document).ready(function() {"use strict";
 			  }			
 			}
 			if (this.massStartByControl) {
-				this.checkForStopControl(this.animationSecs - timeOffset);
+				this.checkForStopControl(this.animationSecs);
 			}
 		},
 
@@ -519,16 +519,18 @@ jQuery(document).ready(function() {"use strict";
 		checkForStopControl : function(currentTime) {
 			var allAtControl = true;
 			var i;
-			// work out of everybody has got to the next control
+			var legTime;
+			// work out if everybody has got to the next control
 			for ( i = 0; i < this.runners.length; i++) {
-				if (this.runners[i].nextStopTime >= currentTime) {
+				legTime = this.runners[i].splits[this.massStartControl + 1] - this.runners[i].splits[this.massStartControl];
+				if (legTime > currentTime) {
 					allAtControl = false;
 					break;
 				}
-			}
+		  }
 			if (allAtControl) {
 				//move on to next control
-				this.massStartControl++;
+			  this.massStartControl++;
 				// find time at next control
 				for (var i = 0; i < this.runners.length; i++) {
 					if (this.massStartControl < (this.runners[i].splits.length)) {
@@ -537,9 +539,9 @@ jQuery(document).ready(function() {"use strict";
 					} else {
 						this.runners[i].nextStopTime = VERY_HIGH_TIME_IN_SECS;
 					}
-				}
-				this.resetAnimationTime(0);
-			}
+        }
+			  this.resetAnimationTime(0);
+		  }
 		},
 
 		goSlower : function() {
