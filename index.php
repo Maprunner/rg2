@@ -66,6 +66,7 @@
 		</div>
 		</div>
 		<div id="rg2-container">
+			
 			<div id="rg2-info-panel">
 				<ul>
 					<li>
@@ -104,7 +105,7 @@
 			      <textarea id="rg2-comments">Enter your comments</textarea>
 				  </div>
 		  </div>
-
+     
 		  <canvas id="rg2-map-canvas">Your browser does not support HTML5</canvas>
 	  
 		  <div class="rg2-ani-row row-1">
@@ -134,6 +135,7 @@
 			  </div>
 			</div>		   
 		  <div id="rg2-track-names"></div>
+		  <div id="rg2-event-info-dialog"></div>
 		  <div id="rg2-about-dialog" title="Routegadget 2.0 Viewer: Version 0.2">
 			 <p>This application allows you to view existing <a href="http://www.routegadget.net">Routegadget</a> information in any modern (HTML5-compliant) browser without the need for Java.</p>
 			 <p>This is an early prototype to allow testing of the user interface. The latest version is available for

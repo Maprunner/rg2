@@ -123,6 +123,9 @@ html, body {
 .showcourse {
 	float: right;
 }
+.event-info-icon {
+	float: right;
+}
 
 #rg2-clock {
    font-weight: bold;

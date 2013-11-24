@@ -738,6 +738,21 @@ jQuery(document).ready(function() {"use strict";
 			return this.events[this.activeEventID].mapid;
 		},
 
+    displayEventInfoDialog : function(eventid) {
+      var id= parseInt(eventid.replace('info-', ''),10);
+      jQuery("#rg2-event-info-dialog").empty()
+      .append(this.events[id].comment)     
+      .dialog({                       
+        title : this.events[id].name,
+        buttons : {
+          Ok : function() {
+            jQuery(this).dialog("close");
+          }
+        }
+      })
+    
+    },
+    
 		getActiveEventDate : function() {
 			if (this.activeEventID !== null) {
 			  return this.events[this.activeEventID].date;
@@ -758,14 +773,17 @@ jQuery(document).ready(function() {"use strict";
 			this.activeEventID = id;
 		},
 
-		formatEventsAsMenu : function() {
+		formatEventsAsMenu : function() {						
 			var html = '';
 			for (var i = this.events.length - 1; i >= 0; i--) {
-				html += "<li title='" + this.events[i].type + " event on " + this.events[i].date + "' id=" + i + "><a href='#" + i;
-				html += "'><span class='ui-icon ui-icon-calendar'></span>" + this.events[i].name + "</a></li>";
-			}
+				html += "<li title='" + this.events[i].type + " event on " + this.events[i].date + "' id=" + i + "><a href='#" + i + "'>";
+				if (this.events[i].comment != "") {
+				  html += "<i class='fa fa-info-circle event-info-icon' id='info-" + i +"'></i>";
+				}
+				html +=  this.events[i].name + "</a></li>";
+			}				
 			return html;
-		},
+		}    
 	}
 
 	function Event(data) {
@@ -1815,7 +1833,7 @@ jQuery(document).ready(function() {"use strict";
 		jQuery("#rg2-about-dialog").hide();
 		jQuery("#rg2-splits-display").hide();
 		jQuery("#rg2-track-names").hide();
-
+    jQuery("#rg2-event-info-dialog").hide();
 		trackTransforms(ctx);
 		resizeCanvas();
 
@@ -1901,12 +1919,13 @@ jQuery(document).ready(function() {"use strict";
 		  .click(function() {
 			  draw.undoLastPoint();
 		});
+   	
    	jQuery("#btn-undo").button("disable");
 
 		jQuery("#btn-zoom-in").click(function() {
 			zoom(1);
-		});
-
+		});		
+		
 		jQuery("#btn-reset").click(function() {
 			resetMapState();
 		});
@@ -2179,7 +2198,10 @@ jQuery(document).ready(function() {"use strict";
 		jQuery("#rg2-event-list").append(html);
 
 		jQuery("#rg2-event-list").menu({
-			select : function(event, ui) {
+			select : function(event, ui) {				
+				if (event.toElement.id.indexOf ('info-') === 0) {				  
+				  events.displayEventInfoDialog(event.toElement.id);				  
+				} else {				  				
 				// new event selected: show we are waiting
 				jQuery('body').css('cursor', 'wait');
 				courses.deleteAllCourses();
@@ -2224,7 +2246,7 @@ jQuery(document).ready(function() {"use strict";
 					var err = textStatus + ", " + error;
 					console.log("Courses request failed: " + err);
 				});
-
+        }
 			}
 		});
 
