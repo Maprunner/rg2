@@ -758,14 +758,23 @@ jQuery(document).ready(function() {"use strict";
 			this.activeEventID = id;
 		},
 
-		formatEventsAsMenu : function() {
+		formatEventsAsMenu : function() {						
+			var title;
 			var html = '';
 			for (var i = this.events.length - 1; i >= 0; i--) {
-				html += "<li title='" + this.events[i].type + " event on " + this.events[i].date + "' id=" + i + "><a href='#" + i;
-				html += "'><span class='ui-icon ui-icon-calendar'></span>" + this.events[i].name + "</a></li>";
-			}
+        if (this.events[i].comment != "") {
+          title = this.events[i].type + " event on " + this.events[i].date + ": " + this.events[i].comment;
+        } else {
+          title = this.events[i].type + " event on " + this.events[i].date;
+        }				
+				html += "<li title='" + title + "' id=" + i + "><a href='#" + i + "'>";
+				if (this.events[i].comment != "") {
+				  html += "<i class='fa fa-info-circle event-info-icon' id='info-" + i +"'></i>";
+				}
+				html +=  this.events[i].name + "</a></li>";
+			}				
 			return html;
-		},
+		}    
 	}
 
 	function Event(data) {
@@ -1413,10 +1422,10 @@ jQuery(document).ready(function() {"use strict";
 		toggleControlDisplay : function() {
 			if (this.displayControls) {
 				jQuery("#btn-toggle-controls").removeClass("fa-ban").addClass("fa-circle-o");
-				jQuery("#btn-toggle-controls").prop("title", "Show controls");
+				jQuery("#btn-toggle-controls").prop("title", "Show all controls map");
 			} else {
 				jQuery("#btn-toggle-controls").removeClass("fa-circle-o").addClass("fa-ban");
-				jQuery("#btn-toggle-controls").prop("title", "Hide controls");
+				jQuery("#btn-toggle-controls").prop("title", "Hide all controls map");
 			}
 			this.displayControls = !this.displayControls;
 		}
@@ -1663,46 +1672,7 @@ jQuery(document).ready(function() {"use strict";
 
 		toggleDisplay : function() {
 			this.display = !this.display;
-		},
-		
-		drawCoursex : function(intensity) {
-			if (this.display) {
-				var temp;
-				ctx.lineWidth = OVERPRINT_LINE_THICKNESS;
-				ctx.strokeStyle = PURPLE;				
-				ctx.font = '20pt Arial';
-				ctx.fillStyle = PURPLE;
-				ctx.globalAlpha = intensity;
-				for (var i = 0; i < this.coords.length; i++) {
-					temp = this.coords[i];
-					switch (temp.type) {
-						case 1:
-							// control circle
-							ctx.beginPath();
-							ctx.arc(temp.x, temp.y, CONTROL_CIRCLE_RADIUS, 0, 2 * Math.PI, false);
-							ctx.stroke();
-							break;
-						case 2:
-							// finish circle
-							controls.drawFinishControl(temp.x, temp.y, "");
-							break;
-						case 3:
-							// text
-							ctx.beginPath();
-							ctx.fillText(temp.a, temp.x, temp.y);
-							ctx.stroke();
-							break;
-						case 4:
-							// lines
-							ctx.beginPath();
-							ctx.moveTo(temp.a, temp.b);
-							ctx.lineTo(temp.x, temp.y);
-							ctx.stroke();
-							break;
-					}
-				}
-			}
-		},
+		},			
 		
   drawCourse : function(intensity) {
       if (this.display) {                                             
@@ -1714,10 +1684,6 @@ jQuery(document).ready(function() {"use strict";
         ctx.globalAlpha = intensity;        
         angle = this.getAngle (this.x[0], this.y[0], this.x[1], this.y[1]);
         controls.drawStartControl(this.x[0], this.y[0], "", angle);
-        for (var i = 1; i < (this.x.length - 1); i++) {          
-          controls.drawSingleControl(this.x[i], this.y[i], i);
-        }
-        controls.drawFinishControl(this.x[this.x.length - 1], this.y[this.y.length - 1], "");
         for (i = 0; i < (this.x.length - 1); i++) {
           angle = this.getAngle (this.x[i], this.y[i], this.x[i + 1], this.y[i + 1]);
           if (i === 0) {
@@ -1727,7 +1693,7 @@ jQuery(document).ready(function() {"use strict";
             c1x = this.x[i] + (CONTROL_CIRCLE_RADIUS * Math.cos(angle));  
             c1y = this.y[i] + (CONTROL_CIRCLE_RADIUS * Math.sin(angle));
           }
-          //Assume the last control is a finish
+          //Assume the last control in the array is a finish
           if (i === this.x.length - 2) {
            c2x = this.x[i + 1] - (FINISH_OUTER_RADIUS * Math.cos(angle));
            c2y = this.y[i + 1] - (FINISH_OUTER_RADIUS * Math.sin(angle));        
@@ -1743,6 +1709,11 @@ jQuery(document).ready(function() {"use strict";
           ctx.stroke();
         
        }
+        for (var i = 1; i < (this.x.length - 1); i++) {          
+          controls.drawSingleControl(this.x[i], this.y[i], i);
+        }
+        controls.drawFinishControl(this.x[this.x.length - 1], this.y[this.y.length - 1], "");
+        
         
       }
   },
@@ -1815,7 +1786,6 @@ jQuery(document).ready(function() {"use strict";
 		jQuery("#rg2-about-dialog").hide();
 		jQuery("#rg2-splits-display").hide();
 		jQuery("#rg2-track-names").hide();
-
 		trackTransforms(ctx);
 		resizeCanvas();
 
@@ -1901,12 +1871,13 @@ jQuery(document).ready(function() {"use strict";
 		  .click(function() {
 			  draw.undoLastPoint();
 		});
+   	
    	jQuery("#btn-undo").button("disable");
 
 		jQuery("#btn-zoom-in").click(function() {
 			zoom(1);
-		});
-
+		});		
+		
 		jQuery("#btn-reset").click(function() {
 			resetMapState();
 		});
@@ -2179,7 +2150,7 @@ jQuery(document).ready(function() {"use strict";
 		jQuery("#rg2-event-list").append(html);
 
 		jQuery("#rg2-event-list").menu({
-			select : function(event, ui) {
+			select : function(event, ui) {						  				
 				// new event selected: show we are waiting
 				jQuery('body').css('cursor', 'wait');
 				courses.deleteAllCourses();
@@ -2224,8 +2195,7 @@ jQuery(document).ready(function() {"use strict";
 					var err = textStatus + ", " + error;
 					console.log("Courses request failed: " + err);
 				});
-
-			}
+      }
 		});
 
 	}
