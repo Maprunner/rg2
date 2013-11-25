@@ -4,8 +4,31 @@
   if (file_exists(dirname(__FILE__) . '/rg2-override-config.php')) {
  	  require_once ( dirname(__FILE__) . '/rg2-override-config.php');
   }
-	
-	if (defined('OVERRIDE_KARTAT_DIRECTORY')) {
+
+  //
+  // Handle the encondig for input data if
+  // input encoding is not set to UTF-8
+  //
+  function encode_rg_input($input_str) {
+    //
+    $encoded = '';
+    //
+    if ( RG_INPUT_ENCODING != 'UTF-8' ) {
+      //
+      $encoded = @iconv( RG_INPUT_ENCODING, RG_OUTPUT_ENCODING, $input_str);
+    } else {
+      //
+      $encoded = $input_str;
+    }
+    //
+    if ( !$encoded ) {
+      $encoded = "";
+    }
+    //
+    return $encoded;
+  }
+
+  if (defined('OVERRIDE_KARTAT_DIRECTORY')) {
     $url = OVERRIDE_KARTAT_DIRECTORY;
 		
   } else {
@@ -27,12 +50,11 @@
   $output = array();
   $i = 0;
 
-	$row = 0;
-		   
+  $row = 0;
+	   
   switch ($type) {
 		
-	case 'events':
-
+    case 'events':
     
     if (($handle = fopen($url."kisat.txt", "r")) !== FALSE) {
       while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
@@ -41,11 +63,12 @@
 				$detail["mapid"] = $data[1];
 				$detail["status"] = $data[2];
 				// Issue #11: found a stray &#39; in a SUFFOC file
-				$detail["name"] = str_replace("&#39;", "'", $data[3]);
+				$name = encode_rg_input($data[3]);
+				$detail["name"] = str_replace("&#39;", "'", $name);
 				$detail["date"] = $data[4];
-				$detail["club"] = $data[5];
+				$detail["club"] = encode_rg_input($data[5]);
 				$detail["type"] = $data[6];
-				$detail["comment"] = $data[7];
+				$detail["comment"] = encode_rg_input($data[7]);
 				$output[$row] = $detail;				
         $row++;
       }
@@ -107,7 +130,7 @@
         $detail = array();
 				$detail["courseid"] = $data[0];
 				$detail["status"] = $data[1];
-				$detail["name"] = $data[2];
+				$detail["name"] = encode_rg_input($data[2]);
 				$detail["coords"] = $data[3];
 				if ($controlsFound) {
 					$detail["codes"] = $controls[$row];
@@ -138,24 +161,9 @@
   			if (strncmp($data[4], "Type your comment", 17) != 0) {
 				  $text[$comments]["resultid"] = $data[1];
 				  // replace carriage return and line break codes
-				  $temp = str_replace("#cr#", " ", $data[4]);			
-				  $temp = str_replace("#nl#", " ", $temp); 
-          
-          // this is a hack to handle non UTF-8 characters in comments for now.
-          // needs a proper look at in future, but for now just replace with ? 
-          
-          //reject overly long 2 byte sequences, as well as characters above U+10000 and replace with ?
-          $temp = preg_replace('/[\x00-\x08\x10\x0B\x0C\x0E-\x19\x7F]'.
-          '|[\x00-\x7F][\x80-\xBF]+'.
-          '|([\xC0\xC1]|[\xF0-\xFF])[\x80-\xBF]*'.
-          '|[\xC2-\xDF]((?![\x80-\xBF])|[\x80-\xBF]{2,})'.
-          '|[\xE0-\xEF](([\x80-\xBF](?![\x80-\xBF]))|(?![\x80-\xBF]{2})|[\x80-\xBF]{3,})/S',
-          '?', $temp );
- 
-          //reject overly long 3 byte sequences and UTF-16 surrogates and replace with ?
-          $temp = preg_replace('/\xE0[\x80-\x9F][\x80-\xBF]'.
-          '|\xED[\xA0-\xBF][\x80-\xBF]/S','?', $temp );
-					
+				  $temp = encode_rg_input($data[4]);
+				  $temp = str_replace("#cr#", " ", $temp);			
+				  $temp = str_replace("#nl#", " ", $temp); 					
 				  $text[$comments]["comments"] = $temp; 
           $comments++;
 				}
@@ -169,8 +177,8 @@
         $detail = array();
 				$detail["resultid"] = $data[0];
 				$detail["courseid"] = $data[1];
-				$detail["coursename"] = $data[2];
-				$detail["name"] = $data[3];
+				$detail["coursename"] = encode_rg_input($data[2]);
+				$detail["name"] = encode_rg_input($data[3]);
 				$detail["starttime"] = $data[4];
 				$detail["time"] = $data[7];
 				// trim trailing ; which create null fields when expanded
@@ -183,7 +191,7 @@
 				$detail["comments"] = "";
 				for ($i = 0; $i < $comments; $i++) {
 				  if ($detail["resultid"] == $text[$i]["resultid"]) {
-				    $detail["comments"] = $text[$i]["comments"];					
+				    $detail["comments"] = encode_rg_input($text[$i]["comments"]);					
 					}
 				}	
 				$output[$row] = $detail;				
@@ -201,7 +209,7 @@
         $detail = array();
 				$detail["trackid"] = $data[0];
 				$detail["resultid"] = $data[1];
-				$detail["name"] = $data[2];
+				$detail["name"] = encode_rg_input($data[2]);
 				$detail["null"] = $data[3];
 				$detail["coords"] = $data[4];
 				$output[$row] = $detail;				
