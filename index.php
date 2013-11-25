@@ -56,18 +56,17 @@
 				<a href="#"><img id="rg2-resize-info-icon" class="hide" src='<?php echo $img_url."hide-info.png"; ?>'></a>
 			</div>
 			<div id="rg2-header"><span id="rg2-event-title">Routegadget 2.0 Viewer</span></div>	
-			  <div class="rg2-button"><i id="btn-about"title = "Help" class="fa fa-question"></i></div>
+			  <div class="rg2-button"><i id="btn-about" title = "Help" class="fa fa-question"></i></div>
 			  <div class="rg2-button"><i id="btn-zoom-out" title = "Zoom out" class="fa fa-search-minus"></i></div>
 			  <div class="rg2-button"><i id="btn-reset" title = "Reset" class="fa fa-undo"></i></div>
 			  <div class="rg2-button"><i id="btn-zoom-in" title = "Zoom in" class="fa fa-search-plus"></i></div>
 			  <div class="rg2-button"><i id="btn-show-splits" title = "Splits" class="fa fa-list-alt"></i></div>
-			  <div class="rg2-button"><i  id="btn-toggle-controls" title = "Show controls"class="fa fa-circle-o"></i></div>
+			  <div class="rg2-button"><i  id="btn-toggle-controls" title = "Show all controls map" class="fa fa-circle-o"></i></div>
 		    <div class="rg2-button"><i id="btn-toggle-names" title = "Show runner names" class="fa fa-tag"></i></div> 
 		</div>
-		</div>
-		<div id="rg2-container">
-			
+		<div id="rg2-container">			
 			<div id="rg2-info-panel">
+				<div id="rg2-info-panel-tab-headers">
 				<ul>
 					<li>
 						<a href="#rg2-event-list">Events</a>
@@ -85,6 +84,8 @@
 						<a href="#rg2-draw">Draw</a>
 					</li>
 				</ul>
+				</div>
+				<div id="rg2-info-panel-tab-body">
 				<div id="rg2-event-list"></div>
 				<div id="rg2-course-list">
 					<div id="rg2-course-table"></div>
@@ -104,6 +105,7 @@
 			      <button id="btn-save-route">Save</button>
 			      <textarea id="rg2-comments">Enter your comments</textarea>
 				  </div>
+		    </div>
 		  </div>
      
 		  <canvas id="rg2-map-canvas">Your browser does not support HTML5</canvas>
@@ -130,12 +132,11 @@
           <input id="spn-tail-length" name="value" />
         </div>
         <div id="rg2-tails-type">
-			    <label for "btn-full-tails">Full tails </label>
+			    <label for="btn-full-tails">Full tails </label>
 			    <input type="checkbox" id="btn-full-tails" />
 			  </div>
 			</div>		   
 		  <div id="rg2-track-names"></div>
-		  <div id="rg2-event-info-dialog"></div>
 		  <div id="rg2-about-dialog" title="Routegadget 2.0 Viewer: Version 0.2">
 			 <p>This application allows you to view existing <a href="http://www.routegadget.net">Routegadget</a> information in any modern (HTML5-compliant) browser without the need for Java.</p>
 			 <p>This is an early prototype to allow testing of the user interface. The latest version is available for
