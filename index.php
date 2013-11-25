@@ -56,14 +56,13 @@
 				<a href="#"><img id="rg2-resize-info-icon" class="hide" src='<?php echo $img_url."hide-info.png"; ?>'></a>
 			</div>
 			<div id="rg2-header"><span id="rg2-event-title">Routegadget 2.0 Viewer</span></div>	
-			  <div class="rg2-button"><i id="btn-about"title = "Help" class="fa fa-question"></i></div>
+			  <div class="rg2-button"><i id="btn-about" title = "Help" class="fa fa-question"></i></div>
 			  <div class="rg2-button"><i id="btn-zoom-out" title = "Zoom out" class="fa fa-search-minus"></i></div>
 			  <div class="rg2-button"><i id="btn-reset" title = "Reset" class="fa fa-undo"></i></div>
 			  <div class="rg2-button"><i id="btn-zoom-in" title = "Zoom in" class="fa fa-search-plus"></i></div>
 			  <div class="rg2-button"><i id="btn-show-splits" title = "Splits" class="fa fa-list-alt"></i></div>
-			  <div class="rg2-button"><i  id="btn-toggle-controls" title = "Show controls"class="fa fa-circle-o"></i></div>
+			  <div class="rg2-button"><i  id="btn-toggle-controls" title = "Show controls" class="fa fa-circle-o"></i></div>
 		    <div class="rg2-button"><i id="btn-toggle-names" title = "Show runner names" class="fa fa-tag"></i></div> 
-		</div>
 		</div>
 		<div id="rg2-container">
 			<div id="rg2-info-panel">
@@ -101,7 +100,7 @@
           </div>	
 			      <button id="btn-undo">Undo</button>
 			      <button id="btn-save-route">Save</button>
-			      <textarea id="rg2-comments">Enter your comments</textarea>
+			      <textarea id="rg2-new-comments">Type your comment</textarea>
 				  </div>
 		  </div>
 
@@ -129,7 +128,7 @@
           <input id="spn-tail-length" name="value" />
         </div>
         <div id="rg2-tails-type">
-			    <label for "btn-full-tails">Full tails </label>
+			    <label for="btn-full-tails">Full tails </label>
 			    <input type="checkbox" id="btn-full-tails" />
 			  </div>
 			</div>		   

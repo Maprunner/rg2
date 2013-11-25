@@ -5,14 +5,11 @@
  *
  * Released under the MIT license
  *
- * Date: 2013-10-08T20:21Z
  */
 jQuery(document).ready(function() {"use strict";
 
   // handle drawing of a new route
   function Draw() {
-    this.courseid = null;
-    this.resultid = null;
     this.controlx = [];
     this.controly = [];
     this.x = [];
@@ -21,6 +18,17 @@ jQuery(document).ready(function() {"use strict";
     this.trackColor = '#ff0000';
     this.CLOSE_ENOUGH = 10;
     this.drawingInProgress = false;
+    this.routeData = new RouteData();
+  }
+  
+  function RouteData() {
+    this.courseid = null;
+    this.resultid = null;
+    this.eventid = null;
+    this.name = null;
+    this.comments = null;
+    this.x = [];
+    this.y = [];
   }
   
 	Draw.prototype = {
@@ -46,7 +54,8 @@ jQuery(document).ready(function() {"use strict";
 		
 		setCourse : function(courseid) {
 			if (!isNaN(courseid)) {
-				this.courseid = courseid;
+				this.routeData.eventid = events.getKartatEventID();
+				this.routeData.courseid = courseid;
 			  courses.putOnDisplay(courseid);
 			  redraw();
 		    var course = courses.getFullCourse(courseid);
@@ -62,20 +71,18 @@ jQuery(document).ready(function() {"use strict";
 		
 		setName : function(resultid) {
 			if (!isNaN(resultid)) {
-			  this.resultid = resultid;
+			  this.routeData.resultid = results.getKartatResultID(resultid);
+			  this.routeData.name = results.getRunnerName(resultid);
         this.drawingInProgress = true;
         redraw();
 		 }
 		},
 		
-		addNewPoint: function (evt) {
+		addNewPoint: function (x, y) {
 		  if (this.drawingInProgress) {
-		  	var X = evt.offsetX || (evt.pageX - canvas.offsetLeft);
-		    var Y = evt.offsetY || (evt.pageY - canvas.offsetTop);
-		    var newXY = ctx.transformedPoint(X, Y);
-			  this.x.push(parseInt(newXY.x, 10));
-			  this.y.push(parseInt(newXY.y, 10));
-			  if (this.closeEnough(newXY.x, newXY.y)) {
+			  this.x.push(parseInt(x, 10));
+			  this.y.push(parseInt(y, 10));
+			  if (this.closeEnough(x, y)) {
 			    this.x.push(this.controlx[this.nextControl]);
 			    this.y.push(this.controly[this.nextControl]);				
 			    this.nextControl++;
@@ -86,7 +93,7 @@ jQuery(document).ready(function() {"use strict";
 			  if (this.x.length > 1) {
    	      jQuery("#btn-undo").button("enable");
    	    } else {
-   	      jQuery("#btn-undo").button("enable");   	  	
+   	      jQuery("#btn-undo").button("disable");   	  	
    	    }
         redraw();
       }
@@ -113,9 +120,32 @@ jQuery(document).ready(function() {"use strict";
 		},
 
 		saveRoute: function () {
-        alert("Are you sure?");
+      this.routeData.x = this.x;
+      this.routeData.y = this.y;
+      this.routeData.comments = jQuery("#rg2-new-comments").val();
+      var $url = json_url + '?type=addroute&id=' + this.routeData.eventid;
+      // create JSON data
+      var json = JSON.stringify(this.routeData);
+      jQuery.ajax({
+        data: json,
+        type: 'POST',
+        url: $url,
+        dataType: 'json',
+        success: function(data, textStatus, jqXHR) {
+        	alert("Post OK " + data);
+        	draw.resetDrawing();
+				  results.deleteAllResults();
+				  results.getResults();
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+          alert("Post failed");
+        }        
+      })
 		},
 		
+		saveSuccessful: function(data, textStatus, jqXHR) {
+          			
+		},
 		
 		// snapto: test if drawn route is close enough to control
 		closeEnough: function (x, y) {
@@ -829,7 +859,52 @@ jQuery(document).ready(function() {"use strict";
 
 	Results.prototype = {
 		Constructor : Results,
-
+	  
+	  getResults: function () {
+		  jQuery.getJSON(json_url, {
+		  	id : events.getKartatEventID(),
+			  type : "results"
+		  }).done(function(json) {
+			  console.log("Results: " + json.data.length);
+			  jQuery.each(json.data, function() {
+				  results.addResult(new Result(this));
+			  });
+			  jQuery("#rg2-result-list").accordion("refresh");
+			  results.getGPSTracks();
+		  }).fail(function(jqxhr, textStatus, error) {
+			  jQuery('body').css('cursor', 'auto');
+			  var err = textStatus + ", " + error;
+			  console.log("Results request failed: " + err);
+		  });
+	  },
+	  
+	  getGPSTracks : function() {
+		  jQuery.getJSON(json_url, {
+			  id : events.getKartatEventID(),
+			  type : "tracks"
+		  }).done(function(json) {
+		  	console.log("Tracks: " + json.data.length);
+			  results.addTracks(json.data);
+			  createCourseMenu();
+			  createResultMenu();
+			  animation.updateAnimationDetails();
+			  jQuery('body').css('cursor', 'auto');
+			  jQuery("#rg2-info-panel").tabs("enable", TAB_COURSES);
+			  jQuery("#rg2-info-panel").tabs("enable", TAB_RESULTS);
+			  jQuery("#rg2-info-panel").tabs("enable", TAB_REPLAY);
+			  //jQuery("#rg2-info-panel").tabs("enable", TAB_DRAW);
+			  // open courses tab
+			  jQuery("#rg2-info-panel").tabs("option", "active", TAB_COURSES);
+			  jQuery("#rg2-info-panel").tabs("refresh");
+			  jQuery("#btn-show-splits").show();
+			  redraw();
+		  }).fail(function(jqxhr, textStatus, error) {
+			  jQuery('body').css('cursor', 'auto');
+			  var err = textStatus + ", " + error;
+			  console.log("Tracks request failed: " + err);
+		  });
+	  },
+		
 		addResult : function(result) {
 			this.results.push(result);
 		},
@@ -842,6 +917,10 @@ jQuery(document).ready(function() {"use strict";
 			return this.results[resultid];
 		},
 
+    getKartatResultID : function(resultid) {
+      return this.results[resultid].resultid;	
+    },
+    
 		drawTracks : function() {
 			for (var i = 0; i < this.results.length; i++) {
 				this.results[i].drawTrack();
@@ -1019,7 +1098,7 @@ jQuery(document).ready(function() {"use strict";
 				// don't include result if it has a valid track already
 				if ((this.results[i].courseid === courseid) && (!this.results[i].hasValidTrack)) {
 				  var opt = document.createElement("option");
-				  opt.value = this.results[i].resultid;
+				  opt.value = i;
 				  opt.text = this.results[i].name;
 				  dropdown.options.add(opt);
 				}
@@ -1029,6 +1108,7 @@ jQuery(document).ready(function() {"use strict";
 	};
 
 	function Result(data) {
+		// resultid is the kartat id value
 		this.resultid = parseInt(data.resultid, 10);
 		// GPS track ids are normal resultid + GPS_RESULT_OFFSET
 		if (this.resultid >= GPS_RESULT_OFFSET) {
@@ -1638,13 +1718,15 @@ jQuery(document).ready(function() {"use strict";
 	var FINISH_INNER_DIAMETER = 16;
 	var FINISH_OUTER_DIAMETER = 24;
   var RUNNER_DOT_DIAMETER = 6;
+  var DEFAULT_SCALE_FACTOR = 1.1;
   // parameters for call to draw courses
   var DIM = 0.5;
   var FULL_INTENSITY = 1.0;
 	var infoPanelMaximised;
 	var infoHideIconSrc;
 	var infoShowIconSrc;
-
+	var scaleFactor;
+	
 	initialize();
 
 	function initialize() {
@@ -1859,6 +1941,7 @@ jQuery(document).ready(function() {"use strict";
 	}
 
 	function resizeCanvas() {
+		scaleFactor = DEFAULT_SCALE_FACTOR;
 		var winwidth = window.innerWidth;
 		var winheight = window.innerHeight;
 		jQuery("#rg2-container").css("height", winheight - 70);
@@ -1874,8 +1957,8 @@ jQuery(document).ready(function() {"use strict";
 		} else {
 			jQuery("#rg2-event-title").hide();
 		}
-
-
+		lastX = canvas.width / 2;
+		lastY = canvas.height / 2;
 		redraw(false);
 	}
 
@@ -1962,9 +2045,10 @@ jQuery(document).ready(function() {"use strict";
 
 	}
 
-	var lastX = canvas.width / 2, lastY = canvas.height / 2;
+	var lastX = canvas.width / 2;
+	var lastY = canvas.height / 2;
 	var dragStart;
-	var dragged;
+	var dragged = false;
 	canvas.addEventListener('mousedown', function(evt) {
 		document.body.style.mozUserSelect = document.body.style.webkitUserSelect = document.body.style.userSelect = 'none';
 		lastX = evt.offsetX || (evt.pageX - canvas.offsetLeft);
@@ -1984,13 +2068,12 @@ jQuery(document).ready(function() {"use strict";
 	}, false);
 
 	canvas.addEventListener('mouseup', function(evt) {
-		dragStart = null;
-		if (!dragged) {
-      draw.addNewPoint(evt);
+  	if (!dragged) {
+      draw.addNewPoint(dragStart.x, dragStart.y);
 		}
+		dragStart = null;
 	}, false);
 
-	var scaleFactor = 1.1;
 	var zoom = function(zoomDirection) {
 		var pt = ctx.transformedPoint(lastX, lastY);
 		ctx.translate(pt.x, pt.y);
@@ -2055,7 +2138,7 @@ jQuery(document).ready(function() {"use strict";
 					courses.generateControlList();
 					jQuery("#btn-toggle-controls").show();
 					jQuery("#btn-toggle-names").show();
-					getResults();
+					results.getResults();
 				}).fail(function(jqxhr, textStatus, error) {
 					jQuery('body').css('cursor', 'auto');
 					var err = textStatus + ", " + error;
@@ -2065,52 +2148,6 @@ jQuery(document).ready(function() {"use strict";
 			}
 		});
 
-	}
-
-	function getResults() {
-
-		jQuery.getJSON(json_url, {
-			id : events.getKartatEventID(),
-			type : "results"
-		}).done(function(json) {
-			console.log("Results: " + json.data.length);
-			jQuery.each(json.data, function() {
-				results.addResult(new Result(this));
-			});
-			jQuery("#rg2-result-list").accordion("refresh");
-			getGPSTracks();
-		}).fail(function(jqxhr, textStatus, error) {
-			jQuery('body').css('cursor', 'auto');
-			var err = textStatus + ", " + error;
-			console.log("Results request failed: " + err);
-		});
-	}
-
-	function getGPSTracks() {
-		jQuery.getJSON(json_url, {
-			id : events.getKartatEventID(),
-			type : "tracks"
-		}).done(function(json) {
-			console.log("Tracks: " + json.data.length);
-			results.addTracks(json.data);
-			createCourseMenu();
-			createResultMenu();
-			animation.updateAnimationDetails();
-			jQuery('body').css('cursor', 'auto');
-			jQuery("#rg2-info-panel").tabs("enable", TAB_COURSES);
-			jQuery("#rg2-info-panel").tabs("enable", TAB_RESULTS);
-			jQuery("#rg2-info-panel").tabs("enable", TAB_REPLAY);
-			//jQuery("#rg2-info-panel").tabs("enable", TAB_DRAW);
-			// open courses tab
-			jQuery("#rg2-info-panel").tabs("option", "active", TAB_COURSES);
-			jQuery("#rg2-info-panel").tabs("refresh");
-			jQuery("#btn-show-splits").show();
-			redraw();
-		}).fail(function(jqxhr, textStatus, error) {
-			jQuery('body').css('cursor', 'auto');
-			var err = textStatus + ", " + error;
-			console.log("Tracks request failed: " + err);
-		});
 	}
 
 	function createCourseMenu() {
