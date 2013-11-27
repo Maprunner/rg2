@@ -1,4 +1,6 @@
 <?php
+  error_reporting(E_ALL);
+  
   require_once( dirname(__FILE__) . '/rg2-config.php' );
   // override allows testing of a local configuration such as c:/xampp/htdocs/rg2
   if (file_exists(dirname(__FILE__) . '/rg2-override-config.php')) {
@@ -6,11 +8,13 @@
   }
 	
 	if (defined('OVERRIDE_KARTAT_DIRECTORY')) {
-    $url = OVERRIDE_KARTAT_DIRECTORY;	
-  } else {
-    $url = RG_BASE_DIRECTORY."/kartat/";
+    $url = OVERRIDE_KARTAT_DIRECTORY;
+	} else {
+    $url = "../kartat/";
   }
+	
 	define('KARTAT_DIRECTORY', $url);
+  define ('LOCK_DIRECTORY', dirname(__FILE__)."/lock/");
 	
   if (isset($_GET['type'])) {
     $type = $_GET['type'];
@@ -28,28 +32,44 @@
   } else if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   	handlePostRequest($type, $id);
   } else {
-  	die();
+  	die("Invalid request");
   }
 
 function handlePostRequest($type, $eventid) {
+  	
+  $data = json_decode(file_get_contents('php://input'));
+	
   switch ($type) {	
 	case 'addroute':
-    addNewRoute($eventid);
+    addNewRoute($eventid, $data);
     break;		
 	default:
+	  die("Request not recognised: ".$type);
 		break;
 	}	
 }
 
-function addNewRoute($eventid) {
+function addNewRoute($eventid, $data) {
 	//rg2log("Add new route for eventid ".$eventid);
-  $data = json_decode(file_get_contents('php://input'));
-  // sanitize comments?
-  $newcommentdata = $data->courseid."|".$data->resultid."|".$data->name."||".$data->comments.PHP_EOL;
-	if (($handle = @fopen(KARTAT_DIRECTORY."kommentit_".$eventid.".txt", "a")) !== FALSE) {
-    fwrite($handle, $newcommentdata);
-  }
-  fclose($handle);
+
+	  // tidy up commments
+  // may need more later
+  $comments = trim($data->comments);
+	$newcommentdata = $data->courseid."|".$data->resultid."|".$data->name."||".$comments.PHP_EOL;
+	$filename = "kommentit_".$eventid.".txt";
+	
+	if (($handle = lockFile($filename)) !== FALSE) {
+    $status =fwrite($handle, $newcommentdata);		
+    unlockFile($filename, $handle);
+		if ($status) {
+		  $write["status"] = "Record saved";
+	  } else {
+		  $write["status"] = "Save error";
+	  }
+	} else {
+		  $write["status"] = "File lock error";
+	}
+  // errors writing comments not reported
 
   // convert x,y to internal RG format
   $track = "";
@@ -57,15 +77,71 @@ function addNewRoute($eventid) {
   	$track .= 'N'.$data->x[$i].';-'.$data->y[$i];
   }
 
-  $newtrackdata = $data->courseid."|".$data->resultid."| ".$data->name."|null|".$track.PHP_EOL;
-	
-	if (($handle = @fopen(KARTAT_DIRECTORY."merkinnat_".$eventid.".txt", "a")) !== FALSE) {
-    fwrite($handle, $newtrackdata);
+  $controls = "";
+  for ($i = 0; $i < count($data->controlx); $i++) {
+  	$controls .= 'N'.$data->controlx[$i].';-'.$data->controly[$i];
   }
-  fclose($handle);
+
+  $newtrackdata = $data->courseid."|".$data->resultid."| ".$data->name."|null|".$track."|".$controls.PHP_EOL;
+	
+	$filename = "merkinnat_".$eventid.".txt";
+	if (($handle = lockFile($filename)) !== FALSE) {
+    $status =fwrite($handle, $newtrackdata);		
+    unlockFile($filename, $handle);
+	  if ($status) {
+		  $write["status_msg"] = "Record saved";
+			$write["ok"] = true;
+	  } else {
+		  $write["status_msg"] = "Save error";
+			$write["ok"] = false;
+
+	  }
+	} else {
+		  $write["status_msg"] = "File lock error";
+			$write["ok"] = false;
+	}
 
   header("Content-type: application/json"); 
-  echo json_encode("Track saved.");
+  echo json_encode($write);
+}
+ 
+function lockFile($filename) {
+	  // lock directory version based on http://docstore.mik.ua/orelly/webprog/pcook/ch18_25.htm
+    // but note mkdir returns true if directory already exists!
+    if (is_dir(LOCK_DIRECTORY.$filename)) {
+    	// locked already by someone else
+    	//rg2log("Directory exists");
+    	$locked = false;
+		} else {
+			// try to lock it ourselves
+      $locked = mkdir(LOCK_DIRECTORY.$filename ,0777);
+    }
+		$tries = 0;
+		while (!$locked && ($tries < 5)) {
+			// wait 500ms up to 5 times trying to get a lock
+			usleep(500000);
+      if (is_dir(LOCK_DIRECTORY.$filename)) {
+    	  // locked already by someone else
+    	  $locked = false;
+		  } else {
+			  // try to lock it ourselves
+        $locked = mkdir(LOCK_DIRECTORY.$filename ,0777);
+      }
+			$tries++;
+		}
+		if ($locked) {
+			// returns file handle if OK, false otherwise
+			return fopen(KARTAT_DIRECTORY.$filename, "a");
+		} else {
+		  return $locked;
+		}
+}
+
+function unlockFile($filename, $handle) {
+	// ignore any errors but try to tidy up everything
+  @fflush($handle);
+  @fclose($handle);
+  @rmdir(LOCK_DIRECTORY.$filename);		   	
 }
 
 function handleGetRequest($type, $id) {
@@ -85,14 +161,17 @@ function handleGetRequest($type, $id) {
     $output = getTracksForEvent($id);
     break;
 	default:
+	  die("Request not recognised: ".$type);
 		break;
 	}
-	
 	// output JSON data
   header("Content-type: application/json"); 
   echo "{\"data\":" .json_encode($output). "}";
 }
 
+function myiconv($a, $b, $c) {
+	return $c;
+}
 function getAllEvents() {
   $output = array();
   $row = 0;
@@ -105,9 +184,9 @@ function getAllEvents() {
 			// Issue #11: found a stray &#39; in a SUFFOC file
 			$detail["name"] = str_replace("&#39;", "'", $data[3]);
 			$detail["date"] = $data[4];
-			$detail["club"] = iconv( RG_INPUT_ENCODING, RG_OUTPUT_ENCODING, $data[5]);
+			$detail["club"] = myiconv( RG_INPUT_ENCODING, RG_OUTPUT_ENCODING, $data[5]);
 			$detail["type"] = $data[6];
-			$detail["comment"] = iconv( RG_INPUT_ENCODING, RG_OUTPUT_ENCODING, $data[7]);
+			$detail["comment"] = myiconv( RG_INPUT_ENCODING, RG_OUTPUT_ENCODING, $data[7]);
 			$output[$row] = $detail;				
       $row++;
     }
@@ -143,10 +222,7 @@ function getResultsForEvent($eventid) {
   		if (strncmp($data[4], "Type your comment", 17) != 0) {
 			  $text[$comments]["resultid"] = $data[1];
 			  // replace carriage return and line break codes
-        $temp = @iconv( RG_INPUT_ENCODING, RG_OUTPUT_ENCODING, $data[4]);  
-        if (!$temp) {
-        	$temp = "";
-				}
+        ($temp = myiconv( RG_INPUT_ENCODING, RG_OUTPUT_ENCODING, $data[4])) || $temp = "";  
         $temp = str_replace("#cr#", " ", $temp);      
         $temp = str_replace("#nl#", " ", $temp);  
         $text[$comments]["comments"] = $temp;
@@ -162,8 +238,8 @@ function getResultsForEvent($eventid) {
       $detail = array();
 	  	$detail["resultid"] = $data[0];
 			$detail["courseid"] = $data[1];
-			$detail["coursename"] = @iconv( RG_INPUT_ENCODING, RG_OUTPUT_ENCODING, $data[2]);
-      $detail["name"] = @iconv( RG_INPUT_ENCODING, RG_OUTPUT_ENCODING, $data[3]);
+			$detail["coursename"] = myiconv( RG_INPUT_ENCODING, RG_OUTPUT_ENCODING, $data[2]);
+      $detail["name"] = myiconv( RG_INPUT_ENCODING, RG_OUTPUT_ENCODING, $data[3]);
 			$detail["starttime"] = $data[4];
 			$detail["time"] = $data[7];
 			// trim trailing ; which create null fields when expanded
@@ -242,7 +318,7 @@ function getCoursesForEvent($eventid) {
       $detail = array();
 		  $detail["courseid"] = $data[0];
 			$detail["status"] = $data[1];
-			$detail["name"] = iconv( RG_INPUT_ENCODING, RG_OUTPUT_ENCODING, $data[2]);
+			$detail["name"] = myiconv( RG_INPUT_ENCODING, RG_OUTPUT_ENCODING, $data[2]);
 			$detail["coords"] = $data[3];
 			if ($controlsFound) {
 				if (isScoreEvent($eventid))	{
@@ -272,9 +348,10 @@ function getTracksForEvent($eventid) {
       $detail = array();
 			$detail["courseid"] = $data[0];
 			$detail["resultid"] = $data[1];
-			$detail["name"] = iconv( RG_INPUT_ENCODING, RG_OUTPUT_ENCODING, $data[2]);
+			$detail["name"] = myiconv( RG_INPUT_ENCODING, RG_OUTPUT_ENCODING, $data[2]);
 			$detail["null"] = $data[3];
 			$detail["coords"] = $data[4];
+			//$detail["mystery"] = $data[5];
 			$output[$row] = $detail;				
       $row++;
     }

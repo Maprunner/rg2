@@ -97,13 +97,15 @@
           </div>					
           <div id="rg2-name-course">
         	  Select your name: <select  id="rg2-name-select"></select>
-          </div>	
-			      <button id="btn-undo">Undo</button>
-			      <button id="btn-save-route">Save</button>
-			      <textarea id="rg2-new-comments">Type your comment</textarea>
-				  </div>
+          </div>
+          <div>
+          	<textarea id="rg2-new-comments"></textarea>
+          </div>
+			    <button id="btn-three-seconds">+3 sec</button>
+			    <button id="btn-undo">Undo</button>
+			    <button id="btn-save-route">Save</button>
+				</div>
 		  </div>
-
 		  <canvas id="rg2-map-canvas">Your browser does not support HTML5</canvas>
 	  
 		  <div class="rg2-ani-row row-1">
@@ -113,13 +115,13 @@
         <div id="rg2-clock"></div>
 		  </div>
 		  <div class="rg2-ani-row row-2">
-          <div id="rg2-clock-slider"></div>
+        <div id="rg2-clock-slider"></div>
       </div>
 		  <div class="rg2-ani-row row-3">
         <div id="rg2-replay-start-control">
-        	Start at: <select  id="rg2-control-select"><option>S</option></select>
+      	  Start at: <select  id="rg2-control-select"><option>S</option></select>
         </div>
-			  <div class="rg2-button"><i id="btn-real-time" title = "Real time" class="fa fa-clock-o"></i></div>
+		    <div class="rg2-button"><i id="btn-real-time" title = "Real time" class="fa fa-clock-o"></i></div>
 			  <div class="rg2-button"><i id="btn-mass-start" title = "Mass start" class="fa fa-users"></i></div>
 		  </div>
 		  <div class="rg2-ani-row row-4">
@@ -128,10 +130,10 @@
           <input id="spn-tail-length" name="value" />
         </div>
         <div id="rg2-tails-type">
-			    <label for="btn-full-tails">Full tails </label>
-			    <input type="checkbox" id="btn-full-tails" />
-			  </div>
-			</div>		   
+		      <label for="btn-full-tails">Full tails </label>
+		      <input type="checkbox" id="btn-full-tails" />
+		    </div>
+		  </div>		   
 		  <div id="rg2-track-names"></div>
 		  <div id="rg2-about-dialog" title="Routegadget 2.0 Viewer: Version 0.2">
 			 <p>This application allows you to view existing <a href="http://www.routegadget.net">Routegadget</a> information in any modern (HTML5-compliant) browser without the need for Java.</p>
@@ -143,8 +145,9 @@
 			  <p><strong>Simon Errington</strong> (simon (at) maprunner.co.uk)</p>
 		  </div>
 		  <div id="rg2-splits-table" title="Splits display"></div>
-		</div>
-		<div id="rg2-footer"><?php echo FOOTER_TEXT; ?></div>
+    </div>
+
+    <div id="rg2-footer"><?php echo FOOTER_TEXT; ?></div>
 
 		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
 		<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>

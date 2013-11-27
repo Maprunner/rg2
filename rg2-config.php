@@ -16,7 +16,7 @@
  define('RG_INPUT_ENCODING', 'UTF-8');
  
  // Set encoding for output data returned through API
- define('RG_OUTPUT_ENCODING', 'UTF-8//TRANSLIT//IGNORE');
+ define('RG_OUTPUT_ENCODING', 'UTF-8');
 
  // User interface colour theme: see gallery at http://jqueryui.com/themeroller/
  // Example define('UI_THEME', 'excite-bike');

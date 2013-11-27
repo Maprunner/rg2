@@ -24,6 +24,19 @@ html, body {
     line-height: 30px;
 }
 
+#rg2-course-select, #rg2-name-select {
+  float: right;
+  min-width: 200px;
+  max-width: 200px;
+}
+
+#rg2-new-comments {
+	margin-top:10px;
+	margin-bottom: 10px;
+	width: 100%;
+	height: 100px;
+}
+
 .rg2-ani-row {
     background: silver;
     color: white;	
@@ -307,4 +320,11 @@ height: 20px;
 #rg2-tails-spinner .ui-state-error .ui-icon,
 .ui-state-error-text .ui-icon {
 	background-image: url(../img/ui-icons_cd0a0a_256x240.png);
+}
+
+/* allow close button on dialog to be hidden
+ * see http://api.jqueryui.com/dialog
+ */
+.no-close .ui-dialog-titlebar-close {
+display: none;
 }
