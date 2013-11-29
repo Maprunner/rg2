@@ -112,7 +112,7 @@ jQuery(document).ready(function() {"use strict";
         }]
       });			  	
 	  },
-	  
+
 	  resetDrawing : function () {
       var msg = "<div id='drawing-reset-dialog'>All information you have entered will be removed. Are you sure you want to reset?</div>";
       var me = this;
@@ -295,20 +295,20 @@ jQuery(document).ready(function() {"use strict";
         ctx.beginPath();
 			  if (this.nextControl < (this.controlx.length - 1)) {
           // normal control
-				  ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], CONTROL_CIRCLE_DIAMETER, 0, 2 * Math.PI, false);
+				  ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], CONTROL_CIRCLE_RADIUS, 0, 2 * Math.PI, false);
 			  } else {
 				  // finish
-				  ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], FINISH_INNER_DIAMETER, 0, 2 * Math.PI, false);				
+				  ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], FINISH_INNER_RADIUS, 0, 2 * Math.PI, false);				
 				  ctx.stroke();
 				  ctx.beginPath();
-				  ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], FINISH_OUTER_DIAMETER, 0, 2 * Math.PI, false);				
+				  ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], FINISH_OUTER_RADIUS, 0, 2 * Math.PI, false);				
 			  }
 			  // dot at centre of control circle
 			  ctx.fillRect(this.controlx[this.nextControl] - 1, this.controly[this.nextControl] - 1, 3, 3)
 			  ctx.stroke();
 			  // dot at start of route
 			  ctx.beginPath();
-			  ctx.arc(this.routeData.x[0] + (RUNNER_DOT_DIAMETER/2), this.routeData.y[0], RUNNER_DOT_DIAMETER, 0, 2 * Math.PI, false);
+			  ctx.arc(this.routeData.x[0] + (RUNNER_DOT_RADIUS/2), this.routeData.y[0], RUNNER_DOT_RADIUS, 0, 2 * Math.PI, false);
 			  ctx.fill();
 			}
 			// route itself
@@ -634,7 +634,7 @@ jQuery(document).ready(function() {"use strict";
 			jQuery("#rg2-clock-slider").slider("value", this.animationSecs);
 			jQuery("#rg2-clock").text(this.formatSecsAsHHMMSS(this.animationSecs));
 
-			ctx.lineWidth = 3;
+			ctx.lineWidth = REPLAY_LINE_THICKNESS;
 			ctx.globalAlpha = 1.0;
 			var runner;
 			var timeOffset;
@@ -679,17 +679,17 @@ jQuery(document).ready(function() {"use strict";
 				} else {
 					t = runner.nextStopTime;
 				}
-				ctx.arc(runner.x[t] + (RUNNER_DOT_DIAMETER / 2), runner.y[t], RUNNER_DOT_DIAMETER, 0, 2 * Math.PI, false);
+				ctx.arc(runner.x[t] + (RUNNER_DOT_RADIUS / 2), runner.y[t], RUNNER_DOT_RADIUS, 0, 2 * Math.PI, false);
 				ctx.fill();
-			  if(this.displayNames) {
+			  if(this.displayNames) {     
 			     ctx.fillStyle = "black";
-			     ctx.font = '14pt Arial';        
-           ctx.textAlign = "left";
-			     ctx.fillText(runner.name, runner.x[t] + 20, runner.y[t] + 20); 
+			     ctx.font = '20pt Arial';        
+           ctx.textAlign = "left";			     			     			     			     
+			     ctx.fillText(runner.name, runner.x[t] + 15, runner.y[t] + 7); 
 			  }			
 			}
 			if (this.massStartByControl) {
-				this.checkForStopControl(this.animationSecs - timeOffset);
+				this.checkForStopControl(this.animationSecs);
 			}
 		},
 
@@ -697,16 +697,18 @@ jQuery(document).ready(function() {"use strict";
 		checkForStopControl : function(currentTime) {
 			var allAtControl = true;
 			var i;
-			// work out of everybody has got to the next control
+			var legTime;
+			// work out if everybody has got to the next control
 			for ( i = 0; i < this.runners.length; i++) {
-				if (this.runners[i].nextStopTime >= currentTime) {
+				legTime = this.runners[i].splits[this.massStartControl + 1] - this.runners[i].splits[this.massStartControl];
+				if (legTime > currentTime) {
 					allAtControl = false;
 					break;
 				}
-			}
+		  }
 			if (allAtControl) {
 				//move on to next control
-				this.massStartControl++;
+			  this.massStartControl++;
 				// find time at next control
 				for (var i = 0; i < this.runners.length; i++) {
 					if (this.massStartControl < (this.runners[i].splits.length)) {
@@ -715,9 +717,9 @@ jQuery(document).ready(function() {"use strict";
 					} else {
 						this.runners[i].nextStopTime = VERY_HIGH_TIME_IN_SECS;
 					}
-				}
-				this.resetAnimationTime(0);
-			}
+        }
+			  this.resetAnimationTime(0);
+		  }
 		},
 
 		goSlower : function() {
@@ -981,13 +983,22 @@ jQuery(document).ready(function() {"use strict";
 		},
 
 		formatEventsAsMenu : function() {
+      var title;
 			var html = '';
 			for (var i = this.events.length - 1; i >= 0; i--) {
-				html += "<li title='" + this.events[i].type + " event on " + this.events[i].date + "' id=" + i + "><a href='#" + i;
-				html += "'><span class='ui-icon ui-icon-calendar'></span>" + this.events[i].name + "</a></li>";
-			}
+        if (this.events[i].comment != "") {
+          title = this.events[i].type + " event on " + this.events[i].date + ": " + this.events[i].comment;
+        } else {
+          title = this.events[i].type + " event on " + this.events[i].date;
+        }				
+				html += "<li title='" + title + "' id=" + i + "><a href='#" + i + "'>";
+				if (this.events[i].comment != "") {
+				  html += "<i class='fa fa-info-circle event-info-icon' id='info-" + i +"'></i>";
+				}
+				html +=  this.events[i].name + "</a></li>";
+			}				
 			return html;
-		},
+		}    
 	}
 
 	function Event(data) {
@@ -1107,7 +1118,22 @@ jQuery(document).ready(function() {"use strict";
 		addResult : function(result) {
 			this.results.push(result);
 		},
-
+    
+    getResultsByCourseID : function(courseid) {
+      var count = 0;
+      for (var i = 0; i < this.results.length; i++) {
+        if (this.results[i].courseid === courseid) {
+          count++;
+        }
+      
+      }
+      return count;
+    },
+		
+		getTotalResultsByCourseID : function(courseid) {
+      return this.results.length;                       		
+		},
+		
 		getCourseID : function(resultid) {
 			return this.results[resultid].courseid;
 		},
@@ -1262,8 +1288,8 @@ jQuery(document).ready(function() {"use strict";
 					} else {
 						html += "</table></div>";
 					}
-					html += "<h3>" + temp.coursename + "</h3><div>";
-					html += "<input class='showcourse' id=" + temp.courseid + " type=checkbox name=course> Show course</input>";
+					html += "<h3>" + temp.coursename;
+					html += "<input class='showcourse' id=" + temp.courseid + " type=checkbox name=course title='Show course'></input></h3><div>";
 					html += "<table class='resulttable'><tr><th>Name</th><th>Time</th><th>Track</th><th>Replay</th></tr>";
 					oldCourseID = temp.courseid;
 				}
@@ -1545,57 +1571,150 @@ jQuery(document).ready(function() {"use strict";
 		drawControls : function() {
 			if (this.displayControls) {
         var x;
-        var y;
-        var len = 40;
-				ctx.lineWidth = 2;
+        var y;        
+				ctx.lineWidth = OVERPRINT_LINE_THICKNESS;
 				ctx.strokeStyle = PURPLE;
-				ctx.font = '14pt Arial';
-				ctx.fillStyle = PURPLE;
-				ctx.textAlign = "left";
-				ctx.globalAlpha = 1.0;
-				ctx.lineCap = 'round';
+				ctx.font = '20pt Arial';
+				ctx.fillStyle = PURPLE;				
+				ctx.globalAlpha = 1.0;				
         for (var i = 0; i < this.controls.length; i++) {
           // Assume things starting with 'F' are a Finish
           if (this.controls[i].code.indexOf('F') == 0){
-            ctx.beginPath();
-            ctx.arc(this.controls[i].x, this.controls[i].y, 16, 0, 2 * Math.PI, false);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.arc(this.controls[i].x, this.controls[i].y, 24, 0, 2 * Math.PI, false);
-            ctx.fillText(this.controls[i].code, this.controls[i].x + 26, this.controls[i].y + 26);
-            ctx.stroke();                   
+            this.drawFinishControl(this.controls[i].x, this.controls[i].y, this.controls[i].code);                   
           } else {
             // Assume things starting with 'S' are a Start             
             if (this.controls[i].code.indexOf('S') == 0){
-              ctx.beginPath();
-              ctx.moveTo(this.controls[i].x, this.controls[i].y - (len / 2));
-              y = this.controls[i].y + (len / 2);
-              x = this.controls[i].x + (len * Math.sin(2 * Math.PI / 12));
-              ctx.lineTo(x, y);
-              x = x- (2 * (len * Math.sin(2 * Math.PI / 12)));
-              ctx.lineTo(x, y);
-              ctx.lineTo(this.controls[i].x, this.controls[i].y - (len / 2));              
-              ctx.fillText(this.controls[i].code, this.controls[i].x + 26, this.controls[i].y + 26);              
-              ctx.stroke();                                                        
+              this.drawStartControl(this.controls[i].x, this.controls[i].y, this.controls[i].code, (6* Math.PI/4));                                     
             } else {
               // Else it's a normal control
-              ctx.beginPath();
-              ctx.arc(this.controls[i].x, this.controls[i].y, 20, 0, 2 * Math.PI, false);
-              ctx.fillText(this.controls[i].code, this.controls[i].x + 20, this.controls[i].y + 20);
-              ctx.stroke();              
+              this.drawSingleControl(this.controls[i].x, this.controls[i].y, this.controls[i].code); 
+                           
             }
           }
         }
       }
 		},
-
+    drawSingleControl : function (x, y, code) {
+      //Draw the white halo around the controls
+      ctx.beginPath();            
+      ctx.strokeStyle = "white";
+      ctx.lineWidth = OVERPRINT_LINE_THICKNESS + 2;
+      ctx.arc(x, y, 20, 0, 2 * Math.PI, false);             
+      ctx.stroke();
+      //Draw the white halo around the control code                
+      ctx.beginPath();
+      ctx.textAlign = "left";
+      ctx.font = "20pt Arial";
+      ctx.strokeStyle = "white";
+      ctx.miterLimit = 2;
+      ctx.lineJoin = "circle";
+      ctx.lineWidth = 1.5;
+      ctx.strokeText(code, x + 25,y + 20);            
+      //Draw the purple control
+      ctx.beginPath();
+      ctx.font = "20pt Arial";
+      ctx.fillStyle = PURPLE;
+      ctx.strokeStyle = PURPLE;
+      ctx.lineWidth = OVERPRINT_LINE_THICKNESS;
+      ctx.arc(x, y, 20, 0, 2 * Math.PI, false);
+      ctx.fillText(code, x + 25, y + 20);
+      ctx.stroke();
+    },
+		drawFinishControl : function (x, y, code) {
+		  //Draw the white halo around the finish control
+		  ctx.strokeStyle = "white";
+		  ctx.lineWidth = OVERPRINT_LINE_THICKNESS + 2;
+		  ctx.beginPath();		  		  
+		  ctx.arc(x, y, FINISH_INNER_RADIUS, 0, 2 * Math.PI, false);
+      ctx.stroke();
+		  ctx.beginPath();
+      ctx.arc(x, y, FINISH_OUTER_RADIUS, 0, 2 * Math.PI, false);
+		  ctx.stroke();
+		  //Draw the white halo around the finish code
+		  ctx.beginPath();
+      ctx.font = "20pt Arial";
+      ctx.textAlign = "left";
+      ctx.strokeStyle = "white";
+      ctx.miterLimit = 2;
+      ctx.lineJoin = "circle";
+      ctx.lineWidth = 1.5;
+      ctx.strokeText(code, x + 30,y + 20);
+		  ctx.stroke();
+		  //Draw the purple finish control
+		  ctx.beginPath();     
+      ctx.fillStyle = PURPLE;
+      ctx.strokeStyle = PURPLE;
+      ctx.lineWidth = OVERPRINT_LINE_THICKNESS;
+      ctx.arc(x, y, FINISH_INNER_RADIUS, 0, 2 * Math.PI, false);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(x, y, FINISH_OUTER_RADIUS, 0, 2 * Math.PI, false);
+      ctx.fillText(code, x + 30, y + 20);
+      ctx.stroke();		
+		},
+		drawStartControl : function(startx, starty, code, angle) {
+		  //Draw the white halo around the start triangle
+		  var x = [];
+		  var y = [];
+		  var DEGREES_120 = (2 * Math.PI/3);
+		  angle = angle + (Math.PI /2);
+		  ctx.lineCap = 'round';
+		  ctx.strokeStyle = "white";
+		  ctx.lineWidth = OVERPRINT_LINE_THICKNESS + 2;
+		  ctx.beginPath();
+		  x[0] = startx + (START_TRIANGLE_LENGTH * Math.sin(angle));
+		  y[0] = starty - (START_TRIANGLE_LENGTH * Math.cos(angle));
+		  ctx.moveTo(x[0], y[0]);            
+      x[1] = startx + (START_TRIANGLE_LENGTH * Math.sin(angle + DEGREES_120));
+      y[1] = starty - (START_TRIANGLE_LENGTH * Math.cos(angle + DEGREES_120));
+      ctx.lineTo(x[1], y[1]);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x[1],y[1]);      
+      x[2] = startx + (START_TRIANGLE_LENGTH * Math.sin(angle - DEGREES_120));
+      y[2] = starty - (START_TRIANGLE_LENGTH * Math.cos(angle - DEGREES_120));
+      ctx.lineTo(x[2], y[2]);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x[2],y[2]);     
+      ctx.lineTo(x[0], y[0]);                                 
+      ctx.stroke();
+		  //Draw the white halo around the start code
+		  ctx.beginPath();
+      ctx.font = "20pt Arial";
+      ctx.textAlign = "left";
+      ctx.strokeStyle = "white";
+      ctx.miterLimit = 2;
+      ctx.lineJoin = "circle";
+      ctx.lineWidth = 1.5;
+      ctx.strokeText(code, x[0] + 25, y[0] + 25);
+      ctx.stroke();
+      //Draw the purple start control
+      ctx.strokeStyle = PURPLE;
+      ctx.lineWidth = OVERPRINT_LINE_THICKNESS;
+      ctx.font = "20pt Arial";
+      ctx.fillStyle = PURPLE;
+      ctx.beginPath();
+      ctx.moveTo(x[0], y[0]);          
+      ctx.lineTo(x[1], y[1]);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x[1], y[1]);
+      ctx.lineTo(x[2], y[2]);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x[2],y[2]);
+      ctx.lineTo(x[0], y[0]);                                 
+      ctx.fillText(code, x[0] +25, y[0] + 25);
+      ctx.stroke();
+		},
 		toggleControlDisplay : function() {
 			if (this.displayControls) {
 				jQuery("#btn-toggle-controls").removeClass("fa-ban").addClass("fa-circle-o");
-				jQuery("#btn-toggle-controls").prop("title", "Show controls");
+				jQuery("#btn-toggle-controls").prop("title", "Show all controls map");
 			} else {
 				jQuery("#btn-toggle-controls").removeClass("fa-circle-o").addClass("fa-ban");
-				jQuery("#btn-toggle-controls").prop("title", "Hide controls");
+				jQuery("#btn-toggle-controls").prop("title", "Hide all controls map");
 			}
 			this.displayControls = !this.displayControls;
 		}
@@ -1780,11 +1899,12 @@ jQuery(document).ready(function() {"use strict";
 		},
 
 		formatCoursesAsTable : function() {
-			var html = "<table class='coursemenutable'><tr><th>Course</th><th>Show</th><th>Tracks</th><th>Show</th></tr>";
+			var html = "<table class='coursemenutable'><tr><th>Course</th><th>Show</th><th>Runners</th><th>Tracks</th><th>Show</th></tr>";
 			for (var i = 0; i < this.courses.length; i++) {
 				if (this.courses[i] != undefined) {
 					html += "<tr><td>" + this.courses[i].name + "</td>";
 					html += "<td><input class='courselist' id=" + i + " type=checkbox name=course></input></td>";
+					html += "<td>" + results.getResultsByCourseID(i) + "</td>";
 					html += "<td>" + this.courses[i].trackcount + "</td>";
 					if (this.courses[i].trackcount > 0) {
 						html += "<td><input id=" + i + " class='tracklist' type=checkbox name=track></input></td>";
@@ -1797,6 +1917,7 @@ jQuery(document).ready(function() {"use strict";
 			// add bottom row for all courses checkboxes
 			html += "<tr><td>All</td>";
 			html += "<td><input class='allcourses' id=" + i + " type=checkbox name=course></input></td>";
+			html += "<td>" + results.getTotalResultsByCourseID() + "</td>";
 			if (this.totaltracks > 0) {
 				html += "<td>" + this.totaltracks + "</td><td><input id=" + i + " class='alltracks' type=checkbox name=track></input></td>";
 			} else {
@@ -1839,53 +1960,62 @@ jQuery(document).ready(function() {"use strict";
 
 		toggleDisplay : function() {
 			this.display = !this.display;
-		},
-		drawCourse : function(intensity) {
-			if (this.display) {
-				var temp;
-				ctx.lineWidth = 2;
-				ctx.strokeStyle = PURPLE;
-				// purple
-				ctx.font = '20pt Arial';
-				ctx.fillStyle = PURPLE;
-				ctx.globalAlpha = intensity;
-				for (var i = 0; i < this.coords.length; i++) {
-					temp = this.coords[i];
-					switch (temp.type) {
-						case 1:
-							// control circle
-							ctx.beginPath();
-							ctx.arc(temp.x, temp.y, CONTROL_CIRCLE_DIAMETER, 0, 2 * Math.PI, false);
-							ctx.stroke();
-							break;
-						case 2:
-							// finish circle
-							ctx.beginPath();
-							ctx.arc(temp.x, temp.y, FINISH_INNER_DIAMETER, 0, 2 * Math.PI, false);
-							ctx.stroke();
-							ctx.beginPath();
-							ctx.arc(temp.x, temp.y, FINISH_OUTER_DIAMETER, 0, 2 * Math.PI, false);
-							ctx.stroke();
-							break;
-						case 3:
-							// text
-							ctx.beginPath();
-							ctx.fillText(temp.a, temp.x, temp.y);
-							ctx.stroke();
-							break;
-						case 4:
-							// lines
-							ctx.beginPath();
-							ctx.moveTo(temp.a, temp.b);
-							ctx.lineTo(temp.x, temp.y);
-							ctx.stroke();
-							break;
-					}
-				}
-			}
-		}
-	};
+		},			
+		
+  drawCourse : function(intensity) {
+      if (this.display) {                                             
+        var angle;
+        var c1x;
+        var c1y;
+        var c2x;
+        var c2y;       
+        ctx.globalAlpha = intensity;        
+        angle = this.getAngle (this.x[0], this.y[0], this.x[1], this.y[1]);
+        controls.drawStartControl(this.x[0], this.y[0], "", angle);
+        for (i = 0; i < (this.x.length - 1); i++) {
+          angle = this.getAngle (this.x[i], this.y[i], this.x[i + 1], this.y[i + 1]);
+          if (i === 0) {
+            c1x = this.x[i] + (START_TRIANGLE_LENGTH * Math.cos(angle));  
+            c1y = this.y[i] + (START_TRIANGLE_LENGTH * Math.sin(angle));   
+          } else {
+            c1x = this.x[i] + (CONTROL_CIRCLE_RADIUS * Math.cos(angle));  
+            c1y = this.y[i] + (CONTROL_CIRCLE_RADIUS * Math.sin(angle));
+          }
+          //Assume the last control in the array is a finish
+          if (i === this.x.length - 2) {
+           c2x = this.x[i + 1] - (FINISH_OUTER_RADIUS * Math.cos(angle));
+           c2y = this.y[i + 1] - (FINISH_OUTER_RADIUS * Math.sin(angle));        
+          } else {
+            c2x = this.x[i + 1] - (CONTROL_CIRCLE_RADIUS * Math.cos(angle));
+            c2y = this.y[i + 1] - (CONTROL_CIRCLE_RADIUS * Math.sin(angle)); 
+          }
+          ctx.lineWidth = OVERPRINT_LINE_THICKNESS;
+          ctx.strokeStyle = PURPLE;         
+          ctx.beginPath();
+          ctx.moveTo(c1x, c1y);
+          ctx.lineTo(c2x, c2y);
+          ctx.stroke();
+        
+       }
+        for (var i = 1; i < (this.x.length - 1); i++) {          
+          controls.drawSingleControl(this.x[i], this.y[i], i);
+        }
+        controls.drawFinishControl(this.x[this.x.length - 1], this.y[this.y.length - 1], "");
+        
+        
+      }
+  },
+	getAngle : function(x1, y1, x2, y2) {
+	  var angle = Math.atan2((y2 - y1), (x2 - x1));
+	  if (angle < 0) {
+	    angle = angle + (2 * Math.PI);	  
+	  }	 	 
+	 return angle;
+	}
+	
+	}
 
+	
 	function CourseCoord(data) {
 		// store y and b as positive rather than negative to simplify screen drawing
 		this.type = parseInt(data[0], 10);
@@ -1922,12 +2052,16 @@ jQuery(document).ready(function() {"use strict";
 	var BIG_SCREEN_BREAK_POINT = 800;
 	var SMALL_SCREEN_BREAK_POINT = 500;
 	var PURPLE = '#b300ff';
-	var CONTROL_CIRCLE_DIAMETER = 20;
-	var FINISH_INNER_DIAMETER = 16;
-	var FINISH_OUTER_DIAMETER = 24;
-  var RUNNER_DOT_DIAMETER = 6;
+	var CONTROL_CIRCLE_RADIUS = 20;
+	var FINISH_INNER_RADIUS = 16.4;
+	var FINISH_OUTER_RADIUS = 23.4;
+  var RUNNER_DOT_RADIUS = 6;
   var DEFAULT_SCALE_FACTOR = 1.1;
   var DEFAULT_NEW_COMMENT = "Type your comment";
+	var START_TRIANGLE_LENGTH = 30;
+  var OVERPRINT_LINE_THICKNESS = 2;
+  var REPLAY_LINE_THICKNESS = 3;
+  var START_TRIANGLE_HEIGHT = 40;
   // parameters for call to draw courses
   var DIM = 0.5;
   var FULL_INTENSITY = 1.0;
@@ -1939,7 +2073,7 @@ jQuery(document).ready(function() {"use strict";
 	var lastY;	
 	var dragStart = null;
 	var dragged = false;
-		
+
 	initialize();
 
 	function initialize() {
@@ -1947,7 +2081,6 @@ jQuery(document).ready(function() {"use strict";
 		jQuery("#rg2-about-dialog").hide();
 		jQuery("#rg2-splits-display").hide();
 		jQuery("#rg2-track-names").hide();
-
 		trackTransforms(ctx);
 		resizeCanvas();
 
@@ -2053,13 +2186,14 @@ jQuery(document).ready(function() {"use strict";
 			  draw.waitThreeSeconds();
 		});
 		
+
    	jQuery("#btn-undo").button("disable");
    	jQuery("#btn-three-seconds").button("disable");
 
 		jQuery("#btn-zoom-in").click(function() {
 			zoom(1);
-		});
-
+		});		
+		
 		jQuery("#btn-reset").click(function() {
 			resetMapState();
 		});
@@ -2308,7 +2442,9 @@ jQuery(document).ready(function() {"use strict";
 	canvas.addEventListener('mouseup', function(evt) {
 		//console.log ("Mouseup" + dragStart.x + ": " + dragStart.y);
   	if (!dragged) {
-		  draw.addNewPoint(dragStart.x, dragStart.y);
+  		if (draw.drawingHappening()) {
+		    draw.addNewPoint(dragStart.x, dragStart.y);
+		  }
 		}
 		dragStart = null;
 	}, false);
@@ -2361,6 +2497,7 @@ jQuery(document).ready(function() {"use strict";
 			}
 			redraw(false);
 		})
+
 		// checkbox on course tab to show all courses
 		jQuery(".allcourses").click(function(event) {
 			if (event.target.checked) {
@@ -2403,7 +2540,18 @@ jQuery(document).ready(function() {"use strict";
 	function createResultMenu() {
 		//loads menu from populated result array
 		var html = results.formatResultListAsAccordion();
+    // checkbox on course tab to show a course
+    jQuery(".courselist").unbind('click').click(function(event) {
+      if (event.target.checked) {
+        courses.putOnDisplay(parseInt(event.currentTarget.id, 10));
+      } else {
+        courses.removeFromDisplay(parseInt(event.currentTarget.id, 10));
+        // make sure the all checkbox is not checked
+        jQuery(".allcourses").prop('checked', false);
+      }
+      redraw();
 
+    })
 		jQuery("#rg2-result-list").empty();
 		jQuery("#rg2-result-list").append(html);
 
@@ -2413,6 +2561,8 @@ jQuery(document).ready(function() {"use strict";
 
 		// checkbox to show a course
 		jQuery(".showcourse").click(function(event) {
+			//Prevent opening accordion when check box is clicked
+			event.stopPropagation();
 			if (event.target.checked) {
 				courses.putOnDisplay(event.target.id);
 			} else {

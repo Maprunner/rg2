@@ -66,6 +66,7 @@
 		</div>
 		<div id="rg2-container">
 			<div id="rg2-info-panel">
+				<div id="rg2-info-panel-tab-headers">
 				<ul>
 					<li>
 						<a href="#rg2-event-list">Events</a>
@@ -83,6 +84,8 @@
 						<a href="#rg2-draw">Draw</a>
 					</li>
 				</ul>
+				</div>
+				<div id="rg2-info-panel-tab-body">
 				<div id="rg2-event-list"></div>
 				<div id="rg2-course-list">
 					<div id="rg2-course-table"></div>
@@ -105,6 +108,7 @@
 			    <button id="btn-undo">Undo</button>
 			    <button id="btn-save-route">Save</button>
 			    <button id="btn-reset-drawing">Reset</button>
+				</div>
 				</div>
 		  </div>
 		  <canvas id="rg2-map-canvas">Your browser does not support HTML5</canvas>
@@ -146,8 +150,7 @@
 			  <p><strong>Simon Errington</strong> (simon (at) maprunner.co.uk)</p>
 		  </div>
 		  <div id="rg2-splits-table" title="Splits display"></div>
-    </div>
-
+   </div>
     <div id="rg2-footer"><?php echo FOOTER_TEXT; ?></div>
 
 		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>

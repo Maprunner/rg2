@@ -133,6 +133,12 @@ html, body {
   background-color: white;
 }
 
+.showcourse {
+	float: right;
+}
+.event-info-icon {
+	float: right;
+}
 
 #rg2-clock {
    font-weight: bold;
@@ -165,11 +171,20 @@ html, body {
 
 #rg2-info-panel {
    font-size: 0.75em;
-   height: 99%;
+	 height: 99%;
 	 width: 360px;
    position: absolute;
-   overflow: auto; /* add scroll bars if needed */
 	 z-index: 100;
+}
+
+#rg2-info-panel-tab-headers {
+   overflow: none; 
+   postion: relative;
+}
+
+#rg2-info-panel-tab-body {
+   overflow: auto; /* add scroll bars if needed */
+   height: 95.5%
 }
 
 #rg2-map-canvas {
