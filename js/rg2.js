@@ -5,22 +5,31 @@
  *
  * Released under the MIT license
  *
- * Date: 2013-10-08T20:21Z
  */
 jQuery(document).ready(function() {"use strict";
 
   // handle drawing of a new route
   function Draw() {
-    this.courseid = null;
-    this.resultid = null;
-    this.controlx = [];
-    this.controly = [];
-    this.x = [];
-    this.y = [];
     this.nextControl = 0;
     this.trackColor = '#ff0000';
     this.CLOSE_ENOUGH = 10;
-    this.drawingInProgress = false;
+    // this is a straight copy from courses so includes the start at [0]
+    // the RouteData version has the start control removed for saving
+    this.controlx = [];
+    this.controly = [];
+    this.pendingCourseID = null;
+  }
+  
+  function RouteData() {
+    this.courseid = null;
+    this.resultid = null;
+    this.eventid = null;
+    this.name = null;
+    this.comments = null;
+    this.x = [];
+    this.y = [];
+    this.controlx = [];
+    this.controly = [];
   }
   
 	Draw.prototype = {
@@ -30,92 +39,239 @@ jQuery(document).ready(function() {"use strict";
 		  return (TAB_DRAW === (jQuery("#rg2-info-panel").tabs( "option", "active" )));	
 		},
 		
-		resetDrawing: function () {
-		  this.controlx.length = 0;
-		  this.controly.length = 0;
-		  this.x.length = 0;
-		  this.y.length = 0;
-      this.courseid = null;
-      this.resultid = null;
-      this.nextPoint = 0;
+		initialiseDrawing: function () {
+      this.routeData = new RouteData();
+      this.nextControl= 0;
       jQuery("#rg2-name-select").prop('disabled', true);	
       jQuery("#rg2-undo").prop('disabled', true);	
-   	  jQuery("#btn-save-route").button("disable");
+      jQuery("#btn-save-route").button("disable");
    	  jQuery("#btn-undo").button("disable");
+   	  jQuery("#btn-three-seconds").button("disable");
+			jQuery("#rg2-name-select").empty();
+			jQuery("#rg2-course-select").empty();
+			courses.updateCourseDropdown();
+      jQuery("#rg2-new-comments").empty().val(DEFAULT_NEW_COMMENT);
+      redraw(false);
     },
 		
 		setCourse : function(courseid) {
 			if (!isNaN(courseid)) {
-				this.courseid = courseid;
-			  courses.putOnDisplay(courseid);
-			  redraw();
-		    var course = courses.getFullCourse(courseid);
-			  this.controlx = course.x;
-			  this.controly = course.y;
-			  this.x[0] = this.controlx[0];
-			  this.y[0] = this.controly[0];
-			  this.nextControl = 1;  
-			  results.createNameDropdown(courseid);
- 	      jQuery("#rg2-name-select").prop('disabled', false);			
-		 }
+				if (this.routeData.courseid !== null) {
+					// already have a course so we are trying to change it
+					if (this.routeData.x.length > 1) {
+						// drawing started so ask to confirm change
+						this.pendingCourseid = courseid;
+						this.confirmCourseChange();
+					} else {
+						// nothing done yet so just change course
+			      courses.removeFromDisplay(this.routeData.courseid);
+            this.initialiseCourse(courseid);					
+					}
+				} else {
+					// first time course has been selected
+          this.initialiseCourse(courseid);
+ 	      }			
+		  }
 		},
-		
+	
+	  initialiseCourse : function(courseid) {
+			this.routeData.eventid = events.getKartatEventID();
+			this.routeData.courseid = courseid;
+			courses.putOnDisplay(courseid);
+		  var course = courses.getFullCourse(courseid);
+			this.controlx = course.x;
+			this.controly = course.y;
+			this.routeData.x.length = 0;
+			this.routeData.y.length = 0;
+			this.routeData.x[0] = this.controlx[0];
+			this.routeData.y[0] = this.controly[0];
+			this.nextControl = 1;  
+			results.createNameDropdown(courseid);
+ 	    jQuery("#rg2-name-select").prop('disabled', false);	  	
+			redraw(false);
+	  },
+	    
+	  confirmCourseChange : function() {
+
+      var msg = "<div id='course-change-dialog'>The route you have started to draw will be discarded. Are you sure you want to change the course?</div>";
+      var me = this;
+      jQuery(msg).dialog({
+        title: "Confirm course change",
+        modal: true,
+        dialogClass: "no-close",
+        closeOnEscape: false,
+        buttons: [ {
+        	text: "Change course",
+        	click: function() {
+        		me.doChangeCourse();
+        	}}, {
+        	text: "Cancel",
+          click: function () {
+            me.doCancelChangeCourse();    
+          } 
+        }]
+      });			  	
+	  },
+
+	  resetDrawing : function () {
+      var msg = "<div id='drawing-reset-dialog'>All information you have entered will be removed. Are you sure you want to reset?</div>";
+      var me = this;
+      jQuery(msg).dialog({
+        title: "Confirm reset",
+        modal: true,
+        dialogClass: "no-close",
+        closeOnEscape: false,
+        buttons: [ {
+        	text: "Reset",
+        	click: function() {
+        		me.doDrawingReset();
+        	}}, {
+        	text: "Cancel",
+          click: function () {
+            me.doCancelDrawingReset();    
+          } 
+        }]
+      });			  	
+	  	
+	  },
+	  
+	  doChangeCourse : function () {
+      jQuery('#course-change-dialog').dialog("destroy");
+ 			courses.removeFromDisplay(this.routeData.courseid);
+      this.initialiseCourse(this.pendingCourseid);
+    },
+     		
+	  doCancelChangeCourse : function () {
+      // reset course dropdown
+     	jQuery("#rg2-course-select").val(this.routeData.courseid);
+      this.pendingCourseid = null;
+      jQuery('#course-change-dialog').dialog("destroy");
+    },
+
+	  doDrawingReset : function () {
+      jQuery('#drawing-reset-dialog').dialog("destroy");
+      this.pendingCourseid = null;
+      this.initialiseDrawing();
+    },
+     		
+	  doCancelDrawingReset : function () {
+      jQuery('#drawing-reset-dialog').dialog("destroy");
+    },
+
 		setName : function(resultid) {
 			if (!isNaN(resultid)) {
-			  this.resultid = resultid;
-        this.drawingInProgress = true;
-        redraw();
+			  this.routeData.resultid = results.getKartatResultID(resultid);
+			  this.routeData.name = results.getRunnerName(resultid);
+   	    jQuery("#btn-three-seconds").button("enable");
 		 }
 		},
 		
-		addNewPoint: function (evt) {
-		  if (this.drawingInProgress) {
-		  	var X = evt.offsetX || (evt.pageX - canvas.offsetLeft);
-		    var Y = evt.offsetY || (evt.pageY - canvas.offsetTop);
-		    var newXY = ctx.transformedPoint(X, Y);
-			  this.x.push(parseInt(newXY.x, 10));
-			  this.y.push(parseInt(newXY.y, 10));
-			  if (this.closeEnough(newXY.x, newXY.y)) {
-			    this.x.push(this.controlx[this.nextControl]);
-			    this.y.push(this.controly[this.nextControl]);				
+		addNewPoint: function (x, y) {
+			// only allow drawing if we have valid name and course
+		  if ((this.routeData.resultid !== null) && (this.routeData.courseid !== null)) {
+        // enable here for testing
+        //jQuery("#btn-save-route").button("enable");
+			  
+			  if (this.closeEnough(x, y)) {
+			    this.routeData.x.push(this.controlx[this.nextControl]);
+			    this.routeData.y.push(this.controly[this.nextControl]);				
 			    this.nextControl++;
 			    if (this.nextControl === this.controlx.length) {
    	        jQuery("#btn-save-route").button("enable");
-   	      } 
+   	      }
+   	    } else {
+			    this.routeData.x.push(parseInt(x, 10));
+			    this.routeData.y.push(parseInt(y, 10));
 			  }
-			  if (this.x.length > 1) {
+			  if (this.routeData.x.length > 1) {
    	      jQuery("#btn-undo").button("enable");
    	    } else {
-   	      jQuery("#btn-undo").button("enable");   	  	
+   	      jQuery("#btn-undo").button("disable");   	  	
    	    }
-        redraw();
-      }
+        redraw(false);
+     } else {
+       var msg = "<div id='drawing-reset-dialog'>Please select course and name before you start drawing a route.</div>";
+       jQuery(msg).dialog({title: "Select course and name"});
+     }
 		},
 		
 		undoLastPoint: function () {
 			// remove last point if we have one
-			var points = this.x.length; 
+			var points = this.routeData.x.length; 
 			if (points > 1) {
 				// are we undoing from a control?
-				if ((this.controlx[this.nextControl - 1] === this.x[points - 1]) && (this.controly[this.nextControl - 1] === this.y[points - 1])) {
-					this.nextControl--;
+				if ((this.controlx[this.nextControl - 1] === this.routeData.x[points - 1]) &&
+				    (this.controly[this.nextControl - 1] === this.routeData.y[points - 1])) {
+			    // are we undoing from the finish?
+			    if (this.nextControl === this.controlx.length) {
+   	        jQuery("#btn-save-route").button("disable");
+   	      } 					
+					// don't go back past first control
+					if (this.nextControl > 1) {
+						this.nextControl--;
+					}
 				}
-        this.x.pop();
-        this.y.pop();   	    
+        this.routeData.x.pop();
+        this.routeData.y.pop();   	    
    	  }
    	  // note that array length has changed so can't use points
-			if (this.x.length > 1) {
+			if (this.routeData.x.length > 1) {
    	    jQuery("#btn-undo").button("enable");
    	  } else {
    	    jQuery("#btn-undo").button("enable");   	  	
    	  }
-   	  redraw();
+   	  redraw(false);
 		},
 
 		saveRoute: function () {
-        alert("Are you sure?");
+			this.routeData.controlx = this.controlx;
+			this.routeData.controly = this.controly;
+			// don't need start control so remove it		
+      this.routeData.controlx.splice(0,1);
+      this.routeData.controly.splice(0,1);
+      this.routeData.comments = jQuery("#rg2-new-comments").val();
+      var $url = json_url + '?type=addroute&id=' + this.routeData.eventid;
+      // create JSON data
+      var json = JSON.stringify(this.routeData);
+      jQuery.ajax({
+        data: json,
+        type: 'POST',
+        url: $url,
+        dataType: 'json',
+        success: function(data, textStatus, jqXHR) {
+        	if (data.ok) {
+        		draw.routeSaved(data.status_msg);
+        	} else {
+        		draw.saveError(data.status_msg);
+        	}
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+          draw.saveError(errorThrown);
+        }        
+      })
 		},
 		
+		saveError : function(text) {
+      var msg = "<div>Your route was not saved. Please try again. " + text + "</div>";
+      jQuery(msg).dialog({
+        title: draw.routeData.name
+      });			
+		},
+		
+		routeSaved : function(text) {
+      var msg = "<div>Your route has been saved.</div>";
+      jQuery(msg).dialog({
+        title: draw.routeData.name
+      });
+			events.loadEvent(events.getActiveEventID());		
+		},
+				
+		waitThreeSeconds: function() {
+      // insert a new point in the same place as the last point
+			this.routeData.x.push(this.routeData.x[this.routeData.x.length - 1]);
+		  this.routeData.y.push(this.routeData.y[this.routeData.y.length - 1]);	
+		  redraw(false);		
+		},
 		
 		// snapto: test if drawn route is close enough to control
 		closeEnough: function (x, y) {
@@ -131,37 +287,60 @@ jQuery(document).ready(function() {"use strict";
 			ctx.lineWidth = 2;
 			ctx.strokeStyle = this.trackColor;
 			ctx.fillStyle = this.trackColour;
-			ctx.globalAlpha = 1.0;
-      // highlight next control
-      ctx.beginPath();
-			if (this.nextControl < (this.controlx.length - 1)) {
-        // normal control
-				ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], CONTROL_CIRCLE_RADIUS, 0, 2 * Math.PI, false);
-			} else {
-				// finish
-				ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], FINISH_INNER_RADIUS, 0, 2 * Math.PI, false);				
-				ctx.stroke();
-				ctx.beginPath();
-				ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], FINISH_OUTER_RADIUS, 0, 2 * Math.PI, false);				
+			ctx.font = '10pt Arial';        
+      ctx.textAlign = "left";
+  		ctx.globalAlpha = 1.0;
+      // highlight next control if we have a course selected
+      if (this.nextControl > 0) {
+        ctx.beginPath();
+			  if (this.nextControl < (this.controlx.length - 1)) {
+          // normal control
+				  ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], CONTROL_CIRCLE_RADIUS, 0, 2 * Math.PI, false);
+			  } else {
+				  // finish
+				  ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], FINISH_INNER_RADIUS, 0, 2 * Math.PI, false);				
+				  ctx.stroke();
+				  ctx.beginPath();
+				  ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], FINISH_OUTER_RADIUS, 0, 2 * Math.PI, false);				
+			  }
+			  // dot at centre of control circle
+			  ctx.fillRect(this.controlx[this.nextControl] - 1, this.controly[this.nextControl] - 1, 3, 3)
+			  ctx.stroke();
+			  // dot at start of route
+			  ctx.beginPath();
+			  ctx.arc(this.routeData.x[0] + (RUNNER_DOT_RADIUS/2), this.routeData.y[0], RUNNER_DOT_RADIUS, 0, 2 * Math.PI, false);
+			  ctx.fill();
 			}
-			ctx.fillRect(this.controlx[this.nextControl] - 1, this.controly[this.nextControl] - 1, 3, 3)
-			ctx.stroke();
-			// dot at start of route
-			ctx.beginPath();
-			ctx.arc(this.x[0] + (RUNNER_DOT_RADIUS/2), this.y[0], RUNNER_DOT_RADIUS, 0, 2 * Math.PI, false);
-			ctx.fill();
 			// route itself
-			if (this.x.length > 1) {
+			if (this.routeData.x.length > 1) {
 				ctx.beginPath();
-				ctx.moveTo(this.x[0], this.y[0]);
-				for (var i = 1; i < this.x.length; i++) {
+				ctx.moveTo(this.routeData.x[0], this.routeData.y[0]);
+				var oldx = this.routeData.x[0];
+				var oldy = this.routeData.y[0];
+				var stopCount = 0;
+				for (var i = 1; i < this.routeData.x.length; i++) {
 					// lines
-					ctx.lineTo(this.x[i], this.y[i]);
+					ctx.lineTo(this.routeData.x[i], this.routeData.y[i]);
+					if ((this.routeData.x[i] == oldx) && (this.routeData.y[i] == oldy)) {
+						// we haven't moved
+						stopCount++;
+			      // only output at current position if this is the last entry
+			      if (i === (this.routeData.x.length - 1)) {
+			      	ctx.fillText((3 * stopCount) + " secs", this.routeData.x[i] + 5, this.routeData.y[i] + 5);
+			      }						
+					} else {
+			      // we have started moving again
+			      if (stopCount > 0) {
+			      	ctx.fillText((3 * stopCount) + " secs", oldx + 5, oldy + 5);	
+              stopCount = 0;
+            }
+				  }
+					oldx = this.routeData.x[i];
+					oldy = this.routeData.y[i];
 				}
 				ctx.stroke();
-
 			}
-		},
+		}
 	}
 	
 	function Animation() {
@@ -184,7 +363,6 @@ jQuery(document).ready(function() {"use strict";
 		this.massStartByControl = false;
 	  this.displayNames = true;
 	}
-
 
 	Animation.prototype = {
 		Constructor : Animation,
@@ -213,7 +391,7 @@ jQuery(document).ready(function() {"use strict";
 		// slider callback
 		clockSliderMoved : function(time) {
 			this.resetAnimationTime(time);
-			redraw();
+			redraw(false);
 		},
 
 		getAnimationNames : function() {
@@ -296,7 +474,7 @@ jQuery(document).ready(function() {"use strict";
 		removeRunner : function(runnerid) {
 			for (var i = 0; i < this.runners.length; i++) {
 				if (this.runners[i].runnerid == runnerid) {
-					// splice deletes items from an array
+					// delete 1 runner at position i
 					this.runners.splice(i, 1);
 				}
 			}
@@ -726,6 +904,52 @@ jQuery(document).ready(function() {"use strict";
 	Events.prototype = {
 		Constructor : Events,
 
+		loadEvent : function (eventid) {  
+			// new event selected: show we are waiting
+			jQuery('body').css('cursor', 'wait');
+			courses.deleteAllCourses();
+			controls.deleteAllControls();
+			animation.resetAnimation();
+			draw.initialiseDrawing();
+			results.deleteAllResults();
+			mapLoadingText = "Map loading...";
+			map.src = null;
+			redraw(false);
+   		this.activeEventID = eventid;
+			// load chosen map: map gets redrawn automatically on load so that's it for here
+			map.src = maps_url + "/" + events.getActiveMapID() + '.jpg';
+
+			// set title bar
+			if (window.innerWidth >= BIG_SCREEN_BREAK_POINT) {
+				jQuery("#rg2-event-title").text(events.getActiveEventName() +" " + events.getActiveEventDate());
+			  jQuery("#rg2-event-title").show();
+			} else if (window.innerWidth > SMALL_SCREEN_BREAK_POINT) {
+				jQuery("#rg2-event-title").text(events.getActiveEventName());				
+				jQuery("#rg2-event-title").show();
+			} else {
+				jQuery("#rg2-event-title").hide();
+			}
+			// get courses for event
+			jQuery.getJSON(json_url, {
+				id : events.getKartatEventID(),
+				type : "courses",
+				cache: false
+			}).done(function(json) {
+  			console.log("Courses: " + json.data.length);
+				jQuery.each(json.data, function() {
+				courses.addCourse(new Course(this));
+			});
+			courses.generateControlList();
+			jQuery("#btn-toggle-controls").show();
+			jQuery("#btn-toggle-names").show();
+			results.getResults();
+			}).fail(function(jqxhr, textStatus, error) {
+				jQuery('body').css('cursor', 'auto');
+				var err = textStatus + ", " + error;
+				console.log("Courses request failed: " + err);
+			});
+    },
+    
 		addEvent : function(eventObject) {
 			this.events.push(eventObject);
 		},
@@ -738,6 +962,10 @@ jQuery(document).ready(function() {"use strict";
 			return this.events[this.activeEventID].mapid;
 		},
 
+		getActiveEventID : function() {
+			return this.activeEventID;
+		},
+		
 		getActiveEventDate : function() {
 			if (this.activeEventID !== null) {
 			  return this.events[this.activeEventID].date;
@@ -754,12 +982,8 @@ jQuery(document).ready(function() {"use strict";
 			}
 		},
 
-		setActiveEventID : function(id) {
-			this.activeEventID = id;
-		},
-
-		formatEventsAsMenu : function() {						
-			var title;
+		formatEventsAsMenu : function() {
+      var title;
 			var html = '';
 			for (var i = this.events.length - 1; i >= 0; i--) {
         if (this.events[i].comment != "") {
@@ -840,7 +1064,57 @@ jQuery(document).ready(function() {"use strict";
 
 	Results.prototype = {
 		Constructor : Results,
-
+	  
+	  getResults: function () {
+		  jQuery.getJSON(json_url, {
+		  	id : events.getKartatEventID(),
+			  type : "results",
+			  cache: false
+		  }).done(function(json) {
+			  console.log("Results: " + json.data.length);
+			  jQuery.each(json.data, function() {
+				  results.addResult(new Result(this));
+			  });
+			  jQuery("#rg2-result-list").accordion("refresh");
+			  results.getGPSTracks();
+		  }).fail(function(jqxhr, textStatus, error) {
+			  jQuery('body').css('cursor', 'auto');
+			  var err = textStatus + ", " + error;
+			  console.log("Results request failed: " + err);
+		  });
+	  },
+	  
+	  getGPSTracks : function() {
+		  jQuery.getJSON(json_url, {
+			  id : events.getKartatEventID(),
+			  type : "tracks",
+			  cache: false
+		  }).done(function(json) {
+		  	console.log("Tracks: " + json.data.length);
+			  results.addTracks(json.data);
+			  createCourseMenu();
+			  createResultMenu();
+			  animation.updateAnimationDetails();
+			  jQuery('body').css('cursor', 'auto');
+			  jQuery("#rg2-info-panel").tabs("enable", TAB_COURSES);
+			  jQuery("#rg2-info-panel").tabs("enable", TAB_RESULTS);
+			  jQuery("#rg2-info-panel").tabs("enable", TAB_REPLAY);
+			  jQuery("#rg2-info-panel").tabs("enable", TAB_DRAW);
+			  // open courses tab for new event: else stay on draw tab
+  	    var active = jQuery("#rg2-info-panel").tabs( "option", "active" );
+  	    if (active != TAB_DRAW) {
+			    jQuery("#rg2-info-panel").tabs("option", "active", TAB_COURSES);
+			  }
+			  jQuery("#rg2-info-panel").tabs("refresh");
+			  jQuery("#btn-show-splits").show();
+			  redraw(false);
+		  }).fail(function(jqxhr, textStatus, error) {
+			  jQuery('body').css('cursor', 'auto');
+			  var err = textStatus + ", " + error;
+			  console.log("Tracks request failed: " + err);
+		  });
+	  },
+		
 		addResult : function(result) {
 			this.results.push(result);
 		},
@@ -868,6 +1142,10 @@ jQuery(document).ready(function() {"use strict";
 			return this.results[resultid];
 		},
 
+    getKartatResultID : function(resultid) {
+      return this.results[resultid].resultid;	
+    },
+    
 		drawTracks : function() {
 			for (var i = 0; i < this.results.length; i++) {
 				this.results[i].drawTrack();
@@ -963,8 +1241,9 @@ jQuery(document).ready(function() {"use strict";
 					// loop through all results and add it against the correct id
 					while (j < this.results.length) {
 						if (resultIndex == this.results[j].resultid) {
-							this.results[j].addTrack(tracks[i].coords);
-							courses.incrementTracksCount(this.results[j].courseid);
+							if (this.results[j].addTrack(tracks[i].coords)) {
+							  courses.incrementTracksCount(this.results[j].courseid);
+							}
 							break;
 						}
 						j++;
@@ -1045,7 +1324,7 @@ jQuery(document).ready(function() {"use strict";
 				// don't include result if it has a valid track already
 				if ((this.results[i].courseid === courseid) && (!this.results[i].hasValidTrack)) {
 				  var opt = document.createElement("option");
-				  opt.value = this.results[i].resultid;
+				  opt.value = i;
 				  opt.text = this.results[i].name;
 				  dropdown.options.add(opt);
 				}
@@ -1055,6 +1334,7 @@ jQuery(document).ready(function() {"use strict";
 	};
 
 	function Result(data) {
+		// resultid is the kartat id value
 		this.resultid = parseInt(data.resultid, 10);
 		// GPS track ids are normal resultid + GPS_RESULT_OFFSET
 		if (this.resultid >= GPS_RESULT_OFFSET) {
@@ -1067,8 +1347,13 @@ jQuery(document).ready(function() {"use strict";
 		this.name = data.name;
 		this.starttime = parseInt(data.starttime, 10);
 		this.time = data.time;
-    // escape single quotes so that tooltips show correctly
-	  this.comments = data.comments.replace("'", "&apos;");
+    // get round iconv problem in API for now
+	  if (data.comments != null) {
+      // escape single quotes so that tooltips show correctly
+	    this.comments = data.comments.replace("'", "&apos;");
+	  } else {
+	  	this.comments = "";
+	  }
 		this.coursename = data.coursename;
 		if (this.coursename === "") {
 			this.coursename = data.courseid;
@@ -1100,8 +1385,9 @@ jQuery(document).ready(function() {"use strict";
 
 		}
 		if (data.gpscoords.length > 0) {
-			this.addTrack(data.gpscoords);
-			courses.incrementTracksCount(this.courseid);
+			if (this.addTrack(data.gpscoords)) {
+			  courses.incrementTracksCount(this.courseid);
+			}
 		}
 
 	}
@@ -1152,12 +1438,13 @@ jQuery(document).ready(function() {"use strict";
 				this.trackx.push(parseInt(xy[0], 10));
 				this.tracky.push(-1 * parseInt(xy[1], 10));
 			}
-
+      var trackOK;
 			if (this.isGPSTrack) {
-				this.expandGPSTrack();
+				trackOK = this.expandGPSTrack();
 			} else {
-				this.expandNormalTrack();
+				trackOK = this.expandNormalTrack();
 			}
+			return trackOK;
 		},
 		
 		expandNormalTrack : function() {
@@ -1215,7 +1502,7 @@ jQuery(document).ready(function() {"use strict";
 					}
 				}
 			}
-
+      return this.hasValidTrack;
 		},
 
 		expandGPSTrack : function() {
@@ -1236,6 +1523,8 @@ jQuery(document).ready(function() {"use strict";
 				oldy = y;
 			}
 			this.hasValidTrack = true;
+			return this.hasValidTrack;
+
 		},
 
 		getCourseName : function() {
@@ -1490,10 +1779,9 @@ jQuery(document).ready(function() {"use strict";
 				if (this.courses[courseObject.courseid].codes.length > this.highestControlNumber) {
 					// the codes includes Start and Finish: we don't need F so subtract 1 to get controls
 					this.highestControlNumber = this.courses[courseObject.courseid].codes.length - 1;
-					this.updateControlDropdown();
+          this.updateControlDropdown();
 				}
 			}
-			this.updateCourseDropdown();
 		},
 		
 		updateCourseDropdown : function() {
@@ -1767,8 +2055,10 @@ jQuery(document).ready(function() {"use strict";
 	var CONTROL_CIRCLE_RADIUS = 20;
 	var FINISH_INNER_RADIUS = 16.4;
 	var FINISH_OUTER_RADIUS = 23.4;
-	var START_TRIANGLE_LENGTH = 30;
   var RUNNER_DOT_RADIUS = 6;
+  var DEFAULT_SCALE_FACTOR = 1.1;
+  var DEFAULT_NEW_COMMENT = "Type your comment";
+	var START_TRIANGLE_LENGTH = 30;
   var OVERPRINT_LINE_THICKNESS = 2;
   var REPLAY_LINE_THICKNESS = 3;
   var START_TRIANGLE_HEIGHT = 40;
@@ -1778,7 +2068,12 @@ jQuery(document).ready(function() {"use strict";
 	var infoPanelMaximised;
 	var infoHideIconSrc;
 	var infoShowIconSrc;
-  
+	var scaleFactor;
+	var lastX;
+	var lastY;	
+	var dragStart = null;
+	var dragged = false;
+
 	initialize();
 
 	function initialize() {
@@ -1860,19 +2155,40 @@ jQuery(document).ready(function() {"use strict";
 		jQuery("#rg2-course-select").click(function(event) {
 			draw.setCourse(parseInt(jQuery("#rg2-course-select").val(), 10));
 		});
+		
+		jQuery('#rg2-new-comments').focus(function(){
+      // Clear comment box if user focuses on it and it still contains default text
+      var text = jQuery("#rg2-new-comments").val();
+      if (text === DEFAULT_NEW_COMMENT){
+         jQuery('#rg2-new-comments').val("");
+      }
+   });
 
 		jQuery("#btn-save-route").button()
 		  .click(function() {
 			  draw.saveRoute();
 		});
+   	
    	jQuery("#btn-save-route").button("disable");
 
 		jQuery("#btn-undo").button()
 		  .click(function() {
 			  draw.undoLastPoint();
 		});
-   	
+
+		jQuery("#btn-reset-drawing").button()
+		  .click(function() {
+			  draw.resetDrawing();
+		});
+
+		jQuery("#btn-three-seconds").button()
+		  .click(function() {
+			  draw.waitThreeSeconds();
+		});
+		
+
    	jQuery("#btn-undo").button("disable");
+   	jQuery("#btn-three-seconds").button("disable");
 
 		jQuery("#btn-zoom-in").click(function() {
 			zoom(1);
@@ -1952,7 +2268,8 @@ jQuery(document).ready(function() {"use strict";
 
 		// load event details
 		jQuery.getJSON(json_url, {
-			type : "events"
+			type : "events",
+			cache: false
 		}).done(function(json) {
 			console.log("Events: " + json.data.length);
 			jQuery.each(json.data, function() {
@@ -1974,6 +2291,10 @@ jQuery(document).ready(function() {"use strict";
 	function resetMapState() {
 		// place map in centre of canvas and scales it down to fit
 		var heightscale = canvas.height / map.height;
+		lastX = canvas.width / 2;
+		lastY = canvas.height / 2;
+		dragStart = null;
+		dragged = false;
 		var mapscale;
 		// don't stretch map: just shrink to fit
 		if (heightscale < 1) {
@@ -1993,6 +2314,7 @@ jQuery(document).ready(function() {"use strict";
 	}
 
 	function resizeCanvas() {
+		scaleFactor = DEFAULT_SCALE_FACTOR;
 		var winwidth = window.innerWidth;
 		var winheight = window.innerHeight;
 		jQuery("#rg2-container").css("height", winheight - 70);
@@ -2008,9 +2330,7 @@ jQuery(document).ready(function() {"use strict";
 		} else {
 			jQuery("#rg2-event-title").hide();
 		}
-
-
-		redraw(false);
+		resetMapState();
 	}
 
   // called whenever the active tab changes to tidy up as necessary
@@ -2019,8 +2339,9 @@ jQuery(document).ready(function() {"use strict";
   	if (active === TAB_DRAW) {
 		  courses.removeAllFromDisplay();  		
 			jQuery("#rg2-track-names").hide();
+			draw.initialiseDrawing();
   	}
-  	redraw();
+  	redraw(false);
   }
 
 	/* called whenever anything changes enough to need screen redraw
@@ -2096,42 +2417,45 @@ jQuery(document).ready(function() {"use strict";
 
 	}
 
-	var lastX = canvas.width / 2, lastY = canvas.height / 2;
-	var dragStart;
-	var dragged;
 	canvas.addEventListener('mousedown', function(evt) {
-		document.body.style.mozUserSelect = document.body.style.webkitUserSelect = document.body.style.userSelect = 'none';
 		lastX = evt.offsetX || (evt.pageX - canvas.offsetLeft);
 		lastY = evt.offsetY || (evt.pageY - canvas.offsetTop);
 		dragStart = ctx.transformedPoint(lastX, lastY);
 		dragged = false;
+		//console.log ("Mousedown" + dragStart.x + ": " + dragStart.y);
 	}, false);
 	canvas.addEventListener('mousemove', function(evt) {
 		lastX = evt.offsetX || (evt.pageX - canvas.offsetLeft);
 		lastY = evt.offsetY || (evt.pageY - canvas.offsetTop);
-		dragged = true;
 		if (dragStart) {
 			var pt = ctx.transformedPoint(lastX, lastY);
-			ctx.translate(pt.x - dragStart.x, pt.y - dragStart.y);
-			redraw();
+			// allow for Webkit which gives us mousemove events with no movement!
+			if ((pt.x !== dragStart.x) || (pt.y !== dragStart.y)) {
+			  ctx.translate(pt.x - dragStart.x, pt.y - dragStart.y);
+		    //console.log ("Mousemove after" + pt.x + ": " + pt.y);
+		    dragged = true;
+			  redraw(false);
+			}
 		}
 	}, false);
 
 	canvas.addEventListener('mouseup', function(evt) {
-		dragStart = null;
-		if (!dragged) {
-      draw.addNewPoint(evt);
+		//console.log ("Mouseup" + dragStart.x + ": " + dragStart.y);
+  	if (!dragged) {
+  		if (draw.drawingHappening()) {
+		    draw.addNewPoint(dragStart.x, dragStart.y);
+		  }
 		}
+		dragStart = null;
 	}, false);
 
-	var scaleFactor = 1.1;
 	var zoom = function(zoomDirection) {
 		var pt = ctx.transformedPoint(lastX, lastY);
 		ctx.translate(pt.x, pt.y);
 		var factor = Math.pow(scaleFactor, zoomDirection);
 		ctx.scale(factor, factor);
 		ctx.translate(-pt.x, -pt.y);
-		redraw();
+		redraw(false);
 	};
 
 	var handleScroll = function(evt) {
@@ -2150,100 +2474,11 @@ jQuery(document).ready(function() {"use strict";
 		jQuery("#rg2-event-list").append(html);
 
 		jQuery("#rg2-event-list").menu({
-			select : function(event, ui) {						  				
-				// new event selected: show we are waiting
-				jQuery('body').css('cursor', 'wait');
-				courses.deleteAllCourses();
-				controls.deleteAllControls();
-				animation.resetAnimation();
-				draw.resetDrawing();
-				results.deleteAllResults();
-				mapLoadingText = "Map loading...";
-				map.src = null;
-				redraw();
-				events.setActiveEventID(ui.item[0].id);
-				// load chosen map
-				// map gets redrawn automatically on load so that's it for here
-				map.src = maps_url + "/" + events.getActiveMapID() + '.jpg';
-
-				// set title bar
-				if (window.innerWidth >= BIG_SCREEN_BREAK_POINT) {
-					jQuery("#rg2-event-title").text(events.getActiveEventName() +" " + events.getActiveEventDate());
-					jQuery("#rg2-event-title").show();
-				} else if (window.innerWidth > SMALL_SCREEN_BREAK_POINT) {
-					jQuery("#rg2-event-title").text(events.getActiveEventName());				
-					jQuery("#rg2-event-title").show();
-				} else {
-					jQuery("#rg2-event-title").hide();
-				}
-				// get courses for event
-
-				jQuery.getJSON(json_url, {
-					id : events.getKartatEventID(),
-					type : "courses"
-				}).done(function(json) {
-					console.log("Courses: " + json.data.length);
-					jQuery.each(json.data, function() {
-						courses.addCourse(new Course(this));
-					});
-					courses.generateControlList();
-					jQuery("#btn-toggle-controls").show();
-					jQuery("#btn-toggle-names").show();
-					getResults();
-				}).fail(function(jqxhr, textStatus, error) {
-					jQuery('body').css('cursor', 'auto');
-					var err = textStatus + ", " + error;
-					console.log("Courses request failed: " + err);
-				});
-      }
+			select : function(event, ui) {
+				events.loadEvent(ui.item[0].id);
+			}
 		});
 
-	}
-
-	function getResults() {
-
-		jQuery.getJSON(json_url, {
-			id : events.getKartatEventID(),
-			type : "results"
-		}).done(function(json) {
-			console.log("Results: " + json.data.length);
-			jQuery.each(json.data, function() {
-				results.addResult(new Result(this));
-			});
-			jQuery("#rg2-result-list").accordion("refresh");
-			getGPSTracks();
-		}).fail(function(jqxhr, textStatus, error) {
-			jQuery('body').css('cursor', 'auto');
-			var err = textStatus + ", " + error;
-			console.log("Results request failed: " + err);
-		});
-	}
-
-	function getGPSTracks() {
-		jQuery.getJSON(json_url, {
-			id : events.getKartatEventID(),
-			type : "tracks"
-		}).done(function(json) {
-			console.log("Tracks: " + json.data.length);
-			results.addTracks(json.data);
-			createCourseMenu();
-			createResultMenu();
-			animation.updateAnimationDetails();
-			jQuery('body').css('cursor', 'auto');
-			jQuery("#rg2-info-panel").tabs("enable", TAB_COURSES);
-			jQuery("#rg2-info-panel").tabs("enable", TAB_RESULTS);
-			jQuery("#rg2-info-panel").tabs("enable", TAB_REPLAY);
-			//jQuery("#rg2-info-panel").tabs("enable", TAB_DRAW);
-			// open courses tab
-			jQuery("#rg2-info-panel").tabs("option", "active", TAB_COURSES);
-			jQuery("#rg2-info-panel").tabs("refresh");
-			jQuery("#btn-show-splits").show();
-			redraw();
-		}).fail(function(jqxhr, textStatus, error) {
-			jQuery('body').css('cursor', 'auto');
-			var err = textStatus + ", " + error;
-			console.log("Tracks request failed: " + err);
-		});
 	}
 
 	function createCourseMenu() {
@@ -2251,6 +2486,17 @@ jQuery(document).ready(function() {"use strict";
 		jQuery("#rg2-course-table").empty();
 		jQuery("#rg2-course-table").append(courses.formatCoursesAsTable());
 
+		// checkbox on course tab to show a course
+		jQuery(".courselist").click(function(event) {
+			if (event.target.checked) {
+				courses.putOnDisplay(parseInt(event.currentTarget.id, 10));
+			} else {
+				courses.removeFromDisplay(parseInt(event.currentTarget.id, 10));
+				// make sure the all checkbox is not checked
+				jQuery(".allcourses").prop('checked', false);
+			}
+			redraw(false);
+		})
 
 		// checkbox on course tab to show all courses
 		jQuery(".allcourses").click(function(event) {
@@ -2262,7 +2508,7 @@ jQuery(document).ready(function() {"use strict";
 				courses.removeAllFromDisplay();
 				jQuery(".courselist").prop('checked', false);
 			}
-			redraw();
+			redraw(false);
 		})
 		// checkbox on course tab to show tracks for one course
 		jQuery(".tracklist").click(function(event) {
@@ -2274,7 +2520,7 @@ jQuery(document).ready(function() {"use strict";
 				// make sure the all checkbox is not checked
 				jQuery(".alltracks").prop('checked', false);
 			}
-			redraw();
+			redraw(false);
 		})
 		// checkbox on course tab to show all tracks
 		jQuery(".alltracks").click(function(event) {
@@ -2287,7 +2533,7 @@ jQuery(document).ready(function() {"use strict";
 				// deselect all the individual checkboxes for each course
 				jQuery(".tracklist").prop('checked', false);
 			}
-			redraw();
+			redraw(false);
 		})
 	}
 
@@ -2322,7 +2568,7 @@ jQuery(document).ready(function() {"use strict";
 			} else {
 				courses.removeFromDisplay(event.target.id);
 			}
-			redraw();
+			redraw(false);
 		})
 		// checkbox to show a result
 		jQuery(".showtrack").click(function(event) {
@@ -2331,7 +2577,7 @@ jQuery(document).ready(function() {"use strict";
 			} else {
 				results.removeOneTrackFromDisplay(event.target.id);
 			}
-			redraw();
+			redraw(false);
 		})
 		// checkbox to animate a result
 		jQuery(".replay").click(function(event) {
@@ -2340,7 +2586,7 @@ jQuery(document).ready(function() {"use strict";
 			} else {
 				animation.removeRunner(event.target.id);
 			}
-			redraw();
+			redraw(false);
 		})
 		// disable control dropdown if we have no controls
 		if (courses.getHighestControlNumber() === 0) {

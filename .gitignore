@@ -1,6 +1,10 @@
-##rg2
+####
+## rg2
+#####
+
 rg2-override-config.txt
 rg2-override-config.php
+log/
 
 #################
 ## Eclipse
