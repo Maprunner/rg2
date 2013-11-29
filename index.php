@@ -104,6 +104,7 @@
 			    <button id="btn-three-seconds">+3 sec</button>
 			    <button id="btn-undo">Undo</button>
 			    <button id="btn-save-route">Save</button>
+			    <button id="btn-reset-drawing">Reset</button>
 				</div>
 		  </div>
 		  <canvas id="rg2-map-canvas">Your browser does not support HTML5</canvas>

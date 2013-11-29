@@ -169,9 +169,6 @@ function handleGetRequest($type, $id) {
   echo "{\"data\":" .json_encode($output). "}";
 }
 
-function myiconv($a, $b, $c) {
-	return $c;
-}
 function getAllEvents() {
   $output = array();
   $row = 0;
@@ -184,9 +181,9 @@ function getAllEvents() {
 			// Issue #11: found a stray &#39; in a SUFFOC file
 			$detail["name"] = str_replace("&#39;", "'", $data[3]);
 			$detail["date"] = $data[4];
-			$detail["club"] = myiconv( RG_INPUT_ENCODING, RG_OUTPUT_ENCODING, $data[5]);
+			$detail["club"] = $data[5];
 			$detail["type"] = $data[6];
-			$detail["comment"] = myiconv( RG_INPUT_ENCODING, RG_OUTPUT_ENCODING, $data[7]);
+			$detail["comment"] = $data[7];
 			$output[$row] = $detail;				
       $row++;
     }
@@ -222,7 +219,7 @@ function getResultsForEvent($eventid) {
   		if (strncmp($data[4], "Type your comment", 17) != 0) {
 			  $text[$comments]["resultid"] = $data[1];
 			  // replace carriage return and line break codes
-        ($temp = myiconv( RG_INPUT_ENCODING, RG_OUTPUT_ENCODING, $data[4])) || $temp = "";  
+        $temp = $data[4]; 
         $temp = str_replace("#cr#", " ", $temp);      
         $temp = str_replace("#nl#", " ", $temp);  
         $text[$comments]["comments"] = $temp;
@@ -238,8 +235,8 @@ function getResultsForEvent($eventid) {
       $detail = array();
 	  	$detail["resultid"] = $data[0];
 			$detail["courseid"] = $data[1];
-			$detail["coursename"] = myiconv( RG_INPUT_ENCODING, RG_OUTPUT_ENCODING, $data[2]);
-      $detail["name"] = myiconv( RG_INPUT_ENCODING, RG_OUTPUT_ENCODING, $data[3]);
+			$detail["coursename"] = $data[2];
+      $detail["name"] = $data[3];
 			$detail["starttime"] = $data[4];
 			$detail["time"] = $data[7];
 			// trim trailing ; which create null fields when expanded
@@ -318,7 +315,7 @@ function getCoursesForEvent($eventid) {
       $detail = array();
 		  $detail["courseid"] = $data[0];
 			$detail["status"] = $data[1];
-			$detail["name"] = myiconv( RG_INPUT_ENCODING, RG_OUTPUT_ENCODING, $data[2]);
+			$detail["name"] = $data[2];
 			$detail["coords"] = $data[3];
 			if ($controlsFound) {
 				if (isScoreEvent($eventid))	{
@@ -348,7 +345,7 @@ function getTracksForEvent($eventid) {
       $detail = array();
 			$detail["courseid"] = $data[0];
 			$detail["resultid"] = $data[1];
-			$detail["name"] = myiconv( RG_INPUT_ENCODING, RG_OUTPUT_ENCODING, $data[2]);
+			$detail["name"] = $data[2];
 			$detail["null"] = $data[3];
 			$detail["coords"] = $data[4];
 			//$detail["mystery"] = $data[5];
