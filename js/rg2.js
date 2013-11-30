@@ -10,14 +10,12 @@ jQuery(document).ready(function() {"use strict";
 
   // handle drawing of a new route
   function Draw() {
-    this.nextControl = 0;
     this.trackColor = '#ff0000';
     this.CLOSE_ENOUGH = 10;
     // this is a straight copy from courses so includes the start at [0]
     // the RouteData version has the start control removed for saving
-    this.controlx = [];
-    this.controly = [];
     this.pendingCourseID = null;
+    this.initialiseDrawing();
   }
   
   function RouteData() {
@@ -41,6 +39,8 @@ jQuery(document).ready(function() {"use strict";
 		
 		initialiseDrawing: function () {
       this.routeData = new RouteData();
+      this.controlx = [];
+      this.controly = [];
       this.nextControl= 0;
       jQuery("#rg2-name-select").prop('disabled', true);	
       jQuery("#rg2-undo").prop('disabled', true);	
@@ -48,8 +48,6 @@ jQuery(document).ready(function() {"use strict";
    	  jQuery("#btn-undo").button("disable");
    	  jQuery("#btn-three-seconds").button("disable");
 			jQuery("#rg2-name-select").empty();
-			jQuery("#rg2-course-select").empty();
-			courses.updateCourseDropdown();
       jQuery("#rg2-new-comments").empty().val(DEFAULT_NEW_COMMENT);
       redraw(false);
     },
@@ -158,6 +156,12 @@ jQuery(document).ready(function() {"use strict";
       jQuery('#drawing-reset-dialog').dialog("destroy");
     },
 
+    showCourseInProgress : function () {
+      if (this.routeData.courseid !== null) {
+        courses.putOnDisplay(this.routeData.courseid);
+      }
+    },
+    
 		setName : function(resultid) {
 			if (!isNaN(resultid)) {
 			  this.routeData.resultid = results.getKartatResultID(resultid);
@@ -937,12 +941,13 @@ jQuery(document).ready(function() {"use strict";
 			}).done(function(json) {
   			console.log("Courses: " + json.data.length);
 				jQuery.each(json.data, function() {
-				courses.addCourse(new Course(this));
-			});
-			courses.generateControlList();
-			jQuery("#btn-toggle-controls").show();
-			jQuery("#btn-toggle-names").show();
-			results.getResults();
+				  courses.addCourse(new Course(this));
+			  });
+			  courses.updateCourseDropdown();
+			  courses.generateControlList();
+			  jQuery("#btn-toggle-controls").show();
+			  jQuery("#btn-toggle-names").show();
+			  results.getResults();
 			}).fail(function(jqxhr, textStatus, error) {
 				jQuery('body').css('cursor', 'auto');
 				var err = textStatus + ", " + error;
@@ -2034,7 +2039,7 @@ jQuery(document).ready(function() {"use strict";
 	var results = new Results();
 	var controls = new Controls();
 	var animation = new Animation();
-  var draw = new Draw();
+	var draw;
 	var timer = 0;
 	// added to resultid when saving a GPS track
 	var GPS_RESULT_OFFSET = 50000;
@@ -2285,6 +2290,8 @@ jQuery(document).ready(function() {"use strict";
 		map.addEventListener("load", function() {
 			resetMapState();
 		}, false);
+		
+		draw = new Draw();
 
 	}
 
@@ -2338,8 +2345,8 @@ jQuery(document).ready(function() {"use strict";
   	var active = jQuery("#rg2-info-panel").tabs( "option", "active" );
   	if (active === TAB_DRAW) {
 		  courses.removeAllFromDisplay();  		
+			draw.showCourseInProgress();
 			jQuery("#rg2-track-names").hide();
-			draw.initialiseDrawing();
   	}
   	redraw(false);
   }
@@ -2448,6 +2455,10 @@ jQuery(document).ready(function() {"use strict";
 		}
 		dragStart = null;
 	}, false);
+
+  //document.body.addEventListener('touchmove', function(event) {
+  //  event.preventDefault();
+  //}, false);
 
 	var zoom = function(zoomDirection) {
 		var pt = ctx.transformedPoint(lastX, lastY);

@@ -107,7 +107,7 @@
 			    <button id="btn-three-seconds">+3 sec</button>
 			    <button id="btn-undo">Undo</button>
 			    <button id="btn-save-route">Save</button>
-			    <button id="btn-reset-drawing">Reset</button>
+			    <button class="pushright" id="btn-reset-drawing">Reset</button>
 				</div>
 				</div>
 		  </div>
