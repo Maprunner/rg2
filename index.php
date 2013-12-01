@@ -108,6 +108,10 @@
 			    <button id="btn-undo">Undo</button>
 			    <button id="btn-save-route">Save</button>
 			    <button class="pushright" id="btn-reset-drawing">Reset</button>
+			    <hr class="rg2-hr">		    
+          <div id="rg2-select-gps-file">
+        	  <input type='file' accept='.gpx' id='rg2-gps-file'></input>
+          </div>	
 				</div>
 				</div>
 		  </div>

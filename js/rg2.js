@@ -8,6 +8,150 @@
  */
 jQuery(document).ready(function() {"use strict";
 
+  function GPSTrack() {
+    this.lat= [];
+    this.lon= [];
+    this.time = [];	
+  }
+
+  GPSTrack.prototype = {
+  	
+	Constructor : GPSTrack,
+	
+	uploadGPS : function (evt) {
+		//console.log ("File" + evt.target.files[0].name);
+		var reader = new FileReader();
+      
+    reader.onerror = function(evt) {
+      switch(evt.target.error.code) {
+      case evt.target.error.NOT_FOUND_ERR:
+        alert('File not found');
+        break;
+      case evt.target.error.NOT_READABLE_ERR:
+        alert('File not readable');
+        break;
+      default:
+        alert('An error occurred reading the file.');
+      }
+    };
+      
+    reader.onload = function(evt) {
+      var trksegs;
+      var trkpts;
+      var xml;
+      var i;
+      var j;
+      xml = jQuery.parseXML(evt.target.result);
+      trksegs = xml.getElementsByTagName('trkseg');
+      for (i = 0; i < trksegs.length; i++) {
+        trkpts = trksegs[i].getElementsByTagName('trkpt');
+        for (j = 0; j < trkpts.length; j++) {
+        	gpstrack.lat.push(trkpts[j].getAttribute('lat'));
+        	gpstrack.lon.push(trkpts[j].getAttribute('lon'));
+        	gpstrack.time.push(trkpts[j].childNodes[3].textcontent); 
+        }
+      }
+      gpstrack.processGPSTrack();
+      console.log ("File loaded");
+    };
+
+    // read the selected file
+    reader.readAsText(evt.target.files[0]);
+		
+		},
+		/* processGPSTrackGeoref : function () {
+
+      var x1 = 1286.553;
+      var y1 = 355.034;
+      var x2 = 394.109;
+      var y2 = 775.23;
+      var x3 = 455.065;
+      var y3 = 110.676;
+     
+      var lat1 = 51.750870;
+      var lon1 = -0.339828;
+      var lat2 = 51.745777;
+      var lon2 = -0.355987;
+      var lat3 = 51.753388;
+      var lon3 = -0.355257; 
+     
+      var pixPerLon1 = (x1 - x2) / (lon1 - lon2);
+      var pixPerLat1 = -1 * ((y1 - y2) / (lat1 - lat2));
+      var pixPerLon2 = (x1 - x3) / (lon1 - lon3);
+      var pixPerLat2 = -1 * ((y1 - y3) / (lat1 - lat3));
+      var pixPerLon3 = (x3 - x2) / (lon3 - lon2);
+      var pixPerLat3 = -1 * ((y3 - y2) / (lat3 - lat2));
+      
+      var pixPerLon = (pixPerLon1 + pixPerLon2 + pixPerLon3) / 3;
+      var pixPerLat = (pixPerLat1 + pixPerLat2 + pixPerLat3) / 3;
+            
+      var baseLon1 = lon1 - (x1 / pixPerLon);
+      var baseLat1 = lat1 + (y1 / pixPerLat); 
+      var baseLon2 = lon2 - (x2 / pixPerLon);
+      var baseLat2 = lat2 + (y2 / pixPerLat); 
+      var baseLon3 = lon3 - (x3 / pixPerLon);
+      var baseLat3 = lat3 + (y3 / pixPerLat); 
+
+      var baseLon = (baseLon1 + baseLon2 + baseLon3) / 3;
+      var baseLat = (baseLat1 + baseLat2 + baseLat3) / 3;
+
+      //baseLon = -0.3636833;
+      //baseLat = 51.754487;
+
+      //pixPerLon = 50597;
+      //pixPerLat = 85270;
+                  		  
+		  for (var i = 0; i < this.lat.length; i++) {
+		    draw.routeData.x[i] = (this.lon[i] - baseLon) * pixPerLon;
+		    draw.routeData.y[i] = -1 * ((this.lat[i] - baseLat) * pixPerLat);
+		  }
+		  redraw(false);
+		}, */
+		
+		processGPSTrack : function () {
+		  var maxLat = this.lat[0];
+		  var maxLon = this.lon[0];
+		  var minLat = this.lat[0];
+		  var minLon = this.lon[0] ;
+		  for (var i = 0; i < this.lat.length; i++) {
+		  	maxLat = Math.max(maxLat, this.lat[i]);
+		  	maxLon = Math.max(maxLon, this.lon[i]);
+		  	minLat = Math.min(minLat, this.lat[i]);
+		  	minLon = Math.min(minLon, this.lon[i]);
+		  }
+		  var minControlX = draw.controlx[0];
+		  var maxControlX = draw.controlx[0];
+		  var minControlY = draw.controly[0];
+		  var maxControlY = draw.controly[0];
+		  
+		  for (i = 0; i < draw.controlx.length; i++) {
+		  	maxControlX = Math.max(maxControlX, draw.controlx[i]);
+		  	maxControlY = Math.max(maxControlY, draw.controly[i]);
+		  	minControlX = Math.min(minControlX, draw.controlx[i]);
+		  	minControlY = Math.min(minControlY, draw.controly[i]);
+		  }
+
+      // scale GPS track to within bounding box of controls: a reasonable start
+		  var scaleX = (maxControlX - minControlX)/(maxLon - minLon);
+		  var scaleY = (maxControlY - minControlY)/(maxLat - minLat);
+
+      // extra offset to put start of track at start location 
+		  draw.routeData.x[0] = ((this.lon[0] - minLon) * scaleX) + minControlX;
+		  draw.routeData.y[0] = (-1 * (this.lat[0] - maxLat) * scaleY) + minControlY;
+		  
+		  var deltaX = minControlX - (draw.routeData.x[0] - draw.controlx[0]); 
+		  var deltaY = minControlY - (draw.routeData.y[0] - draw.controly[0]);
+		  
+		  for (i = 0; i < this.lat.length; i++) {
+		  	draw.routeData.x[i] = ((this.lon[i] - minLon) * scaleX) + deltaX;
+		  	draw.routeData.y[i] = (-1 * (this.lat[i] - maxLat) * scaleY) + deltaY;
+
+		  }
+		  redraw(false);
+		},
+	
+  }
+  
   // handle drawing of a new route
   function Draw() {
     this.trackColor = '#ff0000';
@@ -36,6 +180,7 @@ jQuery(document).ready(function() {"use strict";
 		drawingHappening: function () {
 		  return (TAB_DRAW === (jQuery("#rg2-info-panel").tabs( "option", "active" )));	
 		},
+		
 		
 		initialiseDrawing: function () {
       this.routeData = new RouteData();
@@ -2039,6 +2184,7 @@ jQuery(document).ready(function() {"use strict";
 	var results = new Results();
 	var controls = new Controls();
 	var animation = new Animation();
+	var gpstrack;
 	var draw;
 	var timer = 0;
 	// added to resultid when saving a GPS track
@@ -2190,7 +2336,12 @@ jQuery(document).ready(function() {"use strict";
 		  .click(function() {
 			  draw.waitThreeSeconds();
 		});
-		
+
+		jQuery("#rg2-gps-file").button()
+		  .change(function(evt) {
+			  gpstrack = new GPSTrack();
+			  gpstrack.uploadGPS(evt);
+		});		
 
    	jQuery("#btn-undo").button("disable");
    	jQuery("#btn-three-seconds").button("disable");
@@ -2429,7 +2580,7 @@ jQuery(document).ready(function() {"use strict";
 		lastY = evt.offsetY || (evt.pageY - canvas.offsetTop);
 		dragStart = ctx.transformedPoint(lastX, lastY);
 		dragged = false;
-		//console.log ("Mousedown" + dragStart.x + ": " + dragStart.y);
+		console.log ("Mousedown" + dragStart.x + ": " + dragStart.y);
 	}, false);
 	canvas.addEventListener('mousemove', function(evt) {
 		lastX = evt.offsetX || (evt.pageX - canvas.offsetLeft);

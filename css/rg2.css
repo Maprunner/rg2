@@ -140,6 +140,10 @@ html, body {
 	float: right;
 }
 
+.rg2-hr {
+	margin-top:20px;
+	margin-bottom:20px;
+}
 #rg2-clock {
    font-weight: bold;
    font-size: 26px;
