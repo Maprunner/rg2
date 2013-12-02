@@ -113,11 +113,25 @@ jQuery(document).ready(function() {"use strict";
 		  var maxLon = this.lon[0];
 		  var minLat = this.lat[0];
 		  var minLon = this.lon[0] ;
-		  for (var i = 0; i < this.lat.length; i++) {
+		  
+		  var furthestIndex = 0;
+		  var furthestDistance = 0;
+		  var distanceFromStart;
+		  var x;
+		  var y;
+		  
+		  for (var i = 1; i < this.lat.length; i++) {
 		  	maxLat = Math.max(maxLat, this.lat[i]);
 		  	maxLon = Math.max(maxLon, this.lon[i]);
 		  	minLat = Math.min(minLat, this.lat[i]);
 		  	minLon = Math.min(minLon, this.lon[i]);
+		    x = this.lon[i] - this.lon[0];
+		    y = this.lat[i] - this.lat[0];
+		    distanceFromStart = Math.sqrt((x * x) + (y * y));
+		    if (furthestDistance <= distanceFromStart) {
+		    	furthestDistance = distanceFromStart;
+		    	furthestIndex = i;
+		    }	
 		  }
 		  var minControlX = draw.controlx[0];
 		  var maxControlX = draw.controlx[0];
@@ -145,17 +159,29 @@ jQuery(document).ready(function() {"use strict";
 		  for (i = 0; i < this.lat.length; i++) {
 		  	draw.routeData.x[i] = ((this.lon[i] - minLon) * scaleX) + deltaX;
 		  	draw.routeData.y[i] = (-1 * (this.lat[i] - maxLat) * scaleY) + deltaY;
+        draw.baseGPSX[i] = draw.routeData.x[i];
+        draw.baseGPSY[i] = draw.routeData.y[i];
 
 		  }
+		  //draw.handleIndex = furthestIndex; 
+		  jQuery("#rg2-track-canvas").css('z-index', 60);
 		  redraw(false);
 		},
-	
+  
   }
+
   
   // handle drawing of a new route
   function Draw() {
     this.trackColor = '#ff0000';
+    this.HANDLE_DOT_RADIUS = 10;
     this.CLOSE_ENOUGH = 10;
+    this.handleIndex = null;
+    this.handleX = null;
+    this.handleY = null;
+    this.baseGPSX = [];
+    this.baseGPSY = [];
+    
     // this is a straight copy from courses so includes the start at [0]
     // the RouteData version has the start control removed for saving
     this.pendingCourseID = null;
@@ -187,6 +213,7 @@ jQuery(document).ready(function() {"use strict";
       this.controlx = [];
       this.controly = [];
       this.nextControl= 0;
+      this.handleIndex = null;
       jQuery("#rg2-name-select").prop('disabled', true);	
       jQuery("#rg2-undo").prop('disabled', true);	
       jQuery("#btn-save-route").button("disable");
@@ -430,64 +457,115 @@ jQuery(document).ready(function() {"use strict";
         }
       }
       return false;
-		},		
+		},	
 		
+		toggleHandle: function (x, y) {
+  	  if (this.handleX === null) {
+  		  this.handleX = x;
+  		  this.handleY = y;
+  	  } else {
+    		this.handleX = null;
+  	  	this.handleY = null;
+  	  }
+    },	
+		
+		trackLocked : function () {
+		  return (this.handleX !== null);	
+		}, 
+		
+		skewTrack : function (x1, y1, x2 , y2) {
+
+  	  if (this.handleX !== null) {
+  	  	// scale and rotate track
+  		  var scaleX = (x2 - this.handleX) / (x1 - this.handleX);
+  		  var scaleY = (y2 - this.handleY) / (y1 - this.handleY);
+        scaleX = Math.max(scaleX, 0.1);
+        scaleY = Math.max(scaleY, 0.1);
+        
+	      var newAngle = Math.atan2((y2 - this.handleX), ((x2 - this.handleX)));
+	      var oldAngle = Math.atan2((y1 - this.handleX), ((x1 - this.handleX)));
+        var angle = newAngle - oldAngle;
+	      //if (angle < 0) {
+	      //  angle = angle + (2 * Math.PI);	  
+	      //}	
+        //angle = angle + (Math.PI /2);
+  	    console.log (x1, y1, x2, y2, this.handleX, this.handleY, scaleX, scaleY, angle);        
+        ctxTrack.translate(this.handleX, this.handleY);
+        ctxTrack.rotate(angle);
+        ctxTrack.scale(scaleX, scaleY);
+        ctxTrack.translate(-1 * this.handleX, -1 * this.handleY);
+
+  		} else {
+		    // drag track
+		    ctxTrack.translate(x2 - x1, y2 - y1);
+   		}
+      ctxTrack.save();
+		},
+
 		drawNewTrack : function() {
-			ctx.lineWidth = 2;
-			ctx.strokeStyle = this.trackColor;
-			ctx.fillStyle = this.trackColour;
-			ctx.font = '10pt Arial';        
-      ctx.textAlign = "left";
-  		ctx.globalAlpha = 1.0;
+			var c = ctxTrack;
+			c.lineWidth = 2;
+			c.strokeStyle = this.trackColor;
+			c.fillStyle = this.trackColour;
+			c.font = '10pt Arial';        
+      c.textAlign = "left";
+  		c.globalAlpha = 1.0;
       // highlight next control if we have a course selected
       if (this.nextControl > 0) {
-        ctx.beginPath();
+        c.beginPath();
 			  if (this.nextControl < (this.controlx.length - 1)) {
           // normal control
-				  ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], CONTROL_CIRCLE_RADIUS, 0, 2 * Math.PI, false);
+				  c.arc(this.controlx[this.nextControl], this.controly[this.nextControl], CONTROL_CIRCLE_RADIUS, 0, 2 * Math.PI, false);
 			  } else {
 				  // finish
-				  ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], FINISH_INNER_RADIUS, 0, 2 * Math.PI, false);				
-				  ctx.stroke();
-				  ctx.beginPath();
-				  ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], FINISH_OUTER_RADIUS, 0, 2 * Math.PI, false);				
+				  c.arc(this.controlx[this.nextControl], this.controly[this.nextControl], FINISH_INNER_RADIUS, 0, 2 * Math.PI, false);				
+				  c.stroke();
+				  c.beginPath();
+				  c.arc(this.controlx[this.nextControl], this.controly[this.nextControl], FINISH_OUTER_RADIUS, 0, 2 * Math.PI, false);				
 			  }
 			  // dot at centre of control circle
-			  ctx.fillRect(this.controlx[this.nextControl] - 1, this.controly[this.nextControl] - 1, 3, 3)
-			  ctx.stroke();
+			  c.fillRect(this.controlx[this.nextControl] - 1, this.controly[this.nextControl] - 1, 3, 3)
+			  c.stroke();
 			  // dot at start of route
-			  ctx.beginPath();
-			  ctx.arc(this.routeData.x[0] + (RUNNER_DOT_RADIUS/2), this.routeData.y[0], RUNNER_DOT_RADIUS, 0, 2 * Math.PI, false);
-			  ctx.fill();
+			  c.beginPath();
+			  c.arc(this.routeData.x[0] + (RUNNER_DOT_RADIUS/2), this.routeData.y[0], RUNNER_DOT_RADIUS, 0, 2 * Math.PI, false);
+			  c.fill();
 			}
+		  // handle for GPS route edit
+      if (this.handleX !== null) {
+		   	c.beginPath();
+			  c.arc(this.handleX + (this.HANDLE_DOT_RADIUS/2), this.handleY, this.HANDLE_DOT_RADIUS, 0, 2 * Math.PI, false);
+			  c.fill();
+			}
+
 			// route itself
 			if (this.routeData.x.length > 1) {
-				ctx.beginPath();
-				ctx.moveTo(this.routeData.x[0], this.routeData.y[0]);
+				c.beginPath();
+				c.moveTo(this.routeData.x[0], this.routeData.y[0]);
 				var oldx = this.routeData.x[0];
 				var oldy = this.routeData.y[0];
 				var stopCount = 0;
 				for (var i = 1; i < this.routeData.x.length; i++) {
 					// lines
-					ctx.lineTo(this.routeData.x[i], this.routeData.y[i]);
+					c.lineTo(this.routeData.x[i], this.routeData.y[i]);
 					if ((this.routeData.x[i] == oldx) && (this.routeData.y[i] == oldy)) {
 						// we haven't moved
 						stopCount++;
 			      // only output at current position if this is the last entry
 			      if (i === (this.routeData.x.length - 1)) {
-			      	ctx.fillText((3 * stopCount) + " secs", this.routeData.x[i] + 5, this.routeData.y[i] + 5);
+			      	c.fillText((3 * stopCount) + " secs", this.routeData.x[i] + 5, this.routeData.y[i] + 5);
 			      }						
 					} else {
 			      // we have started moving again
 			      if (stopCount > 0) {
-			      	ctx.fillText((3 * stopCount) + " secs", oldx + 5, oldy + 5);	
+			      	c.fillText((3 * stopCount) + " secs", oldx + 5, oldy + 5);	
               stopCount = 0;
             }
 				  }
 					oldx = this.routeData.x[i];
 					oldy = this.routeData.y[i];
 				}
-				ctx.stroke();
+				c.stroke();
 			}
 		}
 	}
@@ -2177,6 +2255,9 @@ jQuery(document).ready(function() {"use strict";
 
 	var canvas = jQuery("#rg2-map-canvas")[0];
 	var ctx = canvas.getContext('2d');
+	var trackCanvas = jQuery("#rg2-track-canvas")[0];
+	var ctxTrack = trackCanvas.getContext('2d');
+
 	var map = new Image();
 	var mapLoadingText = "Select an event";
 	var events = new Events();
@@ -2232,7 +2313,9 @@ jQuery(document).ready(function() {"use strict";
 		jQuery("#rg2-about-dialog").hide();
 		jQuery("#rg2-splits-display").hide();
 		jQuery("#rg2-track-names").hide();
+		
 		trackTransforms(ctx);
+		trackTransforms(ctxTrack);
 		resizeCanvas();
 
     // stick with native tooltops for now
@@ -2464,10 +2547,13 @@ jQuery(document).ready(function() {"use strict";
 		// avoid annoying jumps on larger screens
 		if ((infoPanelMaximised) || (window.innerWidth >= BIG_SCREEN_BREAK_POINT)) {
 			ctx.setTransform(mapscale, 0, 0, mapscale, jQuery("#rg2-info-panel").outerWidth(), 0);
+			ctxTrack.setTransform(mapscale, 0, 0, mapscale, jQuery("#rg2-info-panel").outerWidth(), 0);
 		} else {
 			ctx.setTransform(mapscale, 0, 0, mapscale, 0, 0);
+			ctxTrack.setTransform(mapscale, 0, 0, mapscale, 0, 0);
 		}
 		ctx.save();
+		ctxTrack.save();
 		redraw(false);
 	}
 
@@ -2478,6 +2564,8 @@ jQuery(document).ready(function() {"use strict";
 		jQuery("#rg2-container").css("height", winheight - 70);
 		canvas.width = winwidth - 10;
 		canvas.height = winheight - 70;
+		trackCanvas.width = winwidth - 10;
+		trackCanvas.height = winheight - 70;
 		// set title bar
 		if (window.innerWidth >= BIG_SCREEN_BREAK_POINT) {
 			jQuery("#rg2-event-title").text(events.getActiveEventName() + " " + events.getActiveEventDate());
@@ -2517,6 +2605,11 @@ jQuery(document).ready(function() {"use strict";
 		ctx.restore();
 		// set transparency of map to none
 		ctx.globalAlpha = 1.0;
+
+		ctxTrack.save();
+		ctxTrack.setTransform(1, 0, 0, 1, 0, 0);
+		ctxTrack.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+		ctxTrack.restore();
 
 		if (map.height > 0) {
 			ctx.drawImage(map, 0, 0);
@@ -2582,6 +2675,7 @@ jQuery(document).ready(function() {"use strict";
 		dragged = false;
 		console.log ("Mousedown" + dragStart.x + ": " + dragStart.y);
 	}, false);
+	
 	canvas.addEventListener('mousemove', function(evt) {
 		lastX = evt.offsetX || (evt.pageX - canvas.offsetLeft);
 		lastY = evt.offsetY || (evt.pageY - canvas.offsetTop);
@@ -2607,16 +2701,49 @@ jQuery(document).ready(function() {"use strict";
 		dragStart = null;
 	}, false);
 
-  //document.body.addEventListener('touchmove', function(event) {
-  //  event.preventDefault();
-  //}, false);
+	trackCanvas.addEventListener('mousedown', function(evt) {
+		lastX = evt.offsetX || (evt.pageX - trackCanvas.offsetLeft);
+		lastY = evt.offsetY || (evt.pageY - trackCanvas.offsetTop);
+		dragStart = ctxTrack.transformedPoint(lastX, lastY);
+		dragged = false;
+		console.log ("Mousedown" + dragStart.x + ": " + dragStart.y);
+	}, false);
+	
+	trackCanvas.addEventListener('mousemove', function(evt) {
+		lastX = evt.offsetX || (evt.pageX - trackCanvas.offsetLeft);
+		lastY = evt.offsetY || (evt.pageY - trackCanvas.offsetTop);
+		if (dragStart) {
+			var pt = ctxTrack.transformedPoint(lastX, lastY);
+			// allow for Webkit which gives us mousemove events with no movement!
+			if ((pt.x !== dragStart.x) || (pt.y !== dragStart.y)) {
+		    draw.skewTrack(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10), parseInt(pt.x, 10), parseInt(pt.y, 10));
+		    //console.log ("Mousemove after" + pt.x + ": " + pt.y);
+		    dragged = true;
+			  redraw(false);
+			}
+		}
+	}, false);
+
+	trackCanvas.addEventListener('mouseup', function(evt) {
+		//console.log ("Mouseup" + dragStart.x + ": " + dragStart.y);
+  	if (!dragged) {
+	    draw.toggleHandle(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10));
+		}
+		dragStart = null;
+		redraw(false);
+	}, false);
 
 	var zoom = function(zoomDirection) {
 		var pt = ctx.transformedPoint(lastX, lastY);
 		ctx.translate(pt.x, pt.y);
+		ctxTrack.translate(pt.x, pt.y);
 		var factor = Math.pow(scaleFactor, zoomDirection);
 		ctx.scale(factor, factor);
 		ctx.translate(-pt.x, -pt.y);
+		ctxTrack.scale(factor, factor);
+		ctxTrack.translate(-pt.x, -pt.y);
+    ctx.save();
+    ctxTrack.save();
 		redraw(false);
 	};
 
@@ -2627,9 +2754,12 @@ jQuery(document).ready(function() {"use strict";
 		}
 		return evt.preventDefault() && false;
 	};
+	
 	canvas.addEventListener('DOMMouseScroll', handleScroll, false);
 	canvas.addEventListener('mousewheel', handleScroll, false);
-
+	trackCanvas.addEventListener('DOMMouseScroll', handleScroll, false);
+	trackCanvas.addEventListener('mousewheel', handleScroll, false);
+	
 	function createEventMenu() {
 		//loads menu from populated events array
 		var html = events.formatEventsAsMenu();

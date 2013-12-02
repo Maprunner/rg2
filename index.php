@@ -116,7 +116,7 @@
 				</div>
 		  </div>
 		  <canvas id="rg2-map-canvas">Your browser does not support HTML5</canvas>
-	  
+		  <canvas id="rg2-track-canvas"></canvas>	  
 		  <div class="rg2-ani-row row-1">
 			  <div class="rg2-button"><i id="btn-slower" title = "Slower" class="fa fa-minus"></i></div>
 			  <div class="rg2-button"><i id="btn-start-stop" title = "Run" class="fa fa-play"></i></div>

@@ -196,6 +196,11 @@ html, body {
    z-index: 50;
 }
 
+#rg2-track-canvas {
+   position: absolute;
+   z-index: 40;
+}
+
 #rg2-animation-names {
    background: rgba(204, 204, 204, 0.75);
    padding : 2px;
