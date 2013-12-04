@@ -184,8 +184,8 @@ jQuery(document).ready(function() {"use strict";
    	        jQuery("#btn-save-route").button("enable");
    	      }
    	    } else {
-			    this.routeData.x.push(parseInt(x, 10));
-			    this.routeData.y.push(parseInt(y, 10));
+			    this.routeData.x.push(Math.round(x));
+			    this.routeData.y.push(Math.round(y));
 			  }
 			  if (this.routeData.x.length > 1) {
    	      jQuery("#btn-undo").button("enable");
@@ -838,9 +838,9 @@ jQuery(document).ready(function() {"use strict";
 				timeatxy = res.xysecs[xy];
 				difft = timeatxy - timeatprevxy;
 				for ( t = timeatprevxy + 1; t < timeatxy; t++) {
-					this.x[t] = parseInt(fromx + ((t - timeatprevxy) * diffx / difft), 10);
-					this.y[t] = parseInt(fromy + ((t - timeatprevxy) * diffy / difft), 10);
-					cumulativeDistance[t] = parseInt(fromdist + ((t - timeatprevxy) * diffdist / difft), 10);
+					this.x[t] = Math.round(fromx + ((t - timeatprevxy) * diffx / difft));
+					this.y[t] = Math.round(fromy + ((t - timeatprevxy) * diffy / difft));
+					cumulativeDistance[t] = Math.round(fromdist + ((t - timeatprevxy) * diffdist / difft));
 				}
 				this.x[timeatxy] = tox;
 				this.y[timeatxy] = toy;
@@ -870,9 +870,9 @@ jQuery(document).ready(function() {"use strict";
 				timeatcontrol = res.splits[control];
 				difft = timeatcontrol - timeatprevcontrol;
 				for ( t = timeatprevcontrol + 1; t < timeatcontrol; t++) {
-					this.x[t] = parseInt(fromx + ((t - timeatprevcontrol) * diffx / difft), 10);
-					this.y[t] = parseInt(fromy + ((t - timeatprevcontrol) * diffy / difft), 10);
-					cumulativeDistance[t] = parseInt(fromdist + ((t - timeatprevxy) * diffdist / difft), 10);
+					this.x[t] = Math.round(fromx + ((t - timeatprevcontrol) * diffx / difft));
+					this.y[t] = Math.round(fromy + ((t - timeatprevcontrol) * diffy / difft));
+					cumulativeDistance[t] = Math.round(fromdist + ((t - timeatprevxy) * diffdist / difft));
 				}
 				this.x[timeatcontrol] = tox;
 				this.y[timeatcontrol] = toy;
@@ -890,7 +890,7 @@ jQuery(document).ready(function() {"use strict";
 		
 		if (course.codes != undefined) {
   		for ( control = 1; control < course.codes.length; control++) {
-	  		this.cumulativeTrackDistance[control] = parseInt(cumulativeDistance[res.splits[control]], 10);
+	  		this.cumulativeTrackDistance[control] = Math.round(cumulativeDistance[res.splits[control]]);
 		  	this.legTrackDistance[control] = this.cumulativeTrackDistance[control] - this.cumulativeTrackDistance[control - 1];
 		  }
 		}		
@@ -1350,7 +1350,7 @@ jQuery(document).ready(function() {"use strict";
 			this.isGPSTrack = false;
 		}
 		this.name = data.name;
-		this.starttime = parseInt(data.starttime, 10);
+		this.starttime = Math.round(data.starttime);
 		this.time = data.time;
     // get round iconv problem in API for now
 	  if (data.comments != null) {
@@ -1367,7 +1367,7 @@ jQuery(document).ready(function() {"use strict";
 		this.splits = data.splits.split(";");
 		// force to integers to avoid doing it every time we read it
 		for (var i = 0; i < this.splits.length; i++) {
-			this.splits[i] = parseInt(this.splits[i], 10);
+			this.splits[i] = Math.round(this.splits[i]);
 		}
 		// insert a 0 split at the start to make life much easier elsewhere
 		this.splits.splice(0, 0, 0);
@@ -1480,7 +1480,7 @@ jQuery(document).ready(function() {"use strict";
 				x = this.trackx[i];
 				y = this.tracky[i];
 				dist = dist + Math.sqrt(((x - oldx) * (x - oldx)) + ((y - oldy) * (y - oldy)));
-				this.cumulativeDistance[i] = parseInt(dist, 10);
+				this.cumulativeDistance[i] = Math.round(dist);
 				oldx = x;
 				oldy = y;
 				// track ends at control
@@ -1493,7 +1493,7 @@ jQuery(document).ready(function() {"use strict";
 					olddist = this.cumulativeDistance[previouscontrolindex];
 					deltadist = this.cumulativeDistance[i] - olddist;
 					for (var j = previouscontrolindex; j <= i; j++) {
-						this.xysecs[j] = oldt + parseInt(((this.cumulativeDistance[j] - olddist) * deltat / deltadist), 10);
+						this.xysecs[j] = oldt + Math.round(((this.cumulativeDistance[j] - olddist) * deltat / deltadist));
 					}
 					previouscontrolindex = i;
 					nextcontrol++;
@@ -1523,7 +1523,7 @@ jQuery(document).ready(function() {"use strict";
 				x = this.trackx[t];
 				y = this.tracky[t];
 				dist = dist + Math.sqrt(((x - oldx) * (x - oldx)) + ((y - oldy) * (y - oldy)));
-				this.cumulativeDistance[t] = parseInt(dist, 10);
+				this.cumulativeDistance[t] = Math.round(dist);
 				oldx = x;
 				oldy = y;
 			}
@@ -2023,11 +2023,11 @@ jQuery(document).ready(function() {"use strict";
 	
 	function CourseCoord(data) {
 		// store y and b as positive rather than negative to simplify screen drawing
-		this.type = parseInt(data[0], 10);
-		this.x = parseInt(data[1], 10);
-		this.y = -1 * parseInt(data[2], 10);
-		this.a = parseInt(data[3], 10);
-		this.b = -1 * parseInt(data[4], 10);
+		this.type = Math.round(data[0]);
+		this.x = Math.round(data[1]);
+		this.y = -1 * Math.round(data[2]);
+		this.a = Math.round(data[3]);
+		this.b = -1 * Math.round(data[4]);
 	}
 
 	var canvas = jQuery("#rg2-map-canvas")[0];
@@ -2425,8 +2425,8 @@ jQuery(document).ready(function() {"use strict";
 	}
 
 	canvas.addEventListener('mousedown', function(evt) {
-		lastX = evt.offsetX || (evt.pageX - canvas.offsetLeft);
-		lastY = evt.offsetY || (evt.pageY - canvas.offsetTop);
+		lastX = evt.offsetX || (evt.layerX - canvas.offsetLeft);
+		lastY = evt.offsetY || (evt.layerY - canvas.offsetTop);
 		dragStart = ctx.transformedPoint(lastX, lastY);
 		dragged = false;
 		//console.log ("Mousedown" + dragStart.x + ": " + dragStart.y);
