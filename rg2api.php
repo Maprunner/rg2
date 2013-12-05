@@ -58,6 +58,30 @@ function encode_rg_input($input_str) {
   return $encoded;
 }
 
+//
+// Handle the encondig for output data if
+// output encoding is not set to UTF-8
+//
+
+function encode_rg_output($output_str) {
+  //
+  $encoded = '';
+  //
+  if ( RG_INPUT_ENCODING != 'UTF-8' ) {
+    //
+    $encoded = @iconv( RG_OUTPUT_ENCODING, RG_INPUT_ENCODING, $output_str);
+  } else {
+    //
+    $encoded = $output_str;
+  }
+  //
+  if ( !$encoded ) {
+    $encoded = "";
+  }
+  //
+  return $encoded;
+}
+
 function handlePostRequest($type, $eventid) {
   	
   $data = json_decode(file_get_contents('php://input'));
@@ -73,25 +97,25 @@ function handlePostRequest($type, $eventid) {
 }
 
 function addNewRoute($eventid, $data) {
-	//rg2log("Add new route for eventid ".$eventid);
+  //rg2log("Add new route for eventid ".$eventid);
 
-	  // tidy up commments
+  // tidy up commments
   // may need more later
   $comments = trim($data->comments);
-	$newcommentdata = $data->courseid."|".$data->resultid."|".$data->name."||".$comments.PHP_EOL;
-	$filename = "kommentit_".$eventid.".txt";
-	
-	if (($handle = lockFile($filename)) !== FALSE) {
+  $newcommentdata = $data->courseid."|".$data->resultid."|".encode_rg_output($data->name)."||".encode_rg_output($comments).PHP_EOL;
+  $filename = "kommentit_".$eventid.".txt";
+
+  if (($handle = lockFile($filename)) !== FALSE) {
     $status =fwrite($handle, $newcommentdata);		
     unlockFile($filename, $handle);
-		if ($status) {
-		  $write["status"] = "Record saved";
-	  } else {
-		  $write["status"] = "Save error";
-	  }
-	} else {
-		  $write["status"] = "File lock error";
-	}
+    if ($status) {
+      $write["status"] = "Record saved";
+    } else {
+      $write["status"] = "Save error";
+    }
+  } else {
+    $write["status"] = "File lock error";
+  }
   // errors writing comments not reported
 
   // convert x,y to internal RG format
@@ -105,24 +129,23 @@ function addNewRoute($eventid, $data) {
   	$controls .= 'N'.$data->controlx[$i].';-'.$data->controly[$i];
   }
 
-  $newtrackdata = $data->courseid."|".$data->resultid."| ".$data->name."|null|".$track."|".$controls.PHP_EOL;
+  $newtrackdata = $data->courseid."|".$data->resultid."| ".encode_rg_output($data->name)."|null|".$track."|".$controls.PHP_EOL;
 	
-	$filename = "merkinnat_".$eventid.".txt";
-	if (($handle = lockFile($filename)) !== FALSE) {
+  $filename = "merkinnat_".$eventid.".txt";
+  if (($handle = lockFile($filename)) !== FALSE) {
     $status =fwrite($handle, $newtrackdata);		
     unlockFile($filename, $handle);
-	  if ($status) {
-		  $write["status_msg"] = "Record saved";
-			$write["ok"] = true;
-	  } else {
-		  $write["status_msg"] = "Save error";
-			$write["ok"] = false;
-
-	  }
-	} else {
-		  $write["status_msg"] = "File lock error";
-			$write["ok"] = false;
-	}
+    if ($status) {
+      $write["status_msg"] = "Record saved";
+      $write["ok"] = true;
+    } else {
+      $write["status_msg"] = "Save error";
+      $write["ok"] = false;
+    }
+  } else {
+    $write["status_msg"] = "File lock error";
+    $write["ok"] = false;
+  }
 
   header("Content-type: application/json"); 
   echo json_encode($write);
