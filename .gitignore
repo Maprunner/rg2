@@ -4,7 +4,7 @@
 
 rg2-override-config.txt
 rg2-override-config.php
-log/
+log/rg2log.txt
 
 #################
 ## Eclipse

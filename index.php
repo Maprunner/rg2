@@ -153,10 +153,10 @@
 			   up in in the original Routegadget.</p>
 			  <p>It does not currently work properly on iPads, tablets and phones because of problems with the touch interface and screen size. This is on the list of things to be looked at.</p>
 			  <p><strong>Simon Errington</strong> (simon (at) maprunner.co.uk)</p>
+			  <p><?php echo ADDITIONAL_INFO_TEXT; ?></p>
 		  </div>
 		  <div id="rg2-splits-table" title="Splits display"></div>
    </div>
-    <div id="rg2-footer"><?php echo FOOTER_TEXT; ?></div>
 
 		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
 		<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>

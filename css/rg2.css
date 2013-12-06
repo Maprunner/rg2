@@ -11,14 +11,11 @@ html, body {
   font: 16px/26px Helvetica, Helvetica Neue, Arial;
 }
 
-#rg2-header-container, #rg2-footer {
+#rg2-header-container {
     background: #002bd9;
     color: white;	
     position: relative;
     height: 30px;
-}
-
-#rg2-header-container {
     border-bottom: 4px solid black;
     font-size: 20px;
     line-height: 30px;
@@ -94,12 +91,6 @@ html, body {
   color: darkgray;
 }
 
-#rg2-footer {
-   border-top: 4px solid black;	
-   font-size: 0.75em;
-   text-align: center;
-}
-
 #rg2-about {
    position: absolute;	
    right: 0px;
@@ -167,10 +158,11 @@ html, body {
 }
 
 #rg2-container {
-	 height: 500px;
+	 height: 100%;
    width: 100%;
    position: relative;
    background: silver;
+   overflow: hidden;
 }
 
 #rg2-info-panel {
