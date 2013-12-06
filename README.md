@@ -16,13 +16,19 @@ Routegadget 2.0 allows you to view existing Routegadget information in any moder
 It also adds a modern user interface as well as updated functionality for analysis.
 
 ##Status
-This is an early prototype to allow testing of the user interface, and the layout and functionality may still change quite a lot.
+The user interface now includes most of the core functionality and should be fairly stable. You can draw a route and upload a recorded GPS file (GPX format only at present).
 
-Later versions will allow you to create new events and upload routes, but for now it only works on events that have been set up in the
+Later versions will allow you to create new events (as a replacement of the original Manager), but for now it only works on events that have been set up in the
 original Routegadget.
 
 It does not currently work properly on iPads, tablets and phones because of problems with the touch interface and screen size. This is
 on the list of things to be looked at.
+
+## GPS file adjustment
+When you upload a file it fitted to the course as closely as possible. There are limited functions to adjust the route.
+You can drag the whole route, and you can lock a point on it and then stretch and rotate the whole course around the locked point. There is no option to edit
+parts of a route (as in RG1), and at the moment there is no intention to add this. The plan is to georeference maps and courses when they are added to
+RG2, and no adjustment will then be needed. 
 
 ##Installation
 To use Routegadget 2.0 you need to install it in an existing Routegadget installation. This will require ftp access to your server. If this makes
@@ -41,10 +47,12 @@ directory, at the same level as the kartat directory where the data files are st
              /rg2
                  /css
                  /img
+                 /lock
+                 /log
                  /js
                      /vendor
 
-3. Edit the rg2-config.php file in the /rg2 directory and enter the URL for your existing Routegadget installation.
+3. Edit the rg2-config.php file in the /rg2 directory and enter the URL for your existing Routegadget installation. Change other configuration options as necessary.
 
 4. Your data should now be available at e.g. http://www.club.routegadget.co.uk/rg2/index.php
 

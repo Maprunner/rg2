@@ -21,7 +21,32 @@
     }
 }());
 
-// Place any jQuery/helper plugins in here.
+	
+	Number.prototype.toRad = function() {
+    return this * Math.PI / 180;
+ };
+  
+  function getLatLonDistance(lat1, lon1, lat2, lon2) {
+		// Haversine formula (http://www.codecodex.com/wiki/Calculate_distance_between_two_points_on_a_globe)
+		var x = lat2 - lat1;
+		var dLat = x.toRad();  
+   	var y = lon2 - lon1;
+   	var dLon = y.toRad();     
+    var a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos((lat1).toRad()) * Math.cos((lat2.toRad())) * Math.sin(dLon/2) * Math.sin(dLon/2);  
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));  
+		
+		// multiply by IUUG earth mean radius (http://en.wikipedia.org/wiki/Earth_radius) in metres
+		return 6371009 * c;
+	}  
+
+	function getAngle(x1, y1, x2, y2) {
+	  var angle = Math.atan2((y2 - y1), (x2 - x1));
+	  if (angle < 0) {
+	    angle = angle + (2 * Math.PI);	  
+	  }	 	 
+	  return angle;
+  }
+
 	// Adds ctx.getTransform() - returns an SVGMatrix
 	// Adds ctx.transformedPoint(x,y) - returns an SVGPoint
 	function trackTransforms(ctx) {
