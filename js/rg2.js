@@ -11,12 +11,24 @@ jQuery(document).ready(function() {"use strict";
   function GPSTrack() {
     this.lat= [];
     this.lon= [];
-    this.time = [];	
+    this.time = [];
+    this.baseX = [];
+    this.baseY = [];
+    this.fileLoaded = false;
   }
 
   GPSTrack.prototype = {
   	
 	Constructor : GPSTrack,
+	
+	initialiseGPS : function() {
+    this.lat.length = 0;
+    this.lon.length = 0;
+    this.time.length = 0;
+    this.baseX.length = 0;
+    this.baseY.length = 0;
+    this.fileLoaded = false;		
+	},
 	
 	uploadGPS : function (evt) {
 		//console.log ("File" + evt.target.files[0].name);
@@ -41,6 +53,7 @@ jQuery(document).ready(function() {"use strict";
       var xml;
       var i;
       var j;
+      var timestring;
       xml = jQuery.parseXML(evt.target.result);
       trksegs = xml.getElementsByTagName('trkseg');
       for (i = 0; i < trksegs.length; i++) {
@@ -48,78 +61,41 @@ jQuery(document).ready(function() {"use strict";
         for (j = 0; j < trkpts.length; j++) {
         	gpstrack.lat.push(trkpts[j].getAttribute('lat'));
         	gpstrack.lon.push(trkpts[j].getAttribute('lon'));
-        	gpstrack.time.push(trkpts[j].childNodes[3].textcontent); 
+        	timestring = trkpts[j].childNodes[3].textContent;
+        	gpstrack.time.push(gpstrack.getSecsFromTrackpoint(timestring)); 
         }
       }
       gpstrack.processGPSTrack();
+ 	    jQuery("#rg2-load-gps-file").button('disable');
       console.log ("File loaded");
     };
-
+  
     // read the selected file
     reader.readAsText(evt.target.files[0]);
 		
 		},
-		/* processGPSTrackGeoref : function () {
 
-      var x1 = 1286.553;
-      var y1 = 355.034;
-      var x2 = 394.109;
-      var y2 = 775.23;
-      var x3 = 455.065;
-      var y3 = 110.676;
-     
-      var lat1 = 51.750870;
-      var lon1 = -0.339828;
-      var lat2 = 51.745777;
-      var lon2 = -0.355987;
-      var lat3 = 51.753388;
-      var lon3 = -0.355257; 
-     
-      var pixPerLon1 = (x1 - x2) / (lon1 - lon2);
-      var pixPerLat1 = -1 * ((y1 - y2) / (lat1 - lat2));
-      var pixPerLon2 = (x1 - x3) / (lon1 - lon3);
-      var pixPerLat2 = -1 * ((y1 - y3) / (lat1 - lat3));
-      var pixPerLon3 = (x3 - x2) / (lon3 - lon2);
-      var pixPerLat3 = -1 * ((y3 - y2) / (lat3 - lat2));
-      
-      var pixPerLon = (pixPerLon1 + pixPerLon2 + pixPerLon3) / 3;
-      var pixPerLat = (pixPerLat1 + pixPerLat2 + pixPerLat3) / 3;
-            
-      var baseLon1 = lon1 - (x1 / pixPerLon);
-      var baseLat1 = lat1 + (y1 / pixPerLat); 
-      var baseLon2 = lon2 - (x2 / pixPerLon);
-      var baseLat2 = lat2 + (y2 / pixPerLat); 
-      var baseLon3 = lon3 - (x3 / pixPerLon);
-      var baseLat3 = lat3 + (y3 / pixPerLat); 
-
-      var baseLon = (baseLon1 + baseLon2 + baseLon3) / 3;
-      var baseLat = (baseLat1 + baseLat2 + baseLat3) / 3;
-
-      //baseLon = -0.3636833;
-      //baseLat = 51.754487;
-
-      //pixPerLon = 50597;
-      //pixPerLat = 85270;
-                  		  
-		  for (var i = 0; i < this.lat.length; i++) {
-		    draw.routeData.x[i] = (this.lon[i] - baseLon) * pixPerLon;
-		    draw.routeData.y[i] = -1 * ((this.lat[i] - baseLat) * pixPerLat);
-		  }
-		  redraw(false);
-		}, */
+    getSecsFromTrackpoint: function (timestring) {
+    	// input is 2013-12-03T12:34:56Z
+    	var hrs = parseInt(timestring.substr(11,2), 10);
+    	var mins = parseInt(timestring.substr(14,2), 10);
+   	  var secs = parseInt(timestring.substr(17,2), 10);
+      return (hrs * 3600) + (mins * 60) + secs;
+    },
 		
 		processGPSTrack : function () {
-		  var maxLat = this.lat[0];
-		  var maxLon = this.lon[0];
-		  var minLat = this.lat[0];
-		  var minLon = this.lon[0] ;
-		  
+      // distance not used at present
 		  var furthestIndex = 0;
 		  var furthestDistance = 0;
 		  var distanceFromStart;
 		  var x;
 		  var y;
 		  
+		  // find bounding box for track
+		  var maxLat = this.lat[0];
+		  var maxLon = this.lon[0];
+		  var minLat = this.lat[0];
+		  var minLon = this.lon[0] ;
 		  for (var i = 1; i < this.lat.length; i++) {
 		  	maxLat = Math.max(maxLat, this.lat[i]);
 		  	maxLon = Math.max(maxLon, this.lon[i]);
@@ -133,6 +109,8 @@ jQuery(document).ready(function() {"use strict";
 		    	furthestIndex = i;
 		    }	
 		  }
+
+		  // find bounding box for course
 		  var minControlX = draw.controlx[0];
 		  var maxControlX = draw.controlx[0];
 		  var minControlY = draw.controly[0];
@@ -144,52 +122,54 @@ jQuery(document).ready(function() {"use strict";
 		  	minControlX = Math.min(minControlX, draw.controlx[i]);
 		  	minControlY = Math.min(minControlY, draw.controly[i]);
 		  }
+      console.log (minControlX, maxControlX, minControlY, maxControlY);
 
       // scale GPS track to within bounding box of controls: a reasonable start
 		  var scaleX = (maxControlX - minControlX)/(maxLon - minLon);
 		  var scaleY = (maxControlY - minControlY)/(maxLat - minLat);
-
+      var lonCorrection = getLatLonDistance(minLat, maxLon, minLat, minLon) / (maxLon - minLon);
+		  var latCorrection = getLatLonDistance(minLat, minLon, maxLat, minLon) / (maxLat - minLat);
+		  
+		  // don't want to skew track so scale needs to be equal in each direction
+		  // so we need to account for differences between a degree of latitude and longitude	  
+		  if (scaleX > scaleY) {
+		  	// pix/lat = pix/lon * m/lat * lon/m
+		  	scaleY = scaleX * latCorrection / lonCorrection;
+		  } else {
+		  	// pix/lon = pix/lat * m/lon * lat/m
+		  	scaleX = scaleY * lonCorrection / latCorrection;  	
+		  }
       // extra offset to put start of track at start location 
 		  draw.routeData.x[0] = ((this.lon[0] - minLon) * scaleX) + minControlX;
 		  draw.routeData.y[0] = (-1 * (this.lat[0] - maxLat) * scaleY) + minControlY;
 		  
+		  // translate lat/lon to x,y
 		  var deltaX = minControlX - (draw.routeData.x[0] - draw.controlx[0]); 
 		  var deltaY = minControlY - (draw.routeData.y[0] - draw.controly[0]);
-		  
 		  for (i = 0; i < this.lat.length; i++) {
 		  	draw.routeData.x[i] = ((this.lon[i] - minLon) * scaleX) + deltaX;
 		  	draw.routeData.y[i] = (-1 * (this.lat[i] - maxLat) * scaleY) + deltaY;
-        draw.baseGPSX[i] = draw.routeData.x[i];
-        draw.baseGPSY[i] = draw.routeData.y[i];
-
 		  }
-		  //draw.handleIndex = furthestIndex; 
-		  jQuery("#rg2-track-canvas").css('z-index', 60);
+		  this.baseX = draw.routeData.x.slice(0);
+		  this.baseY = draw.routeData.y.slice(0);
+		  draw.routeData.time = this.time; 
+      this.fileLoaded = true;
+      jQuery("#btn-save-gps-route").button("enable");
 		  redraw(false);
-		},
-  
+		}
   }
 
-  
   // handle drawing of a new route
   function Draw() {
     this.trackColor = '#ff0000';
     this.HANDLE_DOT_RADIUS = 10;
     this.CLOSE_ENOUGH = 10;
-    this.handleIndex = null;
-    this.handleX = null;
-    this.handleY = null;
-    this.baseGPSX = [];
-    this.baseGPSY = [];
-    
-    // this is a straight copy from courses so includes the start at [0]
-    // the RouteData version has the start control removed for saving
-    this.pendingCourseID = null;
     this.initialiseDrawing();
   }
   
   function RouteData() {
     this.courseid = null;
+    this.coursename = null;
     this.resultid = null;
     this.eventid = null;
     this.name = null;
@@ -198,29 +178,74 @@ jQuery(document).ready(function() {"use strict";
     this.y = [];
     this.controlx = [];
     this.controly = [];
+    this.time = [];
+    this.startsecs = 0;
   }
   
 	Draw.prototype = {
 		Constructor : Draw,
 
-		drawingHappening: function () {
-		  return (TAB_DRAW === (jQuery("#rg2-info-panel").tabs( "option", "active" )));	
+    mouseUp: function (x, y) {
+  	  var active = jQuery("#rg2-info-panel").tabs( "option", "active" );
+  	  if (active != TAB_DRAW) {
+  	  	return;
+  	  }
+  	  if (gpstrack.fileLoaded) {
+  	  	// adjusting the track
+  	  	if (this.handleX === null) {
+  		    this.handleX = x;
+  		    this.handleY = y;
+  	    } else {
+    		  this.handleX = null;
+  	  	  this.handleY = null;
+  	    }
+  	  } else {
+  	  	// drawing new track
+			  // only allow drawing if we have valid name and course
+		    if ((this.routeData.resultid !== null) && (this.routeData.courseid !== null)) {
+  	  	  this.addNewPoint(x, y);
+  	  	} else {
+          var msg = "<div id='drawing-reset-dialog'>Please select course and name before you start drawing a route or upload a file.</div>";
+         jQuery(msg).dialog({title: "Select course and name"});
+        }
+  	  }
+    },
+    
+    dragEnded: function () {
+     	if (gpstrack.fileLoaded) {
+     	  // rebaseline GPS track
+     	  gpstrack.baseX = this.routeData.x.slice(0);
+     	  gpstrack.baseY = this.routeData.y.slice(0);
+     	  redraw(false);
+     	}	
+    }, 
+     
+    // locks or unlocks background when adjusting map
+		toggleMoveAll: function (checkedState) {
+		  this.backgroundLocked = checkedState;
 		},
-		
 		
 		initialiseDrawing: function () {
       this.routeData = new RouteData();
+      this.handleX = null;
+      this.handleY = null;
+      this.backgroundLocked = false;
+      this.pendingCourseID = null;
+      // the RouteData versions of these have the start control removed for saving
       this.controlx = [];
       this.controly = [];
-      this.nextControl= 0;
-      this.handleIndex = null;
+      this.nextControl = 0;
+      gpstrack.initialiseGPS();
       jQuery("#rg2-name-select").prop('disabled', true);	
       jQuery("#rg2-undo").prop('disabled', true);	
       jQuery("#btn-save-route").button("disable");
+      jQuery("#btn-save-gps-route").button("disable");
    	  jQuery("#btn-undo").button("disable");
    	  jQuery("#btn-three-seconds").button("disable");
 			jQuery("#rg2-name-select").empty();
       jQuery("#rg2-new-comments").empty().val(DEFAULT_NEW_COMMENT);
+      jQuery("rg2-move-all").prop('checked', false);
+ 	    jQuery("#rg2-load-gps-file").button('disable');
       redraw(false);
     },
 		
@@ -249,6 +274,7 @@ jQuery(document).ready(function() {"use strict";
 			this.routeData.courseid = courseid;
 			courses.putOnDisplay(courseid);
 		  var course = courses.getFullCourse(courseid);
+		  this.routeData.coursename = course.name;
 			this.controlx = course.x;
 			this.controly = course.y;
 			this.routeData.x.length = 0;
@@ -338,37 +364,33 @@ jQuery(document).ready(function() {"use strict";
 			if (!isNaN(resultid)) {
 			  this.routeData.resultid = results.getKartatResultID(resultid);
 			  this.routeData.name = results.getRunnerName(resultid);
-   	    jQuery("#btn-three-seconds").button("enable");
+   	    jQuery("#btn-three-seconds").button('enable');
+ 	      jQuery("#rg2-load-gps-file").button('enable');
 		 }
 		},
 		
 		addNewPoint: function (x, y) {
-			// only allow drawing if we have valid name and course
-		  if ((this.routeData.resultid !== null) && (this.routeData.courseid !== null)) {
-        // enable here for testing
-        //jQuery("#btn-save-route").button("enable");
+
+      // enable here for testing
+      //jQuery("#btn-save-route").button("enable");
 			  
-			  if (this.closeEnough(x, y)) {
-			    this.routeData.x.push(this.controlx[this.nextControl]);
-			    this.routeData.y.push(this.controly[this.nextControl]);				
-			    this.nextControl++;
-			    if (this.nextControl === this.controlx.length) {
-   	        jQuery("#btn-save-route").button("enable");
-   	      }
-   	    } else {
-			    this.routeData.x.push(parseInt(x, 10));
-			    this.routeData.y.push(parseInt(y, 10));
-			  }
-			  if (this.routeData.x.length > 1) {
-   	      jQuery("#btn-undo").button("enable");
-   	    } else {
-   	      jQuery("#btn-undo").button("disable");   	  	
+			if (this.closeEnough(x, y)) {
+			  this.routeData.x.push(this.controlx[this.nextControl]);
+			  this.routeData.y.push(this.controly[this.nextControl]);				
+			  this.nextControl++;
+			  if (this.nextControl === this.controlx.length) {
+   	      jQuery("#btn-save-route").button("enable");
    	    }
-        redraw(false);
-     } else {
-       var msg = "<div id='drawing-reset-dialog'>Please select course and name before you start drawing a route.</div>";
-       jQuery(msg).dialog({title: "Select course and name"});
-     }
+   	  } else {
+			  this.routeData.x.push(parseInt(x, 10));
+			  this.routeData.y.push(parseInt(y, 10));
+			}
+			if (this.routeData.x.length > 1) {
+   	    jQuery("#btn-undo").button("enable");
+   	  } else {
+   	    jQuery("#btn-undo").button("disable");   	  	
+   	  }
+      redraw(false);
 		},
 		
 		undoLastPoint: function () {
@@ -399,13 +421,43 @@ jQuery(document).ready(function() {"use strict";
    	  redraw(false);
 		},
 
+		saveGPSRoute: function () {
+			// called to save GPS file route
+      // tidy up route details
+      var i;
+      var pt;
+      var t;
+      this.routeData.startsecs = this.routeData.time[0];
+      for (i = 0; i < this.routeData.x.length; i++) {
+      	this.routeData.x[i] = parseInt(this.routeData.x[i], 10);
+      	this.routeData.y[i] = parseInt(this.routeData.y[i], 10);
+      	// convert real time seconds to offset seconds from start time
+      	this.routeData.time[i] -= this.routeData.startsecs;
+      }
+      // allow for already having a GPS route for this runner
+      this.routeData.resultid += GPS_RESULT_OFFSET;
+      while (results.resultIDExists(this.routeData.resultid)) {
+        this.routeData.resultid += GPS_RESULT_OFFSET;
+        // add marker(s) to name to show it is a duplicate
+        this.routeData.name += '*';    	
+      }
+      this.routeData.comments = jQuery("#rg2-new-comments").val();
+
+      this.postRoute();
+		},
+
 		saveRoute: function () {
+			// called to save manually entered route
+      this.routeData.comments = jQuery("#rg2-new-comments").val();
 			this.routeData.controlx = this.controlx;
 			this.routeData.controly = this.controly;
 			// don't need start control so remove it		
       this.routeData.controlx.splice(0,1);
       this.routeData.controly.splice(0,1);
-      this.routeData.comments = jQuery("#rg2-new-comments").val();
+      this.postRoute();
+  },
+  
+    postRoute: function () {  
       var $url = json_url + '?type=addroute&id=' + this.routeData.eventid;
       // create JSON data
       var json = JSON.stringify(this.routeData);
@@ -459,113 +511,112 @@ jQuery(document).ready(function() {"use strict";
       return false;
 		},	
 		
-		toggleHandle: function (x, y) {
-  	  if (this.handleX === null) {
-  		  this.handleX = x;
-  		  this.handleY = y;
-  	  } else {
-    		this.handleX = null;
-  	  	this.handleY = null;
-  	  }
-    },	
-		
 		trackLocked : function () {
 		  return (this.handleX !== null);	
 		}, 
 		
-		skewTrack : function (x1, y1, x2 , y2) {
+		adjustTrack : function (x1, y1, x2 , y2, shiftKeyPressed, ctrlKeyPressed) {
 
-  	  if (this.handleX !== null) {
-  	  	// scale and rotate track
-  		  var scaleX = (x2 - this.handleX) / (x1 - this.handleX);
-  		  var scaleY = (y2 - this.handleY) / (y1 - this.handleY);
-        scaleX = Math.max(scaleX, 0.1);
-        scaleY = Math.max(scaleY, 0.1);
-        
-	      var newAngle = Math.atan2((y2 - this.handleX), ((x2 - this.handleX)));
-	      var oldAngle = Math.atan2((y1 - this.handleX), ((x1 - this.handleX)));
-        var angle = newAngle - oldAngle;
-	      //if (angle < 0) {
-	      //  angle = angle + (2 * Math.PI);	  
-	      //}	
-        //angle = angle + (Math.PI /2);
-  	    console.log (x1, y1, x2, y2, this.handleX, this.handleY, scaleX, scaleY, angle);        
-        ctxTrack.translate(this.handleX, this.handleY);
-        ctxTrack.rotate(angle);
-        ctxTrack.scale(scaleX, scaleY);
-        ctxTrack.translate(-1 * this.handleX, -1 * this.handleY);
-
-  		} else {
-		    // drag track
-		    ctxTrack.translate(x2 - x1, y2 - y1);
+		  if (this.backgroundLocked) {
+		    // drag track and background
+		    ctx.translate(x2 - x1, y2 - y1);  
+		  } else {
+  	    if (this.handleX !== null) {
+  	  	  // scale and rotate track
+  		    var scaleX = (x2 - this.handleX) / (x1 - this.handleX);
+  		    var scaleY = (y2 - this.handleY) / (y1 - this.handleY);
+          var oldAngle = getAngle(x1, y1, this.handleX, this.handleY);
+          var newAngle = getAngle(x2, y2, this.handleX, this.handleY);
+          var angle = newAngle - oldAngle;
+	        //console.log (x1, y1, x2, y2, this.handleX, this.handleY, scaleX, scaleY, oldAngle, newAngle, angle);        
+          if (!shiftKeyPressed) {
+            scaleY = scaleX;
+          }         
+          for (var i = 0; i < draw.routeData.x.length; i++) {
+            var x = gpstrack.baseX[i] - this.handleX;
+            var y = gpstrack.baseY[i] - this.handleY;
+            draw.routeData.x[i] = (((Math.cos(angle) * x) - (Math.sin(angle) * y)) * scaleX) + this.handleX;
+            draw.routeData.y[i] = (((Math.sin(angle) * x) + (Math.cos(angle) * y)) * scaleY) + this.handleY;
+          }
+   		  } else {
+		      // drag track
+          var dx = x2 - x1;
+          var dy = y2 - y1;
+          for (var i = 0; i < draw.routeData.x.length; i++) {
+            draw.routeData.x[i] = gpstrack.baseX[i] + dx;
+            draw.routeData.y[i] = gpstrack.baseY[i] + dy;
+          }
+		    }
    		}
-      ctxTrack.save();
+
 		},
 
 		drawNewTrack : function() {
-			var c = ctxTrack;
-			c.lineWidth = 2;
-			c.strokeStyle = this.trackColor;
-			c.fillStyle = this.trackColour;
-			c.font = '10pt Arial';        
-      c.textAlign = "left";
-  		c.globalAlpha = 1.0;
+			ctx.lineWidth = 2;
+			ctx.strokeStyle = this.trackColor;
+			ctx.fillStyle = this.trackColour;
+			ctx.font = '10pt Arial';        
+      ctx.textAlign = "left";
+  		ctx.globalAlpha = 1.0;
       // highlight next control if we have a course selected
-      if (this.nextControl > 0) {
-        c.beginPath();
+      if ((this.nextControl > 0) && (!gpstrack.fileLoaded)) {
+        ctx.beginPath();
 			  if (this.nextControl < (this.controlx.length - 1)) {
           // normal control
-				  c.arc(this.controlx[this.nextControl], this.controly[this.nextControl], CONTROL_CIRCLE_RADIUS, 0, 2 * Math.PI, false);
+				  ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], CONTROL_CIRCLE_RADIUS, 0, 2 * Math.PI, false);
 			  } else {
 				  // finish
-				  c.arc(this.controlx[this.nextControl], this.controly[this.nextControl], FINISH_INNER_RADIUS, 0, 2 * Math.PI, false);				
-				  c.stroke();
-				  c.beginPath();
-				  c.arc(this.controlx[this.nextControl], this.controly[this.nextControl], FINISH_OUTER_RADIUS, 0, 2 * Math.PI, false);				
+				  ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], FINISH_INNER_RADIUS, 0, 2 * Math.PI, false);				
+				  ctx.stroke();
+				  ctx.beginPath();
+				  ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], FINISH_OUTER_RADIUS, 0, 2 * Math.PI, false);				
 			  }
 			  // dot at centre of control circle
-			  c.fillRect(this.controlx[this.nextControl] - 1, this.controly[this.nextControl] - 1, 3, 3)
-			  c.stroke();
+			  ctx.fillRect(this.controlx[this.nextControl] - 1, this.controly[this.nextControl] - 1, 3, 3)
+			  ctx.stroke();
 			  // dot at start of route
-			  c.beginPath();
-			  c.arc(this.routeData.x[0] + (RUNNER_DOT_RADIUS/2), this.routeData.y[0], RUNNER_DOT_RADIUS, 0, 2 * Math.PI, false);
-			  c.fill();
+			  ctx.beginPath();
+			  ctx.arc(this.routeData.x[0] + (RUNNER_DOT_RADIUS/2), this.routeData.y[0], RUNNER_DOT_RADIUS, 0, 2 * Math.PI, false);
+			  ctx.fill();
 			}
-		  // handle for GPS route edit
+		  // locked point for GPS route edit
       if (this.handleX !== null) {
-		   	c.beginPath();
-			  c.arc(this.handleX + (this.HANDLE_DOT_RADIUS/2), this.handleY, this.HANDLE_DOT_RADIUS, 0, 2 * Math.PI, false);
-			  c.fill();
+		   	ctx.beginPath();
+			  ctx.arc(this.handleX, this.handleY, this.HANDLE_DOT_RADIUS, 0, 2 * Math.PI, false);
+			  ctx.fill();
+			  ctx.beginPath()		  
+			  ctx.arc(this.handleX, this.handleY, 2 * this.HANDLE_DOT_RADIUS, 0, 2 * Math.PI, false);
+			  ctx.stroke();
 			}
 
 			// route itself
 			if (this.routeData.x.length > 1) {
-				c.beginPath();
-				c.moveTo(this.routeData.x[0], this.routeData.y[0]);
+				ctx.beginPath();
+				ctx.moveTo(this.routeData.x[0], this.routeData.y[0]);
 				var oldx = this.routeData.x[0];
 				var oldy = this.routeData.y[0];
 				var stopCount = 0;
 				for (var i = 1; i < this.routeData.x.length; i++) {
 					// lines
-					c.lineTo(this.routeData.x[i], this.routeData.y[i]);
+					ctx.lineTo(this.routeData.x[i], this.routeData.y[i]);
 					if ((this.routeData.x[i] == oldx) && (this.routeData.y[i] == oldy)) {
 						// we haven't moved
 						stopCount++;
 			      // only output at current position if this is the last entry
 			      if (i === (this.routeData.x.length - 1)) {
-			      	c.fillText((3 * stopCount) + " secs", this.routeData.x[i] + 5, this.routeData.y[i] + 5);
+			      	ctx.fillText((3 * stopCount) + " secs", this.routeData.x[i] + 5, this.routeData.y[i] + 5);
 			      }						
 					} else {
 			      // we have started moving again
 			      if (stopCount > 0) {
-			      	c.fillText((3 * stopCount) + " secs", oldx + 5, oldy + 5);	
+			      	ctx.fillText((3 * stopCount) + " secs", oldx + 5, oldy + 5);	
               stopCount = 0;
             }
 				  }
 					oldx = this.routeData.x[i];
 					oldy = this.routeData.y[i];
 				}
-				c.stroke();
+				ctx.stroke();
 			}
 		}
 	}
@@ -609,8 +660,14 @@ jQuery(document).ready(function() {"use strict";
 		},
 
 		updateAnimationDetails : function() {
-			jQuery("#rg2-animation-names").empty();
-			jQuery("#rg2-animation-names").append(this.getAnimationNames());
+			var html = this.getAnimationNames();
+			if (html !== "") {
+			  jQuery("#rg2-track-names").empty();
+			  jQuery("#rg2-track-names").append(html);
+				jQuery("#rg2-track-names").show();
+			} else {
+				jQuery("#rg2-track-names").hide();
+			}
 			this.calculateAnimationRange();
 			jQuery("#rg2-clock").text(this.formatSecsAsHHMMSS(this.animationSecs));
 		},
@@ -622,16 +679,13 @@ jQuery(document).ready(function() {"use strict";
 		},
 
 		getAnimationNames : function() {
-			var html;
+			var html = "";
 			if (this.runners.length < 1) {
-				return "<p>Select runners on the Results tab.</p>";
+				return html;
 			}
-			html = "<table>";
 			for (var i = 0; i < this.runners.length; i++) {
-				html += "<tr><td>" + this.runners[i].coursename + "</td><td>" + this.runners[i].name;
-				html += "</td><td style='color:" + this.runners[i].colour + ";'>=====</td></tr>";
+				html += "<p style='color:" + this.runners[i].colour + ";'>" + this.runners[i].coursename + " " + this.runners[i].name + "</p>";
 			}
-			html += "</table>";
 			return html;
 		},
 
@@ -860,7 +914,6 @@ jQuery(document).ready(function() {"use strict";
 			}
 			jQuery("#rg2-clock-slider").slider("value", this.animationSecs);
 			jQuery("#rg2-clock").text(this.formatSecsAsHHMMSS(this.animationSecs));
-
 			ctx.lineWidth = REPLAY_LINE_THICKNESS;
 			ctx.globalAlpha = 1.0;
 			var runner;
@@ -1326,11 +1379,12 @@ jQuery(document).ready(function() {"use strict";
 			  jQuery('body').css('cursor', 'auto');
 			  jQuery("#rg2-info-panel").tabs("enable", TAB_COURSES);
 			  jQuery("#rg2-info-panel").tabs("enable", TAB_RESULTS);
-			  jQuery("#rg2-info-panel").tabs("enable", TAB_REPLAY);
 			  jQuery("#rg2-info-panel").tabs("enable", TAB_DRAW);
 			  // open courses tab for new event: else stay on draw tab
   	    var active = jQuery("#rg2-info-panel").tabs( "option", "active" );
-  	    if (active != TAB_DRAW) {
+  	    // don't change tab if we have come from DRAW since it means
+  	    // we have just relaoded following a save
+  	    if (active !== TAB_DRAW) {
 			    jQuery("#rg2-info-panel").tabs("option", "active", TAB_COURSES);
 			  }
 			  jQuery("#rg2-info-panel").tabs("refresh");
@@ -1378,23 +1432,28 @@ jQuery(document).ready(function() {"use strict";
 			for (var i = 0; i < this.results.length; i++) {
 				this.results[i].drawTrack();
 			}
+		},
+
+    updateTrackNames: function () {
 			jQuery("#rg2-track-names").empty();
 			var html = this.getDisplayedTrackNames();
 			if (html !== "") {
-				jQuery("#rg2-track-names").empty();
 				jQuery("#rg2-track-names").append(html);
 				jQuery("#rg2-track-names").show();
 			} else {
 				jQuery("#rg2-track-names").hide();
 			}
-		},
-
+   	
+    },
+    
 		putOneTrackOnDisplay : function(resultid) {
 			this.results[resultid].putTrackOnDisplay();
+      this.updateTrackNames();
 		},
 
 		removeOneTrackFromDisplay : function(resultid) {
 			this.results[resultid].removeTrackFromDisplay();
+      this.updateTrackNames();
 		},
 
 		// add all tracks for one course
@@ -1404,6 +1463,7 @@ jQuery(document).ready(function() {"use strict";
 					this.results[i].putTrackOnDisplay();
 				};
 			}
+      this.updateTrackNames();			
 		},
 
 		// put all tracks for all courses on display
@@ -1411,6 +1471,7 @@ jQuery(document).ready(function() {"use strict";
 			for (var i = 0; i < this.results.length; i++) {
 				this.results[i].putTrackOnDisplay();
 			}
+      this.updateTrackNames();
 		},
 
 		getDisplayedTrackNames : function() {
@@ -1422,6 +1483,15 @@ jQuery(document).ready(function() {"use strict";
 				}
 			}
 			return html;
+		},
+
+		resultIDExists : function(resultid) {
+			for (var i = 0; i < this.results.length; i++) {
+				if (resultid === this.results[i].resultid) {
+					return true;
+				}
+			}
+			return false;
 		},
 
 		getSplitsForID : function(resultid) {
@@ -1446,6 +1516,7 @@ jQuery(document).ready(function() {"use strict";
 			for (var i = 0; i < this.results.length; i++) {
 				this.results[i].removeTrackFromDisplay();
 			}
+      this.updateTrackNames();
 		},
 
 		removeTracksFromDisplay : function(courseid) {
@@ -1454,6 +1525,7 @@ jQuery(document).ready(function() {"use strict";
 					this.results[i].removeTrackFromDisplay();
 				};
 			}
+      this.updateTrackNames();
 		},
 
 		addTracks : function(tracks) {
@@ -2198,10 +2270,10 @@ jQuery(document).ready(function() {"use strict";
         var c2x;
         var c2y;       
         ctx.globalAlpha = intensity;        
-        angle = this.getAngle (this.x[0], this.y[0], this.x[1], this.y[1]);
+        angle = getAngle (this.x[0], this.y[0], this.x[1], this.y[1]);
         controls.drawStartControl(this.x[0], this.y[0], "", angle);
         for (i = 0; i < (this.x.length - 1); i++) {
-          angle = this.getAngle (this.x[i], this.y[i], this.x[i + 1], this.y[i + 1]);
+          angle = getAngle (this.x[i], this.y[i], this.x[i + 1], this.y[i + 1]);
           if (i === 0) {
             c1x = this.x[i] + (START_TRIANGLE_LENGTH * Math.cos(angle));  
             c1y = this.y[i] + (START_TRIANGLE_LENGTH * Math.sin(angle));   
@@ -2229,20 +2301,9 @@ jQuery(document).ready(function() {"use strict";
           controls.drawSingleControl(this.x[i], this.y[i], i);
         }
         controls.drawFinishControl(this.x[this.x.length - 1], this.y[this.y.length - 1], "");
-        
-        
-      }
-  },
-	getAngle : function(x1, y1, x2, y2) {
-	  var angle = Math.atan2((y2 - y1), (x2 - x1));
-	  if (angle < 0) {
-	    angle = angle + (2 * Math.PI);	  
-	  }	 	 
-	 return angle;
+     }
+    }
 	}
-	
-	}
-
 	
 	function CourseCoord(data) {
 		// store y and b as positive rather than negative to simplify screen drawing
@@ -2255,9 +2316,6 @@ jQuery(document).ready(function() {"use strict";
 
 	var canvas = jQuery("#rg2-map-canvas")[0];
 	var ctx = canvas.getContext('2d');
-	var trackCanvas = jQuery("#rg2-track-canvas")[0];
-	var ctxTrack = trackCanvas.getContext('2d');
-
 	var map = new Image();
 	var mapLoadingText = "Select an event";
 	var events = new Events();
@@ -2265,7 +2323,7 @@ jQuery(document).ready(function() {"use strict";
 	var results = new Results();
 	var controls = new Controls();
 	var animation = new Animation();
-	var gpstrack;
+	var gpstrack = new GPSTrack();;
 	var draw;
 	var timer = 0;
 	// added to resultid when saving a GPS track
@@ -2273,8 +2331,7 @@ jQuery(document).ready(function() {"use strict";
 	var TAB_EVENTS = 0;
 	var TAB_COURSES = 1;
 	var TAB_RESULTS = 2;
-	var TAB_REPLAY = 3;
-	var TAB_DRAW = 4;
+	var TAB_DRAW = 3;
 	var MASS_START_REPLAY = 1;
   var REAL_TIME_REPLAY = 2;
 	// dropdown selection value
@@ -2304,7 +2361,8 @@ jQuery(document).ready(function() {"use strict";
 	var lastX;
 	var lastY;	
 	var dragStart = null;
-	var dragged = false;
+	// looks odd but this works for initialisation
+	var dragged = true;
 
 	initialize();
 
@@ -2315,7 +2373,6 @@ jQuery(document).ready(function() {"use strict";
 		jQuery("#rg2-track-names").hide();
 		
 		trackTransforms(ctx);
-		trackTransforms(ctxTrack);
 		resizeCanvas();
 
     // stick with native tooltops for now
@@ -2344,9 +2401,9 @@ jQuery(document).ready(function() {"use strict";
 
 		infoPanelMaximised = true;
 
-		// disable courses, results and replay until we have loaded some
+		// disable tabs until we have loaded something
 		jQuery("#rg2-info-panel").tabs({
-			disabled : [TAB_COURSES, TAB_RESULTS, TAB_REPLAY, TAB_DRAW]
+			disabled : [TAB_COURSES, TAB_RESULTS, TAB_DRAW]
 		});
 
 		jQuery("#rg2-result-list").accordion({
@@ -2402,9 +2459,20 @@ jQuery(document).ready(function() {"use strict";
 		  .click(function() {
 			  draw.saveRoute();
 		});
-   	
-   	jQuery("#btn-save-route").button("disable");
 
+		jQuery("#btn-save-gps-route").button()
+		  .click(function() {
+			  draw.saveGPSRoute();
+		});
+
+		jQuery("#btn-move-all").click(function(evt) {
+			  draw.toggleMoveAll(evt.target.checked);
+		});
+		jQuery("#btn-move-all").prop('checked', false);
+		   	
+   	jQuery("#btn-save-route").button("disable");
+   	jQuery("#btn-save-gps-route").button("disable");
+   	
 		jQuery("#btn-undo").button()
 		  .click(function() {
 			  draw.undoLastPoint();
@@ -2420,13 +2488,13 @@ jQuery(document).ready(function() {"use strict";
 			  draw.waitThreeSeconds();
 		});
 
-		jQuery("#rg2-gps-file").button()
+		jQuery("#rg2-load-gps-file").button()
 		  .change(function(evt) {
-			  gpstrack = new GPSTrack();
 			  gpstrack.uploadGPS(evt);
 		});		
 
    	jQuery("#btn-undo").button("disable");
+   	jQuery("#rg2-load-gps-file").button("disable");
    	jQuery("#btn-three-seconds").button("disable");
 
 		jQuery("#btn-zoom-in").click(function() {
@@ -2530,12 +2598,13 @@ jQuery(document).ready(function() {"use strict";
 	}
 
 	function resetMapState() {
-		// place map in centre of canvas and scales it down to fit
+		// place map in centre of canvas and scale it down to fit
 		var heightscale = canvas.height / map.height;
 		lastX = canvas.width / 2;
 		lastY = canvas.height / 2;
 		dragStart = null;
-		dragged = false;
+		// looks odd but this works for initialisation
+		dragged = true;
 		var mapscale;
 		// don't stretch map: just shrink to fit
 		if (heightscale < 1) {
@@ -2547,13 +2616,10 @@ jQuery(document).ready(function() {"use strict";
 		// avoid annoying jumps on larger screens
 		if ((infoPanelMaximised) || (window.innerWidth >= BIG_SCREEN_BREAK_POINT)) {
 			ctx.setTransform(mapscale, 0, 0, mapscale, jQuery("#rg2-info-panel").outerWidth(), 0);
-			ctxTrack.setTransform(mapscale, 0, 0, mapscale, jQuery("#rg2-info-panel").outerWidth(), 0);
 		} else {
 			ctx.setTransform(mapscale, 0, 0, mapscale, 0, 0);
-			ctxTrack.setTransform(mapscale, 0, 0, mapscale, 0, 0);
 		}
 		ctx.save();
-		ctxTrack.save();
 		redraw(false);
 	}
 
@@ -2562,10 +2628,9 @@ jQuery(document).ready(function() {"use strict";
 		var winwidth = window.innerWidth;
 		var winheight = window.innerHeight;
 		jQuery("#rg2-container").css("height", winheight - 70);
+		// we assume elsewhere that we always keep the two canvases aligned
 		canvas.width = winwidth - 10;
 		canvas.height = winheight - 70;
-		trackCanvas.width = winwidth - 10;
-		trackCanvas.height = winheight - 70;
 		// set title bar
 		if (window.innerWidth >= BIG_SCREEN_BREAK_POINT) {
 			jQuery("#rg2-event-title").text(events.getActiveEventName() + " " + events.getActiveEventDate());
@@ -2582,10 +2647,13 @@ jQuery(document).ready(function() {"use strict";
   // called whenever the active tab changes to tidy up as necessary
   function tabActivated() {
   	var active = jQuery("#rg2-info-panel").tabs( "option", "active" );
-  	if (active === TAB_DRAW) {
+  	switch (active) {
+  	case TAB_DRAW:
 		  courses.removeAllFromDisplay();  		
 			draw.showCourseInProgress();
-			jQuery("#rg2-track-names").hide();
+  	  break;
+  	default:
+  	  break;
   	}
   	redraw(false);
   }
@@ -2606,14 +2674,11 @@ jQuery(document).ready(function() {"use strict";
 		// set transparency of map to none
 		ctx.globalAlpha = 1.0;
 
-		ctxTrack.save();
-		ctxTrack.setTransform(1, 0, 0, 1, 0, 0);
-		ctxTrack.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-		ctxTrack.restore();
-
 		if (map.height > 0) {
+      // using non-zero map height to show we have a map loaded
 			ctx.drawImage(map, 0, 0);
-			if (draw.drawingHappening()) {
+  	  var active = jQuery("#rg2-info-panel").tabs( "option", "active" );
+  	  if (active === TAB_DRAW) {
 				courses.drawCourses(DIM);			
 			  controls.drawControls();
 			  draw.drawNewTrack();
@@ -2665,87 +2730,56 @@ jQuery(document).ready(function() {"use strict";
 		}
 		// move map around if necesssary
 		resetMapState();
-
 	}
 
 	canvas.addEventListener('mousedown', function(evt) {
-		lastX = evt.offsetX || (evt.pageX - canvas.offsetLeft);
-		lastY = evt.offsetY || (evt.pageY - canvas.offsetTop);
+		lastX = evt.offsetX || (evt.pageX - can.offsetLeft);
+		lastY = evt.offsetY || (evt.pageY - can.offsetTop);
 		dragStart = ctx.transformedPoint(lastX, lastY);
 		dragged = false;
-		console.log ("Mousedown" + dragStart.x + ": " + dragStart.y);
-	}, false);
-	
+		//console.log ("Mousedown " + lastX + " " + lastY + " " + dragStart.x + " " + dragStart.y);	
+		}, false)
+
 	canvas.addEventListener('mousemove', function(evt) {
 		lastX = evt.offsetX || (evt.pageX - canvas.offsetLeft);
 		lastY = evt.offsetY || (evt.pageY - canvas.offsetTop);
 		if (dragStart) {
 			var pt = ctx.transformedPoint(lastX, lastY);
+	    //console.log ("Mousemove after" + pt.x + ": " + pt.y);
 			// allow for Webkit which gives us mousemove events with no movement!
 			if ((pt.x !== dragStart.x) || (pt.y !== dragStart.y)) {
-			  ctx.translate(pt.x - dragStart.x, pt.y - dragStart.y);
-		    //console.log ("Mousemove after" + pt.x + ": " + pt.y);
+			  if (gpstrack.fileLoaded) {
+		      draw.adjustTrack(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10), parseInt(pt.x, 10), parseInt(pt.y, 10), evt.shiftKey, evt.ctrlKey);	  	
+			  } else {
+			    ctx.translate(pt.x - dragStart.x, pt.y - dragStart.y);
+			  }
 		    dragged = true;
-			  redraw(false);
+		    redraw(false);
 			}
-		}
-	}, false);
+		}	
+	}, false)
 
-	canvas.addEventListener('mouseup', function(evt) {
+  canvas.addEventListener('mouseup', function(evt) {
 		//console.log ("Mouseup" + dragStart.x + ": " + dragStart.y);
-  	if (!dragged) {
-  		if (draw.drawingHappening()) {
-		    draw.addNewPoint(dragStart.x, dragStart.y);
-		  }
-		}
+    if (!dragged) {
+    	draw.mouseUp(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10));
+    } else {
+	    draw.dragEnded();
+	  }	  	
 		dragStart = null;
-	}, false);
-
-	trackCanvas.addEventListener('mousedown', function(evt) {
-		lastX = evt.offsetX || (evt.pageX - trackCanvas.offsetLeft);
-		lastY = evt.offsetY || (evt.pageY - trackCanvas.offsetTop);
-		dragStart = ctxTrack.transformedPoint(lastX, lastY);
-		dragged = false;
-		console.log ("Mousedown" + dragStart.x + ": " + dragStart.y);
-	}, false);
+		redraw(false);	
+	}, false)
 	
-	trackCanvas.addEventListener('mousemove', function(evt) {
-		lastX = evt.offsetX || (evt.pageX - trackCanvas.offsetLeft);
-		lastY = evt.offsetY || (evt.pageY - trackCanvas.offsetTop);
-		if (dragStart) {
-			var pt = ctxTrack.transformedPoint(lastX, lastY);
-			// allow for Webkit which gives us mousemove events with no movement!
-			if ((pt.x !== dragStart.x) || (pt.y !== dragStart.y)) {
-		    draw.skewTrack(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10), parseInt(pt.x, 10), parseInt(pt.y, 10));
-		    //console.log ("Mousemove after" + pt.x + ": " + pt.y);
-		    dragged = true;
-			  redraw(false);
-			}
-		}
-	}, false);
-
-	trackCanvas.addEventListener('mouseup', function(evt) {
-		//console.log ("Mouseup" + dragStart.x + ": " + dragStart.y);
-  	if (!dragged) {
-	    draw.toggleHandle(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10));
-		}
-		dragStart = null;
-		redraw(false);
-	}, false);
-
 	var zoom = function(zoomDirection) {
+		var factor = Math.pow(scaleFactor, zoomDirection);
+
 		var pt = ctx.transformedPoint(lastX, lastY);
 		ctx.translate(pt.x, pt.y);
-		ctxTrack.translate(pt.x, pt.y);
-		var factor = Math.pow(scaleFactor, zoomDirection);
 		ctx.scale(factor, factor);
 		ctx.translate(-pt.x, -pt.y);
-		ctxTrack.scale(factor, factor);
-		ctxTrack.translate(-pt.x, -pt.y);
     ctx.save();
-    ctxTrack.save();
 		redraw(false);
-	};
+	}
 
 	var handleScroll = function(evt) {
 		var delta = evt.wheelDelta ? evt.wheelDelta / 40 : evt.detail ? -evt.detail : 0;
@@ -2753,12 +2787,10 @@ jQuery(document).ready(function() {"use strict";
 			zoom(delta);
 		}
 		return evt.preventDefault() && false;
-	};
+	}
 	
 	canvas.addEventListener('DOMMouseScroll', handleScroll, false);
 	canvas.addEventListener('mousewheel', handleScroll, false);
-	trackCanvas.addEventListener('DOMMouseScroll', handleScroll, false);
-	trackCanvas.addEventListener('mousewheel', handleScroll, false);
 	
 	function createEventMenu() {
 		//loads menu from populated events array
@@ -2770,7 +2802,6 @@ jQuery(document).ready(function() {"use strict";
 				events.loadEvent(ui.item[0].id);
 			}
 		});
-
 	}
 
 	function createCourseMenu() {
@@ -2878,6 +2909,7 @@ jQuery(document).ready(function() {"use strict";
 			} else {
 				animation.removeRunner(event.target.id);
 			}
+			
 			redraw(false);
 		})
 		// disable control dropdown if we have no controls
