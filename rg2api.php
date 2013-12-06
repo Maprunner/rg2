@@ -37,6 +37,29 @@
   	die("Invalid request");
   }
 
+//
+// Handle the encoding for input data if
+// input encoding is not set to UTF-8
+//
+function encode_rg_input($input_str) {
+  //
+  $encoded = '';
+  //
+  if ( RG_INPUT_ENCODING != 'UTF-8' ) {
+    //
+    $encoded = @iconv( RG_INPUT_ENCODING, RG_OUTPUT_ENCODING, $input_str);
+  } else {
+    //
+    $encoded = $input_str;
+  }
+  //
+  if ( !$encoded ) {
+    $encoded = "";
+  }
+  //
+  return $encoded;
+}
+
 function handlePostRequest($type, $eventid) {
   	
   $data = json_decode(file_get_contents('php://input'));
@@ -233,11 +256,12 @@ function getAllEvents() {
 			$detail["mapid"] = $data[1];
 			$detail["status"] = $data[2];
 			// Issue #11: found a stray &#39; in a SUFFOC file
-			$detail["name"] = str_replace("&#39;", "'", $data[3]);
+            $name = encode_rg_input($data[3]);
+			$detail["name"] = str_replace("&#39;", "'", $name);
 			$detail["date"] = $data[4];
-			$detail["club"] = $data[5];
+			$detail["club"] = encode_rg_input($data[5]);
 			$detail["type"] = $data[6];
-			$detail["comment"] = $data[7];
+			$detail["comment"] = encode_rg_input($data[7]);
 			$output[$row] = $detail;				
       $row++;
     }
@@ -273,7 +297,7 @@ function getResultsForEvent($eventid) {
   		if (strncmp($data[4], "Type your comment", 17) != 0) {
 			  $text[$comments]["resultid"] = $data[1];
 			  // replace carriage return and line break codes
-        $temp = $data[4]; 
+        $temp = encode_rg_input($data[4]); 
         $temp = str_replace("#cr#", " ", $temp);      
         $temp = str_replace("#nl#", " ", $temp);  
         $text[$comments]["comments"] = $temp;
@@ -289,8 +313,8 @@ function getResultsForEvent($eventid) {
       $detail = array();
 	  	$detail["resultid"] = $data[0];
 			$detail["courseid"] = $data[1];
-			$detail["coursename"] = $data[2];
-      $detail["name"] = $data[3];
+			$detail["coursename"] = encode_rg_input($data[2]);
+            $detail["name"] = encode_rg_input($data[3]);
 			$detail["starttime"] = $data[4];
 			$detail["time"] = $data[7];
 			// trim trailing ; which create null fields when expanded
@@ -316,7 +340,7 @@ function getResultsForEvent($eventid) {
 			$detail["comments"] = "";
 			for ($i = 0; $i < $comments; $i++) {
 			  if ($detail["resultid"] == $text[$i]["resultid"]) {
-          $detail["comments"] = $text[$i]["comments"];			
+          $detail["comments"] = encode_rg_input($text[$i]["comments"]);			
 				}
 			}	
 			$output[$row] = $detail;				
@@ -382,7 +406,7 @@ function getCoursesForEvent($eventid) {
       $detail = array();
 		  $detail["courseid"] = $data[0];
 			$detail["status"] = $data[1];
-			$detail["name"] = $data[2];
+			$detail["name"] = encode_rg_input($data[2]);
 			$detail["coords"] = $data[3];
 			if ($controlsFound) {
 				if (isScoreEvent($eventid))	{
@@ -412,7 +436,7 @@ function getTracksForEvent($eventid) {
       $detail = array();
 			$detail["courseid"] = $data[0];
 			$detail["resultid"] = $data[1];
-			$detail["name"] = $data[2];
+			$detail["name"] = encode_rg_input($data[2]);
 			$detail["mystery"] = $data[3];
 			$detail["coords"] = $data[4];
 			$detail["controls"] = $data[5];
