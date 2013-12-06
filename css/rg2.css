@@ -140,6 +140,10 @@ html, body {
 	float: right;
 }
 
+.rg2-hr {
+	margin-top:20px;
+	margin-bottom:20px;
+}
 #rg2-clock {
    font-weight: bold;
    font-size: 26px;
@@ -210,7 +214,7 @@ html, body {
    height: auto;
    width: auto;
    z-index: 100;
-   max-height: 600px;
+   max-height: 500px;
    overflow: auto;
 }
 
@@ -260,6 +264,12 @@ table.resulttable th + th {
 padding: 0;
 }
 
+
+#rg2-select-gps-file .ui-button {
+	width: 300px;
+	margin-bottom: 10px;
+}
+
 #rg2-button-bar .ui-button-text-icon-primary,
 #rg2-button-bar .ui-button-text, 
 #rg2-button-bar .ui-button-text-icons,
@@ -272,7 +282,6 @@ padding: 0;
 #rg2-clock-slider {
   margin: 10px 15px;
 }
-
 
 #rg2-clock-slider .ui-state-default {
 	background: silver;
