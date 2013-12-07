@@ -25,7 +25,7 @@ It does not currently work properly on iPads, tablets and phones because of prob
 on the list of things to be looked at.
 
 ## GPS file adjustment
-When you upload a file it fitted to the course as closely as possible. There are limited functions to adjust the route.
+When you upload a file it is initially fitted to the course as closely as possible. There are limited functions to adjust the route.
 You can drag the whole route, and you can lock a point on it and then stretch and rotate the whole course around the locked point. There is no option to edit
 parts of a route (as in RG1), and at the moment there is no intention to add this. The plan is to georeference maps and courses when they are added to
 RG2, and no adjustment will then be needed. 
