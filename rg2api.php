@@ -13,8 +13,10 @@
     $url = "../kartat/";
   }
 	
-  define('KARTAT_DIRECTORY', $url);
-  define('LOCK_DIRECTORY', dirname(__FILE__) . "/lock/");
+	define('KARTAT_DIRECTORY', $url);
+  define ('LOCK_DIRECTORY', dirname(__FILE__)."/lock/");
+	define('GPS_RESULT_OFFSET', 50000);
+	define('GPS_INTERVAL', 3);
 	
   if (isset($_GET['type'])) {
     $type = $_GET['type'];
@@ -36,7 +38,7 @@
   }
 
 //
-// Handle the encondig for input data if
+// Handle the encoding for input data if
 // input encoding is not set to UTF-8
 //
 function encode_rg_input($input_str) {
@@ -98,13 +100,19 @@ function handlePostRequest($type, $eventid) {
 
 function addNewRoute($eventid, $data) {
   //rg2log("Add new route for eventid ".$eventid);
-
+  if ($data->resultid >= GPS_RESULT_OFFSET) {
+    $name = '  GPS '.$data->name;
+  } else {
+    $name = $data->name;
+  }
+  $name = encode_rg_output($name);
   // tidy up commments
   // may need more later
   $comments = trim($data->comments);
-  $newcommentdata = $data->courseid."|".$data->resultid."|".encode_rg_output($data->name)."||".encode_rg_output($comments).PHP_EOL;
+  $comments = encode_rg_output($comments);
+  $newcommentdata = $data->courseid."|".$data->resultid."|".$name."||".$comments.PHP_EOL;
   $filename = "kommentit_".$eventid.".txt";
-
+	
   if (($handle = lockFile($filename)) !== FALSE) {
     $status =fwrite($handle, $newcommentdata);		
     unlockFile($filename, $handle);
@@ -129,8 +137,8 @@ function addNewRoute($eventid, $data) {
   	$controls .= 'N'.$data->controlx[$i].';-'.$data->controly[$i];
   }
 
-  $newtrackdata = $data->courseid."|".$data->resultid."| ".encode_rg_output($data->name)."|null|".$track."|".$controls.PHP_EOL;
-	
+  $newtrackdata = $data->courseid."|".$data->resultid."| ".$name."|null|".$track."|".$controls.PHP_EOL;
+
   $filename = "merkinnat_".$eventid.".txt";
   if (($handle = lockFile($filename)) !== FALSE) {
     $status =fwrite($handle, $newtrackdata);		
@@ -147,12 +155,58 @@ function addNewRoute($eventid, $data) {
     $write["ok"] = false;
   }
 
+  if ($data->resultid >= GPS_RESULT_OFFSET) {
+    // GPS record so need to add result record as well
+    
+    // GPS track saved here as a point every three seconds
+    // input can in theory have any time between points
+    // so we need to interpolate
+    $oldtime = $data->time[0];
+    $oldx = $data->x[0];
+    $oldy = $data->y[0];
+    $track = $data->x[0].';-'.$data->y[0].',0N';
+    for ($i = 1; $i < count($data->x); $i++) {
+      $difftime = $data->time[$i] - $oldtime;
+			if ($difftime >= GPS_INTERVAL) {
+		    $xpersec = ($data->x[$i] - $oldx) / $difftime;
+		    $ypersec = ($data->y[$i] - $oldy) / $difftime;
+        $time = GPS_INTERVAL;
+        while ($time <= $difftime) {
+  	      $track .= intval($oldx + ($xpersec * $time)).';-'.intval($oldy + ($ypersec * $time)).',0N';			        	
+					$time = $time + GPS_INTERVAL;      
+				}
+		    $oldx = intval($oldx + ($xpersec * $time));
+		    $oldy = intval($oldy + ($ypersec * $time));		
+		    $oldtime = $oldtime + $time - GPS_INTERVAL;		
+			}    	  		
+    }
+	
+    $newresultdata = $data->resultid."|".$data->courseid."|".$data->coursename."|".$data->name;
+    $newresultdata .= "|".$data->startsecs."|||||".$track.PHP_EOL;
+	
+    $filename = "kilpailijat_".$eventid.".txt";
+    if (($handle = lockFile($filename)) !== FALSE) {
+        $status =fwrite($handle, $newresultdata);		
+        unlockFile($filename, $handle);
+        if ($status) {
+            $write["status_msg"] = "Record saved";
+            $write["ok"] = true;
+        } else {
+            $write["status_msg"] = "Save error";
+            $write["ok"] = false;
+        }
+    } else {
+        $write["status_msg"] = "File lock error";
+        $write["ok"] = false;
+    }
+  }
+
   header("Content-type: application/json"); 
   echo json_encode($write);
 }
- 
+
 function lockFile($filename) {
-	  // lock directory version based on http://docstore.mik.ua/orelly/webprog/pcook/ch18_25.htm
+    // lock directory version based on http://docstore.mik.ua/orelly/webprog/pcook/ch18_25.htm
     // but note mkdir returns true if directory already exists!
     if (is_dir(LOCK_DIRECTORY.$filename)) {
     	// locked already by someone else
@@ -290,6 +344,19 @@ function getResultsForEvent($eventid) {
 			$detail["splits"] = rtrim($data[8], ";");
 			if (sizeof($data) > 9) {
 				$detail["gpscoords"] = $data[9];
+				// Split Nxx;-yy,0Nxxx;-yy,0N.. into x,y arrays
+				$xy = explode("N", $data[9]);
+				foreach ($xy as $point) {
+				  $temp = explode(";", $point);
+					if (count($temp) == 2) {
+					  $x[] = $temp[0];
+					  $pos = strpos(',', $temp[1]);
+					  $y[] = substr($temp[1], 0, $pos - 2);
+					}
+				}
+				// enable when js has been modified
+				//$detail["x"] = $x;
+				//$detail["y"] = $y;
 			} else {
 				$detail["gpscoords"] = "";					
 			}
@@ -393,9 +460,9 @@ function getTracksForEvent($eventid) {
 			$detail["courseid"] = $data[0];
 			$detail["resultid"] = $data[1];
 			$detail["name"] = encode_rg_input($data[2]);
-			$detail["null"] = $data[3];
+			$detail["mystery"] = $data[3];
 			$detail["coords"] = $data[4];
-			//$detail["mystery"] = $data[5];
+			$detail["controls"] = $data[5];
 			$output[$row] = $detail;				
       $row++;
     }

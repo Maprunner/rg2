@@ -15,14 +15,15 @@
   // Set encoding for input data default UTF-8
   define('RG_INPUT_ENCODING', 'UTF-8');
   //
-  // Set encoding for output data returned throug API
+  // Set encoding for output data returned through API
   define('RG_OUTPUT_ENCODING', 'UTF-8//TRANSLIT//IGNORE');
 
   // User interface colour theme: see gallery at http://jqueryui.com/themeroller/
   // Example define('UI_THEME', 'excite-bike');
   define('UI_THEME', 'excite-bike');
 
-  // text to display in footer. Use '' to leave blank.
-  define('FOOTER_TEXT', '© Maprunner 2013. Maps published on this web site that contain OS data by permission of Ordnance Survey® Licence Number 100046745.');
+  // text displayed at bottom of info dialog. Use '' to leave blank.
+  define('ADDITIONAL_INFO_TEXT', 'Maps published on this web site that contain OS data by permission of Ordnance Survey® Licence Number 100046745.');
+
 	
 ?>
