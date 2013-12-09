@@ -74,24 +74,34 @@ jQuery(document).ready(function() {
     // read the selected file
     reader.readAsText(evt.target.files[0]);
 		
-		},
+	},
 
-    getSecsFromTrackpoint: function (timestring) {
-    	// input is 2013-12-03T12:34:56Z
-    	var hrs = parseInt(timestring.substr(11,2), 10);
-    	var mins = parseInt(timestring.substr(14,2), 10);
-   	  var secs = parseInt(timestring.substr(17,2), 10);
-      return (hrs * 3600) + (mins * 60) + secs;
-    },
+  getSecsFromTrackpoint: function (timestring) {
+  	// input is 2013-12-03T12:34:56Z
+  	var hrs = parseInt(timestring.substr(11,2), 10);
+  	var mins = parseInt(timestring.substr(14,2), 10);
+    var secs = parseInt(timestring.substr(17,2), 10);
+    return (hrs * 3600) + (mins * 60) + secs;
+  },
 		
-		processGPSTrack : function () {
-      // distance not used at present
-		  var furthestIndex = 0;
-		  var furthestDistance = 0;
-		  var distanceFromStart;
-		  var x;
-		  var y;
-		  
+	processGPSTrack : function () {
+		var x;
+		var y;
+		
+		if (events.mapIsGeoreferenced()) {
+			// translate lat/lon to x,y based on world file info: see http://en.wikipedia.org/wiki/World_file
+		  var w = events.getWorldFile();
+		  // simplify calculation a little
+		  var AEDB = (w.A * w.E) - (w.D * w.B);
+		  var xCorrection = (w.B * w.F) - (w.E * w.C);
+		  var yCorrection = (w.D * w.C) - (w.A * w.F);
+		  for (i = 0; i < this.lat.length; i++) {
+			  draw.routeData.x[i] = Math.round(((w.E * this.lon[i]) - (w.B * this.lat[i]) + xCorrection) / AEDB);
+		    draw.routeData.y[i] = Math.round(((-1 * w.D * this.lon[i]) + (w.A * this.lat[i]) + yCorrection) / AEDB);
+		  }		
+		} else {
+      // fit track to within limits of course
+      
 		  // find bounding box for track
 		  var maxLat = this.lat[0];
 		  var maxLon = this.lon[0];
@@ -104,11 +114,6 @@ jQuery(document).ready(function() {
 		  	minLon = Math.min(minLon, this.lon[i]);
 		    x = this.lon[i] - this.lon[0];
 		    y = this.lat[i] - this.lat[0];
-		    distanceFromStart = Math.sqrt((x * x) + (y * y));
-		    if (furthestDistance <= distanceFromStart) {
-		    	furthestDistance = distanceFromStart;
-		    	furthestIndex = i;
-		    }	
 		  }
 
 		  // find bounding box for course
@@ -123,7 +128,7 @@ jQuery(document).ready(function() {
 		  	minControlX = Math.min(minControlX, draw.controlx[i]);
 		  	minControlY = Math.min(minControlY, draw.controly[i]);
 		  }
-      console.log (minControlX, maxControlX, minControlY, maxControlY);
+      //console.log (minControlX, maxControlX, minControlY, maxControlY);
 
       // scale GPS track to within bounding box of controls: a reasonable start
 		  var scaleX = (maxControlX - minControlX)/(maxLon - minLon);
@@ -147,17 +152,19 @@ jQuery(document).ready(function() {
 		  // translate lat/lon to x,y
 		  var deltaX = minControlX - (draw.routeData.x[0] - draw.controlx[0]); 
 		  var deltaY = minControlY - (draw.routeData.y[0] - draw.controly[0]);
+	  
 		  for (i = 0; i < this.lat.length; i++) {
 		  	draw.routeData.x[i] = ((this.lon[i] - minLon) * scaleX) + deltaX;
 		  	draw.routeData.y[i] = (-1 * (this.lat[i] - maxLat) * scaleY) + deltaY;
-		  }
-		  this.baseX = draw.routeData.x.slice(0);
-		  this.baseY = draw.routeData.y.slice(0);
-		  draw.routeData.time = this.time; 
-      this.fileLoaded = true;
-      jQuery("#btn-save-gps-route").button("enable");
-		  redraw(false);
-		}
+      }
+    }
+		this.baseX = draw.routeData.x.slice(0);
+		this.baseY = draw.routeData.y.slice(0);
+		draw.routeData.time = this.time; 
+    this.fileLoaded = true;
+    jQuery("#btn-save-gps-route").button("enable");
+		redraw(false);
+    }
   }
 
   // handle drawing of a new route
@@ -1264,6 +1271,14 @@ jQuery(document).ready(function() {
 			}
 		},
 
+    mapIsGeoreferenced : function() {
+      return this.events[this.activeEventID].georeferenced;
+    },
+    
+    getWorldFile: function () {
+    	return this.events[this.activeEventID].worldFile;
+    },
+    
 		formatEventsAsMenu : function() {
       var title;
 			var html = '';
@@ -1289,6 +1304,18 @@ jQuery(document).ready(function() {
 		this.name = data.name;
 		this.date = data.date;
 		this.club = data.club;
+		this.worldFile = [];
+		if (typeof (data.A) == 'undefined') {
+		  this.georeferenced = false;
+		} else {
+			this.georeferenced = true;
+			this.worldFile.A = data.A;
+			this.worldFile.B = data.B;
+			this.worldFile.C = data.C;
+			this.worldFile.D = data.D;
+			this.worldFile.E = data.E;
+			this.worldFile.F = data.F;			
+		}			
 		switch(data.type) {
 			case "I":
 				this.type = "International";
@@ -2919,5 +2946,6 @@ jQuery(document).ready(function() {
 			jQuery("#rg2-control-select").prop('disabled', false);
 		}
 	}
+
 
 });
