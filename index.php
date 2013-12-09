@@ -109,9 +109,10 @@
           </div>	
 			    <input type=checkbox id="btn-move-all"><label for="btn-move-all"> Move track and map together</label>
 			    <ul>
-			    	<li>Drag track to align track on map</li>
-            <li>Single click to lock/unlock a point</li>
-            <li>Drag to scale and rotate around locked point</li>
+			    	<li>Drag track to align track on map.</li>
+            <li>Single click to lock/unlock a point.</li>
+            <li>Drag to scale and rotate around locked point.i</li>
+            <li>Note! The easiest way to adjust a route is drag the starting point to it's place, lock it with single click and drag the farthest control point to it's place.</li>
 			    </ul>
 			    <button class="pushright" id="btn-save-gps-route">Save GPS route</button>	
 				</div>
