@@ -263,15 +263,15 @@ function getResultsForEvent($eventid) {
   if (($handle = @fopen(KARTAT_DIRECTORY."kommentit_".$eventid.".txt", "r")) !== FALSE) {
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
 	  	// remove null comments
-  		if (strncmp($data[4], "Type your comment", 17) != 0) {
-			  $text[$comments]["resultid"] = $data[1];
-			  // replace carriage return and line break codes
-        $temp = encode_rg_input($data[4]); 
-        $temp = str_replace("#cr#", " ", $temp);      
-        $temp = str_replace("#nl#", " ", $temp);  
-        $text[$comments]["comments"] = $temp;
-        $comments++;
-			}
+  		if (strncmp(encode_rg_input($data[4]), "Type your comment", 17) != 0) {
+          $text[$comments]["resultid"] = $data[1];
+          // replace carriage return and line break codes
+          $temp = encode_rg_input($data[4]);
+          $temp = str_replace("#cr#", " ", $temp);
+          $temp = str_replace("#nl#", " ", $temp);
+          $text[$comments]["comments"] = $temp;
+          $comments++;
+        }
     }
     fclose($handle);
 	}
