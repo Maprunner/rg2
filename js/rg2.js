@@ -9,6 +9,99 @@
 'use strict';
 jQuery(document).ready(function() {
 
+ function User() {
+  	this.name = null;
+  	this.pwd = null;
+  }
+  
+  function Manager() {
+    this.loggedIn = false;
+    this.user = new User();
+    jQuery("#rg2-manager-login").submit(function ( event ) {
+      manager.user.name = jQuery("#rg2-user-name").val();
+      manager.user.pwd = jQuery("#rg2-password").val();
+      // check we have user name and password
+      if ((manager.user.name) && (manager.user.pwd)) {
+      	manager.logIn();
+      } else {
+        var msg = "<div>Please enter user name and password.</div>";
+        jQuery(msg).dialog({
+          title: "Login failed"
+        });	      	
+      	// prevent form submission
+        return false;
+      }
+    })
+    
+    jQuery("#rg2-manager-form").submit(function ( event ) {
+      manager.user.name = jQuery("#rg2-user-name").val();
+      manager.user.pwd = jQuery("#rg2-password").val();
+      // check we have user name and password
+      if ((manager.user.name) && (manager.user.pwd)) {
+      	manager.logIn();
+      } else {
+        var msg = "<div>Please enter user name and password.</div>";
+        jQuery(msg).dialog({
+          title: "Login failed"
+        });	      	
+      	// prevent form submission
+        return false;
+      }
+    })
+
+  }
+
+  Manager.prototype = {
+  	
+	Constructor : Manager,
+	
+	logIn: function () {
+    var url = json_url + '?type=login';
+    var json = JSON.stringify(this.user);
+    jQuery.ajax({
+      type: 'POST',
+      dataType: 'json',
+      data: json,
+      url: url,
+      cache: false,
+      success: function(data, textStatus, jqXHR) {
+        manager.enableEventEdit()
+      },
+      error: function(jqXHR, textStatus, errorThrown) {
+        console.log(errorThrown);
+        var msg = "<div>User name or password incorrect. Please try again.</div>";
+        jQuery(msg).dialog({
+          title: "Login failed"
+        });	
+      }        
+    })
+	  return false;
+	},
+	
+	enableEventEdit: function () {
+		jQuery("#btn-add-event").button()
+		  .click(function() {
+			  manager.addNewEvent();
+		});
+
+		jQuery("#btn-edit-delete-event").button()
+		  .click(function() {
+			  manager.editDeleteEvent();
+		});
+		
+		events.createEventDropdown();
+		
+		jQuery("#rg2-manager-event-select").click(function(event) {
+			manager.selectEvent(parseInt(jQuery("#rg2-manager-event-select").val(), 10));
+		});		
+    jQuery("#rg2-manager-options").show();
+  	jQuery("#rg2-manager-login").hide();
+	}
+	
+  }
+
+
+
   function GPSTrack() {
     this.lat= [];
     this.lon= [];
@@ -1263,7 +1356,19 @@ jQuery(document).ready(function() {
 				return "Routegadget 2.0";
 			}
 		},
-
+		
+		createEventDropdown : function() {
+			jQuery("#rg2-manager-event-select").empty();
+			var dropdown = document.getElementById("rg2-manager-event-select");
+			for (var i = 0; i < this.events.length; i++) {
+				var opt = document.createElement("option");
+				opt.value = this.events[i].kartatid;
+				opt.text = this.events[i].date + ": " + this.events[i].name;
+				dropdown.options.add(opt);
+			}
+			dropdown.options.add(opt);
+		},
+		
 		formatEventsAsMenu : function() {
       var title;
 			var html = '';
@@ -2364,6 +2469,7 @@ jQuery(document).ready(function() {
 	var dragStart = null;
 	// looks odd but this works for initialisation
 	var dragged = true;
+	var manager;
 
 	initialize();
 
@@ -2573,9 +2679,10 @@ jQuery(document).ready(function() {
 		});
 
     if (jQuery('#rg2-manage').length !== 0) {
-    	var manager = new Manager();
+    	manager = new Manager();
+    	jQuery("#rg2-manager-options").hide();
     }
-
+		
 		window.addEventListener('resize', resizeCanvas, false);
 
 		// load event details

@@ -31,6 +31,8 @@
 	} else {
 		$manager = false;
   }
+$manager = true;
+
 ?>
 
 <!DOCTYPE html>
@@ -92,7 +94,7 @@
 						<a href="#rg2-manage">Manage</a>
 					</li>
 					<?php } ?>
-				</ul>
+       </ul>
 				</div>
 				<div id="rg2-info-panel-tab-body">
 				<div id="rg2-event-list"></div>
@@ -140,10 +142,21 @@
             </div>
 			      <button class="pushright" id="btn-login">Log in</button>
 			    </form>
-			    <form id="rg2-manager-form"></form>
+			    <div id="rg2-manager-options">
+			      <div>
+			      	<button class="pushright" id="btn-add-event">Add new event</button>
+        	  </div>
+        	  <hr class="rg2-hr">
+        	  <div>
+        	  	<select id="rg2-manager-event-select"></select>
+			      </div>
+			      <div>
+			        <button class="pushright" id="btn-edit-delete-event">Edit/delete event</button>
+        	  </div>
+          </div>	
+			    </div>
 			  </div>
 			  <?php } ?>
-				</div>
 		  </div>
 		  <canvas id="rg2-map-canvas">Your browser does not support HTML5</canvas>
 		  <div class="rg2-ani-row row-1">
@@ -184,14 +197,15 @@
 			  <p><?php echo ADDITIONAL_INFO_TEXT; ?></p>
 		  </div>
 		  <div id="rg2-splits-table" title="Splits display"></div>
+     </div>
    </div>
 
 		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
 		<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
 		<script src='<?php echo $script_url."plugins.js"; ?>'></script>
-    <?php if ($manager) { ?>
+    <!--<?php if ($manager) { ?>
 		<script src='<?php echo $script_url."rg2manager.js"; ?>'></script>
-    <?php } ?>
+    <?php } ?>-->
 		<script type="text/javascript">
 			var json_url = "<?php echo $json_url; ?>";
 			var maps_url = "<?php echo $maps_url; ?>";

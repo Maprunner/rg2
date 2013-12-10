@@ -21,10 +21,14 @@ html, body {
     line-height: 30px;
 }
 
-#rg2-course-select, #rg2-name-select {
+#rg2-course-select, #rg2-name-select, #rg2-manager-event-select {
   float: right;
   min-width: 200px;
   max-width: 200px;
+}
+
+#rg2-manager-event-select {
+  width: 100%;
 }
 
 #rg2-new-comments {

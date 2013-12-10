@@ -34,8 +34,10 @@
   } else if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   	handlePostRequest($type, $id);
   } else {
-  	die("Invalid request");
+    header('HTTP/1.1 405 Method Not Allowed');
+    header('Allow: GET, POST');
   }
+
 
 //
 // Handle the encoding for input data if
@@ -69,7 +71,7 @@ function handlePostRequest($type, $eventid) {
     addNewRoute($eventid, $data);
     break;		
 	case 'login':
-    logIn();
+    logIn($data);
     break;	
 	default:
 	  die("Request not recognised: ".$type);
@@ -78,15 +80,22 @@ function handlePostRequest($type, $eventid) {
 }
 
 
-function logIn () {
+function logIn ($data) {
+
   if (($handle = fopen(KARTAT_DIRECTORY."uspsw.txt", "r")) !== FALSE) {
-    while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
-      if ($data[0] == $password) {
-			  return true;
-			}
-    }
+    $pwd = fgets($handle);
+    if ($data->pwd != $pwd) {
+		  header('HTTP/1.1 401 Unauthorized', true, 401);
+			$ok = false;
+		} else {
+		  $ok = true;
+		}
+	} else {
+	  header('HTTP/1.1 401 Unauthorized', true, 401);
+		$ok = false;		
 	}
-	return false;
+  header("Content-type: application/json"); 
+  echo json_encode($ok);
 }
 
 function addNewRoute($eventid, $data) {
