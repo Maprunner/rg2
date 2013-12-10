@@ -196,7 +196,7 @@ function addNewRoute($eventid, $data) {
   header("Content-type: application/json"); 
   echo json_encode($write);
 }
- 
+
 function lockFile($filename) {
 	  // lock directory version based on http://docstore.mik.ua/orelly/webprog/pcook/ch18_25.htm
     // but note mkdir returns true if directory already exists!

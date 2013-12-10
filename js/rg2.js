@@ -6,7 +6,8 @@
  * Released under the MIT license
  *
  */
-jQuery(document).ready(function() {"use strict";
+'use strict';
+jQuery(document).ready(function() {
 
   function GPSTrack() {
     this.lat= [];
@@ -2631,10 +2632,11 @@ jQuery(document).ready(function() {"use strict";
 		scaleFactor = DEFAULT_SCALE_FACTOR;
 		var winwidth = window.innerWidth;
 		var winheight = window.innerHeight;
-		jQuery("#rg2-container").css("height", winheight - 70);
-		// we assume elsewhere that we always keep the two canvases aligned
-		canvas.width = winwidth - 10;
-		canvas.height = winheight - 70;
+		// allow for header
+		jQuery("#rg2-container").css("height", winheight - 36);
+		canvas.width = winwidth;
+		// allow for header
+		canvas.height = winheight - 36;
 		// set title bar
 		if (window.innerWidth >= BIG_SCREEN_BREAK_POINT) {
 			jQuery("#rg2-event-title").text(events.getActiveEventName() + " " + events.getActiveEventDate());
@@ -2698,12 +2700,10 @@ jQuery(document).ready(function() {"use strict";
 		  	}
 		  }
 		} else {
-			ctx.fillStyle = "silver";
-			ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 			ctx.font = '30pt Arial';
 			ctx.textAlign = 'center';
 			ctx.fillStyle = "black";
-			ctx.fillText(mapLoadingText, (((canvas.width - 350) / 2) + 350), canvas.height / 2);
+			ctx.fillText(mapLoadingText, canvas.width / 2, canvas.height / 2);
 		}
 
 	}
