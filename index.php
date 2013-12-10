@@ -24,6 +24,13 @@
   }
   
   $maps_url = RG_BASE_DIRECTORY."/kartat/";
+	
+	// include manager function as parameter for now until we decide the best way forward
+	if (isset($_GET['manage'])) {
+    $manager = true;
+	} else {
+		$manager = false;
+  }
 ?>
 
 <!DOCTYPE html>
@@ -36,7 +43,7 @@
 	<head>
 		<meta charset="utf-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-		<title>Routegadget 2.0 Viewer</title>
+		<title>Routegadget 2.0 Viewer<?php if ($manager) {?> and Manager<?php } ?></title>
 		<meta name="description" content="">
 		<meta name="viewport" content="width=device-width">
 
@@ -80,6 +87,11 @@
 					<li>
 						<a href="#rg2-draw">Draw</a>
 					</li>
+					<?php if ($manager) { ?>
+					<li>
+						<a href="#rg2-manage">Manage</a>
+					</li>
+					<?php } ?>
 				</ul>
 				</div>
 				<div id="rg2-info-panel-tab-body">
@@ -115,6 +127,22 @@
 			    </ul>
 			    <button class="pushright" id="btn-save-gps-route">Save GPS route</button>	
 				</div>
+				<?php if ($manager) { ?>
+			  <div id="rg2-manage">
+			    <form id="rg2-manager-login">
+			  	  <div>
+			  	  	<label for"rg2-user-name">User name: </label>
+			  	    <input class="pushright" id="rg2-user-name" type="text">
+			  	  </div>
+			  	  <div>
+			  	  	<label for"rg2-password">Password: </label>
+			  	    <input class="pushright" id="rg2-password" type="password">
+            </div>
+			      <button class="pushright" id="btn-login">Log in</button>
+			    </form>
+			    <form id="rg2-manager-form"></form>
+			  </div>
+			  <?php } ?>
 				</div>
 		  </div>
 		  <canvas id="rg2-map-canvas">Your browser does not support HTML5</canvas>
@@ -161,6 +189,9 @@
 		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
 		<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
 		<script src='<?php echo $script_url."plugins.js"; ?>'></script>
+    <?php if ($manager) { ?>
+		<script src='<?php echo $script_url."rg2manager.js"; ?>'></script>
+    <?php } ?>
 		<script type="text/javascript">
 			var json_url = "<?php echo $json_url; ?>";
 			var maps_url = "<?php echo $maps_url; ?>";

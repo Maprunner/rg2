@@ -68,10 +68,25 @@ function handlePostRequest($type, $eventid) {
 	case 'addroute':
     addNewRoute($eventid, $data);
     break;		
+	case 'login':
+    logIn();
+    break;	
 	default:
 	  die("Request not recognised: ".$type);
 		break;
 	}	
+}
+
+
+function logIn () {
+  if (($handle = fopen(KARTAT_DIRECTORY."uspsw.txt", "r")) !== FALSE) {
+    while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
+      if ($data[0] == $password) {
+			  return true;
+			}
+    }
+	}
+	return false;
 }
 
 function addNewRoute($eventid, $data) {

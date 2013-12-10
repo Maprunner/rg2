@@ -2571,6 +2571,10 @@ jQuery(document).ready(function() {"use strict";
 			}
 		});
 
+    if (jQuery('#rg2-manage').length !== 0) {
+    	var manager = new Manager();
+    }
+
 		window.addEventListener('resize', resizeCanvas, false);
 
 		// load event details
