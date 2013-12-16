@@ -94,7 +94,7 @@ $manager = true;
 						<a href="#rg2-manage">Manage</a>
 					</li>
 					<?php } ?>
-       </ul>
+        </ul>
 				</div>
 				<div id="rg2-info-panel-tab-body">
 				<div id="rg2-event-list"></div>
@@ -144,19 +144,29 @@ $manager = true;
 			    </form>
 			    <div id="rg2-manager-options">
 			      <div>
-			      	<button class="pushright" id="btn-add-event">Add new event</button>
+			      	<button id="btn-add-event">Add new event</button>
         	  </div>
-        	  <hr class="rg2-hr">
         	  <div>
         	  	<select id="rg2-manager-event-select"></select>
-			      </div>
-			      <div>
 			        <button class="pushright" id="btn-edit-delete-event">Edit/delete event</button>
-        	  </div>
-          </div>	
-			    </div>
-			  </div>
+			      </div>
+			      <form id="rg2-event-details">
+          	  <input id="rg2-event-name" type="text"></input>
+          	  <textarea id="rg2-event-comments"></textarea>
+              <div id="rg2-select-map-file">
+        	      <input type='file' accept='.jpg' id='rg2-load-map-file'>
+        	    </div>
+              <div id="rg2-select-results-file">
+        	      <input type='file' accept='.csv' id='rg2-load-map-file'>
+        	    </div>
+              <div id="rg2-select-course-file">
+        	      <input type='file' accept='.xml' id='rg2-load-course-file'>
+        	    </div>
+           </form>
+          </div>
+        </div>	
 			  <?php } ?>
+			 </div>
 		  </div>
 		  <canvas id="rg2-map-canvas">Your browser does not support HTML5</canvas>
 		  <div class="rg2-ani-row row-1">
@@ -197,19 +207,18 @@ $manager = true;
 			  <p><?php echo ADDITIONAL_INFO_TEXT; ?></p>
 		  </div>
 		  <div id="rg2-splits-table" title="Splits display"></div>
-     </div>
-   </div>
+    </div>
 
 		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
 		<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
 		<script src='<?php echo $script_url."plugins.js"; ?>'></script>
-    <!--<?php if ($manager) { ?>
-		<script src='<?php echo $script_url."rg2manager.js"; ?>'></script>
-    <?php } ?>-->
 		<script type="text/javascript">
 			var json_url = "<?php echo $json_url; ?>";
 			var maps_url = "<?php echo $maps_url; ?>";
 		</script>
 		<script src='<?php echo $script_url."rg2.js"; ?>'></script>
+    <?php if ($manager) { ?>
+		<script src='<?php echo $script_url."rg2manager.js"; ?>'></script>
+    <?php } ?>
 	</body>
 </html>

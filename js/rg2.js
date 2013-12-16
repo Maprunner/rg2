@@ -9,98 +9,6 @@
 'use strict';
 jQuery(document).ready(function() {
 
- function User() {
-  	this.name = null;
-  	this.pwd = null;
-  }
-  
-  function Manager() {
-    this.loggedIn = false;
-    this.user = new User();
-    jQuery("#rg2-manager-login").submit(function ( event ) {
-      manager.user.name = jQuery("#rg2-user-name").val();
-      manager.user.pwd = jQuery("#rg2-password").val();
-      // check we have user name and password
-      if ((manager.user.name) && (manager.user.pwd)) {
-      	manager.logIn();
-      } else {
-        var msg = "<div>Please enter user name and password.</div>";
-        jQuery(msg).dialog({
-          title: "Login failed"
-        });	      	
-      	// prevent form submission
-        return false;
-      }
-    })
-    
-    jQuery("#rg2-manager-form").submit(function ( event ) {
-      manager.user.name = jQuery("#rg2-user-name").val();
-      manager.user.pwd = jQuery("#rg2-password").val();
-      // check we have user name and password
-      if ((manager.user.name) && (manager.user.pwd)) {
-      	manager.logIn();
-      } else {
-        var msg = "<div>Please enter user name and password.</div>";
-        jQuery(msg).dialog({
-          title: "Login failed"
-        });	      	
-      	// prevent form submission
-        return false;
-      }
-    })
-
-  }
-
-  Manager.prototype = {
-  	
-	Constructor : Manager,
-	
-	logIn: function () {
-    var url = json_url + '?type=login';
-    var json = JSON.stringify(this.user);
-    jQuery.ajax({
-      type: 'POST',
-      dataType: 'json',
-      data: json,
-      url: url,
-      cache: false,
-      success: function(data, textStatus, jqXHR) {
-        manager.enableEventEdit()
-      },
-      error: function(jqXHR, textStatus, errorThrown) {
-        console.log(errorThrown);
-        var msg = "<div>User name or password incorrect. Please try again.</div>";
-        jQuery(msg).dialog({
-          title: "Login failed"
-        });	
-      }        
-    })
-	  return false;
-	},
-	
-	enableEventEdit: function () {
-		jQuery("#btn-add-event").button()
-		  .click(function() {
-			  manager.addNewEvent();
-		});
-
-		jQuery("#btn-edit-delete-event").button()
-		  .click(function() {
-			  manager.editDeleteEvent();
-		});
-		
-		events.createEventDropdown();
-		
-		jQuery("#rg2-manager-event-select").click(function(event) {
-			manager.selectEvent(parseInt(jQuery("#rg2-manager-event-select").val(), 10));
-		});		
-    jQuery("#rg2-manager-options").show();
-  	jQuery("#rg2-manager-login").hide();
-	}
-	
-  }
-
-
 
   function GPSTrack() {
     this.lat= [];
@@ -167,92 +75,126 @@ jQuery(document).ready(function() {
     // read the selected file
     reader.readAsText(evt.target.files[0]);
 		
-		},
+	},
 
-    getSecsFromTrackpoint: function (timestring) {
-    	// input is 2013-12-03T12:34:56Z
-    	var hrs = parseInt(timestring.substr(11,2), 10);
-    	var mins = parseInt(timestring.substr(14,2), 10);
-   	  var secs = parseInt(timestring.substr(17,2), 10);
-      return (hrs * 3600) + (mins * 60) + secs;
-    },
+  getSecsFromTrackpoint: function (timestring) {
+  	// input is 2013-12-03T12:34:56Z
+  	var hrs = parseInt(timestring.substr(11,2), 10);
+  	var mins = parseInt(timestring.substr(14,2), 10);
+    var secs = parseInt(timestring.substr(17,2), 10);
+    return (hrs * 3600) + (mins * 60) + secs;
+  },
 		
-		processGPSTrack : function () {
-      // distance not used at present
-		  var furthestIndex = 0;
-		  var furthestDistance = 0;
-		  var distanceFromStart;
-		  var x;
-		  var y;
-		  
-		  // find bounding box for track
-		  var maxLat = this.lat[0];
-		  var maxLon = this.lon[0];
-		  var minLat = this.lat[0];
-		  var minLon = this.lon[0] ;
-		  for (var i = 1; i < this.lat.length; i++) {
-		  	maxLat = Math.max(maxLat, this.lat[i]);
-		  	maxLon = Math.max(maxLon, this.lon[i]);
-		  	minLat = Math.min(minLat, this.lat[i]);
-		  	minLon = Math.min(minLon, this.lon[i]);
-		    x = this.lon[i] - this.lon[0];
-		    y = this.lat[i] - this.lat[0];
-		    distanceFromStart = Math.sqrt((x * x) + (y * y));
-		    if (furthestDistance <= distanceFromStart) {
-		    	furthestDistance = distanceFromStart;
-		    	furthestIndex = i;
-		    }	
-		  }
-
-		  // find bounding box for course
-		  var minControlX = draw.controlx[0];
-		  var maxControlX = draw.controlx[0];
-		  var minControlY = draw.controly[0];
-		  var maxControlY = draw.controly[0];
-		  
-		  for (i = 0; i < draw.controlx.length; i++) {
-		  	maxControlX = Math.max(maxControlX, draw.controlx[i]);
-		  	maxControlY = Math.max(maxControlY, draw.controly[i]);
-		  	minControlX = Math.min(minControlX, draw.controlx[i]);
-		  	minControlY = Math.min(minControlY, draw.controly[i]);
-		  }
-      console.log (minControlX, maxControlX, minControlY, maxControlY);
-
-      // scale GPS track to within bounding box of controls: a reasonable start
-		  var scaleX = (maxControlX - minControlX)/(maxLon - minLon);
-		  var scaleY = (maxControlY - minControlY)/(maxLat - minLat);
-      var lonCorrection = getLatLonDistance(minLat, maxLon, minLat, minLon) / (maxLon - minLon);
-		  var latCorrection = getLatLonDistance(minLat, minLon, maxLat, minLon) / (maxLat - minLat);
-		  
-		  // don't want to skew track so scale needs to be equal in each direction
-		  // so we need to account for differences between a degree of latitude and longitude	  
-		  if (scaleX > scaleY) {
-		  	// pix/lat = pix/lon * m/lat * lon/m
-		  	scaleY = scaleX * latCorrection / lonCorrection;
-		  } else {
-		  	// pix/lon = pix/lat * m/lon * lat/m
-		  	scaleX = scaleY * lonCorrection / latCorrection;  	
-		  }
-      // extra offset to put start of track at start location 
-		  draw.routeData.x[0] = ((this.lon[0] - minLon) * scaleX) + minControlX;
-		  draw.routeData.y[0] = (-1 * (this.lat[0] - maxLat) * scaleY) + minControlY;
-		  
-		  // translate lat/lon to x,y
-		  var deltaX = minControlX - (draw.routeData.x[0] - draw.controlx[0]); 
-		  var deltaY = minControlY - (draw.routeData.y[0] - draw.controly[0]);
+	processGPSTrack : function () {
+		var x;
+		var y;
+		
+		if (events.mapIsGeoreferenced()) {
+			// translate lat/lon to x,y based on world file info: see http://en.wikipedia.org/wiki/World_file
+		  var w = events.getWorldFile();
+		  // simplify calculation a little
+		  var AEDB = (w.A * w.E) - (w.D * w.B);
+		  var xCorrection = (w.B * w.F) - (w.E * w.C);
+		  var yCorrection = (w.D * w.C) - (w.A * w.F);
+		  var i;
 		  for (i = 0; i < this.lat.length; i++) {
-		  	draw.routeData.x[i] = ((this.lon[i] - minLon) * scaleX) + deltaX;
-		  	draw.routeData.y[i] = (-1 * (this.lat[i] - maxLat) * scaleY) + deltaY;
+			  draw.routeData.x[i] = Math.round(((w.E * this.lon[i]) - (w.B * this.lat[i]) + xCorrection) / AEDB);
+		    draw.routeData.y[i] = Math.round(((-1 * w.D * this.lon[i]) + (w.A * this.lat[i]) + yCorrection) / AEDB);
+		  }		
+		  // find bounding box for track
+		  var minX = draw.routeData.x[0];
+		  var maxX = draw.routeData.x[0];
+		  var minY = draw.routeData.y[0];
+		  var maxY = draw.routeData.y[0];
+		  
+		  for (i = 1; i < draw.routeData.x.length; i++) {
+			  maxX = Math.max(maxX, draw.routeData.x[i]);
+			  maxY = Math.max(maxY, draw.routeData.y[i]);
+		 	  minX = Math.min(minX, draw.routeData.x[i]);
+		 	  minY = Math.min(minY, draw.routeData.y[i]);
 		  }
-		  this.baseX = draw.routeData.x.slice(0);
-		  this.baseY = draw.routeData.y.slice(0);
-		  draw.routeData.time = this.time; 
-      this.fileLoaded = true;
-      jQuery("#btn-save-gps-route").button("enable");
-		  redraw(false);
-		}
-  }
+		  // check we are somewhere on the map
+      if ((maxX < 0) || (minX > map.width) || (minY > map.height) || (maxY < 0)) {
+        // warn and fit to track      	
+        var msg = "<div id='GPS-problem-dialog'>Your GPS file does not match the map co-ordinates. Please check you have selected the correct file.</div>";
+        jQuery(msg).dialog({title:"GPS file problem"});
+        this.fitTrackInsideCourse();
 
+      }
+		} else {
+      this.fitTrackInsideCourse();
+    }
+		this.baseX = draw.routeData.x.slice(0);
+		this.baseY = draw.routeData.y.slice(0);
+		draw.routeData.time = this.time; 
+    this.fileLoaded = true;
+    jQuery("#btn-save-gps-route").button("enable");
+		redraw(false);
+  }, 
+  
+  fitTrackInsideCourse: function() {
+    // fit track to within limits of course
+		// find bounding box for track
+		var maxLat = this.lat[0];
+		var maxLon = this.lon[0];
+		var minLat = this.lat[0];
+		var minLon = this.lon[0];
+		var x;
+		var y;
+		for (var i = 1; i < this.lat.length; i++) {
+		 	maxLat = Math.max(maxLat, this.lat[i]);
+			maxLon = Math.max(maxLon, this.lon[i]);
+			minLat = Math.min(minLat, this.lat[i]);
+			minLon = Math.min(minLon, this.lon[i]);
+		  x = this.lon[i] - this.lon[0];
+		  y = this.lat[i] - this.lat[0];
+		}
+
+		// find bounding box for course
+		var minControlX = draw.controlx[0];
+		var maxControlX = draw.controlx[0];
+		var minControlY = draw.controly[0];
+		var maxControlY = draw.controly[0];
+		  
+		for (i = 1; i < draw.controlx.length; i++) {
+			maxControlX = Math.max(maxControlX, draw.controlx[i]);
+			maxControlY = Math.max(maxControlY, draw.controly[i]);
+		 	minControlX = Math.min(minControlX, draw.controlx[i]);
+		 	minControlY = Math.min(minControlY, draw.controly[i]);
+		}
+    //console.log (minControlX, maxControlX, minControlY, maxControlY);
+
+    // scale GPS track to within bounding box of controls: a reasonable start
+		var scaleX = (maxControlX - minControlX)/(maxLon - minLon);
+		var scaleY = (maxControlY - minControlY)/(maxLat - minLat);
+    var lonCorrection = getLatLonDistance(minLat, maxLon, minLat, minLon) / (maxLon - minLon);
+		var latCorrection = getLatLonDistance(minLat, minLon, maxLat, minLon) / (maxLat - minLat);
+		  
+		// don't want to skew track so scale needs to be equal in each direction
+		// so we need to account for differences between a degree of latitude and longitude	  
+		if (scaleX > scaleY) {
+			// pix/lat = pix/lon * m/lat * lon/m
+			scaleY = scaleX * latCorrection / lonCorrection;
+		} else {
+			// pix/lon = pix/lat * m/lon * lat/m
+			scaleX = scaleY * lonCorrection / latCorrection;  	
+		}
+    // extra offset to put start of track at start location 
+		draw.routeData.x[0] = ((this.lon[0] - minLon) * scaleX) + minControlX;
+		draw.routeData.y[0] = (-1 * (this.lat[0] - maxLat) * scaleY) + minControlY;
+		  
+		// translate lat/lon to x,y
+		var deltaX = minControlX - (draw.routeData.x[0] - draw.controlx[0]); 
+		var deltaY = minControlY - (draw.routeData.y[0] - draw.controly[0]);
+	  
+		for (i = 0; i < this.lat.length; i++) {
+			draw.routeData.x[i] = ((this.lon[i] - minLon) * scaleX) + deltaX;
+			draw.routeData.y[i] = (-1 * (this.lat[i] - maxLat) * scaleY) + deltaY;
+    }
+    
+  },
+}
+  
   // handle drawing of a new route
   function Draw() {
     this.trackColor = '#ff0000';
@@ -1369,6 +1311,14 @@ jQuery(document).ready(function() {
 			dropdown.options.add(opt);
 		},
 		
+    mapIsGeoreferenced : function() {
+      return this.events[this.activeEventID].georeferenced;
+    },
+    
+    getWorldFile: function () {
+    	return this.events[this.activeEventID].worldFile;
+    },
+    
 		formatEventsAsMenu : function() {
       var title;
 			var html = '';
@@ -1394,6 +1344,18 @@ jQuery(document).ready(function() {
 		this.name = data.name;
 		this.date = data.date;
 		this.club = data.club;
+		this.worldFile = [];
+		if (typeof (data.A) == 'undefined') {
+		  this.georeferenced = false;
+		} else {
+			this.georeferenced = true;
+			this.worldFile.A = data.A;
+			this.worldFile.B = data.B;
+			this.worldFile.C = data.C;
+			this.worldFile.D = data.D;
+			this.worldFile.E = data.E;
+			this.worldFile.F = data.F;			
+		}			
 		switch(data.type) {
 			case "I":
 				this.type = "International";
@@ -2430,6 +2392,7 @@ jQuery(document).ready(function() {
 	var controls = new Controls();
 	var animation = new Animation();
 	var gpstrack = new GPSTrack();;
+	var manager = new Manager();
 	var draw;
 	var timer = 0;
 	// added to resultid when saving a GPS track
@@ -2469,8 +2432,7 @@ jQuery(document).ready(function() {
 	var dragStart = null;
 	// looks odd but this works for initialisation
 	var dragged = true;
-	var manager;
-
+	
 	initialize();
 
 	function initialize() {
@@ -2679,7 +2641,6 @@ jQuery(document).ready(function() {
 		});
 
     if (jQuery('#rg2-manage').length !== 0) {
-    	manager = new Manager();
     	jQuery("#rg2-manager-options").hide();
     }
 		
@@ -2695,6 +2656,7 @@ jQuery(document).ready(function() {
 				events.addEvent(new Event(this));
 			});
 			createEventMenu();
+			events.createEventDropdown();
 		}).fail(function(jqxhr, textStatus, error) {
 			var err = textStatus + ", " + error;
 			console.log("Events request failed: " + err);
@@ -3030,5 +2992,4 @@ jQuery(document).ready(function() {
 			jQuery("#rg2-control-select").prop('disabled', false);
 		}
 	}
-
 });

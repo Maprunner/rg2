@@ -95,6 +95,11 @@ html, body {
   color: darkgray;
 }
 
+#btn-edit-delete-event, #btn-add-event {
+    margin:0 auto;
+    display:block;
+}
+
 #rg2-about {
    position: absolute;	
    right: 0px;
@@ -365,3 +370,4 @@ image, canvas {
     -webkit-touch-callout: none;
     -webkit-user-drag: none;
 }
+
