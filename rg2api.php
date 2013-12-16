@@ -83,8 +83,12 @@ function addNewRoute($eventid, $data) {
   }
 	
 	// tidy up commments
-  // may need more later
-  $comments = trim($data->comments);
+	$comments = trim($data->comments);
+	// remove HTML tags: probably not needed but do it anyway
+  $comments = strip_tags($comments);
+  // remove line breaks and keep compatibility with RG1
+  $comments = str_replace("\r", "", $comments);
+  $comments = str_replace("\n", "#cr##nl#", $comments);
 	$newcommentdata = $data->courseid."|".$data->resultid."|".$name."||".$comments.PHP_EOL;
 	$filename = "kommentit_".$eventid.".txt";
 	
@@ -323,15 +327,17 @@ function getResultsForEvent($eventid) {
   // @ suppresses error report if file does not exist
   if (($handle = @fopen(KARTAT_DIRECTORY."kommentit_".$eventid.".txt", "r")) !== FALSE) {
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
-	  	// remove null comments
-  		if (strncmp($data[4], "Type your comment", 17) != 0) {
-			  $text[$comments]["resultid"] = $data[1];
-			  // replace carriage return and line break codes
-        $temp = encode_rg_input($data[4]); 
-        $temp = str_replace("#cr#", " ", $temp);      
-        $temp = str_replace("#nl#", " ", $temp);  
-        $text[$comments]["comments"] = $temp;
-        $comments++;
+	  	if (count($data) >= 5) {
+	  	  // remove null comments
+  		  if (strncmp($data[4], "Type your comment", 17) != 0) {
+			    $text[$comments]["resultid"] = $data[1];
+			    // replace carriage return and line break codes
+          $temp = encode_rg_input($data[4]);  
+          // RG1 uses #cr##nl# to allow saving to text file
+          $temp = str_replace("#cr##nl#", "\n", $temp);  
+          $text[$comments]["comments"] = $temp;
+          $comments++;
+			  }
 			}
     }
     fclose($handle);
