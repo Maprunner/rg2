@@ -1298,6 +1298,10 @@ jQuery(document).ready(function() {
 			}
 		},
 
+    isScoreEvent: function () {
+      return (this.events[this.activeEventID].format	=== SCORE_EVENT);
+    },
+    
     mapIsGeoreferenced : function() {
       return this.events[this.activeEventID].georeferenced;
     },
@@ -1328,6 +1332,7 @@ jQuery(document).ready(function() {
 	function Event(data) {
 		this.kartatid = data.id;
 		this.mapid = data.mapid;
+		this.format = parseInt(data.format, 10);
 		this.name = data.name;
 		this.date = data.date;
 		this.club = data.club;
@@ -1488,7 +1493,7 @@ jQuery(document).ready(function() {
 				this.results[i].drawTrack();
 			}
 		},
-
+    
     updateTrackNames: function () {
 			jQuery("#rg2-track-names").empty();
 			var html = this.getDisplayedTrackNames();
@@ -1721,6 +1726,13 @@ jQuery(document).ready(function() {
 		}
 		// insert a 0 split at the start to make life much easier elsewhere
 		this.splits.splice(0, 0, 0);
+		
+		if (data.scoreref !== "") {
+			// save control locations for score course result
+			this.scorex = data.scorex;
+			this.scorey = data.scorey;
+		}
+		
 		// calculated cumulative distance in pixels
 		this.cumulativeDistance = [];
 		// set true if track includes all expected controls in correct order
@@ -1780,8 +1792,8 @@ jQuery(document).ready(function() {
 
 			}
 		},
-
-		addTrack : function(trackcoords) {
+		
+ 	addTrack : function(trackcoords) {
 			// gets passed in coords
 			// coord sets are separated by "N"
 			var temp = trackcoords.split("N");
@@ -1807,7 +1819,16 @@ jQuery(document).ready(function() {
 			this.xysecs[0] = 0;
 			this.cumulativeDistance[0] = 0;
 			// get course details
-			var course = courses.getFullCourse(this.courseid);
+			var course = new Object();
+			// each person has their own defined score course
+			if (events.isScoreEvent()) {
+			  course.x = this.scorex;
+			  course.y = this.scorey;
+			} else {
+			  course.x = courses.getFullCourse(this.courseid).x;
+			  course.y = courses.getFullCourse(this.courseid).y;
+
+			}
 			// read through list of controls and copy in split times
 			var nextcontrol = 1;
 			var nextx = course.x[nextcontrol];
@@ -1857,6 +1878,11 @@ jQuery(document).ready(function() {
 					}
 				}
 			}
+      // treat all score tracks as valid for now
+      // may need a complete rethink on score course handling later
+      if (events.isScoreEvent()) {
+      	this.hasValidTrack = true;
+      }
       return this.hasValidTrack;
 		},
 
@@ -2286,16 +2312,8 @@ jQuery(document).ready(function() {
 	function Course(data) {
 		this.name = data.name;
 		this.trackcount = 0;
-		this.status = data.status;
 		this.display = false;
 		this.courseid = data.courseid;
-		// coord sets are separated by "N"
-		this.temp = data.coords.split("N");
-		this.coords = [];
-		for (var i = 0; i < this.temp.length; i++) {
-			// coord sets are 5 items in csv format
-			(this.coords).push(new CourseCoord(this.temp[i].split(";")));
-		}
 		this.codes = data.codes;
 		this.x = data.xpos;
 		this.y = data.ypos;
@@ -2324,8 +2342,14 @@ jQuery(document).ready(function() {
         var c1y;
         var c2x;
         var c2y;       
+        var isScoreEvent = events.isScoreEvent();
         ctx.globalAlpha = intensity;        
-        angle = getAngle (this.x[0], this.y[0], this.x[1], this.y[1]);
+        if (isScoreEvent) {
+        	// align score event start triangle upwards
+        	angle = Math.PI * 3/2;
+        } else {
+          angle = getAngle (this.x[0], this.y[0], this.x[1], this.y[1]);
+        }
         controls.drawStartControl(this.x[0], this.y[0], "", angle);
         for (i = 0; i < (this.x.length - 1); i++) {
           angle = getAngle (this.x[i], this.y[i], this.x[i + 1], this.y[i + 1]);
@@ -2344,12 +2368,15 @@ jQuery(document).ready(function() {
             c2x = this.x[i + 1] - (CONTROL_CIRCLE_RADIUS * Math.cos(angle));
             c2y = this.y[i + 1] - (CONTROL_CIRCLE_RADIUS * Math.sin(angle)); 
           }
-          ctx.lineWidth = OVERPRINT_LINE_THICKNESS;
-          ctx.strokeStyle = PURPLE;         
-          ctx.beginPath();
-          ctx.moveTo(c1x, c1y);
-          ctx.lineTo(c2x, c2y);
-          ctx.stroke();
+          // don't join up controls for score events
+          if (!isScoreEvent) {
+          	ctx.lineWidth = OVERPRINT_LINE_THICKNESS;
+            ctx.strokeStyle = PURPLE;         
+            ctx.beginPath();
+            ctx.moveTo(c1x, c1y);
+            ctx.lineTo(c2x, c2y);
+            ctx.stroke();
+          }
         
        }
         for (var i = 1; i < (this.x.length - 1); i++) {          
@@ -2358,15 +2385,6 @@ jQuery(document).ready(function() {
         controls.drawFinishControl(this.x[this.x.length - 1], this.y[this.y.length - 1], "");
      }
     }
-	}
-	
-	function CourseCoord(data) {
-		// store y and b as positive rather than negative to simplify screen drawing
-		this.type = Math.round(data[0]);
-		this.x = Math.round(data[1]);
-		this.y = -1 * Math.round(data[2]);
-		this.a = Math.round(data[3]);
-		this.b = -1 * Math.round(data[4]);
 	}
 
 	var canvas = jQuery("#rg2-map-canvas")[0];
@@ -2409,6 +2427,7 @@ jQuery(document).ready(function() {
   // parameters for call to draw courses
   var DIM = 0.5;
   var FULL_INTENSITY = 1.0;
+  var SCORE_EVENT = 3;
 	var infoPanelMaximised;
 	var infoHideIconSrc;
 	var infoShowIconSrc;
