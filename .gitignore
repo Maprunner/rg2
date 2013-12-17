@@ -5,6 +5,7 @@
 rg2-override-config.txt
 rg2-override-config.php
 log/rg2log.txt
+node_modules
 
 #################
 ## Eclipse

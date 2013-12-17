@@ -107,8 +107,12 @@ function addNewRoute($eventid, $data) {
   }
 	
 	// tidy up commments
-  // may need more later
-  $comments = trim($data->comments);
+	$comments = trim($data->comments);
+	// remove HTML tags: probably not needed but do it anyway
+  $comments = strip_tags($comments);
+  // remove line breaks and keep compatibility with RG1
+  $comments = str_replace("\r", "", $comments);
+  $comments = str_replace("\n", "#cr##nl#", $comments);
 	$newcommentdata = $data->courseid."|".$data->resultid."|".$name."||".$comments.PHP_EOL;
 	$filename = "kommentit_".$eventid.".txt";
 	
@@ -308,9 +312,9 @@ function getAllEvents() {
 				}
 			}
 
-			$detail["status"] = $data[2];
+			$detail["format"] = $data[2];
 			// Issue #11: found a stray &#39; in a SUFFOC file
-            $name = encode_rg_input($data[3]);
+      $name = encode_rg_input($data[3]);
 			$detail["name"] = str_replace("&#39;", "'", $name);
 			$detail["date"] = $data[4];
 			$detail["club"] = encode_rg_input($data[5]);
@@ -347,18 +351,46 @@ function getResultsForEvent($eventid) {
   // @ suppresses error report if file does not exist
   if (($handle = @fopen(KARTAT_DIRECTORY."kommentit_".$eventid.".txt", "r")) !== FALSE) {
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
-	  	// remove null comments
-  		if (strncmp($data[4], "Type your comment", 17) != 0) {
-			  $text[$comments]["resultid"] = $data[1];
-			  // replace carriage return and line break codes
-        $temp = encode_rg_input($data[4]); 
-        $temp = str_replace("#cr#", " ", $temp);      
-        $temp = str_replace("#nl#", " ", $temp);  
-        $text[$comments]["comments"] = $temp;
-        $comments++;
+	  	if (count($data) >= 5) {
+	  	  // remove null comments
+  		  if (strncmp($data[4], "Type your comment", 17) != 0) {
+			    $text[$comments]["resultid"] = $data[1];
+			    // replace carriage return and line break codes
+          $temp = encode_rg_input($data[4]);  
+          // RG1 uses #cr##nl# to allow saving to text file
+          $temp = str_replace("#cr##nl#", "\n", $temp);  
+          $text[$comments]["comments"] = $temp;
+          $comments++;
+			  }
 			}
     }
     fclose($handle);
+	}
+
+  if (isScoreEvent($eventid)) {
+  	if (($handle = @fopen(KARTAT_DIRECTORY."ratapisteet_".$eventid.".txt", "r")) !== FALSE) {
+      $row = 0;	
+      while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
+        $x = array();
+		    $y = array();
+			  // field is N separated and then comma separated	
+			  $pairs = explode("N", $data[1]);
+			  for ($j = 0; $j < count($pairs); $j++) {
+  			  $xy = explode(";", $pairs[$j]);
+          // some courses seem to have nulls at the end so just ignore them
+          if ($xy[0] != "") {
+		        $x[$j] = 1 * $xy[0];
+				    // make it easier to draw map
+				    $y[$j] = -1 * $xy[1];
+				  }		  			
+		 	  }
+        $scoreref[$row] = $data[0];
+			  $xpos[$row] = $x;
+			  $ypos[$row] = $y;
+			  $row++;		
+      }
+			fclose($handle);
+	  }
 	}
 
   // @ suppresses error report if file does not exist
@@ -370,6 +402,16 @@ function getResultsForEvent($eventid) {
 			$detail["coursename"] = encode_rg_input($data[2]);
             $detail["name"] = encode_rg_input($data[3]);
 			$detail["starttime"] = $data[4];
+			$detail["databaseid"] = $data[5];
+			$detail["scoreref"] = $data[6];
+			if ($data[6] != "") {
+			  for ($i = 0; $i < count($scoreref); $i++) {
+			    if ($scoreref[$i] == $data[6]) {
+            $detail["scorex"] = $xpos[$i];	
+            $detail["scorey"] = $ypos[$i];	
+				  }
+			  }					
+			}
 			$detail["time"] = $data[7];
 			// trim trailing ; which create null fields when expanded
 			$detail["splits"] = rtrim($data[8], ";");
@@ -414,6 +456,7 @@ function getCoursesForEvent($eventid) {
   $xpos = array();
 	$ypos = array();
   // @ suppresses error report if file does not exist
+  // read control codes for each course
   if (($handle = @fopen(KARTAT_DIRECTORY."sarjojenkoodit_".$eventid.".txt", "r")) !== FALSE) {
     $controlsFound = true;
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
@@ -454,22 +497,15 @@ function getCoursesForEvent($eventid) {
   }
 
 	$row = 0; 
-  // extract course drawing info: now potentially redundant since done in browser based on other info
-  if (($handle = fopen(KARTAT_DIRECTORY."radat_".$eventid.".txt", "r")) !== FALSE) {
+  // set up details for each course
+  if (($handle = fopen(KARTAT_DIRECTORY."sarjat_".$eventid.".txt", "r")) !== FALSE) {
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
       $detail = array();
 		  $detail["courseid"] = $data[0];
-			$detail["status"] = $data[1];
-			$detail["name"] = encode_rg_input($data[2]);
-			$detail["coords"] = $data[3];
+			$detail["name"] = encode_rg_input($data[1]);
 			if ($controlsFound) {
-				if (isScoreEvent($eventid))	{
-					// score event so assume only one course for now
-					// needs a further look for multi-course score events
-				  $detail["codes"] = $controls[0];
-				} else {
-				  $detail["codes"] = $controls[$row];					
-				}
+				// assuming files have same number of entries: should cross-check courseid?	
+				$detail["codes"] = $controls[$row];
 			}
 			$detail["xpos"] = $xpos[$row];
 			$detail["ypos"] = $ypos[$row];
@@ -483,6 +519,8 @@ function getCoursesForEvent($eventid) {
 
 function getTracksForEvent($eventid) {
   $output = array();
+	$x = array();
+	$y = array();
   $row = 0;
   // @ suppresses error report if file does not exist
   if (($handle = @fopen(KARTAT_DIRECTORY."merkinnat_".$eventid.".txt", "r")) !== FALSE) {

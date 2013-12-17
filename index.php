@@ -8,16 +8,27 @@
  }
  if (defined('OVERRIDE_UI_THEME')) {
     $ui_theme = OVERRIDE_UI_THEME;
-  } else {
+ } else {
   	$ui_theme = UI_THEME;
-  }
+ }
 
- if (defined('OVERRIDE_BASE_DIRECTORY')) {
+  if (defined('HEADER_COLOUR')) {
+    $header_colour = HEADER_COLOUR;
+  } else {
+	  $header_colour = '#002bd9';
+  }
+  if (defined('HEADER_TEXT_COLOUR')) {
+    $header_text_colour = HEADER_TEXT_COLOUR;
+  } else {
+	  $header_text_colour = '#ffffff';
+  }
+	
+  if (defined('OVERRIDE_BASE_DIRECTORY')) {
     $json_url = OVERRIDE_BASE_DIRECTORY."/rg2/rg2api.php";
     $script_url = OVERRIDE_BASE_DIRECTORY."/rg2/js/";
     $img_url = OVERRIDE_BASE_DIRECTORY."/rg2/img/";
 
-  } else {
+   } else {
   	$json_url = RG_BASE_DIRECTORY."/rg2/rg2api.php";
     $script_url = RG_BASE_DIRECTORY."/rg2/js/";
     $img_url = RG_BASE_DIRECTORY."/rg2/img/";
@@ -215,6 +226,9 @@ $manager = true;
 		<script type="text/javascript">
 			var json_url = "<?php echo $json_url; ?>";
 			var maps_url = "<?php echo $maps_url; ?>";
+			var header_colour = "<?php echo $header_colour; ?>";
+			var header_text_colour = "<?php echo $header_text_colour; ?>";
+
 		</script>
 		<script src='<?php echo $script_url."rg2.js"; ?>'></script>
     <?php if ($manager) { ?>
