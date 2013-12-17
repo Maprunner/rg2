@@ -2441,6 +2441,8 @@ jQuery(document).ready(function() {
 	initialize();
 
 	function initialize() {
+    jQuery("#rg2-header-container").css("color", header_text_colour);
+    jQuery("#rg2-header-container").css("background", header_colour);
 
 		jQuery("#rg2-about-dialog").hide();
 		jQuery("#rg2-splits-display").hide();
