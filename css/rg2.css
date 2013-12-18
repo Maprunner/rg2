@@ -21,13 +21,14 @@ html, body {
     line-height: 30px;
 }
 
-#rg2-course-select, #rg2-name-select, #rg2-manager-event-select {
+#rg2-course-select, #rg2-name-select {
   float: right;
   min-width: 200px;
   max-width: 200px;
 }
 
 #rg2-manager-event-select {
+  margin-top:100px;
   width: 100%;
 }
 
@@ -228,6 +229,11 @@ html, body {
 	float: right;
 }
 
+#rg2-manager-options .ui-button {
+	margin-top: 10px;
+  margin-bottom: 10px;
+}
+
 /* mass start/real time icon colour */
 .active {
 	color: green;
@@ -322,6 +328,13 @@ height: 20px;
 #rg2-tails-spinner .ui-spinner input {
   font: 16px Helvetica, Helvetica Neue, Arial;
   margin-bottom: 9px
+}
+
+#rg2-event-comments {
+	margin-top: 10px;
+	margin-bottom: 10px;
+	width: 100%;
+	height: 50px;
 }
 
 /* spinner icons */

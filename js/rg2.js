@@ -280,6 +280,7 @@ jQuery(document).ready(function() {
    	  jQuery("#btn-three-seconds").button("disable");
 			jQuery("#rg2-name-select").empty();
       jQuery("#rg2-new-comments").empty().val(DEFAULT_NEW_COMMENT);
+      jQuery("#rg2-event-comments").empty().val(DEFAULT_EVENT_COMMENT);
       jQuery("rg2-move-all").prop('checked', false);
  	    jQuery("#rg2-load-gps-file").button('disable');
       redraw(false);
@@ -2434,6 +2435,7 @@ jQuery(document).ready(function() {
   var RUNNER_DOT_RADIUS = 6;
   var DEFAULT_SCALE_FACTOR = 1.1;
   var DEFAULT_NEW_COMMENT = "Type your comment";
+  var DEFAULT_EVENT_COMMENT = "Comments";
 	var START_TRIANGLE_LENGTH = 30;
   var OVERPRINT_LINE_THICKNESS = 2;
   var REPLAY_LINE_THICKNESS = 3;
@@ -2461,7 +2463,8 @@ jQuery(document).ready(function() {
 		jQuery("#rg2-about-dialog").hide();
 		jQuery("#rg2-splits-display").hide();
 		jQuery("#rg2-track-names").hide();
-		
+		jQuery("#rg2-add-new-event").hide();
+				
 		trackTransforms(ctx);
 		resizeCanvas();
 
@@ -2544,6 +2547,14 @@ jQuery(document).ready(function() {
          jQuery('#rg2-new-comments').val("");
       }
    });
+
+		jQuery('#rg2-event-comments').focus(function(){
+      // Clear comment box if user focuses on it and it still contains default text
+      var text = jQuery("#rg2-event-comments").val();
+      if (text === DEFAULT_EVENT_COMMENT){
+         jQuery('#rg2-event-comments').val("");
+      }
+    });
 
 		jQuery("#btn-save-route").button()
 		  .click(function() {

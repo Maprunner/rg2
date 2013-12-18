@@ -17,15 +17,15 @@ function Manager() {
 	this.loggedIn = false;
 	this.user = new User();
 	var that = this;
-	jQuery("#rg2-manager-login").submit(function(event) {
-		that.user.name = jQuery("#rg2-user-name").val();
-		that.user.pwd = jQuery("#rg2-password").val();
+	$("#rg2-manager-login").submit(function(event) {
+		that.user.name = $("#rg2-user-name").val();
+		that.user.pwd = $("#rg2-password").val();
 		// check we have user name and password
 		if ((that.user.name) && (that.user.pwd)) {
 			that.logIn();
 		} else {
 			var msg = "<div>Please enter user name and password.</div>";
-			jQuery(msg).dialog({
+			$(msg).dialog({
 				title : "Login failed"
 			});
 			// prevent form submission
@@ -33,15 +33,15 @@ function Manager() {
 		}
 	})
 
-	jQuery("#rg2-manager-form").submit(function(event) {
-		manager.user.name = jQuery("#rg2-user-name").val();
-		manager.user.pwd = jQuery("#rg2-password").val();
+	$("#rg2-manager-form").submit(function(event) {
+		manager.user.name = $("#rg2-user-name").val();
+		manager.user.pwd = $("#rg2-password").val();
 		// check we have user name and password
 		if ((manager.user.name) && (manager.user.pwd)) {
 			manager.logIn();
 		} else {
 			var msg = "<div>Please enter user name and password.</div>";
-			jQuery(msg).dialog({
+			$(msg).dialog({
 				title : "Login failed"
 			});
 			// prevent form submission
@@ -58,7 +58,7 @@ Manager.prototype = {
 		var url = json_url + '?type=login';
 		var json = JSON.stringify(this.user);
 		var that = this;
-		jQuery.ajax({
+		$.ajax({
 			type : 'POST',
 			dataType : 'json',
 			data : json,
@@ -70,7 +70,7 @@ Manager.prototype = {
 			error : function(jqXHR, textStatus, errorThrown) {
 				console.log(errorThrown);
 				var msg = "<div>User name or password incorrect. Please try again.</div>";
-				jQuery(msg).dialog({
+				$(msg).dialog({
 					title : "Login failed"
 				});
 			}
@@ -79,19 +79,31 @@ Manager.prototype = {
 	},
 
 	enableEventEdit : function() {
-		jQuery("#btn-add-event").button().click(function() {
-			this.addNewEvent();
+		$("#btn-add-event").button().click(function() {
+			jQuery("#rg2-add-new-event").dialog({
+				title: "Add new event",
+				width : 'auto',
+				buttons : {
+					Add : function() {
+						jQuery(this).dialog('close');
+					},
+					Cancel: function() {
+						jQuery(this).dialog('close');						
+					}
+				}
+			})
+	  });
+
+		$("#btn-edit-event").button().click(function() {
+		  var id = $("#rg2-manager-event-select").val();
 		});
 
-		jQuery("#btn-edit-delete-event").button().click(function() {
-			this.editDeleteEvent();
+		$("#btn-delete-event").button().click(function() {
+		  var id = $("#rg2-manager-event-select").val();
 		});
-
-		jQuery("#rg2-manager-event-select").click(function(event) {
-			this.selectEvent(parseInt(jQuery("#rg2-manager-event-select").val(), 10));
-		});
-		jQuery("#rg2-manager-options").show();
-		jQuery("#rg2-manager-login").hide();
+		
+		$("#rg2-manager-options").show();
+		$("#rg2-manager-login").hide();
 	}
 }
 

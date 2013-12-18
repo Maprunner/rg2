@@ -151,30 +151,15 @@ $manager = true;
 			  	  	<label for"rg2-password">Password: </label>
 			  	    <input class="pushright" id="rg2-password" type="password">
             </div>
-			      <button class="pushright" id="btn-login">Log in</button>
+			      <button id="btn-login">Log in</button>
 			    </form>
 			    <div id="rg2-manager-options">
-			      <div>
-			      	<button id="btn-add-event">Add new event</button>
-        	  </div>
-        	  <div>
-        	  	<select id="rg2-manager-event-select"></select>
-			        <button class="pushright" id="btn-edit-delete-event">Edit/delete event</button>
-			      </div>
-			      <form id="rg2-event-details">
-          	  <input id="rg2-event-name" type="text"></input>
-          	  <textarea id="rg2-event-comments"></textarea>
-              <div id="rg2-select-map-file">
-        	      <input type='file' accept='.jpg' id='rg2-load-map-file'>
-        	    </div>
-              <div id="rg2-select-results-file">
-        	      <input type='file' accept='.csv' id='rg2-load-map-file'>
-        	    </div>
-              <div id="rg2-select-course-file">
-        	      <input type='file' accept='.xml' id='rg2-load-course-file'>
-        	    </div>
-           </form>
-          </div>
+			      <button id="btn-add-event">Add new event</button>
+        	  <select id="rg2-manager-event-select"></select>
+			      <button id="btn-edit-event">Edit selected event</button>
+			      <button id="btn-delete-event">Delete selected event</button>
+
+			    </div>
         </div>	
 			  <?php } ?>
 			 </div>
@@ -218,6 +203,26 @@ $manager = true;
 			  <p><?php echo ADDITIONAL_INFO_TEXT; ?></p>
 		  </div>
 		  <div id="rg2-splits-table" title="Splits display"></div>
+      <?php if ($manager) { ?>
+		  <div id="rg2-add-new-event">
+			  <form id="rg2-event-details">
+          <div>
+            Name:
+          	<input id="rg2-event-name" type="text"></input>
+          </div>
+          <textarea id="rg2-event-comments">Comments</textarea>
+          <div id="rg2-select-map-file">
+        	  <input type='file' accept='.jpg' id='rg2-load-map-file'>
+        	 </div>
+           <div id="rg2-select-results-file">
+        	   <input type='file' accept='.csv' id='rg2-load-map-file'>
+        	 </div>
+           <div id="rg2-select-course-file">
+        	   <input type='file' accept='.xml' id='rg2-load-course-file'>
+        	 </div>
+         </form>
+		  </div>
+      <?php } ?>
     </div>
 
 		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
