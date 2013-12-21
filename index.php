@@ -235,9 +235,17 @@ $manager = true;
 			var header_text_colour = "<?php echo $header_text_colour; ?>";
 
 		</script>
-		<script src='<?php echo $script_url."rg2.js"; ?>'></script>
+		<script src='<?php echo $script_url."events.js"; ?>'></script>
+		<script src='<?php echo $script_url."results.js"; ?>'></script>
+		<script src='<?php echo $script_url."gpstrack.js"; ?>'></script>
+		<script src='<?php echo $script_url."controls.js"; ?>'></script>
+		<script src='<?php echo $script_url."courses.js"; ?>'></script>
+		<script src='<?php echo $script_url."draw.js"; ?>'></script>
+		<script src='<?php echo $script_url."animation.js"; ?>'></script>
+		<script src='<?php echo $script_url."runner.js"; ?>'></script>
     <?php if ($manager) { ?>
 		<script src='<?php echo $script_url."rg2manager.js"; ?>'></script>
     <?php } ?>
+		<script src='<?php echo $script_url."rg2.js"; ?>'></script>
 	</body>
 </html>

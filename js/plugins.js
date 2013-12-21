@@ -21,6 +21,23 @@
     }
 }());
 
+	function Colours() {
+		// used to generate track colours: add extra colours as necessary
+		this.colours = ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#ff00ff", "#00ffff"];
+		this.colourIndex = 0;
+	}
+
+	Colours.prototype = {
+		Constructor : Colours,
+
+		getNextColour : function() {
+			this.colourIndex++;
+			if (this.colourIndex == this.colours.length) {
+				this.colourIndex = 0;
+			}
+			return this.colours[this.colourIndex];
+		},
+	}
 	
 	Number.prototype.toRad = function() {
     return this * Math.PI / 180;
