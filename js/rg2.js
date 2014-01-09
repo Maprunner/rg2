@@ -1,6 +1,5 @@
 /*global $:false */
-var rg2 = ( function() {
-		'use strict';
+var rg2 = ( function() {'use strict';
 		var canvas = $("#rg2-map-canvas")[0];
 		var ctx = canvas.getContext('2d');
 		var map;
@@ -21,6 +20,8 @@ var rg2 = ( function() {
 		var lastY;
 		var dragStart;
 		var dragged;
+		var requestedHash;
+		var requestedEventID;
 
 		var config = {
 			DEFAULT_SCALE_FACTOR : 1.1,
@@ -56,6 +57,11 @@ var rg2 = ( function() {
 		};
 
 		function init() {
+			// check if a specific event has been requested
+      requestedHash = window.location.hash;
+			if (requestedHash) {
+				requestedEventID = requestedHash.replace("#", "");
+			}
 
 			$("#btn-save-route").button().button("disable");
 			$("#btn-save-gps-route").button().button("disable");
@@ -500,6 +506,11 @@ var rg2 = ( function() {
 					loadEvent(ui.item[0].id);
 				}
 			});
+
+			// load requested event if set
+			if (requestedEventID) {
+				loadEvent(requestedEventID);
+			}
 		}
 
 		function loadEvent(eventid) {
@@ -738,6 +749,7 @@ var rg2 = ( function() {
 		function drawStart(x, y, text, angle) {
 			return controls.drawStart(x, y, text, angle);
 		}
+
 		function drawSingleControl(x, y, i) {
 			return controls.drawSingleControl(x, y, i);
 		}
@@ -745,9 +757,11 @@ var rg2 = ( function() {
 		function drawFinish(x, y, text) {
 			return controls.drawFinish(x, y, text);
 		}
+
 		function getFullResult(resultid) {
 			return results.getFullResult(resultid);
 		}
+
 		function getHighestControlNumber() {
 			return courses.getHighestControlNumber();
 		}
@@ -775,6 +789,7 @@ var rg2 = ( function() {
 		function getRunnerName(resultid) {
 			return results.getRunnerName(resultid);
 		}
+
 		function resultIDExists(resultid) {
 			return results.resultIDExists(resultid);
 		}
@@ -794,7 +809,7 @@ var rg2 = ( function() {
 		function mapIsGeoreferenced() {
 			return events.mapIsGeoreferenced();
 		}
-		
+
 		function getWorldFile() {
 			return events.getWorldFile();
 		}
