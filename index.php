@@ -244,7 +244,7 @@ $manager = true;
 		<script src='<?php echo $script_url."animation.js"; ?>'></script>
 		<script src='<?php echo $script_url."runner.js"; ?>'></script>
     <?php if ($manager) { ?>
-		<script src='<?php echo $script_url."rg2manager.js"; ?>'></script>
+		<script src='<?php echo $script_url."manager.js"; ?>'></script>
     <?php } ?>
 		<script src='<?php echo $script_url."rg2.js"; ?>'></script>
 	</body>

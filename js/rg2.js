@@ -1,14 +1,6 @@
-/**
- * @author Simon Errington
- *
- * Routegadget 2.0 Viewer
- *
- * Released under the MIT license
- *
- */
-'use strict';
-
+/*global $:false */
 var rg2 = ( function() {
+		'use strict';
 		var canvas = $("#rg2-map-canvas")[0];
 		var ctx = canvas.getContext('2d');
 		var map;
@@ -64,7 +56,7 @@ var rg2 = ( function() {
 		};
 
 		function init() {
-		
+
 			$("#btn-save-route").button().button("disable");
 			$("#btn-save-gps-route").button().button("disable");
 			$("#btn-reset-drawing").button().button("disable");
@@ -96,7 +88,6 @@ var rg2 = ( function() {
 			$("#btn-mass-start").addClass('active');
 			$("#btn-real-time").removeClass('active');
 
-
 			$("#rg2-info-panel").tabs({
 				active : config.TAB_EVENTS,
 				heightStyle : "content",
@@ -104,7 +95,7 @@ var rg2 = ( function() {
 					tabActivated();
 				}
 			});
-								
+
 			map = new Image();
 			mapLoadingText = "Select an event";
 			events = new Events();
@@ -122,7 +113,6 @@ var rg2 = ( function() {
 			// initially loaded file has a close icon
 			infoHideIconSrc = $("#rg2-resize-info-icon").attr("src");
 			infoShowIconSrc = infoHideIconSrc.replace("hide-info", "show-info");
-
 
 			$("#rg2-header-container").css("color", header_text_colour);
 			$("#rg2-header-container").css("background", header_colour);
@@ -173,6 +163,14 @@ var rg2 = ( function() {
 				if (text === config.DEFAULT_EVENT_COMMENT) {
 					$('#rg2-event-comments').val("");
 				}
+			});
+
+			$("#btn-save-route").button().click(function() {
+				drawing.saveRoute();
+			});
+
+			$("#btn-save-gps-route").button().click(function() {
+				drawing.saveGPSRoute();
 			});
 
 			$("#btn-move-all").click(function(evt) {
@@ -235,7 +233,7 @@ var rg2 = ( function() {
 							$(this).dialog('close');
 						}
 					}
-				})
+				});
 			});
 			// enable once we have courses loaded
 			$("#btn-show-splits").hide();
@@ -273,7 +271,7 @@ var rg2 = ( function() {
 
 			trackTransforms(ctx);
 			resizeCanvas();
-			
+
 			window.addEventListener('resize', resizeCanvas, false);
 
 			canvas.addEventListener('DOMMouseScroll', handleScroll, false);
@@ -284,7 +282,7 @@ var rg2 = ( function() {
 				dragStart = ctx.transformedPoint(lastX, lastY);
 				dragged = false;
 				//console.log ("Mousedown " + lastX + " " + lastY + " " + dragStart.x + " " + dragStart.y);
-			}, false)
+			}, false);
 
 			canvas.addEventListener('mousemove', function(evt) {
 				lastX = evt.offsetX || (evt.layerX - canvas.offsetLeft);
@@ -303,7 +301,7 @@ var rg2 = ( function() {
 						redraw(false);
 					}
 				}
-			}, false)
+			}, false);
 
 			canvas.addEventListener('mouseup', function(evt) {
 				//console.log ("Mouseup" + dragStart.x + ": " + dragStart.y);
@@ -314,7 +312,7 @@ var rg2 = ( function() {
 				}
 				dragStart = null;
 				redraw(false);
-			}, false)
+			}, false);
 
 			// force redraw once map has loaded
 			map.addEventListener("load", function() {
@@ -337,7 +335,7 @@ var rg2 = ( function() {
 				console.log("Events request failed: " + err);
 			});
 
-		};
+		}
 
 		function resetMapState() {
 			// place map in centre of canvas and scale it down to fit
@@ -363,7 +361,7 @@ var rg2 = ( function() {
 			}
 			ctx.save();
 			redraw(false);
-		};
+		}
 
 		function resizeCanvas() {
 			scaleFactor = config.DEFAULT_SCALE_FACTOR;
@@ -385,7 +383,7 @@ var rg2 = ( function() {
 				$("#rg2-event-title").hide();
 			}
 			resetMapState();
-		};
+		}
 
 		// called whenever the active tab changes to tidy up as necessary
 		function tabActivated() {
@@ -399,7 +397,7 @@ var rg2 = ( function() {
 					break;
 			}
 			redraw(false);
-		};
+		}
 
 		/* called whenever anything changes enough to need screen redraw
 		 * @param fromTimer {Boolean} true if called from timer: used to determine if animation time should be incremented
@@ -443,7 +441,7 @@ var rg2 = ( function() {
 				ctx.fillText(mapLoadingText, canvas.width / 2, canvas.height / 2);
 			}
 
-		};
+		}
 
 		function displayAboutDialog() {
 			$("#rg2-about-dialog").dialog({
@@ -454,8 +452,8 @@ var rg2 = ( function() {
 						$(this).dialog("close");
 					}
 				}
-			})
-		};
+			});
+		}
 
 		function resizeInfoDisplay() {
 			if (infoPanelMaximised) {
@@ -471,7 +469,7 @@ var rg2 = ( function() {
 			}
 			// move map around if necesssary
 			resetMapState();
-		};
+		}
 
 		var zoom = function(zoomDirection) {
 			var factor = Math.pow(scaleFactor, zoomDirection);
@@ -502,7 +500,7 @@ var rg2 = ( function() {
 					loadEvent(ui.item[0].id);
 				}
 			});
-		};
+		}
 
 		function loadEvent(eventid) {
 			// new event selected: show we are waiting
@@ -551,7 +549,7 @@ var rg2 = ( function() {
 			});
 
 			var draw = new Draw();
-		};
+		}
 
 		function getResults() {
 			$.getJSON(json_url, {
@@ -569,7 +567,7 @@ var rg2 = ( function() {
 				var err = textStatus + ", " + error;
 				console.log("Results request failed: " + err);
 			});
-		};
+		}
 
 		function getGPSTracks() {
 			$.getJSON(json_url, {
@@ -601,7 +599,7 @@ var rg2 = ( function() {
 				var err = textStatus + ", " + error;
 				console.log("Tracks request failed: " + err);
 			});
-		};
+		}
 
 		function createCourseMenu() {
 			//loads menu from populated courses array
@@ -618,7 +616,7 @@ var rg2 = ( function() {
 					$(".allcourses").prop('checked', false);
 				}
 				redraw(false);
-			})
+			});
 			// checkbox on course tab to show all courses
 			$(".allcourses").click(function(event) {
 				if (event.target.checked) {
@@ -630,7 +628,7 @@ var rg2 = ( function() {
 					$(".courselist").prop('checked', false);
 				}
 				redraw(false);
-			})
+			});
 			// checkbox on course tab to show tracks for one course
 			$(".tracklist").click(function(event) {
 				var courseid = event.target.id;
@@ -642,7 +640,7 @@ var rg2 = ( function() {
 					$(".alltracks").prop('checked', false);
 				}
 				redraw(false);
-			})
+			});
 			// checkbox on course tab to show all tracks
 			$(".alltracks").click(function(event) {
 				if (event.target.checked) {
@@ -655,8 +653,8 @@ var rg2 = ( function() {
 					$(".tracklist").prop('checked', false);
 				}
 				redraw(false);
-			})
-		};
+			});
+		}
 
 		function createResultMenu() {
 			//loads menu from populated result array
@@ -672,7 +670,7 @@ var rg2 = ( function() {
 				}
 				redraw();
 
-			})
+			});
 			$("#rg2-result-list").empty();
 			$("#rg2-result-list").append(html);
 
@@ -690,7 +688,7 @@ var rg2 = ( function() {
 					courses.removeFromDisplay(event.target.id);
 				}
 				redraw(false);
-			})
+			});
 			// checkbox to show a result
 			$(".showtrack").click(function(event) {
 				if (event.target.checked) {
@@ -699,116 +697,129 @@ var rg2 = ( function() {
 					results.removeOneTrackFromDisplay(event.target.id);
 				}
 				redraw(false);
-			})
+			});
 			// checkbox to animate a result
 			$(".replay").click(function(event) {
 				if (event.target.checked) {
-					animation.addRunner(new Runner(event.target.id));
+					animation.addRunner(new Runner(event.target.id, animation.colours.getNextColour()));
 				} else {
 					animation.removeRunner(event.target.id);
 				}
 
 				redraw(false);
-			})
+			});
 			// disable control dropdown if we have no controls
 			if (courses.getHighestControlNumber() === 0) {
 				$("#rg2-control-select").prop('disabled', true);
 			} else {
 				$("#rg2-control-select").prop('disabled', false);
 			}
-		};
+		}
 
 		// Allow functions on collections to be called.
 		// Not a great fix and probably better to rewrite things to avoid
 		// this as far as possible but works for now.
 		function getCourseDetails(courseid) {
 			return courses.getFullCourse(courseid);
-		};
+		}
 
 		function getCourseName(courseid) {
 			return courses.getCourseName(courseid);
-		};
+		}
 
 		function getResultsByCourseID(courseid) {
 			return results.getResultsByCourseID(courseid);
-		};
+		}
 
 		function getTotalResultsByCourseID() {
 			return results.getTotalResultsByCourseID();
-		};
+		}
 
 		function drawStart(x, y, text, angle) {
 			return controls.drawStart(x, y, text, angle);
-		};
+		}
 		function drawSingleControl(x, y, i) {
 			return controls.drawSingleControl(x, y, i);
-		};
+		}
 
 		function drawFinish(x, y, text) {
 			return controls.drawFinish(x, y, text);
-		};
+		}
 		function getFullResult(resultid) {
 			return results.getFullResult(resultid);
-		};
+		}
 		function getHighestControlNumber() {
-			return courses.getHighestControlNumber()
-		};
+			return courses.getHighestControlNumber();
+		}
 
 		function getKartatEventID(courseid) {
 			return events.getKartatEventID(courseid);
-		};
+		}
 
 		function incrementTracksCount(courseid) {
 			return courses.incrementTracksCount(courseid);
-		};
+		}
 
 		function putOnDisplay(courseid) {
 			courses.putOnDisplay(courseid);
-		};
+		}
 
 		function removeFromDisplay(courseid) {
 			courses.removeFromDisplay(courseid);
-		};
+		}
 
 		function createNameDropdown(courseid) {
 			results.createNameDropdown(courseid);
-		};
+		}
 
 		function getRunnerName(resultid) {
 			return results.getRunnerName(resultid);
-		};
+		}
 		function resultIDExists(resultid) {
 			return results.resultIDExists(resultid);
-		};
+		}
 
 		function getKartatResultID(resultid) {
 			return results.getKartatResultID(resultid);
-		};
+		}
 
 		function getTimeForID(resultid) {
 			return results.getTimeForID(resultid);
-		};
+		}
 
 		function getSplitsForID(resultid) {
 			return results.getSplitsForID(resultid);
-		};
+		}
 
-    function mapIsGeoreferenced() {
-      return events.mapIsGeoreferenced()
-    };
-    
-    function getWorldFile() {
-    	return events.getWorldFile();
-    };
-    
+		function mapIsGeoreferenced() {
+			return events.mapIsGeoreferenced();
+		}
+		
+		function getWorldFile() {
+			return events.getWorldFile();
+		}
+
+		function getControlX() {
+			return drawing.getControlX();
+		}
+
+		function getControlY() {
+			return drawing.getControlY();
+		}
+
+		function getActiveEventID() {
+			return events.getActiveEventID();
+		}
+
 		return {
 			// functions and variables available elsewhere
 			init : init,
 			config : config,
 			redraw : redraw,
 			ctx : ctx,
-			mapIsGeoreferenced:mapIsGeoreferenced,
-			getWorldFile:getWorldFile,
+			loadEvent : loadEvent,
+			mapIsGeoreferenced : mapIsGeoreferenced,
+			getWorldFile : getWorldFile,
 			getFullResult : getFullResult,
 			drawStart : drawStart,
 			drawSingleControl : drawSingleControl,
@@ -823,12 +834,15 @@ var rg2 = ( function() {
 			incrementTracksCount : incrementTracksCount,
 			getKartatEventID : getKartatEventID,
 			getKartatResultID : getKartatResultID,
+			getActiveEventID : getActiveEventID,
 			getHighestControlNumber : getHighestControlNumber,
 			getCourseDetails : getCourseDetails,
 			getCourseName : getCourseName,
 			getResultsByCourseID : getResultsByCourseID,
-			getTotalResultsByCourseID : getTotalResultsByCourseID
-		}
+			getTotalResultsByCourseID : getTotalResultsByCourseID,
+			getControlX : getControlX,
+			getControlY : getControlY
+		};
 
 	}());
 

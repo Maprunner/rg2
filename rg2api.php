@@ -345,7 +345,6 @@ function isScoreEvent($eventid) {
 
 function getResultsForEvent($eventid) {
   $output = array();
-  $row = 0;
 	$comments = 0;  
   $text = array();
   // @ suppresses error report if file does not exist
@@ -395,6 +394,7 @@ function getResultsForEvent($eventid) {
 
   // @ suppresses error report if file does not exist
   if (($handle = @fopen(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt", "r")) !== FALSE) {
+    $row = 0;
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
       $detail = array();
 	  	$detail["resultid"] = $data[0];

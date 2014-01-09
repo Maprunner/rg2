@@ -1,5 +1,3 @@
-'use strict';
-
 function Events() {
 	this.events = [];
 	this.activeEventID = null;
@@ -45,7 +43,7 @@ Events.prototype = {
 	},
 
 	createEventDropdown : function() {
-		jQuery("#rg2-manager-event-select").empty();
+		$("#rg2-manager-event-select").empty();
 		var dropdown = document.getElementById("rg2-manager-event-select");
 		for (var i = 0; i < this.events.length; i++) {
 			var opt = document.createElement("option");
@@ -53,11 +51,10 @@ Events.prototype = {
 			opt.text = this.events[i].date + ": " + this.events[i].name;
 			dropdown.options.add(opt);
 		}
-		dropdown.options.add(opt);
 	},
 
 	isScoreEvent : function() {
-		return (this.events[this.activeEventID].format === window.SCORE_EVENT);
+		return (this.events[this.activeEventID].format === rg2.config.SCORE_EVENT);
 	},
 
 	mapIsGeoreferenced : function() {
@@ -71,14 +68,15 @@ Events.prototype = {
 	formatEventsAsMenu : function() {
 		var title;
 		var html = '';
-		for (var i = this.events.length - 1; i >= 0; i--) {
-			if (this.events[i].comment != "") {
+		var i; 
+		for (i = this.events.length - 1; i >= 0; i--) {
+			if (this.events[i].comment !== "") {
 				title = this.events[i].type + " event on " + this.events[i].date + ": " + this.events[i].comment;
 			} else {
 				title = this.events[i].type + " event on " + this.events[i].date;
 			}
 			html += "<li title='" + title + "' id=" + i + "><a href='#" + i + "'>";
-			if (this.events[i].comment != "") {
+			if (this.events[i].comment !== "") {
 				html += "<i class='fa fa-info-circle event-info-icon' id='info-" + i + "'></i>";
 			}
 			html += this.events[i].name + "</a></li>";
@@ -86,7 +84,7 @@ Events.prototype = {
 		return html;
 
 	}
-}
+};
 
 function Event(data) {
 	this.kartatid = data.id;
@@ -134,4 +132,4 @@ function Event(data) {
 
 Event.prototype = {
 	Constructor : Event,
-}
+};

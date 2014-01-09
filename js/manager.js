@@ -1,13 +1,3 @@
-/**
- * @author Simon Errington
- *
- * Routegadget 2.0 Viewer
- *
- * Released under the MIT license
- *
- */
-'use strict';
-
 function User() {
 	this.name = null;
 	this.pwd = null;
@@ -31,7 +21,7 @@ function Manager() {
 			// prevent form submission
 			return false;
 		}
-	})
+	});
 
 	$("#rg2-manager-form").submit(function(event) {
 		manager.user.name = $("#rg2-user-name").val();
@@ -47,7 +37,7 @@ function Manager() {
 			// prevent form submission
 			return false;
 		}
-	})
+	});
 }
 
 Manager.prototype = {
@@ -65,7 +55,7 @@ Manager.prototype = {
 			url : url,
 			cache : false,
 			success : function(data, textStatus, jqXHR) {
-				that.enableEventEdit()
+				that.enableEventEdit();
 			},
 			error : function(jqXHR, textStatus, errorThrown) {
 				console.log(errorThrown);
@@ -74,38 +64,38 @@ Manager.prototype = {
 					title : "Login failed"
 				});
 			}
-		})
+		});
 		return false;
 	},
 
 	enableEventEdit : function() {
 		$("#btn-add-event").button().click(function() {
 			jQuery("#rg2-add-new-event").dialog({
-				title: "Add new event",
+				title : "Add new event",
 				width : 'auto',
 				buttons : {
 					Add : function() {
 						jQuery(this).dialog('close');
 					},
-					Cancel: function() {
-						jQuery(this).dialog('close');						
+					Cancel : function() {
+						jQuery(this).dialog('close');
 					}
 				}
-			})
-	  });
+			});
+		});
 
 		$("#btn-edit-event").button().click(function() {
-		  var id = $("#rg2-manager-event-select").val();
+			var id = $("#rg2-manager-event-select").val();
 		});
 
 		$("#btn-delete-event").button().click(function() {
-		  var id = $("#rg2-manager-event-select").val();
+			var id = $("#rg2-manager-event-select").val();
 		});
-		
+
 		$("#rg2-manager-options").show();
 		$("#rg2-manager-login").hide();
 	}
-}
+};
 
 function ResultsFile() {
 	this.loaded = false;
@@ -141,7 +131,6 @@ ResultsFile.prototype = {
 	},
 
 	processResultsFile : function() {
-		// split CSV here
+		console.log("split CSV here");
 	}
-}
-
+}; 
