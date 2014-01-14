@@ -66,7 +66,7 @@ Courses.prototype = {
 				dropdown.options.add(opt);
 			}
 		}
-		dropdown.options.add(opt);
+		//dropdown.options.add(opt);
 	},
 
 	updateControlDropdown : function() {

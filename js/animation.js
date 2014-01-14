@@ -1,4 +1,5 @@
-function Animation() {
+ function Animation() {
+	'use strict';
 	this.runners = [];
 	this.timer = null;
 	this.animationSecs = 0;

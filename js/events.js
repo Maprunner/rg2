@@ -42,10 +42,11 @@ Events.prototype = {
 		}
 	},
 
-	createEventDropdown : function() {
+	createEventEditDropdown : function() {
 		$("#rg2-manager-event-select").empty();
 		var dropdown = document.getElementById("rg2-manager-event-select");
-		for (var i = 0; i < this.events.length; i++) {
+		var i;
+		for (i = 0; i < this.events.length; i += 1) {
 			var opt = document.createElement("option");
 			opt.value = this.events[i].kartatid;
 			opt.text = this.events[i].date + ": " + this.events[i].name;
@@ -56,6 +57,14 @@ Events.prototype = {
 	isScoreEvent : function() {
 		return (this.events[this.activeEventID].format === rg2.config.SCORE_EVENT);
 	},
+
+  isValidEventID : function (eventid) {
+    if ((this.events.length >= eventid) && (eventid > 0)) {
+        return true;
+    } else {
+      return false;
+    } 
+  },
 
 	mapIsGeoreferenced : function() {
 		return this.events[this.activeEventID].georeferenced;
@@ -87,14 +96,14 @@ Events.prototype = {
 };
 
 function Event(data) {
-	this.kartatid = data.id;
+	this.kartatid = parseInt(data.id, 10);
 	this.mapid = data.mapid;
 	this.format = parseInt(data.format, 10);
 	this.name = data.name;
 	this.date = data.date;
 	this.club = data.club;
 	this.worldFile = [];
-	if ( typeof (data.A) == 'undefined') {
+	if ( typeof (data.A) === 'undefined') {
 		this.georeferenced = false;
 	} else {
 		this.georeferenced = true;
@@ -131,5 +140,5 @@ function Event(data) {
 }
 
 Event.prototype = {
-	Constructor : Event,
+	Constructor : Event
 };

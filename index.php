@@ -42,7 +42,6 @@
 	} else {
 		$manager = false;
   }
-$manager = true;
 
 ?>
 
@@ -97,15 +96,15 @@ $manager = true;
 					<li>
 						<a href="#rg2-result-list">Results</a>
 					</li>
-					<li>
-						<a href="#rg2-draw">Draw</a>
-					</li>
+     <li id="rg2-draw-tab">
+      <a href="#rg2-draw">Draw</a>
+     </li>
 					<?php if ($manager) { ?>
 					<li>
 						<a href="#rg2-manage">Manage</a>
 					</li>
 					<?php } ?>
-        </ul>
+    </ul>
 				</div>
 				<div id="rg2-info-panel-tab-body">
 				<div id="rg2-event-list"></div>
@@ -113,33 +112,33 @@ $manager = true;
 					<div id="rg2-course-table"></div>
 				</div>
 				<div id="rg2-result-list"></div>
-				<div id="rg2-draw">
+      <div id="rg2-draw">
           <div id="rg2-select-course">
-        	  Select your course: <select  id="rg2-course-select"></select>
-          </div>					
+           Select course: <select  id="rg2-course-select"></select>
+          </div>     
           <div id="rg2-name-course">
-        	  Select your name: <select  id="rg2-name-select"></select>
+           Select name: <select  id="rg2-name-select"></select>
           </div>
           <div>
-          	<textarea id="rg2-new-comments"></textarea>
+           <textarea id="rg2-new-comments"></textarea>
           </div>
-			    <button id="btn-three-seconds">+3 sec</button>
-			    <button id="btn-undo">Undo</button>
-			    <button id="btn-save-route">Save</button>
-			    <button class="pushright" id="btn-reset-drawing">Reset</button>
+       <button id="btn-three-seconds">+3 sec</button>
+       <button id="btn-undo">Undo</button>
+       <button id="btn-save-route">Save</button>
+       <button class="pushright" id="btn-reset-drawing">Reset</button>
           <hr class="rg2-hr">
           <h3>Load GPS file</h3>
           <div id="rg2-select-gps-file">
-        	  <input type='file' accept='.gpx' id='rg2-load-gps-file'>
-          </div>	
-			    <input type=checkbox id="btn-move-all"><label for="btn-move-all"> Move track and map together</label>
-			    <ul>
-			    	<li>Drag track to align track on map</li>
+           <input type='file' accept='.gpx' id='rg2-load-gps-file'>
+          </div> 
+       <input type=checkbox id="btn-move-all"><label for="btn-move-all"> Move track and map together</label>
+       <ul>
+        <li>Drag track to align track on map</li>
             <li>Single click to lock/unlock a point</li>
             <li>Drag to scale and rotate around locked point</li>
-			    </ul>
-			    <button class="pushright" id="btn-save-gps-route">Save GPS route</button>	
-				</div>
+       </ul>
+       <button class="pushright" id="btn-save-gps-route">Save GPS route</button> 
+    </div>
 				<?php if ($manager) { ?>
 			  <div id="rg2-manage">
 			    <form id="rg2-manager-login">
@@ -160,8 +159,8 @@ $manager = true;
 			      <button id="btn-delete-event">Delete selected event</button>
 
 			    </div>
-        </div>	
-			  <?php } ?>
+      </div>	
+		  <?php } ?>
 			 </div>
 		  </div>
 		  <canvas id="rg2-map-canvas">Your browser does not support HTML5</canvas>
@@ -205,22 +204,44 @@ $manager = true;
 		  <div id="rg2-splits-table" title="Splits display"></div>
       <?php if ($manager) { ?>
 		  <div id="rg2-add-new-event">
-			  <form id="rg2-event-details">
-          <div>
-            Name:
-          	<input id="rg2-event-name" type="text"></input>
+			  <form id="rg2-new-event-details">
+          <div id="rg2-select-event-name">
+            Event name:
+          	<input id="rg2-event-name" type="text" autofocus></input>
           </div>
-          <textarea id="rg2-event-comments">Comments</textarea>
+          <div id="rg2-select-map-name">
+            Map name:
+            <input id="rg2-map-name" type="text"></input>
+          </div>
+          <div id="rg2-select-club-name">
+            Club name:
+            <input id="rg2-club-name" type="text"></input>
+          </div>
+          <div id="rg2-select-event-date">
+            Event date:
+            <input id="rg2-event-date" type="text"></input>
+          </div>
+          <div id="rg2-select-event-level">
+            Event level: <select id="rg2-event-level"></select>
+          </div>
+          <textarea id="rg2-event-comments"></textarea>
           <div id="rg2-select-map-file">
-        	  <input type='file' accept='.jpg' id='rg2-load-map-file'>
-        	 </div>
-           <div id="rg2-select-results-file">
-        	   <input type='file' accept='.csv' id='rg2-load-map-file'>
-        	 </div>
-           <div id="rg2-select-course-file">
-        	   <input type='file' accept='.xml' id='rg2-load-course-file'>
-        	 </div>
-         </form>
+        	  <input type='file' accept='.jpg' id='rg2-load-map-file' />
+        	  <label for="rg2-load-map-file">Map file</label>
+        	</div>
+          <div id="rg2-select-results-file">
+        	  <input type='file' accept='.csv' id='rg2-load-results-file' />
+            <label for="rg2-load-results-file">Results file</label>
+          </div>
+          <div id="rg2-select-course-file">
+        	  <input type='file' accept='.xml' id='rg2-load-course-file' />
+            <label for="rg2-load-course-file">Course file</label>       	   
+        	</div>
+          <div id="rg2-results-grouping">
+            <label><input type='radio' name='rg2-course-breakdown' val='course' checked="checked" />Group results by course</label>
+            <label><input type='radio' name='rg2-course-breakdown' val='class' />Group results by class</label>
+          </div> 
+        </form>
 		  </div>
       <?php } ?>
     </div>
