@@ -1,3 +1,7 @@
+/*global rg2:false */
+/*global GPSTrack:false */
+/*global getAngle:false */
+/*global json_url:false */
 // handle drawing of a new route
 function Draw() {
  this.trackColor = '#ff0000';
@@ -240,7 +244,7 @@ Draw.prototype = {
   if (this.closeEnough(x, y)) {
    this.gpstrack.routeData.x.push(this.controlx[this.nextControl]);
    this.gpstrack.routeData.y.push(this.controly[this.nextControl]);
-   this.nextControl++;
+   this.nextControl += 1;
    if (this.nextControl === this.controlx.length) {
     $("#btn-save-route").button("enable");
    }
@@ -268,7 +272,7 @@ Draw.prototype = {
     }
     // don't go back past first control
     if (this.nextControl > 1) {
-     this.nextControl--;
+     this.nextControl -= 1;
     }
    }
    this.gpstrack.routeData.x.pop();
@@ -287,10 +291,8 @@ Draw.prototype = {
   // called to save GPS file route
   // tidy up route details
   var i;
-  var pt;
-  var t;
   this.gpstrack.routeData.startsecs = this.gpstrack.routeData.time[0];
-  for ( i = 0; i < this.gpstrack.routeData.x.length; i++) {
+  for ( i = 0; i < this.gpstrack.routeData.x.length; i += 1) {
    this.gpstrack.routeData.x[i] = parseInt(this.gpstrack.routeData.x[i], 10);
    this.gpstrack.routeData.y[i] = parseInt(this.gpstrack.routeData.y[i], 10);
    // convert real time seconds to offset seconds from start time
@@ -395,7 +397,7 @@ Draw.prototype = {
     if (!shiftKeyPressed) {
      scaleY = scaleX;
     }
-    for ( i = 0; i < this.gpstrack.routeData.x.length; i++) {
+    for ( i = 0; i < this.gpstrack.routeData.x.length; i += 1) {
      var x = this.gpstrack.baseX[i] - this.handleX;
      var y = this.gpstrack.baseY[i] - this.handleY;
      this.gpstrack.routeData.x[i] = (((Math.cos(angle) * x) - (Math.sin(angle) * y)) * scaleX) + this.handleX;
@@ -405,7 +407,7 @@ Draw.prototype = {
     // drag track
     var dx = x2 - x1;
     var dy = y2 - y1;
-    for ( i = 0; i < this.gpstrack.routeData.x.length; i++) {
+    for ( i = 0; i < this.gpstrack.routeData.x.length; i += 1) {
      this.gpstrack.routeData.x[i] = this.gpstrack.baseX[i] + dx;
      this.gpstrack.routeData.y[i] = this.gpstrack.baseY[i] + dy;
     }
@@ -459,12 +461,12 @@ Draw.prototype = {
    var oldx = this.gpstrack.routeData.x[0];
    var oldy = this.gpstrack.routeData.y[0];
    var stopCount = 0;
-   for (var i = 1; i < this.gpstrack.routeData.x.length; i++) {
+   for (var i = 1; i < this.gpstrack.routeData.x.length; i += 1) {
     // lines
     rg2.ctx.lineTo(this.gpstrack.routeData.x[i], this.gpstrack.routeData.y[i]);
     if ((this.gpstrack.routeData.x[i] == oldx) && (this.gpstrack.routeData.y[i] == oldy)) {
      // we haven't moved
-     stopCount++;
+     stopCount += 1;
      // only output at current position if this is the last entry
      if (i === (this.gpstrack.routeData.x.length - 1)) {
       rg2.ctx.fillText((3 * stopCount) + " secs", this.gpstrack.routeData.x[i] + 5, this.gpstrack.routeData.y[i] + 5);
@@ -482,4 +484,4 @@ Draw.prototype = {
    rg2.ctx.stroke();
   }
  }
-}; 
+};

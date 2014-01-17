@@ -1,4 +1,20 @@
 /*global $:false */
+/*global header_colour:false */
+/*global header_text_colour:false */
+/*global json_url:false */
+/*global maps_url:false */
+/*global Image:false */
+/*global Events:false */
+/*global Event:false */
+/*global Courses:false */
+/*global Controls:false */
+/*global Results:false */
+/*global Animation:false */
+/*global Draw:false */
+/*global Manager:false */
+/*global Runner:false */
+/*global Course:false */
+/*global trackTransforms:false */
 var rg2 = ( function() {'use strict';
     var canvas = $("#rg2-map-canvas")[0];
     var ctx = canvas.getContext('2d');
@@ -11,7 +27,6 @@ var rg2 = ( function() {'use strict';
     var animation;
     var manager;
     var drawing;
-    var timer = 0;
     var infoPanelMaximised;
     var infoHideIconSrc;
     var infoShowIconSrc;
@@ -29,6 +44,7 @@ var rg2 = ( function() {'use strict';
       TAB_COURSES : 1,
       TAB_RESULTS : 2,
       TAB_DRAW : 3,
+      TAB_MANAGE : 4,
       DEFAULT_NEW_COMMENT : "Type your comment",
       DEFAULT_EVENT_COMMENT : "Comments (optional)",
       // added to resultid when saving a GPS track
@@ -264,11 +280,15 @@ var rg2 = ( function() {'use strict';
 
       if ($('#rg2-manage').length !== 0) {
         // manage info in template so enable functionality
-        manager = new Manager();      
+        manager = new Manager();
         // hide manager options until login complete
         $("#rg2-manager-options").hide();
         // don't need to see draw tab if manager active
         $("#rg2-draw-tab").hide();
+        // set manager tab active
+        $("#rg2-info-panel").tabs("option", "active", config.TAB_MANAGE);
+        // and disable Events tab to avoid anything being selected
+        $("#rg2-info-panel").tabs("disable", config.TAB_EVENTS);
       }
 
       trackTransforms(ctx);
@@ -297,7 +317,11 @@ var rg2 = ( function() {'use strict';
             if (drawing.gpsFileLoaded()) {
               drawing.adjustTrack(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10), parseInt(pt.x, 10), parseInt(pt.y, 10), evt.shiftKey, evt.ctrlKey);
             } else {
-              ctx.translate(pt.x - dragStart.x, pt.y - dragStart.y);
+              if ($("#rg2-info-panel").tabs("option", "active") === config.TAB_MANAGE) {
+                manager.adjustControls(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10), parseInt(pt.x, 10), parseInt(pt.y, 10), evt.shiftKey, evt.ctrlKey);
+              } else {
+                ctx.translate(pt.x - dragStart.x, pt.y - dragStart.y);
+              }
             }
             dragged = true;
             redraw(false);
@@ -425,14 +449,18 @@ var rg2 = ( function() {'use strict';
           controls.drawControls();
           drawing.drawNewTrack();
         } else {
-          courses.drawCourses(config.FULL_INTENSITY);
-          results.drawTracks();
-          controls.drawControls();
-          // parameter determines if animation time is updated or not
-          if (fromTimer) {
-            animation.runAnimation(true);
+          if (active === config.TAB_MANAGE) {
+            manager.drawControls();
           } else {
-            animation.runAnimation(false);
+            courses.drawCourses(config.FULL_INTENSITY);
+            results.drawTracks();
+            controls.drawControls();
+            // parameter determines if animation time is updated or not
+            if (fromTimer) {
+              animation.runAnimation(true);
+            } else {
+              animation.runAnimation(false);
+            }
           }
         }
       } else {
@@ -553,7 +581,6 @@ var rg2 = ( function() {'use strict';
         console.log("Courses request failed: " + err);
       });
 
-      var draw = new Draw();
     }
 
     function loadNewMap(mapFile) {
@@ -741,8 +768,8 @@ var rg2 = ( function() {'use strict';
       return results.getResultsByCourseID(courseid);
     }
 
-    function getTotalResultsByCourseID() {
-      return results.getTotalResultsByCourseID();
+    function getTotalResults() {
+      return results.getTotalResults();
     }
 
     function drawStart(x, y, text, angle) {
@@ -809,6 +836,13 @@ var rg2 = ( function() {'use strict';
       return events.mapIsGeoreferenced();
     }
 
+    function getMapSize() {
+      var size = {};
+      size.height = map.height;
+      size.width = map.width;
+      return size;
+    }
+
     function getWorldFile() {
       return events.getWorldFile();
     }
@@ -824,7 +858,7 @@ var rg2 = ( function() {'use strict';
     function getActiveEventID() {
       return events.getActiveEventID();
     }
-    
+
     function createEventEditDropdown() {
       events.createEventEditDropdown();
     }
@@ -835,6 +869,7 @@ var rg2 = ( function() {'use strict';
       config : config,
       redraw : redraw,
       ctx : ctx,
+      getMapSize : getMapSize,
       loadNewMap : loadNewMap,
       loadEvent : loadEvent,
       mapIsGeoreferenced : mapIsGeoreferenced,
@@ -858,7 +893,7 @@ var rg2 = ( function() {'use strict';
       getCourseDetails : getCourseDetails,
       getCourseName : getCourseName,
       getResultsByCourseID : getResultsByCourseID,
-      getTotalResultsByCourseID : getTotalResultsByCourseID,
+      getTotalResults : getTotalResults,
       getControlX : getControlX,
       getControlY : getControlY,
       createEventEditDropdown : createEventEditDropdown

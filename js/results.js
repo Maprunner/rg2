@@ -1,3 +1,5 @@
+/*global rg2:false */
+/*global Colours:false */
 function Results() {
 	this.results = [];
 	this.colours = new Colours();
@@ -8,7 +10,7 @@ Results.prototype = {
 
 	addResults : function(data, isScoreEvent) {
 		// for each result
-		for (var i = 0; i < data.length; i++) {
+		for (var i = 0; i < data.length; i += 1) {
 			var result = new Result(data[i], isScoreEvent, this.colours.getNextColour());
 			this.results.push(result);
 		}
@@ -16,16 +18,16 @@ Results.prototype = {
 
 	getResultsByCourseID : function(courseid) {
 		var count = 0;
-		for (var i = 0; i < this.results.length; i++) {
+		for (var i = 0; i < this.results.length; i += 1) {
 			if (this.results[i].courseid === courseid) {
-				count++;
+				count += 1;
 			}
 
 		}
 		return count;
 	},
 
-	getTotalResultsByCourseID : function(courseid) {
+	getTotalResults : function() {
 		return this.results.length;
 	},
 
@@ -42,7 +44,7 @@ Results.prototype = {
 	},
 
 	drawTracks : function() {
-		for (var i = 0; i < this.results.length; i++) {
+		for (var i = 0; i < this.results.length; i += 1) {
 			this.results[i].drawTrack();
 		}
 	},
@@ -71,7 +73,7 @@ Results.prototype = {
 
 	// add all tracks for one course
 	putTracksOnDisplay : function(courseid) {
-		for (var i = 0; i < this.results.length; i++) {
+		for (var i = 0; i < this.results.length; i += 1) {
 			if (this.results[i].courseid == courseid) {
 				this.results[i].putTrackOnDisplay();
 			}
@@ -81,7 +83,7 @@ Results.prototype = {
 
 	// put all tracks for all courses on display
 	putAllTracksOnDisplay : function() {
-		for (var i = 0; i < this.results.length; i++) {
+		for (var i = 0; i < this.results.length; i += 1) {
 			this.results[i].putTrackOnDisplay();
 		}
 		this.updateTrackNames();
@@ -89,7 +91,7 @@ Results.prototype = {
 
 	getDisplayedTrackNames : function() {
 		var html = "";
-		for (var i = 0; i < this.results.length; i++) {
+		for (var i = 0; i < this.results.length; i += 1) {
 			if (this.results[i].displayTrack) {
 				html += "<p style='color:" + this.results[i].trackColour + ";'>" + rg2.getCourseName(this.results[i].courseid);
 				html += ": " + this.results[i].name + "</p>";
@@ -99,7 +101,7 @@ Results.prototype = {
 	},
 
 	resultIDExists : function(resultid) {
-		for (var i = 0; i < this.results.length; i++) {
+		for (var i = 0; i < this.results.length; i += 1) {
 			if (resultid === this.results[i].resultid) {
 				return true;
 			}
@@ -108,7 +110,7 @@ Results.prototype = {
 	},
 
 	getSplitsForID : function(resultid) {
-		for (var i = 0; i < this.results.length; i++) {
+		for (var i = 0; i < this.results.length; i += 1) {
 			if (resultid === this.results[i].resultid) {
 				return this.results[i].splits;
 			}
@@ -117,7 +119,7 @@ Results.prototype = {
 	},
 
 	getTimeForID : function(resultid) {
-		for (var i = 0; i < this.results.length; i++) {
+		for (var i = 0; i < this.results.length; i += 1) {
 			if (resultid === this.results[i].resultid) {
 				return this.results[i].time;
 			}
@@ -126,14 +128,14 @@ Results.prototype = {
 	},
 
 	removeAllTracksFromDisplay : function() {
-		for (var i = 0; i < this.results.length; i++) {
+		for (var i = 0; i < this.results.length; i += 1) {
 			this.results[i].removeTrackFromDisplay();
 		}
 		this.updateTrackNames();
 	},
 
 	removeTracksFromDisplay : function(courseid) {
-		for (var i = 0; i < this.results.length; i++) {
+		for (var i = 0; i < this.results.length; i += 1) {
 			if (this.results[i].courseid == courseid) {
 				this.results[i].removeTrackFromDisplay();
 			}
@@ -146,7 +148,7 @@ Results.prototype = {
 		var resultIndex;
 		var j;
 		// for each track
-		for (var i = 0; i < tracks.length; i++) {
+		for (var i = 0; i < tracks.length; i += 1) {
 			resultIndex = tracks[i].resultid;
 			j = 0;
 			// don't add GPS track since we got a better one in the original results
@@ -159,7 +161,7 @@ Results.prototype = {
 						}
 						break;
 					}
-					j++;
+					j += 1;
 				}
 			}
 		}
@@ -192,7 +194,7 @@ Results.prototype = {
 		var temp;
 		var firstCourse = true;
 		var oldCourseID = 0;
-		for (var i = 0; i < this.results.length; i++) {
+		for (var i = 0; i < this.results.length; i += 1) {
 			temp = this.results[i];
 			if (temp.courseid != oldCourseID) {
 				// found a new course so add header
@@ -234,7 +236,7 @@ Results.prototype = {
 		opt.value = null;
 		opt.text = 'Select name';
 		dropdown.options.add(opt);
-		for (var i = 0; i < this.results.length; i++) {
+		for (var i = 0; i < this.results.length; i += 1) {
 			// don't include result if it has a valid track already
 			if ((this.results[i].courseid === courseid) && (!this.results[i].hasValidTrack)) {
 				opt = document.createElement("option");
@@ -244,7 +246,7 @@ Results.prototype = {
 			}
 		}
 		dropdown.options.add(opt);
-	},
+	}
 };
 
 function Result(data, isScoreEvent, colour) {
@@ -276,7 +278,7 @@ function Result(data, isScoreEvent, colour) {
 	this.courseid = parseInt(data.courseid, 10);
 	this.splits = data.splits.split(";");
 	// force to integers to avoid doing it every time we read it
-	for (var i = 0; i < this.splits.length; i++) {
+	for (var i = 0; i < this.splits.length; i += 1) {
 		this.splits[i] = Math.round(this.splits[i]);
 	}
 	// insert a 0 split at the start to make life much easier elsewhere
@@ -337,7 +339,7 @@ Result.prototype = {
 			// set transparency of overprint
 			rg2.ctx.beginPath();
 			rg2.ctx.moveTo(this.trackx[0], this.tracky[0]);
-			for (var i = 1; i < this.trackx.length; i++) {
+			for (var i = 1; i < this.trackx.length; i += 1) {
 				// lines
 				rg2.ctx.lineTo(this.trackx[i], this.tracky[i]);
 			}
@@ -352,7 +354,7 @@ Result.prototype = {
 		var temp = trackcoords.split("N");
 		var xy = 0;
 		// ignore first point hack for now
-		for (var i = 1; i < temp.length; i++) {
+		for (var i = 1; i < temp.length; i += 1) {
 			// coord sets are 2 items in csv format
 			xy = temp[i].split(";");
 			this.trackx.push(parseInt(xy[0], 10));
@@ -401,7 +403,7 @@ Result.prototype = {
 		var previouscontrolindex = 0;
 		// we are assuming the track starts at the start which is index 0...
 		// look at each track point and see if it matches the next control location
-		for ( i = 1; i < this.trackx.length; i++) {
+		for ( i = 1; i < this.trackx.length; i += 1) {
 			// calculate distance while we are looping through
 			x = this.trackx[i];
 			y = this.tracky[i];
@@ -418,11 +420,11 @@ Result.prototype = {
 				deltat = this.xysecs[i] - oldt;
 				olddist = this.cumulativeDistance[previouscontrolindex];
 				deltadist = this.cumulativeDistance[i] - olddist;
-				for (var j = previouscontrolindex; j <= i; j++) {
+				for (var j = previouscontrolindex; j <= i; j += 1) {
 					this.xysecs[j] = oldt + Math.round(((this.cumulativeDistance[j] - olddist) * deltat / deltadist));
 				}
 				previouscontrolindex = i;
-				nextcontrol++;
+				nextcontrol += 1;
 				if (nextcontrol === course.x.length) {
 					// we have found all the controls
 					this.hasValidTrack = true;
@@ -449,7 +451,7 @@ Result.prototype = {
 		var x = 0;
 		var y = 0;
 		// in theory we get one point every three seconds
-		for ( t = 0; t < this.trackx.length; t++) {
+		for ( t = 0; t < this.trackx.length; t += 1) {
 			this.xysecs[t] = 3 * t;
 			x = this.trackx[t];
 			y = this.tracky[t];

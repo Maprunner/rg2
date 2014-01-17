@@ -154,6 +154,7 @@
 			    </form>
 			    <div id="rg2-manager-options">
 			      <button id="btn-add-event">Add new event</button>
+			      <input type=checkbox id="btn-move-map-and-controls"><label for="btn-move-map-and-controls"> Move map and controls together</label>
         	  <select id="rg2-manager-event-select"></select>
 			      <button id="btn-edit-event">Edit selected event</button>
 			      <button id="btn-delete-event">Delete selected event</button>
@@ -237,6 +238,7 @@
         	  <input type='file' accept='.xml' id='rg2-load-course-file' />
             <label for="rg2-load-course-file">Course file</label>       	   
         	</div>
+        	<div id="rg2-course-allocations"></div>
           <div id="rg2-results-grouping">
             <label><input type='radio' name='rg2-course-breakdown' val='course' checked="checked" />Group results by course</label>
             <label><input type='radio' name='rg2-course-breakdown' val='class' />Group results by class</label>

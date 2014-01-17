@@ -1,3 +1,4 @@
+/*global rg2:false */
 function Controls() {
 	this.controls = [];
 	this.displayControls = false;
@@ -8,7 +9,7 @@ Controls.prototype = {
 
 	addControl : function(code, x, y) {
 		var newCode = true;
-		for (var i = 0; i < this.controls.length; i++) {
+		for (var i = 0; i < this.controls.length; i += 1) {
 			if (this.controls[i].code === code) {
 				newCode = false;
 				break;
@@ -32,7 +33,7 @@ Controls.prototype = {
 			rg2.ctx.font = '20pt Arial';
 			rg2.ctx.fillStyle = rg2.config.PURPLE;
 			rg2.ctx.globalAlpha = 1.0;
-			for (var i = 0; i < this.controls.length; i++) {
+			for (var i = 0; i < this.controls.length; i += 1) {
 				// Assume things starting with 'F' are a Finish
 				if (this.controls[i].code.indexOf('F') === 0) {
 					this.drawFinish(this.controls[i].x, this.controls[i].y, this.controls[i].code);
@@ -172,6 +173,10 @@ Controls.prototype = {
 			$("#btn-toggle-controls").prop("title", "Hide all controls map");
 		}
 		this.displayControls = !this.displayControls;
+	},
+	
+	displayAllControls: function() {
+    this.displayControls = true;
 	}
 };
 
@@ -182,5 +187,5 @@ function Control(code, x, y) {
 }
 
 Control.prototype = {
-	Constructor : Control,
+	Constructor : Control
 };

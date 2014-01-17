@@ -1,3 +1,7 @@
+/*global rg2:false */
+/*global map:false */
+/*global getLatLonDistance:false */
+/*global RouteData:false */
 function GPSTrack() {
 	this.lat = [];
 	this.lon = [];
@@ -49,9 +53,9 @@ GPSTrack.prototype = {
 			var timestring;
 			xml = $.parseXML(evt.target.result);
 			trksegs = xml.getElementsByTagName('trkseg');
-			for ( i = 0; i < trksegs.length; i++) {
+			for ( i = 0; i < trksegs.length; i += 1) {
 				trkpts = trksegs[i].getElementsByTagName('trkpt');
-				for ( j = 0; j < trkpts.length; j++) {
+				for ( j = 0; j < trkpts.length; j += 1) {
 					self.lat.push(trkpts[j].getAttribute('lat'));
 					self.lon.push(trkpts[j].getAttribute('lon'));
 					timestring = trkpts[j].childNodes[3].textContent;
@@ -77,9 +81,6 @@ GPSTrack.prototype = {
 	},
 
 	processGPSTrack : function() {
-		var x;
-		var y;
-
 		if (rg2.mapIsGeoreferenced()) {
 			// translate lat/lon to x,y based on world file info: see http://en.wikipedia.org/wiki/World_file
 			var w = rg2.getWorldFile();
@@ -88,7 +89,7 @@ GPSTrack.prototype = {
 			var xCorrection = (w.B * w.F) - (w.E * w.C);
 			var yCorrection = (w.D * w.C) - (w.A * w.F);
 			var i;
-			for ( i = 0; i < this.lat.length; i++) {
+			for ( i = 0; i < this.lat.length; i += 1) {
 				this.routeData.x[i] = Math.round(((w.E * this.lon[i]) - (w.B * this.lat[i]) + xCorrection) / AEDB);
 				this.routeData.y[i] = Math.round(((-1 * w.D * this.lon[i]) + (w.A * this.lat[i]) + yCorrection) / AEDB);
 			}
@@ -98,7 +99,7 @@ GPSTrack.prototype = {
 			var minY = this.routeData.y[0];
 			var maxY = this.routeData.y[0];
 
-			for ( i = 1; i < this.routeData.x.length; i++) {
+			for ( i = 1; i < this.routeData.x.length; i += 1) {
 				maxX = Math.max(maxX, this.routeData.x[i]);
 				maxY = Math.max(maxY, this.routeData.y[i]);
 				minX = Math.min(minX, this.routeData.x[i]);
@@ -134,7 +135,7 @@ GPSTrack.prototype = {
 		var minLon = this.lon[0];
 		var x;
 		var y;
-		for (var i = 1; i < this.lat.length; i++) {
+		for (var i = 1; i < this.lat.length; i += 1) {
 			maxLat = Math.max(maxLat, this.lat[i]);
 			maxLon = Math.max(maxLon, this.lon[i]);
 			minLat = Math.min(minLat, this.lat[i]);
@@ -152,7 +153,7 @@ GPSTrack.prototype = {
 		var minControlY = controly[0];
 		var maxControlY = controly[0];
 
-		for ( i = 1; i < controlx.length; i++) {
+		for ( i = 1; i < controlx.length; i += 1) {
 			maxControlX = Math.max(maxControlX, controlx[i]);
 			maxControlY = Math.max(maxControlY, controly[i]);
 			minControlX = Math.min(minControlX, controlx[i]);
@@ -183,10 +184,10 @@ GPSTrack.prototype = {
 		var deltaX = minControlX - (this.routeData.x[0] - controlx[0]);
 		var deltaY = minControlY - (this.routeData.y[0] - controly[0]);
 
-		for ( i = 0; i < this.lat.length; i++) {
+		for ( i = 0; i < this.lat.length; i += 1) {
 			this.routeData.x[i] = ((this.lon[i] - minLon) * scaleX) + deltaX;
 			this.routeData.y[i] = (-1 * (this.lat[i] - maxLat) * scaleY) + deltaY;
 		}
 
-	},
+	}
 };

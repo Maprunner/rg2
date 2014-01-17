@@ -1,3 +1,5 @@
+/*global rg2:false */
+/*global getAngle:false */
 function Courses() {
 	// indexed by the provided courseid which omits 0 and hence a sparse array
 	// careful when iterating or getting length!
@@ -24,7 +26,7 @@ Courses.prototype = {
 
 	incrementTracksCount : function(courseid) {
 		this.courses[courseid].incrementTracksCount();
-		this.totaltracks++;
+		this.totaltracks += 1;
 	},
 
 	gettrackcountCount : function(courseid) {
@@ -37,7 +39,7 @@ Courses.prototype = {
 
 	addCourse : function(courseObject) {
 		this.courses[courseObject.courseid] = courseObject;
-		this.numberofcourses++;
+		this.numberofcourses += 1;
 		// allow for courses with no defined controls
 		// careful here: != catches null and undefined, but !== just catches undefined
 		if (this.courses[courseObject.courseid].codes !== undefined) {
@@ -58,7 +60,7 @@ Courses.prototype = {
 		opt.text = "Select course";
 		dropdown.options.add(opt);
 
-		for (i = 0; i < this.courses.length; i++) {
+		for (i = 0; i < this.courses.length; i += 1) {
 			if (this.courses[i] !== undefined) {
 				opt = document.createElement("option");
 				opt.value = i;
@@ -74,7 +76,7 @@ Courses.prototype = {
 		var dropdown = document.getElementById("rg2-control-select");
 		var opt;
 		var i;
-		for (i = 0; i < this.highestControlNumber; i++) {
+		for (i = 0; i < this.highestControlNumber; i += 1) {
 			opt = document.createElement("option");
 			opt.value = i;
 			if (i === 0) {
@@ -98,7 +100,7 @@ Courses.prototype = {
 	},
 
 	drawCourses : function(intensity) {
-		for (var i = 0; i < this.courses.length; i++) {
+		for (var i = 0; i < this.courses.length; i += 1) {
 			if (this.courses[i] !== undefined) {
 				this.courses[i].drawCourse(intensity);
 			}
@@ -112,7 +114,7 @@ Courses.prototype = {
 	},
 
 	putAllOnDisplay : function() {
-		for (var i = 0; i < this.courses.length; i++) {
+		for (var i = 0; i < this.courses.length; i += 1) {
 			if (this.courses[i] !== undefined) {
 				this.courses[i].display = true;
 			}
@@ -120,7 +122,7 @@ Courses.prototype = {
 	},
 
 	removeAllFromDisplay : function() {
-		for (var i = 0; i < this.courses.length; i++) {
+		for (var i = 0; i < this.courses.length; i += 1) {
 			if (this.courses[i] !== undefined) {
 				this.courses[i].display = false;
 			}
@@ -151,14 +153,14 @@ Courses.prototype = {
 		var x;
 		var y;
 		// for all courses
-		for (var i = 0; i < this.courses.length; i++) {
+		for (var i = 0; i < this.courses.length; i += 1) {
 			if (this.courses[i] !== undefined) {
 				codes = this.courses[i].codes;
 				x = this.courses[i].x;
 				y = this.courses[i].y;
 				// for all controls on course
 				if (codes !== undefined) {
-					for (var j = 0; j < codes.length; j++) {
+					for (var j = 0; j < codes.length; j += 1) {
 						controls.addControl(codes[j], x[j], y[j]);
 					}
 				}
@@ -168,7 +170,7 @@ Courses.prototype = {
 
 	formatCoursesAsTable : function() {
 		var html = "<table class='coursemenutable'><tr><th>Course</th><th>Show</th><th>Runners</th><th>Tracks</th><th>Show</th></tr>";
-		for (var i = 0; i < this.courses.length; i++) {
+		for (var i = 0; i < this.courses.length; i += 1) {
 			if (this.courses[i] !== undefined) {
 				html += "<tr><td>" + this.courses[i].name + "</td>";
 				html += "<td><input class='courselist' id=" + i + " type=checkbox name=course></input></td>";
@@ -185,7 +187,7 @@ Courses.prototype = {
 		// add bottom row for all courses checkboxes
 		html += "<tr><td>All</td>";
 		html += "<td><input class='allcourses' id=" + i + " type=checkbox name=course></input></td>";
-		html += "<td>" + rg2.getTotalResultsByCourseID() + "</td>";
+		html += "<td>" + rg2.getTotalResults() + "</td>";
 		if (this.totaltracks > 0) {
 			html += "<td>" + this.totaltracks + "</td><td><input id=" + i + " class='alltracks' type=checkbox name=track></input></td>";
 		} else {
@@ -211,7 +213,7 @@ Course.prototype = {
 	Constructor : Course,
 
 	incrementTracksCount : function() {
-		this.trackcount++;
+		this.trackcount += 1;
 	},
 	getCourseID : function() {
 		return this.courseid;
@@ -236,7 +238,7 @@ Course.prototype = {
 				angle = getAngle(this.x[0], this.y[0], this.x[1], this.y[1]);
 			}
 			rg2.drawStart(this.x[0], this.y[0], "", angle);
-			for ( i = 0; i < (this.x.length - 1); i++) {
+			for ( i = 0; i < (this.x.length - 1); i += 1) {
 				angle = getAngle(this.x[i], this.y[i], this.x[i + 1], this.y[i + 1]);
 				if (i === 0) {
 					c1x = this.x[i] + (rg2.config.START_TRIANGLE_LENGTH * Math.cos(angle));
@@ -264,7 +266,7 @@ Course.prototype = {
 				}
 
 			}
-			for (var i = 1; i < (this.x.length - 1); i++) {
+			for (var i = 1; i < (this.x.length - 1); i += 1) {
 				rg2.drawSingleControl(this.x[i], this.y[i], i);
 			}
 			rg2.drawFinish(this.x[this.x.length - 1], this.y[this.y.length - 1], "");

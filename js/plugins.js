@@ -1,3 +1,7 @@
+/* exported getLatLonDistance */
+/* exported getAngle */
+/* exported trackTransforms */
+
 // Avoid `console` errors in browsers that lack a console.
 ( function() {
 		var method;
@@ -7,7 +11,8 @@
 		var length = methods.length;
 		var console = (window.console = window.console || {});
 
-		while (length--) {
+		while (length) {
+			length -= 1;
 			method = methods[length];
 
 			// Only stub undefined methods.
@@ -27,7 +32,7 @@ Colours.prototype = {
 	Constructor : Colours,
 
 	getNextColour : function() {
-		this.colourIndex++;
+		this.colourIndex += 1;
 		if (this.colourIndex === this.colours.length) {
 			this.colourIndex = 0;
 		}

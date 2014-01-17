@@ -1,3 +1,4 @@
+/*global rg2:false */
 function Events() {
 	this.events = [];
 	this.activeEventID = null;
@@ -63,7 +64,7 @@ Events.prototype = {
         return true;
     } else {
       return false;
-    } 
+    }
   },
 
 	mapIsGeoreferenced : function() {
@@ -77,8 +78,8 @@ Events.prototype = {
 	formatEventsAsMenu : function() {
 		var title;
 		var html = '';
-		var i; 
-		for (i = this.events.length - 1; i >= 0; i--) {
+		var i;
+		for (i = this.events.length - 1; i >= 0; i -= 1) {
 			if (this.events[i].comment !== "") {
 				title = this.events[i].type + " event on " + this.events[i].date + ": " + this.events[i].comment;
 			} else {

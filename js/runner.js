@@ -1,3 +1,5 @@
+/*global rg2:false */
+/*exported Runner */
 // animated runner details
 function Runner(resultid, colour) {
 	var res = rg2.getFullResult(resultid);
@@ -22,7 +24,6 @@ function Runner(resultid, colour) {
 	this.y[0] = course.y[0];
 	var timeatprevcontrol = 0;
 	var timeatcontrol = 0;
-	var distance = 0;
 	var timeatxy = 0;
 	var timeatprevxy = 0;
 	var tox;
@@ -38,10 +39,6 @@ function Runner(resultid, colour) {
 	var t;
 	var xy;
 	var dist;
-	var oldx = res.trackx[0];
-	var oldy = res.tracky[0];
-	var x = 0;
-	var y = 0;
 
 	if (res.hasValidTrack) {
 		// x,y are indexed by time in seconds
@@ -53,7 +50,7 @@ function Runner(resultid, colour) {
 		fromdist = 0;
 		dist = 0;
 		// for each point on track
-		for ( xy = 1; xy < res.xysecs.length; xy++) {
+		for ( xy = 1; xy < res.xysecs.length; xy += 1) {
 			tox = res.trackx[xy];
 			toy = res.tracky[xy];
 			diffx = tox - fromx;
@@ -62,7 +59,7 @@ function Runner(resultid, colour) {
 			diffdist = dist - fromdist;
 			timeatxy = res.xysecs[xy];
 			difft = timeatxy - timeatprevxy;
-			for ( t = timeatprevxy + 1; t < timeatxy; t++) {
+			for ( t = timeatprevxy + 1; t < timeatxy; t += 1) {
 				this.x[t] = Math.round(fromx + ((t - timeatprevxy) * diffx / difft));
 				this.y[t] = Math.round(fromy + ((t - timeatprevxy) * diffy / difft));
 				cumulativeDistance[t] = Math.round(fromdist + ((t - timeatprevxy) * diffdist / difft));
@@ -85,7 +82,7 @@ function Runner(resultid, colour) {
 		fromy = course.y[0];
 		fromdist = 0;
 		dist = 0;
-		for ( control = 1; control < course.codes.length; control++) {
+		for ( control = 1; control < course.codes.length; control += 1) {
 			tox = course.x[control];
 			toy = course.y[control];
 			diffx = tox - fromx;
@@ -94,7 +91,7 @@ function Runner(resultid, colour) {
 			diffdist = dist - fromdist;
 			timeatcontrol = res.splits[control];
 			difft = timeatcontrol - timeatprevcontrol;
-			for ( t = timeatprevcontrol + 1; t < timeatcontrol; t++) {
+			for ( t = timeatprevcontrol + 1; t < timeatcontrol; t += 1) {
 				this.x[t] = Math.round(fromx + ((t - timeatprevcontrol) * diffx / difft));
 				this.y[t] = Math.round(fromy + ((t - timeatprevcontrol) * diffy / difft));
 				cumulativeDistance[t] = Math.round(fromdist + ((t - timeatprevxy) * diffdist / difft));
@@ -114,7 +111,7 @@ function Runner(resultid, colour) {
 	this.cumulativeTrackDistance[0] = 0;
 
 	if (course.codes !== undefined) {
-		for ( control = 1; control < course.codes.length; control++) {
+		for ( control = 1; control < course.codes.length; control += 1) {
 			this.cumulativeTrackDistance[control] = Math.round(cumulativeDistance[res.splits[control]]);
 			this.legTrackDistance[control] = this.cumulativeTrackDistance[control] - this.cumulativeTrackDistance[control - 1];
 		}

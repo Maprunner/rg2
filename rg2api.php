@@ -400,7 +400,7 @@ function getResultsForEvent($eventid) {
 	  	$detail["resultid"] = $data[0];
 			$detail["courseid"] = $data[1];
 			$detail["coursename"] = encode_rg_input($data[2]);
-            $detail["name"] = encode_rg_input($data[3]);
+      $detail["name"] = encode_rg_input($data[3]);
 			$detail["starttime"] = $data[4];
 			$detail["databaseid"] = $data[5];
 			$detail["scoreref"] = $data[6];

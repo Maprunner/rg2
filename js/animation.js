@@ -1,3 +1,7 @@
+/*global rg2:false */
+/*global Colours:false */
+/*global clearInterval:false */
+/*global setInterval:false */
  function Animation() {
 	'use strict';
 	this.runners = [];
@@ -61,7 +65,7 @@ Animation.prototype = {
 		if (this.runners.length < 1) {
 			return html;
 		}
-		for (var i = 0; i < this.runners.length; i++) {
+		for (var i = 0; i < this.runners.length; i += 1) {
 			html += "<p style='color:" + this.runners[i].colour + ";'>" + this.runners[i].coursename + " " + this.runners[i].name + "</p>";
 		}
 		return html;
@@ -80,7 +84,7 @@ Animation.prototype = {
 		var legSplit = [];
 		var prevControlSecs = 0;
 		// find maximum number of controls to set size of table
-		for ( i = 0; i < this.runners.length; i++) {
+		for ( i = 0; i < this.runners.length; i += 1) {
 			if (this.runners[i].splits.length > maxControls) {
 				maxControls = this.runners[i].splits.length;
 			}
@@ -89,25 +93,25 @@ Animation.prototype = {
 		maxControls -= 2;
 
 		html = "<table class='splitstable'><tr><th>Course</th><th>Name</th>";
-		for ( i = 1; i <= maxControls; i++) {
+		for ( i = 1; i <= maxControls; i += 1) {
 			html += "<th>" + i + "</th>";
 		}
 		html += "<th>F</th></tr>";
-		for ( i = 0; i < this.runners.length; i++) {
+		for ( i = 0; i < this.runners.length; i += 1) {
 			run = this.runners[i];
 			prevControlSecs = 0;
 			html += "<tr class='splitsname-row'><td>" + run.coursename + "</td><td>" + run.name + "</td>";
-			for ( j = 1; j < run.splits.length; j++) {
+			for ( j = 1; j < run.splits.length; j += 1) {
 				html += "<td>" + this.formatSecsAsMMSS(run.splits[j]) + "</td>";
 				legSplit[j] = run.splits[j] - prevControlSecs;
 				prevControlSecs = run.splits[j];
 			}
 			html += "</tr><tr class='splitstime-row'><td></td><td></td>";
-			for ( j = 1; j < run.splits.length; j++) {
+			for ( j = 1; j < run.splits.length; j += 1) {
 				html += "<td>" + this.formatSecsAsMMSS(legSplit[j]) + "</td>";
 			}
 			html += "</tr><tr class='splitsdistance-row'><td></td><td>pixels</td>";
-			for ( j = 1; j < run.splits.length; j++) {
+			for ( j = 1; j < run.splits.length; j += 1) {
 				html += "<td>" + run.legTrackDistance[j] + "</td>";
 			}
 
@@ -131,7 +135,7 @@ Animation.prototype = {
 	},
 
 	removeRunner : function(runnerid) {
-		for (var i = 0; i < this.runners.length; i++) {
+		for (var i = 0; i < this.runners.length; i += 1) {
 			if (this.runners[i].runnerid == runnerid) {
 				// delete 1 runner at position i
 				this.runners.splice(i, 1);
@@ -164,7 +168,7 @@ Animation.prototype = {
 		this.earliestStartSecs = 86400;
 		this.latestFinishSecs = 0;
 		this.slowestTimeSecs = 0;
-		for (var i = 0; i < this.runners.length; i++) {
+		for (var i = 0; i < this.runners.length; i += 1) {
 			if (this.runners[i].starttime < this.earliestStartSecs) {
 				this.earliestStartSecs = this.runners[i].starttime;
 			}
@@ -209,12 +213,12 @@ Animation.prototype = {
 			this.massStartControl = 0;
 			this.massStartByControl = true;
 			// get split time at control 1
-			for ( i = 0; i < this.runners.length; i++) {
+			for ( i = 0; i < this.runners.length; i += 1) {
 				this.runners[i].nextStopTime = this.runners[i].splits[1];
 			}
 		} else {
 			this.massStartByControl = false;
-			for ( i = 0; i < this.runners.length; i++) {
+			for ( i = 0; i < this.runners.length; i += 1) {
 				this.runners[i].nextStopTime = rg2.config.VERY_HIGH_TIME_IN_SECS;
 			}
 		}
@@ -306,7 +310,7 @@ Animation.prototype = {
 			tailStartTimeSecs = Math.max(this.animationSecs - this.tailLength, this.startSecs + 1);
 		}
 
-		for ( i = 0; i < this.runners.length; i++) {
+		for ( i = 0; i < this.runners.length; i += 1) {
 			runner = this.runners[i];
 			if (this.realTime) {
 				timeOffset = runner.starttime;
@@ -325,7 +329,7 @@ Animation.prototype = {
 
 			// t runs as real time seconds or 0-based seconds depending on this.realTime
 			//runner.x[] is always indexed in 0-based time so needs to be adjusted for starttime offset
-			for ( t = tailStartTimeSecs; t <= this.animationSecs; t++) {
+			for ( t = tailStartTimeSecs; t <= this.animationSecs; t += 1) {
 				if ((t > timeOffset) && ((t - timeOffset) < runner.nextStopTime)) {
 					rg2.ctx.lineTo(runner.x[t - timeOffset], runner.y[t - timeOffset]);
 				}
@@ -358,7 +362,7 @@ Animation.prototype = {
 		var i;
 		var legTime;
 		// work out if everybody has got to the next control
-		for ( i = 0; i < this.runners.length; i++) {
+		for ( i = 0; i < this.runners.length; i += 1) {
 			legTime = this.runners[i].splits[this.massStartControl + 1] - this.runners[i].splits[this.massStartControl];
 			if (legTime > currentTime) {
 				allAtControl = false;
@@ -367,9 +371,9 @@ Animation.prototype = {
 		}
 		if (allAtControl) {
 			//move on to next control
-			this.massStartControl++;
+			this.massStartControl += 1;
 			// find time at next control
-			for ( i = 0; i < this.runners.length; i++) {
+			for ( i = 0; i < this.runners.length; i += 1) {
 				if (this.massStartControl < (this.runners[i].splits.length)) {
 					// splits includes a start time so index to control is + 1
 					this.runners[i].nextStopTime = this.runners[i].splits[this.massStartControl + 1];
