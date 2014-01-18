@@ -34,8 +34,10 @@
   } else if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   	handlePostRequest($type, $id);
   } else {
-  	die("Invalid request");
+    header('HTTP/1.1 405 Method Not Allowed');
+    header('Allow: GET, POST');
   }
+
 
 //
 // Handle the encoding for input data if
@@ -68,10 +70,32 @@ function handlePostRequest($type, $eventid) {
 	case 'addroute':
     addNewRoute($eventid, $data);
     break;		
+	case 'login':
+    logIn($data);
+    break;	
 	default:
 	  die("Request not recognised: ".$type);
 		break;
 	}	
+}
+
+
+function logIn ($data) {
+
+  if (($handle = fopen(KARTAT_DIRECTORY."uspsw.txt", "r")) !== FALSE) {
+    $pwd = fgets($handle);
+    if ($data->pwd != $pwd) {
+		  header('HTTP/1.1 401 Unauthorized', true, 401);
+			$ok = false;
+		} else {
+		  $ok = true;
+		}
+	} else {
+	  header('HTTP/1.1 401 Unauthorized', true, 401);
+		$ok = false;		
+	}
+  header("Content-type: application/json"); 
+  echo json_encode($ok);
 }
 
 function addNewRoute($eventid, $data) {
@@ -321,7 +345,6 @@ function isScoreEvent($eventid) {
 
 function getResultsForEvent($eventid) {
   $output = array();
-  $row = 0;
 	$comments = 0;  
   $text = array();
   // @ suppresses error report if file does not exist
@@ -371,12 +394,13 @@ function getResultsForEvent($eventid) {
 
   // @ suppresses error report if file does not exist
   if (($handle = @fopen(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt", "r")) !== FALSE) {
+    $row = 0;
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
       $detail = array();
 	  	$detail["resultid"] = $data[0];
 			$detail["courseid"] = $data[1];
 			$detail["coursename"] = encode_rg_input($data[2]);
-            $detail["name"] = encode_rg_input($data[3]);
+      $detail["name"] = encode_rg_input($data[3]);
 			$detail["starttime"] = $data[4];
 			$detail["databaseid"] = $data[5];
 			$detail["scoreref"] = $data[6];

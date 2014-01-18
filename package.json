@@ -1,0 +1,13 @@
+{
+  "name": "rg2",
+  "description": "Routegadget 2",
+  "version": "0.3.0",
+  "repository": "https://github.com/Maprunner/rg2",
+  "devDependencies": {
+    "grunt": "~0.4.2",
+    "grunt-contrib-jshint": "~0.8.0",
+    "grunt-contrib-nodeunit": "~0.2.2",
+    "grunt-contrib-uglify": "~0.2.7",
+    "grunt-contrib-concat": "~0.3.0"
+  }
+}

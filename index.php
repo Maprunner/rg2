@@ -35,6 +35,14 @@
   }
   
   $maps_url = RG_BASE_DIRECTORY."/kartat/";
+	
+	// include manager function as parameter for now until we decide the best way forward
+	if (isset($_GET['manage'])) {
+    $manager = true;
+	} else {
+		$manager = false;
+  }
+
 ?>
 
 <!DOCTYPE html>
@@ -47,7 +55,7 @@
 	<head>
 		<meta charset="utf-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-		<title>Routegadget 2.0 Viewer</title>
+		<title>Routegadget 2.0 Viewer<?php if ($manager) {?> and Manager<?php } ?></title>
 		<meta name="description" content="">
 		<meta name="viewport" content="width=device-width">
 
@@ -79,19 +87,24 @@
 			<div id="rg2-info-panel">
 				<div id="rg2-info-panel-tab-headers">
 				<ul>
-					<li>
+					<li id="rg2-events-tab">
 						<a href="#rg2-event-list">Events</a>
 					</li>
-					<li>
+					<li id="rg2-courses-tab">
 						<a href="#rg2-course-list">Courses</a>
 					</li>
-					<li>
+					<li id="rg2-results-tab">
 						<a href="#rg2-result-list">Results</a>
 					</li>
-					<li>
-						<a href="#rg2-draw">Draw</a>
+          <li id="rg2-draw-tab">
+            <a href="#rg2-draw">Draw</a>
+          </li>
+					<?php if ($manager) { ?>
+					<li id="rg2-manage-tab">
+						<a href="#rg2-manage">Manage</a>
 					</li>
-				</ul>
+					<?php } ?>
+    </ul>
 				</div>
 				<div id="rg2-info-panel-tab-body">
 				<div id="rg2-event-list"></div>
@@ -99,60 +112,85 @@
 					<div id="rg2-course-table"></div>
 				</div>
 				<div id="rg2-result-list"></div>
-				<div id="rg2-draw">
+      <div id="rg2-draw">
           <div id="rg2-select-course">
-        	  Select your course: <select  id="rg2-course-select"></select>
-          </div>					
+           Select course: <select  id="rg2-course-select"></select>
+          </div>     
           <div id="rg2-name-course">
-        	  Select your name: <select  id="rg2-name-select"></select>
+           Select name: <select  id="rg2-name-select"></select>
           </div>
           <div>
-          	<textarea id="rg2-new-comments"></textarea>
+           <textarea id="rg2-new-comments"></textarea>
           </div>
-			    <button id="btn-three-seconds">+3 sec</button>
-			    <button id="btn-undo">Undo</button>
-			    <button id="btn-save-route">Save</button>
-			    <button class="pushright" id="btn-reset-drawing">Reset</button>
+       <button id="btn-three-seconds">+3 sec</button>
+       <button id="btn-undo">Undo</button>
+       <button id="btn-save-route">Save</button>
+       <button class="pushright" id="btn-reset-drawing">Reset</button>
           <hr class="rg2-hr">
           <h3>Load GPS file</h3>
           <div id="rg2-select-gps-file">
-        	  <input type='file' accept='.gpx' id='rg2-load-gps-file'>
-          </div>	
-			    <input type=checkbox id="btn-move-all"><label for="btn-move-all"> Move track and map together</label>
-			    <ul>
-			    	<li>Drag track to align track on map</li>
+           <input type='file' accept='.gpx' id='rg2-load-gps-file'>
+          </div> 
+       <input type=checkbox id="btn-move-all"><label for="btn-move-all"> Move track and map together</label>
+       <ul>
+        <li>Drag track to align track on map</li>
             <li>Single click to lock/unlock a point</li>
             <li>Drag to scale and rotate around locked point</li>
-			    </ul>
-			    <button class="pushright" id="btn-save-gps-route">Save GPS route</button>	
-				</div>
-				</div>
+       </ul>
+       <button class="pushright" id="btn-save-gps-route">Save GPS route</button> 
+    </div>
+				<?php if ($manager) { ?>
+			  <div id="rg2-manage">
+			    <form id="rg2-manager-login">
+			  	  <div>
+			  	  	<label for"rg2-user-name">User name: </label>
+			  	    <input class="pushright" id="rg2-user-name" type="text">
+			  	  </div>
+			  	  <div>
+			  	  	<label for"rg2-password">Password: </label>
+			  	    <input class="pushright" id="rg2-password" type="password">
+            </div>
+			      <button id="btn-login">Log in</button>
+			    </form>
+			    <div id="rg2-manager-options">
+			      <button id="btn-add-event">Add new event</button>
+			      <input type=checkbox id="btn-move-map-and-controls"><label for="btn-move-map-and-controls"> Move map and controls together</label>
+        	  <select id="rg2-manager-event-select"></select>
+			      <button id="btn-edit-event">Edit selected event</button>
+			      <button id="btn-delete-event">Delete selected event</button>
+
+			    </div>
+      </div>	
+		  <?php } ?>
+			 </div>
 		  </div>
 		  <canvas id="rg2-map-canvas">Your browser does not support HTML5</canvas>
-		  <div class="rg2-ani-row row-1">
-			  <div class="rg2-button"><i id="btn-slower" title = "Slower" class="fa fa-minus"></i></div>
-			  <div class="rg2-button"><i id="btn-start-stop" title = "Run" class="fa fa-play"></i></div>
-			  <div class="rg2-button"><i id="btn-faster" title = "Faster" class="fa fa-plus"></i></div>
-        <div id="rg2-clock"></div>
-		  </div>
-		  <div class="rg2-ani-row row-2">
-        <div id="rg2-clock-slider"></div>
-      </div>
-		  <div class="rg2-ani-row row-3">
-        <div id="rg2-replay-start-control">
-      	  Start at: <select  id="rg2-control-select"><option>S</option></select>
+      <div id="rg2-animation-controls">
+		    <div class="rg2-ani-row row-1">
+			    <div class="rg2-button"><i id="btn-slower" title = "Slower" class="fa fa-minus"></i></div>
+			    <div class="rg2-button"><i id="btn-start-stop" title = "Run" class="fa fa-play"></i></div>
+			    <div class="rg2-button"><i id="btn-faster" title = "Faster" class="fa fa-plus"></i></div>
+          <div id="rg2-clock"></div>
+		    </div>
+		    <div class="rg2-ani-row row-2">
+          <div id="rg2-clock-slider"></div>
         </div>
-		    <div class="rg2-button"><i id="btn-real-time" title = "Real time" class="fa fa-clock-o"></i></div>
-			  <div class="rg2-button"><i id="btn-mass-start" title = "Mass start" class="fa fa-users"></i></div>
-		  </div>
-		  <div class="rg2-ani-row row-4">
-        <div id="rg2-tails-spinner">
-          <label for="spn-tail-length">Length</label>
-          <input id="spn-tail-length" name="value" />
-        </div>
-        <div id="rg2-tails-type">
-		      <label for="btn-full-tails">Full tails </label>
-		      <input type="checkbox" id="btn-full-tails" />
+		    <div class="rg2-ani-row row-3">
+          <div id="rg2-replay-start-control">
+      	    Start at: <select  id="rg2-control-select"><option>S</option></select>
+          </div>
+		      <div class="rg2-button"><i id="btn-real-time" title = "Real time" class="fa fa-clock-o"></i></div>
+			    <div class="rg2-button"><i id="btn-mass-start" title = "Mass start" class="fa fa-users"></i></div>
+		    </div>
+		    <div class="rg2-ani-row row-4">
+          <div id="rg2-tails-spinner">
+            <label for="spn-tail-length">Length</label>
+            <input id="spn-tail-length" name="value" />
+          </div>
+          <div id="rg2-tails-type">
+		        <label for="btn-full-tails">Full tails </label>
+		        <input type="checkbox" id="btn-full-tails" />
+		      </div>
 		    </div>
 		  </div>		   
 		  <div id="rg2-track-names"></div>
@@ -167,7 +205,50 @@
 			  <p><?php echo ADDITIONAL_INFO_TEXT; ?></p>
 		  </div>
 		  <div id="rg2-splits-table" title="Splits display"></div>
-   </div>
+      <?php if ($manager) { ?>
+		  <div id="rg2-add-new-event">
+			  <form id="rg2-new-event-details">
+          <div id="rg2-select-event-name">
+            Event name:
+          	<input id="rg2-event-name" type="text" autofocus></input>
+          </div>
+          <div id="rg2-select-map-name">
+            Map name:
+            <input id="rg2-map-name" type="text"></input>
+          </div>
+          <div id="rg2-select-club-name">
+            Club name:
+            <input id="rg2-club-name" type="text"></input>
+          </div>
+          <div id="rg2-select-event-date">
+            Event date:
+            <input id="rg2-event-date" type="text"></input>
+          </div>
+          <div id="rg2-select-event-level">
+            Event level: <select id="rg2-event-level"></select>
+          </div>
+          <textarea id="rg2-event-comments"></textarea>
+          <div id="rg2-select-map-file">
+        	  <input type='file' accept='.jpg' id='rg2-load-map-file' />
+        	  <label for="rg2-load-map-file">Map file</label>
+        	</div>
+          <div id="rg2-select-results-file">
+        	  <input type='file' accept='.csv' id='rg2-load-results-file' />
+            <label for="rg2-load-results-file">Results file</label>
+          </div>
+          <div id="rg2-select-course-file">
+        	  <input type='file' accept='.xml' id='rg2-load-course-file' />
+            <label for="rg2-load-course-file">Course file</label>       	   
+        	</div>
+        	<div id="rg2-course-allocations"></div>
+          <div id="rg2-results-grouping">
+            <label><input type='radio' name='rg2-course-breakdown' val='course' checked="checked" />Group results by course</label>
+            <label><input type='radio' name='rg2-course-breakdown' val='class' />Group results by class</label>
+          </div> 
+        </form>
+		  </div>
+      <?php } ?>
+    </div>
 
 		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
 		<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
@@ -179,6 +260,17 @@
 			var header_text_colour = "<?php echo $header_text_colour; ?>";
 
 		</script>
+		<script src='<?php echo $script_url."events.js"; ?>'></script>
+		<script src='<?php echo $script_url."results.js"; ?>'></script>
+		<script src='<?php echo $script_url."gpstrack.js"; ?>'></script>
+		<script src='<?php echo $script_url."controls.js"; ?>'></script>
+		<script src='<?php echo $script_url."courses.js"; ?>'></script>
+		<script src='<?php echo $script_url."draw.js"; ?>'></script>
+		<script src='<?php echo $script_url."animation.js"; ?>'></script>
+		<script src='<?php echo $script_url."runner.js"; ?>'></script>
+    <?php if ($manager) { ?>
+		<script src='<?php echo $script_url."manager.js"; ?>'></script>
+    <?php } ?>
 		<script src='<?php echo $script_url."rg2.js"; ?>'></script>
 	</body>
 </html>
