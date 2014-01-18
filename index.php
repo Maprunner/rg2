@@ -87,20 +87,20 @@
 			<div id="rg2-info-panel">
 				<div id="rg2-info-panel-tab-headers">
 				<ul>
-					<li>
+					<li id="rg2-events-tab">
 						<a href="#rg2-event-list">Events</a>
 					</li>
-					<li>
+					<li id="rg2-courses-tab">
 						<a href="#rg2-course-list">Courses</a>
 					</li>
-					<li>
+					<li id="rg2-results-tab">
 						<a href="#rg2-result-list">Results</a>
 					</li>
-     <li id="rg2-draw-tab">
-      <a href="#rg2-draw">Draw</a>
-     </li>
+          <li id="rg2-draw-tab">
+            <a href="#rg2-draw">Draw</a>
+          </li>
 					<?php if ($manager) { ?>
-					<li>
+					<li id="rg2-manage-tab">
 						<a href="#rg2-manage">Manage</a>
 					</li>
 					<?php } ?>
@@ -165,30 +165,32 @@
 			 </div>
 		  </div>
 		  <canvas id="rg2-map-canvas">Your browser does not support HTML5</canvas>
-		  <div class="rg2-ani-row row-1">
-			  <div class="rg2-button"><i id="btn-slower" title = "Slower" class="fa fa-minus"></i></div>
-			  <div class="rg2-button"><i id="btn-start-stop" title = "Run" class="fa fa-play"></i></div>
-			  <div class="rg2-button"><i id="btn-faster" title = "Faster" class="fa fa-plus"></i></div>
-        <div id="rg2-clock"></div>
-		  </div>
-		  <div class="rg2-ani-row row-2">
-        <div id="rg2-clock-slider"></div>
-      </div>
-		  <div class="rg2-ani-row row-3">
-        <div id="rg2-replay-start-control">
-      	  Start at: <select  id="rg2-control-select"><option>S</option></select>
+      <div id="rg2-animation-controls">
+		    <div class="rg2-ani-row row-1">
+			    <div class="rg2-button"><i id="btn-slower" title = "Slower" class="fa fa-minus"></i></div>
+			    <div class="rg2-button"><i id="btn-start-stop" title = "Run" class="fa fa-play"></i></div>
+			    <div class="rg2-button"><i id="btn-faster" title = "Faster" class="fa fa-plus"></i></div>
+          <div id="rg2-clock"></div>
+		    </div>
+		    <div class="rg2-ani-row row-2">
+          <div id="rg2-clock-slider"></div>
         </div>
-		    <div class="rg2-button"><i id="btn-real-time" title = "Real time" class="fa fa-clock-o"></i></div>
-			  <div class="rg2-button"><i id="btn-mass-start" title = "Mass start" class="fa fa-users"></i></div>
-		  </div>
-		  <div class="rg2-ani-row row-4">
-        <div id="rg2-tails-spinner">
-          <label for="spn-tail-length">Length</label>
-          <input id="spn-tail-length" name="value" />
-        </div>
-        <div id="rg2-tails-type">
-		      <label for="btn-full-tails">Full tails </label>
-		      <input type="checkbox" id="btn-full-tails" />
+		    <div class="rg2-ani-row row-3">
+          <div id="rg2-replay-start-control">
+      	    Start at: <select  id="rg2-control-select"><option>S</option></select>
+          </div>
+		      <div class="rg2-button"><i id="btn-real-time" title = "Real time" class="fa fa-clock-o"></i></div>
+			    <div class="rg2-button"><i id="btn-mass-start" title = "Mass start" class="fa fa-users"></i></div>
+		    </div>
+		    <div class="rg2-ani-row row-4">
+          <div id="rg2-tails-spinner">
+            <label for="spn-tail-length">Length</label>
+            <input id="spn-tail-length" name="value" />
+          </div>
+          <div id="rg2-tails-type">
+		        <label for="btn-full-tails">Full tails </label>
+		        <input type="checkbox" id="btn-full-tails" />
+		      </div>
 		    </div>
 		  </div>		   
 		  <div id="rg2-track-names"></div>

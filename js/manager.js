@@ -24,11 +24,14 @@ function Manager() {
   this.allocationsDisplayed = false;
   this.mapWidth = 0;
   this.mapHeight = 0;
-  this.backgroundLocked = true;
+  this.backgroundLocked = false;
   this.handleX = null;
   this.handleY = null;
+  this.HANDLE_DOT_RADIUS = 10;
+  this.handleColor = '#ff0000';
 
   var self = this;
+
   $("#rg2-manager-login").submit(function(event) {
     self.user.name = $("#rg2-user-name").val();
     self.user.pwd = $("#rg2-password").val();
@@ -455,9 +458,11 @@ Manager.prototype = {
 
       var xRange = maxX - minX;
       var yRange = maxY - minY;
-      for ( i = 1; i < this.newcontrols.controls.length; i += 1) {
+      for ( i = 0; i < this.newcontrols.controls.length; i += 1) {
         this.newcontrols.controls[i].x = (this.newcontrols.controls[i].x - minX) * (this.mapWidth / xRange);
-        this.newcontrols.controls[i].y = (this.newcontrols.controls[i].y - minY) * (this.mapHeight / yRange);
+        this.newcontrols.controls[i].y = this.mapHeight - ((this.newcontrols.controls[i].y - minY) * (this.mapHeight/ yRange));
+        this.newcontrols.controls[i].oldX = this.newcontrols.controls[i].x;
+        this.newcontrols.controls[i].oldY = this.newcontrols.controls[i].y;
       }
       this.newcontrols.displayAllControls();
     }
@@ -502,8 +507,8 @@ Manager.prototype = {
   createEventLevelDropdown : function() {
     $("#rg2-event-level").empty();
     var dropdown = document.getElementById("rg2-event-level");
-    var types = ["National", "Regional", "Local", "Training", "International"];
-    var abbrev = ["N", "R", "L", "T", "I"];
+    var types = ["Local", "Regional", "National", "Training", "International"];
+    var abbrev = ["L", "R", "N", "T", "I"];
     var opt;
     var i;
     for ( i = 0; i < types.length; i += 1) {
@@ -547,7 +552,24 @@ Manager.prototype = {
   drawControls : function() {
     if ((this.mapLoaded) && (this.newcontrols.controls.length > 0)) {
       this.newcontrols.drawControls();
+
+      // locked point for control edit
+      if (this.handleX !== null) {
+        rg2.ctx.lineWidth = 2;
+        rg2.ctx.strokeStyle = this.handleColor;
+        rg2.ctx.fillStyle = this.handleColour;
+        rg2.ctx.globalAlpha = 1.0;
+
+        rg2.ctx.beginPath();
+        rg2.ctx.arc(this.handleX, this.handleY, this.HANDLE_DOT_RADIUS, 0, 2 * Math.PI, false);
+        rg2.ctx.fill();
+        rg2.ctx.beginPath();
+        rg2.ctx.arc(this.handleX, this.handleY, 2 * this.HANDLE_DOT_RADIUS, 0, 2 * Math.PI, false);
+        rg2.ctx.stroke();
+      }
+
     }
+
   },
 
   // based on adjustTrack from draw.js
@@ -562,27 +584,24 @@ Manager.prototype = {
       rg2.ctx.translate(x2 - x1, y2 - y1);
     } else {
       if (this.handleX !== null) {
-        // scale and rotate controls
+        // scale controls
         var scaleX = (x2 - this.handleX) / (x1 - this.handleX);
         var scaleY = (y2 - this.handleY) / (y1 - this.handleY);
-        var oldAngle = getAngle(x1, y1, this.handleX, this.handleY);
-        var newAngle = getAngle(x2, y2, this.handleX, this.handleY);
-        var angle = newAngle - oldAngle;
-        //console.log (x1, y1, x2, y2, this.handleX, this.handleY, scaleX, scaleY, oldAngle, newAngle, angle);
-
+        // don't rotate: we are assuming controls and map are already rotated the same
+        //console.log (x1, y1, x2, y2, this.handleX, this.handleY, scaleX, scaleY);
         for ( i = 0; i < this.newcontrols.controls.length; i += 1) {
-          x = this.newcontrols.controls[i].x - this.handleX;
-          y = this.newcontrols.controls[i].y - this.handleY;
-          this.newcontrols.controls[i].tmpX = (((Math.cos(angle) * x) - (Math.sin(angle) * y)) * scaleX) + this.handleX;
-          this.newcontrols.controls[i].tmpY = (((Math.sin(angle) * x) + (Math.cos(angle) * y)) * scaleY) + this.handleY;
+          x = this.newcontrols.controls[i].oldX - this.handleX;
+          y = this.newcontrols.controls[i].oldY - this.handleY;
+          this.newcontrols.controls[i].x = (x * scaleX) + this.handleX;
+          this.newcontrols.controls[i].y = (y * scaleY) + this.handleY;
         }
       } else {
         // drag controls
         dx = x2 - x1;
         dy = y2 - y1;
         for ( i = 0; i < this.newcontrols.controls.length; i += 1) {
-          this.newcontrols.controls[i].tmpX = this.newcontrols.controls[i].x + dx;
-          this.newcontrols.controls[i].tmpY = this.newcontrols.controls[i].y + dy;
+          this.newcontrols.controls[i].x = this.newcontrols.controls[i].oldX + dx;
+          this.newcontrols.controls[i].y = this.newcontrols.controls[i].oldY + dy;
         }
       }
     }
@@ -593,13 +612,23 @@ Manager.prototype = {
     if ((this.mapLoaded) && (this.newcontrols.controls.length > 0)) {
       // rebaseline control locations
       for ( i = 0; i < this.newcontrols.controls.length; i += 1) {
-        this.newcontrols.controls[i].x = this.newcontrols.controls[i].tmpX;
-        this.newcontrols.controls[i].y = this.newcontrols.controls[i].tmpY;
+        this.newcontrols.controls[i].oldX = this.newcontrols.controls[i].x;
+        this.newcontrols.controls[i].oldY = this.newcontrols.controls[i].y;
       }
-
-      this.gpstrack.baseX = this.gpstrack.routeData.x.slice(0);
-      this.gpstrack.baseY = this.gpstrack.routeData.y.slice(0);
       rg2.redraw(false);
+    }
+  },
+
+  mouseUp : function(x, y) {
+    if ((this.mapLoaded) && (this.newcontrols.controls.length > 0)) {
+      // adjusting the track
+      if (this.handleX === null) {
+        this.handleX = x;
+        this.handleY = y;
+      } else {
+        this.handleX = null;
+        this.handleY = null;
+      }
     }
   },
 

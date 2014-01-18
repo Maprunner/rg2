@@ -279,16 +279,21 @@ var rg2 = ( function() {'use strict';
       });
 
       if ($('#rg2-manage').length !== 0) {
-        // manage info in template so enable functionality
+        // manage info in template to enable functionality
         manager = new Manager();
+        // hide animation controls
+        $("#rg2-animation-controls").hide();
         // hide manager options until login complete
         $("#rg2-manager-options").hide();
-        // don't need to see draw tab if manager active
+        // disable Events tab to avoid anything being selected
+        $("#rg2-info-panel").tabs("disable", config.TAB_EVENTS);
+        // don't need to see other tabs if manager active
         $("#rg2-draw-tab").hide();
+        $("#rg2-results-tab").hide();
+        $("#rg2-courses-tab").hide();
+        $("#rg2-events-tab").hide();
         // set manager tab active
         $("#rg2-info-panel").tabs("option", "active", config.TAB_MANAGE);
-        // and disable Events tab to avoid anything being selected
-        $("#rg2-info-panel").tabs("disable", config.TAB_EVENTS);
       }
 
       trackTransforms(ctx);
@@ -331,10 +336,19 @@ var rg2 = ( function() {'use strict';
 
       canvas.addEventListener('mouseup', function(evt) {
         //console.log ("Mouseup" + dragStart.x + ": " + dragStart.y);
+        var active = $("#rg2-info-panel").tabs("option", "active");
         if (!dragged) {
-          drawing.mouseUp(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10));
+          if (active === config.TAB_MANAGE) {
+            manager.mouseUp(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10));
+          } else {
+            drawing.mouseUp(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10));
+          }
         } else {
-          drawing.dragEnded();
+          if (active === config.TAB_MANAGE) {
+            manager.dragEnded();
+          } else {
+            drawing.dragEnded();
+          }
         }
         dragStart = null;
         redraw(false);
