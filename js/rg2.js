@@ -1,6 +1,7 @@
 /*global $:false */
 /*global header_colour:false */
 /*global header_text_colour:false */
+/*global rg2VersionInfo:false */
 /*global json_url:false */
 /*global maps_url:false */
 /*global Image:false */
@@ -37,7 +38,12 @@ var rg2 = ( function() {'use strict';
     var dragged;
     var requestedHash;
     var requestedEventID;
-
+    var managing;
+    
+    // jQuery cache items
+    var $rg2infopanel;
+    var $rg2eventtitle;
+    
     var config = {
       DEFAULT_SCALE_FACTOR : 1.1,
       TAB_EVENTS : 0,
@@ -73,9 +79,19 @@ var rg2 = ( function() {'use strict';
     };
 
     function init() {
+      // cache jQuery things we use a lot
+      $rg2infopanel = $("#rg2-info-panel");
+      $rg2eventtitle = $("#rg2-event-title");
+      
+      if ($('#rg2-manage').length !== 0) {
+        managing = true;
+      } else {
+        managing = false;
+      }
+          
       // check if a specific event has been requested
       requestedHash = window.location.hash;
-      if (requestedHash) {
+      if ((requestedHash) && (!managing)) {
         requestedEventID = parseInt(requestedHash.replace("#", ""), 10);
       }
 
@@ -87,8 +103,16 @@ var rg2 = ( function() {'use strict';
       $("#btn-three-seconds").button().button("disable");
 
       // disable tabs until we have loaded something
-      $("#rg2-info-panel").tabs({
+      $rg2infopanel.tabs({
         disabled : [config.TAB_COURSES, config.TAB_RESULTS, config.TAB_DRAW]
+      });
+
+      $rg2infopanel.tabs({
+        active : config.TAB_EVENTS,
+        heightStyle : "content",
+        activate : function(event, ui) {
+          tabActivated();
+        }
       });
 
       $("#rg2-result-list").accordion({
@@ -109,14 +133,6 @@ var rg2 = ( function() {'use strict';
 
       $("#btn-mass-start").addClass('active');
       $("#btn-real-time").removeClass('active');
-
-      $("#rg2-info-panel").tabs({
-        active : config.TAB_EVENTS,
-        heightStyle : "content",
-        activate : function(event, ui) {
-          tabActivated();
-        }
-      });
 
       map = new Image();
       mapLoadingText = "Select an event";
@@ -266,34 +282,29 @@ var rg2 = ( function() {'use strict';
         }
       }).val(0);
 
-      $("#btn-full-tails").prop('checked', false);
-      $("#btn-full-tails").click(function(event) {
-        if (event.target.checked) {
-          animation.setFullTails(true);
-          $("#spn-tail-length").spinner("disable");
-        } else {
-          animation.setFullTails(false);
-          $("#spn-tail-length").spinner("enable");
-
+      $("#btn-full-tails")
+        .prop('checked', false)
+        .click(function(event) {
+          if (event.target.checked) {
+            animation.setFullTails(true);
+            $("#spn-tail-length").spinner("disable");
+          } else {
+            animation.setFullTails(false);
+            $("#spn-tail-length").spinner("enable");
         }
       });
 
-      if ($('#rg2-manage').length !== 0) {
-        // manage info in template to enable functionality
+      if (managing) {
         manager = new Manager();
-        // hide animation controls
         $("#rg2-animation-controls").hide();
         // hide manager options until login complete
         $("#rg2-manager-options").hide();
-        // disable Events tab to avoid anything being selected
-        $("#rg2-info-panel").tabs("disable", config.TAB_EVENTS);
-        // don't need to see other tabs if manager active
+        $rg2infopanel.tabs("disable", config.TAB_EVENTS);
         $("#rg2-draw-tab").hide();
         $("#rg2-results-tab").hide();
         $("#rg2-courses-tab").hide();
         $("#rg2-events-tab").hide();
-        // set manager tab active
-        $("#rg2-info-panel").tabs("option", "active", config.TAB_MANAGE);
+        $rg2infopanel.tabs("option", "active", config.TAB_MANAGE);
       }
 
       trackTransforms(ctx);
@@ -322,7 +333,7 @@ var rg2 = ( function() {'use strict';
             if (drawing.gpsFileLoaded()) {
               drawing.adjustTrack(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10), parseInt(pt.x, 10), parseInt(pt.y, 10), evt.shiftKey, evt.ctrlKey);
             } else {
-              if ($("#rg2-info-panel").tabs("option", "active") === config.TAB_MANAGE) {
+              if ($rg2infopanel.tabs("option", "active") === config.TAB_MANAGE) {
                 manager.adjustControls(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10), parseInt(pt.x, 10), parseInt(pt.y, 10), evt.shiftKey, evt.ctrlKey);
               } else {
                 ctx.translate(pt.x - dragStart.x, pt.y - dragStart.y);
@@ -336,7 +347,7 @@ var rg2 = ( function() {'use strict';
 
       canvas.addEventListener('mouseup', function(evt) {
         //console.log ("Mouseup" + dragStart.x + ": " + dragStart.y);
-        var active = $("#rg2-info-panel").tabs("option", "active");
+        var active = $rg2infopanel.tabs("option", "active");
         if (!dragged) {
           if (active === config.TAB_MANAGE) {
             manager.mouseUp(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10));
@@ -394,7 +405,7 @@ var rg2 = ( function() {'use strict';
       // move map into view on small screens
       // avoid annoying jumps on larger screens
       if ((infoPanelMaximised) || (window.innerWidth >= config.BIG_SCREEN_BREAK_POINT)) {
-        ctx.setTransform(mapscale, 0, 0, mapscale, $("#rg2-info-panel").outerWidth(), 0);
+        ctx.setTransform(mapscale, 0, 0, mapscale, $rg2infopanel.outerWidth(), 0);
       } else {
         ctx.setTransform(mapscale, 0, 0, mapscale, 0, 0);
       }
@@ -413,20 +424,18 @@ var rg2 = ( function() {'use strict';
       canvas.height = winheight - 36;
       // set title bar
       if (window.innerWidth >= config.BIG_SCREEN_BREAK_POINT) {
-        $("#rg2-event-title").text(events.getActiveEventName() + " " + events.getActiveEventDate());
-        $("#rg2-event-title").show();
+        $rg2eventtitle.text(events.getActiveEventName() + " " + events.getActiveEventDate()).show();
       } else if (window.innerWidth > config.SMALL_SCREEN_BREAK_POINT) {
-        $("#rg2-event-title").text(events.getActiveEventName());
-        $("#rg2-event-title").show();
+        $rg2eventtitle.text(events.getActiveEventName()).show();
       } else {
-        $("#rg2-event-title").hide();
+        $rg2eventtitle.hide();
       }
       resetMapState();
     }
 
     // called whenever the active tab changes to tidy up as necessary
     function tabActivated() {
-      var active = $("#rg2-info-panel").tabs("option", "active");
+      var active = $rg2infopanel.tabs("option", "active");
       switch (active) {
         case config.TAB_DRAW:
           courses.removeAllFromDisplay();
@@ -457,7 +466,7 @@ var rg2 = ( function() {'use strict';
       if (map.height > 0) {
         // using non-zero map height to show we have a map loaded
         ctx.drawImage(map, 0, 0);
-        var active = $("#rg2-info-panel").tabs("option", "active");
+        var active = $rg2infopanel.tabs("option", "active");
         if (active === config.TAB_DRAW) {
           courses.drawCourses(config.DIM);
           controls.drawControls();
@@ -487,6 +496,7 @@ var rg2 = ( function() {'use strict';
     }
 
     function displayAboutDialog() {
+      $("#rg2-version-info").empty().append("Version information: " + rg2VersionInfo);
       $("#rg2-about-dialog").dialog({
         //modal : true,
         minWidth : 400,
@@ -503,12 +513,12 @@ var rg2 = ( function() {'use strict';
         infoPanelMaximised = false;
         $("#rg2-resize-info-icon").attr("src", infoShowIconSrc);
         $("#rg2-resize-info").prop("title", "Show info panel");
-        $("#rg2-info-panel").hide();
+        $rg2infopanel.hide();
       } else {
         infoPanelMaximised = true;
         $("#rg2-resize-info-icon").attr("src", infoHideIconSrc);
         $("#rg2-resize-info").prop("title", "Hide info panel");
-        $("#rg2-info-panel").show();
+        $rg2infopanel.show();
       }
       // move map around if necesssary
       resetMapState();
@@ -536,11 +546,11 @@ var rg2 = ( function() {'use strict';
     function createEventMenu() {
       //loads menu from populated events array
       var html = events.formatEventsAsMenu();
-      $("#rg2-event-list").append(html);
-
-      $("#rg2-event-list").menu({
-        select : function(event, ui) {
-          loadEvent(ui.item[0].id);
+      $("#rg2-event-list")
+        .append(html)
+        .menu({
+          select : function(event, ui) {
+            loadEvent(ui.item[0].id);
         }
       });
 
@@ -566,13 +576,15 @@ var rg2 = ( function() {'use strict';
 
       // set title bar
       if (window.innerWidth >= config.BIG_SCREEN_BREAK_POINT) {
-        $("#rg2-event-title").text(events.getActiveEventName() + " " + events.getActiveEventDate());
-        $("#rg2-event-title").show();
+        $rg2eventtitle
+          .text(events.getActiveEventName() + " " + events.getActiveEventDate())
+          .show();
       } else if (window.innerWidth > config.SMALL_SCREEN_BREAK_POINT) {
-        $("#rg2-event-title").text(events.getActiveEventName());
-        $("#rg2-event-title").show();
+        $rg2eventtitle
+          .text(events.getActiveEventName())
+          .show();
       } else {
-        $("#rg2-event-title").hide();
+        $rg2eventtitle.hide();
       }
       // get courses for event
       $.getJSON(json_url, {
@@ -632,17 +644,17 @@ var rg2 = ( function() {'use strict';
         createResultMenu();
         animation.updateAnimationDetails();
         $('body').css('cursor', 'auto');
-        $("#rg2-info-panel").tabs("enable", config.TAB_COURSES);
-        $("#rg2-info-panel").tabs("enable", config.TAB_RESULTS);
-        $("#rg2-info-panel").tabs("enable", config.TAB_DRAW);
+        $rg2infopanel.tabs("enable", config.TAB_COURSES);
+        $rg2infopanel.tabs("enable", config.TAB_RESULTS);
+        $rg2infopanel.tabs("enable", config.TAB_DRAW);
         // open courses tab for new event: else stay on draw tab
-        var active = $("#rg2-info-panel").tabs("option", "active");
+        var active = $rg2infopanel.tabs("option", "active");
         // don't change tab if we have come from DRAW since it means
         // we have just relaoded following a save
         if (active !== config.TAB_DRAW) {
-          $("#rg2-info-panel").tabs("option", "active", config.TAB_COURSES);
+          $rg2infopanel.tabs("option", "active", config.TAB_COURSES);
         }
-        $("#rg2-info-panel").tabs("refresh");
+        $rg2infopanel.tabs("refresh");
         $("#btn-show-splits").show();
         redraw(false);
       }).fail(function(jqxhr, textStatus, error) {
@@ -654,8 +666,7 @@ var rg2 = ( function() {'use strict';
 
     function createCourseMenu() {
       //loads menu from populated courses array
-      $("#rg2-course-table").empty();
-      $("#rg2-course-table").append(courses.formatCoursesAsTable());
+      $("#rg2-course-table").empty().append(courses.formatCoursesAsTable());
 
       // checkbox on course tab to show a course
       $(".courselist").click(function(event) {
@@ -722,12 +733,11 @@ var rg2 = ( function() {'use strict';
         redraw();
 
       });
-      $("#rg2-result-list").empty();
-      $("#rg2-result-list").append(html);
+      $("#rg2-result-list").empty().append(html);
 
       $("#rg2-result-list").accordion("refresh");
 
-      $("#rg2-info-panel").tabs("refresh");
+      $rg2infopanel.tabs("refresh");
 
       // checkbox to show a course
       $(".showcourse").click(function(event) {

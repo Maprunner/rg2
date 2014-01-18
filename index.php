@@ -43,6 +43,12 @@
 		$manager = false;
   }
 
+  // include debug function as parameter for now until we decide the best way forward
+  if (isset($_GET['debug'])) {
+    $debug = true;
+  } else {
+    $debug = false;
+  }
 ?>
 
 <!DOCTYPE html>
@@ -194,7 +200,7 @@
 		    </div>
 		  </div>		   
 		  <div id="rg2-track-names"></div>
-		  <div id="rg2-about-dialog" title="Routegadget 2.0 Viewer: Version 0.3">
+		  <div id="rg2-about-dialog" title="Routegadget 2.0 Viewer">
 			 <p>This application allows you to view existing <a href="http://www.routegadget.net">Routegadget</a> information in any modern (HTML5-compliant) browser without the need for Java.</p>
 			 <p>This is an early prototype to allow testing of the user interface. The latest version is available for
 			 	<a href="https://github.com/Maprunner/rg2/archive/master.zip"> download here</a>.
@@ -202,6 +208,7 @@
 			   up in in the original Routegadget.</p>
 			  <p>It does not currently work properly on iPads, tablets and phones because of problems with the touch interface and screen size. This is on the list of things to be looked at.</p>
 			  <p><strong>Simon Errington</strong> (simon (at) maprunner.co.uk)</p>
+        <p id="rg2-version-info"></p>
 			  <p><?php echo ADDITIONAL_INFO_TEXT; ?></p>
 		  </div>
 		  <div id="rg2-splits-table" title="Splits display"></div>
@@ -250,9 +257,8 @@
       <?php } ?>
     </div>
 
-		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
 		<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
-		<script src='<?php echo $script_url."plugins.js"; ?>'></script>
 		<script type="text/javascript">
 			var json_url = "<?php echo $json_url; ?>";
 			var maps_url = "<?php echo $maps_url; ?>";
@@ -260,17 +266,22 @@
 			var header_text_colour = "<?php echo $header_text_colour; ?>";
 
 		</script>
-		<script src='<?php echo $script_url."events.js"; ?>'></script>
-		<script src='<?php echo $script_url."results.js"; ?>'></script>
-		<script src='<?php echo $script_url."gpstrack.js"; ?>'></script>
-		<script src='<?php echo $script_url."controls.js"; ?>'></script>
-		<script src='<?php echo $script_url."courses.js"; ?>'></script>
-		<script src='<?php echo $script_url."draw.js"; ?>'></script>
-		<script src='<?php echo $script_url."animation.js"; ?>'></script>
-		<script src='<?php echo $script_url."runner.js"; ?>'></script>
-    <?php if ($manager) { ?>
-		<script src='<?php echo $script_url."manager.js"; ?>'></script>
-    <?php } ?>
-		<script src='<?php echo $script_url."rg2.js"; ?>'></script>
+    <?php if ($debug) { ?>
+		  <script src='<?php echo $script_url."events.js"; ?>'></script>
+		  <script src='<?php echo $script_url."results.js"; ?>'></script>
+		  <script src='<?php echo $script_url."gpstrack.js"; ?>'></script>
+		  <script src='<?php echo $script_url."controls.js"; ?>'></script>
+		  <script src='<?php echo $script_url."courses.js"; ?>'></script>
+		  <script src='<?php echo $script_url."draw.js"; ?>'></script>
+		  <script src='<?php echo $script_url."animation.js"; ?>'></script>
+		  <script src='<?php echo $script_url."runner.js"; ?>'></script>
+      <script src='<?php echo $script_url."plugins.js"; ?>'></script>
+		  <script src='<?php echo $script_url."rg2.js"; ?>'></script>
+		<?php } else { ?>
+      <script src='<?php echo $script_url."rg2all.min.js"; ?>'></script>		  
+		<?php } ?>  
+      <?php if ($manager) { ?>
+      <script src='<?php echo $script_url."manager.js"; ?>'></script>
+      <?php } ?>
 	</body>
 </html>
