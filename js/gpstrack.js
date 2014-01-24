@@ -133,6 +133,12 @@ GPSTrack.prototype = {
 		var maxLon = this.lon[0];
 		var minLat = this.lat[0];
 		var minLon = this.lon[0];
+
+    var minControlX;
+    var maxControlX;
+    var minControlY;
+    var maxControlY;
+    var size;
 		var x;
 		var y;
 		for (var i = 1; i < this.lat.length; i += 1) {
@@ -148,17 +154,26 @@ GPSTrack.prototype = {
 		var controly = rg2.getControlY();
 
 		// find bounding box for course
-		var minControlX = controlx[0];
-		var maxControlX = controlx[0];
-		var minControlY = controly[0];
-		var maxControlY = controly[0];
-
+    minControlX = controlx[0];
+		maxControlX = controlx[0];
+		minControlY = controly[0];
+		maxControlY = controly[0];
 		for ( i = 1; i < controlx.length; i += 1) {
 			maxControlX = Math.max(maxControlX, controlx[i]);
 			maxControlY = Math.max(maxControlY, controly[i]);
 			minControlX = Math.min(minControlX, controlx[i]);
 			minControlY = Math.min(minControlY, controly[i]);
 		}
+    // issue #60: allow for no controls or just a few in a small area
+    // 100 is an arbitrary but sensible cut-off
+    if (((maxControlY - minControlY) < 100) || ((maxControlX - minControlX) < 100)) {
+      minControlX = 0;
+      minControlY = 0;
+      size = rg2.getMapSize();
+      maxControlX = size.width;
+      maxControlY = size.height;
+    }
+
 		//console.log (minControlX, maxControlX, minControlY, maxControlY);
 
 		// scale GPS track to within bounding box of controls: a reasonable start

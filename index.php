@@ -4,8 +4,12 @@
  
  // override allows testing of a local configuration such as c:/xampp/htdocs/rg2
  if (file_exists('rg2-override-config.php')) {
+ 	$override = true;
  	require_once ( 'rg2-override-config.php');
+ } else {
+   $override = false;  
  }
+ 
  if (defined('OVERRIDE_UI_THEME')) {
     $ui_theme = OVERRIDE_UI_THEME;
  } else {
@@ -44,7 +48,7 @@
   }
 
   // include debug function as parameter for now until we decide the best way forward
-  if (isset($_GET['debug'])) {
+  if (isset($_GET['debug']) || $override) {
     $debug = true;
   } else {
     $debug = false;
@@ -264,7 +268,6 @@
 			var maps_url = "<?php echo $maps_url; ?>";
 			var header_colour = "<?php echo $header_colour; ?>";
 			var header_text_colour = "<?php echo $header_text_colour; ?>";
-
 		</script>
     <?php if ($debug) { ?>
 		  <script src='<?php echo $script_url."events.js"; ?>'></script>

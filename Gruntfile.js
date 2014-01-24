@@ -1,4 +1,21 @@
 module.exports = function(grunt) {
+  var jsFileList = ['js/rg2.js', 'js/animation.js', 'js/controls.js', 'js/courses.js', 'js/draw.js', 'js/events.js', 'js/gpstrack.js',
+   'js/manager.js', 'js/plugins.js', 'js/results.js', 'js/runner.js'];
+
+  var jsConcatFile = 'js/rg2all.js';
+
+  var jsMinFile = 'js/rg2all.min.js';
+
+  var relDir = 'ftpsite/';
+
+  var ftpHost = 'ftp.routegadget.co.uk';
+
+  var clubs = ['aire', 'bado', 'baoc', 'basoc', 'bko', 'boc', 'bok', 'border', 'chig', 'claro', 'clyde', 'cuoc', 'cvfr', 'darkandwhite', 'dee',
+   'devenoc', 'ebor', 'ecko', 'elo', 'esoc', 'euoc', 'gmoa', 'gramp', 'guildford', 'happyherts', 'havoc', 'hoc', 'interlopers', 'invoc', 'jk',
+   'kerno', 'kfo', 'lamm', 'leioc', 'loc', 'log', 'lok', 'lvo', 'maroc', 'mdoc', 'mvoc', 'nato', 'ngoc', 'noroc', 'nwo', 'od', 'omm', 'ouoc',
+   'pfo', 'pow', 'quantock', 'rafo', 'roxburghreivers', 'sa', 'sarum', 'scottish6days', 'seloc', 'slow', 'smbo', 'smoc', 'sn', 'soc', 'solway',
+   'sportident', 'sroc', 'stag', 'start', 'suffoc', 'swoc', 'syo', 'tay', 'test', 'thistle', 'tinto', 'tvoc', 'walton', 'wcoc', 'wim',
+   'wsco', 'wsoe', 'wsx'];
 
   // Project configuration.
   grunt.initConfig({
@@ -6,12 +23,13 @@ module.exports = function(grunt) {
 
     concat : {
       js : {
-        src : ['js/rg2.js', 'js/animation.js', 'js/controls.js', 'js/courses.js', 'js/manager.js', 'js/draw.js', 'js/events.js', 'js/gpstrack.js', 'js/results.js', 'js/runner.js', 'js/plugins.js'],
+        src : jsFileList,
 
-        dest : 'js/rg2all.js',
+        dest : jsConcatFile,
 
         options : {
-          //separator : ';'
+          banner : '// Version <%= pkg.version %> <%= grunt.template.today("isoDateTime") %>;\n'
+
         }
       }
     },
@@ -35,75 +53,593 @@ module.exports = function(grunt) {
         }
       },
       all : {
-        src : ['js/rg2.js', 'js/animation.js', 'js/controls.js', 'js/courses.js', 'js/manager.js', 'js/draw.js', 'js/events.js', 'js/gpstrack.js', 'js/results.js', 'js/runner.js', 'js/plugins.js']
-      },
-      min : {
-        src : ['js/rg2all.js']
+        src : jsFileList
       }
     },
 
     uglify : {
       options : {
-        banner : 'var rg2VersionInfo = "<%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd hh:mm:ss") %>";\n'
+        banner : '// Version <%= pkg.version %> <%= grunt.template.today("isoDateTime") %>;\n'
       },
       build : {
-        src : 'js/<%= pkg.name %>all.js',
-        dest : 'js/<%= pkg.name %>all.min.js'
+        src : jsConcatFile,
+        dest : jsMinFile
       }
     },
 
     'ftp-deploy' : {
       build : {
         auth : {
-          host : 'ftp.routegadget.co.uk',
+          host : ftpHost,
           port : 21,
-          authKey : 'hh'
+          authKey : 'rg'
         },
-        src : 'C:/xampp/htdocs/rg2/rel',
-        dest : '/rg2',
-        exclusions : ['']
+        src : relDir,
+        dest : '<%= ftp.dest %>',
+        exclusions : ['rg2-config-template.php']
       }
     },
-    clean : {
-      release : ["C:/xampp/htdocs/rg2/rel"]
-    },
+
     copy : {
-      api : {
-        src : 'C:/xampp/htdocs/rg2/rg2api.php',
-        dest : 'C:/xampp/htdocs/rg2/rel'
+      aire : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/aire/rg2/'
       },
-      index : {
-        src : 'C:/xampp/htdocs/rg2/index.php',
-        dest : 'C:/xampp/htdocs/rg2/rel'
+      bado : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/bado/rg2/'
       },
-      js : {
-        src : 'C:/xampp/htdocs/rg2/js/*',
-        dest : 'C:/xampp/htdocs/rg2/rel/js'
+      baoc : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/baoc/rg2/'
       },
-      css : {
-        src : 'C:/xampp/htdocs/rg2/css/*',
-        dest : 'C:/xampp/htdocs/rg2/rel/css'
+      basoc : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/basoc/rg2/'
       },
-      img : {
-        src : 'C:/xampp/htdocs/rg2/img/*',
-        dest : 'C:/xampp/htdocs/rg2/rel/img'
+      bko : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/bko/rg2/'
+      },
+      boc : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/boc/rg2/'
+      },
+      bok : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/bok/rg2/'
+      },
+      border : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/border/rg2/'
+      },
+      chig : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/chig/rg2/'
+      },
+      claro : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/claro/rg2/'
+      },
+      clyde : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/clyde/rg2/'
+      },
+      cuoc : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/cuoc/rg2/'
+      },
+      cvfr : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/cvfr/rg2/'
+      },
+      darkandwhite : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/darkandwhite/rg2/'
+      },
+      dee : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/dee/rg2/'
+      },
+      devenoc : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/devenoc/rg2/'
+      },
+      ebor : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/ebor/rg2/'
+      },
+      ecko : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/ecko/rg2/'
+      },
+      elo : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/elo/rg2/'
+      },
+      esoc : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/esoc/rg2/'
+      },
+      euoc : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/euoc/rg2/'
+      },
+      gmoa : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/gmoa/rg2/'
+      },
+      gramp : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/gramp/rg2/'
+      },
+      guildford : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/guildford/rg2/'
+      },
+      happyherts : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/happyherts/rg2/'
+      },
+      havoc : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/havoc/rg2/'
+      },
+      hoc : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/hoc/rg2/'
+      },
+      interlopers : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/interlopers/rg2/'
+      },
+      invoc : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/invoc/rg2/'
+      },
+      jk : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/jk/rg2/'
+      },
+      kerno : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/kerno/rg2/'
+      },
+      kfo : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/kfo/rg2/'
+      },
+      lamm : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/lamm/rg2/'
+      },
+      leioc : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/leioc/rg2/'
+      },
+      loc : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/loc/rg2/'
+      },
+      log : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/log/rg2/'
+      },
+      lok : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/lok/rg2/'
+      },
+      lvo : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/lvo/rg2/'
+      },
+      maroc : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/maroc/rg2/'
+      },
+      mdoc : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/mdoc/rg2/'
+      },
+      mvoc : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/mvoc/rg2/'
+      },
+      nato : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/nato/rg2/'
+      },
+      ngoc : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/ngoc/rg2/'
+      },
+      noroc : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/noroc/rg2/'
+      },
+      nwo : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/nwo/rg2/'
+      },
+      od : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/od/rg2/'
+      },
+      omm : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/omm/rg2/'
+      },
+      ouoc : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/ouoc/rg2/'
+      },
+      pfo : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/pfo/rg2/'
+      },
+      pow : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/pow/rg2/'
+      },
+      quantock : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/quantock/rg2/'
+      },
+      rafo : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/rafo/rg2/'
+      },
+      roxburghreivers : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/roxburghreivers/rg2/'
+      },
+      sa : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/sa/rg2/'
+      },
+      sarum : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/sarum/rg2/'
+      },
+      scottish6days : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/scottish6days/rg2/'
+      },
+      seloc : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/seloc/rg2/'
+      },
+      slow : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/slow/rg2/'
+      },
+      smbo : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/smbo/rg2/'
+      },
+      smoc : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/smoc/rg2/'
+      },
+      sn : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/sn/rg2/'
+      },
+      soc : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/soc/rg2/'
+      },
+      solway : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/solway/rg2/'
+      },
+      sportident : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/sportident/rg2/'
+      },
+      sroc : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/sroc/rg2/'
+      },
+      stag : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/stag/rg2/'
+      },
+      start : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/start/rg2/'
+      },
+      suffoc : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/suffoc/rg2/'
+      },
+      swoc : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/swoc/rg2/'
+      },
+      syo : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/syo/rg2/'
+      },
+      tay : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/tay/rg2/'
+      },
+      test : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/test/rg2/'
+      },
+      thistle : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/thistle/rg2/'
+      },
+      tinto : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/tinto/rg2/'
+      },
+      tvoc : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/tvoc/rg2/'
+      },
+      walton : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/walton/rg2/'
+      },
+      wcoc : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/wcoc/rg2/'
+      },
+      wim : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/wim/rg2/'
+      },
+      wsco : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/wsco/rg2/'
+      },
+      wsoe : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/wsoe/rg2/'
+      },
+      wsx : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/wsx/rg2/'
       }
+    },
+
+    bumpup : 'package.json',
+
+    replace : {
+      config : {
+        src : ['rel/rg2-config-template.php'],
+        dest : 'rel/<%= ftp.club %>/rg2-config.php',
+        replacements : [{
+          from : '<club>',
+          to : '<%= ftp.club %>'
+        }]
+      },
+      version : {
+        src : 'js/rg2.js',
+        overwrite : true,
+        replacements : [{
+          from : /RG2VERSION.*\'/,
+          to : "RG2VERSION: '<%= pkg.version %>'"
+        }]
+      }
+
     }
   });
 
-  grunt.loadNpmTasks('grunt-contrib-uglify');
-  grunt.loadNpmTasks('grunt-contrib-concat');
-  grunt.loadNpmTasks('grunt-contrib-jshint');
-  grunt.loadNpmTasks('grunt-ftp-deploy');
-  grunt.loadNpmTasks('grunt-contrib-copy');
-  grunt.loadNpmTasks('grunt-contrib-clean');
+  // Load all the grunt tasks
+  require('load-grunt-tasks')(grunt);
 
-  // Default task(s).
   grunt.registerTask('default', ['build']);
 
-  grunt.registerTask('build', ['jshint:all', 'concat', 'uglify']);
+  grunt.registerTask('bump', ['bumpup']);
+  grunt.registerTask('bump-minor', ['bumpup:minor']);
+  grunt.registerTask('bump-major', ['bumpup:major']);
 
-  grunt.registerTask('deploy', ['build', 'clean:release', 'ftp-deploy']);
+  grunt.registerTask('build', ['newer:jshint:all', 'newer:concat', 'newer:uglify']);
 
-  grunt.registerTask('hintmin', ['jshint:min']);
+  grunt.registerTask('deploy', ['replace:version', 'build', 'copy']);
+
+  grunt.registerTask('config', 'Generate config files', function() {
+
+    // clubs that didn't have a config already
+    var clubs = ['aire', 'baoc', 'bko', 'boc', 'bok', 'border', 'chig', 'claro', 'clyde', 'cuoc', 'cvfr', 'darkandwhite', 'devenoc', 'ebor', 'ecko', 'elo', 'esoc', 'euoc', 'gmoa', 'gramp', 'guildford', 'happyherts', 'havoc', 'hoc', 'interlopers', 'jk', 'kerno', 'kfo', 'lamm', 'log', 'lok', 'lvo', 'mdoc', 'mvoc', 'nato', 'ngoc', 'noroc', 'nwo', 'od', 'ouoc', 'pfo', 'pow', 'quantock', 'rafo', 'sa', 'sarum', 'scottish6days', 'seloc', 'smbo', 'smoc', 'sn', 'soc', 'solway', 'sportident', 'stag', 'start', 'swoc', 'syo', 'tay', 'test', 'thistle', 'tinto', 'tvoc', 'walton', 'wcoc', 'wim', 'wsco', 'wsoe', 'wsx'];
+
+    var i;
+    var obj = '';
+    for ( i = 0; i < clubs.length; i += 1) {
+      obj += clubs[i] + ": {\n";
+      obj += "src: ['rel/rg2-config-template.php'],\n";
+      obj += "dest: 'ftpsite/" + clubs[i] + "/rg2/rg2-config.php',\n";
+      obj += "replacements: [{ \n";
+      obj += "from: '<club>',\n";
+      obj += "to: '" + clubs[i] + "'\n";
+      obj += "}]\n";
+      obj += "},\n";
+    }
+
+    grunt.file.write('config.js', obj);
+
+  });
+
+  grunt.registerTask('cpy', 'ftpTask', function() {
+
+    var i;
+    var obj = '';
+    for ( i = 0; i < clubs.length; i += 1) {
+      obj += clubs[i] + ": {\n";
+      obj += "cwd: 'rel/',\n";
+      obj += "expand: true,\n";
+      obj += "src: '**,\n";
+      obj += "dest: 'ftpsite/" + clubs[i] + "/rg2/'\n";
+      obj += "},\n";
+    }
+
+    grunt.file.write('copyconfig.js', obj);
+  });
 };
