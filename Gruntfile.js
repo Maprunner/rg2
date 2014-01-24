@@ -10,8 +10,8 @@ module.exports = function(grunt) {
 
   var ftpHost = 'ftp.routegadget.co.uk';
 
-  var clubs = ['aire', 'bado', 'baoc', 'basoc', 'bko', 'boc', 'bok', 'border', 'chig', 'claro', 'clyde', 'cuoc', 'cvfr', 'darkandwhite', 'dee',
-   'devenoc', 'ebor', 'ecko', 'elo', 'esoc', 'euoc', 'gmoa', 'gramp', 'guildford', 'happyherts', 'havoc', 'hoc', 'interlopers', 'invoc', 'jk',
+  var clubs = ['aire', 'bado', 'baoc', 'basoc', 'bko', 'boc', 'bok', 'border', 'chig', 'claro', 'clok', 'clyde', 'cuoc', 'cvfr', 'darkandwhite', 'dee',
+   'devenoc', 'ebor', 'ecko', 'elo', 'epoc', 'esoc', 'euoc', 'gmoa', 'gramp', 'guildford', 'happyherts', 'havoc', 'hoc', 'interlopers', 'invoc', 'jk',
    'kerno', 'kfo', 'lamm', 'leioc', 'loc', 'log', 'lok', 'lvo', 'maroc', 'mdoc', 'mvoc', 'nato', 'ngoc', 'noroc', 'nwo', 'od', 'omm', 'ouoc',
    'pfo', 'pow', 'quantock', 'rafo', 'roxburghreivers', 'sa', 'sarum', 'scottish6days', 'seloc', 'slow', 'smbo', 'smoc', 'sn', 'soc', 'solway',
    'sportident', 'sroc', 'stag', 'start', 'suffoc', 'swoc', 'syo', 'tay', 'test', 'thistle', 'tinto', 'tvoc', 'walton', 'wcoc', 'wim',
@@ -135,6 +135,12 @@ module.exports = function(grunt) {
         src : '**',
         dest : 'ftpsite/chig/rg2/'
       },
+      clok : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/clok/rg2/'
+      },
       claro : {
         cwd : 'rel/',
         expand : true,
@@ -194,6 +200,12 @@ module.exports = function(grunt) {
         expand : true,
         src : '**',
         dest : 'ftpsite/elo/rg2/'
+      },
+      epoc : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/epoc/rg2/'
       },
       esoc : {
         cwd : 'rel/',
