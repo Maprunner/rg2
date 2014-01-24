@@ -1,7 +1,14 @@
+/*
+* Routegadget 2
+* https://github.com/Maprunner/rg2
+*
+* Copyright (c) 2014 Simon Errington and contributors
+* Licensed under the MIT license.
+* https://github.com/Maprunner/rg2/blob/master/LICENSE
+*/
 /*global $:false */
 /*global header_colour:false */
 /*global header_text_colour:false */
-/*global rg2VersionInfo:false */
 /*global json_url:false */
 /*global maps_url:false */
 /*global Image:false */
@@ -39,11 +46,11 @@ var rg2 = ( function() {'use strict';
     var requestedHash;
     var requestedEventID;
     var managing;
-    
+
     // jQuery cache items
     var $rg2infopanel;
     var $rg2eventtitle;
-    
+
     var config = {
       DEFAULT_SCALE_FACTOR : 1.1,
       TAB_EVENTS : 0,
@@ -75,20 +82,22 @@ var rg2 = ( function() {'use strict';
       // parameters for call to draw courses
       DIM : 0.5,
       FULL_INTENSITY : 1.0,
-      SCORE_EVENT : 3
+      SCORE_EVENT : 3,
+      // version gets set automatically by grunt file during build process
+      RG2VERSION: '0.4.1'
     };
 
     function init() {
       // cache jQuery things we use a lot
       $rg2infopanel = $("#rg2-info-panel");
       $rg2eventtitle = $("#rg2-event-title");
-      
+
       if ($('#rg2-manage').length !== 0) {
         managing = true;
       } else {
         managing = false;
       }
-          
+
       // check if a specific event has been requested
       requestedHash = window.location.hash;
       if ((requestedHash) && (!managing)) {
@@ -104,10 +113,7 @@ var rg2 = ( function() {'use strict';
 
       // disable tabs until we have loaded something
       $rg2infopanel.tabs({
-        disabled : [config.TAB_COURSES, config.TAB_RESULTS, config.TAB_DRAW]
-      });
-
-      $rg2infopanel.tabs({
+        disabled : [config.TAB_COURSES, config.TAB_RESULTS, config.TAB_DRAW],
         active : config.TAB_EVENTS,
         heightStyle : "content",
         activate : function(event, ui) {
@@ -253,9 +259,10 @@ var rg2 = ( function() {'use strict';
       }).hide();
 
       $("#btn-show-splits").click(function() {
-        $("#rg2-splits-table").empty();
-        $("#rg2-splits-table").append(animation.getSplitsTable());
-        $("#rg2-splits-table").dialog({
+        $("#rg2-splits-table")
+        .empty()
+        .append(animation.getSplitsTable())
+        .dialog({
           width : 'auto',
           buttons : {
             Ok : function() {
@@ -282,15 +289,13 @@ var rg2 = ( function() {'use strict';
         }
       }).val(0);
 
-      $("#btn-full-tails")
-        .prop('checked', false)
-        .click(function(event) {
-          if (event.target.checked) {
-            animation.setFullTails(true);
-            $("#spn-tail-length").spinner("disable");
-          } else {
-            animation.setFullTails(false);
-            $("#spn-tail-length").spinner("enable");
+      $("#btn-full-tails").prop('checked', false).click(function(event) {
+        if (event.target.checked) {
+          animation.setFullTails(true);
+          $("#spn-tail-length").spinner("disable");
+        } else {
+          animation.setFullTails(false);
+          $("#spn-tail-length").spinner("enable");
         }
       });
 
@@ -314,56 +319,9 @@ var rg2 = ( function() {'use strict';
 
       canvas.addEventListener('DOMMouseScroll', handleScroll, false);
       canvas.addEventListener('mousewheel', handleScroll, false);
-      canvas.addEventListener('mousedown', function(evt) {
-        lastX = evt.offsetX || (evt.layerX - canvas.offsetLeft);
-        lastY = evt.offsetY || (evt.layerY - canvas.offsetTop);
-        dragStart = ctx.transformedPoint(lastX, lastY);
-        dragged = false;
-        //console.log ("Mousedown " + lastX + " " + lastY + " " + dragStart.x + " " + dragStart.y);
-      }, false);
-
-      canvas.addEventListener('mousemove', function(evt) {
-        lastX = evt.offsetX || (evt.layerX - canvas.offsetLeft);
-        lastY = evt.offsetY || (evt.layerY - canvas.offsetTop);
-        if (dragStart) {
-          var pt = ctx.transformedPoint(lastX, lastY);
-          //console.log ("Mousemove after" + pt.x + ": " + pt.y);
-          // allow for Webkit which gives us mousemove events with no movement!
-          if ((pt.x !== dragStart.x) || (pt.y !== dragStart.y)) {
-            if (drawing.gpsFileLoaded()) {
-              drawing.adjustTrack(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10), parseInt(pt.x, 10), parseInt(pt.y, 10), evt.shiftKey, evt.ctrlKey);
-            } else {
-              if ($rg2infopanel.tabs("option", "active") === config.TAB_MANAGE) {
-                manager.adjustControls(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10), parseInt(pt.x, 10), parseInt(pt.y, 10), evt.shiftKey, evt.ctrlKey);
-              } else {
-                ctx.translate(pt.x - dragStart.x, pt.y - dragStart.y);
-              }
-            }
-            dragged = true;
-            redraw(false);
-          }
-        }
-      }, false);
-
-      canvas.addEventListener('mouseup', function(evt) {
-        //console.log ("Mouseup" + dragStart.x + ": " + dragStart.y);
-        var active = $rg2infopanel.tabs("option", "active");
-        if (!dragged) {
-          if (active === config.TAB_MANAGE) {
-            manager.mouseUp(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10));
-          } else {
-            drawing.mouseUp(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10));
-          }
-        } else {
-          if (active === config.TAB_MANAGE) {
-            manager.dragEnded();
-          } else {
-            drawing.dragEnded();
-          }
-        }
-        dragStart = null;
-        redraw(false);
-      }, false);
+      canvas.addEventListener('mousedown', handleMouseDown, false);
+      canvas.addEventListener('mousemove', handleMouseMove, false);
+      canvas.addEventListener('mouseup', handleMouseUp, false);
 
       // force redraw once map has loaded
       map.addEventListener("load", function() {
@@ -496,7 +454,7 @@ var rg2 = ( function() {'use strict';
     }
 
     function displayAboutDialog() {
-      $("#rg2-version-info").empty().append("Version information: " + rg2VersionInfo);
+      $("#rg2-version-info").empty().append("Version information: " + config.RG2VERSION);
       $("#rg2-about-dialog").dialog({
         //modal : true,
         minWidth : 400,
@@ -543,14 +501,63 @@ var rg2 = ( function() {'use strict';
       return evt.preventDefault() && false;
     };
 
+    var handleMouseDown = function(evt) {
+      lastX = evt.offsetX || (evt.layerX - canvas.offsetLeft);
+      lastY = evt.offsetY || (evt.layerY - canvas.offsetTop);
+      dragStart = ctx.transformedPoint(lastX, lastY);
+      dragged = false;
+      //console.log ("Mousedown " + lastX + " " + lastY + " " + dragStart.x + " " + dragStart.y);
+    };
+
+    var handleMouseMove = function(evt) {
+      lastX = evt.offsetX || (evt.layerX - canvas.offsetLeft);
+      lastY = evt.offsetY || (evt.layerY - canvas.offsetTop);
+      if (dragStart) {
+        var pt = ctx.transformedPoint(lastX, lastY);
+        //console.log ("Mousemove after" + pt.x + ": " + pt.y);
+        // allow for Webkit which gives us mousemove events with no movement!
+        if ((pt.x !== dragStart.x) || (pt.y !== dragStart.y)) {
+          if (drawing.gpsFileLoaded()) {
+            drawing.adjustTrack(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10), parseInt(pt.x, 10), parseInt(pt.y, 10), evt.shiftKey, evt.ctrlKey);
+          } else {
+            if ($rg2infopanel.tabs("option", "active") === config.TAB_MANAGE) {
+              manager.adjustControls(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10), parseInt(pt.x, 10), parseInt(pt.y, 10), evt.shiftKey, evt.ctrlKey);
+            } else {
+              ctx.translate(pt.x - dragStart.x, pt.y - dragStart.y);
+            }
+          }
+          dragged = true;
+          redraw(false);
+        }
+      }
+    };
+
+    var handleMouseUp = function(evt) {
+      //console.log ("Mouseup" + dragStart.x + ": " + dragStart.y);
+      var active = $rg2infopanel.tabs("option", "active");
+      if (!dragged) {
+        if (active === config.TAB_MANAGE) {
+          manager.mouseUp(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10));
+        } else {
+          drawing.mouseUp(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10));
+        }
+      } else {
+        if (active === config.TAB_MANAGE) {
+          manager.dragEnded();
+        } else {
+          drawing.dragEnded();
+        }
+      }
+      dragStart = null;
+      redraw(false);
+    };
+
     function createEventMenu() {
       //loads menu from populated events array
       var html = events.formatEventsAsMenu();
-      $("#rg2-event-list")
-        .append(html)
-        .menu({
-          select : function(event, ui) {
-            loadEvent(ui.item[0].id);
+      $("#rg2-event-list").append(html).menu({
+        select : function(event, ui) {
+          loadEvent(ui.item[0].id);
         }
       });
 
@@ -576,13 +583,9 @@ var rg2 = ( function() {'use strict';
 
       // set title bar
       if (window.innerWidth >= config.BIG_SCREEN_BREAK_POINT) {
-        $rg2eventtitle
-          .text(events.getActiveEventName() + " " + events.getActiveEventDate())
-          .show();
+        $rg2eventtitle.text(events.getActiveEventName() + " " + events.getActiveEventDate()).show();
       } else if (window.innerWidth > config.SMALL_SCREEN_BREAK_POINT) {
-        $rg2eventtitle
-          .text(events.getActiveEventName())
-          .show();
+        $rg2eventtitle.text(events.getActiveEventName()).show();
       } else {
         $rg2eventtitle.hide();
       }

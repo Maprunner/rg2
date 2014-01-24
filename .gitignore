@@ -7,6 +7,7 @@ rg2-override-config.php
 log/rg2log.txt
 node_modules
 rel
+ftpsite
 .ftppass
 
 #################

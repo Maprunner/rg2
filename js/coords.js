@@ -98,7 +98,7 @@ function readJGW(evt) {
 		var E = -1 * pixResY * Math.cos(angle);
 		var C = WGS84[0]._lon;
 		var F = WGS84[0]._lat;
-
+    console.log(A, B, C, D, E, F);
 		var newx = [];
 		var newy = [];
 
