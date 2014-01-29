@@ -615,7 +615,7 @@ module.exports = function(grunt) {
 
   grunt.registerTask('build', ['newer:jshint:all', 'newer:concat', 'newer:uglify']);
 
-  grunt.registerTask('deploy', ['replace:version', 'build', 'copy']);
+  grunt.registerTask('deploy', ['replace:version', 'build', 'newer:copy']);
 
   grunt.registerTask('config', 'Generate config files', function() {
 
