@@ -58,6 +58,14 @@ Events.prototype = {
 	isScoreEvent : function() {
 		return (this.events[this.activeEventID].format === rg2.config.SCORE_EVENT);
 	},
+	
+	hasResults: function () {
+    if (this.activeEventID !== null) {
+      return (this.events[this.activeEventID].format !== rg2.config.EVENT_WITHOUT_RESULTS);
+    } else {
+      return true;
+    }
+	},
 
   isValidEventID : function (eventid) {
     if ((this.events.length >= eventid) && (eventid > 0)) {

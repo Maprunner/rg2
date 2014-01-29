@@ -106,7 +106,8 @@ GPSTrack.prototype = {
 				minY = Math.min(minY, this.routeData.y[i]);
 			}
 			// check we are somewhere on the map
-			if ((maxX < 0) || (minX > map.width) || (minY > map.height) || (maxY < 0)) {
+			var mapSize = rg2.getMapSize();
+			if ((maxX < 0) || (minX > mapSize.width) || (minY > mapSize.height) || (maxY < 0)) {
 				// warn and fit to track
 				var msg = "<div id='GPS-problem-dialog'>Your GPS file does not match the map co-ordinates. Please check you have selected the correct file.</div>";
 				$(msg).dialog({

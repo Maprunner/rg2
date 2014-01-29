@@ -126,8 +126,12 @@
           <div id="rg2-select-course">
            Select course: <select  id="rg2-course-select"></select>
           </div>     
-          <div id="rg2-name-course">
+          <div id="rg2-select-name">
            Select name: <select  id="rg2-name-select"></select>
+          </div>
+          <div id="rg2-enter-name">
+           <p id = "rg2-name">Enter name: <input  id="rg2-name-entry" class="pushright" type="text"></input></p>
+           <p id = "rg2-time">Enter time (mm:ss): <input  id="rg2-time-entry" class="pushright" type="text"></input></p>
           </div>
           <div>
            <textarea id="rg2-new-comments"></textarea>

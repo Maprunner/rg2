@@ -10,11 +10,11 @@ module.exports = function(grunt) {
 
   var ftpHost = 'ftp.routegadget.co.uk';
 
-  var clubs = ['aire', 'bado', 'baoc', 'basoc', 'bko', 'boc', 'bok', 'border', 'chig', 'claro', 'clok', 'clyde', 'cuoc', 'cvfr', 'darkandwhite', 'dee',
-   'devenoc', 'ebor', 'ecko', 'elo', 'epoc', 'esoc', 'euoc', 'gmoa', 'gramp', 'guildford', 'happyherts', 'havoc', 'hoc', 'interlopers', 'invoc', 'jk',
+  var clubs = ['aire', 'bado', 'baoc', 'basoc', 'bko', 'boc', 'bok', 'bl', 'chig', 'claro', 'clok', 'clyde', 'cuoc', 'cvfr', 'darkandwhite', 'dee',
+   'devenoc', 'ebor', 'ecko', 'elo', 'epoc', 'esoc', 'euoc', 'gmoa', 'gramp', 'go', 'happyherts', 'havoc', 'hoc', 'interlopers', 'invoc', 'jk',
    'kerno', 'kfo', 'lamm', 'leioc', 'loc', 'log', 'lok', 'lvo', 'maroc', 'mdoc', 'mvoc', 'nato', 'ngoc', 'noroc', 'nwo', 'od', 'omm', 'ouoc',
    'pfo', 'pow', 'quantock', 'rafo', 'roxburghreivers', 'sa', 'sarum', 'scottish6days', 'seloc', 'slow', 'smbo', 'smoc', 'sn', 'soc', 'solway',
-   'sportident', 'sroc', 'stag', 'start', 'suffoc', 'swoc', 'syo', 'tay', 'test', 'thistle', 'tinto', 'tvoc', 'walton', 'wcoc', 'wim',
+   'sportident', 'sroc', 'stag', 'start', 'suffoc', 'swoc', 'syo', 'tay', 'test', 'purple-thistle', 'tinto', 'tvoc', 'walton', 'wcoc', 'wim',
    'wsco', 'wsoe', 'wsx'];
 
   // Project configuration.
@@ -123,11 +123,11 @@ module.exports = function(grunt) {
         src : '**',
         dest : 'ftpsite/bok/rg2/'
       },
-      border : {
+      bl : {
         cwd : 'rel/',
         expand : true,
         src : '**',
-        dest : 'ftpsite/border/rg2/'
+        dest : 'ftpsite/bl/rg2/'
       },
       chig : {
         cwd : 'rel/',
@@ -205,7 +205,7 @@ module.exports = function(grunt) {
         cwd : 'rel/',
         expand : true,
         src : '**',
-        dest : 'ftpsite/epoc/rg2/'
+        dest : 'ftpsite/epoc/gadget/rg2/'
       },
       esoc : {
         cwd : 'rel/',
@@ -231,7 +231,7 @@ module.exports = function(grunt) {
         src : '**',
         dest : 'ftpsite/gramp/rg2/'
       },
-      guildford : {
+      go : {
         cwd : 'rel/',
         expand : true,
         src : '**',
@@ -525,11 +525,11 @@ module.exports = function(grunt) {
         src : '**',
         dest : 'ftpsite/test/rg2/'
       },
-      thistle : {
+       purplethistle : {
         cwd : 'rel/',
         expand : true,
         src : '**',
-        dest : 'ftpsite/thistle/rg2/'
+        dest : 'ftpsite/ purple-thistle/rg2/'
       },
       tinto : {
         cwd : 'rel/',

@@ -14,7 +14,7 @@
   }
 	
 	define('KARTAT_DIRECTORY', $url);
-  define ('LOCK_DIRECTORY', dirname(__FILE__)."/lock/");
+  define ('LOCK_DIRECTORY', dirname(__FILE__)."/lock/saving/");
 	define('GPS_RESULT_OFFSET', 50000);
 	define('GPS_INTERVAL', 3);
 	
@@ -63,13 +63,21 @@ function encode_rg_input($input_str) {
 }
 
 function handlePostRequest($type, $eventid) {
-  	
   $data = json_decode(file_get_contents('php://input'));
-	
+  
   switch ($type) {	
 	case 'addroute':
-    addNewRoute($eventid, $data);
-    break;		
+    if (lockDatabase() !== FALSE) {
+      addNewRoute($eventid, $data);
+      unlockDatabase();
+    } else {
+      $write["status_msg"] = "File lock error";
+      $write["ok"] = FALSE;
+      header("Content-type: application/json"); 
+      echo json_encode($write);
+    }
+    break;	
+    	
 	case 'login':
     logIn($data);
     break;	
@@ -85,14 +93,14 @@ function logIn ($data) {
   if (($handle = fopen(KARTAT_DIRECTORY."uspsw.txt", "r")) !== FALSE) {
     $pwd = fgets($handle);
     if ($data->pwd != $pwd) {
-		  header('HTTP/1.1 401 Unauthorized', true, 401);
-			$ok = false;
+		  header('HTTP/1.1 401 Unauthorized', TRUE, 401);
+			$ok = FALSE;
 		} else {
-		  $ok = true;
+		  $ok = TRUE;
 		}
 	} else {
-	  header('HTTP/1.1 401 Unauthorized', true, 401);
-		$ok = false;		
+	  header('HTTP/1.1 401 Unauthorized', TRUE, 401);
+		$ok = FALSE;		
 	}
   header("Content-type: application/json"); 
   echo json_encode($ok);
@@ -100,8 +108,25 @@ function logIn ($data) {
 
 function addNewRoute($eventid, $data) {
 	//rg2log("Add new route for eventid ".$eventid);
-  if ($data->resultid >= GPS_RESULT_OFFSET) {
-  	$name = '  GPS '.$data->name;
+  $newresult = FALSE;
+  $id = $data->resultid;
+  if (($data->resultid == 0) || ($data->resultid == GPS_RESULT_OFFSET)) {
+    // result needs to be allocated a new id
+    $newresult = TRUE;
+    $rows = count(file(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt"));
+    $rows++;
+    if ($data->resultid == 0) {
+      $id = $rows;
+    } else {
+      $id = $rows + GPS_RESULT_OFFSET;
+    }  
+  }
+
+  $write["oldid"] = $data->resultid;
+  $write["newid"] = $id;
+  
+	if ($id >= GPS_RESULT_OFFSET) {
+  	$name = ' GPS '.$data->name;
   } else {
   	$name = $data->name;
   }
@@ -113,22 +138,8 @@ function addNewRoute($eventid, $data) {
   // remove line breaks and keep compatibility with RG1
   $comments = str_replace("\r", "", $comments);
   $comments = str_replace("\n", "#cr##nl#", $comments);
-	$newcommentdata = $data->courseid."|".$data->resultid."|".$name."||".$comments.PHP_EOL;
-	$filename = "kommentit_".$eventid.".txt";
-	
-	if (($handle = lockFile($filename)) !== FALSE) {
-    $status =fwrite($handle, $newcommentdata);		
-    unlockFile($filename, $handle);
-		if ($status) {
-		  $write["status"] = "Record saved";
-	  } else {
-		  $write["status"] = "Save error";
-	  }
-	} else {
-		  $write["status"] = "File lock error";
-	}
-  // errors writing comments not reported
-
+	$newcommentdata = $data->courseid."|".$id."|".$name."||".$comments.PHP_EOL;
+ 
   // convert x,y to internal RG format
   $track = "";
   for ($i = 0; $i < count($data->x); $i++) {
@@ -140,113 +151,117 @@ function addNewRoute($eventid, $data) {
   	$controls .= 'N'.$data->controlx[$i].';-'.$data->controly[$i];
   }
 	
-  $newtrackdata = $data->courseid."|".$data->resultid."| ".$name."|null|".$track."|".$controls.PHP_EOL;
-	
-	$filename = "merkinnat_".$eventid.".txt";
-	if (($handle = lockFile($filename)) !== FALSE) {
-    $status =fwrite($handle, $newtrackdata);		
-    unlockFile($filename, $handle);
-	  if ($status) {
-		  $write["status_msg"] = "Record saved";
-			$write["ok"] = true;
-	  } else {
-		  $write["status_msg"] = "Save error";
-			$write["ok"] = false;
+  $newtrackdata = $data->courseid."|".$id."| ".$name."|null|".$track."|".$controls.PHP_EOL;
 
-	  }
-	} else {
-		  $write["status_msg"] = "File lock error";
-			$write["ok"] = false;
-	}
-
-  if ($data->resultid >= GPS_RESULT_OFFSET) {
-    // GPS record so need to add result record as well
-    
+  $newresultdata = "";
+  if (($newresult == TRUE) || ($id >= GPS_RESULT_OFFSET)) {
+    // New result or GPS record so need to add result record as well
     // GPS track saved here as a point every three seconds
     // input can in theory have any time between points
     // so we need to interpolate
-		$oldtime = $data->time[0];
-		$oldx = $data->x[0];
-		$oldy = $data->y[0];
-		$track = $data->x[0].';-'.$data->y[0].',0N';
-    for ($i = 1; $i < count($data->x); $i++) {
-      $difftime = $data->time[$i] - $oldtime;
-			if ($difftime >= GPS_INTERVAL) {
-		    $xpersec = ($data->x[$i] - $oldx) / $difftime;
-		    $ypersec = ($data->y[$i] - $oldy) / $difftime;
-        $time = GPS_INTERVAL;
-        while ($time <= $difftime) {
-  	      $track .= intval($oldx + ($xpersec * $time)).';-'.intval($oldy + ($ypersec * $time)).',0N';			        	
-					$time = $time + GPS_INTERVAL;      
-				}
-		    $oldx = intval($oldx + ($xpersec * $time));
-		    $oldy = intval($oldy + ($ypersec * $time));		
-		    $oldtime = $oldtime + $time - GPS_INTERVAL;		
-			}    	  		
+		$track= "";
+		if ($id >= GPS_RESULT_OFFSET) {
+		  $oldtime = $data->time[0];
+		  $oldx = $data->x[0];
+		  $oldy = $data->y[0];
+		  $track = $data->x[0].';-'.$data->y[0].',0N';
+      for ($i = 1; $i < count($data->x); $i++) {
+        $difftime = $data->time[$i] - $oldtime;
+			  if ($difftime >= GPS_INTERVAL) {
+		      $xpersec = ($data->x[$i] - $oldx) / $difftime;
+		      $ypersec = ($data->y[$i] - $oldy) / $difftime;
+          $time = GPS_INTERVAL;
+          while ($time <= $difftime) {
+  	        $track .= intval($oldx + ($xpersec * $time)).';-'.intval($oldy + ($ypersec * $time)).',0N';			        	
+					  $time = $time + GPS_INTERVAL;      
+				  }
+		      $oldx = intval($oldx + ($xpersec * $time));
+		      $oldy = intval($oldy + ($ypersec * $time));		
+		      $oldtime = $oldtime + $time - GPS_INTERVAL;		
+			  }
+        
+      }    	  		
     }
 	
-    $newresultdata = $data->resultid."|".$data->courseid."|".$data->coursename."|".$data->name;
-    $newresultdata .= "|".$data->startsecs."|||||".$track.PHP_EOL;
-	
-	  $filename = "kilpailijat_".$eventid.".txt";
-	  if (($handle = lockFile($filename)) !== FALSE) {
-      $status =fwrite($handle, $newresultdata);		
-      unlockFile($filename, $handle);
-	    if ($status) {
-		    $write["status_msg"] = "Record saved";
-			  $write["ok"] = true;
-	    } else {
-		    $write["status_msg"] = "Save error";
-			  $write["ok"] = false;
-
-	    }
-	  } else {
-		  $write["status_msg"] = "File lock error";
-			$write["ok"] = false;
-		}
+    $newresultdata = $id."|".$data->courseid."|".$data->coursename."|".$name;
+    $newresultdata .= "|".$data->startsecs."|||".$data->totaltime."||".$track.PHP_EOL;
 	}
 
+  $write["status_msg"] = "";
+  
+  if (($handle = @fopen(KARTAT_DIRECTORY."kommentit_".$eventid.".txt", "a")) !== FALSE) {
+    $status =fwrite($handle, $newcommentdata);    
+    if (!$status) {
+      $write["status_msg"] = "Save error for kommentit. ";
+    }
+    @fflush($handle);
+    @fclose($handle);
+  }
+  
+  if (($handle = @fopen(KARTAT_DIRECTORY."merkinnat_".$eventid.".txt", "a")) !== FALSE) {
+    $status =fwrite($handle, $newtrackdata);  
+    if (!$status) {
+      $write["status_msg"] .= " Save error for merkinnat. ";
+    }
+    @fflush($handle);
+    @fclose($handle);
+  }
+
+  if (($newresult == TRUE) || ($id >= GPS_RESULT_OFFSET)) {
+    if (($handle = @fopen(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt", "a")) !== FALSE) {
+      $status =fwrite($handle, $newresultdata);   
+      if (!$status) {
+        $write["status_msg"] .= " Save error for kilpailijat.";
+      }
+      @fflush($handle);
+      @fclose($handle);
+    }
+  }
+
+  if ($write["status_msg"] == "") {
+    $write["ok"] = TRUE;
+    $write["status_msg"] = "Record saved";
+  } else {
+    $write["ok"] = FALSE;    
+  }
+  
   header("Content-type: application/json"); 
   echo json_encode($write);
 }
 
-function lockFile($filename) {
-	  // lock directory version based on http://docstore.mik.ua/orelly/webprog/pcook/ch18_25.htm
-    // but note mkdir returns true if directory already exists!
-    if (is_dir(LOCK_DIRECTORY.$filename)) {
+function lockDatabase() {
+	  // lock directory version based on http://docstore.mik.ua/oreilly/webprog/pcook/ch18_25.htm
+    // but note mkdir returns TRUE if directory already exists!
+    $locked = FALSE;
+    if (is_dir(LOCK_DIRECTORY)) {
     	// locked already by someone else
-    	//rg2log("Directory exists");
-    	$locked = false;
+    	rg2log("Directory exists");
 		} else {
 			// try to lock it ourselves
-      $locked = mkdir(LOCK_DIRECTORY.$filename ,0777);
+			//rg2log("Trying to lock");
+      $locked = mkdir(LOCK_DIRECTORY ,0777);
     }
 		$tries = 0;
 		while (!$locked && ($tries < 5)) {
 			// wait 500ms up to 5 times trying to get a lock
 			usleep(500000);
-      if (is_dir(LOCK_DIRECTORY.$filename)) {
+      if (is_dir(LOCK_DIRECTORY)) {
     	  // locked already by someone else
-    	  $locked = false;
+    	  $locked = FALSE;
 		  } else {
 			  // try to lock it ourselves
-        $locked = mkdir(LOCK_DIRECTORY.$filename ,0777);
+        $locked = mkdir(LOCK_DIRECTORY,0777);
       }
 			$tries++;
+      //rg2log("Lock attempt ".$tries);
 		}
-		if ($locked) {
-			// returns file handle if OK, false otherwise
-			return fopen(KARTAT_DIRECTORY.$filename, "a");
-		} else {
-		  return $locked;
-		}
+		//rg2log("Lock status ".$locked);
+	  return $locked;
 }
 
-function unlockFile($filename, $handle) {
+function unlockDatabase() {
 	// ignore any errors but try to tidy up everything
-  @fflush($handle);
-  @fclose($handle);
-  @rmdir(LOCK_DIRECTORY.$filename);		   	
+  @rmdir(LOCK_DIRECTORY);		   	
 }
 
 function handleGetRequest($type, $id) {
@@ -333,14 +348,14 @@ function isScoreEvent($eventid) {
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
       if ($data[0] == $eventid) {
 			  if ($data[2] == 3) {
-          return true;
+          return TRUE;
 				} else {
-					return false;
+					return FALSE;
 				}
 			}
     }
 	}
-	return false;
+	return FALSE;
 }
 
 function getResultsForEvent($eventid) {
@@ -412,7 +427,10 @@ function getResultsForEvent($eventid) {
 				  }
 			  }					
 			}
-			$detail["time"] = $data[7];
+			// remove ".:" and "::" which RG1 can generate when adding results
+			$t = str_replace('.:', ':', $data[7]);
+      $t = str_replace('::', ":", $t);
+			$detail["time"] = $t;
 			// trim trailing ; which create null fields when expanded
 			$detail["splits"] = rtrim($data[8], ";");
 			if (sizeof($data) > 9) {
@@ -451,14 +469,14 @@ function getCoursesForEvent($eventid) {
   $output = array();
   $row = 0;
   // extract control codes
-  $controlsFound = false;
+  $controlsFound = FALSE;
   $controls = array();
   $xpos = array();
 	$ypos = array();
   // @ suppresses error report if file does not exist
   // read control codes for each course
   if (($handle = @fopen(KARTAT_DIRECTORY."sarjojenkoodit_".$eventid.".txt", "r")) !== FALSE) {
-    $controlsFound = true;
+    $controlsFound = TRUE;
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
       // ignore first field: it is an index	
       $codes = array();
