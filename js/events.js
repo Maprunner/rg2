@@ -26,6 +26,16 @@ Events.prototype = {
 	getActiveEventID : function() {
 		return this.activeEventID;
 	},
+	
+	getEventIDForKartatID : function (kartatID) {
+    var i;
+    for (i = 0; i < this.events.length; i += 1) {
+      if (this.events[i].kartatid === kartatID) {
+        return i;
+      }
+    }
+    return undefined; 
+	},
 
 	getActiveEventDate : function() {
 		if (this.activeEventID !== null) {

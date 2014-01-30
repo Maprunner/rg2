@@ -574,9 +574,11 @@ var rg2 = ( function() {'use strict';
       });
 
       // load requested event if set
+      // input is kartat ID so need to find internal ID first
       if (requestedEventID) {
-        if (events.isValidEventID(requestedEventID)) {
-          loadEvent(requestedEventID);
+        var eventID = events.getEventIDForKartatID(requestedEventID);
+        if (eventID !== undefined) {
+          loadEvent(eventID);
         }
       }
     }
