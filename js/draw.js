@@ -3,6 +3,7 @@
 /*global getAngle:false */
 /*global formatSecsAsMMSS:false */
 /*global getSecsFromMMSS:false */
+/*global rg2WarningDialog:false */
 /*global json_url:false */
 // handle drawing of a new route
 function Draw() {
@@ -69,10 +70,7 @@ Draw.prototype = {
       if ((this.gpstrack.routeData.resultid !== null) && (this.gpstrack.routeData.courseid !== null)) {
         this.addNewPoint(x, y);
       } else {
-        var msg = "<div id='drawing-reset-dialog'>Please select course and name before you start drawing a route or upload a file.</div>";
-        $(msg).dialog({
-          title : "Select course and name"
-        });
+        rg2WarningDialog('Select course and name', 'Please select course and name before you start drawing a route or upload a file.');
       }
     }
   },
@@ -395,17 +393,11 @@ Draw.prototype = {
   },
 
   saveError : function(text) {
-    var msg = "<div>Your route was not saved. Please try again. " + text + "</div>";
-    $(msg).dialog({
-      title : this.gpstrack.routeData.name
-    });
+    rg2WarningDialog(this.gpstrack.routeData.name, 'Your route was not saved. Please try again.' + text);
   },
 
   routeSaved : function(text) {
-    var msg = "<div>Your route has been saved.</div>";
-    $(msg).dialog({
-      title : this.gpstrack.routeData.name
-    });
+    rg2WarningDialog(this.gpstrack.routeData.name, 'Your route has been saved.');
     rg2.loadEvent(rg2.getActiveEventID());
   },
 

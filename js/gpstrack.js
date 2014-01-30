@@ -2,6 +2,7 @@
 /*global map:false */
 /*global getLatLonDistance:false */
 /*global RouteData:false */
+/*global rg2WarningDialog:false */
 function GPSTrack() {
 	this.lat = [];
 	this.lon = [];
@@ -9,6 +10,7 @@ function GPSTrack() {
 	this.baseX = [];
 	this.baseY = [];
 	this.fileLoaded = false;
+	this.fileName = '';
 	this.routeData = new RouteData();
 }
 
@@ -28,43 +30,45 @@ GPSTrack.prototype = {
 	uploadGPS : function(evt) {
 		//console.log ("File" + evt.target.files[0].name);
 		var reader = new FileReader();
-
+    this.fileName = evt.target.files[0].name;
+    
 		reader.onerror = function(evt) {
 			switch(evt.target.error.code) {
 				case evt.target.error.NOT_FOUND_ERR:
-					alert('File not found');
+          rg2WarningDialog('GPS file problem', 'File not found');
 					break;
 				case evt.target.error.NOT_READABLE_ERR:
-					alert('File not readable');
+          rg2WarningDialog('GPS file problem', 'File not readable. Please check you have selected the correct file.');
 					break;
 				default:
-					alert('An error occurred reading the file.');
+          rg2WarningDialog('GPS file problem', 'An error occurred. Please check you have selected the correct file.');
 			}
 		};
 
 		var self = this;
 
 		reader.onload = function(evt) {
-			var trksegs;
-			var trkpts;
 			var xml;
-			var i;
-			var j;
-			var timestring;
-			xml = $.parseXML(evt.target.result);
-			trksegs = xml.getElementsByTagName('trkseg');
-			for ( i = 0; i < trksegs.length; i += 1) {
-				trkpts = trksegs[i].getElementsByTagName('trkpt');
-				for ( j = 0; j < trkpts.length; j += 1) {
-					self.lat.push(trkpts[j].getAttribute('lat'));
-					self.lon.push(trkpts[j].getAttribute('lon'));
-					timestring = trkpts[j].childNodes[3].textContent;
-					self.time.push(self.getSecsFromTrackpoint(timestring));
-				}
+			var fileType = self.fileName.slice(-3).toLowerCase();
+			if ((fileType !== 'gpx') && (fileType !== 'tcx')) {
+        rg2WarningDialog('GPS file problem', 'File type not recognised. Please check you have selected the correct file.');
+        return;
+      }
+      try {
+        xml = $.parseXML(evt.target.result);
+      } catch(err) {
+        rg2WarningDialog('GPS file problem', 'File is not valid XML. Please check you have selected the correct file.');
+        return;
+      }
+			if (fileType === "gpx") {
+        self.processGPX(xml);
+      } else {
+        if (fileType === "tcx") {
+          self.processTCX(xml);
+        }
 			}
 			self.processGPSTrack();
 			$("#rg2-load-gps-file").button('disable');
-			console.log("File loaded");
 		};
 
 		// read the selected file
@@ -72,12 +76,52 @@ GPSTrack.prototype = {
 
 	},
 
+  processGPX: function (xml) {
+    var trksegs;
+    var trkpts;
+    var i;
+    var j;
+    var timestring;
+    trksegs = xml.getElementsByTagName('trkseg');
+    for ( i = 0; i < trksegs.length; i += 1) {
+      trkpts = trksegs[i].getElementsByTagName('trkpt');
+      for ( j = 0; j < trkpts.length; j += 1) {
+        this.lat.push(trkpts[j].getAttribute('lat'));
+        this.lon.push(trkpts[j].getAttribute('lon'));
+        timestring = trkpts[j].childNodes[3].textContent;
+        this.time.push(this.getSecsFromTrackpoint(timestring));
+      }
+    }
+  },
+
+  processTCX: function (xml) {
+    var trksegs;
+    var trkpts;
+    var i;
+    var j;
+    var timestring;
+    trksegs = xml.getElementsByTagName('Track');
+    for ( i = 0; i < trksegs.length; i += 1) {
+      trkpts = trksegs[i].getElementsByTagName('Trackpoint');
+      for ( j = 0; j < trkpts.length; j += 1) {
+        this.lat.push(trkpts[j].childNodes[3].childNodes[1].textContent);
+        this.lon.push(trkpts[j].childNodes[3].childNodes[3].textContent);
+        timestring = trkpts[j].childNodes[1].textContent;
+        this.time.push(this.getSecsFromTrackpoint(timestring));
+      }
+    }
+  },
+  
 	getSecsFromTrackpoint : function(timestring) {
-		// input is 2013-12-03T12:34:56Z
+	try {
+		// input is 2013-12-03T12:34:56Z (or 56.000Z)
 		var hrs = parseInt(timestring.substr(11, 2), 10);
 		var mins = parseInt(timestring.substr(14, 2), 10);
 		var secs = parseInt(timestring.substr(17, 2), 10);
 		return (hrs * 3600) + (mins * 60) + secs;
+	} catch (err) {
+      return 0;
+	}
 	},
 
 	processGPSTrack : function() {

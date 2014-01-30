@@ -1,7 +1,7 @@
 {
   "name": "rg2",
   "description": "Routegadget 2",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "repository": "https://github.com/Maprunner/rg2",
   "devDependencies": {
     "grunt": "~0.4.2",
@@ -15,6 +15,7 @@
     "grunt-newer": "~0.6.1",
     "load-grunt-tasks": "~0.2.1",
     "grunt-text-replace": "~0.3.10",
-    "grunt-bumpup": "~0.5.0"
+    "grunt-bumpup": "~0.5.0",
+    "grunt-sync": "0.0.5"
   }
 }

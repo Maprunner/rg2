@@ -141,10 +141,10 @@
        <button id="btn-save-route">Save</button>
        <button class="pushright" id="btn-reset-drawing">Reset</button>
           <hr class="rg2-hr">
-          <h3>Load GPS file</h3>
+          <h3>Load GPS file (GPX or TCX)</h3>
           <div id="rg2-select-gps-file">
-           <input type='file' accept='.gpx' id='rg2-load-gps-file'>
-          </div> 
+           <input type='file' accept='.gpx, .tcx' id='rg2-load-gps-file'>
+          </div>
        <input type=checkbox id="btn-move-all"><label for="btn-move-all"> Move track and map together</label>
        <ul>
         <li>Drag track to align track on map</li>
@@ -210,7 +210,7 @@
 		  <div id="rg2-track-names"></div>
 		  <div id="rg2-about-dialog" title="Routegadget 2.0 Viewer">
 			 <p>This application allows you to view existing <a href="http://www.routegadget.net">Routegadget</a> information in any modern (HTML5-compliant) browser without the need for Java.</p>
-			 <p>This is an early prototype to allow testing of the user interface. The latest version is available for
+			 <p>The latest version is available for
 			 	<a href="https://github.com/Maprunner/rg2/archive/master.zip"> download here</a>.
 				 Later versions will allow you to create new events, but for now it only works on events that have been set
 			   up in in the original Routegadget.</p>

@@ -1,5 +1,6 @@
 /* exported getLatLonDistance */
 /* exported getAngle */
+/* exported rg2WarningDialog */
 /* exported formatSecsAsMMSS */
 /* exported getSecsFromMMSS */
 /* exported trackTransforms */
@@ -44,6 +45,14 @@ Colours.prototype = {
 Number.prototype.toRad = function() {
   return this * Math.PI / 180;
 };
+
+
+function rg2WarningDialog(title, text) {
+  var msg = '<div>' + text + '</div>';
+  $(msg).dialog({
+    title : title
+  });
+}
 
 function getLatLonDistance(lat1, lon1, lat2, lon2) {
   // Haversine formula (http://www.codecodex.com/wiki/Calculate_distance_between_two_points_on_a_globe)
