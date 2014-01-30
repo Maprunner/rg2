@@ -1,5 +1,15 @@
 # Routegadget 2.0
 
+## Latest news
+Version 0.4.3 was released on 30th January and now provides nearly all the user functionality of the original Routegadget. It has been installed on all sites managed through routegadget.co.uk, and I am working with Paul Frost to keep these sites up to date with future versions as they are released. Recent significant changes include:
+* Permalinks to allow direct access to a given event through a link ending #xx, where xx is the event number. For example, [http://www.happyherts.routegadget.co.uk/rg2/#135] (http://www.happyherts.routegadget.co.uk/rg2/#135) links directly to the HH event at Ashridge on 19th January.
+* Entry of names, times and routes for events that were added without results (typically low-key events such as evening street score events).
+* Ability to upload TCX files as well as GPX files.
+
+## Error reporting
+If you find a problem or want to suggest an enhancement then the first thing to do is check the [known issues list on Github] (https://github.com/Maprunner/rg2/issues).
+If your problem is not already there then you can add it directly (although I think you need a Github account to do this) or you can email me (simon at maprunner dot co dot uk) and I will add it.
+
 ## What is RouteGadget?
 Routegadget is a Web application for drawing and comparing orienteering routes. The original version was developed by Jarkko Ryyppö, and
 it is now used by [orienteering clubs around the world] (http://www.routegadget.net). This includes a very big user base
@@ -16,7 +26,7 @@ Routegadget 2.0 allows you to view existing Routegadget information in any moder
 It also adds a modern user interface as well as updated functionality for analysis.
 
 ##Status
-The user interface now includes most of the core functionality and should be fairly stable. You can draw a route and upload a recorded GPS file (GPX format only at present).
+The user interface now includes all core functionality and should be fairly stable. You can draw a route and upload a recorded GPS file (GPX and TCX formats only at present).
 
 Later versions will allow you to create new events (as a replacement of the original Manager), but for now it only works on events that have been set up in the
 original Routegadget.
@@ -55,5 +65,13 @@ directory, at the same level as the kartat directory where the data files are st
 3. Edit the rg2-config.php file in the /rg2 directory and enter the URL for your existing Routegadget installation. Change other configuration options as necessary.
 
 4. Your data should now be available at e.g. http://www.club.routegadget.co.uk/rg2/index.php
+
+##Known installation problems
+We have had two examples of a problem when creating the configuration file. Certain text editors (and it is not obvious which, or even if it always happens) can add three invisible bytes at the start of a file when saving it and this gives error when the file is read in. You will get a blank Events tab, and will possibly see a message starting "Events request failed: parsererror, SyntaxError: JSON Parse error:
+Unrecognized token '<'".
+
+The easiest solution is to recreate the config file in a different editor starting from the github version. 
+
+For a full technical explanation see [UTF8 BOM in this article] (http://stackoverflow.com/questions/8028957/headers-already-sent-by-php). You can see the problem if you upload the config file to [http://en.webhex.net/] (http://en.webhex.net/).
 
 
