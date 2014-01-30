@@ -9,7 +9,7 @@ module.exports = function(grunt) {
   var relDir = 'ftpsite/';
 
   var ftpHost = 'ftp.routegadget.co.uk';
-
+  
   var clubs = ['aire', 'bado', 'baoc', 'basoc', 'bko', 'boc', 'bok', 'bl', 'chig', 'claro', 'clok', 'clyde', 'cuoc', 'cvfr', 'darkandwhite', 'dee',
    'devenoc', 'ebor', 'ecko', 'elo', 'epoc', 'esoc', 'euoc', 'gmoa', 'gramp', 'go', 'happyherts', 'havoc', 'hoc', 'interlopers', 'invoc', 'jk',
    'kerno', 'kfo', 'lamm', 'leioc', 'loc', 'log', 'lok', 'lvo', 'maroc', 'mdoc', 'mvoc', 'nato', 'ngoc', 'noroc', 'nwo', 'od', 'omm', 'ouoc',
@@ -68,19 +68,22 @@ module.exports = function(grunt) {
     },
 
     'ftp-deploy' : {
-      build : {
+      toweb : {
         auth : {
           host : ftpHost,
           port : 21,
           authKey : 'rg'
         },
-        src : relDir,
-        dest : '<%= ftp.dest %>',
-        exclusions : ['rg2-config-template.php']
+        src : 'ftpsite/',
+        dest : 'public_html/',
+        exclusions : []
       }
     },
-
-    copy : {
+    sync : {
+      rel : {
+        src : ['js/**', 'css/**', 'img/**', 'rg2api.php', 'index.php'],
+        dest : 'rel/'
+      },
       aire : {
         cwd : 'rel/',
         expand : true,
@@ -235,7 +238,7 @@ module.exports = function(grunt) {
         cwd : 'rel/',
         expand : true,
         src : '**',
-        dest : 'ftpsite/guildford/rg2/'
+        dest : 'ftpsite/go/rg2/'
       },
       happyherts : {
         cwd : 'rel/',
@@ -525,11 +528,11 @@ module.exports = function(grunt) {
         src : '**',
         dest : 'ftpsite/test/rg2/'
       },
-       purplethistle : {
+      purplethistle : {
         cwd : 'rel/',
         expand : true,
         src : '**',
-        dest : 'ftpsite/ purple-thistle/rg2/'
+        dest : 'ftpsite/purple-thistle/rg2/'
       },
       tinto : {
         cwd : 'rel/',
@@ -613,10 +616,11 @@ module.exports = function(grunt) {
   grunt.registerTask('bump-minor', ['bumpup:minor']);
   grunt.registerTask('bump-major', ['bumpup:major']);
 
-  grunt.registerTask('build', ['newer:jshint:all', 'newer:concat', 'newer:uglify']);
+  grunt.registerTask('build', ['newer:jshint:all', 'newer:concat', 'newer:uglify', 'sync:rel']);
 
   grunt.registerTask('deploy', ['replace:version', 'build', 'newer:copy']);
 
+  //old example task: one-off to generate config files
   grunt.registerTask('config', 'Generate config files', function() {
 
     // clubs that didn't have a config already
@@ -639,19 +643,4 @@ module.exports = function(grunt) {
 
   });
 
-  grunt.registerTask('cpy', 'ftpTask', function() {
-
-    var i;
-    var obj = '';
-    for ( i = 0; i < clubs.length; i += 1) {
-      obj += clubs[i] + ": {\n";
-      obj += "cwd: 'rel/',\n";
-      obj += "expand: true,\n";
-      obj += "src: '**,\n";
-      obj += "dest: 'ftpsite/" + clubs[i] + "/rg2/'\n";
-      obj += "},\n";
-    }
-
-    grunt.file.write('copyconfig.js', obj);
-  });
 };

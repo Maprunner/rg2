@@ -1,4 +1,4 @@
-// Version 0.4.2 2014-01-29T20:31:17;
+// Version 0.4.3 2014-01-30T20:37:27;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -88,7 +88,7 @@ var rg2 = ( function() {'use strict';
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.4.2',
+      RG2VERSION: '0.4.3',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999
     };
@@ -575,9 +575,11 @@ var rg2 = ( function() {'use strict';
       });
 
       // load requested event if set
+      // input is kartat ID so need to find internal ID first
       if (requestedEventID) {
-        if (events.isValidEventID(requestedEventID)) {
-          loadEvent(requestedEventID);
+        var eventID = events.getEventIDForKartatID(requestedEventID);
+        if (eventID !== undefined) {
+          loadEvent(eventID);
         }
       }
     }
@@ -778,11 +780,10 @@ var rg2 = ( function() {'use strict';
       // checkbox to animate a result
       $(".replay").click(function(event) {
         if (event.target.checked) {
-          animation.addRunner(new Runner(event.target.id, animation.colours.getNextColour()));
+          animation.addRunner(new Runner(event.target.id));
         } else {
           animation.removeRunner(event.target.id);
         }
-
         redraw(false);
       });
       // disable control dropdown if we have no controls
@@ -950,7 +951,6 @@ $(document).ready(rg2.init);
 
 /*global rg2:false */
 /*global formatSecsAsMMSS:false */
-/*global Colours:false */
 /*global clearInterval:false */
 /*global setInterval:false */
  function Animation() {
@@ -961,7 +961,6 @@ $(document).ready(rg2.init);
 	this.deltaSecs = 5;
 	// value in milliseconds
 	this.timerInterval = 100;
-	this.colours = new Colours();
 	// if not real time then mass start
 	this.realTime = false;
 	this.earliestStartSecs = 0;
@@ -1839,6 +1838,7 @@ Course.prototype = {
 /*global getAngle:false */
 /*global formatSecsAsMMSS:false */
 /*global getSecsFromMMSS:false */
+/*global rg2WarningDialog:false */
 /*global json_url:false */
 // handle drawing of a new route
 function Draw() {
@@ -1905,10 +1905,7 @@ Draw.prototype = {
       if ((this.gpstrack.routeData.resultid !== null) && (this.gpstrack.routeData.courseid !== null)) {
         this.addNewPoint(x, y);
       } else {
-        var msg = "<div id='drawing-reset-dialog'>Please select course and name before you start drawing a route or upload a file.</div>";
-        $(msg).dialog({
-          title : "Select course and name"
-        });
+        rg2WarningDialog('Select course and name', 'Please select course and name before you start drawing a route or upload a file.');
       }
     }
   },
@@ -2231,17 +2228,11 @@ Draw.prototype = {
   },
 
   saveError : function(text) {
-    var msg = "<div>Your route was not saved. Please try again. " + text + "</div>";
-    $(msg).dialog({
-      title : this.gpstrack.routeData.name
-    });
+    rg2WarningDialog(this.gpstrack.routeData.name, 'Your route was not saved. Please try again.' + text);
   },
 
   routeSaved : function(text) {
-    var msg = "<div>Your route has been saved.</div>";
-    $(msg).dialog({
-      title : this.gpstrack.routeData.name
-    });
+    rg2WarningDialog(this.gpstrack.routeData.name, 'Your route has been saved.');
     rg2.loadEvent(rg2.getActiveEventID());
   },
 
@@ -2399,6 +2390,16 @@ Events.prototype = {
 	getActiveEventID : function() {
 		return this.activeEventID;
 	},
+	
+	getEventIDForKartatID : function (kartatID) {
+    var i;
+    for (i = 0; i < this.events.length; i += 1) {
+      if (this.events[i].kartatid === kartatID) {
+        return i;
+      }
+    }
+    return undefined;
+	},
 
 	getActiveEventDate : function() {
 		if (this.activeEventID !== null) {
@@ -2466,7 +2467,7 @@ Events.prototype = {
 			} else {
 				title = this.events[i].type + " event on " + this.events[i].date;
 			}
-			html += "<li title='" + title + "' id=" + i + "><a href='#" + i + "'>";
+			html += "<li title='" + title + "' id=" + i + "><a href='#" + this.events[i].kartatid + "'>";
 			if (this.events[i].comment !== "") {
 				html += "<i class='fa fa-info-circle event-info-icon' id='info-" + i + "'></i>";
 			}
@@ -2528,6 +2529,7 @@ Event.prototype = {
 /*global map:false */
 /*global getLatLonDistance:false */
 /*global RouteData:false */
+/*global rg2WarningDialog:false */
 function GPSTrack() {
 	this.lat = [];
 	this.lon = [];
@@ -2535,6 +2537,7 @@ function GPSTrack() {
 	this.baseX = [];
 	this.baseY = [];
 	this.fileLoaded = false;
+	this.fileName = '';
 	this.routeData = new RouteData();
 }
 
@@ -2554,43 +2557,45 @@ GPSTrack.prototype = {
 	uploadGPS : function(evt) {
 		//console.log ("File" + evt.target.files[0].name);
 		var reader = new FileReader();
-
+    this.fileName = evt.target.files[0].name;
+    
 		reader.onerror = function(evt) {
 			switch(evt.target.error.code) {
 				case evt.target.error.NOT_FOUND_ERR:
-					alert('File not found');
+          rg2WarningDialog('GPS file problem', 'File not found');
 					break;
 				case evt.target.error.NOT_READABLE_ERR:
-					alert('File not readable');
+          rg2WarningDialog('GPS file problem', 'File not readable. Please check you have selected the correct file.');
 					break;
 				default:
-					alert('An error occurred reading the file.');
+          rg2WarningDialog('GPS file problem', 'An error occurred. Please check you have selected the correct file.');
 			}
 		};
 
 		var self = this;
 
 		reader.onload = function(evt) {
-			var trksegs;
-			var trkpts;
 			var xml;
-			var i;
-			var j;
-			var timestring;
-			xml = $.parseXML(evt.target.result);
-			trksegs = xml.getElementsByTagName('trkseg');
-			for ( i = 0; i < trksegs.length; i += 1) {
-				trkpts = trksegs[i].getElementsByTagName('trkpt');
-				for ( j = 0; j < trkpts.length; j += 1) {
-					self.lat.push(trkpts[j].getAttribute('lat'));
-					self.lon.push(trkpts[j].getAttribute('lon'));
-					timestring = trkpts[j].childNodes[3].textContent;
-					self.time.push(self.getSecsFromTrackpoint(timestring));
-				}
+			var fileType = self.fileName.slice(-3).toLowerCase();
+			if ((fileType !== 'gpx') && (fileType !== 'tcx')) {
+        rg2WarningDialog('GPS file problem', 'File type not recognised. Please check you have selected the correct file.');
+        return;
+      }
+      try {
+        xml = $.parseXML(evt.target.result);
+      } catch(err) {
+        rg2WarningDialog('GPS file problem', 'File is not valid XML. Please check you have selected the correct file.');
+        return;
+      }
+			if (fileType === "gpx") {
+        self.processGPX(xml);
+      } else {
+        if (fileType === "tcx") {
+          self.processTCX(xml);
+        }
 			}
 			self.processGPSTrack();
 			$("#rg2-load-gps-file").button('disable');
-			console.log("File loaded");
 		};
 
 		// read the selected file
@@ -2598,12 +2603,52 @@ GPSTrack.prototype = {
 
 	},
 
+  processGPX: function (xml) {
+    var trksegs;
+    var trkpts;
+    var i;
+    var j;
+    var timestring;
+    trksegs = xml.getElementsByTagName('trkseg');
+    for ( i = 0; i < trksegs.length; i += 1) {
+      trkpts = trksegs[i].getElementsByTagName('trkpt');
+      for ( j = 0; j < trkpts.length; j += 1) {
+        this.lat.push(trkpts[j].getAttribute('lat'));
+        this.lon.push(trkpts[j].getAttribute('lon'));
+        timestring = trkpts[j].childNodes[3].textContent;
+        this.time.push(this.getSecsFromTrackpoint(timestring));
+      }
+    }
+  },
+
+  processTCX: function (xml) {
+    var trksegs;
+    var trkpts;
+    var i;
+    var j;
+    var timestring;
+    trksegs = xml.getElementsByTagName('Track');
+    for ( i = 0; i < trksegs.length; i += 1) {
+      trkpts = trksegs[i].getElementsByTagName('Trackpoint');
+      for ( j = 0; j < trkpts.length; j += 1) {
+        this.lat.push(trkpts[j].childNodes[3].childNodes[1].textContent);
+        this.lon.push(trkpts[j].childNodes[3].childNodes[3].textContent);
+        timestring = trkpts[j].childNodes[1].textContent;
+        this.time.push(this.getSecsFromTrackpoint(timestring));
+      }
+    }
+  },
+  
 	getSecsFromTrackpoint : function(timestring) {
-		// input is 2013-12-03T12:34:56Z
+	try {
+		// input is 2013-12-03T12:34:56Z (or 56.000Z)
 		var hrs = parseInt(timestring.substr(11, 2), 10);
 		var mins = parseInt(timestring.substr(14, 2), 10);
 		var secs = parseInt(timestring.substr(17, 2), 10);
 		return (hrs * 3600) + (mins * 60) + secs;
+	} catch (err) {
+      return 0;
+	}
 	},
 
 	processGPSTrack : function() {
@@ -3375,6 +3420,7 @@ Manager.prototype = {
 
 /* exported getLatLonDistance */
 /* exported getAngle */
+/* exported rg2WarningDialog */
 /* exported formatSecsAsMMSS */
 /* exported getSecsFromMMSS */
 /* exported trackTransforms */
@@ -3400,7 +3446,7 @@ Manager.prototype = {
 
 function Colours() {
   // used to generate track colours: add extra colours as necessary
-  this.colours = ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#ff00ff", "#00ffff"];
+  this.colours = ["#ff0000", "#ff8000",  "#ff00ff", "#ff0080", "#008080", "#008000", "#00ff00", "#0080ff", "#0000ff", "#8000ff", "#000000", "#00ffff", "#808080"];
   this.colourIndex = 0;
 }
 
@@ -3419,6 +3465,14 @@ Colours.prototype = {
 Number.prototype.toRad = function() {
   return this * Math.PI / 180;
 };
+
+
+function rg2WarningDialog(title, text) {
+  var msg = '<div>' + text + '</div>';
+  $(msg).dialog({
+    title : title
+  });
+}
 
 function getLatLonDistance(lat1, lon1, lat2, lon2) {
   // Haversine formula (http://www.codecodex.com/wiki/Calculate_distance_between_two_points_on_a_globe)
@@ -4021,14 +4075,14 @@ Result.prototype = {
 /*global rg2:false */
 /*exported Runner */
 // animated runner details
-function Runner(resultid, colour) {
+function Runner(resultid) {
 	var res = rg2.getFullResult(resultid);
 	this.name = res.name;
 	// careful: we need the index into results, not the resultid from the text file
 	this.runnerid = resultid;
 	this.starttime = res.starttime;
 	this.splits = res.splits;
-	this.colour = colour;
+	this.colour = res.trackColour;
 	// get course details
 	var course = rg2.getCourseDetails(res.courseid);
 	this.coursename = course.name;
