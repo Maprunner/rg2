@@ -1,6 +1,5 @@
 /*global rg2:false */
 /*global formatSecsAsMMSS:false */
-/*global Colours:false */
 /*global clearInterval:false */
 /*global setInterval:false */
  function Animation() {
@@ -11,7 +10,6 @@
 	this.deltaSecs = 5;
 	// value in milliseconds
 	this.timerInterval = 100;
-	this.colours = new Colours();
 	// if not real time then mass start
 	this.realTime = false;
 	this.earliestStartSecs = 0;

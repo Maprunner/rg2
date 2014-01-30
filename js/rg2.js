@@ -779,11 +779,10 @@ var rg2 = ( function() {'use strict';
       // checkbox to animate a result
       $(".replay").click(function(event) {
         if (event.target.checked) {
-          animation.addRunner(new Runner(event.target.id, animation.colours.getNextColour()));
+          animation.addRunner(new Runner(event.target.id));
         } else {
           animation.removeRunner(event.target.id);
         }
-
         redraw(false);
       });
       // disable control dropdown if we have no controls

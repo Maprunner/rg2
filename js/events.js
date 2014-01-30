@@ -34,7 +34,7 @@ Events.prototype = {
         return i;
       }
     }
-    return undefined; 
+    return undefined;
 	},
 
 	getActiveEventDate : function() {

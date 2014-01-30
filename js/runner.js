@@ -1,14 +1,14 @@
 /*global rg2:false */
 /*exported Runner */
 // animated runner details
-function Runner(resultid, colour) {
+function Runner(resultid) {
 	var res = rg2.getFullResult(resultid);
 	this.name = res.name;
 	// careful: we need the index into results, not the resultid from the text file
 	this.runnerid = resultid;
 	this.starttime = res.starttime;
 	this.splits = res.splits;
-	this.colour = colour;
+	this.colour = res.trackColour;
 	// get course details
 	var course = rg2.getCourseDetails(res.courseid);
 	this.coursename = course.name;
