@@ -26,6 +26,16 @@ Events.prototype = {
 	getActiveEventID : function() {
 		return this.activeEventID;
 	},
+	
+	getEventIDForKartatID : function (kartatID) {
+    var i;
+    for (i = 0; i < this.events.length; i += 1) {
+      if (this.events[i].kartatid === kartatID) {
+        return i;
+      }
+    }
+    return undefined;
+	},
 
 	getActiveEventDate : function() {
 		if (this.activeEventID !== null) {
@@ -58,6 +68,14 @@ Events.prototype = {
 	isScoreEvent : function() {
 		return (this.events[this.activeEventID].format === rg2.config.SCORE_EVENT);
 	},
+	
+	hasResults: function () {
+    if (this.activeEventID !== null) {
+      return (this.events[this.activeEventID].format !== rg2.config.EVENT_WITHOUT_RESULTS);
+    } else {
+      return true;
+    }
+	},
 
   isValidEventID : function (eventid) {
     if ((this.events.length >= eventid) && (eventid > 0)) {
@@ -85,7 +103,7 @@ Events.prototype = {
 			} else {
 				title = this.events[i].type + " event on " + this.events[i].date;
 			}
-			html += "<li title='" + title + "' id=" + i + "><a href='#" + i + "'>";
+			html += "<li title='" + title + "' id=" + i + "><a href='#" + this.events[i].kartatid + "'>";
 			if (this.events[i].comment !== "") {
 				html += "<i class='fa fa-info-circle event-info-icon' id='info-" + i + "'></i>";
 			}

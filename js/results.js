@@ -115,7 +115,7 @@ Results.prototype = {
 				return this.results[i].splits;
 			}
 		}
-		return 9999;
+		return rg2.config.SPLITS_NOT_FOUND;
 	},
 
 	getTimeForID : function(resultid) {
@@ -124,7 +124,7 @@ Results.prototype = {
 				return this.results[i].time;
 			}
 		}
-		return 9999;
+		return rg2.config.TIME_NOT_FOUND;
 	},
 
 	removeAllTracksFromDisplay : function() {
@@ -305,6 +305,10 @@ function Result(data, isScoreEvent, colour) {
 	if (this.isGPSTrack) {
 		// don't get time or splits so need to copy them in from (GPS_RESULT_OFFSET - resultid)
 		this.time = rg2.getTimeForID(this.resultid - rg2.config.GPS_RESULT_OFFSET);
+		// allow for events with no results where there won't be a non-GPS result
+		if (this.time === rg2.config.TIME_NOT_FOUND) {
+      this.time = data.time;
+		}
 		this.splits = rg2.getSplitsForID(this.resultid - rg2.config.GPS_RESULT_OFFSET);
 
 	}

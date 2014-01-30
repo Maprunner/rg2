@@ -1,5 +1,5 @@
 /*global rg2:false */
-/*global Colours:false */
+/*global formatSecsAsMMSS:false */
 /*global clearInterval:false */
 /*global setInterval:false */
  function Animation() {
@@ -10,7 +10,6 @@
 	this.deltaSecs = 5;
 	// value in milliseconds
 	this.timerInterval = 100;
-	this.colours = new Colours();
 	// if not real time then mass start
 	this.realTime = false;
 	this.earliestStartSecs = 0;
@@ -102,13 +101,13 @@ Animation.prototype = {
 			prevControlSecs = 0;
 			html += "<tr class='splitsname-row'><td>" + run.coursename + "</td><td>" + run.name + "</td>";
 			for ( j = 1; j < run.splits.length; j += 1) {
-				html += "<td>" + this.formatSecsAsMMSS(run.splits[j]) + "</td>";
+				html += "<td>" + formatSecsAsMMSS(run.splits[j]) + "</td>";
 				legSplit[j] = run.splits[j] - prevControlSecs;
 				prevControlSecs = run.splits[j];
 			}
 			html += "</tr><tr class='splitstime-row'><td></td><td></td>";
 			for ( j = 1; j < run.splits.length; j += 1) {
-				html += "<td>" + this.formatSecsAsMMSS(legSplit[j]) + "</td>";
+				html += "<td>" + formatSecsAsMMSS(legSplit[j]) + "</td>";
 			}
 			html += "</tr><tr class='splitsdistance-row'><td></td><td>pixels</td>";
 			for ( j = 1; j < run.splits.length; j += 1) {
@@ -118,20 +117,6 @@ Animation.prototype = {
 		}
 		html += "</tr></table>";
 		return html;
-	},
-
-	formatSecsAsMMSS : function(secs) {
-		var formattedtime;
-		var minutes = Math.floor(secs / 60);
-		formattedtime = minutes;
-		var seconds = secs - (minutes * 60);
-		if (seconds < 10) {
-			formattedtime += ":0" + seconds;
-		} else {
-			formattedtime += ":" + seconds;
-		}
-		return formattedtime;
-
 	},
 
 	removeRunner : function(runnerid) {

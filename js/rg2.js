@@ -82,9 +82,14 @@ var rg2 = ( function() {'use strict';
       // parameters for call to draw courses
       DIM : 0.5,
       FULL_INTENSITY : 1.0,
+      // values of event format
+      NORMAL_EVENT : 1,
+      EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.4.1'
+      RG2VERSION: '0.4.3',
+      TIME_NOT_FOUND : 9999,
+      SPLITS_NOT_FOUND : 9999
     };
 
     function init() {
@@ -190,6 +195,13 @@ var rg2 = ( function() {'use strict';
 
       $("#rg2-course-select").click(function(event) {
         drawing.setCourse(parseInt($("#rg2-course-select").val(), 10));
+      });
+
+      $("#rg2-enter-name").click(function(event) {
+        drawing.setNameAndTime();
+      })
+      .keyup(function(event) {
+        drawing.setNameAndTime();
       });
 
       $('#rg2-new-comments').focus(function() {
@@ -562,9 +574,11 @@ var rg2 = ( function() {'use strict';
       });
 
       // load requested event if set
+      // input is kartat ID so need to find internal ID first
       if (requestedEventID) {
-        if (events.isValidEventID(requestedEventID)) {
-          loadEvent(requestedEventID);
+        var eventID = events.getEventIDForKartatID(requestedEventID);
+        if (eventID !== undefined) {
+          loadEvent(eventID);
         }
       }
     }
@@ -575,9 +589,9 @@ var rg2 = ( function() {'use strict';
       courses.deleteAllCourses();
       controls.deleteAllControls();
       animation.resetAnimation();
-      drawing.initialiseDrawing();
       results.deleteAllResults();
       events.setActiveEventID(eventid);
+      drawing.initialiseDrawing(events.hasResults(eventid));
       loadNewMap(maps_url + "/" + events.getActiveMapID() + '.jpg');
       redraw(false);
 
@@ -765,11 +779,10 @@ var rg2 = ( function() {'use strict';
       // checkbox to animate a result
       $(".replay").click(function(event) {
         if (event.target.checked) {
-          animation.addRunner(new Runner(event.target.id, animation.colours.getNextColour()));
+          animation.addRunner(new Runner(event.target.id));
         } else {
           animation.removeRunner(event.target.id);
         }
-
         redraw(false);
       });
       // disable control dropdown if we have no controls
@@ -821,6 +834,10 @@ var rg2 = ( function() {'use strict';
 
     function getKartatEventID(courseid) {
       return events.getKartatEventID(courseid);
+    }
+    
+    function eventHasResults() {
+      return events.hasResults();
     }
 
     function incrementTracksCount(courseid) {
@@ -899,6 +916,7 @@ var rg2 = ( function() {'use strict';
       getMapSize : getMapSize,
       loadNewMap : loadNewMap,
       loadEvent : loadEvent,
+      eventHasResults: eventHasResults,
       mapIsGeoreferenced : mapIsGeoreferenced,
       getWorldFile : getWorldFile,
       getFullResult : getFullResult,
