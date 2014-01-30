@@ -93,7 +93,7 @@ Events.prototype = {
 			} else {
 				title = this.events[i].type + " event on " + this.events[i].date;
 			}
-			html += "<li title='" + title + "' id=" + i + "><a href='#" + i + "'>";
+			html += "<li title='" + title + "' id=" + i + "><a href='#" + this.events[i].kartatid + "'>";
 			if (this.events[i].comment !== "") {
 				html += "<i class='fa fa-info-circle event-info-icon' id='info-" + i + "'></i>";
 			}
