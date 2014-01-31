@@ -473,6 +473,7 @@ function getCoursesForEvent($eventid) {
   $controls = array();
   $xpos = array();
 	$ypos = array();
+	$dummycontrols = array();
   // @ suppresses error report if file does not exist
   // read control codes for each course
   if (($handle = @fopen(KARTAT_DIRECTORY."sarjojenkoodit_".$eventid.".txt", "r")) !== FALSE) {
@@ -496,12 +497,14 @@ function getCoursesForEvent($eventid) {
       // ignore first field: it is an index	
       $x = array();
 		  $y = array();
+      $dummycodes = array();
 			// field is N separated and then comma separated	
 			$pairs = explode("N", $data[1]);
 			for ($j = 0; $j < count($pairs); $j++) {
   			$xy = explode(";", $pairs[$j]);
         // some courses seem to have nulls at the end so just ignore them
         if ($xy[0] != "") {
+		      $dummycodes[$j] = getDummyCode($pairs[$j]);
 		      $x[$j] = 1 * $xy[0];
 				  // make it easier to draw map
 				  $y[$j] = -1 * $xy[1];
@@ -509,10 +512,12 @@ function getCoursesForEvent($eventid) {
 			}
 			$xpos[$row] = $x;
 			$ypos[$row] = $y;
+      $dummycontrols[$row] = $dummycodes;
 			$row++;		
     }
     fclose($handle);
   }
+
 
 	$row = 0; 
   // set up details for each course
@@ -524,6 +529,8 @@ function getCoursesForEvent($eventid) {
 			if ($controlsFound) {
 				// assuming files have same number of entries: should cross-check courseid?	
 				$detail["codes"] = $controls[$row];
+      } else {
+        $detail["codes"] = $dummycontrols[$row];
 			}
 			$detail["xpos"] = $xpos[$row];
 			$detail["ypos"] = $ypos[$row];
@@ -533,6 +540,27 @@ function getCoursesForEvent($eventid) {
     fclose($handle);
 	}
 	return $output;
+}
+
+function getDummyCode($code) {
+
+  static $codes = array();
+  static $count = 0;
+  $dummycode = 0;
+  for ($i = 0; $i < $count; $i++) {
+    if ($codes[$i] == $code) {
+      $dummycode = $i + 1;
+    }
+  }
+  if ($dummycode == 0) {
+    $codes[$count] = $code;
+    $count++;
+    $dummycode = $count;
+  }
+  //rg2log($code.' becomes '.$dummycode);
+  // force to a string since it helps elsewhere and it shows that these are dummy values
+  return 'X'.$dummycode;
+  
 }
 
 function getTracksForEvent($eventid) {
