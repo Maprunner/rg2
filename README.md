@@ -2,7 +2,7 @@
 
 ## Latest news
 Version 0.4.3 was released on 30th January and now provides nearly all the user functionality of the original Routegadget. It has been installed on all sites managed through routegadget.co.uk, and I am working with Paul Frost to keep these sites up to date with future versions as they are released. Recent significant changes include:
-* Permalinks to allow direct access to a given event through a link ending #xx, where xx is the event number. For example, [http://www.happyherts.routegadget.co.uk/rg2/#135] (http://www.happyherts.routegadget.co.uk/rg2/#135) links directly to the HH event at Ashridge on 19th January.
+* Permalinks to allow direct access to a given event through a link ending #xx, where xx is the event number. For example, [http://www.happyherts.routegadget.co.uk/rg2/#149] (http://www.happyherts.routegadget.co.uk/rg2/#149) links directly to the HH event at Ashridge on 19th January.
 * Entry of names, times and routes for events that were added without results (typically low-key events such as evening street score events).
 * Ability to upload TCX files as well as GPX files.
 
