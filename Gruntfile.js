@@ -11,7 +11,7 @@ module.exports = function(grunt) {
   var ftpHost = 'ftp.routegadget.co.uk';
   
   var clubs = ['aire', 'bado', 'baoc', 'basoc', 'bko', 'boc', 'bok', 'bl', 'chig', 'claro', 'clok', 'clyde', 'cuoc', 'cvfr', 'darkandwhite', 'dee',
-   'devenoc', 'ebor', 'ecko', 'elo', 'epoc', 'esoc', 'euoc', 'gmoa', 'gramp', 'go', 'happyherts', 'havoc', 'hoc', 'interlopers', 'invoc', 'jk',
+   'devonoc', 'ebor', 'ecko', 'elo', 'epoc', 'esoc', 'euoc', 'gmoa', 'gramp', 'go', 'happyherts', 'havoc', 'hoc', 'interlopers', 'invoc', 'jk',
    'kerno', 'kfo', 'lamm', 'leioc', 'loc', 'log', 'lok', 'lvo', 'maroc', 'mdoc', 'mvoc', 'nato', 'ngoc', 'noroc', 'nwo', 'od', 'omm', 'ouoc',
    'pfo', 'pow', 'quantock', 'rafo', 'roxburghreivers', 'sa', 'sarum', 'scottish6days', 'seloc', 'slow', 'smbo', 'smoc', 'sn', 'soc', 'solway',
    'sportident', 'sroc', 'stag', 'start', 'suffoc', 'swoc', 'syo', 'tay', 'test', 'purple-thistle', 'tinto', 'tvoc', 'walton', 'wcoc', 'wim',
@@ -180,11 +180,11 @@ module.exports = function(grunt) {
         src : '**',
         dest : 'ftpsite/dee/rg2/'
       },
-      devenoc : {
+      devonoc : {
         cwd : 'rel/',
         expand : true,
         src : '**',
-        dest : 'ftpsite/devenoc/rg2/'
+        dest : 'ftpsite/devonoc/rg2/'
       },
       ebor : {
         cwd : 'rel/',
@@ -624,7 +624,7 @@ module.exports = function(grunt) {
   grunt.registerTask('config', 'Generate config files', function() {
 
     // clubs that didn't have a config already
-    var clubs = ['aire', 'baoc', 'bko', 'boc', 'bok', 'border', 'chig', 'claro', 'clyde', 'cuoc', 'cvfr', 'darkandwhite', 'devenoc', 'ebor', 'ecko', 'elo', 'esoc', 'euoc', 'gmoa', 'gramp', 'guildford', 'happyherts', 'havoc', 'hoc', 'interlopers', 'jk', 'kerno', 'kfo', 'lamm', 'log', 'lok', 'lvo', 'mdoc', 'mvoc', 'nato', 'ngoc', 'noroc', 'nwo', 'od', 'ouoc', 'pfo', 'pow', 'quantock', 'rafo', 'sa', 'sarum', 'scottish6days', 'seloc', 'smbo', 'smoc', 'sn', 'soc', 'solway', 'sportident', 'stag', 'start', 'swoc', 'syo', 'tay', 'test', 'thistle', 'tinto', 'tvoc', 'walton', 'wcoc', 'wim', 'wsco', 'wsoe', 'wsx'];
+    var clubs = ['aire', 'baoc', 'bko', 'boc', 'bok', 'border', 'chig', 'claro', 'clyde', 'cuoc', 'cvfr', 'darkandwhite', 'devonoc', 'ebor', 'ecko', 'elo', 'esoc', 'euoc', 'gmoa', 'gramp', 'guildford', 'happyherts', 'havoc', 'hoc', 'interlopers', 'jk', 'kerno', 'kfo', 'lamm', 'log', 'lok', 'lvo', 'mdoc', 'mvoc', 'nato', 'ngoc', 'noroc', 'nwo', 'od', 'ouoc', 'pfo', 'pow', 'quantock', 'rafo', 'sa', 'sarum', 'scottish6days', 'seloc', 'smbo', 'smoc', 'sn', 'soc', 'solway', 'sportident', 'stag', 'start', 'swoc', 'syo', 'tay', 'test', 'thistle', 'tinto', 'tvoc', 'walton', 'wcoc', 'wim', 'wsco', 'wsoe', 'wsx'];
 
     var i;
     var obj = '';

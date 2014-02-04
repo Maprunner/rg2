@@ -23,6 +23,7 @@
 /*global Runner:false */
 /*global Course:false */
 /*global trackTransforms:false */
+/*global Hammer:false */
 var rg2 = ( function() {'use strict';
     var canvas = $("#rg2-map-canvas")[0];
     var ctx = canvas.getContext('2d');
@@ -324,6 +325,41 @@ var rg2 = ( function() {'use strict';
         $rg2infopanel.tabs("option", "active", config.TAB_MANAGE);
       }
 
+      var hammer = new Hammer(canvas, {
+          correct_for_drag_min_distance: false,
+          drag_block_horizontal : true,
+          drag_block_vertical : true
+        //}).on("touch pinch tap hold swipe release", function(evt) { 
+        //console.log(evt.type, evt.gesture.center.pageX, evt.gesture.center.pageY);
+        //console.log(evt.gesture);
+      }).on("dragstart", function(evt) {
+        handleTouchStart(evt);
+      }).on("drag", function(evt) {
+        handleTouchMove(evt);
+      }).on("dragend", function(evt) {
+        handleTouchEnd(evt);
+      }).on("pinchin", function(evt) {
+        zoom(-1);
+      }).on("pinchout", function(evt) {
+        zoom(1);
+      });
+
+      var handleTouchStart = function(evt) {
+        lastX = evt.gesture.touches[0].pageX - evt.gesture.deltaX;
+        lastY = evt.gesture.touches[0].pageY - evt.gesture.deltaY;
+        handleInputDown();
+      };
+      
+      var handleTouchMove = function(evt) {
+        lastX = evt.gesture.touches[0].pageX;
+        lastY = evt.gesture.touches[0].pageY;
+        handleInputMove(false, false);
+      };
+
+      var handleTouchEnd = function(evt) {
+        handleInputUp();
+      };
+
       trackTransforms(ctx);
       resizeCanvas();
 
@@ -516,24 +552,37 @@ var rg2 = ( function() {'use strict';
     var handleMouseDown = function(evt) {
       lastX = evt.offsetX || (evt.layerX - canvas.offsetLeft);
       lastY = evt.offsetY || (evt.layerY - canvas.offsetTop);
-      dragStart = ctx.transformedPoint(lastX, lastY);
-      dragged = false;
-      //console.log ("Mousedown " + lastX + " " + lastY + " " + dragStart.x + " " + dragStart.y);
+      handleInputDown();
     };
+
 
     var handleMouseMove = function(evt) {
       lastX = evt.offsetX || (evt.layerX - canvas.offsetLeft);
       lastY = evt.offsetY || (evt.layerY - canvas.offsetTop);
+      handleInputMove(evt.shiftKey, evt.ctrlKey);
+    };
+
+    var handleMouseUp = function(evt) {
+      handleInputUp();
+    };
+
+    var handleInputDown = function() {
+      dragStart = ctx.transformedPoint(lastX, lastY);
+      dragged = false;
+      //console.log ("InputDown " + lastX + " " + lastY + " " + dragStart.x + " " + dragStart.y);
+    };
+    
+    var handleInputMove = function(shiftKey, ctrlKey) {
       if (dragStart) {
         var pt = ctx.transformedPoint(lastX, lastY);
         //console.log ("Mousemove after" + pt.x + ": " + pt.y);
         // allow for Webkit which gives us mousemove events with no movement!
         if ((pt.x !== dragStart.x) || (pt.y !== dragStart.y)) {
           if (drawing.gpsFileLoaded()) {
-            drawing.adjustTrack(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10), parseInt(pt.x, 10), parseInt(pt.y, 10), evt.shiftKey, evt.ctrlKey);
+            drawing.adjustTrack(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10), parseInt(pt.x, 10), parseInt(pt.y, 10), shiftKey, ctrlKey);
           } else {
             if ($rg2infopanel.tabs("option", "active") === config.TAB_MANAGE) {
-              manager.adjustControls(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10), parseInt(pt.x, 10), parseInt(pt.y, 10), evt.shiftKey, evt.ctrlKey);
+              manager.adjustControls(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10), parseInt(pt.x, 10), parseInt(pt.y, 10), shiftKey, ctrlKey);
             } else {
               ctx.translate(pt.x - dragStart.x, pt.y - dragStart.y);
             }
@@ -543,9 +592,8 @@ var rg2 = ( function() {'use strict';
         }
       }
     };
-
-    var handleMouseUp = function(evt) {
-      //console.log ("Mouseup" + dragStart.x + ": " + dragStart.y);
+    
+    var handleInputUp = function() {
       var active = $rg2infopanel.tabs("option", "active");
       if (!dragged) {
         if (active === config.TAB_MANAGE) {
