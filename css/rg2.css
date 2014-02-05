@@ -184,8 +184,8 @@ html, body {
 }
 
 #rg2-info-panel-tab-headers {
-   overflow: none; 
-   postion: relative;
+   overflow: hidden; 
+   position: relative;
 }
 
 #rg2-info-panel-tab-body {
@@ -198,14 +198,7 @@ html, body {
    z-index: 50;
 }
 
-#rg2-animation-names {
-   background: rgba(204, 204, 204, 0.75);
-   padding : 2px;
-   font: 0.75em;
-   text-align: left;
-}
-
-#rg2-track-names {
+#rg2-track-names, #rg2-animation-names {
    border: 1px solid darkgray;
    background: rgba(204, 204, 204, 0.75);
    padding : 2px;
@@ -323,7 +316,7 @@ height: 20px;
 
 #rg2-tails-spinner .ui-state-default {
 	background: silver;
-	colour: darkgray;
+	color: darkgray;
 }
 
 #rg2-tails-spinner .ui-state-active {

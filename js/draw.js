@@ -80,7 +80,6 @@ Draw.prototype = {
       // rebaseline GPS track
       this.gpstrack.baseX = this.gpstrack.routeData.x.slice(0);
       this.gpstrack.baseY = this.gpstrack.routeData.y.slice(0);
-      rg2.redraw(false);
     }
   },
 

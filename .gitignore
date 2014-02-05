@@ -9,6 +9,10 @@ node_modules
 rel
 ftpsite
 .ftppass
+test
+karma.conf.js
+js/coords.js
+coords.html
 
 #################
 ## Eclipse

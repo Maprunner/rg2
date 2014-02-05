@@ -66,8 +66,8 @@
 		<meta charset="utf-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 		<title>Routegadget 2.0 Viewer<?php if ($manager) {?> and Manager<?php } ?></title>
-		<meta name="description" content="">
-		<meta name="viewport" content="width=device-width">
+		<meta name="description" content="View and save route choices for orienteering events">
+		<meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
 
 		<link rel="stylesheet" href="css/normalize.min.css">
 		<link rel="stylesheet" href="css/rg2.css">
@@ -283,8 +283,10 @@
 		  <script src='<?php echo $script_url."animation.js"; ?>'></script>
 		  <script src='<?php echo $script_url."runner.js"; ?>'></script>
       <script src='<?php echo $script_url."plugins.js"; ?>'></script>
+      <script src='<?php echo $script_url."lib/hammer.min.js"; ?>'></script>
 		  <script src='<?php echo $script_url."rg2.js"; ?>'></script>
 		<?php } else { ?>
+      <script src='<?php echo $script_url."lib/hammer.min.js"; ?>'></script>
       <script src='<?php echo $script_url."rg2all.min.js"; ?>'></script>		  
 		<?php } ?>  
       <?php if ($manager) { ?>

@@ -615,7 +615,6 @@ Manager.prototype = {
         this.newcontrols.controls[i].oldX = this.newcontrols.controls[i].x;
         this.newcontrols.controls[i].oldY = this.newcontrols.controls[i].y;
       }
-      rg2.redraw(false);
     }
   },
 
