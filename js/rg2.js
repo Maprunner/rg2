@@ -42,6 +42,7 @@ var rg2 = ( function() {'use strict';
     var scaleFactor;
     var lastX;
     var lastY;
+    var zoomSize;
     var dragStart;
     var dragged;
     var requestedHash;
@@ -88,7 +89,7 @@ var rg2 = ( function() {'use strict';
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.4.3',
+      RG2VERSION: '0.4.4',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999
     };
@@ -97,6 +98,8 @@ var rg2 = ( function() {'use strict';
       // cache jQuery things we use a lot
       $rg2infopanel = $("#rg2-info-panel");
       $rg2eventtitle = $("#rg2-event-title");
+
+      $.ajaxSetup({ cache: false });
 
       if ($('#rg2-manage').length !== 0) {
         managing = true;
@@ -399,6 +402,7 @@ var rg2 = ( function() {'use strict';
       var heightscale = canvas.height / map.height;
       lastX = canvas.width / 2;
       lastY = canvas.height / 2;
+      zoomSize = 1;
       dragStart = null;
       // looks odd but this works for initialisation
       dragged = true;
@@ -532,13 +536,19 @@ var rg2 = ( function() {'use strict';
 
     var zoom = function(zoomDirection) {
       var factor = Math.pow(scaleFactor, zoomDirection);
-
-      var pt = ctx.transformedPoint(lastX, lastY);
-      ctx.translate(pt.x, pt.y);
-      ctx.scale(factor, factor);
-      ctx.translate(-pt.x, -pt.y);
-      ctx.save();
-      redraw(false);
+      var tempZoom = zoomSize * factor;
+      // limit zoom to avoid things disappearing
+      // chosen values seem reasonable after some quick tests
+      if ((tempZoom < 50) && (tempZoom > 0.05)) {
+        zoomSize = tempZoom;
+        var pt = ctx.transformedPoint(lastX, lastY);
+        ctx.translate(pt.x, pt.y);
+        ctx.scale(factor, factor);
+        ctx.translate(-pt.x, -pt.y);
+        ctx.save();
+        redraw(false);
+      }
+      //console.log("Zoom size " + zoomSize);      
     };
 
     var handleScroll = function(evt) {

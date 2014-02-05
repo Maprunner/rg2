@@ -1,4 +1,4 @@
-// Version 0.4.3 2014-01-30T20:37:27;
+// Version 0.4.4 2014-02-05T21:38:24;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -24,6 +24,7 @@
 /*global Runner:false */
 /*global Course:false */
 /*global trackTransforms:false */
+/*global Hammer:false */
 var rg2 = ( function() {'use strict';
     var canvas = $("#rg2-map-canvas")[0];
     var ctx = canvas.getContext('2d');
@@ -42,6 +43,7 @@ var rg2 = ( function() {'use strict';
     var scaleFactor;
     var lastX;
     var lastY;
+    var zoomSize;
     var dragStart;
     var dragged;
     var requestedHash;
@@ -88,7 +90,7 @@ var rg2 = ( function() {'use strict';
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.4.3',
+      RG2VERSION: '0.4.4',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999
     };
@@ -97,6 +99,8 @@ var rg2 = ( function() {'use strict';
       // cache jQuery things we use a lot
       $rg2infopanel = $("#rg2-info-panel");
       $rg2eventtitle = $("#rg2-event-title");
+
+      $.ajaxSetup({ cache: false });
 
       if ($('#rg2-manage').length !== 0) {
         managing = true;
@@ -325,6 +329,41 @@ var rg2 = ( function() {'use strict';
         $rg2infopanel.tabs("option", "active", config.TAB_MANAGE);
       }
 
+      var hammer = new Hammer(canvas, {
+          correct_for_drag_min_distance: false,
+          drag_block_horizontal : true,
+          drag_block_vertical : true
+        //}).on("touch pinch tap hold swipe release", function(evt) { 
+        //console.log(evt.type, evt.gesture.center.pageX, evt.gesture.center.pageY);
+        //console.log(evt.gesture);
+      }).on("dragstart", function(evt) {
+        handleTouchStart(evt);
+      }).on("drag", function(evt) {
+        handleTouchMove(evt);
+      }).on("dragend", function(evt) {
+        handleTouchEnd(evt);
+      }).on("pinchin", function(evt) {
+        zoom(-1);
+      }).on("pinchout", function(evt) {
+        zoom(1);
+      });
+
+      var handleTouchStart = function(evt) {
+        lastX = evt.gesture.touches[0].pageX - evt.gesture.deltaX;
+        lastY = evt.gesture.touches[0].pageY - evt.gesture.deltaY;
+        handleInputDown();
+      };
+      
+      var handleTouchMove = function(evt) {
+        lastX = evt.gesture.touches[0].pageX;
+        lastY = evt.gesture.touches[0].pageY;
+        handleInputMove(false, false);
+      };
+
+      var handleTouchEnd = function(evt) {
+        handleInputUp();
+      };
+
       trackTransforms(ctx);
       resizeCanvas();
 
@@ -364,6 +403,7 @@ var rg2 = ( function() {'use strict';
       var heightscale = canvas.height / map.height;
       lastX = canvas.width / 2;
       lastY = canvas.height / 2;
+      zoomSize = 1;
       dragStart = null;
       // looks odd but this works for initialisation
       dragged = true;
@@ -497,13 +537,19 @@ var rg2 = ( function() {'use strict';
 
     var zoom = function(zoomDirection) {
       var factor = Math.pow(scaleFactor, zoomDirection);
-
-      var pt = ctx.transformedPoint(lastX, lastY);
-      ctx.translate(pt.x, pt.y);
-      ctx.scale(factor, factor);
-      ctx.translate(-pt.x, -pt.y);
-      ctx.save();
-      redraw(false);
+      var tempZoom = zoomSize * factor;
+      // limit zoom to avoid things disappearing
+      // chosen values seem reasonable after some quick tests
+      if ((tempZoom < 50) && (tempZoom > 0.05)) {
+        zoomSize = tempZoom;
+        var pt = ctx.transformedPoint(lastX, lastY);
+        ctx.translate(pt.x, pt.y);
+        ctx.scale(factor, factor);
+        ctx.translate(-pt.x, -pt.y);
+        ctx.save();
+        redraw(false);
+      }
+      //console.log("Zoom size " + zoomSize);      
     };
 
     var handleScroll = function(evt) {
@@ -517,24 +563,37 @@ var rg2 = ( function() {'use strict';
     var handleMouseDown = function(evt) {
       lastX = evt.offsetX || (evt.layerX - canvas.offsetLeft);
       lastY = evt.offsetY || (evt.layerY - canvas.offsetTop);
-      dragStart = ctx.transformedPoint(lastX, lastY);
-      dragged = false;
-      //console.log ("Mousedown " + lastX + " " + lastY + " " + dragStart.x + " " + dragStart.y);
+      handleInputDown();
     };
+
 
     var handleMouseMove = function(evt) {
       lastX = evt.offsetX || (evt.layerX - canvas.offsetLeft);
       lastY = evt.offsetY || (evt.layerY - canvas.offsetTop);
+      handleInputMove(evt.shiftKey, evt.ctrlKey);
+    };
+
+    var handleMouseUp = function(evt) {
+      handleInputUp();
+    };
+
+    var handleInputDown = function() {
+      dragStart = ctx.transformedPoint(lastX, lastY);
+      dragged = false;
+      //console.log ("InputDown " + lastX + " " + lastY + " " + dragStart.x + " " + dragStart.y);
+    };
+    
+    var handleInputMove = function(shiftKey, ctrlKey) {
       if (dragStart) {
         var pt = ctx.transformedPoint(lastX, lastY);
         //console.log ("Mousemove after" + pt.x + ": " + pt.y);
         // allow for Webkit which gives us mousemove events with no movement!
         if ((pt.x !== dragStart.x) || (pt.y !== dragStart.y)) {
           if (drawing.gpsFileLoaded()) {
-            drawing.adjustTrack(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10), parseInt(pt.x, 10), parseInt(pt.y, 10), evt.shiftKey, evt.ctrlKey);
+            drawing.adjustTrack(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10), parseInt(pt.x, 10), parseInt(pt.y, 10), shiftKey, ctrlKey);
           } else {
             if ($rg2infopanel.tabs("option", "active") === config.TAB_MANAGE) {
-              manager.adjustControls(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10), parseInt(pt.x, 10), parseInt(pt.y, 10), evt.shiftKey, evt.ctrlKey);
+              manager.adjustControls(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10), parseInt(pt.x, 10), parseInt(pt.y, 10), shiftKey, ctrlKey);
             } else {
               ctx.translate(pt.x - dragStart.x, pt.y - dragStart.y);
             }
@@ -544,9 +603,8 @@ var rg2 = ( function() {'use strict';
         }
       }
     };
-
-    var handleMouseUp = function(evt) {
-      //console.log ("Mouseup" + dragStart.x + ": " + dragStart.y);
+    
+    var handleInputUp = function() {
       var active = $rg2infopanel.tabs("option", "active");
       if (!dragged) {
         if (active === config.TAB_MANAGE) {
@@ -1915,7 +1973,6 @@ Draw.prototype = {
       // rebaseline GPS track
       this.gpstrack.baseX = this.gpstrack.routeData.x.slice(0);
       this.gpstrack.baseY = this.gpstrack.routeData.y.slice(0);
-      rg2.redraw(false);
     }
   },
 
@@ -3395,7 +3452,6 @@ Manager.prototype = {
         this.newcontrols.controls[i].oldX = this.newcontrols.controls[i].x;
         this.newcontrols.controls[i].oldY = this.newcontrols.controls[i].y;
       }
-      rg2.redraw(false);
     }
   },
 

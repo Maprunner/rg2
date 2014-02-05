@@ -81,7 +81,7 @@ module.exports = function(grunt) {
     },
     sync : {
       rel : {
-        src : ['js/**', 'css/**', 'img/**', 'rg2api.php', 'index.php'],
+        src : ['js/**', 'css/**', 'img/**', 'rg2api.php', 'index.php', 'lib/hammer.min.js'],
         dest : 'rel/'
       },
       aire : {
@@ -616,9 +616,9 @@ module.exports = function(grunt) {
   grunt.registerTask('bump-minor', ['bumpup:minor']);
   grunt.registerTask('bump-major', ['bumpup:major']);
 
-  grunt.registerTask('build', ['newer:jshint:all', 'newer:concat', 'newer:uglify', 'sync:rel']);
+  grunt.registerTask('build', ['newer:jshint:all', 'newer:concat', 'newer:uglify' ]);
 
-  grunt.registerTask('deploy', ['replace:version', 'build', 'newer:copy']);
+  grunt.registerTask('deploy', ['replace:version', 'build', 'sync:rel']);
 
   //old example task: one-off to generate config files
   grunt.registerTask('config', 'Generate config files', function() {
