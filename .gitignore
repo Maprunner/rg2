@@ -5,6 +5,14 @@
 rg2-override-config.txt
 rg2-override-config.php
 log/rg2log.txt
+node_modules
+rel
+ftpsite
+.ftppass
+test
+karma.conf.js
+js/coords.js
+coords.html
 
 #################
 ## Eclipse
