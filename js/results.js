@@ -340,15 +340,36 @@ Result.prototype = {
 			rg2.ctx.lineWidth = 2;
 			rg2.ctx.strokeStyle = this.trackColour;
 			rg2.ctx.globalAlpha = 1.0;
+      rg2.ctx.fillStyle = this.trackColour;
+      rg2.ctx.font = '10pt Arial';
+      rg2.ctx.textAlign = "left";
 			// set transparency of overprint
 			rg2.ctx.beginPath();
 			rg2.ctx.moveTo(this.trackx[0], this.tracky[0]);
+      var oldx = this.trackx[0];
+      var oldy = this.tracky[0];
+      var stopCount = 0;
 			for (var i = 1; i < this.trackx.length; i += 1) {
 				// lines
 				rg2.ctx.lineTo(this.trackx[i], this.tracky[i]);
+        if ((this.trackx[i] === oldx) && (this.tracky[i] === oldy)) {
+          // we haven't moved
+          stopCount += 1;
+          // only output at current position if this is the last entry
+          if (i === (this.trackx.length - 1)) {
+            rg2.ctx.fillText((3 * stopCount) + " secs", this.trackx[i] + 5, this.tracky[i] + 5);
+          }
+        } else {
+          // we have started moving again
+          if (stopCount > 0) {
+            rg2.ctx.fillText((3 * stopCount) + " secs", oldx + 5, oldy + 5);
+            stopCount = 0;
+          }
+        }
+        oldx = this.trackx[i];
+        oldy = this.tracky[i];
 			}
 			rg2.ctx.stroke();
-
 		}
 	},
 

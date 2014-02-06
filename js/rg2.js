@@ -24,6 +24,7 @@
 /*global Course:false */
 /*global trackTransforms:false */
 /*global Hammer:false */
+/*global setTimeout:false */
 var rg2 = ( function() {'use strict';
     var canvas = $("#rg2-map-canvas")[0];
     var ctx = canvas.getContext('2d');
