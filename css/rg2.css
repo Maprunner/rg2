@@ -173,6 +173,7 @@ html, body {
    position: relative;
    background: silver;
    overflow: hidden;
+   display: none;
 }
 
 #rg2-info-panel {

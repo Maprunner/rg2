@@ -394,6 +394,8 @@ var rg2 = ( function() {'use strict';
         console.log("Events request failed: " + err);
       });
 
+      // timer for start-up screen to give a controlled start-up
+      setTimeout(function() {$("#rg2-container").show();}, 2000);
     }
 
     function resetMapState() {
