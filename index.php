@@ -145,7 +145,7 @@
           <div id="rg2-select-gps-file">
            <input type='file' accept='.gpx, .tcx' id='rg2-load-gps-file'>
           </div>
-       <input type=checkbox id="btn-move-all"><label for="btn-move-all"> Move track and map together (or drag-right click)</label>
+       <input type=checkbox id="btn-move-all"><label for="btn-move-all"> Move track and map together (or right click-drag)</label>
        <ul>
         <li>Left click to add/lock/unlock a handle</li>
         <ul><li>Green: draggable</li><li>Red: locked</li></ul>

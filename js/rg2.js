@@ -81,11 +81,11 @@ var rg2 = ( function() {'use strict';
       FINISH_OUTER_RADIUS : 23.4,
       RUNNER_DOT_RADIUS : 6,
       START_TRIANGLE_LENGTH : 30,
-      OVERPRINT_LINE_THICKNESS : 2,
+      OVERPRINT_LINE_THICKNESS : 3,
       REPLAY_LINE_THICKNESS : 3,
       START_TRIANGLE_HEIGHT : 40,
       // parameters for call to draw courses
-      DIM : 0.5,
+      DIM : 0.75,
       FULL_INTENSITY : 1.0,
       // values of event format
       NORMAL_EVENT : 1,
