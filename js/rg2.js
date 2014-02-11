@@ -89,7 +89,7 @@ var rg2 = ( function() {'use strict';
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.4.4',
+      RG2VERSION: '0.4.5',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999
     };
