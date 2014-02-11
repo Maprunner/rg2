@@ -8,9 +8,8 @@
 // handle drawing of a new route
 function Draw() {
   this.trackColor = '#ff0000';
-  this.HANDLE_DOT_RADIUS = 10;
+  this.HANDLE_DOT_RADIUS = 7;
   this.CLOSE_ENOUGH = 10;
-  this.gpstrack = new GPSTrack();
   this.hasResults = false;
   this.initialiseDrawing();
 }
@@ -50,24 +49,56 @@ Draw.prototype = {
     return this.controly;
   },
 
-  mouseUp : function(x, y) {
+  mouseUp : function(x, y, button) {
+    // called after a click at (x, y)
     var active = $("#rg2-info-panel").tabs("option", "active");
-    if (active != rg2.config.TAB_DRAW) {
+    var i;
+    var trk;
+    var len;
+    var delta = 3;
+    var h = {};
+    var handle;
+    if (active !== rg2.config.TAB_DRAW) {
       return;
     }
-    if (this.gpstrack.fileLoaded) {
-      // adjusting the track
-      if (this.handleX === null) {
-        this.handleX = x;
-        this.handleY = y;
+    trk = this.gpstrack;
+    if (trk.fileLoaded) {
+      handle = this.getHandleClicked(x, y);
+      if (handle !== undefined) {
+        if ((button === rg2.config.RIGHT_CLICK) &&  (handle !== 0) && (handle !== trk.handles.length)) {
+          // delete handle if not first or last entries
+          trk.handles.splice(handle, 1);
+        } else {
+          // clicked in a handle area so toggle state
+          if (trk.handles[handle].locked) {
+            trk.handles[handle].locked = false;
+            this.pointsLocked -= 1;
+          } else {
+            trk.handles[handle].locked = true;
+            this.pointsLocked += 1;
+          }
+        }
       } else {
-        this.handleX = null;
-        this.handleY = null;
+        // not an existing handle so read through track to look for x,y
+        len = trk.baseX.length;
+        for ( i = 0; i < len; i += 1) {
+          if ((trk.baseX[i] + delta >= x) && (trk.baseX[i] - delta <= x) && (trk.baseY[i] + delta >= y) && (trk.baseY[i] - delta <= y)) {
+            // found on track so add new handle
+            h.x = x;
+            h.y = y;
+            h.basex = x;
+            h.basey = y;
+            h.locked = false;
+            h.time = i;
+            trk.handles.push(h);
+            break;
+          }
+        }
       }
     } else {
       // drawing new track
       // only allow drawing if we have valid name and course
-      if ((this.gpstrack.routeData.resultid !== null) && (this.gpstrack.routeData.courseid !== null)) {
+      if ((trk.routeData.resultid !== null) && (trk.routeData.courseid !== null)) {
         this.addNewPoint(x, y);
       } else {
         rg2WarningDialog('Select course and name', 'Please select course and name before you start drawing a route or upload a file.');
@@ -77,9 +108,14 @@ Draw.prototype = {
 
   dragEnded : function() {
     if (this.gpstrack.fileLoaded) {
+      var trk =this.gpstrack;
       // rebaseline GPS track
-      this.gpstrack.baseX = this.gpstrack.routeData.x.slice(0);
-      this.gpstrack.baseY = this.gpstrack.routeData.y.slice(0);
+      trk.baseX = trk.routeData.x.slice(0);
+      trk.baseY = trk.routeData.y.slice(0);
+      for (var i = 0; i < trk.handles.length; i += 1) {
+        trk.handles[i].basex = trk.handles[i].x;
+        trk.handles[i].basey = trk.handles[i].y;
+      }
     }
   },
 
@@ -89,10 +125,10 @@ Draw.prototype = {
   },
 
   initialiseDrawing : function() {
+    this.gpstrack = new GPSTrack();
     this.gpstrack.routeData = new RouteData();
-    this.handleX = null;
-    this.handleY = null;
     this.backgroundLocked = false;
+    this.pointsLocked = 0;
     this.pendingCourseID = null;
     // the RouteData versions of these have the start control removed for saving
     this.controlx = [];
@@ -107,7 +143,6 @@ Draw.prototype = {
       $("#rg2-select-name").hide();
       $("#rg2-enter-name").show();
     }
-
     $("#rg2-name-select").prop('disabled', true);
     $("#rg2-undo").prop('disabled', true);
     $("#btn-save-route").button("disable");
@@ -418,46 +453,315 @@ Draw.prototype = {
   },
 
   trackLocked : function() {
-    return (this.handleX !== null);
+    return (this.pointsLocked > 0);
   },
 
-  adjustTrack : function(x1, y1, x2, y2, shiftKeyPressed, ctrlKeyPressed) {
+  adjustTrack : function(x1, y1, x2, y2, button, shiftKeyPressed, ctrlKeyPressed) {
+// called whilst dragging a GPS track
+// TODO: not the greatest function in the world and a candidate for refactoring big-time
+// but it works which is a huge step forward
     var i;
-    if (this.backgroundLocked) {
-      // drag track and background
+    var trk;
+    var len;
+    var lockBefore;
+    var lockAfter;
+    var dragIndex;
+    var handle;
+    var x;
+    var y;
+    var a;
+    var xb;
+    var yb;
+    var xs;
+    var ys;
+    var dx;
+    var dy;
+    var scale1;
+    var scale2;
+    var scale;
+    var oldAngle;
+    var newAngle;
+    var angle;
+    var reverseAngle;
+    var earliest;
+    var latest;
+    var lockedHandle1;
+    var lockedHandle2;
+    var fromTime;
+    var toTime;
+    //console.log("adjustTrack ", x1, y1, x2, y2);
+    if ((this.backgroundLocked) || (button === rg2.config.RIGHT_CLICK)) {
       rg2.ctx.translate(x2 - x1, y2 - y1);
     } else {
-      if (this.handleX !== null) {
-        // scale and rotate track
-        var scaleX = (x2 - this.handleX) / (x1 - this.handleX);
-        var scaleY = (y2 - this.handleY) / (y1 - this.handleY);
-        var oldAngle = getAngle(x1, y1, this.handleX, this.handleY);
-        var newAngle = getAngle(x2, y2, this.handleX, this.handleY);
-        var angle = newAngle - oldAngle;
-        //console.log (x1, y1, x2, y2, this.handleX, this.handleY, scaleX, scaleY, oldAngle, newAngle, angle);
-        if (!shiftKeyPressed) {
-          scaleY = scaleX;
-        }
-        for ( i = 0; i < this.gpstrack.routeData.x.length; i += 1) {
-          var x = this.gpstrack.baseX[i] - this.handleX;
-          var y = this.gpstrack.baseY[i] - this.handleY;
-          this.gpstrack.routeData.x[i] = (((Math.cos(angle) * x) - (Math.sin(angle) * y)) * scaleX) + this.handleX;
-          this.gpstrack.routeData.y[i] = (((Math.sin(angle) * x) + (Math.cos(angle) * y)) * scaleY) + this.handleY;
+      trk = this.gpstrack;
+      len = trk.baseX.length;
+      if (this.pointsLocked > 0) {
+        if (this.pointsLocked === 1)  {
+          handle = this.getLockedHandle();
+          // scale and rotate track around single locked point
+          oldAngle = getAngle(x1, y1, handle.basex, handle.basey);
+          newAngle = getAngle(x2, y2, handle.basex, handle.basey);
+          angle = newAngle - oldAngle;
+          scale1 = Math.sqrt(Math.pow((x1 - handle.basex), 2) + Math.pow((y1 - handle.basey), 2));
+          scale2 = Math.sqrt(Math.pow((x2 - handle.basex), 2) + Math.pow((y2 - handle.basey), 2));
+          scale = scale2/scale1;
+          //console.log (x1, y1, x2, y2, handle.basex, handle.basey, scale, angle);
+          for ( i = 0; i < len; i += 1) {
+            x = trk.baseX[i] - handle.basex;
+            y = trk.baseY[i] - handle.basey;
+            trk.routeData.x[i] = (((Math.cos(angle) * x) - (Math.sin(angle) * y)) * scale) + handle.basex;
+            trk.routeData.y[i] = (((Math.sin(angle) * x) + (Math.cos(angle) * y)) * scale) + handle.basey;
+          }
+          for (i = 0; i < trk.handles.length; i += 1) {
+            if (!trk.handles[i].locked) {
+              x = trk.handles[i].basex - handle.basex;
+              y = trk.handles[i].basey - handle.basey;
+              trk.handles[i].x = (((Math.cos(angle) * x) - (Math.sin(angle) * y)) * scale) + handle.basex;
+              trk.handles[i].y = (((Math.sin(angle) * x) + (Math.cos(angle) * y)) * scale) + handle.basey;
+            }
+          }
+          
+        } else {
+          // check if start of drag is on a handle
+          handle = this.getHandleClicked(x1, y1);
+          // we already know we have at least two points locked: cases to deal with from here
+          // 1: drag point not on a handle: exit
+          // 2: drag point on a locked handle: exit
+          // 3: drag point between start and a locked handle: scale and rotate around single point
+          // 4: drag point between locked handle and end: scale and rotate around single handle
+          // 5: drag point between two locked handles: shear around two fixed handles
+          //case 1
+          if (handle === undefined) {
+            //console.log("Point (" + x1 + ", " + y1 + ") not on track: " + this.pointsLocked + " points locked.");
+            return;
+          }
+          // case 2
+          if (trk.handles[handle].locked) {
+            //console.log("Point (" + x1 + ", " + y1 + ") locked: " + this.pointsLocked + " points locked.");
+            return;
+          }
+          earliest = this.getEarliestLockedHandle();
+          latest = this.getLatestLockedHandle();
+          
+          if ((trk.handles[earliest].time > trk.handles[handle].time) || (trk.handles[latest].time < trk.handles[handle].time)) {
+            // case 3 and 4: floating end point
+            if (trk.handles[earliest].time > trk.handles[handle].time) {
+              lockedHandle1 = earliest;
+              fromTime = 0;
+              toTime = trk.handles[earliest].time;
+            } else {
+              lockedHandle1 = latest;
+              fromTime = trk.handles[latest].time + 1;
+              // second entry is always the last point in the route
+              toTime = trk.handles[1].time + 1;
+            }
+            // scale and rotate track around single locked point
+            scale1 = Math.sqrt(Math.pow((x1 - trk.handles[lockedHandle1].basex), 2) + Math.pow((y1 - trk.handles[lockedHandle1].basey), 2));
+            scale2 = Math.sqrt(Math.pow((x2 - trk.handles[lockedHandle1].basex), 2) + Math.pow((y2 - trk.handles[lockedHandle1].basey), 2));
+            scale = scale2/scale1;
+            oldAngle = getAngle(x1, y1, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
+            newAngle = getAngle(x2, y2, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
+            angle = newAngle - oldAngle;
+            //console.log (x1, y1, x2, y2, trk.handles[handle].basex, trk.handles[handle].basey, scale, angle, fromTime, toTime);
+            for ( i = fromTime; i < toTime; i += 1) {
+              x = trk.baseX[i] - trk.handles[lockedHandle1].basex;
+              y = trk.baseY[i] - trk.handles[lockedHandle1].basey;
+              trk.routeData.x[i] = (((Math.cos(angle) * x) - (Math.sin(angle) * y)) * scale) + trk.handles[lockedHandle1].basex;
+              trk.routeData.y[i] = (((Math.sin(angle) * x) + (Math.cos(angle) * y)) * scale) + trk.handles[lockedHandle1].basey;
+            }
+            for (i = 0; i < trk.handles.length; i += 1) {
+              if ((!trk.handles[i].locked) && (trk.handles[i].time >= fromTime) && (trk.handles[i].time <= toTime)) {
+                x = trk.handles[i].basex - trk.handles[lockedHandle1].basex;
+                y = trk.handles[i].basey - trk.handles[lockedHandle1].basey;
+                trk.handles[i].x = (((Math.cos(angle) * x) - (Math.sin(angle) * y)) * scale) + trk.handles[lockedHandle1].basex;
+                trk.handles[i].y = (((Math.sin(angle) * x) + (Math.cos(angle) * y)) * scale) + trk.handles[lockedHandle1].basey;
+              }
+            }
+          } else {
+            // case 5: shear/scale around two locked points 
+            // all based on putting handle1 at (0, 0), rotating handle 2 to be on x-axis and then shearing on x-axis and scaling on y-axis.
+            // there must be a better way...
+            
+            lockedHandle1 = this.getPreviousLockedHandle(handle);
+            fromTime = trk.handles[lockedHandle1].time;
+            lockedHandle2 = this.getNextLockedHandle(handle);
+            toTime = trk.handles[lockedHandle2].time;
+            //console.log("Point (", x1, ", ", y1, ") in middle of ", lockedHandle1, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey, " and ",lockedHandle2, trk.handles[lockedHandle2].basex, trk.handles[lockedHandle2].basey);
+            reverseAngle = getAngle(trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey, trk.handles[lockedHandle2].basex, trk.handles[lockedHandle2].basey);
+            angle = (2 * Math.PI) - reverseAngle;
+            
+            xb = x1 - trk.handles[lockedHandle1].basex;
+            yb = y1 - trk.handles[lockedHandle1].basey;
+            x1 = (Math.cos(angle) * xb) - (Math.sin(angle) * yb);
+            y1 = (Math.sin(angle) * xb) + (Math.cos(angle) * yb);
+                      
+            xb = x2 - trk.handles[lockedHandle1].basex;
+            yb = y2 - trk.handles[lockedHandle1].basey;
+            x2 = (Math.cos(angle) * xb) - (Math.sin(angle) * yb);
+            y2 = (Math.sin(angle) * xb) + (Math.cos(angle) * yb);
+                        
+            xb = trk.handles[lockedHandle2].basex - trk.handles[lockedHandle1].basex;
+            yb = trk.handles[lockedHandle2].basey - trk.handles[lockedHandle1].basey;
+            x = (Math.cos(angle) * xb) - (Math.sin(angle) * yb);
+            y = (Math.sin(angle) * xb) + (Math.cos(angle) * yb);
+
+            // calculate scaling factors
+            a = (x2 - x1) /y1;
+            scale = y2 / y1;
+            
+            if (!isFinite(a) || !isFinite(scale)) {
+              // TODO: this will cause trouble when y1 is 0 (or even just very small) but I've never managed to get it to happen
+              // you need to click exactly on a line through the two locked handles: just do nothing for now
+              console.log("y1 became 0: scale factors invalid", a, scale);
+              return;
+            }
+            // recalculate all points between locked handles          
+            for ( i = fromTime + 1; i < toTime; i += 1) {
+              // translate to put locked point at origin
+              xb = trk.baseX[i] - trk.handles[lockedHandle1].basex;
+              yb = trk.baseY[i] - trk.handles[lockedHandle1].basey;
+              // rotate to give locked points as x-axis
+              x = (Math.cos(angle) * xb) - (Math.sin(angle) * yb);
+              y = (Math.sin(angle) * xb) + (Math.cos(angle) * yb);
+              
+              // shear/stretch
+              xs = x + (y * a);
+              ys = y * scale;
+              
+              // rotate and translate back
+              trk.routeData.x[i] = (Math.cos(reverseAngle) * xs) - (Math.sin(reverseAngle) * ys) + trk.handles[lockedHandle1].basex;
+              trk.routeData.y[i] = (Math.sin(reverseAngle) * xs) + (Math.cos(reverseAngle) * ys) + trk.handles[lockedHandle1].basey;
+
+            }
+            // recalculate all handles between locked handles
+            for (i = 0; i < trk.handles.length; i += 1) {
+              if ((!trk.handles[i].locked) && (trk.handles[i].time >= fromTime) && (trk.handles[i].time <= toTime)) {
+                xb = trk.handles[i].basex - trk.handles[lockedHandle1].basex;
+                yb = trk.handles[i].basey - trk.handles[lockedHandle1].basey;
+                
+                // rotate to give locked points as x-axis
+                x = (Math.cos(angle) * xb) - (Math.sin(angle) * yb);
+                y = (Math.sin(angle) * xb) + (Math.cos(angle) * yb);
+              
+                // shear/stretch
+                xs = x + (y * a);
+                ys = y * scale;
+                             
+                trk.handles[i].x = ((Math.cos(reverseAngle) * xs) - (Math.sin(reverseAngle) * ys)) + trk.handles[lockedHandle1].basex;
+                trk.handles[i].y = ((Math.sin(reverseAngle) * xs) + (Math.cos(reverseAngle) * ys)) + trk.handles[lockedHandle1].basey;
+              }
+            }
+          }
+          
         }
       } else {
-        // drag track
-        var dx = x2 - x1;
-        var dy = y2 - y1;
-        for ( i = 0; i < this.gpstrack.routeData.x.length; i += 1) {
-          this.gpstrack.routeData.x[i] = this.gpstrack.baseX[i] + dx;
-          this.gpstrack.routeData.y[i] = this.gpstrack.baseY[i] + dy;
+        // nothing locked so drag track
+        dx = x2 - x1;
+        dy = y2 - y1;
+        for ( i = 0; i < len; i += 1) {
+          trk.routeData.x[i] = trk.baseX[i] + dx;
+          trk.routeData.y[i] = trk.baseY[i] + dy;
+        }
+        for (i = 0; i < trk.handles.length; i += 1) {
+          trk.handles[i].x = trk.handles[i].basex + dx;
+          trk.handles[i].y = trk.handles[i].basey + dy;
         }
       }
     }
+  },
+  
+  // find if the click was on an existing handle
+  // return: handle index or undefined
+  // basex and basey are handle locations at the start of the drag which is what we are interested in
+  getHandleClicked: function (x, y) {
+    //console.log("Get handle clicked for " + x + ", " + y);
+    var i;
+    var distance;
+    for (i = 0; i < this.gpstrack.handles.length; i += 1) {
+      distance = Math.sqrt(Math.pow((x - this.gpstrack.handles[i].basex), 2) + Math.pow((y - this.gpstrack.handles[i].basey), 2));
+      if (distance <= this.HANDLE_DOT_RADIUS) {
+        return i;
+      }
+    }
+    return undefined;
+  },
+  
+  // called when we know there is only one locked handle
+  // return: handle object or undefined
+  getLockedHandle: function() {
+    var i;
+    for (i = 0; i < this.gpstrack.handles.length; i += 1) {
+      if (this.gpstrack.handles[i].locked) {
+        return this.gpstrack.handles[i];
+      }
+    }
+    return undefined;
+  },
+  
+  // called to find earliest locked handle
+  getEarliestLockedHandle: function() {
+    var i;
+    var earliest = 99999;
+    var handle;
+    for (i = 0; i < this.gpstrack.handles.length; i += 1) {
+      if (this.gpstrack.handles[i].locked) {
+        if (this.gpstrack.handles[i].time < earliest) {
+          earliest = this.gpstrack.handles[i].time;
+          handle = i;
+        }
+      }
+    }
+    return handle;
+  },
 
+  // called to find latest locked handle
+  getLatestLockedHandle: function() {
+    var i;
+    var latest = -1;
+    var handle;
+    for (i = 0; i < this.gpstrack.handles.length; i += 1) {
+      if (this.gpstrack.handles[i].locked) {
+        if (this.gpstrack.handles[i].time > latest) {
+          latest = this.gpstrack.handles[i].time;
+          handle = i;
+        }
+      }
+    }
+    return handle;
+  },
+
+  getPreviousLockedHandle: function(handle) {
+    var i;
+    // max diff possible is last entry time
+    var minDiff = this.gpstrack.handles[1].time;
+    var time = this.gpstrack.handles[handle].time;
+    var previous;
+    for (i = 0; i < this.gpstrack.handles.length; i += 1) {
+      if (((time - this.gpstrack.handles[i].time) < minDiff) && (this.gpstrack.handles[i].time < time) && this.gpstrack.handles[i].locked) {
+        minDiff = time - this.gpstrack.handles[i].time;
+        previous = i;
+      }
+    }
+    return previous;
+  },
+
+  getNextLockedHandle: function(handle) {
+    var i;
+    // max diff possible is last entry time
+    var minDiff = this.gpstrack.handles[1].time;
+    var time = this.gpstrack.handles[handle].time;
+    var next;
+    for (i = 0; i < this.gpstrack.handles.length; i += 1) {
+      if (((this.gpstrack.handles[i].time - time) < minDiff) && (this.gpstrack.handles[i].time > time) && this.gpstrack.handles[i].locked) {
+        minDiff = this.gpstrack.handles[i].time - time;
+        next = i;
+      }
+    }
+    return next;
   },
 
   drawNewTrack : function() {
+    var i;
     rg2.ctx.lineWidth = 2;
     rg2.ctx.strokeStyle = this.trackColor;
     rg2.ctx.fillStyle = this.trackColour;
@@ -485,16 +789,6 @@ Draw.prototype = {
       rg2.ctx.arc(this.gpstrack.routeData.x[0] + (rg2.config.RUNNER_DOT_RADIUS / 2), this.gpstrack.routeData.y[0], rg2.config.RUNNER_DOT_RADIUS, 0, 2 * Math.PI, false);
       rg2.ctx.fill();
     }
-    // locked point for GPS route edit
-    if (this.handleX !== null) {
-      rg2.ctx.beginPath();
-      rg2.ctx.arc(this.handleX, this.handleY, this.HANDLE_DOT_RADIUS, 0, 2 * Math.PI, false);
-      rg2.ctx.fill();
-      rg2.ctx.beginPath();
-      rg2.ctx.arc(this.handleX, this.handleY, 2 * this.HANDLE_DOT_RADIUS, 0, 2 * Math.PI, false);
-      rg2.ctx.stroke();
-    }
-
     // route itself
     if (this.gpstrack.routeData.x.length > 1) {
       rg2.ctx.beginPath();
@@ -502,8 +796,7 @@ Draw.prototype = {
       var oldx = this.gpstrack.routeData.x[0];
       var oldy = this.gpstrack.routeData.y[0];
       var stopCount = 0;
-      for (var i = 1; i < this.gpstrack.routeData.x.length; i += 1) {
-        // lines
+      for (i = 1; i < this.gpstrack.routeData.x.length; i += 1) {
         rg2.ctx.lineTo(this.gpstrack.routeData.x[i], this.gpstrack.routeData.y[i]);
         if ((this.gpstrack.routeData.x[i] == oldx) && (this.gpstrack.routeData.y[i] == oldy)) {
           // we haven't moved
@@ -522,6 +815,19 @@ Draw.prototype = {
         oldx = this.gpstrack.routeData.x[i];
         oldy = this.gpstrack.routeData.y[i];
       }
+      rg2.ctx.stroke();
+    }
+    // locked points
+    for (i = 0; i < this.gpstrack.handles.length; i += 1) {
+      if (this.gpstrack.handles[i].locked === true) {
+        rg2.ctx.fillStyle = rg2.config.RED;
+      } else {
+        rg2.ctx.fillStyle = rg2.config.GREEN;
+      }
+      rg2.ctx.strokestyle = rg2.config.PURPLE;
+      rg2.ctx.beginPath();
+      rg2.ctx.arc(this.gpstrack.handles[i].x, this.gpstrack.handles[i].y, this.HANDLE_DOT_RADIUS, 0, 2 * Math.PI, false);
+      rg2.ctx.fill();
       rg2.ctx.stroke();
     }
   }

@@ -74,6 +74,8 @@ var rg2 = ( function() {'use strict';
       BIG_SCREEN_BREAK_POINT : 800,
       SMALL_SCREEN_BREAK_POINT : 500,
       PURPLE : '#b300ff',
+      RED : '#ff0000',
+      GREEN : '#00ff00',
       CONTROL_CIRCLE_RADIUS : 20,
       FINISH_INNER_RADIUS : 16.4,
       FINISH_OUTER_RADIUS : 23.4,
@@ -92,7 +94,9 @@ var rg2 = ( function() {'use strict';
       // version gets set automatically by grunt file during build process
       RG2VERSION: '0.4.4',
       TIME_NOT_FOUND : 9999,
-      SPLITS_NOT_FOUND : 9999
+      SPLITS_NOT_FOUND : 9999,
+      // values for evt.which 
+      RIGHT_CLICK : 3
     };
 
     function init() {
@@ -329,7 +333,7 @@ var rg2 = ( function() {'use strict';
         $rg2infopanel.tabs("option", "active", config.TAB_MANAGE);
       }
 
-      var hammer = new Hammer(canvas, {
+      /*var hammer = new Hammer(canvas, {
           correct_for_drag_min_distance: false,
           drag_block_horizontal : true,
           drag_block_vertical : true
@@ -346,22 +350,27 @@ var rg2 = ( function() {'use strict';
         zoom(-1);
       }).on("pinchout", function(evt) {
         zoom(1);
-      });
+      });*/
+      
+      canvas.addEventListener('touchstart', handleTouchStart, false);
+      canvas.addEventListener('touchmove', handleTouchMove, false);
+      canvas.addEventListener('touchend', handleTouchEnd, false);
 
       var handleTouchStart = function(evt) {
+        evt.preventDefault();
         lastX = evt.gesture.touches[0].pageX - evt.gesture.deltaX;
         lastY = evt.gesture.touches[0].pageY - evt.gesture.deltaY;
-        handleInputDown();
+        handleInputDown(evt);
       };
       
       var handleTouchMove = function(evt) {
         lastX = evt.gesture.touches[0].pageX;
         lastY = evt.gesture.touches[0].pageY;
-        handleInputMove(false, false);
+        handleInputMove(evt);
       };
 
       var handleTouchEnd = function(evt) {
-        handleInputUp();
+        handleInputUp(evt);
       };
 
       trackTransforms(ctx);
@@ -379,6 +388,11 @@ var rg2 = ( function() {'use strict';
       map.addEventListener("load", function() {
         resetMapState();
       }, false);
+
+      // disable right click menu: may add our own later
+      $(document).bind("contextmenu", function(evt) {
+        evt.preventDefault();
+      });
 
       // load event details
       $.getJSON(json_url, {
@@ -559,43 +573,52 @@ var rg2 = ( function() {'use strict';
       if (delta) {
         zoom(delta);
       }
+      evt.stopPropagation();
       return evt.preventDefault() && false;
     };
 
     var handleMouseDown = function(evt) {
       lastX = evt.offsetX || (evt.layerX - canvas.offsetLeft);
       lastY = evt.offsetY || (evt.layerY - canvas.offsetTop);
-      handleInputDown();
+      handleInputDown(evt);
+      evt.stopPropagation();
+      return evt.preventDefault() && false;
     };
 
 
     var handleMouseMove = function(evt) {
       lastX = evt.offsetX || (evt.layerX - canvas.offsetLeft);
       lastY = evt.offsetY || (evt.layerY - canvas.offsetTop);
-      handleInputMove(evt.shiftKey, evt.ctrlKey);
+      handleInputMove(evt);
+      evt.stopPropagation();
+      return evt.preventDefault() && false;
     };
 
     var handleMouseUp = function(evt) {
-      handleInputUp();
+      handleInputUp(evt);
+      evt.stopPropagation();
+      return evt.preventDefault() && false;
     };
 
-    var handleInputDown = function() {
+    var handleInputDown = function(evt) {
       dragStart = ctx.transformedPoint(lastX, lastY);
       dragged = false;
       //console.log ("InputDown " + lastX + " " + lastY + " " + dragStart.x + " " + dragStart.y);
+      //lastX = null;
+      //lastY = null;
     };
     
-    var handleInputMove = function(shiftKey, ctrlKey) {
+    var handleInputMove = function(evt) {
       if (dragStart) {
         var pt = ctx.transformedPoint(lastX, lastY);
         //console.log ("Mousemove after" + pt.x + ": " + pt.y);
         // allow for Webkit which gives us mousemove events with no movement!
         if ((pt.x !== dragStart.x) || (pt.y !== dragStart.y)) {
           if (drawing.gpsFileLoaded()) {
-            drawing.adjustTrack(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10), parseInt(pt.x, 10), parseInt(pt.y, 10), shiftKey, ctrlKey);
+            drawing.adjustTrack(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10), parseInt(pt.x, 10), parseInt(pt.y, 10), evt.which ,evt.shiftKey, evt.ctrlKey);
           } else {
             if ($rg2infopanel.tabs("option", "active") === config.TAB_MANAGE) {
-              manager.adjustControls(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10), parseInt(pt.x, 10), parseInt(pt.y, 10), shiftKey, ctrlKey);
+              manager.adjustControls(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10), parseInt(pt.x, 10), parseInt(pt.y, 10), evt.shiftKey, evt.ctrlKey);
             } else {
               ctx.translate(pt.x - dragStart.x, pt.y - dragStart.y);
             }
@@ -606,13 +629,14 @@ var rg2 = ( function() {'use strict';
       }
     };
     
-    var handleInputUp = function() {
+    var handleInputUp = function(evt) {
       var active = $rg2infopanel.tabs("option", "active");
       if (!dragged) {
         if (active === config.TAB_MANAGE) {
           manager.mouseUp(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10));
         } else {
-          drawing.mouseUp(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10));
+          // pass button that was clicked
+          drawing.mouseUp(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10), evt.which);
         }
       } else {
         if (active === config.TAB_MANAGE) {

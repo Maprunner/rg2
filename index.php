@@ -145,11 +145,12 @@
           <div id="rg2-select-gps-file">
            <input type='file' accept='.gpx, .tcx' id='rg2-load-gps-file'>
           </div>
-       <input type=checkbox id="btn-move-all"><label for="btn-move-all"> Move track and map together</label>
+       <input type=checkbox id="btn-move-all"><label for="btn-move-all"> Move track and map together (or drag-right click)</label>
        <ul>
-        <li>Drag track to align track on map</li>
-            <li>Single click to lock/unlock a point</li>
-            <li>Drag to scale and rotate around locked point</li>
+        <li>Left click to add/lock/unlock a handle</li>
+        <ul><li>Green: draggable</li><li>Red: locked</li></ul>
+        <li>Right click to delete a handle</li>
+        <li>Drag a handle to adjust track around locked point(s)</li>
        </ul>
        <button class="pushright" id="btn-save-gps-route">Save GPS route</button> 
     </div>
@@ -214,7 +215,6 @@
 			 	<a href="https://github.com/Maprunner/rg2/archive/master.zip"> download here</a>.
 				 Later versions will allow you to create new events, but for now it only works on events that have been set
 			   up in in the original Routegadget.</p>
-			  <p>It does not currently work properly on iPads, tablets and phones because of problems with the touch interface and screen size. This is on the list of things to be looked at.</p>
 			  <p><strong>Simon Errington</strong> (simon (at) maprunner.co.uk)</p>
         <p id="rg2-version-info"></p>
 			  <p><?php echo ADDITIONAL_INFO_TEXT; ?></p>
