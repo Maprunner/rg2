@@ -1,4 +1,4 @@
-// Version 0.4.4 2014-02-05T21:38:24;
+// Version 0.4.5 2014-02-11T19:56:07;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -90,7 +90,7 @@ var rg2 = ( function() {'use strict';
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.4.4',
+      RG2VERSION: '0.4.5',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999
     };
