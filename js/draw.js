@@ -5,6 +5,7 @@
 /*global getSecsFromMMSS:false */
 /*global rg2WarningDialog:false */
 /*global json_url:false */
+/*global getDistanceBetweenPoints:false */
 // handle drawing of a new route
 function Draw() {
   this.trackColor = '#ff0000';
@@ -375,8 +376,8 @@ Draw.prototype = {
     this.gpstrack.routeData.totaltime = formatSecsAsMMSS(t);
     this.gpstrack.routeData.startsecs = this.gpstrack.routeData.time[0];
     for ( i = 0; i < this.gpstrack.routeData.x.length; i += 1) {
-      this.gpstrack.routeData.x[i] = parseInt(this.gpstrack.routeData.x[i], 10);
-      this.gpstrack.routeData.y[i] = parseInt(this.gpstrack.routeData.y[i], 10);
+      this.gpstrack.routeData.x[i] = Math.round(this.gpstrack.routeData.x[i]);
+      this.gpstrack.routeData.y[i] = Math.round(this.gpstrack.routeData.y[i]);
       // convert real time seconds to offset seconds from start time
       this.gpstrack.routeData.time[i] -= this.gpstrack.routeData.startsecs;
     }
@@ -502,8 +503,8 @@ Draw.prototype = {
           oldAngle = getAngle(x1, y1, handle.basex, handle.basey);
           newAngle = getAngle(x2, y2, handle.basex, handle.basey);
           angle = newAngle - oldAngle;
-          scale1 = Math.sqrt(Math.pow((x1 - handle.basex), 2) + Math.pow((y1 - handle.basey), 2));
-          scale2 = Math.sqrt(Math.pow((x2 - handle.basex), 2) + Math.pow((y2 - handle.basey), 2));
+          scale1 = getDistanceBetweenPoints(x1, y1, handle.basex, handle.basey);
+          scale2 = getDistanceBetweenPoints(x2, y2, handle.basex, handle.basey);
           scale = scale2/scale1;
           //console.log (x1, y1, x2, y2, handle.basex, handle.basey, scale, angle);
           for ( i = 0; i < len; i += 1) {
@@ -556,8 +557,8 @@ Draw.prototype = {
               toTime = trk.handles[1].time + 1;
             }
             // scale and rotate track around single locked point
-            scale1 = Math.sqrt(Math.pow((x1 - trk.handles[lockedHandle1].basex), 2) + Math.pow((y1 - trk.handles[lockedHandle1].basey), 2));
-            scale2 = Math.sqrt(Math.pow((x2 - trk.handles[lockedHandle1].basex), 2) + Math.pow((y2 - trk.handles[lockedHandle1].basey), 2));
+            scale1 = getDistanceBetweenPoints(x1, y1, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
+            scale2 = getDistanceBetweenPoints(x2, y2, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
             scale = scale2/scale1;
             oldAngle = getAngle(x1, y1, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
             newAngle = getAngle(x2, y2, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
@@ -678,7 +679,7 @@ Draw.prototype = {
     var i;
     var distance;
     for (i = 0; i < this.gpstrack.handles.length; i += 1) {
-      distance = Math.sqrt(Math.pow((x - this.gpstrack.handles[i].basex), 2) + Math.pow((y - this.gpstrack.handles[i].basey), 2));
+      distance = getDistanceBetweenPoints(x, y, this.gpstrack.handles[i].basex, this.gpstrack.handles[i].basey);
       if (distance <= this.HANDLE_DOT_RADIUS) {
         return i;
       }
@@ -803,12 +804,12 @@ Draw.prototype = {
           stopCount += 1;
           // only output at current position if this is the last entry
           if (i === (this.gpstrack.routeData.x.length - 1)) {
-            rg2.ctx.fillText((3 * stopCount) + " secs", this.gpstrack.routeData.x[i] + 5, this.gpstrack.routeData.y[i] + 5);
+            rg2.ctx.fillText(stopCount + " secs", this.gpstrack.routeData.x[i] + 5, this.gpstrack.routeData.y[i] + 5);
           }
         } else {
           // we have started moving again
           if (stopCount > 0) {
-            rg2.ctx.fillText((3 * stopCount) + " secs", oldx + 5, oldy + 5);
+            rg2.ctx.fillText((stopCount) + " secs", oldx + 5, oldy + 5);
             stopCount = 0;
           }
         }

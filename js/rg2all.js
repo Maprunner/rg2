@@ -1,4 +1,4 @@
-// Version 0.4.4 2014-02-11T14:34:44;
+// Version 0.4.6 2014-02-13T14:03:54;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -24,7 +24,7 @@
 /*global Runner:false */
 /*global Course:false */
 /*global trackTransforms:false */
-/*global Hammer:false */
+/*global getDistanceBetweenPoints:false */
 /*global setTimeout:false */
 var rg2 = ( function() {'use strict';
     var canvas = $("#rg2-map-canvas")[0];
@@ -47,6 +47,11 @@ var rg2 = ( function() {'use strict';
     var zoomSize;
     var dragStart;
     var dragged;
+    var pinched;
+    var pinchStart0;
+    var pinchStart1;
+    var pinchEnd0;
+    var pinchEnd1;
     var requestedHash;
     var requestedEventID;
     var managing;
@@ -82,18 +87,18 @@ var rg2 = ( function() {'use strict';
       FINISH_OUTER_RADIUS : 23.4,
       RUNNER_DOT_RADIUS : 6,
       START_TRIANGLE_LENGTH : 30,
-      OVERPRINT_LINE_THICKNESS : 2,
+      OVERPRINT_LINE_THICKNESS : 3,
       REPLAY_LINE_THICKNESS : 3,
       START_TRIANGLE_HEIGHT : 40,
       // parameters for call to draw courses
-      DIM : 0.5,
+      DIM : 0.75,
       FULL_INTENSITY : 1.0,
       // values of event format
       NORMAL_EVENT : 1,
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.4.4',
+      RG2VERSION: '0.4.6',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -333,46 +338,10 @@ var rg2 = ( function() {'use strict';
         $("#rg2-events-tab").hide();
         $rg2infopanel.tabs("option", "active", config.TAB_MANAGE);
       }
-
-      /*var hammer = new Hammer(canvas, {
-          correct_for_drag_min_distance: false,
-          drag_block_horizontal : true,
-          drag_block_vertical : true
-        //}).on("touch pinch tap hold swipe release", function(evt) { 
-        //console.log(evt.type, evt.gesture.center.pageX, evt.gesture.center.pageY);
-        //console.log(evt.gesture);
-      }).on("dragstart", function(evt) {
-        handleTouchStart(evt);
-      }).on("drag", function(evt) {
-        handleTouchMove(evt);
-      }).on("dragend", function(evt) {
-        handleTouchEnd(evt);
-      }).on("pinchin", function(evt) {
-        zoom(-1);
-      }).on("pinchout", function(evt) {
-        zoom(1);
-      });*/
-      
+     
       canvas.addEventListener('touchstart', handleTouchStart, false);
       canvas.addEventListener('touchmove', handleTouchMove, false);
       canvas.addEventListener('touchend', handleTouchEnd, false);
-
-      var handleTouchStart = function(evt) {
-        evt.preventDefault();
-        lastX = evt.gesture.touches[0].pageX - evt.gesture.deltaX;
-        lastY = evt.gesture.touches[0].pageY - evt.gesture.deltaY;
-        handleInputDown(evt);
-      };
-      
-      var handleTouchMove = function(evt) {
-        lastX = evt.gesture.touches[0].pageX;
-        lastY = evt.gesture.touches[0].pageY;
-        handleInputMove(evt);
-      };
-
-      var handleTouchEnd = function(evt) {
-        handleInputUp(evt);
-      };
 
       trackTransforms(ctx);
       resizeCanvas();
@@ -551,6 +520,59 @@ var rg2 = ( function() {'use strict';
       // move map around if necesssary
       resetMapState();
     }
+    
+    // homegrown touch handling: seems no worse than adding some other library in
+    // pinch zoom is primitive but works
+    var handleTouchStart = function(evt) {
+      evt.preventDefault();
+      if (evt.touches.length > 1) {
+        pinchStart0 = ctx.transformedPoint(evt.touches[0].pageX, evt.touches[0].pageY);
+        pinchStart1 = ctx.transformedPoint(evt.touches[1].pageX, evt.touches[1].pageY);
+        pinched = true;
+      }
+      lastX = evt.touches[0].pageX;
+      lastY = evt.touches[0].pageY;
+      handleInputDown(evt);
+    };
+      
+    var handleTouchMove = function(evt) {
+      var oldDistance;
+      var newDistance;
+      if (evt.touches.length > 1) {
+        if (!pinched) {
+          // second touch seen during move
+          pinchStart0 = ctx.transformedPoint(evt.touches[0].pageX, evt.touches[0].pageY);
+          pinchStart1 = ctx.transformedPoint(evt.touches[1].pageX, evt.touches[1].pageY);
+          pinched = true;
+        }
+      } else {
+        pinched = false;
+      }
+      if (pinched && (evt.touches.length > 1)) {
+        pinchEnd0 = ctx.transformedPoint(evt.touches[0].pageX, evt.touches[0].pageY);
+        pinchEnd1 = ctx.transformedPoint(evt.touches[1].pageX, evt.touches[1].pageY);
+        oldDistance = getDistanceBetweenPoints(pinchStart0.x, pinchStart0.y, pinchStart1.x, pinchStart1.y);
+        newDistance = getDistanceBetweenPoints(pinchEnd0.x, pinchEnd0.y, pinchEnd1.x, pinchEnd1.y);
+        if ((oldDistance / newDistance) > 1.1) {
+          zoom(-1);
+          pinchStart0 = pinchEnd0;
+          pinchStart1 = pinchEnd1;
+        } else if ((oldDistance / newDistance) < 0.9) {
+          zoom(1);
+          pinchStart0 = pinchEnd0;
+          pinchStart1 = pinchEnd1;
+        }
+      } else {
+        lastX = evt.touches[0].pageX;
+        lastY = evt.touches[0].pageY;
+        handleInputMove(evt);
+      }
+    };
+
+    var handleTouchEnd = function(evt) {
+      handleInputUp(evt);
+      pinched = false;
+    };
 
     var zoom = function(zoomDirection) {
       var factor = Math.pow(scaleFactor, zoomDirection);
@@ -605,8 +627,6 @@ var rg2 = ( function() {'use strict';
       dragStart = ctx.transformedPoint(lastX, lastY);
       dragged = false;
       //console.log ("InputDown " + lastX + " " + lastY + " " + dragStart.x + " " + dragStart.y);
-      //lastX = null;
-      //lastY = null;
     };
     
     var handleInputMove = function(evt) {
@@ -614,12 +634,14 @@ var rg2 = ( function() {'use strict';
         var pt = ctx.transformedPoint(lastX, lastY);
         //console.log ("Mousemove after" + pt.x + ": " + pt.y);
         // allow for Webkit which gives us mousemove events with no movement!
-        if ((pt.x !== dragStart.x) || (pt.y !== dragStart.y)) {
+        // Math.floor is a lot quicker than parseInt, plus it removes some of the small moves since you need to move at least a pixel
+        if ((Math.floor(pt.x) !== Math.floor(dragStart.x)) || (Math.floor(pt.y) !== Math.floor(dragStart.y))) {
+          // but use Math.round here to get that extra 0.5 pixel accuracy!
           if (drawing.gpsFileLoaded()) {
-            drawing.adjustTrack(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10), parseInt(pt.x, 10), parseInt(pt.y, 10), evt.which ,evt.shiftKey, evt.ctrlKey);
+            drawing.adjustTrack(Math.round(dragStart.x), Math.round(dragStart.y), Math.round(pt.x), Math.round(pt.y), evt.which ,evt.shiftKey, evt.ctrlKey);
           } else {
             if ($rg2infopanel.tabs("option", "active") === config.TAB_MANAGE) {
-              manager.adjustControls(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10), parseInt(pt.x, 10), parseInt(pt.y, 10), evt.shiftKey, evt.ctrlKey);
+              manager.adjustControls(Math.round(dragStart.x), Math.round(dragStart.y), Math.round(pt.x), Math.round(pt.y), evt.shiftKey, evt.ctrlKey);
             } else {
               ctx.translate(pt.x - dragStart.x, pt.y - dragStart.y);
             }
@@ -634,10 +656,10 @@ var rg2 = ( function() {'use strict';
       var active = $rg2infopanel.tabs("option", "active");
       if (!dragged) {
         if (active === config.TAB_MANAGE) {
-          manager.mouseUp(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10));
+          manager.mouseUp(Math.round(dragStart.x), Math.round(dragStart.y));
         } else {
           // pass button that was clicked
-          drawing.mouseUp(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10), evt.which);
+          drawing.mouseUp(Math.round(dragStart.x), Math.round(dragStart.y), evt.which);
         }
       } else {
         if (active === config.TAB_MANAGE) {
@@ -1925,6 +1947,7 @@ Course.prototype = {
 /*global getSecsFromMMSS:false */
 /*global rg2WarningDialog:false */
 /*global json_url:false */
+/*global getDistanceBetweenPoints:false */
 // handle drawing of a new route
 function Draw() {
   this.trackColor = '#ff0000';
@@ -2295,8 +2318,8 @@ Draw.prototype = {
     this.gpstrack.routeData.totaltime = formatSecsAsMMSS(t);
     this.gpstrack.routeData.startsecs = this.gpstrack.routeData.time[0];
     for ( i = 0; i < this.gpstrack.routeData.x.length; i += 1) {
-      this.gpstrack.routeData.x[i] = parseInt(this.gpstrack.routeData.x[i], 10);
-      this.gpstrack.routeData.y[i] = parseInt(this.gpstrack.routeData.y[i], 10);
+      this.gpstrack.routeData.x[i] = Math.round(this.gpstrack.routeData.x[i]);
+      this.gpstrack.routeData.y[i] = Math.round(this.gpstrack.routeData.y[i]);
       // convert real time seconds to offset seconds from start time
       this.gpstrack.routeData.time[i] -= this.gpstrack.routeData.startsecs;
     }
@@ -2422,8 +2445,8 @@ Draw.prototype = {
           oldAngle = getAngle(x1, y1, handle.basex, handle.basey);
           newAngle = getAngle(x2, y2, handle.basex, handle.basey);
           angle = newAngle - oldAngle;
-          scale1 = Math.sqrt(Math.pow((x1 - handle.basex), 2) + Math.pow((y1 - handle.basey), 2));
-          scale2 = Math.sqrt(Math.pow((x2 - handle.basex), 2) + Math.pow((y2 - handle.basey), 2));
+          scale1 = getDistanceBetweenPoints(x1, y1, handle.basex, handle.basey);
+          scale2 = getDistanceBetweenPoints(x2, y2, handle.basex, handle.basey);
           scale = scale2/scale1;
           //console.log (x1, y1, x2, y2, handle.basex, handle.basey, scale, angle);
           for ( i = 0; i < len; i += 1) {
@@ -2476,8 +2499,8 @@ Draw.prototype = {
               toTime = trk.handles[1].time + 1;
             }
             // scale and rotate track around single locked point
-            scale1 = Math.sqrt(Math.pow((x1 - trk.handles[lockedHandle1].basex), 2) + Math.pow((y1 - trk.handles[lockedHandle1].basey), 2));
-            scale2 = Math.sqrt(Math.pow((x2 - trk.handles[lockedHandle1].basex), 2) + Math.pow((y2 - trk.handles[lockedHandle1].basey), 2));
+            scale1 = getDistanceBetweenPoints(x1, y1, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
+            scale2 = getDistanceBetweenPoints(x2, y2, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
             scale = scale2/scale1;
             oldAngle = getAngle(x1, y1, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
             newAngle = getAngle(x2, y2, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
@@ -2598,7 +2621,7 @@ Draw.prototype = {
     var i;
     var distance;
     for (i = 0; i < this.gpstrack.handles.length; i += 1) {
-      distance = Math.sqrt(Math.pow((x - this.gpstrack.handles[i].basex), 2) + Math.pow((y - this.gpstrack.handles[i].basey), 2));
+      distance = getDistanceBetweenPoints(x, y, this.gpstrack.handles[i].basex, this.gpstrack.handles[i].basey);
       if (distance <= this.HANDLE_DOT_RADIUS) {
         return i;
       }
@@ -2723,12 +2746,12 @@ Draw.prototype = {
           stopCount += 1;
           // only output at current position if this is the last entry
           if (i === (this.gpstrack.routeData.x.length - 1)) {
-            rg2.ctx.fillText((3 * stopCount) + " secs", this.gpstrack.routeData.x[i] + 5, this.gpstrack.routeData.y[i] + 5);
+            rg2.ctx.fillText(stopCount + " secs", this.gpstrack.routeData.x[i] + 5, this.gpstrack.routeData.y[i] + 5);
           }
         } else {
           // we have started moving again
           if (stopCount > 0) {
-            rg2.ctx.fillText((3 * stopCount) + " secs", oldx + 5, oldy + 5);
+            rg2.ctx.fillText((stopCount) + " secs", oldx + 5, oldy + 5);
             stopCount = 0;
           }
         }
@@ -3826,6 +3849,7 @@ Manager.prototype = {
 };
 
 /* exported getLatLonDistance */
+/* exported getDistanceBetweenPoints */
 /* exported getAngle */
 /* exported rg2WarningDialog */
 /* exported formatSecsAsMMSS */
@@ -3900,6 +3924,11 @@ function getAngle(x1, y1, x2, y2) {
     angle = angle + (2 * Math.PI);
   }
   return angle;
+}
+
+function getDistanceBetweenPoints(x1, y1, x2, y2) {
+  // Pythagoras
+  return Math.sqrt(Math.pow((x1 - x2), 2) + Math.pow((y1 - y2), 2));
 }
 
 // converts seconds to MM:SS
