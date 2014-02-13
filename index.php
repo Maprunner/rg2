@@ -283,10 +283,8 @@
       <script src='<?php echo $script_url."animation.js"; ?>'></script>
       <script src='<?php echo $script_url."runner.js"; ?>'></script>
       <script src='<?php echo $script_url."plugins.js"; ?>'></script>
-      <script src='<?php echo $script_url."lib/hammer.min.js"; ?>'></script>
       <script src='<?php echo $script_url."rg2.js"; ?>'></script>
     <?php } else { ?>
-      <script src='<?php echo $script_url."lib/hammer.min.js"; ?>'></script>
       <script src='<?php echo $script_url."rg2all.min.js"; ?>'></script>      
     <?php } ?>  
       <?php if ($manager) { ?>
