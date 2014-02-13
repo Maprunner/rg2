@@ -81,7 +81,7 @@ module.exports = function(grunt) {
     },
     sync : {
       rel : {
-        src : ['js/**', 'css/**', 'img/**', 'rg2api.php', 'index.php', 'js/lib/hammer.min.js'],
+        src : ['js/**', 'css/**', 'img/**', 'rg2api.php', 'index.php'],
         dest : 'rel/'
       },
       aire : {

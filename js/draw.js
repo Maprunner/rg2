@@ -807,7 +807,7 @@ Draw.prototype = {
       rg2.ctx.stroke();
     }
     // locked points
-    l = this.gpstrack.handles.length
+    l = this.gpstrack.handles.length;
     for (i = 0; i < l; i += 1) {
       if (this.gpstrack.handles[i].locked === true) {
         rg2.ctx.fillStyle = rg2.config.RED;

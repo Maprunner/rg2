@@ -1,4 +1,4 @@
-// Version 0.4.6 2014-02-13T14:03:54;
+// Version 0.4.7 2014-02-13T17:56:28;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -98,7 +98,7 @@ var rg2 = ( function() {'use strict';
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.4.6',
+      RG2VERSION: '0.4.7',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -2314,10 +2314,12 @@ Draw.prototype = {
     // called to save GPS file route
     // tidy up route details
     var i;
+    var l;
     var t = this.gpstrack.routeData.time[this.gpstrack.routeData.time.length - 1] - this.gpstrack.routeData.time[0];
     this.gpstrack.routeData.totaltime = formatSecsAsMMSS(t);
     this.gpstrack.routeData.startsecs = this.gpstrack.routeData.time[0];
-    for ( i = 0; i < this.gpstrack.routeData.x.length; i += 1) {
+    l = this.gpstrack.routeData.x.length;
+    for ( i = 0; i < l; i += 1) {
       this.gpstrack.routeData.x[i] = Math.round(this.gpstrack.routeData.x[i]);
       this.gpstrack.routeData.y[i] = Math.round(this.gpstrack.routeData.y[i]);
       // convert real time seconds to offset seconds from start time
@@ -2690,11 +2692,13 @@ Draw.prototype = {
 
   getNextLockedHandle: function(handle) {
     var i;
+    var l;
     // max diff possible is last entry time
     var minDiff = this.gpstrack.handles[1].time;
     var time = this.gpstrack.handles[handle].time;
     var next;
-    for (i = 0; i < this.gpstrack.handles.length; i += 1) {
+    l = this.gpstrack.handles.length;
+    for (i = 0; i < l; i += 1) {
       if (((this.gpstrack.handles[i].time - time) < minDiff) && (this.gpstrack.handles[i].time > time) && this.gpstrack.handles[i].locked) {
         minDiff = this.gpstrack.handles[i].time - time;
         next = i;
@@ -2705,6 +2709,7 @@ Draw.prototype = {
 
   drawNewTrack : function() {
     var i;
+    var l;
     rg2.ctx.lineWidth = 2;
     rg2.ctx.strokeStyle = this.trackColor;
     rg2.ctx.fillStyle = this.trackColour;
@@ -2736,32 +2741,16 @@ Draw.prototype = {
     if (this.gpstrack.routeData.x.length > 1) {
       rg2.ctx.beginPath();
       rg2.ctx.moveTo(this.gpstrack.routeData.x[0], this.gpstrack.routeData.y[0]);
-      var oldx = this.gpstrack.routeData.x[0];
-      var oldy = this.gpstrack.routeData.y[0];
-      var stopCount = 0;
-      for (i = 1; i < this.gpstrack.routeData.x.length; i += 1) {
+      // don't bother with +3 second displays in GPS adjustment
+      l = this.gpstrack.routeData.x.length;
+      for (i = 1; i < l; i += 1) {
         rg2.ctx.lineTo(this.gpstrack.routeData.x[i], this.gpstrack.routeData.y[i]);
-        if ((this.gpstrack.routeData.x[i] == oldx) && (this.gpstrack.routeData.y[i] == oldy)) {
-          // we haven't moved
-          stopCount += 1;
-          // only output at current position if this is the last entry
-          if (i === (this.gpstrack.routeData.x.length - 1)) {
-            rg2.ctx.fillText(stopCount + " secs", this.gpstrack.routeData.x[i] + 5, this.gpstrack.routeData.y[i] + 5);
-          }
-        } else {
-          // we have started moving again
-          if (stopCount > 0) {
-            rg2.ctx.fillText((stopCount) + " secs", oldx + 5, oldy + 5);
-            stopCount = 0;
-          }
-        }
-        oldx = this.gpstrack.routeData.x[i];
-        oldy = this.gpstrack.routeData.y[i];
       }
       rg2.ctx.stroke();
     }
     // locked points
-    for (i = 0; i < this.gpstrack.handles.length; i += 1) {
+    l = this.gpstrack.handles.length;
+    for (i = 0; i < l; i += 1) {
       if (this.gpstrack.handles[i].locked === true) {
         rg2.ctx.fillStyle = rg2.config.RED;
       } else {
