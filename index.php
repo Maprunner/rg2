@@ -86,6 +86,7 @@
       </div>
       <div id="rg2-header"><span id="rg2-event-title">Routegadget 2.0 Viewer</span></div>  
         <div class="rg2-button"><i id="btn-about" title = "Help" class="fa fa-question"></i></div>
+        <div class="rg2-button"><i id="btn-options" title = "Options" class="fa fa-cog"></i></div>
         <div class="rg2-button"><i id="btn-zoom-out" title = "Zoom out" class="fa fa-search-minus"></i></div>
         <div class="rg2-button"><i id="btn-reset" title = "Reset" class="fa fa-undo"></i></div>
         <div class="rg2-button"><i id="btn-zoom-in" title = "Zoom in" class="fa fa-search-plus"></i></div>
@@ -208,8 +209,22 @@
 		      </div>
 		    </div>
 		  </div>		   
+		  <div id="rg2-option-controls" title="Configuration options">
+        <div id="rg2-dim-spinner">
+          <label for="spn-map-intensity">Map intensity %</label>
+          <input id="spn-map-intensity" name="value" />
+        </div>
+        <div id="rg2-course-width-spinner">
+          <label for="spn-course-width">Course overprint width</label>
+          <input id="spn-course-width" name="value" />
+        </div>
+        <div id="rg2-route-width-spinner">
+          <label for="spn-route-width">Route width</label>
+          <input id="spn-route-width" name="value" />
+        </div>
+      </div>
 		  <div id="rg2-track-names"></div>
-		  <div id="rg2-about-dialog" title="Routegadget 2.0 Viewer">
+		  <div id="rg2-about-dialog" title="Routegadget 2.0">
 			 <p>This application allows you to view existing <a href="http://www.routegadget.net">Routegadget</a> information in any modern (HTML5-compliant) browser without the need for Java.</p>
 			 <p>The latest version is available for
 			 	<a href="https://github.com/Maprunner/rg2/archive/master.zip"> download here</a>.

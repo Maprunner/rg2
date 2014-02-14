@@ -284,7 +284,7 @@ Animation.prototype = {
 		}
 		$("#rg2-clock-slider").slider("value", this.animationSecs);
 		$("#rg2-clock").text(this.formatSecsAsHHMMSS(this.animationSecs));
-		rg2.ctx.lineWidth = rg2.config.REPLAY_LINE_THICKNESS;
+		rg2.ctx.lineWidth = rg2.getRouteWidth();
 		rg2.ctx.globalAlpha = 1.0;
 		var runner;
 		var timeOffset;

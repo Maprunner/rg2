@@ -25,11 +25,15 @@
 /*global trackTransforms:false */
 /*global getDistanceBetweenPoints:false */
 /*global setTimeout:false */
-var rg2 = ( function() {'use strict';
+var rg2 = ( function() {
+    'use strict';
     var canvas = $("#rg2-map-canvas")[0];
     var ctx = canvas.getContext('2d');
     var map;
+    var mapIntensity;
     var mapLoadingText;
+    var overprintWidth;
+    var routeWidth;
     var events;
     var courses;
     var results;
@@ -86,8 +90,8 @@ var rg2 = ( function() {'use strict';
       FINISH_OUTER_RADIUS : 23.4,
       RUNNER_DOT_RADIUS : 6,
       START_TRIANGLE_LENGTH : 30,
-      OVERPRINT_LINE_THICKNESS : 3,
-      REPLAY_LINE_THICKNESS : 3,
+      DEFAULT_OVERPRINT_LINE_THICKNESS : 3,
+      DEFAULT_ROUTE_THICKNESS : 4,
       START_TRIANGLE_HEIGHT : 40,
       // parameters for call to draw courses
       DIM : 0.75,
@@ -97,7 +101,7 @@ var rg2 = ( function() {'use strict';
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.4.10',
+      RG2VERSION: '0.4.11',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -163,6 +167,9 @@ var rg2 = ( function() {'use strict';
 
       map = new Image();
       mapLoadingText = "Select an event";
+      mapIntensity = config.FULL_INTENSITY;
+      overprintWidth = config.DEFAULT_OVERPRINT_LINE_THICKNESS;
+      routeWidth = config.DEFAULT_ROUTE_THICKNESS;
       events = new Events();
       courses = new Courses();
       results = new Results();
@@ -187,6 +194,10 @@ var rg2 = ( function() {'use strict';
 
       $("#btn-about").click(function() {
         displayAboutDialog();
+      });
+
+      $("#btn-options").click(function() {
+        displayOptionsDialog();
       });
 
       $("#rg2-resize-info").click(function() {
@@ -227,6 +238,40 @@ var rg2 = ( function() {'use strict';
           $('#rg2-new-comments').val("");
         }
       });
+      
+      $("#rg2-option-controls").hide();
+
+      // set default to 100% = full intensity
+      $("#spn-map-intensity").spinner({
+        max : 100,
+        min : 0,
+        step: 10,
+        numberFormat: "n",
+        spin : function(event, ui) {
+          mapIntensity = (ui.value / 100);
+          redraw(false);
+        }
+      }).val(100);
+
+      $("#spn-course-width").spinner({
+        max : 10,
+        min : 1,
+        step: 0.5,
+        spin : function(event, ui) {
+          overprintWidth = ui.value;
+          redraw(false);
+        }
+      }).val(config.DEFAULT_OVERPRINT_LINE_THICKNESS);
+
+      $("#spn-route-width").spinner({
+        max : 10,
+        min : 1,
+        step: 0.5,
+        spin : function(event, ui) {
+          routeWidth = ui.value;
+          redraw(false);
+        }
+      }).val(config.DEFAULT_ROUTE_THICKNESS);
       
       $("#rg2-animation-controls").hide();
 
@@ -459,8 +504,8 @@ var rg2 = ( function() {'use strict';
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
       // go back to where we started
       ctx.restore();
-      // set transparency of map to none
-      ctx.globalAlpha = 1.0;
+      // set transparency of map
+      ctx.globalAlpha = mapIntensity;
 
       if (map.height > 0) {
         // using non-zero map height to show we have a map loaded
@@ -506,6 +551,19 @@ var rg2 = ( function() {'use strict';
         }
       });
     }
+
+    function displayOptionsDialog() {
+      $("#rg2-option-controls").dialog({
+        //modal : true,
+        minWidth : 400,
+        buttons : {
+          Ok : function() {
+            $(this).dialog("close");
+          }
+        }
+      });
+    }
+
 
     function resizeInfoDisplay() {
       if (infoPanelMaximised) {
@@ -1016,12 +1074,22 @@ var rg2 = ( function() {'use strict';
     function createEventEditDropdown() {
       events.createEventEditDropdown();
     }
+    
+    function getOverprintWidth() {
+      return overprintWidth;
+    }
+
+    function getRouteWidth() {
+      return routeWidth;
+    }
 
     return {
       // functions and variables available elsewhere
       init : init,
       config : config,
       redraw : redraw,
+      getOverprintWidth: getOverprintWidth,
+      getRouteWidth: getRouteWidth,
       ctx : ctx,
       getMapSize : getMapSize,
       loadNewMap : loadNewMap,

@@ -231,6 +231,8 @@ Course.prototype = {
 			var c2x;
 			var c2y;
 			rg2.ctx.globalAlpha = intensity;
+			rg2.ctx.lineWidth = rg2.getOverprintWidth();
+			rg2.ctx.strokeStyle = rg2.config.PURPLE;
 			if (this.isScoreCourse) {
 				// align score event start triangle upwards
 				angle = Math.PI * 3 / 2;
@@ -257,8 +259,6 @@ Course.prototype = {
 				}
 				// don't join up controls for score events
 				if (!this.isScoreCourse) {
-					rg2.ctx.lineWidth = rg2.config.OVERPRINT_LINE_THICKNESS;
-					rg2.ctx.strokeStyle = rg2.config.PURPLE;
 					rg2.ctx.beginPath();
 					rg2.ctx.moveTo(c1x, c1y);
 					rg2.ctx.lineTo(c2x, c2y);

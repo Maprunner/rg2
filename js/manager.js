@@ -555,7 +555,7 @@ Manager.prototype = {
 
       // locked point for control edit
       if (this.handleX !== null) {
-        rg2.ctx.lineWidth = 2;
+        rg2.ctx.lineWidth = rg2.getOverprintWidth();
         rg2.ctx.strokeStyle = this.handleColor;
         rg2.ctx.fillStyle = this.handleColour;
         rg2.ctx.globalAlpha = 1.0;

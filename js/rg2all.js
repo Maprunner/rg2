@@ -1,4 +1,4 @@
-// Version 0.4.10 2014-02-14T08:00:19;
+// Version 0.4.11 2014-02-14T20:35:22;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -26,11 +26,15 @@
 /*global trackTransforms:false */
 /*global getDistanceBetweenPoints:false */
 /*global setTimeout:false */
-var rg2 = ( function() {'use strict';
+var rg2 = ( function() {
+    'use strict';
     var canvas = $("#rg2-map-canvas")[0];
     var ctx = canvas.getContext('2d');
     var map;
+    var mapIntensity;
     var mapLoadingText;
+    var overprintWidth;
+    var routeWidth;
     var events;
     var courses;
     var results;
@@ -87,8 +91,8 @@ var rg2 = ( function() {'use strict';
       FINISH_OUTER_RADIUS : 23.4,
       RUNNER_DOT_RADIUS : 6,
       START_TRIANGLE_LENGTH : 30,
-      OVERPRINT_LINE_THICKNESS : 3,
-      REPLAY_LINE_THICKNESS : 3,
+      DEFAULT_OVERPRINT_LINE_THICKNESS : 3,
+      DEFAULT_ROUTE_THICKNESS : 4,
       START_TRIANGLE_HEIGHT : 40,
       // parameters for call to draw courses
       DIM : 0.75,
@@ -98,7 +102,7 @@ var rg2 = ( function() {'use strict';
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.4.10',
+      RG2VERSION: '0.4.11',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -164,6 +168,9 @@ var rg2 = ( function() {'use strict';
 
       map = new Image();
       mapLoadingText = "Select an event";
+      mapIntensity = config.FULL_INTENSITY;
+      overprintWidth = config.DEFAULT_OVERPRINT_LINE_THICKNESS;
+      routeWidth = config.DEFAULT_ROUTE_THICKNESS;
       events = new Events();
       courses = new Courses();
       results = new Results();
@@ -188,6 +195,10 @@ var rg2 = ( function() {'use strict';
 
       $("#btn-about").click(function() {
         displayAboutDialog();
+      });
+
+      $("#btn-options").click(function() {
+        displayOptionsDialog();
       });
 
       $("#rg2-resize-info").click(function() {
@@ -228,6 +239,40 @@ var rg2 = ( function() {'use strict';
           $('#rg2-new-comments').val("");
         }
       });
+      
+      $("#rg2-option-controls").hide();
+
+      // set default to 100% = full intensity
+      $("#spn-map-intensity").spinner({
+        max : 100,
+        min : 0,
+        step: 10,
+        numberFormat: "n",
+        spin : function(event, ui) {
+          mapIntensity = (ui.value / 100);
+          redraw(false);
+        }
+      }).val(100);
+
+      $("#spn-course-width").spinner({
+        max : 10,
+        min : 1,
+        step: 0.5,
+        spin : function(event, ui) {
+          overprintWidth = ui.value;
+          redraw(false);
+        }
+      }).val(config.DEFAULT_OVERPRINT_LINE_THICKNESS);
+
+      $("#spn-route-width").spinner({
+        max : 10,
+        min : 1,
+        step: 0.5,
+        spin : function(event, ui) {
+          routeWidth = ui.value;
+          redraw(false);
+        }
+      }).val(config.DEFAULT_ROUTE_THICKNESS);
       
       $("#rg2-animation-controls").hide();
 
@@ -460,8 +505,8 @@ var rg2 = ( function() {'use strict';
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
       // go back to where we started
       ctx.restore();
-      // set transparency of map to none
-      ctx.globalAlpha = 1.0;
+      // set transparency of map
+      ctx.globalAlpha = mapIntensity;
 
       if (map.height > 0) {
         // using non-zero map height to show we have a map loaded
@@ -507,6 +552,19 @@ var rg2 = ( function() {'use strict';
         }
       });
     }
+
+    function displayOptionsDialog() {
+      $("#rg2-option-controls").dialog({
+        //modal : true,
+        minWidth : 400,
+        buttons : {
+          Ok : function() {
+            $(this).dialog("close");
+          }
+        }
+      });
+    }
+
 
     function resizeInfoDisplay() {
       if (infoPanelMaximised) {
@@ -1017,12 +1075,22 @@ var rg2 = ( function() {'use strict';
     function createEventEditDropdown() {
       events.createEventEditDropdown();
     }
+    
+    function getOverprintWidth() {
+      return overprintWidth;
+    }
+
+    function getRouteWidth() {
+      return routeWidth;
+    }
 
     return {
       // functions and variables available elsewhere
       init : init,
       config : config,
       redraw : redraw,
+      getOverprintWidth: getOverprintWidth,
+      getRouteWidth: getRouteWidth,
       ctx : ctx,
       getMapSize : getMapSize,
       loadNewMap : loadNewMap,
@@ -1345,7 +1413,7 @@ Animation.prototype = {
 		}
 		$("#rg2-clock-slider").slider("value", this.animationSecs);
 		$("#rg2-clock").text(this.formatSecsAsHHMMSS(this.animationSecs));
-		rg2.ctx.lineWidth = rg2.config.REPLAY_LINE_THICKNESS;
+		rg2.ctx.lineWidth = rg2.getRouteWidth();
 		rg2.ctx.globalAlpha = 1.0;
 		var runner;
 		var timeOffset;
@@ -1509,12 +1577,15 @@ Controls.prototype = {
 		if (this.displayControls) {
 			var x;
 			var y;
-			rg2.ctx.lineWidth = rg2.config.OVERPRINT_LINE_THICKNESS;
+			var i;
+			var l;
+			rg2.ctx.lineWidth = rg2.getOverprintWidth();
 			rg2.ctx.strokeStyle = rg2.config.PURPLE;
 			rg2.ctx.font = '20pt Arial';
 			rg2.ctx.fillStyle = rg2.config.PURPLE;
 			rg2.ctx.globalAlpha = 1.0;
-			for (var i = 0; i < this.controls.length; i += 1) {
+			l = this.controls.length;
+			for (i = 0; i < l; i += 1) {
 				// Assume things starting with 'F' are a Finish
 				if (this.controls[i].code.indexOf('F') === 0) {
 					this.drawFinish(this.controls[i].x, this.controls[i].y, this.controls[i].code);
@@ -1535,7 +1606,7 @@ Controls.prototype = {
 		//Draw the white halo around the controls
 		rg2.ctx.beginPath();
 		rg2.ctx.strokeStyle = "white";
-		rg2.ctx.lineWidth = rg2.config.OVERPRINT_LINE_THICKNESS + 2;
+		rg2.ctx.lineWidth = rg2.getOverprintWidth() + 2;
 		rg2.ctx.arc(x, y, 20, 0, 2 * Math.PI, false);
 		rg2.ctx.stroke();
 		//Draw the white halo around the control code
@@ -1552,7 +1623,7 @@ Controls.prototype = {
 		rg2.ctx.font = "20pt Arial";
 		rg2.ctx.fillStyle = rg2.config.PURPLE;
 		rg2.ctx.strokeStyle = rg2.config.PURPLE;
-		rg2.ctx.lineWidth = rg2.config.OVERPRINT_LINE_THICKNESS;
+		rg2.ctx.lineWidth = rg2.getOverprintWidth();
 		rg2.ctx.arc(x, y, 20, 0, 2 * Math.PI, false);
 		rg2.ctx.fillText(code, x + 25, y + 20);
 		rg2.ctx.stroke();
@@ -1560,7 +1631,7 @@ Controls.prototype = {
 	drawFinish : function(x, y, code) {
 		//Draw the white halo around the finish control
 		rg2.ctx.strokeStyle = "white";
-		rg2.ctx.lineWidth = rg2.config.OVERPRINT_LINE_THICKNESS + 2;
+		rg2.ctx.lineWidth = rg2.getOverprintWidth() + 2;
 		rg2.ctx.beginPath();
 		rg2.ctx.arc(x, y, rg2.config.FINISH_INNER_RADIUS, 0, 2 * Math.PI, false);
 		rg2.ctx.stroke();
@@ -1581,7 +1652,7 @@ Controls.prototype = {
 		rg2.ctx.beginPath();
 		rg2.ctx.fillStyle = rg2.config.PURPLE;
 		rg2.ctx.strokeStyle = rg2.config.PURPLE;
-		rg2.ctx.lineWidth = rg2.config.OVERPRINT_LINE_THICKNESS;
+		rg2.ctx.lineWidth = rg2.getOverprintWidth();
 		rg2.ctx.arc(x, y, rg2.config.FINISH_INNER_RADIUS, 0, 2 * Math.PI, false);
 		rg2.ctx.stroke();
 		rg2.ctx.beginPath();
@@ -1597,7 +1668,7 @@ Controls.prototype = {
 		angle = angle + (Math.PI / 2);
 		rg2.ctx.lineCap = 'round';
 		rg2.ctx.strokeStyle = "white";
-		rg2.ctx.lineWidth = rg2.config.OVERPRINT_LINE_THICKNESS + 2;
+		rg2.ctx.lineWidth = rg2.getOverprintWidth() + 2;
 		rg2.ctx.beginPath();
 		x[0] = startx + (rg2.config.START_TRIANGLE_LENGTH * Math.sin(angle));
 		y[0] = starty - (rg2.config.START_TRIANGLE_LENGTH * Math.cos(angle));
@@ -1628,7 +1699,7 @@ Controls.prototype = {
 		rg2.ctx.stroke();
 		//Draw the purple start control
 		rg2.ctx.strokeStyle = rg2.config.PURPLE;
-		rg2.ctx.lineWidth = rg2.config.OVERPRINT_LINE_THICKNESS;
+		rg2.ctx.lineWidth = rg2.getOverprintWidth();
 		rg2.ctx.font = "20pt Arial";
 		rg2.ctx.fillStyle = rg2.config.PURPLE;
 		rg2.ctx.beginPath();
@@ -1903,6 +1974,8 @@ Course.prototype = {
 			var c2x;
 			var c2y;
 			rg2.ctx.globalAlpha = intensity;
+			rg2.ctx.lineWidth = rg2.getOverprintWidth();
+			rg2.ctx.strokeStyle = rg2.config.PURPLE;
 			if (this.isScoreCourse) {
 				// align score event start triangle upwards
 				angle = Math.PI * 3 / 2;
@@ -1929,8 +2002,6 @@ Course.prototype = {
 				}
 				// don't join up controls for score events
 				if (!this.isScoreCourse) {
-					rg2.ctx.lineWidth = rg2.config.OVERPRINT_LINE_THICKNESS;
-					rg2.ctx.strokeStyle = rg2.config.PURPLE;
 					rg2.ctx.beginPath();
 					rg2.ctx.moveTo(c1x, c1y);
 					rg2.ctx.lineTo(c2x, c2y);
@@ -2716,7 +2787,7 @@ Draw.prototype = {
   drawNewTrack : function() {
     var i;
     var l;
-    rg2.ctx.lineWidth = 2;
+    rg2.ctx.lineWidth = rg2.getRouteWidth();
     rg2.ctx.strokeStyle = this.trackColor;
     rg2.ctx.fillStyle = this.trackColour;
     rg2.ctx.font = '10pt Arial';
@@ -3761,7 +3832,7 @@ Manager.prototype = {
 
       // locked point for control edit
       if (this.handleX !== null) {
-        rg2.ctx.lineWidth = 2;
+        rg2.ctx.lineWidth = rg2.getOverprintWidth();
         rg2.ctx.strokeStyle = this.handleColor;
         rg2.ctx.fillStyle = this.handleColour;
         rg2.ctx.globalAlpha = 1.0;
@@ -4020,6 +4091,7 @@ function trackTransforms(ctx) {
 
 /*global rg2:false */
 /*global Colours:false */
+/*global getDistanceBetweenPoints:false */
 function Results() {
 	this.results = [];
 	this.colours = new Colours();
@@ -4030,7 +4102,8 @@ Results.prototype = {
 
 	addResults : function(data, isScoreEvent) {
 		// for each result
-		for (var i = 0; i < data.length; i += 1) {
+		var l = data.length;
+		for (var i = 0; i < l; i += 1) {
 			var result = new Result(data[i], isScoreEvent, this.colours.getNextColour());
 			this.results.push(result);
 		}
@@ -4103,7 +4176,10 @@ Results.prototype = {
 
 	// put all tracks for all courses on display
 	putAllTracksOnDisplay : function() {
-		for (var i = 0; i < this.results.length; i += 1) {
+    var i;
+    var l;
+    l = this.results.length;
+		for (i = 0; i < l; i += 1) {
 			this.results[i].putTrackOnDisplay();
 		}
 		this.updateTrackNames();
@@ -4166,9 +4242,12 @@ Results.prototype = {
 	addTracks : function(tracks) {
 		// this gets passed the json data array
 		var resultIndex;
+		var i;
 		var j;
+		var l;
 		// for each track
-		for (var i = 0; i < tracks.length; i += 1) {
+		l = tracks.length;
+		for (i = 0; i < l; i += 1) {
 			resultIndex = tracks[i].resultid;
 			j = 0;
 			// don't add GPS track since we got a better one in the original results
@@ -4214,7 +4293,10 @@ Results.prototype = {
 		var temp;
 		var firstCourse = true;
 		var oldCourseID = 0;
-		for (var i = 0; i < this.results.length; i += 1) {
+    var i;
+    var l;
+    l = this.results.length;
+		for (i = 0; i < l; i += 1) {
 			temp = this.results[i];
 			if (temp.courseid != oldCourseID) {
 				// found a new course so add header
@@ -4356,8 +4438,9 @@ Result.prototype = {
 	},
 
 	drawTrack : function() {
+		var l;
 		if (this.displayTrack) {
-			rg2.ctx.lineWidth = 2;
+			rg2.ctx.lineWidth = rg2.getRouteWidth();
 			rg2.ctx.strokeStyle = this.trackColour;
 			rg2.ctx.globalAlpha = 1.0;
       rg2.ctx.fillStyle = this.trackColour;
@@ -4369,7 +4452,8 @@ Result.prototype = {
       var oldx = this.trackx[0];
       var oldy = this.tracky[0];
       var stopCount = 0;
-			for (var i = 1; i < this.trackx.length; i += 1) {
+			l = this.trackx.length;
+			for (var i = 1; i < l; i += 1) {
 				// lines
 				rg2.ctx.lineTo(this.trackx[i], this.tracky[i]);
         if ((this.trackx[i] === oldx) && (this.tracky[i] === oldy)) {
@@ -4399,7 +4483,8 @@ Result.prototype = {
 		var temp = trackcoords.split("N");
 		var xy = 0;
 		// ignore first point hack for now
-		for (var i = 1; i < temp.length; i += 1) {
+		var l = temp.length;
+		for (var i = 1; i < l; i += 1) {
 			// coord sets are 2 items in csv format
 			xy = temp[i].split(";");
 			this.trackx.push(parseInt(xy[0], 10));
@@ -4425,11 +4510,8 @@ Result.prototype = {
 			course.x = this.scorex;
 			course.y = this.scorey;
 		} else {
-			//course.x = getFullCourse(this.courseid).x;
-			//course.y = getFullCourse(this.courseid).y;
 			course.x = rg2.getCourseDetails(this.courseid).x;
 			course.y = rg2.getCourseDetails(this.courseid).y;
-
 		}
 		// read through list of controls and copy in split times
 		var nextcontrol = 1;
@@ -4439,6 +4521,8 @@ Result.prototype = {
 		var oldx = this.trackx[0];
 		var oldy = this.tracky[0];
 		var i;
+		var j;
+		var l;
 		var x = 0;
 		var y = 0;
 		var deltat = 0;
@@ -4448,11 +4532,12 @@ Result.prototype = {
 		var previouscontrolindex = 0;
 		// we are assuming the track starts at the start which is index 0...
 		// look at each track point and see if it matches the next control location
-		for ( i = 1; i < this.trackx.length; i += 1) {
+		l = this.trackx.length;
+		for ( i = 1; i < l; i += 1) {
 			// calculate distance while we are looping through
 			x = this.trackx[i];
 			y = this.tracky[i];
-			dist = dist + Math.sqrt(((x - oldx) * (x - oldx)) + ((y - oldy) * (y - oldy)));
+			dist += getDistanceBetweenPoints(x, y, oldx, oldy);
 			this.cumulativeDistance[i] = Math.round(dist);
 			oldx = x;
 			oldy = y;
@@ -4465,7 +4550,7 @@ Result.prototype = {
 				deltat = this.xysecs[i] - oldt;
 				olddist = this.cumulativeDistance[previouscontrolindex];
 				deltadist = this.cumulativeDistance[i] - olddist;
-				for (var j = previouscontrolindex; j <= i; j += 1) {
+				for (j = previouscontrolindex; j <= i; j += 1) {
 					this.xysecs[j] = oldt + Math.round(((this.cumulativeDistance[j] - olddist) * deltat / deltadist));
 				}
 				previouscontrolindex = i;
@@ -4496,11 +4581,12 @@ Result.prototype = {
 		var x = 0;
 		var y = 0;
 		// in theory we get one point every three seconds
-		for ( t = 0; t < this.trackx.length; t += 1) {
+		var l = this.trackx.length;
+		for ( t = 0; t < l; t += 1) {
 			this.xysecs[t] = 3 * t;
 			x = this.trackx[t];
 			y = this.tracky[t];
-			dist = dist + Math.sqrt(((x - oldx) * (x - oldx)) + ((y - oldy) * (y - oldy)));
+			dist += getDistanceBetweenPoints(x, y, oldx, oldy);
 			this.cumulativeDistance[t] = Math.round(dist);
 			oldx = x;
 			oldy = y;

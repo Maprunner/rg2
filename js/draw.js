@@ -769,7 +769,7 @@ Draw.prototype = {
   drawNewTrack : function() {
     var i;
     var l;
-    rg2.ctx.lineWidth = 2;
+    rg2.ctx.lineWidth = rg2.getRouteWidth();
     rg2.ctx.strokeStyle = this.trackColor;
     rg2.ctx.fillStyle = this.trackColour;
     rg2.ctx.font = '10pt Arial';

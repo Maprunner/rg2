@@ -349,7 +349,7 @@ Result.prototype = {
 	drawTrack : function() {
 		var l;
 		if (this.displayTrack) {
-			rg2.ctx.lineWidth = 2;
+			rg2.ctx.lineWidth = rg2.getRouteWidth();
 			rg2.ctx.strokeStyle = this.trackColour;
 			rg2.ctx.globalAlpha = 1.0;
       rg2.ctx.fillStyle = this.trackColour;

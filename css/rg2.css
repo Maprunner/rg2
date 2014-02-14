@@ -162,16 +162,26 @@ html, body {
   width: 30px;
 }
 
+#spn-map-intensity, #spn-course-width, #spn-route-width {
+  width: 40px;
+}
+
 #rg2-tails-spinner {
   float: right;
   padding-right: 5px;
+}
+
+#rg2-route-width-spinner, #rg2-course-width-spinner, #rg2-dim-spinner {
+  float: right;
+  padding-right: 5px;
+  margin-top: 5px;
 }
 
 #rg2-container {
 	 height: 100%;
    width: 100%;
    position: relative;
-   background: silver;
+   background: white;
    overflow: hidden;
    display: none;
 }
