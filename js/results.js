@@ -1,5 +1,6 @@
 /*global rg2:false */
 /*global Colours:false */
+/*global getDistanceBetweenPoints:false */
 function Results() {
 	this.results = [];
 	this.colours = new Colours();
@@ -10,7 +11,8 @@ Results.prototype = {
 
 	addResults : function(data, isScoreEvent) {
 		// for each result
-		for (var i = 0; i < data.length; i += 1) {
+		var l = data.length;
+		for (var i = 0; i < l; i += 1) {
 			var result = new Result(data[i], isScoreEvent, this.colours.getNextColour());
 			this.results.push(result);
 		}
@@ -83,7 +85,10 @@ Results.prototype = {
 
 	// put all tracks for all courses on display
 	putAllTracksOnDisplay : function() {
-		for (var i = 0; i < this.results.length; i += 1) {
+    var i;
+    var l;
+    l = this.results.length;
+		for (i = 0; i < l; i += 1) {
 			this.results[i].putTrackOnDisplay();
 		}
 		this.updateTrackNames();
@@ -146,9 +151,12 @@ Results.prototype = {
 	addTracks : function(tracks) {
 		// this gets passed the json data array
 		var resultIndex;
+		var i;
 		var j;
+		var l;
 		// for each track
-		for (var i = 0; i < tracks.length; i += 1) {
+		l = tracks.length;
+		for (i = 0; i < l; i += 1) {
 			resultIndex = tracks[i].resultid;
 			j = 0;
 			// don't add GPS track since we got a better one in the original results
@@ -194,7 +202,10 @@ Results.prototype = {
 		var temp;
 		var firstCourse = true;
 		var oldCourseID = 0;
-		for (var i = 0; i < this.results.length; i += 1) {
+    var i;
+    var l;
+    l = this.results.length;
+		for (i = 0; i < l; i += 1) {
 			temp = this.results[i];
 			if (temp.courseid != oldCourseID) {
 				// found a new course so add header
@@ -336,6 +347,7 @@ Result.prototype = {
 	},
 
 	drawTrack : function() {
+		var l;
 		if (this.displayTrack) {
 			rg2.ctx.lineWidth = 2;
 			rg2.ctx.strokeStyle = this.trackColour;
@@ -349,7 +361,8 @@ Result.prototype = {
       var oldx = this.trackx[0];
       var oldy = this.tracky[0];
       var stopCount = 0;
-			for (var i = 1; i < this.trackx.length; i += 1) {
+			l = this.trackx.length;
+			for (var i = 1; i < l; i += 1) {
 				// lines
 				rg2.ctx.lineTo(this.trackx[i], this.tracky[i]);
         if ((this.trackx[i] === oldx) && (this.tracky[i] === oldy)) {
@@ -379,7 +392,8 @@ Result.prototype = {
 		var temp = trackcoords.split("N");
 		var xy = 0;
 		// ignore first point hack for now
-		for (var i = 1; i < temp.length; i += 1) {
+		var l = temp.length;
+		for (var i = 1; i < l; i += 1) {
 			// coord sets are 2 items in csv format
 			xy = temp[i].split(";");
 			this.trackx.push(parseInt(xy[0], 10));
@@ -405,11 +419,8 @@ Result.prototype = {
 			course.x = this.scorex;
 			course.y = this.scorey;
 		} else {
-			//course.x = getFullCourse(this.courseid).x;
-			//course.y = getFullCourse(this.courseid).y;
 			course.x = rg2.getCourseDetails(this.courseid).x;
 			course.y = rg2.getCourseDetails(this.courseid).y;
-
 		}
 		// read through list of controls and copy in split times
 		var nextcontrol = 1;
@@ -419,6 +430,8 @@ Result.prototype = {
 		var oldx = this.trackx[0];
 		var oldy = this.tracky[0];
 		var i;
+		var j;
+		var l;
 		var x = 0;
 		var y = 0;
 		var deltat = 0;
@@ -428,11 +441,12 @@ Result.prototype = {
 		var previouscontrolindex = 0;
 		// we are assuming the track starts at the start which is index 0...
 		// look at each track point and see if it matches the next control location
-		for ( i = 1; i < this.trackx.length; i += 1) {
+		l = this.trackx.length;
+		for ( i = 1; i < l; i += 1) {
 			// calculate distance while we are looping through
 			x = this.trackx[i];
 			y = this.tracky[i];
-			dist = dist + Math.sqrt(((x - oldx) * (x - oldx)) + ((y - oldy) * (y - oldy)));
+			dist += getDistanceBetweenPoints(x, y, oldx, oldy);
 			this.cumulativeDistance[i] = Math.round(dist);
 			oldx = x;
 			oldy = y;
@@ -445,7 +459,7 @@ Result.prototype = {
 				deltat = this.xysecs[i] - oldt;
 				olddist = this.cumulativeDistance[previouscontrolindex];
 				deltadist = this.cumulativeDistance[i] - olddist;
-				for (var j = previouscontrolindex; j <= i; j += 1) {
+				for (j = previouscontrolindex; j <= i; j += 1) {
 					this.xysecs[j] = oldt + Math.round(((this.cumulativeDistance[j] - olddist) * deltat / deltadist));
 				}
 				previouscontrolindex = i;
@@ -476,11 +490,12 @@ Result.prototype = {
 		var x = 0;
 		var y = 0;
 		// in theory we get one point every three seconds
-		for ( t = 0; t < this.trackx.length; t += 1) {
+		var l = this.trackx.length;
+		for ( t = 0; t < l; t += 1) {
 			this.xysecs[t] = 3 * t;
 			x = this.trackx[t];
 			y = this.tracky[t];
-			dist = dist + Math.sqrt(((x - oldx) * (x - oldx)) + ((y - oldy) * (y - oldy)));
+			dist += getDistanceBetweenPoints(x, y, oldx, oldy);
 			this.cumulativeDistance[t] = Math.round(dist);
 			oldx = x;
 			oldy = y;
