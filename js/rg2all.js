@@ -1,4 +1,4 @@
-// Version 0.4.7 2014-02-13T17:56:28;
+// Version 0.4.10 2014-02-14T08:00:19;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -98,7 +98,7 @@ var rg2 = ( function() {'use strict';
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.4.7',
+      RG2VERSION: '0.4.10',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -106,6 +106,8 @@ var rg2 = ( function() {'use strict';
     };
 
     function init() {
+      $("#rg2-container").hide();
+      
       // cache jQuery things we use a lot
       $rg2infopanel = $("#rg2-info-panel");
       $rg2eventtitle = $("#rg2-event-title");
@@ -226,6 +228,8 @@ var rg2 = ( function() {'use strict';
           $('#rg2-new-comments').val("");
         }
       });
+      
+      $("#rg2-animation-controls").hide();
 
       $("#btn-save-route").button().click(function() {
         drawing.saveRoute();
@@ -379,8 +383,7 @@ var rg2 = ( function() {'use strict';
         console.log("Events request failed: " + err);
       });
 
-      // timer for start-up screen to give a controlled start-up
-      setTimeout(function() {$("#rg2-container").show();}, 2000);
+      setTimeout(function() {$("#rg2-container").show();}, 1000);
     }
 
     function resetMapState() {
@@ -1104,8 +1107,10 @@ Animation.prototype = {
 			$("#rg2-track-names").empty();
 			$("#rg2-track-names").append(html);
 			$("#rg2-track-names").show();
+			$("#rg2-animation-controls").show();
 		} else {
 			$("#rg2-track-names").hide();
+      $("#rg2-animation-controls").hide();
 		}
 		this.calculateAnimationRange();
 		$("#rg2-clock").text(this.formatSecsAsHHMMSS(this.animationSecs));
@@ -2192,6 +2197,7 @@ Draw.prototype = {
   doChangeCourse : function() {
     $('#course-change-dialog').dialog("destroy");
     rg2.removeFromDisplay(this.gpstrack.routeData.courseid);
+    this.doDrawingReset();
     this.initialiseCourse(this.pendingCourseid);
   },
 

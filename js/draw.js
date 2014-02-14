@@ -250,6 +250,7 @@ Draw.prototype = {
   doChangeCourse : function() {
     $('#course-change-dialog').dialog("destroy");
     rg2.removeFromDisplay(this.gpstrack.routeData.courseid);
+    this.doDrawingReset();
     this.initialiseCourse(this.pendingCourseid);
   },
 

@@ -65,7 +65,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Routegadget 2.0 Viewer<?php if ($manager) {?> and Manager<?php } ?></title>
+    <title>Routegadget 2.0</title>
     <meta name="description" content="View and save route choices for orienteering events">
     <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
 

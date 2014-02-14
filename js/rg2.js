@@ -97,7 +97,7 @@ var rg2 = ( function() {'use strict';
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.4.7',
+      RG2VERSION: '0.4.10',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -105,6 +105,8 @@ var rg2 = ( function() {'use strict';
     };
 
     function init() {
+      $("#rg2-container").hide();
+      
       // cache jQuery things we use a lot
       $rg2infopanel = $("#rg2-info-panel");
       $rg2eventtitle = $("#rg2-event-title");
@@ -225,6 +227,8 @@ var rg2 = ( function() {'use strict';
           $('#rg2-new-comments').val("");
         }
       });
+      
+      $("#rg2-animation-controls").hide();
 
       $("#btn-save-route").button().click(function() {
         drawing.saveRoute();
@@ -378,8 +382,7 @@ var rg2 = ( function() {'use strict';
         console.log("Events request failed: " + err);
       });
 
-      // timer for start-up screen to give a controlled start-up
-      setTimeout(function() {$("#rg2-container").show();}, 2000);
+      setTimeout(function() {$("#rg2-container").show();}, 1000);
     }
 
     function resetMapState() {
