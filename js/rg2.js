@@ -50,6 +50,7 @@ var rg2 = ( function() {
     var zoomSize;
     var dragStart;
     var dragged;
+    var whichButton;
     var pinched;
     var pinchStart0;
     var pinchStart1;
@@ -103,7 +104,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.4.12',
+      RG2VERSION: '0.4.13',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -689,6 +690,8 @@ var rg2 = ( function() {
     var handleInputDown = function(evt) {
       dragStart = ctx.transformedPoint(lastX, lastY);
       dragged = false;
+      // need to cache this here since IE and FF don't set it for mousemove events
+      whichButton = evt.which;
       //console.log ("InputDown " + lastX + " " + lastY + " " + dragStart.x + " " + dragStart.y);
     };
     
@@ -701,7 +704,7 @@ var rg2 = ( function() {
         if ((Math.floor(pt.x) !== Math.floor(dragStart.x)) || (Math.floor(pt.y) !== Math.floor(dragStart.y))) {
           // but use Math.round here to get that extra 0.5 pixel accuracy!
           if (drawing.gpsFileLoaded()) {
-            drawing.adjustTrack(Math.round(dragStart.x), Math.round(dragStart.y), Math.round(pt.x), Math.round(pt.y), evt.which ,evt.shiftKey, evt.ctrlKey);
+            drawing.adjustTrack(Math.round(dragStart.x), Math.round(dragStart.y), Math.round(pt.x), Math.round(pt.y), whichButton ,evt.shiftKey, evt.ctrlKey);
           } else {
             if ($rg2infopanel.tabs("option", "active") === config.TAB_MANAGE) {
               manager.adjustControls(Math.round(dragStart.x), Math.round(dragStart.y), Math.round(pt.x), Math.round(pt.y), evt.shiftKey, evt.ctrlKey);
