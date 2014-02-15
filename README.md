@@ -1,5 +1,13 @@
 # Routegadget 2.0
 
+## Latest news
+Version 0.5.0 was released on 15 February 2014 and has been installed on all routegadget.co.uk sites. The main changes are:
+* Enhanced GPS file adjustment. You can now add intermediate points to your route and adjust them.
+* Improved touch interface that should support drag and pinch-zoom on most devices.
+* Configuration menu (cog icon in top right). You can set course overprint and route line widths and set map intensity.
+* Replay control panel is now only displayed when you are on the results tab.
+* Several other minor improvements based on user feedback.
+
 ## What is RouteGadget?
 Routegadget is a Web application for drawing and comparing orienteering routes. The original version was developed by Jarkko Ryyppö, and
 it is now used by [orienteering clubs around the world] (http://www.routegadget.net). This includes a very big user base
@@ -15,20 +23,8 @@ The original Routegadget makes extensive use of Java, and this has caused increa
 Routegadget 2.0 allows you to view existing Routegadget information in any modern (HTML5-compliant) browser without the need for Java.
 It also adds a modern user interface as well as updated functionality for analysis.
 
-##Status
-The user interface now includes most of the core functionality and should be fairly stable. You can draw a route and upload a recorded GPS file (GPX format only at present).
-
-Later versions will allow you to create new events (as a replacement of the original Manager), but for now it only works on events that have been set up in the
-original Routegadget.
-
-It does not currently work properly on iPads, tablets and phones because of problems with the touch interface and screen size. This is
-on the list of things to be looked at.
-
 ## GPS file adjustment
-When you upload a file it is initially fitted to the course as closely as possible. There are limited functions to adjust the route.
-You can drag the whole route, and you can lock a point on it and then stretch and rotate the whole course around the locked point. There is no option to edit
-parts of a route (as in RG1), and at the moment there is no intention to add this. The plan is to georeference maps and courses when they are added to
-RG2, and no adjustment will then be needed. 
+When you upload a file it is initially fitted to the course as closely as possible. Adjustment handles (small dots) are added at the start and end of the route. These are green when free to move and red when locked. Left click on a handle to toggle the lock. You can stretch and rotate around a single locked point, or between two locked points. In future the plan is to georeference maps and courses when they are added to RG2, and no adjustment will then be needed. 
 
 ##Installation
 To use Routegadget 2.0 you need to install it in an existing Routegadget installation. This will require ftp access to your server. If this makes
