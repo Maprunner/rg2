@@ -1,4 +1,4 @@
-// Version 0.4.11 2014-02-14T20:35:22;
+// Version 0.4.12 2014-02-15T08:25:52;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -86,6 +86,8 @@ var rg2 = ( function() {
       PURPLE : '#b300ff',
       RED : '#ff0000',
       GREEN : '#00ff00',
+      WHITE : '#ffffff',
+      BLACK : '#ffoooo',
       CONTROL_CIRCLE_RADIUS : 20,
       FINISH_INNER_RADIUS : 16.4,
       FINISH_OUTER_RADIUS : 23.4,
@@ -102,7 +104,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.4.11',
+      RG2VERSION: '0.4.12',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -501,8 +503,9 @@ var rg2 = ( function() {
       ctx.save();
       // reset everything back to initial size/state/orientation
       ctx.setTransform(1, 0, 0, 1, 0, 0);
-      // clear the canvas
-      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      // fill canvas to erase things: clearRect doesn't work on Android (?) and leaves the old map as background when changing
+      ctx.fillStyle = config.WHITE;
+      ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
       // go back to where we started
       ctx.restore();
       // set transparency of map
@@ -534,7 +537,7 @@ var rg2 = ( function() {
       } else {
         ctx.font = '30pt Arial';
         ctx.textAlign = 'center';
-        ctx.fillStyle = "black";
+        ctx.fillStyle = config.BLACK;
         ctx.fillText(mapLoadingText, canvas.width / 2, canvas.height / 2);
       }
 
