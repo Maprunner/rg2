@@ -1,4 +1,5 @@
 /* exported getLatLonDistance */
+/* exported getDistanceBetweenPoints */
 /* exported getAngle */
 /* exported rg2WarningDialog */
 /* exported formatSecsAsMMSS */
@@ -73,6 +74,11 @@ function getAngle(x1, y1, x2, y2) {
     angle = angle + (2 * Math.PI);
   }
   return angle;
+}
+
+function getDistanceBetweenPoints(x1, y1, x2, y2) {
+  // Pythagoras
+  return Math.sqrt(Math.pow((x1 - x2), 2) + Math.pow((y1 - y2), 2));
 }
 
 // converts seconds to MM:SS

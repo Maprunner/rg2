@@ -46,8 +46,10 @@ Animation.prototype = {
 			$("#rg2-track-names").empty();
 			$("#rg2-track-names").append(html);
 			$("#rg2-track-names").show();
+			$("#rg2-animation-controls").show();
 		} else {
 			$("#rg2-track-names").hide();
+      $("#rg2-animation-controls").hide();
 		}
 		this.calculateAnimationRange();
 		$("#rg2-clock").text(this.formatSecsAsHHMMSS(this.animationSecs));
@@ -282,7 +284,7 @@ Animation.prototype = {
 		}
 		$("#rg2-clock-slider").slider("value", this.animationSecs);
 		$("#rg2-clock").text(this.formatSecsAsHHMMSS(this.animationSecs));
-		rg2.ctx.lineWidth = rg2.config.REPLAY_LINE_THICKNESS;
+		rg2.ctx.lineWidth = rg2.getRouteWidth();
 		rg2.ctx.globalAlpha = 1.0;
 		var runner;
 		var timeOffset;

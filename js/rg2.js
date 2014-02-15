@@ -23,12 +23,17 @@
 /*global Runner:false */
 /*global Course:false */
 /*global trackTransforms:false */
-/*global Hammer:false */
-var rg2 = ( function() {'use strict';
+/*global getDistanceBetweenPoints:false */
+/*global setTimeout:false */
+var rg2 = ( function() {
+    'use strict';
     var canvas = $("#rg2-map-canvas")[0];
     var ctx = canvas.getContext('2d');
     var map;
+    var mapIntensity;
     var mapLoadingText;
+    var overprintWidth;
+    var routeWidth;
     var events;
     var courses;
     var results;
@@ -45,6 +50,12 @@ var rg2 = ( function() {'use strict';
     var zoomSize;
     var dragStart;
     var dragged;
+    var whichButton;
+    var pinched;
+    var pinchStart0;
+    var pinchStart1;
+    var pinchEnd0;
+    var pinchEnd1;
     var requestedHash;
     var requestedEventID;
     var managing;
@@ -73,28 +84,36 @@ var rg2 = ( function() {'use strict';
       BIG_SCREEN_BREAK_POINT : 800,
       SMALL_SCREEN_BREAK_POINT : 500,
       PURPLE : '#b300ff',
+      RED : '#ff0000',
+      GREEN : '#00ff00',
+      WHITE : '#ffffff',
+      BLACK : '#ffoooo',
       CONTROL_CIRCLE_RADIUS : 20,
       FINISH_INNER_RADIUS : 16.4,
       FINISH_OUTER_RADIUS : 23.4,
       RUNNER_DOT_RADIUS : 6,
       START_TRIANGLE_LENGTH : 30,
-      OVERPRINT_LINE_THICKNESS : 2,
-      REPLAY_LINE_THICKNESS : 3,
+      DEFAULT_OVERPRINT_LINE_THICKNESS : 3,
+      DEFAULT_ROUTE_THICKNESS : 4,
       START_TRIANGLE_HEIGHT : 40,
       // parameters for call to draw courses
-      DIM : 0.5,
+      DIM : 0.75,
       FULL_INTENSITY : 1.0,
       // values of event format
       NORMAL_EVENT : 1,
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.4.5',
+      RG2VERSION: '0.5.0',
       TIME_NOT_FOUND : 9999,
-      SPLITS_NOT_FOUND : 9999
+      SPLITS_NOT_FOUND : 9999,
+      // values for evt.which 
+      RIGHT_CLICK : 3
     };
 
     function init() {
+      $("#rg2-container").hide();
+      
       // cache jQuery things we use a lot
       $rg2infopanel = $("#rg2-info-panel");
       $rg2eventtitle = $("#rg2-event-title");
@@ -151,6 +170,9 @@ var rg2 = ( function() {'use strict';
 
       map = new Image();
       mapLoadingText = "Select an event";
+      mapIntensity = config.FULL_INTENSITY;
+      overprintWidth = config.DEFAULT_OVERPRINT_LINE_THICKNESS;
+      routeWidth = config.DEFAULT_ROUTE_THICKNESS;
       events = new Events();
       courses = new Courses();
       results = new Results();
@@ -175,6 +197,10 @@ var rg2 = ( function() {'use strict';
 
       $("#btn-about").click(function() {
         displayAboutDialog();
+      });
+
+      $("#btn-options").click(function() {
+        displayOptionsDialog();
       });
 
       $("#rg2-resize-info").click(function() {
@@ -215,6 +241,42 @@ var rg2 = ( function() {'use strict';
           $('#rg2-new-comments').val("");
         }
       });
+      
+      $("#rg2-option-controls").hide();
+
+      // set default to 100% = full intensity
+      $("#spn-map-intensity").spinner({
+        max : 100,
+        min : 0,
+        step: 10,
+        numberFormat: "n",
+        spin : function(event, ui) {
+          mapIntensity = (ui.value / 100);
+          redraw(false);
+        }
+      }).val(100);
+
+      $("#spn-course-width").spinner({
+        max : 10,
+        min : 1,
+        step: 0.5,
+        spin : function(event, ui) {
+          overprintWidth = ui.value;
+          redraw(false);
+        }
+      }).val(config.DEFAULT_OVERPRINT_LINE_THICKNESS);
+
+      $("#spn-route-width").spinner({
+        max : 10,
+        min : 1,
+        step: 0.5,
+        spin : function(event, ui) {
+          routeWidth = ui.value;
+          redraw(false);
+        }
+      }).val(config.DEFAULT_ROUTE_THICKNESS);
+      
+      $("#rg2-animation-controls").hide();
 
       $("#btn-save-route").button().click(function() {
         drawing.saveRoute();
@@ -327,41 +389,10 @@ var rg2 = ( function() {'use strict';
         $("#rg2-events-tab").hide();
         $rg2infopanel.tabs("option", "active", config.TAB_MANAGE);
       }
-
-      var hammer = new Hammer(canvas, {
-          correct_for_drag_min_distance: false,
-          drag_block_horizontal : true,
-          drag_block_vertical : true
-        //}).on("touch pinch tap hold swipe release", function(evt) { 
-        //console.log(evt.type, evt.gesture.center.pageX, evt.gesture.center.pageY);
-        //console.log(evt.gesture);
-      }).on("dragstart", function(evt) {
-        handleTouchStart(evt);
-      }).on("drag", function(evt) {
-        handleTouchMove(evt);
-      }).on("dragend", function(evt) {
-        handleTouchEnd(evt);
-      }).on("pinchin", function(evt) {
-        zoom(-1);
-      }).on("pinchout", function(evt) {
-        zoom(1);
-      });
-
-      var handleTouchStart = function(evt) {
-        lastX = evt.gesture.touches[0].pageX - evt.gesture.deltaX;
-        lastY = evt.gesture.touches[0].pageY - evt.gesture.deltaY;
-        handleInputDown();
-      };
-      
-      var handleTouchMove = function(evt) {
-        lastX = evt.gesture.touches[0].pageX;
-        lastY = evt.gesture.touches[0].pageY;
-        handleInputMove(false, false);
-      };
-
-      var handleTouchEnd = function(evt) {
-        handleInputUp();
-      };
+     
+      canvas.addEventListener('touchstart', handleTouchStart, false);
+      canvas.addEventListener('touchmove', handleTouchMove, false);
+      canvas.addEventListener('touchend', handleTouchEnd, false);
 
       trackTransforms(ctx);
       resizeCanvas();
@@ -379,6 +410,11 @@ var rg2 = ( function() {'use strict';
         resetMapState();
       }, false);
 
+      // disable right click menu: may add our own later
+      $(document).bind("contextmenu", function(evt) {
+        evt.preventDefault();
+      });
+
       // load event details
       $.getJSON(json_url, {
         type : "events",
@@ -394,6 +430,7 @@ var rg2 = ( function() {'use strict';
         console.log("Events request failed: " + err);
       });
 
+      setTimeout(function() {$("#rg2-container").show();}, 1000);
     }
 
     function resetMapState() {
@@ -466,12 +503,13 @@ var rg2 = ( function() {'use strict';
       ctx.save();
       // reset everything back to initial size/state/orientation
       ctx.setTransform(1, 0, 0, 1, 0, 0);
-      // clear the canvas
-      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      // fill canvas to erase things: clearRect doesn't work on Android (?) and leaves the old map as background when changing
+      ctx.fillStyle = config.WHITE;
+      ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
       // go back to where we started
       ctx.restore();
-      // set transparency of map to none
-      ctx.globalAlpha = 1.0;
+      // set transparency of map
+      ctx.globalAlpha = mapIntensity;
 
       if (map.height > 0) {
         // using non-zero map height to show we have a map loaded
@@ -499,7 +537,7 @@ var rg2 = ( function() {'use strict';
       } else {
         ctx.font = '30pt Arial';
         ctx.textAlign = 'center';
-        ctx.fillStyle = "black";
+        ctx.fillStyle = config.BLACK;
         ctx.fillText(mapLoadingText, canvas.width / 2, canvas.height / 2);
       }
 
@@ -518,6 +556,19 @@ var rg2 = ( function() {'use strict';
       });
     }
 
+    function displayOptionsDialog() {
+      $("#rg2-option-controls").dialog({
+        //modal : true,
+        minWidth : 400,
+        buttons : {
+          Ok : function() {
+            $(this).dialog("close");
+          }
+        }
+      });
+    }
+
+
     function resizeInfoDisplay() {
       if (infoPanelMaximised) {
         infoPanelMaximised = false;
@@ -533,6 +584,59 @@ var rg2 = ( function() {'use strict';
       // move map around if necesssary
       resetMapState();
     }
+    
+    // homegrown touch handling: seems no worse than adding some other library in
+    // pinch zoom is primitive but works
+    var handleTouchStart = function(evt) {
+      evt.preventDefault();
+      if (evt.touches.length > 1) {
+        pinchStart0 = ctx.transformedPoint(evt.touches[0].pageX, evt.touches[0].pageY);
+        pinchStart1 = ctx.transformedPoint(evt.touches[1].pageX, evt.touches[1].pageY);
+        pinched = true;
+      }
+      lastX = evt.touches[0].pageX;
+      lastY = evt.touches[0].pageY;
+      handleInputDown(evt);
+    };
+      
+    var handleTouchMove = function(evt) {
+      var oldDistance;
+      var newDistance;
+      if (evt.touches.length > 1) {
+        if (!pinched) {
+          // second touch seen during move
+          pinchStart0 = ctx.transformedPoint(evt.touches[0].pageX, evt.touches[0].pageY);
+          pinchStart1 = ctx.transformedPoint(evt.touches[1].pageX, evt.touches[1].pageY);
+          pinched = true;
+        }
+      } else {
+        pinched = false;
+      }
+      if (pinched && (evt.touches.length > 1)) {
+        pinchEnd0 = ctx.transformedPoint(evt.touches[0].pageX, evt.touches[0].pageY);
+        pinchEnd1 = ctx.transformedPoint(evt.touches[1].pageX, evt.touches[1].pageY);
+        oldDistance = getDistanceBetweenPoints(pinchStart0.x, pinchStart0.y, pinchStart1.x, pinchStart1.y);
+        newDistance = getDistanceBetweenPoints(pinchEnd0.x, pinchEnd0.y, pinchEnd1.x, pinchEnd1.y);
+        if ((oldDistance / newDistance) > 1.1) {
+          zoom(-1);
+          pinchStart0 = pinchEnd0;
+          pinchStart1 = pinchEnd1;
+        } else if ((oldDistance / newDistance) < 0.9) {
+          zoom(1);
+          pinchStart0 = pinchEnd0;
+          pinchStart1 = pinchEnd1;
+        }
+      } else {
+        lastX = evt.touches[0].pageX;
+        lastY = evt.touches[0].pageY;
+        handleInputMove(evt);
+      }
+    };
+
+    var handleTouchEnd = function(evt) {
+      handleInputUp(evt);
+      pinched = false;
+    };
 
     var zoom = function(zoomDirection) {
       var factor = Math.pow(scaleFactor, zoomDirection);
@@ -556,43 +660,54 @@ var rg2 = ( function() {'use strict';
       if (delta) {
         zoom(delta);
       }
+      evt.stopPropagation();
       return evt.preventDefault() && false;
     };
 
     var handleMouseDown = function(evt) {
       lastX = evt.offsetX || (evt.layerX - canvas.offsetLeft);
       lastY = evt.offsetY || (evt.layerY - canvas.offsetTop);
-      handleInputDown();
+      handleInputDown(evt);
+      evt.stopPropagation();
+      return evt.preventDefault() && false;
     };
 
 
     var handleMouseMove = function(evt) {
       lastX = evt.offsetX || (evt.layerX - canvas.offsetLeft);
       lastY = evt.offsetY || (evt.layerY - canvas.offsetTop);
-      handleInputMove(evt.shiftKey, evt.ctrlKey);
+      handleInputMove(evt);
+      evt.stopPropagation();
+      return evt.preventDefault() && false;
     };
 
     var handleMouseUp = function(evt) {
-      handleInputUp();
+      handleInputUp(evt);
+      evt.stopPropagation();
+      return evt.preventDefault() && false;
     };
 
-    var handleInputDown = function() {
+    var handleInputDown = function(evt) {
       dragStart = ctx.transformedPoint(lastX, lastY);
       dragged = false;
+      // need to cache this here since IE and FF don't set it for mousemove events
+      whichButton = evt.which;
       //console.log ("InputDown " + lastX + " " + lastY + " " + dragStart.x + " " + dragStart.y);
     };
     
-    var handleInputMove = function(shiftKey, ctrlKey) {
+    var handleInputMove = function(evt) {
       if (dragStart) {
         var pt = ctx.transformedPoint(lastX, lastY);
         //console.log ("Mousemove after" + pt.x + ": " + pt.y);
         // allow for Webkit which gives us mousemove events with no movement!
-        if ((pt.x !== dragStart.x) || (pt.y !== dragStart.y)) {
+        // Math.floor is a lot quicker than parseInt, plus it removes some of the small moves since you need to move at least a pixel
+        if ((Math.floor(pt.x) !== Math.floor(dragStart.x)) || (Math.floor(pt.y) !== Math.floor(dragStart.y))) {
+          // but use Math.round here to get that extra 0.5 pixel accuracy!
           if (drawing.gpsFileLoaded()) {
-            drawing.adjustTrack(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10), parseInt(pt.x, 10), parseInt(pt.y, 10), shiftKey, ctrlKey);
+            drawing.adjustTrack(Math.round(dragStart.x), Math.round(dragStart.y), Math.round(pt.x), Math.round(pt.y), whichButton ,evt.shiftKey, evt.ctrlKey);
           } else {
             if ($rg2infopanel.tabs("option", "active") === config.TAB_MANAGE) {
-              manager.adjustControls(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10), parseInt(pt.x, 10), parseInt(pt.y, 10), shiftKey, ctrlKey);
+              manager.adjustControls(Math.round(dragStart.x), Math.round(dragStart.y), Math.round(pt.x), Math.round(pt.y), evt.shiftKey, evt.ctrlKey);
             } else {
               ctx.translate(pt.x - dragStart.x, pt.y - dragStart.y);
             }
@@ -603,13 +718,14 @@ var rg2 = ( function() {'use strict';
       }
     };
     
-    var handleInputUp = function() {
+    var handleInputUp = function(evt) {
       var active = $rg2infopanel.tabs("option", "active");
       if (!dragged) {
         if (active === config.TAB_MANAGE) {
-          manager.mouseUp(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10));
+          manager.mouseUp(Math.round(dragStart.x), Math.round(dragStart.y));
         } else {
-          drawing.mouseUp(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10));
+          // pass button that was clicked
+          drawing.mouseUp(Math.round(dragStart.x), Math.round(dragStart.y), evt.which);
         }
       } else {
         if (active === config.TAB_MANAGE) {
@@ -964,12 +1080,22 @@ var rg2 = ( function() {'use strict';
     function createEventEditDropdown() {
       events.createEventEditDropdown();
     }
+    
+    function getOverprintWidth() {
+      return overprintWidth;
+    }
+
+    function getRouteWidth() {
+      return routeWidth;
+    }
 
     return {
       // functions and variables available elsewhere
       init : init,
       config : config,
       redraw : redraw,
+      getOverprintWidth: getOverprintWidth,
+      getRouteWidth: getRouteWidth,
       ctx : ctx,
       getMapSize : getMapSize,
       loadNewMap : loadNewMap,

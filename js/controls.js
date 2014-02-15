@@ -28,12 +28,15 @@ Controls.prototype = {
 		if (this.displayControls) {
 			var x;
 			var y;
-			rg2.ctx.lineWidth = rg2.config.OVERPRINT_LINE_THICKNESS;
+			var i;
+			var l;
+			rg2.ctx.lineWidth = rg2.getOverprintWidth();
 			rg2.ctx.strokeStyle = rg2.config.PURPLE;
 			rg2.ctx.font = '20pt Arial';
 			rg2.ctx.fillStyle = rg2.config.PURPLE;
 			rg2.ctx.globalAlpha = 1.0;
-			for (var i = 0; i < this.controls.length; i += 1) {
+			l = this.controls.length;
+			for (i = 0; i < l; i += 1) {
 				// Assume things starting with 'F' are a Finish
 				if (this.controls[i].code.indexOf('F') === 0) {
 					this.drawFinish(this.controls[i].x, this.controls[i].y, this.controls[i].code);
@@ -54,7 +57,7 @@ Controls.prototype = {
 		//Draw the white halo around the controls
 		rg2.ctx.beginPath();
 		rg2.ctx.strokeStyle = "white";
-		rg2.ctx.lineWidth = rg2.config.OVERPRINT_LINE_THICKNESS + 2;
+		rg2.ctx.lineWidth = rg2.getOverprintWidth() + 2;
 		rg2.ctx.arc(x, y, 20, 0, 2 * Math.PI, false);
 		rg2.ctx.stroke();
 		//Draw the white halo around the control code
@@ -71,7 +74,7 @@ Controls.prototype = {
 		rg2.ctx.font = "20pt Arial";
 		rg2.ctx.fillStyle = rg2.config.PURPLE;
 		rg2.ctx.strokeStyle = rg2.config.PURPLE;
-		rg2.ctx.lineWidth = rg2.config.OVERPRINT_LINE_THICKNESS;
+		rg2.ctx.lineWidth = rg2.getOverprintWidth();
 		rg2.ctx.arc(x, y, 20, 0, 2 * Math.PI, false);
 		rg2.ctx.fillText(code, x + 25, y + 20);
 		rg2.ctx.stroke();
@@ -79,7 +82,7 @@ Controls.prototype = {
 	drawFinish : function(x, y, code) {
 		//Draw the white halo around the finish control
 		rg2.ctx.strokeStyle = "white";
-		rg2.ctx.lineWidth = rg2.config.OVERPRINT_LINE_THICKNESS + 2;
+		rg2.ctx.lineWidth = rg2.getOverprintWidth() + 2;
 		rg2.ctx.beginPath();
 		rg2.ctx.arc(x, y, rg2.config.FINISH_INNER_RADIUS, 0, 2 * Math.PI, false);
 		rg2.ctx.stroke();
@@ -100,7 +103,7 @@ Controls.prototype = {
 		rg2.ctx.beginPath();
 		rg2.ctx.fillStyle = rg2.config.PURPLE;
 		rg2.ctx.strokeStyle = rg2.config.PURPLE;
-		rg2.ctx.lineWidth = rg2.config.OVERPRINT_LINE_THICKNESS;
+		rg2.ctx.lineWidth = rg2.getOverprintWidth();
 		rg2.ctx.arc(x, y, rg2.config.FINISH_INNER_RADIUS, 0, 2 * Math.PI, false);
 		rg2.ctx.stroke();
 		rg2.ctx.beginPath();
@@ -116,7 +119,7 @@ Controls.prototype = {
 		angle = angle + (Math.PI / 2);
 		rg2.ctx.lineCap = 'round';
 		rg2.ctx.strokeStyle = "white";
-		rg2.ctx.lineWidth = rg2.config.OVERPRINT_LINE_THICKNESS + 2;
+		rg2.ctx.lineWidth = rg2.getOverprintWidth() + 2;
 		rg2.ctx.beginPath();
 		x[0] = startx + (rg2.config.START_TRIANGLE_LENGTH * Math.sin(angle));
 		y[0] = starty - (rg2.config.START_TRIANGLE_LENGTH * Math.cos(angle));
@@ -147,7 +150,7 @@ Controls.prototype = {
 		rg2.ctx.stroke();
 		//Draw the purple start control
 		rg2.ctx.strokeStyle = rg2.config.PURPLE;
-		rg2.ctx.lineWidth = rg2.config.OVERPRINT_LINE_THICKNESS;
+		rg2.ctx.lineWidth = rg2.getOverprintWidth();
 		rg2.ctx.font = "20pt Arial";
 		rg2.ctx.fillStyle = rg2.config.PURPLE;
 		rg2.ctx.beginPath();

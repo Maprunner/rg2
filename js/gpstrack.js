@@ -9,6 +9,7 @@ function GPSTrack() {
 	this.time = [];
 	this.baseX = [];
 	this.baseY = [];
+  this.handles = [];
 	this.fileLoaded = false;
 	this.fileName = '';
 	this.routeData = new RouteData();
@@ -24,6 +25,7 @@ GPSTrack.prototype = {
 		this.time.length = 0;
 		this.baseX.length = 0;
 		this.baseY.length = 0;
+    this.handles.length = 0;
 		this.fileLoaded = false;
 	},
 
@@ -165,6 +167,22 @@ GPSTrack.prototype = {
 		}
 		this.baseX = this.routeData.x.slice(0);
 		this.baseY = this.routeData.y.slice(0);
+		var h0 = {};
+    var h1 = {};
+		h0.x = this.baseX[0];
+    h0.y = this.baseY[0];
+    h0.basex = h0.x;
+    h0.basey = h0.y;
+    h0.locked = false;
+    h0.time = 0;
+    this.handles.push(h0);
+    h1.x = this.baseX[this.baseX.length - 1];
+    h1.y = this.baseY[this.baseY.length - 1];
+    h1.basex = h1.x;
+    h1.basey = h1.y;
+    h1.locked = false;
+    h1.time = this.baseY.length - 1;
+    this.handles.push(h1);
 		this.routeData.time = this.time;
 		this.fileLoaded = true;
 		$("#btn-save-gps-route").button("enable");

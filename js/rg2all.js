@@ -1,4 +1,4 @@
-// Version 0.4.5 2014-02-11T19:56:07;
+// Version 0.5.0 2014-02-15T11:32:47;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -24,12 +24,17 @@
 /*global Runner:false */
 /*global Course:false */
 /*global trackTransforms:false */
-/*global Hammer:false */
-var rg2 = ( function() {'use strict';
+/*global getDistanceBetweenPoints:false */
+/*global setTimeout:false */
+var rg2 = ( function() {
+    'use strict';
     var canvas = $("#rg2-map-canvas")[0];
     var ctx = canvas.getContext('2d');
     var map;
+    var mapIntensity;
     var mapLoadingText;
+    var overprintWidth;
+    var routeWidth;
     var events;
     var courses;
     var results;
@@ -46,6 +51,12 @@ var rg2 = ( function() {'use strict';
     var zoomSize;
     var dragStart;
     var dragged;
+    var whichButton;
+    var pinched;
+    var pinchStart0;
+    var pinchStart1;
+    var pinchEnd0;
+    var pinchEnd1;
     var requestedHash;
     var requestedEventID;
     var managing;
@@ -74,28 +85,36 @@ var rg2 = ( function() {'use strict';
       BIG_SCREEN_BREAK_POINT : 800,
       SMALL_SCREEN_BREAK_POINT : 500,
       PURPLE : '#b300ff',
+      RED : '#ff0000',
+      GREEN : '#00ff00',
+      WHITE : '#ffffff',
+      BLACK : '#ffoooo',
       CONTROL_CIRCLE_RADIUS : 20,
       FINISH_INNER_RADIUS : 16.4,
       FINISH_OUTER_RADIUS : 23.4,
       RUNNER_DOT_RADIUS : 6,
       START_TRIANGLE_LENGTH : 30,
-      OVERPRINT_LINE_THICKNESS : 2,
-      REPLAY_LINE_THICKNESS : 3,
+      DEFAULT_OVERPRINT_LINE_THICKNESS : 3,
+      DEFAULT_ROUTE_THICKNESS : 4,
       START_TRIANGLE_HEIGHT : 40,
       // parameters for call to draw courses
-      DIM : 0.5,
+      DIM : 0.75,
       FULL_INTENSITY : 1.0,
       // values of event format
       NORMAL_EVENT : 1,
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.4.5',
+      RG2VERSION: '0.5.0',
       TIME_NOT_FOUND : 9999,
-      SPLITS_NOT_FOUND : 9999
+      SPLITS_NOT_FOUND : 9999,
+      // values for evt.which 
+      RIGHT_CLICK : 3
     };
 
     function init() {
+      $("#rg2-container").hide();
+      
       // cache jQuery things we use a lot
       $rg2infopanel = $("#rg2-info-panel");
       $rg2eventtitle = $("#rg2-event-title");
@@ -152,6 +171,9 @@ var rg2 = ( function() {'use strict';
 
       map = new Image();
       mapLoadingText = "Select an event";
+      mapIntensity = config.FULL_INTENSITY;
+      overprintWidth = config.DEFAULT_OVERPRINT_LINE_THICKNESS;
+      routeWidth = config.DEFAULT_ROUTE_THICKNESS;
       events = new Events();
       courses = new Courses();
       results = new Results();
@@ -176,6 +198,10 @@ var rg2 = ( function() {'use strict';
 
       $("#btn-about").click(function() {
         displayAboutDialog();
+      });
+
+      $("#btn-options").click(function() {
+        displayOptionsDialog();
       });
 
       $("#rg2-resize-info").click(function() {
@@ -216,6 +242,42 @@ var rg2 = ( function() {'use strict';
           $('#rg2-new-comments').val("");
         }
       });
+      
+      $("#rg2-option-controls").hide();
+
+      // set default to 100% = full intensity
+      $("#spn-map-intensity").spinner({
+        max : 100,
+        min : 0,
+        step: 10,
+        numberFormat: "n",
+        spin : function(event, ui) {
+          mapIntensity = (ui.value / 100);
+          redraw(false);
+        }
+      }).val(100);
+
+      $("#spn-course-width").spinner({
+        max : 10,
+        min : 1,
+        step: 0.5,
+        spin : function(event, ui) {
+          overprintWidth = ui.value;
+          redraw(false);
+        }
+      }).val(config.DEFAULT_OVERPRINT_LINE_THICKNESS);
+
+      $("#spn-route-width").spinner({
+        max : 10,
+        min : 1,
+        step: 0.5,
+        spin : function(event, ui) {
+          routeWidth = ui.value;
+          redraw(false);
+        }
+      }).val(config.DEFAULT_ROUTE_THICKNESS);
+      
+      $("#rg2-animation-controls").hide();
 
       $("#btn-save-route").button().click(function() {
         drawing.saveRoute();
@@ -328,41 +390,10 @@ var rg2 = ( function() {'use strict';
         $("#rg2-events-tab").hide();
         $rg2infopanel.tabs("option", "active", config.TAB_MANAGE);
       }
-
-      var hammer = new Hammer(canvas, {
-          correct_for_drag_min_distance: false,
-          drag_block_horizontal : true,
-          drag_block_vertical : true
-        //}).on("touch pinch tap hold swipe release", function(evt) { 
-        //console.log(evt.type, evt.gesture.center.pageX, evt.gesture.center.pageY);
-        //console.log(evt.gesture);
-      }).on("dragstart", function(evt) {
-        handleTouchStart(evt);
-      }).on("drag", function(evt) {
-        handleTouchMove(evt);
-      }).on("dragend", function(evt) {
-        handleTouchEnd(evt);
-      }).on("pinchin", function(evt) {
-        zoom(-1);
-      }).on("pinchout", function(evt) {
-        zoom(1);
-      });
-
-      var handleTouchStart = function(evt) {
-        lastX = evt.gesture.touches[0].pageX - evt.gesture.deltaX;
-        lastY = evt.gesture.touches[0].pageY - evt.gesture.deltaY;
-        handleInputDown();
-      };
-      
-      var handleTouchMove = function(evt) {
-        lastX = evt.gesture.touches[0].pageX;
-        lastY = evt.gesture.touches[0].pageY;
-        handleInputMove(false, false);
-      };
-
-      var handleTouchEnd = function(evt) {
-        handleInputUp();
-      };
+     
+      canvas.addEventListener('touchstart', handleTouchStart, false);
+      canvas.addEventListener('touchmove', handleTouchMove, false);
+      canvas.addEventListener('touchend', handleTouchEnd, false);
 
       trackTransforms(ctx);
       resizeCanvas();
@@ -380,6 +411,11 @@ var rg2 = ( function() {'use strict';
         resetMapState();
       }, false);
 
+      // disable right click menu: may add our own later
+      $(document).bind("contextmenu", function(evt) {
+        evt.preventDefault();
+      });
+
       // load event details
       $.getJSON(json_url, {
         type : "events",
@@ -395,6 +431,7 @@ var rg2 = ( function() {'use strict';
         console.log("Events request failed: " + err);
       });
 
+      setTimeout(function() {$("#rg2-container").show();}, 1000);
     }
 
     function resetMapState() {
@@ -467,12 +504,13 @@ var rg2 = ( function() {'use strict';
       ctx.save();
       // reset everything back to initial size/state/orientation
       ctx.setTransform(1, 0, 0, 1, 0, 0);
-      // clear the canvas
-      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      // fill canvas to erase things: clearRect doesn't work on Android (?) and leaves the old map as background when changing
+      ctx.fillStyle = config.WHITE;
+      ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
       // go back to where we started
       ctx.restore();
-      // set transparency of map to none
-      ctx.globalAlpha = 1.0;
+      // set transparency of map
+      ctx.globalAlpha = mapIntensity;
 
       if (map.height > 0) {
         // using non-zero map height to show we have a map loaded
@@ -500,7 +538,7 @@ var rg2 = ( function() {'use strict';
       } else {
         ctx.font = '30pt Arial';
         ctx.textAlign = 'center';
-        ctx.fillStyle = "black";
+        ctx.fillStyle = config.BLACK;
         ctx.fillText(mapLoadingText, canvas.width / 2, canvas.height / 2);
       }
 
@@ -519,6 +557,19 @@ var rg2 = ( function() {'use strict';
       });
     }
 
+    function displayOptionsDialog() {
+      $("#rg2-option-controls").dialog({
+        //modal : true,
+        minWidth : 400,
+        buttons : {
+          Ok : function() {
+            $(this).dialog("close");
+          }
+        }
+      });
+    }
+
+
     function resizeInfoDisplay() {
       if (infoPanelMaximised) {
         infoPanelMaximised = false;
@@ -534,6 +585,59 @@ var rg2 = ( function() {'use strict';
       // move map around if necesssary
       resetMapState();
     }
+    
+    // homegrown touch handling: seems no worse than adding some other library in
+    // pinch zoom is primitive but works
+    var handleTouchStart = function(evt) {
+      evt.preventDefault();
+      if (evt.touches.length > 1) {
+        pinchStart0 = ctx.transformedPoint(evt.touches[0].pageX, evt.touches[0].pageY);
+        pinchStart1 = ctx.transformedPoint(evt.touches[1].pageX, evt.touches[1].pageY);
+        pinched = true;
+      }
+      lastX = evt.touches[0].pageX;
+      lastY = evt.touches[0].pageY;
+      handleInputDown(evt);
+    };
+      
+    var handleTouchMove = function(evt) {
+      var oldDistance;
+      var newDistance;
+      if (evt.touches.length > 1) {
+        if (!pinched) {
+          // second touch seen during move
+          pinchStart0 = ctx.transformedPoint(evt.touches[0].pageX, evt.touches[0].pageY);
+          pinchStart1 = ctx.transformedPoint(evt.touches[1].pageX, evt.touches[1].pageY);
+          pinched = true;
+        }
+      } else {
+        pinched = false;
+      }
+      if (pinched && (evt.touches.length > 1)) {
+        pinchEnd0 = ctx.transformedPoint(evt.touches[0].pageX, evt.touches[0].pageY);
+        pinchEnd1 = ctx.transformedPoint(evt.touches[1].pageX, evt.touches[1].pageY);
+        oldDistance = getDistanceBetweenPoints(pinchStart0.x, pinchStart0.y, pinchStart1.x, pinchStart1.y);
+        newDistance = getDistanceBetweenPoints(pinchEnd0.x, pinchEnd0.y, pinchEnd1.x, pinchEnd1.y);
+        if ((oldDistance / newDistance) > 1.1) {
+          zoom(-1);
+          pinchStart0 = pinchEnd0;
+          pinchStart1 = pinchEnd1;
+        } else if ((oldDistance / newDistance) < 0.9) {
+          zoom(1);
+          pinchStart0 = pinchEnd0;
+          pinchStart1 = pinchEnd1;
+        }
+      } else {
+        lastX = evt.touches[0].pageX;
+        lastY = evt.touches[0].pageY;
+        handleInputMove(evt);
+      }
+    };
+
+    var handleTouchEnd = function(evt) {
+      handleInputUp(evt);
+      pinched = false;
+    };
 
     var zoom = function(zoomDirection) {
       var factor = Math.pow(scaleFactor, zoomDirection);
@@ -557,43 +661,54 @@ var rg2 = ( function() {'use strict';
       if (delta) {
         zoom(delta);
       }
+      evt.stopPropagation();
       return evt.preventDefault() && false;
     };
 
     var handleMouseDown = function(evt) {
       lastX = evt.offsetX || (evt.layerX - canvas.offsetLeft);
       lastY = evt.offsetY || (evt.layerY - canvas.offsetTop);
-      handleInputDown();
+      handleInputDown(evt);
+      evt.stopPropagation();
+      return evt.preventDefault() && false;
     };
 
 
     var handleMouseMove = function(evt) {
       lastX = evt.offsetX || (evt.layerX - canvas.offsetLeft);
       lastY = evt.offsetY || (evt.layerY - canvas.offsetTop);
-      handleInputMove(evt.shiftKey, evt.ctrlKey);
+      handleInputMove(evt);
+      evt.stopPropagation();
+      return evt.preventDefault() && false;
     };
 
     var handleMouseUp = function(evt) {
-      handleInputUp();
+      handleInputUp(evt);
+      evt.stopPropagation();
+      return evt.preventDefault() && false;
     };
 
-    var handleInputDown = function() {
+    var handleInputDown = function(evt) {
       dragStart = ctx.transformedPoint(lastX, lastY);
       dragged = false;
+      // need to cache this here since IE and FF don't set it for mousemove events
+      whichButton = evt.which;
       //console.log ("InputDown " + lastX + " " + lastY + " " + dragStart.x + " " + dragStart.y);
     };
     
-    var handleInputMove = function(shiftKey, ctrlKey) {
+    var handleInputMove = function(evt) {
       if (dragStart) {
         var pt = ctx.transformedPoint(lastX, lastY);
         //console.log ("Mousemove after" + pt.x + ": " + pt.y);
         // allow for Webkit which gives us mousemove events with no movement!
-        if ((pt.x !== dragStart.x) || (pt.y !== dragStart.y)) {
+        // Math.floor is a lot quicker than parseInt, plus it removes some of the small moves since you need to move at least a pixel
+        if ((Math.floor(pt.x) !== Math.floor(dragStart.x)) || (Math.floor(pt.y) !== Math.floor(dragStart.y))) {
+          // but use Math.round here to get that extra 0.5 pixel accuracy!
           if (drawing.gpsFileLoaded()) {
-            drawing.adjustTrack(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10), parseInt(pt.x, 10), parseInt(pt.y, 10), shiftKey, ctrlKey);
+            drawing.adjustTrack(Math.round(dragStart.x), Math.round(dragStart.y), Math.round(pt.x), Math.round(pt.y), whichButton ,evt.shiftKey, evt.ctrlKey);
           } else {
             if ($rg2infopanel.tabs("option", "active") === config.TAB_MANAGE) {
-              manager.adjustControls(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10), parseInt(pt.x, 10), parseInt(pt.y, 10), shiftKey, ctrlKey);
+              manager.adjustControls(Math.round(dragStart.x), Math.round(dragStart.y), Math.round(pt.x), Math.round(pt.y), evt.shiftKey, evt.ctrlKey);
             } else {
               ctx.translate(pt.x - dragStart.x, pt.y - dragStart.y);
             }
@@ -604,13 +719,14 @@ var rg2 = ( function() {'use strict';
       }
     };
     
-    var handleInputUp = function() {
+    var handleInputUp = function(evt) {
       var active = $rg2infopanel.tabs("option", "active");
       if (!dragged) {
         if (active === config.TAB_MANAGE) {
-          manager.mouseUp(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10));
+          manager.mouseUp(Math.round(dragStart.x), Math.round(dragStart.y));
         } else {
-          drawing.mouseUp(parseInt(dragStart.x, 10), parseInt(dragStart.y, 10));
+          // pass button that was clicked
+          drawing.mouseUp(Math.round(dragStart.x), Math.round(dragStart.y), evt.which);
         }
       } else {
         if (active === config.TAB_MANAGE) {
@@ -965,12 +1081,22 @@ var rg2 = ( function() {'use strict';
     function createEventEditDropdown() {
       events.createEventEditDropdown();
     }
+    
+    function getOverprintWidth() {
+      return overprintWidth;
+    }
+
+    function getRouteWidth() {
+      return routeWidth;
+    }
 
     return {
       // functions and variables available elsewhere
       init : init,
       config : config,
       redraw : redraw,
+      getOverprintWidth: getOverprintWidth,
+      getRouteWidth: getRouteWidth,
       ctx : ctx,
       getMapSize : getMapSize,
       loadNewMap : loadNewMap,
@@ -1055,8 +1181,10 @@ Animation.prototype = {
 			$("#rg2-track-names").empty();
 			$("#rg2-track-names").append(html);
 			$("#rg2-track-names").show();
+			$("#rg2-animation-controls").show();
 		} else {
 			$("#rg2-track-names").hide();
+      $("#rg2-animation-controls").hide();
 		}
 		this.calculateAnimationRange();
 		$("#rg2-clock").text(this.formatSecsAsHHMMSS(this.animationSecs));
@@ -1291,7 +1419,7 @@ Animation.prototype = {
 		}
 		$("#rg2-clock-slider").slider("value", this.animationSecs);
 		$("#rg2-clock").text(this.formatSecsAsHHMMSS(this.animationSecs));
-		rg2.ctx.lineWidth = rg2.config.REPLAY_LINE_THICKNESS;
+		rg2.ctx.lineWidth = rg2.getRouteWidth();
 		rg2.ctx.globalAlpha = 1.0;
 		var runner;
 		var timeOffset;
@@ -1455,12 +1583,15 @@ Controls.prototype = {
 		if (this.displayControls) {
 			var x;
 			var y;
-			rg2.ctx.lineWidth = rg2.config.OVERPRINT_LINE_THICKNESS;
+			var i;
+			var l;
+			rg2.ctx.lineWidth = rg2.getOverprintWidth();
 			rg2.ctx.strokeStyle = rg2.config.PURPLE;
 			rg2.ctx.font = '20pt Arial';
 			rg2.ctx.fillStyle = rg2.config.PURPLE;
 			rg2.ctx.globalAlpha = 1.0;
-			for (var i = 0; i < this.controls.length; i += 1) {
+			l = this.controls.length;
+			for (i = 0; i < l; i += 1) {
 				// Assume things starting with 'F' are a Finish
 				if (this.controls[i].code.indexOf('F') === 0) {
 					this.drawFinish(this.controls[i].x, this.controls[i].y, this.controls[i].code);
@@ -1481,7 +1612,7 @@ Controls.prototype = {
 		//Draw the white halo around the controls
 		rg2.ctx.beginPath();
 		rg2.ctx.strokeStyle = "white";
-		rg2.ctx.lineWidth = rg2.config.OVERPRINT_LINE_THICKNESS + 2;
+		rg2.ctx.lineWidth = rg2.getOverprintWidth() + 2;
 		rg2.ctx.arc(x, y, 20, 0, 2 * Math.PI, false);
 		rg2.ctx.stroke();
 		//Draw the white halo around the control code
@@ -1498,7 +1629,7 @@ Controls.prototype = {
 		rg2.ctx.font = "20pt Arial";
 		rg2.ctx.fillStyle = rg2.config.PURPLE;
 		rg2.ctx.strokeStyle = rg2.config.PURPLE;
-		rg2.ctx.lineWidth = rg2.config.OVERPRINT_LINE_THICKNESS;
+		rg2.ctx.lineWidth = rg2.getOverprintWidth();
 		rg2.ctx.arc(x, y, 20, 0, 2 * Math.PI, false);
 		rg2.ctx.fillText(code, x + 25, y + 20);
 		rg2.ctx.stroke();
@@ -1506,7 +1637,7 @@ Controls.prototype = {
 	drawFinish : function(x, y, code) {
 		//Draw the white halo around the finish control
 		rg2.ctx.strokeStyle = "white";
-		rg2.ctx.lineWidth = rg2.config.OVERPRINT_LINE_THICKNESS + 2;
+		rg2.ctx.lineWidth = rg2.getOverprintWidth() + 2;
 		rg2.ctx.beginPath();
 		rg2.ctx.arc(x, y, rg2.config.FINISH_INNER_RADIUS, 0, 2 * Math.PI, false);
 		rg2.ctx.stroke();
@@ -1527,7 +1658,7 @@ Controls.prototype = {
 		rg2.ctx.beginPath();
 		rg2.ctx.fillStyle = rg2.config.PURPLE;
 		rg2.ctx.strokeStyle = rg2.config.PURPLE;
-		rg2.ctx.lineWidth = rg2.config.OVERPRINT_LINE_THICKNESS;
+		rg2.ctx.lineWidth = rg2.getOverprintWidth();
 		rg2.ctx.arc(x, y, rg2.config.FINISH_INNER_RADIUS, 0, 2 * Math.PI, false);
 		rg2.ctx.stroke();
 		rg2.ctx.beginPath();
@@ -1543,7 +1674,7 @@ Controls.prototype = {
 		angle = angle + (Math.PI / 2);
 		rg2.ctx.lineCap = 'round';
 		rg2.ctx.strokeStyle = "white";
-		rg2.ctx.lineWidth = rg2.config.OVERPRINT_LINE_THICKNESS + 2;
+		rg2.ctx.lineWidth = rg2.getOverprintWidth() + 2;
 		rg2.ctx.beginPath();
 		x[0] = startx + (rg2.config.START_TRIANGLE_LENGTH * Math.sin(angle));
 		y[0] = starty - (rg2.config.START_TRIANGLE_LENGTH * Math.cos(angle));
@@ -1574,7 +1705,7 @@ Controls.prototype = {
 		rg2.ctx.stroke();
 		//Draw the purple start control
 		rg2.ctx.strokeStyle = rg2.config.PURPLE;
-		rg2.ctx.lineWidth = rg2.config.OVERPRINT_LINE_THICKNESS;
+		rg2.ctx.lineWidth = rg2.getOverprintWidth();
 		rg2.ctx.font = "20pt Arial";
 		rg2.ctx.fillStyle = rg2.config.PURPLE;
 		rg2.ctx.beginPath();
@@ -1849,6 +1980,8 @@ Course.prototype = {
 			var c2x;
 			var c2y;
 			rg2.ctx.globalAlpha = intensity;
+			rg2.ctx.lineWidth = rg2.getOverprintWidth();
+			rg2.ctx.strokeStyle = rg2.config.PURPLE;
 			if (this.isScoreCourse) {
 				// align score event start triangle upwards
 				angle = Math.PI * 3 / 2;
@@ -1875,8 +2008,6 @@ Course.prototype = {
 				}
 				// don't join up controls for score events
 				if (!this.isScoreCourse) {
-					rg2.ctx.lineWidth = rg2.config.OVERPRINT_LINE_THICKNESS;
-					rg2.ctx.strokeStyle = rg2.config.PURPLE;
 					rg2.ctx.beginPath();
 					rg2.ctx.moveTo(c1x, c1y);
 					rg2.ctx.lineTo(c2x, c2y);
@@ -1898,12 +2029,12 @@ Course.prototype = {
 /*global getSecsFromMMSS:false */
 /*global rg2WarningDialog:false */
 /*global json_url:false */
+/*global getDistanceBetweenPoints:false */
 // handle drawing of a new route
 function Draw() {
   this.trackColor = '#ff0000';
-  this.HANDLE_DOT_RADIUS = 10;
+  this.HANDLE_DOT_RADIUS = 7;
   this.CLOSE_ENOUGH = 10;
-  this.gpstrack = new GPSTrack();
   this.hasResults = false;
   this.initialiseDrawing();
 }
@@ -1943,24 +2074,56 @@ Draw.prototype = {
     return this.controly;
   },
 
-  mouseUp : function(x, y) {
+  mouseUp : function(x, y, button) {
+    // called after a click at (x, y)
     var active = $("#rg2-info-panel").tabs("option", "active");
-    if (active != rg2.config.TAB_DRAW) {
+    var i;
+    var trk;
+    var len;
+    var delta = 3;
+    var h = {};
+    var handle;
+    if (active !== rg2.config.TAB_DRAW) {
       return;
     }
-    if (this.gpstrack.fileLoaded) {
-      // adjusting the track
-      if (this.handleX === null) {
-        this.handleX = x;
-        this.handleY = y;
+    trk = this.gpstrack;
+    if (trk.fileLoaded) {
+      handle = this.getHandleClicked(x, y);
+      if (handle !== undefined) {
+        if ((button === rg2.config.RIGHT_CLICK) &&  (handle !== 0) && (handle !== trk.handles.length)) {
+          // delete handle if not first or last entries
+          trk.handles.splice(handle, 1);
+        } else {
+          // clicked in a handle area so toggle state
+          if (trk.handles[handle].locked) {
+            trk.handles[handle].locked = false;
+            this.pointsLocked -= 1;
+          } else {
+            trk.handles[handle].locked = true;
+            this.pointsLocked += 1;
+          }
+        }
       } else {
-        this.handleX = null;
-        this.handleY = null;
+        // not an existing handle so read through track to look for x,y
+        len = trk.baseX.length;
+        for ( i = 0; i < len; i += 1) {
+          if ((trk.baseX[i] + delta >= x) && (trk.baseX[i] - delta <= x) && (trk.baseY[i] + delta >= y) && (trk.baseY[i] - delta <= y)) {
+            // found on track so add new handle
+            h.x = x;
+            h.y = y;
+            h.basex = x;
+            h.basey = y;
+            h.locked = false;
+            h.time = i;
+            trk.handles.push(h);
+            break;
+          }
+        }
       }
     } else {
       // drawing new track
       // only allow drawing if we have valid name and course
-      if ((this.gpstrack.routeData.resultid !== null) && (this.gpstrack.routeData.courseid !== null)) {
+      if ((trk.routeData.resultid !== null) && (trk.routeData.courseid !== null)) {
         this.addNewPoint(x, y);
       } else {
         rg2WarningDialog('Select course and name', 'Please select course and name before you start drawing a route or upload a file.');
@@ -1970,9 +2133,14 @@ Draw.prototype = {
 
   dragEnded : function() {
     if (this.gpstrack.fileLoaded) {
+      var trk =this.gpstrack;
       // rebaseline GPS track
-      this.gpstrack.baseX = this.gpstrack.routeData.x.slice(0);
-      this.gpstrack.baseY = this.gpstrack.routeData.y.slice(0);
+      trk.baseX = trk.routeData.x.slice(0);
+      trk.baseY = trk.routeData.y.slice(0);
+      for (var i = 0; i < trk.handles.length; i += 1) {
+        trk.handles[i].basex = trk.handles[i].x;
+        trk.handles[i].basey = trk.handles[i].y;
+      }
     }
   },
 
@@ -1982,10 +2150,10 @@ Draw.prototype = {
   },
 
   initialiseDrawing : function() {
+    this.gpstrack = new GPSTrack();
     this.gpstrack.routeData = new RouteData();
-    this.handleX = null;
-    this.handleY = null;
     this.backgroundLocked = false;
+    this.pointsLocked = 0;
     this.pendingCourseID = null;
     // the RouteData versions of these have the start control removed for saving
     this.controlx = [];
@@ -2000,7 +2168,6 @@ Draw.prototype = {
       $("#rg2-select-name").hide();
       $("#rg2-enter-name").show();
     }
-
     $("#rg2-name-select").prop('disabled', true);
     $("#rg2-undo").prop('disabled', true);
     $("#btn-save-route").button("disable");
@@ -2107,6 +2274,7 @@ Draw.prototype = {
   doChangeCourse : function() {
     $('#course-change-dialog').dialog("destroy");
     rg2.removeFromDisplay(this.gpstrack.routeData.courseid);
+    this.doDrawingReset();
     this.initialiseCourse(this.pendingCourseid);
   },
 
@@ -2229,12 +2397,14 @@ Draw.prototype = {
     // called to save GPS file route
     // tidy up route details
     var i;
+    var l;
     var t = this.gpstrack.routeData.time[this.gpstrack.routeData.time.length - 1] - this.gpstrack.routeData.time[0];
     this.gpstrack.routeData.totaltime = formatSecsAsMMSS(t);
     this.gpstrack.routeData.startsecs = this.gpstrack.routeData.time[0];
-    for ( i = 0; i < this.gpstrack.routeData.x.length; i += 1) {
-      this.gpstrack.routeData.x[i] = parseInt(this.gpstrack.routeData.x[i], 10);
-      this.gpstrack.routeData.y[i] = parseInt(this.gpstrack.routeData.y[i], 10);
+    l = this.gpstrack.routeData.x.length;
+    for ( i = 0; i < l; i += 1) {
+      this.gpstrack.routeData.x[i] = Math.round(this.gpstrack.routeData.x[i]);
+      this.gpstrack.routeData.y[i] = Math.round(this.gpstrack.routeData.y[i]);
       // convert real time seconds to offset seconds from start time
       this.gpstrack.routeData.time[i] -= this.gpstrack.routeData.startsecs;
     }
@@ -2311,47 +2481,319 @@ Draw.prototype = {
   },
 
   trackLocked : function() {
-    return (this.handleX !== null);
+    return (this.pointsLocked > 0);
   },
 
-  adjustTrack : function(x1, y1, x2, y2, shiftKeyPressed, ctrlKeyPressed) {
+  adjustTrack : function(x1, y1, x2, y2, button, shiftKeyPressed, ctrlKeyPressed) {
+// called whilst dragging a GPS track
+// TODO: not the greatest function in the world and a candidate for refactoring big-time
+// but it works which is a huge step forward
     var i;
-    if (this.backgroundLocked) {
-      // drag track and background
+    var trk;
+    var len;
+    var lockBefore;
+    var lockAfter;
+    var dragIndex;
+    var handle;
+    var x;
+    var y;
+    var a;
+    var xb;
+    var yb;
+    var xs;
+    var ys;
+    var dx;
+    var dy;
+    var scale1;
+    var scale2;
+    var scale;
+    var oldAngle;
+    var newAngle;
+    var angle;
+    var reverseAngle;
+    var earliest;
+    var latest;
+    var lockedHandle1;
+    var lockedHandle2;
+    var fromTime;
+    var toTime;
+    //console.log("adjustTrack ", x1, y1, x2, y2);
+    if ((this.backgroundLocked) || (button === rg2.config.RIGHT_CLICK)) {
       rg2.ctx.translate(x2 - x1, y2 - y1);
     } else {
-      if (this.handleX !== null) {
-        // scale and rotate track
-        var scaleX = (x2 - this.handleX) / (x1 - this.handleX);
-        var scaleY = (y2 - this.handleY) / (y1 - this.handleY);
-        var oldAngle = getAngle(x1, y1, this.handleX, this.handleY);
-        var newAngle = getAngle(x2, y2, this.handleX, this.handleY);
-        var angle = newAngle - oldAngle;
-        //console.log (x1, y1, x2, y2, this.handleX, this.handleY, scaleX, scaleY, oldAngle, newAngle, angle);
-        if (!shiftKeyPressed) {
-          scaleY = scaleX;
-        }
-        for ( i = 0; i < this.gpstrack.routeData.x.length; i += 1) {
-          var x = this.gpstrack.baseX[i] - this.handleX;
-          var y = this.gpstrack.baseY[i] - this.handleY;
-          this.gpstrack.routeData.x[i] = (((Math.cos(angle) * x) - (Math.sin(angle) * y)) * scaleX) + this.handleX;
-          this.gpstrack.routeData.y[i] = (((Math.sin(angle) * x) + (Math.cos(angle) * y)) * scaleY) + this.handleY;
+      trk = this.gpstrack;
+      len = trk.baseX.length;
+      if (this.pointsLocked > 0) {
+        if (this.pointsLocked === 1)  {
+          handle = this.getLockedHandle();
+          // scale and rotate track around single locked point
+          oldAngle = getAngle(x1, y1, handle.basex, handle.basey);
+          newAngle = getAngle(x2, y2, handle.basex, handle.basey);
+          angle = newAngle - oldAngle;
+          scale1 = getDistanceBetweenPoints(x1, y1, handle.basex, handle.basey);
+          scale2 = getDistanceBetweenPoints(x2, y2, handle.basex, handle.basey);
+          scale = scale2/scale1;
+          //console.log (x1, y1, x2, y2, handle.basex, handle.basey, scale, angle);
+          for ( i = 0; i < len; i += 1) {
+            x = trk.baseX[i] - handle.basex;
+            y = trk.baseY[i] - handle.basey;
+            trk.routeData.x[i] = (((Math.cos(angle) * x) - (Math.sin(angle) * y)) * scale) + handle.basex;
+            trk.routeData.y[i] = (((Math.sin(angle) * x) + (Math.cos(angle) * y)) * scale) + handle.basey;
+          }
+          for (i = 0; i < trk.handles.length; i += 1) {
+            if (!trk.handles[i].locked) {
+              x = trk.handles[i].basex - handle.basex;
+              y = trk.handles[i].basey - handle.basey;
+              trk.handles[i].x = (((Math.cos(angle) * x) - (Math.sin(angle) * y)) * scale) + handle.basex;
+              trk.handles[i].y = (((Math.sin(angle) * x) + (Math.cos(angle) * y)) * scale) + handle.basey;
+            }
+          }
+          
+        } else {
+          // check if start of drag is on a handle
+          handle = this.getHandleClicked(x1, y1);
+          // we already know we have at least two points locked: cases to deal with from here
+          // 1: drag point not on a handle: exit
+          // 2: drag point on a locked handle: exit
+          // 3: drag point between start and a locked handle: scale and rotate around single point
+          // 4: drag point between locked handle and end: scale and rotate around single handle
+          // 5: drag point between two locked handles: shear around two fixed handles
+          //case 1
+          if (handle === undefined) {
+            //console.log("Point (" + x1 + ", " + y1 + ") not on track: " + this.pointsLocked + " points locked.");
+            return;
+          }
+          // case 2
+          if (trk.handles[handle].locked) {
+            //console.log("Point (" + x1 + ", " + y1 + ") locked: " + this.pointsLocked + " points locked.");
+            return;
+          }
+          earliest = this.getEarliestLockedHandle();
+          latest = this.getLatestLockedHandle();
+          
+          if ((trk.handles[earliest].time > trk.handles[handle].time) || (trk.handles[latest].time < trk.handles[handle].time)) {
+            // case 3 and 4: floating end point
+            if (trk.handles[earliest].time > trk.handles[handle].time) {
+              lockedHandle1 = earliest;
+              fromTime = 0;
+              toTime = trk.handles[earliest].time;
+            } else {
+              lockedHandle1 = latest;
+              fromTime = trk.handles[latest].time + 1;
+              // second entry is always the last point in the route
+              toTime = trk.handles[1].time + 1;
+            }
+            // scale and rotate track around single locked point
+            scale1 = getDistanceBetweenPoints(x1, y1, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
+            scale2 = getDistanceBetweenPoints(x2, y2, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
+            scale = scale2/scale1;
+            oldAngle = getAngle(x1, y1, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
+            newAngle = getAngle(x2, y2, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
+            angle = newAngle - oldAngle;
+            //console.log (x1, y1, x2, y2, trk.handles[handle].basex, trk.handles[handle].basey, scale, angle, fromTime, toTime);
+            for ( i = fromTime; i < toTime; i += 1) {
+              x = trk.baseX[i] - trk.handles[lockedHandle1].basex;
+              y = trk.baseY[i] - trk.handles[lockedHandle1].basey;
+              trk.routeData.x[i] = (((Math.cos(angle) * x) - (Math.sin(angle) * y)) * scale) + trk.handles[lockedHandle1].basex;
+              trk.routeData.y[i] = (((Math.sin(angle) * x) + (Math.cos(angle) * y)) * scale) + trk.handles[lockedHandle1].basey;
+            }
+            for (i = 0; i < trk.handles.length; i += 1) {
+              if ((!trk.handles[i].locked) && (trk.handles[i].time >= fromTime) && (trk.handles[i].time <= toTime)) {
+                x = trk.handles[i].basex - trk.handles[lockedHandle1].basex;
+                y = trk.handles[i].basey - trk.handles[lockedHandle1].basey;
+                trk.handles[i].x = (((Math.cos(angle) * x) - (Math.sin(angle) * y)) * scale) + trk.handles[lockedHandle1].basex;
+                trk.handles[i].y = (((Math.sin(angle) * x) + (Math.cos(angle) * y)) * scale) + trk.handles[lockedHandle1].basey;
+              }
+            }
+          } else {
+            // case 5: shear/scale around two locked points 
+            // all based on putting handle1 at (0, 0), rotating handle 2 to be on x-axis and then shearing on x-axis and scaling on y-axis.
+            // there must be a better way...
+            
+            lockedHandle1 = this.getPreviousLockedHandle(handle);
+            fromTime = trk.handles[lockedHandle1].time;
+            lockedHandle2 = this.getNextLockedHandle(handle);
+            toTime = trk.handles[lockedHandle2].time;
+            //console.log("Point (", x1, ", ", y1, ") in middle of ", lockedHandle1, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey, " and ",lockedHandle2, trk.handles[lockedHandle2].basex, trk.handles[lockedHandle2].basey);
+            reverseAngle = getAngle(trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey, trk.handles[lockedHandle2].basex, trk.handles[lockedHandle2].basey);
+            angle = (2 * Math.PI) - reverseAngle;
+            
+            xb = x1 - trk.handles[lockedHandle1].basex;
+            yb = y1 - trk.handles[lockedHandle1].basey;
+            x1 = (Math.cos(angle) * xb) - (Math.sin(angle) * yb);
+            y1 = (Math.sin(angle) * xb) + (Math.cos(angle) * yb);
+                      
+            xb = x2 - trk.handles[lockedHandle1].basex;
+            yb = y2 - trk.handles[lockedHandle1].basey;
+            x2 = (Math.cos(angle) * xb) - (Math.sin(angle) * yb);
+            y2 = (Math.sin(angle) * xb) + (Math.cos(angle) * yb);
+                        
+            xb = trk.handles[lockedHandle2].basex - trk.handles[lockedHandle1].basex;
+            yb = trk.handles[lockedHandle2].basey - trk.handles[lockedHandle1].basey;
+            x = (Math.cos(angle) * xb) - (Math.sin(angle) * yb);
+            y = (Math.sin(angle) * xb) + (Math.cos(angle) * yb);
+
+            // calculate scaling factors
+            a = (x2 - x1) /y1;
+            scale = y2 / y1;
+            
+            if (!isFinite(a) || !isFinite(scale)) {
+              // TODO: this will cause trouble when y1 is 0 (or even just very small) but I've never managed to get it to happen
+              // you need to click exactly on a line through the two locked handles: just do nothing for now
+              console.log("y1 became 0: scale factors invalid", a, scale);
+              return;
+            }
+            // recalculate all points between locked handles          
+            for ( i = fromTime + 1; i < toTime; i += 1) {
+              // translate to put locked point at origin
+              xb = trk.baseX[i] - trk.handles[lockedHandle1].basex;
+              yb = trk.baseY[i] - trk.handles[lockedHandle1].basey;
+              // rotate to give locked points as x-axis
+              x = (Math.cos(angle) * xb) - (Math.sin(angle) * yb);
+              y = (Math.sin(angle) * xb) + (Math.cos(angle) * yb);
+              
+              // shear/stretch
+              xs = x + (y * a);
+              ys = y * scale;
+              
+              // rotate and translate back
+              trk.routeData.x[i] = (Math.cos(reverseAngle) * xs) - (Math.sin(reverseAngle) * ys) + trk.handles[lockedHandle1].basex;
+              trk.routeData.y[i] = (Math.sin(reverseAngle) * xs) + (Math.cos(reverseAngle) * ys) + trk.handles[lockedHandle1].basey;
+
+            }
+            // recalculate all handles between locked handles
+            for (i = 0; i < trk.handles.length; i += 1) {
+              if ((!trk.handles[i].locked) && (trk.handles[i].time >= fromTime) && (trk.handles[i].time <= toTime)) {
+                xb = trk.handles[i].basex - trk.handles[lockedHandle1].basex;
+                yb = trk.handles[i].basey - trk.handles[lockedHandle1].basey;
+                
+                // rotate to give locked points as x-axis
+                x = (Math.cos(angle) * xb) - (Math.sin(angle) * yb);
+                y = (Math.sin(angle) * xb) + (Math.cos(angle) * yb);
+              
+                // shear/stretch
+                xs = x + (y * a);
+                ys = y * scale;
+                             
+                trk.handles[i].x = ((Math.cos(reverseAngle) * xs) - (Math.sin(reverseAngle) * ys)) + trk.handles[lockedHandle1].basex;
+                trk.handles[i].y = ((Math.sin(reverseAngle) * xs) + (Math.cos(reverseAngle) * ys)) + trk.handles[lockedHandle1].basey;
+              }
+            }
+          }
+          
         }
       } else {
-        // drag track
-        var dx = x2 - x1;
-        var dy = y2 - y1;
-        for ( i = 0; i < this.gpstrack.routeData.x.length; i += 1) {
-          this.gpstrack.routeData.x[i] = this.gpstrack.baseX[i] + dx;
-          this.gpstrack.routeData.y[i] = this.gpstrack.baseY[i] + dy;
+        // nothing locked so drag track
+        dx = x2 - x1;
+        dy = y2 - y1;
+        for ( i = 0; i < len; i += 1) {
+          trk.routeData.x[i] = trk.baseX[i] + dx;
+          trk.routeData.y[i] = trk.baseY[i] + dy;
+        }
+        for (i = 0; i < trk.handles.length; i += 1) {
+          trk.handles[i].x = trk.handles[i].basex + dx;
+          trk.handles[i].y = trk.handles[i].basey + dy;
         }
       }
     }
+  },
+  
+  // find if the click was on an existing handle
+  // return: handle index or undefined
+  // basex and basey are handle locations at the start of the drag which is what we are interested in
+  getHandleClicked: function (x, y) {
+    //console.log("Get handle clicked for " + x + ", " + y);
+    var i;
+    var distance;
+    for (i = 0; i < this.gpstrack.handles.length; i += 1) {
+      distance = getDistanceBetweenPoints(x, y, this.gpstrack.handles[i].basex, this.gpstrack.handles[i].basey);
+      if (distance <= this.HANDLE_DOT_RADIUS) {
+        return i;
+      }
+    }
+    return undefined;
+  },
+  
+  // called when we know there is only one locked handle
+  // return: handle object or undefined
+  getLockedHandle: function() {
+    var i;
+    for (i = 0; i < this.gpstrack.handles.length; i += 1) {
+      if (this.gpstrack.handles[i].locked) {
+        return this.gpstrack.handles[i];
+      }
+    }
+    return undefined;
+  },
+  
+  // called to find earliest locked handle
+  getEarliestLockedHandle: function() {
+    var i;
+    var earliest = 99999;
+    var handle;
+    for (i = 0; i < this.gpstrack.handles.length; i += 1) {
+      if (this.gpstrack.handles[i].locked) {
+        if (this.gpstrack.handles[i].time < earliest) {
+          earliest = this.gpstrack.handles[i].time;
+          handle = i;
+        }
+      }
+    }
+    return handle;
+  },
 
+  // called to find latest locked handle
+  getLatestLockedHandle: function() {
+    var i;
+    var latest = -1;
+    var handle;
+    for (i = 0; i < this.gpstrack.handles.length; i += 1) {
+      if (this.gpstrack.handles[i].locked) {
+        if (this.gpstrack.handles[i].time > latest) {
+          latest = this.gpstrack.handles[i].time;
+          handle = i;
+        }
+      }
+    }
+    return handle;
+  },
+
+  getPreviousLockedHandle: function(handle) {
+    var i;
+    // max diff possible is last entry time
+    var minDiff = this.gpstrack.handles[1].time;
+    var time = this.gpstrack.handles[handle].time;
+    var previous;
+    for (i = 0; i < this.gpstrack.handles.length; i += 1) {
+      if (((time - this.gpstrack.handles[i].time) < minDiff) && (this.gpstrack.handles[i].time < time) && this.gpstrack.handles[i].locked) {
+        minDiff = time - this.gpstrack.handles[i].time;
+        previous = i;
+      }
+    }
+    return previous;
+  },
+
+  getNextLockedHandle: function(handle) {
+    var i;
+    var l;
+    // max diff possible is last entry time
+    var minDiff = this.gpstrack.handles[1].time;
+    var time = this.gpstrack.handles[handle].time;
+    var next;
+    l = this.gpstrack.handles.length;
+    for (i = 0; i < l; i += 1) {
+      if (((this.gpstrack.handles[i].time - time) < minDiff) && (this.gpstrack.handles[i].time > time) && this.gpstrack.handles[i].locked) {
+        minDiff = this.gpstrack.handles[i].time - time;
+        next = i;
+      }
+    }
+    return next;
   },
 
   drawNewTrack : function() {
-    rg2.ctx.lineWidth = 2;
+    var i;
+    var l;
+    rg2.ctx.lineWidth = rg2.getRouteWidth();
     rg2.ctx.strokeStyle = this.trackColor;
     rg2.ctx.fillStyle = this.trackColour;
     rg2.ctx.font = '10pt Arial';
@@ -2378,43 +2820,29 @@ Draw.prototype = {
       rg2.ctx.arc(this.gpstrack.routeData.x[0] + (rg2.config.RUNNER_DOT_RADIUS / 2), this.gpstrack.routeData.y[0], rg2.config.RUNNER_DOT_RADIUS, 0, 2 * Math.PI, false);
       rg2.ctx.fill();
     }
-    // locked point for GPS route edit
-    if (this.handleX !== null) {
-      rg2.ctx.beginPath();
-      rg2.ctx.arc(this.handleX, this.handleY, this.HANDLE_DOT_RADIUS, 0, 2 * Math.PI, false);
-      rg2.ctx.fill();
-      rg2.ctx.beginPath();
-      rg2.ctx.arc(this.handleX, this.handleY, 2 * this.HANDLE_DOT_RADIUS, 0, 2 * Math.PI, false);
-      rg2.ctx.stroke();
-    }
-
     // route itself
     if (this.gpstrack.routeData.x.length > 1) {
       rg2.ctx.beginPath();
       rg2.ctx.moveTo(this.gpstrack.routeData.x[0], this.gpstrack.routeData.y[0]);
-      var oldx = this.gpstrack.routeData.x[0];
-      var oldy = this.gpstrack.routeData.y[0];
-      var stopCount = 0;
-      for (var i = 1; i < this.gpstrack.routeData.x.length; i += 1) {
-        // lines
+      // don't bother with +3 second displays in GPS adjustment
+      l = this.gpstrack.routeData.x.length;
+      for (i = 1; i < l; i += 1) {
         rg2.ctx.lineTo(this.gpstrack.routeData.x[i], this.gpstrack.routeData.y[i]);
-        if ((this.gpstrack.routeData.x[i] == oldx) && (this.gpstrack.routeData.y[i] == oldy)) {
-          // we haven't moved
-          stopCount += 1;
-          // only output at current position if this is the last entry
-          if (i === (this.gpstrack.routeData.x.length - 1)) {
-            rg2.ctx.fillText((3 * stopCount) + " secs", this.gpstrack.routeData.x[i] + 5, this.gpstrack.routeData.y[i] + 5);
-          }
-        } else {
-          // we have started moving again
-          if (stopCount > 0) {
-            rg2.ctx.fillText((3 * stopCount) + " secs", oldx + 5, oldy + 5);
-            stopCount = 0;
-          }
-        }
-        oldx = this.gpstrack.routeData.x[i];
-        oldy = this.gpstrack.routeData.y[i];
       }
+      rg2.ctx.stroke();
+    }
+    // locked points
+    l = this.gpstrack.handles.length;
+    for (i = 0; i < l; i += 1) {
+      if (this.gpstrack.handles[i].locked === true) {
+        rg2.ctx.fillStyle = rg2.config.RED;
+      } else {
+        rg2.ctx.fillStyle = rg2.config.GREEN;
+      }
+      rg2.ctx.strokestyle = rg2.config.PURPLE;
+      rg2.ctx.beginPath();
+      rg2.ctx.arc(this.gpstrack.handles[i].x, this.gpstrack.handles[i].y, this.HANDLE_DOT_RADIUS, 0, 2 * Math.PI, false);
+      rg2.ctx.fill();
       rg2.ctx.stroke();
     }
   }
@@ -2593,6 +3021,7 @@ function GPSTrack() {
 	this.time = [];
 	this.baseX = [];
 	this.baseY = [];
+  this.handles = [];
 	this.fileLoaded = false;
 	this.fileName = '';
 	this.routeData = new RouteData();
@@ -2608,6 +3037,7 @@ GPSTrack.prototype = {
 		this.time.length = 0;
 		this.baseX.length = 0;
 		this.baseY.length = 0;
+    this.handles.length = 0;
 		this.fileLoaded = false;
 	},
 
@@ -2749,6 +3179,22 @@ GPSTrack.prototype = {
 		}
 		this.baseX = this.routeData.x.slice(0);
 		this.baseY = this.routeData.y.slice(0);
+		var h0 = {};
+    var h1 = {};
+		h0.x = this.baseX[0];
+    h0.y = this.baseY[0];
+    h0.basex = h0.x;
+    h0.basey = h0.y;
+    h0.locked = false;
+    h0.time = 0;
+    this.handles.push(h0);
+    h1.x = this.baseX[this.baseX.length - 1];
+    h1.y = this.baseY[this.baseY.length - 1];
+    h1.basex = h1.x;
+    h1.basey = h1.y;
+    h1.locked = false;
+    h1.time = this.baseY.length - 1;
+    this.handles.push(h1);
 		this.routeData.time = this.time;
 		this.fileLoaded = true;
 		$("#btn-save-gps-route").button("enable");
@@ -3392,7 +3838,7 @@ Manager.prototype = {
 
       // locked point for control edit
       if (this.handleX !== null) {
-        rg2.ctx.lineWidth = 2;
+        rg2.ctx.lineWidth = rg2.getOverprintWidth();
         rg2.ctx.strokeStyle = this.handleColor;
         rg2.ctx.fillStyle = this.handleColour;
         rg2.ctx.globalAlpha = 1.0;
@@ -3475,6 +3921,7 @@ Manager.prototype = {
 };
 
 /* exported getLatLonDistance */
+/* exported getDistanceBetweenPoints */
 /* exported getAngle */
 /* exported rg2WarningDialog */
 /* exported formatSecsAsMMSS */
@@ -3549,6 +3996,11 @@ function getAngle(x1, y1, x2, y2) {
     angle = angle + (2 * Math.PI);
   }
   return angle;
+}
+
+function getDistanceBetweenPoints(x1, y1, x2, y2) {
+  // Pythagoras
+  return Math.sqrt(Math.pow((x1 - x2), 2) + Math.pow((y1 - y2), 2));
 }
 
 // converts seconds to MM:SS
@@ -3645,6 +4097,7 @@ function trackTransforms(ctx) {
 
 /*global rg2:false */
 /*global Colours:false */
+/*global getDistanceBetweenPoints:false */
 function Results() {
 	this.results = [];
 	this.colours = new Colours();
@@ -3655,7 +4108,8 @@ Results.prototype = {
 
 	addResults : function(data, isScoreEvent) {
 		// for each result
-		for (var i = 0; i < data.length; i += 1) {
+		var l = data.length;
+		for (var i = 0; i < l; i += 1) {
 			var result = new Result(data[i], isScoreEvent, this.colours.getNextColour());
 			this.results.push(result);
 		}
@@ -3728,7 +4182,10 @@ Results.prototype = {
 
 	// put all tracks for all courses on display
 	putAllTracksOnDisplay : function() {
-		for (var i = 0; i < this.results.length; i += 1) {
+    var i;
+    var l;
+    l = this.results.length;
+		for (i = 0; i < l; i += 1) {
 			this.results[i].putTrackOnDisplay();
 		}
 		this.updateTrackNames();
@@ -3791,9 +4248,12 @@ Results.prototype = {
 	addTracks : function(tracks) {
 		// this gets passed the json data array
 		var resultIndex;
+		var i;
 		var j;
+		var l;
 		// for each track
-		for (var i = 0; i < tracks.length; i += 1) {
+		l = tracks.length;
+		for (i = 0; i < l; i += 1) {
 			resultIndex = tracks[i].resultid;
 			j = 0;
 			// don't add GPS track since we got a better one in the original results
@@ -3839,7 +4299,10 @@ Results.prototype = {
 		var temp;
 		var firstCourse = true;
 		var oldCourseID = 0;
-		for (var i = 0; i < this.results.length; i += 1) {
+    var i;
+    var l;
+    l = this.results.length;
+		for (i = 0; i < l; i += 1) {
 			temp = this.results[i];
 			if (temp.courseid != oldCourseID) {
 				// found a new course so add header
@@ -3981,19 +4444,42 @@ Result.prototype = {
 	},
 
 	drawTrack : function() {
+		var l;
 		if (this.displayTrack) {
-			rg2.ctx.lineWidth = 2;
+			rg2.ctx.lineWidth = rg2.getRouteWidth();
 			rg2.ctx.strokeStyle = this.trackColour;
 			rg2.ctx.globalAlpha = 1.0;
+      rg2.ctx.fillStyle = this.trackColour;
+      rg2.ctx.font = '10pt Arial';
+      rg2.ctx.textAlign = "left";
 			// set transparency of overprint
 			rg2.ctx.beginPath();
 			rg2.ctx.moveTo(this.trackx[0], this.tracky[0]);
-			for (var i = 1; i < this.trackx.length; i += 1) {
+      var oldx = this.trackx[0];
+      var oldy = this.tracky[0];
+      var stopCount = 0;
+			l = this.trackx.length;
+			for (var i = 1; i < l; i += 1) {
 				// lines
 				rg2.ctx.lineTo(this.trackx[i], this.tracky[i]);
+        if ((this.trackx[i] === oldx) && (this.tracky[i] === oldy)) {
+          // we haven't moved
+          stopCount += 1;
+          // only output at current position if this is the last entry
+          if (i === (this.trackx.length - 1)) {
+            rg2.ctx.fillText((3 * stopCount) + " secs", this.trackx[i] + 5, this.tracky[i] + 5);
+          }
+        } else {
+          // we have started moving again
+          if (stopCount > 0) {
+            rg2.ctx.fillText((3 * stopCount) + " secs", oldx + 5, oldy + 5);
+            stopCount = 0;
+          }
+        }
+        oldx = this.trackx[i];
+        oldy = this.tracky[i];
 			}
 			rg2.ctx.stroke();
-
 		}
 	},
 
@@ -4003,7 +4489,8 @@ Result.prototype = {
 		var temp = trackcoords.split("N");
 		var xy = 0;
 		// ignore first point hack for now
-		for (var i = 1; i < temp.length; i += 1) {
+		var l = temp.length;
+		for (var i = 1; i < l; i += 1) {
 			// coord sets are 2 items in csv format
 			xy = temp[i].split(";");
 			this.trackx.push(parseInt(xy[0], 10));
@@ -4029,11 +4516,8 @@ Result.prototype = {
 			course.x = this.scorex;
 			course.y = this.scorey;
 		} else {
-			//course.x = getFullCourse(this.courseid).x;
-			//course.y = getFullCourse(this.courseid).y;
 			course.x = rg2.getCourseDetails(this.courseid).x;
 			course.y = rg2.getCourseDetails(this.courseid).y;
-
 		}
 		// read through list of controls and copy in split times
 		var nextcontrol = 1;
@@ -4043,6 +4527,8 @@ Result.prototype = {
 		var oldx = this.trackx[0];
 		var oldy = this.tracky[0];
 		var i;
+		var j;
+		var l;
 		var x = 0;
 		var y = 0;
 		var deltat = 0;
@@ -4052,11 +4538,12 @@ Result.prototype = {
 		var previouscontrolindex = 0;
 		// we are assuming the track starts at the start which is index 0...
 		// look at each track point and see if it matches the next control location
-		for ( i = 1; i < this.trackx.length; i += 1) {
+		l = this.trackx.length;
+		for ( i = 1; i < l; i += 1) {
 			// calculate distance while we are looping through
 			x = this.trackx[i];
 			y = this.tracky[i];
-			dist = dist + Math.sqrt(((x - oldx) * (x - oldx)) + ((y - oldy) * (y - oldy)));
+			dist += getDistanceBetweenPoints(x, y, oldx, oldy);
 			this.cumulativeDistance[i] = Math.round(dist);
 			oldx = x;
 			oldy = y;
@@ -4069,7 +4556,7 @@ Result.prototype = {
 				deltat = this.xysecs[i] - oldt;
 				olddist = this.cumulativeDistance[previouscontrolindex];
 				deltadist = this.cumulativeDistance[i] - olddist;
-				for (var j = previouscontrolindex; j <= i; j += 1) {
+				for (j = previouscontrolindex; j <= i; j += 1) {
 					this.xysecs[j] = oldt + Math.round(((this.cumulativeDistance[j] - olddist) * deltat / deltadist));
 				}
 				previouscontrolindex = i;
@@ -4100,11 +4587,12 @@ Result.prototype = {
 		var x = 0;
 		var y = 0;
 		// in theory we get one point every three seconds
-		for ( t = 0; t < this.trackx.length; t += 1) {
+		var l = this.trackx.length;
+		for ( t = 0; t < l; t += 1) {
 			this.xysecs[t] = 3 * t;
 			x = this.trackx[t];
 			y = this.tracky[t];
-			dist = dist + Math.sqrt(((x - oldx) * (x - oldx)) + ((y - oldy) * (y - oldy)));
+			dist += getDistanceBetweenPoints(x, y, oldx, oldy);
 			this.cumulativeDistance[t] = Math.round(dist);
 			oldx = x;
 			oldy = y;

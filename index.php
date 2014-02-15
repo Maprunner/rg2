@@ -65,7 +65,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Routegadget 2.0 Viewer<?php if ($manager) {?> and Manager<?php } ?></title>
+    <title>Routegadget 2.0</title>
     <meta name="description" content="View and save route choices for orienteering events">
     <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -86,6 +86,7 @@
       </div>
       <div id="rg2-header"><span id="rg2-event-title">Routegadget 2.0 Viewer</span></div>  
         <div class="rg2-button"><i id="btn-about" title = "Help" class="fa fa-question"></i></div>
+        <div class="rg2-button"><i id="btn-options" title = "Options" class="fa fa-cog"></i></div>
         <div class="rg2-button"><i id="btn-zoom-out" title = "Zoom out" class="fa fa-search-minus"></i></div>
         <div class="rg2-button"><i id="btn-reset" title = "Reset" class="fa fa-undo"></i></div>
         <div class="rg2-button"><i id="btn-zoom-in" title = "Zoom in" class="fa fa-search-plus"></i></div>
@@ -145,11 +146,12 @@
           <div id="rg2-select-gps-file">
            <input type='file' accept='.gpx, .tcx' id='rg2-load-gps-file'>
           </div>
-       <input type=checkbox id="btn-move-all"><label for="btn-move-all"> Move track and map together</label>
+       <input type=checkbox id="btn-move-all"><label for="btn-move-all"> Move track and map together (or right click-drag)</label>
        <ul>
-        <li>Drag track to align track on map</li>
-            <li>Single click to lock/unlock a point</li>
-            <li>Drag to scale and rotate around locked point</li>
+        <li>Left click to add/lock/unlock a handle</li>
+        <ul><li>Green: draggable</li><li>Red: locked</li></ul>
+        <li>Right click to delete a handle</li>
+        <li>Drag a handle to adjust track around locked point(s)</li>
        </ul>
        <button class="pushright" id="btn-save-gps-route">Save GPS route</button> 
     </div>
@@ -202,20 +204,33 @@
             <input id="spn-tail-length" name="value" />
           </div>
           <div id="rg2-tails-type">
-            <label for="btn-full-tails">Full tails </label>
-            <input type="checkbox" id="btn-full-tails" />
-          </div>
+		        <label for="btn-full-tails">Full tails </label>
+		        <input type="checkbox" id="btn-full-tails" />
+		      </div>
+		    </div>
+		  </div>		   
+		  <div id="rg2-option-controls" title="Configuration options">
+        <div id="rg2-dim-spinner">
+          <label for="spn-map-intensity">Map intensity %</label>
+          <input id="spn-map-intensity" name="value" />
         </div>
-      </div>       
-      <div id="rg2-track-names"></div>
-      <div id="rg2-about-dialog" title="Routegadget 2.0 Viewer">
-       <p>This application allows you to view existing <a href="http://www.routegadget.net">Routegadget</a> information in any modern (HTML5-compliant) browser without the need for Java.</p>
-       <p>The latest version is available for
-         <a href="https://github.com/Maprunner/rg2/archive/master.zip"> download here</a>.
-         Later versions will allow you to create new events, but for now it only works on events that have been set
-         up in in the original Routegadget.</p>
-        <p>It does not currently work properly on iPads, tablets and phones because of problems with the touch interface and screen size. This is on the list of things to be looked at.</p>
-        <p><strong>Simon Errington</strong> (simon (at) maprunner.co.uk)</p>
+        <div id="rg2-course-width-spinner">
+          <label for="spn-course-width">Course overprint width</label>
+          <input id="spn-course-width" name="value" />
+        </div>
+        <div id="rg2-route-width-spinner">
+          <label for="spn-route-width">Route width</label>
+          <input id="spn-route-width" name="value" />
+        </div>
+      </div>
+		  <div id="rg2-track-names"></div>
+		  <div id="rg2-about-dialog" title="Routegadget 2.0">
+			 <p>This application allows you to view existing <a href="http://www.routegadget.net">Routegadget</a> information in any modern (HTML5-compliant) browser without the need for Java.</p>
+			 <p>The latest version is available for
+			 	<a href="https://github.com/Maprunner/rg2/archive/master.zip"> download here</a>.
+				 Later versions will allow you to create new events, but for now it only works on events that have been set
+			   up in in the original Routegadget.</p>
+			  <p><strong>Simon Errington</strong> (simon (at) maprunner.co.uk)</p>
         <p id="rg2-version-info"></p>
         <p><?php echo ADDITIONAL_INFO_TEXT; ?></p>
       </div>
@@ -283,10 +298,8 @@
       <script src='<?php echo $script_url."animation.js"; ?>'></script>
       <script src='<?php echo $script_url."runner.js"; ?>'></script>
       <script src='<?php echo $script_url."plugins.js"; ?>'></script>
-      <script src='<?php echo $script_url."lib/hammer.min.js"; ?>'></script>
       <script src='<?php echo $script_url."rg2.js"; ?>'></script>
     <?php } else { ?>
-      <script src='<?php echo $script_url."lib/hammer.min.js"; ?>'></script>
       <script src='<?php echo $script_url."rg2all.min.js"; ?>'></script>      
     <?php } ?>  
       <?php if ($manager) { ?>
