@@ -208,6 +208,9 @@
 		        <input type="checkbox" id="btn-full-tails" />
 		      </div>
 		    </div>
+		  </div>
+		  <div id="rg2-hide-info-panel-control">
+		    <a href="#"><i id="rg2-hide-info-panel-icon" class="fa fa-chevron-left"></i></a>
 		  </div>		   
 		  <div id="rg2-option-controls" title="Configuration options">
         <div id="rg2-dim-spinner">

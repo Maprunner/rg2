@@ -204,6 +204,18 @@ html, body {
    height: 95.5%
 }
 
+#rg2-hide-info-panel-control {
+  position:absolute;
+  left: 366px;
+  top: 4px;
+  z-index: 100;
+  color: black;
+  width: 20px;
+  text-align: center;
+  border: 1px solid #AAAAAA;
+  background: #E0E0E0;
+}
+
 #rg2-map-canvas {
    position: absolute;
    z-index: 50;

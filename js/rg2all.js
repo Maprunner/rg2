@@ -1,4 +1,4 @@
-// Version 0.5.0 2014-02-15T11:32:47;
+// Version 0.5.1 2014-02-16T19:07:08;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -105,7 +105,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.5.0',
+      RG2VERSION: '0.5.1',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -205,6 +205,10 @@ var rg2 = ( function() {
       });
 
       $("#rg2-resize-info").click(function() {
+        resizeInfoDisplay();
+      });
+
+      $("#rg2-hide-info-panel-control").click(function() {
         resizeInfoDisplay();
       });
 
@@ -575,11 +579,15 @@ var rg2 = ( function() {
         infoPanelMaximised = false;
         $("#rg2-resize-info-icon").attr("src", infoShowIconSrc);
         $("#rg2-resize-info").prop("title", "Show info panel");
+        $("#rg2-hide-info-panel-control").css("left", "0px");
+        $("#rg2-hide-info-panel-icon").removeClass("fa-chevron-left").addClass("fa-chevron-right").prop("title", "Show info panel");
         $rg2infopanel.hide();
       } else {
         infoPanelMaximised = true;
         $("#rg2-resize-info-icon").attr("src", infoHideIconSrc);
         $("#rg2-resize-info").prop("title", "Hide info panel");
+        $("#rg2-hide-info-panel-control").css("left", "366px");
+        $("#rg2-hide-info-panel-icon").removeClass("fa-chevron-right").addClass("fa-chevron-left").prop("title", "Hide info panel");
         $rg2infopanel.show();
       }
       // move map around if necesssary
