@@ -1,4 +1,4 @@
-// Version 0.5.1 2014-02-16T19:07:08;
+// Version 0.5.2 2014-02-18T20:51:07;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -105,7 +105,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.5.1',
+      RG2VERSION: '0.5.2',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -118,7 +118,7 @@ var rg2 = ( function() {
       // cache jQuery things we use a lot
       $rg2infopanel = $("#rg2-info-panel");
       $rg2eventtitle = $("#rg2-event-title");
-
+      
       $.ajaxSetup({ cache: false });
 
       if ($('#rg2-manage').length !== 0) {
@@ -281,6 +281,10 @@ var rg2 = ( function() {
         }
       }).val(config.DEFAULT_ROUTE_THICKNESS);
       
+      $("#chk-show-three-seconds").prop('checked', false).click(function() {
+        redraw(false);
+      });
+      
       $("#rg2-animation-controls").hide();
 
       $("#btn-save-route").button().click(function() {
@@ -291,10 +295,9 @@ var rg2 = ( function() {
         drawing.saveGPSRoute();
       });
 
-      $("#btn-move-all").click(function(evt) {
+      $("#btn-move-all").prop('checked', false).click(function(evt) {
         drawing.toggleMoveAll(evt.target.checked);
       });
-      $("#btn-move-all").prop('checked', false);
 
       $("#btn-undo").click(function() {
         drawing.undoLastPoint();
@@ -1097,6 +1100,10 @@ var rg2 = ( function() {
     function getRouteWidth() {
       return routeWidth;
     }
+    
+    function showThreeSeconds() {
+     return $("#chk-show-three-seconds").prop('checked');
+    }
 
     return {
       // functions and variables available elsewhere
@@ -1134,7 +1141,8 @@ var rg2 = ( function() {
       getTotalResults : getTotalResults,
       getControlX : getControlX,
       getControlY : getControlY,
-      createEventEditDropdown : createEventEditDropdown
+      createEventEditDropdown : createEventEditDropdown,
+      showThreeSeconds: showThreeSeconds
     };
 
   }());
@@ -4151,8 +4159,11 @@ Results.prototype = {
 	},
 
 	drawTracks : function() {
+    var show;
+    // check if +3 to be displayed once here rather than every time through loop
+    show = rg2.showThreeSeconds();
 		for (var i = 0; i < this.results.length; i += 1) {
-			this.results[i].drawTrack();
+			this.results[i].drawTrack(show);
 		}
 	},
 
@@ -4451,7 +4462,7 @@ Result.prototype = {
 		}
 	},
 
-	drawTrack : function() {
+	drawTrack : function(showThreeSeconds) {
 		var l;
 		if (this.displayTrack) {
 			rg2.ctx.lineWidth = rg2.getRouteWidth();
@@ -4473,14 +4484,12 @@ Result.prototype = {
         if ((this.trackx[i] === oldx) && (this.tracky[i] === oldy)) {
           // we haven't moved
           stopCount += 1;
-          // only output at current position if this is the last entry
-          if (i === (this.trackx.length - 1)) {
-            rg2.ctx.fillText((3 * stopCount) + " secs", this.trackx[i] + 5, this.tracky[i] + 5);
-          }
         } else {
           // we have started moving again
           if (stopCount > 0) {
-            rg2.ctx.fillText((3 * stopCount) + " secs", oldx + 5, oldy + 5);
+            if (!this.isGPSTrack || (this.isGPSTrack && showThreeSeconds)) {
+              rg2.ctx.fillText("+" + (3 * stopCount), oldx + 5, oldy + 5);
+            }
             stopCount = 0;
           }
         }

@@ -247,6 +247,7 @@ function addNewRoute($eventid, $data) {
   if ($write["status_msg"] == "") {
     $write["ok"] = TRUE;
     $write["status_msg"] = "Record saved";
+    rg2log("Route saved|".$eventid."|".$id);
   } else {
     $write["ok"] = FALSE;    
   }
@@ -296,9 +297,11 @@ function handleGetRequest($type, $id) {
   switch ($type) {  
   case 'events':
     $output = getAllEvents();
+    rg2log("Get events");
     break;    
   case 'courses':
     $output = getCoursesForEvent($id);
+    rg2log("Get courses|".$id);
     break;  
   case 'results':
     $output = getResultsForEvent($id);
@@ -614,7 +617,8 @@ function getTracksForEvent($eventid) {
 
 function rg2log($msg) {
   if (defined('RG_LOG_FILE')){
-    error_log(date("H:i:s", time()).": ".$msg.PHP_EOL, 3, RG_LOG_FILE);
+    $user_agent = $_SERVER['HTTP_USER_AGENT']; 
+    error_log(date("c", time())."|".$user_agent."|".$msg.PHP_EOL, 3, RG_LOG_FILE);
   }
 }
 ?>
