@@ -104,7 +104,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.5.2',
+      RG2VERSION: '0.5.3',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -136,6 +136,7 @@ var rg2 = ( function() {
       $("#btn-save-gps-route").button().button("disable");
       $("#btn-reset-drawing").button().button("disable");
       $("#btn-undo").button().button("disable");
+      $("#btn-undo-gps-adjust").button().button("disable");
       $("#rg2-load-gps-file").button().button("disable");
       $("#btn-three-seconds").button().button("disable");
 
@@ -300,6 +301,10 @@ var rg2 = ( function() {
 
       $("#btn-undo").click(function() {
         drawing.undoLastPoint();
+      });
+
+      $("#btn-undo-gps-adjust").click(function() {
+        drawing.undoGPSAdjust();
       });
 
       $("#btn-reset-drawing").click(function() {

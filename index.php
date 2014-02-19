@@ -153,6 +153,7 @@
         <li>Right click to delete a handle</li>
         <li>Drag a handle to adjust track around locked point(s)</li>
        </ul>
+       <button id="btn-undo-gps-adjust">Undo</button>
        <button class="pushright" id="btn-save-gps-route">Save GPS route</button> 
     </div>
         <?php if ($manager) { ?>

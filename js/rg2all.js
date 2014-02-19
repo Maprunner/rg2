@@ -1,4 +1,4 @@
-// Version 0.5.2 2014-02-18T20:51:07;
+// Version 0.5.3 2014-02-19T10:21:35;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -105,7 +105,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.5.2',
+      RG2VERSION: '0.5.3',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -137,6 +137,7 @@ var rg2 = ( function() {
       $("#btn-save-gps-route").button().button("disable");
       $("#btn-reset-drawing").button().button("disable");
       $("#btn-undo").button().button("disable");
+      $("#btn-undo-gps-adjust").button().button("disable");
       $("#rg2-load-gps-file").button().button("disable");
       $("#btn-three-seconds").button().button("disable");
 
@@ -301,6 +302,10 @@ var rg2 = ( function() {
 
       $("#btn-undo").click(function() {
         drawing.undoLastPoint();
+      });
+
+      $("#btn-undo-gps-adjust").click(function() {
+        drawing.undoGPSAdjust();
       });
 
       $("#btn-reset-drawing").click(function() {
@@ -2149,14 +2154,21 @@ Draw.prototype = {
 
   dragEnded : function() {
     if (this.gpstrack.fileLoaded) {
+      var i;
       var trk =this.gpstrack;
       // rebaseline GPS track
+      trk.savedBaseX = trk.baseX.slice(0);
+      trk.savedBaseY = trk.baseY.slice(0);
       trk.baseX = trk.routeData.x.slice(0);
       trk.baseY = trk.routeData.y.slice(0);
-      for (var i = 0; i < trk.handles.length; i += 1) {
+      // can't use slice(0) for an array of objects so need to do deep copy in jQuery
+      // see http://stackoverflow.com/questions/122102/most-efficient-way-to-clone-an-object
+      trk.savedHandles = $.extend(true, [], trk.handles);
+      for (i = 0; i < trk.handles.length; i += 1) {
         trk.handles[i].basex = trk.handles[i].x;
         trk.handles[i].basey = trk.handles[i].y;
       }
+      $("#btn-undo-gps-adjust").button("enable");
     }
   },
 
@@ -2238,6 +2250,7 @@ Draw.prototype = {
     this.nextControl = 1;
     rg2.createNameDropdown(courseid);
     $("#rg2-name-select").prop('disabled', false);
+    $("#btn-undo-gps-adjust").button("disable");
     rg2.redraw(false);
   },
 
@@ -2381,6 +2394,25 @@ Draw.prototype = {
     }
     rg2.redraw(false);
   },
+  
+  undoGPSAdjust : function() {
+    // restore route from before last adjust operation
+    var trk;
+    trk = this.gpstrack;
+    trk.baseX = trk.savedBaseX.slice(0);
+    trk.baseY = trk.savedBaseY.slice(0);
+    trk.routeData.x = trk.savedBaseX.slice(0);
+    trk.routeData.y = trk.savedBaseY.slice(0);
+    // can't use slice(0) for an array of objects so need to do deep copy in jQuery
+    // see http://stackoverflow.com/questions/122102/most-efficient-way-to-clone-an-object
+    trk.handles = $.extend(true, [], trk.savedHandles);
+    for (var i = 0; i < trk.handles.length; i += 1) {
+        trk.handles[i].x = trk.handles[i].basex;
+        trk.handles[i].y = trk.handles[i].basey;
+      }
+    $("#btn-undo-gps-adjust").button("disable");
+    rg2.redraw(false);
+  },
 
   undoLastPoint : function() {
     // remove last point if we have one
@@ -2433,6 +2465,7 @@ Draw.prototype = {
     }
     this.gpstrack.routeData.comments = $("#rg2-new-comments").val();
 
+    $("#btn-undo-gps-adjust").button("disable");
     this.postRoute();
   },
 
@@ -3038,6 +3071,9 @@ function GPSTrack() {
 	this.baseX = [];
 	this.baseY = [];
   this.handles = [];
+  this.savedBaseX = [];
+  this.savedBaseY = [];
+  this.savedHandles = [];
 	this.fileLoaded = false;
 	this.fileName = '';
 	this.routeData = new RouteData();
@@ -3054,6 +3090,9 @@ GPSTrack.prototype = {
 		this.baseX.length = 0;
 		this.baseY.length = 0;
     this.handles.length = 0;
+    this.savedBaseX.length = 0;
+    this.savedBaseY.length = 0;
+    this.savedHandles.length = 0;
 		this.fileLoaded = false;
 	},
 
@@ -3195,6 +3234,7 @@ GPSTrack.prototype = {
 		}
 		this.baseX = this.routeData.x.slice(0);
 		this.baseY = this.routeData.y.slice(0);
+		// add handles at start and finish of route
 		var h0 = {};
     var h1 = {};
 		h0.x = this.baseX[0];
