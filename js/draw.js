@@ -109,14 +109,21 @@ Draw.prototype = {
 
   dragEnded : function() {
     if (this.gpstrack.fileLoaded) {
+      var i;
       var trk =this.gpstrack;
       // rebaseline GPS track
+      trk.savedBaseX = trk.baseX.slice(0);
+      trk.savedBaseY = trk.baseY.slice(0);
       trk.baseX = trk.routeData.x.slice(0);
       trk.baseY = trk.routeData.y.slice(0);
-      for (var i = 0; i < trk.handles.length; i += 1) {
+      // can't use slice(0) for an array of objects so need to do deep copy in jQuery
+      // see http://stackoverflow.com/questions/122102/most-efficient-way-to-clone-an-object
+      trk.savedHandles = $.extend(true, [], trk.handles);
+      for (i = 0; i < trk.handles.length; i += 1) {
         trk.handles[i].basex = trk.handles[i].x;
         trk.handles[i].basey = trk.handles[i].y;
       }
+      $("#btn-undo-gps-adjust").button("enable");
     }
   },
 
@@ -198,6 +205,7 @@ Draw.prototype = {
     this.nextControl = 1;
     rg2.createNameDropdown(courseid);
     $("#rg2-name-select").prop('disabled', false);
+    $("#btn-undo-gps-adjust").button("disable");
     rg2.redraw(false);
   },
 
@@ -341,6 +349,25 @@ Draw.prototype = {
     }
     rg2.redraw(false);
   },
+  
+  undoGPSAdjust : function() {
+    // restore route from before last adjust operation
+    var trk;
+    trk = this.gpstrack;
+    trk.baseX = trk.savedBaseX.slice(0);
+    trk.baseY = trk.savedBaseY.slice(0);
+    trk.routeData.x = trk.savedBaseX.slice(0);
+    trk.routeData.y = trk.savedBaseY.slice(0);
+    // can't use slice(0) for an array of objects so need to do deep copy in jQuery
+    // see http://stackoverflow.com/questions/122102/most-efficient-way-to-clone-an-object
+    trk.handles = $.extend(true, [], trk.savedHandles);
+    for (var i = 0; i < trk.handles.length; i += 1) {
+        trk.handles[i].x = trk.handles[i].basex;
+        trk.handles[i].y = trk.handles[i].basey;
+      }
+    $("#btn-undo-gps-adjust").button("disable");
+    rg2.redraw(false);
+  },
 
   undoLastPoint : function() {
     // remove last point if we have one
@@ -393,6 +420,7 @@ Draw.prototype = {
     }
     this.gpstrack.routeData.comments = $("#rg2-new-comments").val();
 
+    $("#btn-undo-gps-adjust").button("disable");
     this.postRoute();
   },
 

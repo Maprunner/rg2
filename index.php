@@ -84,7 +84,7 @@
       <div  id="rg2-resize-info" title="Hide info panel">
         <a href="#"><img id="rg2-resize-info-icon" class="hide" src='<?php echo $img_url."hide-info.png"; ?>'></a>
       </div>
-      <div id="rg2-header"><span id="rg2-event-title">Routegadget 2.0 Viewer</span></div>  
+      <div id="rg2-header"><span id="rg2-event-title">Routegadget 2.0</span></div>  
         <div class="rg2-button"><i id="btn-about" title = "Help" class="fa fa-question"></i></div>
         <div class="rg2-button"><i id="btn-options" title = "Options" class="fa fa-cog"></i></div>
         <div class="rg2-button"><i id="btn-zoom-out" title = "Zoom out" class="fa fa-search-minus"></i></div>
@@ -153,6 +153,7 @@
         <li>Right click to delete a handle</li>
         <li>Drag a handle to adjust track around locked point(s)</li>
        </ul>
+       <button id="btn-undo-gps-adjust">Undo</button>
        <button class="pushright" id="btn-save-gps-route">Save GPS route</button> 
     </div>
         <?php if ($manager) { ?>
@@ -225,6 +226,9 @@
           <label for="spn-route-width">Route width</label>
           <input id="spn-route-width" name="value" />
         </div>
+        <div id="rg2-show-seconds">
+          <label for="chk-show-three-seconds"> Show +3 time loss for GPS routes </label><input type=checkbox id="chk-show-three-seconds">
+        </div>
       </div>
 		  <div id="rg2-track-names"></div>
 		  <div id="rg2-about-dialog" title="Routegadget 2.0">
@@ -283,7 +287,7 @@
       <?php } ?>
     </div>
 
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
     <script type="text/javascript">
       var json_url = "<?php echo $json_url; ?>";

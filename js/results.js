@@ -46,8 +46,11 @@ Results.prototype = {
 	},
 
 	drawTracks : function() {
+    var show;
+    // check if +3 to be displayed once here rather than every time through loop
+    show = rg2.showThreeSeconds();
 		for (var i = 0; i < this.results.length; i += 1) {
-			this.results[i].drawTrack();
+			this.results[i].drawTrack(show);
 		}
 	},
 
@@ -346,7 +349,7 @@ Result.prototype = {
 		}
 	},
 
-	drawTrack : function() {
+	drawTrack : function(showThreeSeconds) {
 		var l;
 		if (this.displayTrack) {
 			rg2.ctx.lineWidth = rg2.getRouteWidth();
@@ -368,14 +371,12 @@ Result.prototype = {
         if ((this.trackx[i] === oldx) && (this.tracky[i] === oldy)) {
           // we haven't moved
           stopCount += 1;
-          // only output at current position if this is the last entry
-          if (i === (this.trackx.length - 1)) {
-            rg2.ctx.fillText((3 * stopCount) + " secs", this.trackx[i] + 5, this.tracky[i] + 5);
-          }
         } else {
           // we have started moving again
           if (stopCount > 0) {
-            rg2.ctx.fillText((3 * stopCount) + " secs", oldx + 5, oldy + 5);
+            if (!this.isGPSTrack || (this.isGPSTrack && showThreeSeconds)) {
+              rg2.ctx.fillText("+" + (3 * stopCount), oldx + 5, oldy + 5);
+            }
             stopCount = 0;
           }
         }

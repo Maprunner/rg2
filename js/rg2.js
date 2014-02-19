@@ -104,7 +104,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.5.1',
+      RG2VERSION: '0.5.3',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -117,7 +117,7 @@ var rg2 = ( function() {
       // cache jQuery things we use a lot
       $rg2infopanel = $("#rg2-info-panel");
       $rg2eventtitle = $("#rg2-event-title");
-
+      
       $.ajaxSetup({ cache: false });
 
       if ($('#rg2-manage').length !== 0) {
@@ -136,6 +136,7 @@ var rg2 = ( function() {
       $("#btn-save-gps-route").button().button("disable");
       $("#btn-reset-drawing").button().button("disable");
       $("#btn-undo").button().button("disable");
+      $("#btn-undo-gps-adjust").button().button("disable");
       $("#rg2-load-gps-file").button().button("disable");
       $("#btn-three-seconds").button().button("disable");
 
@@ -280,6 +281,10 @@ var rg2 = ( function() {
         }
       }).val(config.DEFAULT_ROUTE_THICKNESS);
       
+      $("#chk-show-three-seconds").prop('checked', false).click(function() {
+        redraw(false);
+      });
+      
       $("#rg2-animation-controls").hide();
 
       $("#btn-save-route").button().click(function() {
@@ -290,13 +295,16 @@ var rg2 = ( function() {
         drawing.saveGPSRoute();
       });
 
-      $("#btn-move-all").click(function(evt) {
+      $("#btn-move-all").prop('checked', false).click(function(evt) {
         drawing.toggleMoveAll(evt.target.checked);
       });
-      $("#btn-move-all").prop('checked', false);
 
       $("#btn-undo").click(function() {
         drawing.undoLastPoint();
+      });
+
+      $("#btn-undo-gps-adjust").click(function() {
+        drawing.undoGPSAdjust();
       });
 
       $("#btn-reset-drawing").click(function() {
@@ -1096,6 +1104,10 @@ var rg2 = ( function() {
     function getRouteWidth() {
       return routeWidth;
     }
+    
+    function showThreeSeconds() {
+     return $("#chk-show-three-seconds").prop('checked');
+    }
 
     return {
       // functions and variables available elsewhere
@@ -1133,7 +1145,8 @@ var rg2 = ( function() {
       getTotalResults : getTotalResults,
       getControlX : getControlX,
       getControlY : getControlY,
-      createEventEditDropdown : createEventEditDropdown
+      createEventEditDropdown : createEventEditDropdown,
+      showThreeSeconds: showThreeSeconds
     };
 
   }());
