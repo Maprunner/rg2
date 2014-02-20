@@ -1,58 +1,58 @@
 <?php
 
- require_once( 'rg2-config.php' ); 
- 
- // override allows testing of a local configuration such as c:/xampp/htdocs/rg2
- if (file_exists('rg2-override-config.php')) {
-   $override = true;
-   require_once ( 'rg2-override-config.php');
- } else {
-   $override = false;  
- }
- 
- if (defined('OVERRIDE_UI_THEME')) {
-    $ui_theme = OVERRIDE_UI_THEME;
- } else {
-    $ui_theme = UI_THEME;
- }
+require_once ('rg2-config.php');
 
-  if (defined('HEADER_COLOUR')) {
-    $header_colour = HEADER_COLOUR;
-  } else {
-    $header_colour = '#002bd9';
-  }
-  if (defined('HEADER_TEXT_COLOUR')) {
-    $header_text_colour = HEADER_TEXT_COLOUR;
-  } else {
-    $header_text_colour = '#ffffff';
-  }
-  
-  if (defined('OVERRIDE_BASE_DIRECTORY')) {
-    $json_url = OVERRIDE_BASE_DIRECTORY."/rg2/rg2api.php";
-    $script_url = OVERRIDE_BASE_DIRECTORY."/rg2/js/";
-    $img_url = OVERRIDE_BASE_DIRECTORY."/rg2/img/";
+// override allows testing of a local configuration such as c:/xampp/htdocs/rg2
+if (file_exists('rg2-override-config.php')) {
+	$override = true;
+	require_once ('rg2-override-config.php');
+} else {
+	$override = false;
+}
 
-   } else {
-    $json_url = RG_BASE_DIRECTORY."/rg2/rg2api.php";
-    $script_url = RG_BASE_DIRECTORY."/rg2/js/";
-    $img_url = RG_BASE_DIRECTORY."/rg2/img/";
-  }
-  
-  $maps_url = RG_BASE_DIRECTORY."/kartat/";
-  
-  // include manager function as parameter for now until we decide the best way forward
-  if (isset($_GET['manage'])) {
-    $manager = true;
-  } else {
-    $manager = false;
-  }
+if (defined('OVERRIDE_UI_THEME')) {
+	$ui_theme = OVERRIDE_UI_THEME;
+} else {
+	$ui_theme = UI_THEME;
+}
 
-  // include debug function as parameter for now until we decide the best way forward
-  if (isset($_GET['debug']) || $override) {
-    $debug = true;
-  } else {
-    $debug = false;
-  }
+if (defined('HEADER_COLOUR')) {
+	$header_colour = HEADER_COLOUR;
+} else {
+	$header_colour = '#002bd9';
+}
+if (defined('HEADER_TEXT_COLOUR')) {
+	$header_text_colour = HEADER_TEXT_COLOUR;
+} else {
+	$header_text_colour = '#ffffff';
+}
+
+if (defined('OVERRIDE_BASE_DIRECTORY')) {
+	$json_url = OVERRIDE_BASE_DIRECTORY . "/rg2/rg2api.php";
+	$script_url = OVERRIDE_BASE_DIRECTORY . "/rg2/js/";
+	$img_url = OVERRIDE_BASE_DIRECTORY . "/rg2/img/";
+
+} else {
+	$json_url = RG_BASE_DIRECTORY . "/rg2/rg2api.php";
+	$script_url = RG_BASE_DIRECTORY . "/rg2/js/";
+	$img_url = RG_BASE_DIRECTORY . "/rg2/img/";
+}
+
+$maps_url = RG_BASE_DIRECTORY . "/kartat/";
+
+// include manager function as parameter for now until we decide the best way forward
+if (isset($_GET['manage'])) {
+	$manager = true;
+} else {
+	$manager = false;
+}
+
+// include debug function as parameter for now until we decide the best way forward
+if (isset($_GET['debug']) || $override) {
+	$debug = true;
+} else {
+	$debug = false;
+}
 ?>
 
 <!DOCTYPE html>
@@ -82,7 +82,7 @@
 
     <div id="rg2-header-container">
       <div  id="rg2-resize-info" title="Hide info panel">
-        <a href="#"><img id="rg2-resize-info-icon" class="hide" src='<?php echo $img_url."hide-info.png"; ?>'></a>
+        <a href="#"><img id="rg2-resize-info-icon" class="hide" src='<?php echo $img_url . "hide-info.png"; ?>'></a>
       </div>
       <div id="rg2-header"><span id="rg2-event-title">Routegadget 2.0</span></div>  
         <div class="rg2-button"><i id="btn-about" title = "Help" class="fa fa-question"></i></div>
@@ -111,11 +111,20 @@
             <a href="#rg2-draw">Draw</a>
           </li>
           <?php if ($manager) { ?>
-          <li id="rg2-manage-tab">
-            <a href="#rg2-manage">Manage</a>
+          <li id="rg2-login-tab">
+            <a href="#rg2-manage-login">Login</a>
+          </li>
+          <li id="rg2-create-tab">
+          	<a href="#rg2-manage-create">Create Event</a>
+          </li>
+          <li id="rg2-edit-tab">
+          	<a href="#rg2-manage-edit">Edit Event</a>
+          </li>
+          <li id="rg2-logout-tab">
+          	<a href="#rg2-manage-logout">Logout</a>
           </li>
           <?php } ?>
-    </ul>
+   			</ul>
         </div>
         <div id="rg2-info-panel-tab-body">
         <div id="rg2-event-list"></div>
@@ -156,29 +165,7 @@
        <button id="btn-undo-gps-adjust">Undo</button>
        <button class="pushright" id="btn-save-gps-route">Save GPS route</button> 
     </div>
-        <?php if ($manager) { ?>
-        <div id="rg2-manage">
-          <form id="rg2-manager-login">
-            <div>
-              <label for"rg2-user-name">User name: </label>
-              <input class="pushright" id="rg2-user-name" type="text">
-            </div>
-            <div>
-              <label for"rg2-password">Password: </label>
-              <input class="pushright" id="rg2-password" type="password">
-            </div>
-            <button id="btn-login">Log in</button>
-          </form>
-          <div id="rg2-manager-options">
-            <button id="btn-add-event">Add new event</button>
-            <input type=checkbox id="btn-move-map-and-controls"><label for="btn-move-map-and-controls"> Move map and controls together</label>
-            <select id="rg2-manager-event-select"></select>
-            <button id="btn-edit-event">Edit selected event</button>
-            <button id="btn-delete-event">Delete selected event</button>
-
-          </div>
-      </div>  
-      <?php } ?>
+    <?php if ($manager) {include 'manager.html'; } ?>     
        </div>
       </div>
       <canvas id="rg2-map-canvas">Your browser does not support HTML5</canvas>
@@ -242,75 +229,31 @@
         <p><?php echo ADDITIONAL_INFO_TEXT; ?></p>
       </div>
       <div id="rg2-splits-table" title="Splits display"></div>
-      <?php if ($manager) { ?>
-      <div id="rg2-add-new-event">
-        <form id="rg2-new-event-details">
-          <div id="rg2-select-event-name">
-            Event name:
-            <input id="rg2-event-name" type="text" autofocus></input>
-          </div>
-          <div id="rg2-select-map-name">
-            Map name:
-            <input id="rg2-map-name" type="text"></input>
-          </div>
-          <div id="rg2-select-club-name">
-            Club name:
-            <input id="rg2-club-name" type="text"></input>
-          </div>
-          <div id="rg2-select-event-date">
-            Event date:
-            <input id="rg2-event-date" type="text"></input>
-          </div>
-          <div id="rg2-select-event-level">
-            Event level: <select id="rg2-event-level"></select>
-          </div>
-          <textarea id="rg2-event-comments"></textarea>
-          <div id="rg2-select-map-file">
-            <input type='file' accept='.jpg' id='rg2-load-map-file' />
-            <label for="rg2-load-map-file">Map file</label>
-          </div>
-          <div id="rg2-select-results-file">
-            <input type='file' accept='.csv' id='rg2-load-results-file' />
-            <label for="rg2-load-results-file">Results file</label>
-          </div>
-          <div id="rg2-select-course-file">
-            <input type='file' accept='.xml' id='rg2-load-course-file' />
-            <label for="rg2-load-course-file">Course file</label>            
-          </div>
-          <div id="rg2-course-allocations"></div>
-          <div id="rg2-results-grouping">
-            <label><input type='radio' name='rg2-course-breakdown' val='course' checked="checked" />Group results by course</label>
-            <label><input type='radio' name='rg2-course-breakdown' val='class' />Group results by class</label>
-          </div> 
-        </form>
-      </div>
-      <?php } ?>
     </div>
 
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
-    <script type="text/javascript">
-      var json_url = "<?php echo $json_url; ?>";
+    <script type="text/javascript">var json_url =  "<?php echo $json_url; ?>";
       var maps_url = "<?php echo $maps_url; ?>";
       var header_colour = "<?php echo $header_colour; ?>";
       var header_text_colour = "<?php echo $header_text_colour; ?>";
     </script>
     <?php if ($debug) { ?>
-      <script src='<?php echo $script_url."events.js"; ?>'></script>
-      <script src='<?php echo $script_url."results.js"; ?>'></script>
-      <script src='<?php echo $script_url."gpstrack.js"; ?>'></script>
-      <script src='<?php echo $script_url."controls.js"; ?>'></script>
-      <script src='<?php echo $script_url."courses.js"; ?>'></script>
-      <script src='<?php echo $script_url."draw.js"; ?>'></script>
-      <script src='<?php echo $script_url."animation.js"; ?>'></script>
-      <script src='<?php echo $script_url."runner.js"; ?>'></script>
-      <script src='<?php echo $script_url."plugins.js"; ?>'></script>
-      <script src='<?php echo $script_url."rg2.js"; ?>'></script>
+      <script src='<?php echo $script_url . "events.js"; ?>'></script>
+      <script src='<?php echo $script_url . "results.js"; ?>'></script>
+      <script src='<?php echo $script_url . "gpstrack.js"; ?>'></script>
+      <script src='<?php echo $script_url . "controls.js"; ?>'></script>
+      <script src='<?php echo $script_url . "courses.js"; ?>'></script>
+      <script src='<?php echo $script_url . "draw.js"; ?>'></script>
+      <script src='<?php echo $script_url . "animation.js"; ?>'></script>
+      <script src='<?php echo $script_url . "runner.js"; ?>'></script>
+      <script src='<?php echo $script_url . "plugins.js"; ?>'></script>
+      <script src='<?php echo $script_url . "rg2.js"; ?>'></script>
     <?php } else { ?>
-      <script src='<?php echo $script_url."rg2all.min.js"; ?>'></script>      
+      <script src='<?php echo $script_url . "rg2all.min.js"; ?>'></script>      
     <?php } ?>  
       <?php if ($manager) { ?>
-      <script src='<?php echo $script_url."manager.js"; ?>'></script>
+      <script src='<?php echo $script_url . "manager.js"; ?>'></script>
       <?php } ?>
   </body>
 </html>

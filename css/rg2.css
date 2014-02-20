@@ -28,7 +28,7 @@ html, body {
 }
 
 #rg2-manager-event-select {
-  margin-top:100px;
+  /*margin-top:100px;*/
   width: 100%;
 }
 
@@ -245,7 +245,7 @@ html, body {
 	float: right;
 }
 
-#rg2-manager-options .ui-button {
+#rg2-manage-edit .ui-button {
 	margin-top: 10px;
   margin-bottom: 10px;
 }
@@ -414,3 +414,6 @@ image, canvas {
     -webkit-user-drag: none;
 }
 
+#rg2-manage-subheaders {
+  text-align: center;
+}

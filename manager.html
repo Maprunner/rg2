@@ -1,0 +1,75 @@
+<div id="rg2-manage-login">
+  <form id="rg2-manager-login-form">
+    <div>
+      <label for"rg2-user-name"><strong>User name:</strong> </label>
+      <input class="pushright" id="rg2-user-name" type="text">
+    </div>
+    <div>
+      <label for"rg2-password"><strong>Password:</strong> </label>
+      <input class="pushright" id="rg2-password" type="password">
+    </div>
+    <button id="btn-login">
+      Log in
+    </button>
+  </form>
+</div>
+<div id="rg2-manage-create">
+  <h2 id="rg2-manage-subheaders">Create new event</h2>
+  <div id="rg2-select-event-name">
+    <strong>Event name:</strong>
+    <input class="pushright" id="rg2-event-name" type="text" autofocus>
+    </input>
+  </div>
+  <div id="rg2-select-map-name">
+    <strong>Map name:</strong>
+    <input class="pushright" id="rg2-map-name" type="text">
+    </input>
+  </div>
+  <div id="rg2-select-club-name">
+    <strong>Club name:</strong>
+    <input class="pushright" id="rg2-club-name" type="text">
+    </input>
+  </div>
+  <div id="rg2-select-event-date">
+    <strong>Event date:</strong>
+    <input class="pushright" id="rg2-event-date" type="text">
+    </input>
+  </div>
+  <div id="rg2-select-event-level">
+    <strong>Event level:</strong><select class="pushright" id="rg2-event-level"></select>
+  </div>
+  <input type=checkbox id="btn-move-map-and-controls">
+  <label for="btn-move-map-and-controls"> Move map and controls together</label>  <textarea id="rg2-event-comments"></textarea>
+  <div id="rg2-select-map-file">
+    <input type='file' accept='.jpg' id='rg2-load-map-file' />
+    <label for="rg2-load-map-file">Map file</label>
+  </div>
+  <div id="rg2-select-results-file">
+    <input type='file' accept='.csv' id='rg2-load-results-file' />
+    <label for="rg2-load-results-file">Results file</label>
+  </div>
+  <div id="rg2-select-course-file">
+    <input type='file' accept='.xml' id='rg2-load-course-file' />
+    <label for="rg2-load-course-file">Course file</label>
+  </div><div id="rg2-course-allocations"></div>
+  <div id="rg2-results-grouping">
+    <label>
+      <input type='radio' name='rg2-course-breakdown' val='course' checked="checked" />
+      Group results by course</label>
+    <label>
+      <input type='radio' name='rg2-course-breakdown' val='class' />
+      Group results by class</label>
+  </div>
+</div>
+<div id="rg2-manage-edit">
+  <h2 id="rg2-manage-subheaders">Edit existing event</h2> <select id="rg2-manager-event-select"></select>
+  <button id="btn-edit-event">
+    Edit selected event
+  </button>
+  <button id="btn-delete-event">
+    Delete selected event
+  </button>
+</div>
+<div id="rg2-manage-logout">
+<p> Testy testy test</p>
+</div>

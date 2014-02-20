@@ -120,7 +120,7 @@ var rg2 = ( function() {
       
       $.ajaxSetup({ cache: false });
 
-      if ($('#rg2-manage').length !== 0) {
+      if ($('#rg2-manage-login').length !== 0) {
         managing = true;
       } else {
         managing = false;
@@ -392,8 +392,10 @@ var rg2 = ( function() {
       if (managing) {
         manager = new Manager();
         $("#rg2-animation-controls").hide();
-        // hide manager options until login complete
-        $("#rg2-manager-options").hide();
+        $("#rg2-create-tab").hide();
+        $("#rg2-edit-tab").hide();
+        $("#rg2-logout-tab").hide();
+        $("#rg2-manage-login").show();
         $rg2infopanel.tabs("disable", config.TAB_EVENTS);
         $("#rg2-draw-tab").hide();
         $("#rg2-results-tab").hide();
@@ -723,7 +725,7 @@ var rg2 = ( function() {
             drawing.adjustTrack(Math.round(dragStart.x), Math.round(dragStart.y), Math.round(pt.x), Math.round(pt.y), whichButton ,evt.shiftKey, evt.ctrlKey);
           } else {
             if ($rg2infopanel.tabs("option", "active") === config.TAB_MANAGE) {
-              manager.adjustControls(Math.round(dragStart.x), Math.round(dragStart.y), Math.round(pt.x), Math.round(pt.y), evt.shiftKey, evt.ctrlKey);
+              manager.adjustControls(Math.round(dragStart.x), Math.round(dragStart.y), Math.round(pt.x), Math.round(pt.y), whichButton, evt.shiftKey, evt.ctrlKey);
             } else {
               ctx.translate(pt.x - dragStart.x, pt.y - dragStart.y);
             }

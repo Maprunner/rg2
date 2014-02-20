@@ -32,7 +32,7 @@ function Manager() {
 
   var self = this;
 
-  $("#rg2-manager-login").submit(function(event) {
+  $("#rg2-manager-login-form").submit(function(event) {
     self.user.name = $("#rg2-user-name").val();
     self.user.pwd = $("#rg2-password").val();
     // check we have user name and password
@@ -157,8 +157,14 @@ Manager.prototype = {
       var id = $("#rg2-manager-event-select").val();
     }).button("disable");
 
-    $("#rg2-manager-options").show();
-    $("#rg2-manager-login").hide();
+    $("#rg2-manage-edit").show();
+    $("#rg2-manage-create").show();
+    $("#rg2-create-tab").show();
+    $("#rg2-edit-tab").show();  
+    $("#rg2-logout-tab").show();
+    $("#rg2-manage-login").hide();
+    $("#rg2-login-tab").hide();
+    
   },
 
   doContinue : function() {
@@ -573,13 +579,13 @@ Manager.prototype = {
   },
 
   // based on adjustTrack from draw.js
-  adjustControls : function(x1, y1, x2, y2, shiftKeyPressed, ctrlKeyPressed) {
+  adjustControls : function(x1, y1, x2, y2, button, shiftKeyPressed, ctrlKeyPressed) {
     var i;
     var x;
     var y;
     var dx;
     var dy;
-    if (this.backgroundLocked) {
+    if ((this.backgroundLocked) || (button === rg2.config.RIGHT_CLICK)) {
       // drag track and background
       rg2.ctx.translate(x2 - x1, y2 - y1);
     } else {
