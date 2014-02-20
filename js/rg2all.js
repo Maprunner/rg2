@@ -1,4 +1,4 @@
-// Version 0.5.3 2014-02-20T10:08:40;
+// Version 0.5.4 2014-02-20T19:10:46;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -105,7 +105,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.5.3',
+      RG2VERSION: '0.5.4',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -1265,7 +1265,7 @@ Animation.prototype = {
 			}
 			html += "</tr><tr class='splitstime-row'><td></td><td></td>";
 			for ( j = 1; j < run.splits.length; j += 1) {
-				html += "<td>" + formatSecsAsMMSS(legSplit[j]) + " (" + run.legpos[j] + ")</td>";
+				html += "<td>" + formatSecsAsMMSS(legSplit[j]) + "</td>";
 			}
 			html += "</tr><tr class='splitsdistance-row'><td></td><td>pixels</td>";
 			for ( j = 1; j < run.splits.length; j += 1) {
