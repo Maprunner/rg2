@@ -109,7 +109,7 @@ Animation.prototype = {
 			}
 			html += "</tr><tr class='splitstime-row'><td></td><td></td>";
 			for ( j = 1; j < run.splits.length; j += 1) {
-				html += "<td>" + formatSecsAsMMSS(legSplit[j]) + " (" + run.legpos[j] + ")</td>";
+				html += "<td>" + formatSecsAsMMSS(legSplit[j]) + "</td>";
 			}
 			html += "</tr><tr class='splitsdistance-row'><td></td><td>pixels</td>";
 			for ( j = 1; j < run.splits.length; j += 1) {

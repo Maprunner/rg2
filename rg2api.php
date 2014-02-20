@@ -326,7 +326,7 @@ function getAllEvents() {
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
       // mapid, map name, 12 old georef values, 6 world file values
       if (count($data) == 20) {
-        $maps[$referenced]["mapid"] = $data[0];
+        $maps[$referenced]["mapid"] = intval($data[0]);
         $maps[$referenced]["A"] = $data[14];
         $maps[$referenced]["D"] = $data[15];
         $maps[$referenced]["B"] = $data[16];
@@ -343,8 +343,8 @@ function getAllEvents() {
   if (($handle = fopen(KARTAT_DIRECTORY."kisat.txt", "r")) !== FALSE) {
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
       $detail = array();
-      $detail["id"] = $data[0];
-      $detail["mapid"] = $data[1];
+      $detail["id"] = intval($data[0]);
+      $detail["mapid"] = intval($data[1]);
       for ($i = 0; $i < $referenced; $i++) {
         if ($detail["mapid"] == $maps[$i]["mapid"]) {
           $detail["A"] = $maps[$i]["A"];
@@ -546,7 +546,7 @@ function getCoursesForEvent($eventid) {
   if (($handle = fopen(KARTAT_DIRECTORY."sarjat_".$eventid.".txt", "r")) !== FALSE) {
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
       $detail = array();
-      $detail["courseid"] = $data[0];
+      $detail["courseid"] = intval($data[0]);
       $detail["name"] = encode_rg_input($data[1]);
       if ($controlsFound) {
         // assuming files have same number of entries: should cross-check courseid?  
