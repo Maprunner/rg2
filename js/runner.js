@@ -8,6 +8,7 @@ function Runner(resultid) {
 	this.runnerid = resultid;
 	this.starttime = res.starttime;
 	this.splits = res.splits;
+	this.legpos = res.legpos;
 	this.colour = res.trackColour;
 	// get course details
 	var course = rg2.getCourseDetails(res.courseid);
