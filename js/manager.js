@@ -132,7 +132,9 @@ Manager.prototype = {
     $("#btn-move-map-and-controls").click(function(evt) {
       self.toggleMoveAll(evt.target.checked);
     });
-
+    
+    $("#rg2-results-grouping").buttonset();
+        
     $("#btn-add-event").button().click(function() {
       $("#rg2-add-new-event").dialog({
         title : "Add new event",
