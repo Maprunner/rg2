@@ -326,7 +326,7 @@ function getAllEvents() {
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
       // mapid, map name, 12 old georef values, 6 world file values
       if (count($data) == 20) {
-        $maps[$referenced]["mapid"] = $data[0];
+        $maps[$referenced]["mapid"] = intval($data[0]);
         $maps[$referenced]["A"] = $data[14];
         $maps[$referenced]["D"] = $data[15];
         $maps[$referenced]["B"] = $data[16];
@@ -343,8 +343,8 @@ function getAllEvents() {
   if (($handle = fopen(KARTAT_DIRECTORY."kisat.txt", "r")) !== FALSE) {
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
       $detail = array();
-      $detail["id"] = $data[0];
-      $detail["mapid"] = $data[1];
+      $detail["id"] = intval($data[0]);
+      $detail["mapid"] = intval($data[1]);
       for ($i = 0; $i < $referenced; $i++) {
         if ($detail["mapid"] == $maps[$i]["mapid"]) {
           $detail["A"] = $maps[$i]["A"];
@@ -441,11 +441,11 @@ function getResultsForEvent($eventid) {
     $row = 0;
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
       $detail = array();
-      $detail["resultid"] = $data[0];
-      $detail["courseid"] = $data[1];
+      $detail["resultid"] = intval($data[0]);
+      $detail["courseid"] = intval($data[1]);
       $detail["coursename"] = encode_rg_input($data[2]);
       $detail["name"] = encode_rg_input($data[3]);
-      $detail["starttime"] = $data[4];
+      $detail["starttime"] = intval($data[4]);
       $detail["databaseid"] = $data[5];
       $detail["scoreref"] = $data[6];
       if ($data[6] != "") {
@@ -461,25 +461,18 @@ function getResultsForEvent($eventid) {
       $t = str_replace('::', ":", $t);
       $detail["time"] = $t;
       // trim trailing ; which create null fields when expanded
-      $detail["splits"] = rtrim($data[8], ";");
+      $temp = rtrim($data[8], ";");
+      // split array at ; and force to integers
+      $detail["splits"] = array_map('intval', explode(";", $temp));
+      
       if (sizeof($data) > 9) {
-        $detail["gpscoords"] = $data[9];
-        // Split Nxx;-yy,0Nxxx;-yy,0N.. into x,y arrays
-        $xy = explode("N", $data[9]);
-        foreach ($xy as $point) {
-          $temp = explode(";", $point);
-          if (count($temp) == 2) {
-            $x[] = $temp[0];
-            $pos = strpos(',', $temp[1]);
-            $y[] = substr($temp[1], 0, $pos - 2);
-          }
-        }
-        // enable when js has been modified
-        //$detail["x"] = $x;
-        //$detail["y"] = $y;
+        // list allocates return values in an array to the specified variables 
+        list($detail["gpsx"], $detail["gpsy"]) = expandCoords($data[9]);
       } else {
-        $detail["gpscoords"] = "";          
+        $detail["gpsx"] = ""; 
+        $detail["gpsy"] = ""; 
       }
+      
       $detail["comments"] = "";
       for ($i = 0; $i < $comments; $i++) {
         if ($detail["resultid"] == $text[$i]["resultid"]) {
@@ -553,7 +546,7 @@ function getCoursesForEvent($eventid) {
   if (($handle = fopen(KARTAT_DIRECTORY."sarjat_".$eventid.".txt", "r")) !== FALSE) {
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
       $detail = array();
-      $detail["courseid"] = $data[0];
+      $detail["courseid"] = intval($data[0]);
       $detail["name"] = encode_rg_input($data[1]);
       if ($controlsFound) {
         // assuming files have same number of entries: should cross-check courseid?  
@@ -571,8 +564,33 @@ function getCoursesForEvent($eventid) {
   return $output;
 }
 
-function getDummyCode($code) {
+function expandCoords($coords) {
+  // Split Nxx;-yy,0Nxxx;-yy,0N.. into x,y arrays
+  // but note that somestimes you don't get the ,0
+  $x = array();
+  $y = array();
+  $xy = explode("N", $coords);
+  foreach ($xy as $point) {
+    $temp = explode(";", $point);
+    if (count($temp) == 2) {
+      $x[] = $temp[0];
+      // strip off trailing ,0 if it exists
+      $pos = strpos(',', $temp[1]);
+      if ($pos) {
+        // remove leading - by starting at 1
+        $y[] = substr($temp[1], 1, $pos - 2);        
+      } else {
+        $y[] = substr($temp[1], 1);
+      }
 
+    }
+  }
+  // return the two arrays converted to integer values
+  return array(array_map('intval', $x), array_map('intval', $y)); 
+}
+
+function getDummyCode($code) {
+  // create dummy control codes if the results didn't include any
   static $codes = array();
   static $count = 0;
   $dummycode = 0;
@@ -594,18 +612,16 @@ function getDummyCode($code) {
 
 function getTracksForEvent($eventid) {
   $output = array();
-  $x = array();
-  $y = array();
   $row = 0;
   // @ suppresses error report if file does not exist
   if (($handle = @fopen(KARTAT_DIRECTORY."merkinnat_".$eventid.".txt", "r")) !== FALSE) {
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
       $detail = array();
-      $detail["courseid"] = $data[0];
-      $detail["resultid"] = $data[1];
+      $detail["courseid"] = intval($data[0]);
+      $detail["resultid"] = intval($data[1]);
       $detail["name"] = encode_rg_input($data[2]);
       $detail["mystery"] = $data[3];
-      $detail["coords"] = $data[4];
+      list($detail["gpsx"], $detail["gpsy"]) = expandCoords($data[4]);
       $detail["controls"] = $data[5];
       $output[$row] = $detail;        
       $row++;
