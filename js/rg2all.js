@@ -1,4 +1,4 @@
-// Version 0.5.3 2014-02-19T10:21:35;
+// Version 0.5.4 2014-02-20T19:10:46;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -105,7 +105,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.5.3',
+      RG2VERSION: '0.5.4',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -4169,8 +4169,56 @@ Results.prototype = {
 			var result = new Result(data[i], isScoreEvent, this.colours.getNextColour());
 			this.results.push(result);
 		}
+		this.generateLegPositions();
 	},
 
+  generateLegPositions: function() {
+
+    var i;
+    var j;
+    var k;
+    var courses;
+    var controls;
+    courses = [];
+    controls = [];
+    for (i = 0; i < this.results.length; i += 1) {
+      if (courses.indexOf(this.results[i].courseid) === -1) {
+        courses.push(this.results[i].courseid);
+        // not a good way fo finding number of controls: better to get from courses?
+        controls.push(this.results[i].splits.length);
+      }
+    
+    }
+    var pos = [];
+    var p;
+    for (i = 0; i < courses.length; i += 1) {
+      //console.log("Generate positions for course " + courses[i]);
+
+      // start at 1 since 0 is time 0
+      for (k = 1; k < controls[i]; k += 1) {
+        pos.length = 0;
+        for (j = 0; j < this.results.length; j += 1) {
+          if (this.results[j].courseid === courses[i]) {
+            p = {};
+            p.time = this.results[j].splits[k];
+            p.id = j;
+            pos.push(p);
+          }
+        }
+        pos.sort(this.sortTimes);
+        //console.log(pos);
+        for (j = 0; j < pos.length; j+= 1) {
+          // no allowance for ties yet
+          this.results[pos[j].id].legpos[k] = j + 1;
+        }
+      }
+    }
+  },
+
+  sortTimes : function(a, b) {
+    return a.time - b.time;
+  },
+  
 	getResultsByCourseID : function(courseid) {
 		var count = 0;
 		for (var i = 0; i < this.results.length; i += 1) {
@@ -4320,9 +4368,7 @@ Results.prototype = {
 				// loop through all results and add it against the correct id
 				while (j < this.results.length) {
 					if (resultIndex == this.results[j].resultid) {
-						if (this.results[j].addTrack(tracks[i].coords)) {
-							rg2.incrementTracksCount(this.results[j].courseid);
-						}
+						this.results[j].addTrack(tracks[i]);
 						break;
 					}
 					j += 1;
@@ -4418,7 +4464,7 @@ Results.prototype = {
 
 function Result(data, isScoreEvent, colour) {
 	// resultid is the kartat id value
-	this.resultid = parseInt(data.resultid, 10);
+	this.resultid = data.resultid;
 	this.isScoreEvent = isScoreEvent;
 	// GPS track ids are normal resultid + GPS_RESULT_OFFSET
 	if (this.resultid >= rg2.config.GPS_RESULT_OFFSET) {
@@ -4429,7 +4475,7 @@ function Result(data, isScoreEvent, colour) {
 		this.isGPSTrack = false;
 	}
 	this.name = data.name;
-	this.starttime = Math.round(data.starttime);
+	this.starttime = data.starttime;
 	this.time = data.time;
 	// get round iconv problem in API for now
 	if (data.comments !== null) {
@@ -4442,12 +4488,9 @@ function Result(data, isScoreEvent, colour) {
 	if (this.coursename === "") {
 		this.coursename = data.courseid;
 	}
-	this.courseid = parseInt(data.courseid, 10);
-	this.splits = data.splits.split(";");
-	// force to integers to avoid doing it every time we read it
-	for (var i = 0; i < this.splits.length; i += 1) {
-		this.splits[i] = Math.round(this.splits[i]);
-	}
+	this.courseid = data.courseid;
+	
+	this.splits = data.splits;
 	// insert a 0 split at the start to make life much easier elsewhere
 	this.splits.splice(0, 0, 0);
 
@@ -4459,8 +4502,7 @@ function Result(data, isScoreEvent, colour) {
 
 	// calculated cumulative distance in pixels
 	this.cumulativeDistance = [];
-	// set true if track includes all expected controls in correct order
-	// or is a GPS track
+	// set true if track includes all expected controls in correct order or is a GPS track
 	this.hasValidTrack = false;
 	this.displayTrack = false;
 	this.trackColour = colour;
@@ -4479,13 +4521,12 @@ function Result(data, isScoreEvent, colour) {
 		this.splits = rg2.getSplitsForID(this.resultid - rg2.config.GPS_RESULT_OFFSET);
 
 	}
-	if (data.gpscoords.length > 0) {
-		if (this.addTrack(data.gpscoords)) {
-			rg2.incrementTracksCount(this.courseid);
-		}
+  this.legpos = [];
+	if (data.gpsx.length > 0) {
+     this.addTrack(data);
 	}
 
-}
+  }
 
 Result.prototype = {
 	Constructor : Result,
@@ -4500,6 +4541,23 @@ Result.prototype = {
 		if (this.hasValidTrack) {
 			this.displayTrack = false;
 		}
+	},
+	
+	addTrack: function(data) {
+    // copy arrays but ignore first value: that's just how it needs to work
+    this.trackx = data.gpsx;
+    this.tracky = data.gpsy;
+    this.trackx.splice(0,1);
+    this.tracky.splice(0,1);
+    var trackOK;
+    if (this.isGPSTrack) {
+      trackOK = this.expandGPSTrack();
+    } else {
+      trackOK = this.expandNormalTrack();
+    }
+    if (trackOK) {
+      rg2.incrementTracksCount(this.courseid);
+    }
 	},
 
 	drawTrack : function(showThreeSeconds) {
@@ -4538,28 +4596,6 @@ Result.prototype = {
 			}
 			rg2.ctx.stroke();
 		}
-	},
-
-	addTrack : function(trackcoords, getFullCourse) {
-		// gets passed in coords
-		// coord sets are separated by "N"
-		var temp = trackcoords.split("N");
-		var xy = 0;
-		// ignore first point hack for now
-		var l = temp.length;
-		for (var i = 1; i < l; i += 1) {
-			// coord sets are 2 items in csv format
-			xy = temp[i].split(";");
-			this.trackx.push(parseInt(xy[0], 10));
-			this.tracky.push(-1 * parseInt(xy[1], 10));
-		}
-		var trackOK;
-		if (this.isGPSTrack) {
-			trackOK = this.expandGPSTrack();
-		} else {
-			trackOK = this.expandNormalTrack();
-		}
-		return trackOK;
 	},
 
 	expandNormalTrack : function() {
@@ -4683,6 +4719,7 @@ function Runner(resultid) {
 	this.runnerid = resultid;
 	this.starttime = res.starttime;
 	this.splits = res.splits;
+	this.legpos = res.legpos;
 	this.colour = res.trackColour;
 	// get course details
 	var course = rg2.getCourseDetails(res.courseid);
