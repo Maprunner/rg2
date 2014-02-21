@@ -133,6 +133,7 @@ if (isset($_GET['debug']) || $override) {
         </div>
         <div id="rg2-result-list"></div>
       <div id="rg2-draw">
+          <h3 class="no-top-margin">Draw route</h3>
           <div id="rg2-select-course">
            Select course: <select  id="rg2-course-select"></select>
           </div>     

@@ -258,6 +258,7 @@ html, body {
 /* light green background*/
 .valid {
   background-color: #99ffcc;
+  border-radius: 3px;
 }
 
 .coursemenutable tr, td, th {
@@ -354,7 +355,7 @@ height: 20px;
 #rg2-event-comments {
 	margin-top: 10px;
 	margin-bottom: 10px;
-	width: 100%;
+	width: 95%;
 	height: 50px;
 }
 
@@ -414,6 +415,35 @@ image, canvas {
     -webkit-user-drag: none;
 }
 
-#rg2-manage-subheaders {
-  text-align: center;
+.manage-input {
+  margin-top: 2px;
+  margin-right: 3px;
+}
+
+.manage-label {
+  margin-left: 3px;
+}
+
+.no-top-margin {
+  margin-top: 0px;
+  margin-bottom: 2px;
+}
+
+#rg2-manage-create {
+  padding-right: 5px;
+}
+
+.manage-file-input {
+  margin-top: 4px;
+  margin-bottom: 4px;
+  width: 200px;
+}
+
+.manage-file-input-div {
+  height: 41px;
+}
+
+.manage-file-label {
+  margin-top: 9px;
+  margin-bottom: 9px;
 }
