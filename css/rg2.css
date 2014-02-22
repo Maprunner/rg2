@@ -416,7 +416,7 @@ image, canvas {
 }
 
 .manage-input {
-  margin-top: 2px;
+  margin-top: 3px;
   margin-right: 3px;
 }
 
@@ -461,6 +461,20 @@ image, canvas {
   width: 80px;
 }
 
+
+#manage-edit-options input {
+  width: 220px;
+}
+
+#manage-edit-options .ui-accordion-content {
+  padding: 1em 0.5em;
+}
+
 #rg2-edit-event-comments {
+  width: 95%;
+  height: 70px;
+}
+
+#rg2-event-selected {
   width: 95%;
 }

@@ -228,7 +228,7 @@ var rg2 = ( function() {
       });
 
       $("#rg2-name-select").prop('disabled', true).click(function(event) {
-        drawing.setName(parseInt($("#rg2-name-select").val(), 10));
+        drawing.setName($("#rg2-name-select").val());
       });
 
       $("#rg2-course-select").click(function(event) {
@@ -1114,6 +1114,9 @@ var rg2 = ( function() {
      return $("#chk-show-three-seconds").prop('checked');
     }
 
+    function getEventInfo(id) {
+      return events.getEventInfo(id);  
+    }
     return {
       // functions and variables available elsewhere
       init : init,
@@ -1151,7 +1154,8 @@ var rg2 = ( function() {
       getControlX : getControlX,
       getControlY : getControlY,
       createEventEditDropdown : createEventEditDropdown,
-      showThreeSeconds: showThreeSeconds
+      showThreeSeconds: showThreeSeconds,
+      getEventInfo: getEventInfo
     };
 
   }());

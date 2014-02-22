@@ -66,39 +66,44 @@
   <label for="btn-move-map-and-controls"> Move map and controls together (or right click-drag)</label>
 </div>
 <div id="rg2-manage-edit">
+  <h3 class="no-top-margin">Select event</h3>
+  <div id="rg2-manager-event-select">
+    <select id="rg2-event-selected"></select>
+  </div>
+  <hr class="rg2-hr">
   <div id="manage-edit-options">
-    <h3>Edit event details</h3>
+    <h3 class="no-top-margin">Edit event details</h3>
     <div>
-      <select id="rg2-manager-event-select"></select>
       <div id="rg2-edit-event-name" class="manage-event-edit-div">
-        <label for="rg2-event-name-edit"> Event name:</label>
-        <input class="pushright manage-event-edit-form" id="rg2-event-name-edit" type="text" autofocus>
-      </div>
-      <div id="rg2-edit-club-name" class="manage-event-edit-div">
-        <label for="rg2-club-name-edit">Club name:</label>
-        <input class="pushright manage-event-edit-form" id="rg2-club-name-edit" type="text">
-      </div>
-      <div id="rg2-edit-event-date" class="manage-event-edit-div">
-        <label for="rg2-event-date-edit" class="manage-event-edit-form">Event date:</label>
-        <input class="pushright manage-event-edit-form" id="rg2-event-date-edit" type="text">
-      </div>
-      <div id="rg2-edit-event-level" class="manage-event-edit-div">
-        <label for="rg2-event-level-edit">Event level:</label>
-        <select class="pushright manage-event-edit-form" id="rg2-event-level-edit"></select>
-      </div>
-      <textarea id="rg2-edit-event-comments"></textarea> 
-      <button type="button" class="manage-file-label">Update event details</button>
+      <label for="rg2-event-name-edit">Event:</label>
+      <input class="pushright manage-event-edit-form" id="rg2-event-name-edit" type="text" autofocus>
     </div>
-    <h3>Edit map details</h3>
+    <div id="rg2-edit-club-name" class="manage-event-edit-div">
+      <label for="rg2-club-name-edit">Club:</label>
+      <input class="pushright manage-event-edit-form" id="rg2-club-name-edit" type="text">
+    </div>
+    <div id="rg2-edit-event-date" class="manage-event-edit-div">
+      <label for="rg2-event-date-edit" class="manage-event-edit-form">Date:</label>
+      <input class="pushright manage-event-edit-form" id="rg2-event-date-edit" type="text">
+    </div>
+    <div id="rg2-edit-event-level" class="manage-event-edit-div">
+      <label for="rg2-event-level-edit">Level:</label>
+      <select class="pushright manage-event-edit-form" id="rg2-event-level-edit"></select>
+    </div>
+    <textarea id="rg2-edit-event-comments"></textarea> 
+    <button type="button" class="manage-file-label" id="btn-update-event">Update event details</button>
+    </div>
+    <hr class="rg2-hr">
+    <h3 class="no-top-margin">Delete course</h3>
     <div></div>
-    <h3>Delete course</h3>
-    <div></div>
-    <h3>Delete route</h3>
-    <div></div>
-    <h3>Delete map</h3>
-    <div></div>
-    <h3>Delete event</h3>
-    <div></div> 
+    <hr class="rg2-hr">
+    <h3 class="no-top-margin">Delete route</h3>
+    <div></div>   
+    <hr class="rg2-hr">
+    <h3 class="no-top-margin">Delete event</h3>
+    <div id="manage-delete-event">
+      <button type="button" id="btn-delete-event"?>Delete event</button>
+    </div> 
   </div>
   
 </div>

@@ -132,7 +132,11 @@ Manager.prototype = {
     $("#btn-move-map-and-controls").click(function(evt) {
       self.toggleMoveAll(evt.target.checked);
     });
-               
+     
+    $("#rg2-manager-event-select").click(function(event) {
+        self.setEvent(parseInt($("#rg2-event-selected").val(), 10));
+    });
+                 
     $("#btn-add-event").button().click(function() {
       $("#rg2-add-new-event").dialog({
         title : "Add new event",
@@ -148,21 +152,15 @@ Manager.prototype = {
       });
     });
 
-    // TODO buttons disabled until handling code written
-    $("#btn-edit-event").button().click(function() {
+    
+    $("#btn-update-event").button().click(function() {
       var id = $("#rg2-manager-event-select").val();
     }).button("disable");
 
     $("#btn-delete-event").button().click(function() {
-      var id = $("#rg2-manager-event-select").val();
+      self.confirmDeleteEvent();
     }).button("disable");
-    $("#manage-edit-options").accordion({
-        collapsible : true,
-        heightStyle : "content",
-        select : function(event, ui) {
-          console.log("Option selected: " + ui.item[0].id);
-        }
-      });
+    
     $("#rg2-manage-edit").show();
     $("#rg2-manage-create").show();
     $("#rg2-create-tab").show();
@@ -185,6 +183,29 @@ Manager.prototype = {
     }
   },
 
+  setEvent : function(id) {
+    if (id) {
+      // copy event details to edit-form
+      var event = rg2.getEventInfo(id);
+      $("#rg2-event-name-edit").empty().val(event.name);
+      $("#rg2-club-name-edit").empty().val(event.club);
+      $("#rg2-event-date-edit").empty().val(event.date);
+      $("#rg2-event-level-edit").empty().val(event.type);
+      $("#rg2-edit-event-comments").empty().val(event.comment);
+      $("#btn-delete-event").button("enable");
+      $("#btn-update-event").button("enable");
+    } else {
+      $("#btn-delete-event").button("disable");   
+      $("#btn-update-event").button("disable");
+      $("#rg2-event-name-edit").val("");
+      $("#rg2-club-name-edit").val("");
+      $("#rg2-event-date-edit").val("");
+      $("#rg2-event-level-edit").val("");
+      $("#rg2-edit-event-comments").val("");
+    }
+      
+  }, 
+  
   getCoursesFromResults : function() {
     var i;
     this.resultCourses = [];
@@ -212,6 +233,51 @@ Manager.prototype = {
     }
   },
 
+  confirmDeleteEvent : function() {
+
+    var msg = "<div id='event-delete-dialog'>This event will be permanently deleted. Are you sure?</div>";
+    var me = this;
+    $(msg).dialog({
+      title : "Confirm event delete",
+      modal : true,
+      dialogClass : "no-close",
+      closeOnEscape : false,
+      buttons : [{
+        text : "Delete event",
+        click : function() {
+          me.doDeleteEvent();
+        }
+      }, {
+        text : "Cancel",
+        click : function() {
+          me.doCancelDeleteEvent();
+        }
+      }]
+    });
+  },
+  doCancelDeleteEvent : function() {
+    $("#event-delete-dialog").dialog("destroy");
+  },
+  
+  doDeleteEvent : function() {
+    $("#event-delete-dialog").dialog("destroy");
+    var id = $("#rg2-event-selected").val();
+    var $url = json_url + "?type=deleteevent&id=" + id;
+    $.ajax({
+        data:"",
+        type:"POST",
+        url:$url,
+        dataType:"json",
+        success:function(data, textStatus, jqXHR) {
+          console.log(data.status_msg);
+        },
+        error:function(jqXHR, textStatus, errorThrown) {
+          console.log(textStatus);
+        }
+        
+    });
+  },
+  
   readResultsCSV : function(evt) {
 
     var reader = new FileReader();

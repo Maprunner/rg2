@@ -11,6 +11,10 @@ Events.prototype = {
 		this.events.push(eventObject);
 	},
 
+	getEventInfo : function(id) {
+	  return this.events[this.getEventIDForKartatID(id)];
+	},
+	
 	getKartatEventID : function() {
 		return this.events[this.activeEventID].kartatid;
 	},
@@ -54,11 +58,15 @@ Events.prototype = {
 	},
 
 	createEventEditDropdown : function() {
-		$("#rg2-manager-event-select").empty();
-		var dropdown = document.getElementById("rg2-manager-event-select");
+		$("#rg2-event-selected").empty();
+		var dropdown = document.getElementById("rg2-event-selected");
 		var i;
+		var opt = document.createElement("option");
+    opt.value = null;
+    opt.text = 'No event selected';
+    dropdown.options.add(opt);
 		for (i = 0; i < this.events.length; i += 1) {
-			var opt = document.createElement("option");
+		  opt = document.createElement("option");
 			opt.value = this.events[i].kartatid;
 			opt.text = this.events[i].date + ": " + this.events[i].name;
 			dropdown.options.add(opt);
