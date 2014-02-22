@@ -13,7 +13,7 @@ test
 karma.conf.js
 js/coords.js
 coords.html
-
+coverage
 #################
 ## Eclipse
 #################
