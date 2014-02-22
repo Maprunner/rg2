@@ -87,7 +87,7 @@ Manager.prototype = {
     var self = this;
 
     this.createEventLevelDropdown();
-
+    
     rg2.createEventEditDropdown();
 
     $('#rg2-event-comments').focus(function() {
@@ -132,9 +132,7 @@ Manager.prototype = {
     $("#btn-move-map-and-controls").click(function(evt) {
       self.toggleMoveAll(evt.target.checked);
     });
-    
-    $("#rg2-results-grouping").buttonset();
-        
+               
     $("#btn-add-event").button().click(function() {
       $("#rg2-add-new-event").dialog({
         title : "Add new event",
@@ -158,7 +156,13 @@ Manager.prototype = {
     $("#btn-delete-event").button().click(function() {
       var id = $("#rg2-manager-event-select").val();
     }).button("disable");
-
+    $("#manage-edit-options").accordion({
+        collapsible : true,
+        heightStyle : "content",
+        select : function(event, ui) {
+          console.log("Option selected: " + ui.item[0].id);
+        }
+      });
     $("#rg2-manage-edit").show();
     $("#rg2-manage-create").show();
     $("#rg2-create-tab").show();
@@ -166,7 +170,7 @@ Manager.prototype = {
     $("#rg2-logout-tab").show();
     $("#rg2-manage-login").hide();
     $("#rg2-login-tab").hide();
-    
+    $('#rg2-info-panel').tabs('option', 'active', rg2.config.TAB_CREATE);
   },
 
   doContinue : function() {

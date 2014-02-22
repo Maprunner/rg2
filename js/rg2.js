@@ -70,7 +70,10 @@ var rg2 = ( function() {
       TAB_COURSES : 1,
       TAB_RESULTS : 2,
       TAB_DRAW : 3,
-      TAB_MANAGE : 4,
+      TAB_LOGIN : 4,
+      TAB_CREATE : 5,
+      TAB_EDIT : 6,
+      TAB_LOGOUT : 7,
       DEFAULT_NEW_COMMENT : "Type your comment",
       DEFAULT_EVENT_COMMENT : "Comments (optional)",
       // added to resultid when saving a GPS track
@@ -401,7 +404,7 @@ var rg2 = ( function() {
         $("#rg2-results-tab").hide();
         $("#rg2-courses-tab").hide();
         $("#rg2-events-tab").hide();
-        $rg2infopanel.tabs("option", "active", config.TAB_MANAGE);
+        $rg2infopanel.tabs("option", "active", config.TAB_LOGIN);
       }
      
       canvas.addEventListener('touchstart', handleTouchStart, false);
@@ -534,7 +537,7 @@ var rg2 = ( function() {
           controls.drawControls();
           drawing.drawNewTrack();
         } else {
-          if (active === config.TAB_MANAGE) {
+          if (active === config.TAB_CREATE) {
             manager.drawControls();
           } else {
             courses.drawCourses(config.FULL_INTENSITY);
@@ -724,7 +727,7 @@ var rg2 = ( function() {
           if (drawing.gpsFileLoaded()) {
             drawing.adjustTrack(Math.round(dragStart.x), Math.round(dragStart.y), Math.round(pt.x), Math.round(pt.y), whichButton ,evt.shiftKey, evt.ctrlKey);
           } else {
-            if ($rg2infopanel.tabs("option", "active") === config.TAB_MANAGE) {
+            if ($rg2infopanel.tabs("option", "active") === config.TAB_CREATE) {
               manager.adjustControls(Math.round(dragStart.x), Math.round(dragStart.y), Math.round(pt.x), Math.round(pt.y), whichButton, evt.shiftKey, evt.ctrlKey);
             } else {
               ctx.translate(pt.x - dragStart.x, pt.y - dragStart.y);
@@ -739,14 +742,14 @@ var rg2 = ( function() {
     var handleInputUp = function(evt) {
       var active = $rg2infopanel.tabs("option", "active");
       if (!dragged) {
-        if (active === config.TAB_MANAGE) {
+        if (active === config.TAB_CREATE) {
           manager.mouseUp(Math.round(dragStart.x), Math.round(dragStart.y));
         } else {
           // pass button that was clicked
           drawing.mouseUp(Math.round(dragStart.x), Math.round(dragStart.y), evt.which);
         }
       } else {
-        if (active === config.TAB_MANAGE) {
+        if (active === config.TAB_CREATE) {
           manager.dragEnded();
         } else {
           drawing.dragEnded();
