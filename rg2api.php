@@ -88,29 +88,107 @@ function encode_rg_output($output_str) {
 
 function handlePostRequest($type, $eventid) {
   $data = json_decode(file_get_contents('php://input'));
-  
-  switch ($type) {  
-  case 'addroute':
-    if (lockDatabase() !== FALSE) {
-      addNewRoute($eventid, $data);
-      unlockDatabase();
-    } else {
-      $write["status_msg"] = "File lock error";
-      $write["ok"] = FALSE;
-      header("Content-type: application/json"); 
-      echo json_encode($write);
-    }
-    break;  
+
+  if (lockDatabase() !== FALSE) {
+
+    switch ($type) {  
+    case 'addroute':
+      $write = addNewRoute($eventid, $data);
+      break; 
+     
+    case 'editevent':
+      $write = editEvent($eventid, $data);
+      break; 
+
+    case 'deleteevent':
+      $write = deleteEvent($eventid);
+      break; 
       
-  case 'login':
-    logIn($data);
-    break;  
-  default:
-    die("Request not recognised: ".$type);
-    break;
-  }  
+    case 'login':
+      $write = logIn($data);
+      break;  
+    default:
+      $write["status_msg"] = "Request not recognised: ".$type;
+      $write["ok"] = FALSE;
+      break;
+    } 
+    unlockDatabase();
+  } else {
+    $write["status_msg"] = "File lock error";
+    $write["ok"] = FALSE;
+  } 
+ 
+  header("Content-type: application/json"); 
+  echo json_encode($write);
 }
 
+function editEvent($eventid, $newdata) {
+  $write["status_msg"] = "";
+  $updatedfile = array();
+  $oldfile = file(KARTAT_DIRECTORY."kisat.txt");
+  foreach ($oldfile as $row) {
+    $data = explode("|", $row);
+    if ($data[0] == $eventid) {
+      rg2log($eventid);
+      $data[3] = $newdata->name;
+      $data[4] = $newdata->eventdate;
+      $data[5] = $newdata->club;
+      $data[6] = $newdata->type;
+      $data[7] = $newdata->comments;
+      $row = "";
+      // reconstruct |-separated row
+      for ($i = 0; $i < count($data); $i++) {
+        if ($i > 0) {
+          $row .= "|";
+        }
+        $row .= $data[$i];  
+      }
+      $row .= PHP_EOL;
+      rg2log($row);
+    }
+    $updatedfile[] = $row;
+  }
+  $status = file_put_contents(KARTAT_DIRECTORY."kisat.txt", $updatedfile);   
+  
+  if (!$status) {
+    $write["status_msg"] .= " Save error for kisat.txt.";
+  }
+  if ($write["status_msg"] == "") {
+    $write["ok"] = TRUE;
+    $write["status_msg"] = "Event detail updated";
+    rg2log("Event updated|".$eventid);
+  } else {
+    $write["ok"] = FALSE;    
+  }
+  
+  return($write);
+}
+
+function deleteEvent($eventid) {
+  $write["status_msg"] = "";
+  $updatedfile = array();
+  $oldfile = file(KARTAT_DIRECTORY."kisat.txt");
+  foreach ($oldfile as $row) {
+    $data = explode("|", $row);
+    if ($data[0] != $eventid) {
+      $updatedfile[] = $row;
+    }
+  }
+  $status = file_put_contents(KARTAT_DIRECTORY."kisat.txt", $updatedfile);   
+  
+  if (!$status) {
+    $write["status_msg"] .= " Save error for kisat.txt.";
+  }
+  if ($write["status_msg"] == "") {
+    $write["ok"] = TRUE;
+    $write["status_msg"] = "Event deleted";
+    rg2log("Event deleted|".$eventid);
+  } else {
+    $write["ok"] = FALSE;    
+  }
+  
+  return($write);
+}
 
 function logIn ($data) {
 
@@ -126,8 +204,8 @@ function logIn ($data) {
     header('HTTP/1.1 401 Unauthorized', TRUE, 401);
     $ok = FALSE;    
   }
-  header("Content-type: application/json"); 
-  echo json_encode($ok);
+  $write["ok"] = $ok;
+  return $write;
 }
 
 function addNewRoute($eventid, $data) {
@@ -252,8 +330,8 @@ function addNewRoute($eventid, $data) {
     $write["ok"] = FALSE;    
   }
   
-  header("Content-type: application/json"); 
-  echo json_encode($write);
+  return $write;
+
 }
 
 function lockDatabase() {
