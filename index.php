@@ -120,9 +120,6 @@ if (isset($_GET['debug']) || $override) {
           <li id="rg2-edit-tab">
           	<a href="#rg2-manage-edit">Edit Event</a>
           </li>
-          <li id="rg2-logout-tab">
-          	<a href="#rg2-manage-logout">Logout</a>
-          </li>
           <?php } ?>
    			</ul>
         </div>

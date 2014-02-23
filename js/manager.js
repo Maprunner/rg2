@@ -156,19 +156,21 @@ Manager.prototype = {
       self.confirmUpdateEvent();
     }).button("disable");
     
-    $("#btn-delete-course").button().button("disable");
+    $("#btn-delete-course").button().click(function() {
+      self.confirmDeleteCourse();
+    }).button("disable");
     
-    $("#btn-delete-route").button().button("disable");
+    $("#btn-delete-route").button().click(function() {
+      self.confirmDeleteRoute();
+    }).button("disable");
     
     $("#btn-delete-event").button().click(function() {
       self.confirmDeleteEvent();
     }).button("disable");
     
-    $("#rg2-manage-edit").show();
     $("#rg2-manage-create").show();
     $("#rg2-create-tab").show();
     $("#rg2-edit-tab").show();
-    $("#rg2-logout-tab").show();
     $("#rg2-manage-login").hide();
     $("#rg2-login-tab").hide();
     $('#rg2-info-panel').tabs('option', 'active', rg2.config.TAB_CREATE);
@@ -246,8 +248,8 @@ Manager.prototype = {
     var opt;
     for ( i = 0; i < routes.length; i += 1) {
       opt = document.createElement("option");
-      opt.value = routes[i].id;
-      opt.text = routes[i].id + ": " + routes[i].name + " on " + routes[i].coursename;
+      opt.value = routes[i].resultid;
+      opt.text = routes[i].resultid + ": " + routes[i].name + " on " + routes[i].coursename;
       dropdown.options.add(opt);
     }
   },
@@ -379,6 +381,96 @@ Manager.prototype = {
         }
         
     });
+  },
+  
+  confirmDeleteCourse : function() {
+    var msg = "<div id='course-delete-dialog'>This course will be permanently deleted. Are you sure?</div>";
+    var me = this;
+    $(msg).dialog({
+      title : "Confirm course delete",
+      modal : true,
+      dialogClass : "no-close",
+      closeOnEscape : false,
+      buttons : [{
+        text : "Delete course",
+        click : function() {
+          me.doDeleteCourse();
+        }
+      }, {
+        text : "Cancel",
+        click : function() {
+          me.doCancelDeleteCourse();
+        }
+      }]
+    });
+  },
+  
+  doCancelDeleteCourse : function() {
+    $("#course-delete-dialog").dialog("destroy");
+  },
+  
+  doDeleteCourse : function() {
+    $("#course-delete-dialog").dialog("destroy");
+    var id = $("#rg2-event-selected").val();
+    var routeid = $("#rg2-route-selected").val();
+    var $url = json_url + "?type=deletecourse&id=" + id + "&routeid=" + routeid;
+    /*$.ajax({
+      data:"",
+        type:"POST",
+        url:$url,
+        dataType:"json",
+        success:function(data, textStatus, jqXHR) {
+          console.log(data.status_msg);
+        },
+        error:function(jqXHR, textStatus, errorThrown) {
+          console.log(textStatus);
+        } 
+    }); */
+  },
+  
+  confirmDeleteRoute : function() {
+    var msg = "<div id='route-delete-dialog'>This route will be permanently deleted. Are you sure?</div>";
+    var me = this;
+    $(msg).dialog({
+      title : "Confirm route delete",
+      modal : true,
+      dialogClass : "no-close",
+      closeOnEscape : false,
+      buttons : [{
+        text : "Delete route",
+        click : function() {
+          me.doDeleteRoute();
+        }
+      }, {
+        text : "Cancel",
+        click : function() {
+          me.doCancelDeleteRoute();
+        }
+      }]
+    });
+  },
+  
+   doCancelDeleteRoute : function() {
+    $("#route-delete-dialog").dialog("destroy");
+  },
+  
+  doDeleteRoute : function() {
+    $("#route-delete-dialog").dialog("destroy");
+    var id = $("#rg2-event-selected").val();
+    var routeid = $("#rg2-route-selected").val();
+    var $url = json_url + "?type=deleteroute&id=" + id + "&routeid=" + routeid;
+    $.ajax({
+      data:"",
+        type:"POST",
+        url:$url,
+        dataType:"json",
+        success:function(data, textStatus, jqXHR) {
+          console.log(data.status_msg);
+        },
+        error:function(jqXHR, textStatus, errorThrown) {
+          console.log(textStatus);
+        } 
+    }); 
   },
   
   confirmDeleteEvent : function() {
