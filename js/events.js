@@ -141,6 +141,7 @@ function Event(data) {
 		this.worldFile.E = data.E;
 		this.worldFile.F = data.F;
 	}
+	this.rawtype = data.type;
 	switch(data.type) {
 		case "I":
 			this.type = "International";

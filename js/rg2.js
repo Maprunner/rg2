@@ -1117,6 +1117,11 @@ var rg2 = ( function() {
     function getEventInfo(id) {
       return events.getEventInfo(id);  
     }
+    
+    function getCoursesForEvent(id) {
+      return courses.getCoursesForEvent(id);  
+    }
+    
     return {
       // functions and variables available elsewhere
       init : init,
@@ -1155,7 +1160,8 @@ var rg2 = ( function() {
       getControlY : getControlY,
       createEventEditDropdown : createEventEditDropdown,
       showThreeSeconds: showThreeSeconds,
-      getEventInfo: getEventInfo
+      getEventInfo: getEventInfo,
+      getCoursesForEvent: getCoursesForEvent
     };
 
   }());

@@ -48,10 +48,10 @@
   </div>
   <textarea id="rg2-event-comments"></textarea>
   <hr class="rg2-hr">
-  <h3 class="no-top-margin">Upload files</h3>
+  <h3 class="no-top-margin">Event files</h3>
   <div id="rg2-select-map-file" class="manage-file-input-div">
     <label for="rg2-load-map-file" class="manage-file-label">Map file</label>
-    <input type='file' accept='image/*' id='rg2-load-map-file' class="pushright manage-file-input" />
+    <input type='file' accept='.jpg' id='rg2-load-map-file' class="pushright manage-file-input" />
   </div>
   <div id="rg2-select-results-file" class="manage-file-input-div">
     <label for="rg2-load-results-file" class="manage-file-label">Results file</label>
@@ -95,10 +95,16 @@
     </div>
     <hr class="rg2-hr">
     <h3 class="no-top-margin">Delete course</h3>
-    <div></div>
+    <div>
+      <select id="rg2-course-selected"></select>
+      <button type="button" class="manage-file-label" id="btn-delete-course">Delete</button>
+    </div>
     <hr class="rg2-hr">
     <h3 class="no-top-margin">Delete route</h3>
-    <div></div>   
+    <div>
+      <select id="rg2-route-selected"></select>
+      <button type="button" class="manage-file-label" id="btn-delete-route">Delete</button>
+    </div>   
     <hr class="rg2-hr">
     <h3 class="no-top-margin">Delete event</h3>
     <div id="manage-delete-event">

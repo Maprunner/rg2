@@ -29,7 +29,7 @@ function Manager() {
   this.handleY = null;
   this.HANDLE_DOT_RADIUS = 10;
   this.handleColor = '#ff0000';
-
+  $("#btn-login").button();
   var self = this;
 
   $("#rg2-manager-login-form").submit(function(event) {
@@ -86,9 +86,14 @@ Manager.prototype = {
     this.loggedIn = true;
     var self = this;
 
-    this.createEventLevelDropdown();
+    this.createEventLevelDropdown("rg2-event-level"); 
+    $("#rg2-event-level").click(function(event) {
+      self.eventLevel = $("#rg2-event-level").val();
+      $("#rg2-select-event-level").addClass('valid');
+    });
     
     rg2.createEventEditDropdown();
+    
 
     $('#rg2-event-comments').focus(function() {
       // Clear comment box if user focuses on it and it still contains default text
@@ -99,12 +104,18 @@ Manager.prototype = {
     });
 
     $("#rg2-event-date").datepicker({
-      dateFormat : 'dd/mm/yy',
+      dateFormat : 'yy-mm-dd',
       onSelect : function(date) {
         self.setDate(date);
       }
     });
-
+    
+    this.createEventLevelDropdown("rg2-event-level-edit"); 
+    
+    $("#rg2-event-date-edit").datepicker({
+      dateFormat : 'yy-mm-dd'
+    });
+    
     $("#rg2-event-name").on("change", function(evt) {
       self.setEventName(evt);
     });
@@ -152,11 +163,15 @@ Manager.prototype = {
       });
     });
 
-    
+        
     $("#btn-update-event").button().click(function() {
-      var id = $("#rg2-manager-event-select").val();
+      self.confirmUpdateEvent();
     }).button("disable");
-
+    
+    $("#btn-delete-course").button().button("disable");
+    
+    $("#btn-delete-route").button().button("disable");
+    
     $("#btn-delete-event").button().click(function() {
       self.confirmDeleteEvent();
     }).button("disable");
@@ -186,17 +201,24 @@ Manager.prototype = {
   setEvent : function(id) {
     if (id) {
       // copy event details to edit-form
+      //rg2.loadEvent(id);
       var event = rg2.getEventInfo(id);
       $("#rg2-event-name-edit").empty().val(event.name);
       $("#rg2-club-name-edit").empty().val(event.club);
       $("#rg2-event-date-edit").empty().val(event.date);
-      $("#rg2-event-level-edit").empty().val(event.type);
+      $("#rg2-event-level-edit").val(event.rawtype);
       $("#rg2-edit-event-comments").empty().val(event.comment);
       $("#btn-delete-event").button("enable");
       $("#btn-update-event").button("enable");
+      $("#btn-delete-route").button("enable");
+      $("#btn-delete-course").button("enable");
+      //this.createCourseDeleteDropdown(id);
+      //rg2.createRouteDeleteDropdown(id);
     } else {
       $("#btn-delete-event").button("disable");   
       $("#btn-update-event").button("disable");
+      $("#btn-delete-route").button("disable");
+      $("#btn-delete-course").button("disable");
       $("#rg2-event-name-edit").val("");
       $("#rg2-club-name-edit").val("");
       $("#rg2-event-date-edit").val("");
@@ -205,6 +227,20 @@ Manager.prototype = {
     }
       
   }, 
+  
+  createCourseDeleteDropdown : function(id) {
+    $("#rg2-course-selected").empty();
+    var dropdown = document.getElementById("rg2-course-selected");
+    var courses = rg2.getCoursesForEvent(id);
+    var i;
+    var opt;
+    for ( i = 0; i < courses.length; i += 1) {
+      opt = document.createElement("option");
+      opt.value = courses[i].id;
+      opt.text = courses[i].name;
+      dropdown.options.add(opt);
+    }
+  },  
   
   getCoursesFromResults : function() {
     var i;
@@ -233,6 +269,59 @@ Manager.prototype = {
     }
   },
 
+  confirmUpdateEvent : function() {
+
+    var msg = "<div id='event-update-dialog'>Are you sure you want to update this event?</div>";
+    var me = this;
+    $(msg).dialog({
+      title : "Confirm event update",
+      modal : true,
+      dialogClass : "no-close",
+      closeOnEscape : false,
+      buttons : [{
+        text : "Update event",
+        click : function() {
+          me.doUpdateEvent();
+        }
+      }, {
+        text : "Cancel",
+        click : function() {
+          me.doCancelUpdateEvent();
+        }
+      }]
+    });
+  },
+  
+  doCancelUpdateEvent : function() {
+    $("#event-update-dialog").dialog("destroy");
+  },
+  
+  doUpdateEvent : function() {
+    $("#event-update-dialog").dialog("destroy");
+    var id = $("#rg2-event-selected").val();
+    var $url = json_url + "?type=editevent&id=" + id;
+    var data = {};
+    data.comments = $("#rg2-edit-event-comments").val();
+    data.name = $("#rg2-event-name-edit").val();
+    data.type = $("#rg2-event-level-edit").val();
+    data.eventdate = $("#rg2-event-date-edit").val();
+    data.club = $("#rg2-club-name-edit").val();
+    var json = JSON.stringify(data);
+    $.ajax({
+        data:json,
+        type:"POST",
+        url:$url,
+        dataType:"json",
+        success:function(data, textStatus, jqXHR) {
+          console.log(data.status_msg);
+        },
+        error:function(jqXHR, textStatus, errorThrown) {
+          console.log(textStatus);
+        }
+        
+    });
+  },
+  
   confirmDeleteEvent : function() {
 
     var msg = "<div id='event-delete-dialog'>This event will be permanently deleted. Are you sure?</div>";
@@ -582,9 +671,9 @@ Manager.prototype = {
     }
   },
 
-  createEventLevelDropdown : function() {
-    $("#rg2-event-level").empty();
-    var dropdown = document.getElementById("rg2-event-level");
+  createEventLevelDropdown : function(id) {
+    $("#" + id).empty();
+    var dropdown = document.getElementById(id);
     var types = ["Local", "Regional", "National", "Training", "International"];
     var abbrev = ["L", "R", "N", "T", "I"];
     var opt;
@@ -595,11 +684,6 @@ Manager.prototype = {
       opt.text = types[i];
       dropdown.options.add(opt);
     }
-    var self = this;
-    $("#rg2-event-level").click(function(event) {
-      self.eventLevel = $("#rg2-event-level").val();
-      $("#rg2-select-event-level").addClass('valid');
-    });
 
   },
 
