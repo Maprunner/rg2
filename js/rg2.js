@@ -404,7 +404,7 @@ var rg2 = ( function() {
         $("#rg2-results-tab").hide();
         $("#rg2-courses-tab").hide();
         $("#rg2-events-tab").hide();
-        $rg2infopanel.tabs("option", "active", config.TAB_LOGIN);
+        $rg2infopanel.tabs("option", "active", config.TAB_LOGIN).tabs("refresh");
       }
      
       canvas.addEventListener('touchstart', handleTouchStart, false);
@@ -438,6 +438,7 @@ var rg2 = ( function() {
         cache : false
       }).done(function(json) {
         console.log("Events: " + json.data.length);
+        var i = 0;
         $.each(json.data, function() {
           events.addEvent(new Event(this));
         });
@@ -856,18 +857,22 @@ var rg2 = ( function() {
         createResultMenu();
         animation.updateAnimationDetails();
         $('body').css('cursor', 'auto');
-        $rg2infopanel.tabs("enable", config.TAB_COURSES);
-        $rg2infopanel.tabs("enable", config.TAB_RESULTS);
-        $rg2infopanel.tabs("enable", config.TAB_DRAW);
-        // open courses tab for new event: else stay on draw tab
-        var active = $rg2infopanel.tabs("option", "active");
-        // don't change tab if we have come from DRAW since it means
-        // we have just relaoded following a save
-        if (active !== config.TAB_DRAW) {
-          $rg2infopanel.tabs("option", "active", config.TAB_COURSES);
+        if (managing) {
+          manager.eventFinishedLoading();
+        } else {
+          $rg2infopanel.tabs("enable", config.TAB_COURSES);
+          $rg2infopanel.tabs("enable", config.TAB_RESULTS);
+          $rg2infopanel.tabs("enable", config.TAB_DRAW);
+          // open courses tab for new event: else stay on draw tab
+          var active = $rg2infopanel.tabs("option", "active");
+          // don't change tab if we have come from DRAW since it means
+          // we have just relaoded following a save
+          if (active !== config.TAB_DRAW) {
+            $rg2infopanel.tabs("option", "active", config.TAB_COURSES);
+          }
+          $rg2infopanel.tabs("refresh");
+          $("#btn-show-splits").show();
         }
-        $rg2infopanel.tabs("refresh");
-        $("#btn-show-splits").show();
         redraw(false);
       }).fail(function(jqxhr, textStatus, error) {
         $('body').css('cursor', 'auto');
@@ -1115,13 +1120,17 @@ var rg2 = ( function() {
     }
 
     function getEventInfo(id) {
-      return events.getEventInfo(id);  
+      return events.getEventInfo(id);
     }
     
     function getCoursesForEvent(id) {
-      return courses.getCoursesForEvent(id);  
+      return courses.getCoursesForEvent();
     }
-    
+
+    function getRoutesForEvent() {
+      return results.getRoutesForEvent();
+    }
+        
     return {
       // functions and variables available elsewhere
       init : init,
@@ -1161,7 +1170,8 @@ var rg2 = ( function() {
       createEventEditDropdown : createEventEditDropdown,
       showThreeSeconds: showThreeSeconds,
       getEventInfo: getEventInfo,
-      getCoursesForEvent: getCoursesForEvent
+      getCoursesForEvent: getCoursesForEvent,
+      getRoutesForEvent: getRoutesForEvent
     };
 
   }());

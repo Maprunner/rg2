@@ -86,7 +86,7 @@ Manager.prototype = {
     this.loggedIn = true;
     var self = this;
 
-    this.createEventLevelDropdown("rg2-event-level"); 
+    this.createEventLevelDropdown("rg2-event-level");
     $("#rg2-event-level").click(function(event) {
       self.eventLevel = $("#rg2-event-level").val();
       $("#rg2-select-event-level").addClass('valid');
@@ -110,7 +110,7 @@ Manager.prototype = {
       }
     });
     
-    this.createEventLevelDropdown("rg2-event-level-edit"); 
+    this.createEventLevelDropdown("rg2-event-level-edit");
     
     $("#rg2-event-date-edit").datepicker({
       dateFormat : 'yy-mm-dd'
@@ -179,7 +179,7 @@ Manager.prototype = {
     $("#rg2-manage-edit").show();
     $("#rg2-manage-create").show();
     $("#rg2-create-tab").show();
-    $("#rg2-edit-tab").show();  
+    $("#rg2-edit-tab").show();
     $("#rg2-logout-tab").show();
     $("#rg2-manage-login").hide();
     $("#rg2-login-tab").hide();
@@ -198,24 +198,14 @@ Manager.prototype = {
     }
   },
 
-  setEvent : function(id) {
-    if (id) {
-      // copy event details to edit-form
-      //rg2.loadEvent(id);
-      var event = rg2.getEventInfo(id);
-      $("#rg2-event-name-edit").empty().val(event.name);
-      $("#rg2-club-name-edit").empty().val(event.club);
-      $("#rg2-event-date-edit").empty().val(event.date);
-      $("#rg2-event-level-edit").val(event.rawtype);
-      $("#rg2-edit-event-comments").empty().val(event.comment);
-      $("#btn-delete-event").button("enable");
-      $("#btn-update-event").button("enable");
-      $("#btn-delete-route").button("enable");
-      $("#btn-delete-course").button("enable");
-      //this.createCourseDeleteDropdown(id);
-      //rg2.createRouteDeleteDropdown(id);
+  setEvent : function(kartatid) {
+    if (kartatid) {
+      // load details for this event
+      var event = rg2.getEventInfo(kartatid);
+      rg2.loadEvent(event.id);
     } else {
-      $("#btn-delete-event").button("disable");   
+      // no event selected so disable everything
+      $("#btn-delete-event").button("disable");
       $("#btn-update-event").button("disable");
       $("#btn-delete-route").button("disable");
       $("#btn-delete-course").button("disable");
@@ -226,7 +216,25 @@ Manager.prototype = {
       $("#rg2-edit-event-comments").val("");
     }
       
-  }, 
+  },
+  
+  eventFinishedLoading : function () {
+    // copy event details to edit-form
+    // you tell me why this needs parseInt but the same call above doesn't
+    var kartatid = parseInt($("#rg2-event-selected").val(), 10);
+    var event = rg2.getEventInfo(kartatid);
+    $("#rg2-event-name-edit").empty().val(event.name);
+    $("#rg2-club-name-edit").empty().val(event.club);
+    $("#rg2-event-date-edit").empty().val(event.date);
+    $("#rg2-event-level-edit").val(event.rawtype);
+    $("#rg2-edit-event-comments").empty().val(event.comment);
+    $("#btn-delete-event").button("enable");
+    $("#btn-update-event").button("enable");
+    $("#btn-delete-route").button("enable");
+    $("#btn-delete-course").button("enable");
+    this.createCourseDeleteDropdown(event.id);
+    this.createRouteDeleteDropdown(event.id);
+  },
   
   createCourseDeleteDropdown : function(id) {
     $("#rg2-course-selected").empty();
@@ -240,7 +248,21 @@ Manager.prototype = {
       opt.text = courses[i].name;
       dropdown.options.add(opt);
     }
-  },  
+  },
+
+  createRouteDeleteDropdown : function(id) {
+    $("#rg2-route-selected").empty();
+    var dropdown = document.getElementById("rg2-route-selected");
+    var routes = rg2.getRoutesForEvent(id);
+    var i;
+    var opt;
+    for ( i = 0; i < routes.length; i += 1) {
+      opt = document.createElement("option");
+      opt.value = routes[i].id;
+      opt.text = routes[i].id + ": " + routes[i].name + " on " + routes[i].coursename;
+      dropdown.options.add(opt);
+    }
+  },
   
   getCoursesFromResults : function() {
     var i;
@@ -674,8 +696,8 @@ Manager.prototype = {
   createEventLevelDropdown : function(id) {
     $("#" + id).empty();
     var dropdown = document.getElementById(id);
-    var types = ["Local", "Regional", "National", "Training", "International"];
-    var abbrev = ["L", "R", "N", "T", "I"];
+    var types = ["Training", "Local", "Regional", "National", "International"];
+    var abbrev = ["T", "L", "R", "N", "I"];
     var opt;
     var i;
     for ( i = 0; i < types.length; i += 1) {
