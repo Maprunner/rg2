@@ -173,7 +173,6 @@ var rg2 = ( function() {
       $("#btn-real-time").removeClass('active');
 
       map = new Image();
-      mapLoadingText = "Select an event";
       mapIntensity = config.FULL_INTENSITY;
       overprintWidth = config.DEFAULT_OVERPRINT_LINE_THICKNESS;
       routeWidth = config.DEFAULT_ROUTE_THICKNESS;
@@ -405,6 +404,10 @@ var rg2 = ( function() {
         $("#rg2-courses-tab").hide();
         $("#rg2-events-tab").hide();
         $rg2infopanel.tabs("option", "active", config.TAB_LOGIN);
+        mapLoadingText = "";
+      } else {     
+        mapLoadingText = "Select an event";
+        
       }
      
       canvas.addEventListener('touchstart', handleTouchStart, false);

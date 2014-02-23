@@ -148,22 +148,10 @@ Manager.prototype = {
         self.setEvent(parseInt($("#rg2-event-selected").val(), 10));
     });
                  
-    $("#btn-add-event").button().click(function() {
-      $("#rg2-add-new-event").dialog({
-        title : "Add new event",
-        width : 'auto',
-        buttons : {
-          Continue : function() {
-            self.doContinue();
-          },
-          Cancel : function() {
-            $(this).dialog('close');
-          }
-        }
-      });
-    });
-
-        
+    $("#btn-create-event").button().click(function() {
+      self.confirmCreateEvent();
+    }).button("disable");  
+    
     $("#btn-update-event").button().click(function() {
       self.confirmUpdateEvent();
     }).button("disable");
@@ -269,6 +257,55 @@ Manager.prototype = {
     }
   },
 
+  confirmCreateEvent : function() {
+
+    var msg = "<div id='event-create-dialog'>Are you sure you want to create this event?</div>";
+    var me = this;
+    $(msg).dialog({
+      title : "Confirm event creation",
+      modal : true,
+      dialogClass : "no-close",
+      closeOnEscape : false,
+      buttons : [{
+        text : "Create event",
+        click : function() {
+          me.doCreateEvent();
+        }
+      }, {
+        text : "Cancel",
+        click : function() {
+          me.doCancelCreateEvent();
+        }
+      }]
+    });
+  },
+  
+  doCancelUpdateEvent : function() {
+    $("#event-create-dialog").dialog("destroy");
+  },
+  
+  doCreateEvent : function() {
+    $("#event-create-dialog").dialog("destroy");
+    var id = $("#rg2-event-selected").val();
+    var $url = json_url + "?type=createevent";
+    var data = {};
+
+    var json = JSON.stringify(data);
+    /* $.ajax({
+        data:json,
+        type:"POST",
+        url:$url,
+        dataType:"json",
+        success:function(data, textStatus, jqXHR) {
+          console.log(data.status_msg);
+        },
+        error:function(jqXHR, textStatus, errorThrown) {
+          console.log(textStatus);
+        }
+        
+    }); */
+  },
+  
   confirmUpdateEvent : function() {
 
     var msg = "<div id='event-update-dialog'>Are you sure you want to update this event?</div>";

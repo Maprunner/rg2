@@ -418,6 +418,7 @@ image, canvas {
 .manage-input {
   margin-top: 3px;
   margin-right: 3px;
+  width: 200px;
 }
 
 .manage-label {
@@ -450,8 +451,7 @@ image, canvas {
 
 .manage-event-edit-div {
   height: 30px;
-  margin-top: 7px;
-}
+  }
 
 .manage-event-edit-div label, .manage-event-edit-div input {
   display: inline-block;
