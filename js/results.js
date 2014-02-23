@@ -84,7 +84,7 @@ Results.prototype = {
       if (this.results[i].hasValidTrack) {
         route = {};
         route.id = i;
-        route.resultid = this.results[i].resultid; 
+        route.resultid = this.results[i].resultid;
         route.name = this.results[i].name;
         route.time = this.results[i].time;
         route.coursename = this.results[i].coursename;

@@ -107,6 +107,11 @@ function handlePostRequest($type, $eventid) {
     case 'deleteroute':
       $write = deleteRoute($eventid);
       break; 
+
+
+    case 'deletecourse':
+      $write = deleteCourse($eventid);
+      break; 
       
     case 'login':
       $write = logIn($data);
@@ -181,12 +186,175 @@ function deleteEvent($eventid) {
   $status = file_put_contents(KARTAT_DIRECTORY."kisat.txt", $updatedfile);   
   
   if (!$status) {
-    $write["status_msg"] .= " Save error for kisat.txt.";
+    $write["status_msg"] .= " Save error for kisat.";
   }
+  
+  // delete all associated files but don't worry about errors
+  @unlink(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt");
+  @unlink(KARTAT_DIRECTORY."kommentit_".$eventid.".txt");
+  @unlink(KARTAT_DIRECTORY."merkinnat_".$eventid.".txt");
+  @unlink(KARTAT_DIRECTORY."radat_".$eventid.".txt");
+  @unlink(KARTAT_DIRECTORY."ratapisteet_".$eventid.".txt");
+  @unlink(KARTAT_DIRECTORY."sarjat_".$eventid.".txt");
+  @unlink(KARTAT_DIRECTORY."sarjojenkoodit_".$eventid.".txt");
+              
   if ($write["status_msg"] == "") {
     $write["ok"] = TRUE;
     $write["status_msg"] = "Event deleted";
     rg2log("Event deleted|".$eventid);
+  } else {
+    $write["ok"] = FALSE;    
+  }
+  
+  return($write);
+}
+
+function deleteCourse($eventid) {
+  $write["status_msg"] = "";
+  if (isset($_GET['courseid'])) {
+    $courseid = $_GET['courseid'];
+    // delete comments
+    $filename = KARTAT_DIRECTORY."kommentit_".$eventid.".txt";
+    $oldfile = file($filename);
+    $updatedfile = array();
+    $deleted = FALSE;
+    foreach ($oldfile as $row) {
+      $data = explode("|", $row);
+      if ($data[0] == $courseid) {
+        $deleted = TRUE;
+      } else {
+        $updatedfile[] = $row;
+      }
+    }
+    $status = file_put_contents($filename, $updatedfile);
+    
+    if (!$status) {
+      $write["status_msg"] .= "Save error for kommentit. ";
+    }
+
+    // delete result records
+    $filename = KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt";
+    $oldfile = file($filename);
+    $updatedfile = array();
+    $deleted = FALSE;
+    foreach ($oldfile as $row) {
+      $data = explode("|", $row);
+      $deleted = FALSE;
+      if ($data[1] == $courseid) {
+        $deleted = TRUE;                    
+      } else {
+        $updatedfile[] = $row;
+      }
+    }
+    $status = file_put_contents($filename, $updatedfile);
+    
+    if (!$status) {
+      $write["status_msg"] .= "Save error for kilpailijat. ";
+    }
+   
+    // delete route
+    $deleted = FALSE;
+    $filename = KARTAT_DIRECTORY."merkinnat_".$eventid.".txt";
+    $oldfile = file($filename);
+    $updatedfile = array();
+    foreach ($oldfile as $row) {
+      $data = explode("|", $row);
+      if ($data[0] == $courseid) {
+        $deleted = TRUE;
+      } else {
+        $updatedfile[] = $row;
+      }
+    }
+    $status = file_put_contents($filename, $updatedfile);   
+  
+    if (!$status) {
+      $write["status_msg"] .= " Save error for merkinnat. ";
+    }
+    
+    // delete course template
+    $filename = KARTAT_DIRECTORY."radat_".$eventid.".txt";
+    $oldfile = file($filename);
+    $updatedfile = array();
+    $deleted = FALSE;
+    foreach ($oldfile as $row) {
+      $data = explode("|", $row);
+      if ($data[0] == $courseid) {
+        $deleted = TRUE;
+      } else {
+        $updatedfile[] = $row;
+      }
+    }
+    $status = file_put_contents($filename, $updatedfile);
+    
+    if (!$status) {
+      $write["status_msg"] .= "Save error for radat. ";
+    }    
+    
+    // delete course template
+    $filename = KARTAT_DIRECTORY."ratapisteet_".$eventid.".txt";
+    $oldfile = file($filename);
+    $updatedfile = array();
+    $deleted = FALSE;
+    foreach ($oldfile as $row) {
+      $data = explode("|", $row);
+      if ($data[0] == $courseid) {
+        $deleted = TRUE;
+      } else {
+        $updatedfile[] = $row;
+      }
+    }
+    $status = file_put_contents($filename, $updatedfile);
+    
+    if (!$status) {
+      $write["status_msg"] .= "Save error for ratapisteet. ";
+    }    
+
+    // delete course names
+    $filename = KARTAT_DIRECTORY."sarjat_".$eventid.".txt";
+    $oldfile = file($filename);
+    $updatedfile = array();
+    $deleted = FALSE;
+    foreach ($oldfile as $row) {
+      $data = explode("|", $row);
+      if ($data[0] == $courseid) {
+        $deleted = TRUE;
+      } else {
+        $updatedfile[] = $row;
+      }
+    }
+    $status = file_put_contents($filename, $updatedfile);
+    
+    if (!$status) {
+      $write["status_msg"] .= "Save error for sarjat. ";
+    } 
+  
+    // delete course control list
+    $filename = KARTAT_DIRECTORY."sarjojenkoodit".$eventid.".txt";
+    $oldfile = file($filename);
+    $updatedfile = array();
+    $deleted = FALSE;
+    foreach ($oldfile as $row) {
+      $data = explode("|", $row);
+      if ($data[0] == $courseid) {
+        $deleted = TRUE;
+      } else {
+        $updatedfile[] = $row;
+      }
+    }
+    $status = file_put_contents($filename, $updatedfile);
+    
+    if (!$status) {
+      $write["status_msg"] .= "Save error for sarjojenkoodit. ";
+    } 
+            
+  } else {
+    $write["status_msg"] = "Invalid course id. ";  
+  }
+  
+  if ($write["status_msg"] == "") {
+    $write["ok"] = TRUE;
+    $write["status_msg"] = "Course deleted.";
+    rg2log("Course deleted|".$eventid."|".$courseid);
   } else {
     $write["ok"] = FALSE;    
   }
@@ -215,10 +383,6 @@ function deleteRoute($eventid) {
     
     if (!$status) {
       $write["status_msg"] .= "Save error for kommentit. ";
-    }
-    
-    if (!$deleted) {
-      $write["status_msg"] .= "No comments found. ";
     }
 
     // delete GPS details in result record

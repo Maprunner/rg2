@@ -150,7 +150,7 @@ Manager.prototype = {
                  
     $("#btn-create-event").button().click(function() {
       self.confirmCreateEvent();
-    }).button("disable");  
+    }).button("disable");
     
     $("#btn-update-event").button().click(function() {
       self.confirmUpdateEvent();
@@ -353,8 +353,8 @@ Manager.prototype = {
     });
   },
   
-  doCancelUpdateEvent : function() {
-    $("#event-update-dialog").dialog("destroy");
+  doCancelUpdateCourse : function() {
+    $("#course-update-dialog").dialog("destroy");
   },
   
   doUpdateEvent : function() {
@@ -469,8 +469,8 @@ Manager.prototype = {
         },
         error:function(jqXHR, textStatus, errorThrown) {
           console.log(textStatus);
-        } 
-    }); 
+        }
+    });
   },
   
   confirmDeleteEvent : function() {

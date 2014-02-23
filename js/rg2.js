@@ -403,7 +403,7 @@ var rg2 = ( function() {
         $("#rg2-events-tab").hide();
         $rg2infopanel.tabs("option", "active", config.TAB_LOGIN);
         mapLoadingText = "";
-      } else {     
+      } else {
         mapLoadingText = "Select an event";
       }
      
