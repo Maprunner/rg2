@@ -103,6 +103,10 @@ function handlePostRequest($type, $eventid) {
     case 'deleteevent':
       $write = deleteEvent($eventid);
       break; 
+
+    case 'deleteroute':
+      $write = deleteRoute($eventid);
+      break; 
       
     case 'login':
       $write = logIn($data);
@@ -129,7 +133,7 @@ function editEvent($eventid, $newdata) {
   foreach ($oldfile as $row) {
     $data = explode("|", $row);
     if ($data[0] == $eventid) {
-      rg2log($eventid);
+      //rg2log($eventid);
       $data[3] = $newdata->name;
       $data[4] = $newdata->eventdate;
       $data[5] = $newdata->club;
@@ -144,7 +148,7 @@ function editEvent($eventid, $newdata) {
         $row .= $data[$i];  
       }
       $row .= PHP_EOL;
-      rg2log($row);
+      //rg2log($row);
     }
     $updatedfile[] = $row;
   }
@@ -183,6 +187,91 @@ function deleteEvent($eventid) {
     $write["ok"] = TRUE;
     $write["status_msg"] = "Event deleted";
     rg2log("Event deleted|".$eventid);
+  } else {
+    $write["ok"] = FALSE;    
+  }
+  
+  return($write);
+}
+
+function deleteRoute($eventid) {
+  $write["status_msg"] = "";
+  if (isset($_GET['routeid'])) {
+    $routeid = $_GET['routeid'];
+    // delete comments
+    $filename = KARTAT_DIRECTORY."kommentit_".$eventid.".txt";
+    $oldfile = file($filename);
+    $updatedfile = array();
+    $deleted = FALSE;
+    foreach ($oldfile as $row) {
+      $data = explode("|", $row);
+      if ($data[1] == $routeid) {
+        $deleted = TRUE;
+      } else {
+        $updatedfile[] = $row;
+      }
+    }
+    $status = file_put_contents($filename, $updatedfile);
+    
+    if (!$status) {
+      $write["status_msg"] .= "Save error for kommentit. ";
+    }
+    
+    if (!$deleted) {
+      $write["status_msg"] .= "No comments found. ";
+    }
+
+    // delete GPS details in result record
+    if ($routeid >= GPS_RESULT_OFFSET) {
+      $filename = KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt";
+      $oldfile = file($filename);
+      $updatedfile = array();
+      foreach ($oldfile as $row) {
+        $data = explode("|", $row);
+        $deleted = FALSE;
+        if ($data[0] == $routeid) {
+          $deleted = TRUE;                    
+        } else {
+          $updatedfile[] = $row;
+        }
+      }
+      $status = file_put_contents($filename, $updatedfile);
+    
+      if (!$status) {
+        $write["status_msg"] .= "Save error for kilpailijat. ";
+      }
+
+    }
+      
+    // delete route
+    $deleted = FALSE;
+    $filename = KARTAT_DIRECTORY."merkinnat_".$eventid.".txt";
+    $oldfile = file($filename);
+    $updatedfile = array();
+    foreach ($oldfile as $row) {
+      $data = explode("|", $row);
+      if ($data[1] == $routeid) {
+        $deleted = TRUE;
+      } else {
+        $updatedfile[] = $row;
+      }
+    }
+    $status = file_put_contents($filename, $updatedfile);   
+  
+    if (!$status) {
+      $write["status_msg"] .= " Save error for merkinnat. ";
+    }
+    if (!$deleted) {
+      $write["status_msg"] .= "Invalid route id. ";
+    }
+  } else {
+    $write["status_msg"] = "Invalid route id. ";  
+  }
+  
+  if ($write["status_msg"] == "") {
+    $write["ok"] = TRUE;
+    $write["status_msg"] = "Route deleted";
+    rg2log("Route deleted|".$eventid."|".$routeid);
   } else {
     $write["ok"] = FALSE;    
   }
