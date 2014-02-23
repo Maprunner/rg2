@@ -12,7 +12,10 @@ Events.prototype = {
 	},
 
 	getEventInfo : function(id) {
-	  return this.events[this.getEventIDForKartatID(id)];
+    var realid = this.getEventIDForKartatID(id);
+    var info = this.events[realid];
+    info.id = realid;
+    return info;
 	},
 	
 	getKartatEventID : function() {
@@ -66,7 +69,7 @@ Events.prototype = {
     opt.text = 'No event selected';
     dropdown.options.add(opt);
 		for (i = 0; i < this.events.length; i += 1) {
-		  opt = document.createElement("option");
+      opt = document.createElement("option");
 			opt.value = this.events[i].kartatid;
 			opt.text = this.events[i].date + ": " + this.events[i].name;
 			dropdown.options.add(opt);

@@ -77,6 +77,23 @@ Results.prototype = {
 		return count;
 	},
 
+  getRoutesForEvent : function() {
+    var routes = [];
+    var route;
+    for (var i = 0; i < this.results.length; i += 1) {
+      if (this.results[i].hasValidTrack) {
+        route = {};
+        route.id = i;
+        route.resultid = this.results[i].resultid; 
+        route.name = this.results[i].name;
+        route.time = this.results[i].time;
+        route.coursename = this.results[i].coursename;
+        routes.push(route);
+      }
+    }
+    return routes;
+  },
+
 	getTotalResults : function() {
 		return this.results.length;
 	},

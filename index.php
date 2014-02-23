@@ -141,8 +141,8 @@ if (isset($_GET['debug']) || $override) {
            Select name: <select  id="rg2-name-select"></select>
           </div>
           <div id="rg2-enter-name">
-           <p id = "rg2-name">Enter name: <input  id="rg2-name-entry" class="pushright" type="text"></input></p>
-           <p id = "rg2-time">Enter time (mm:ss): <input  id="rg2-time-entry" class="pushright" type="text"></input></p>
+           <p id = "rg2-name">Enter name: <input  id="rg2-name-entry" class="pushright" type="text"></p>
+           <p id = "rg2-time">Enter time (mm:ss): <input  id="rg2-time-entry" class="pushright" type="text"></p>
           </div>
           <div>
            <textarea id="rg2-new-comments"></textarea>
@@ -158,8 +158,7 @@ if (isset($_GET['debug']) || $override) {
           </div>
        <input type=checkbox id="btn-move-all"><label for="btn-move-all"> Move track and map together (or right click-drag)</label>
        <ul>
-        <li>Left click to add/lock/unlock a handle</li>
-        <ul><li>Green: draggable</li><li>Red: locked</li></ul>
+        <li>Left click to add/lock/unlock a handle<ul><li>Green: draggable</li><li>Red: locked</li></ul></li>
         <li>Right click to delete a handle</li>
         <li>Drag a handle to adjust track around locked point(s)</li>
        </ul>

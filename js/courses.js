@@ -16,10 +16,10 @@ Courses.prototype = {
 		return this.courses[courseid].name;
 	},
 
-	getCoursesForEvent : function(id) {
-	  var courses = [];
-	  var course;
-	  for (var i = 0; i < this.courses.length; i += 1) {
+	getCoursesForEvent : function() {
+    var courses = [];
+    var course;
+    for (var i = 0; i < this.courses.length; i += 1) {
       if (this.courses[i] !== undefined) {
         course = {};
         course.id = this.courses[i].courseid;
