@@ -31,7 +31,6 @@ if (defined('OVERRIDE_BASE_DIRECTORY')) {
 	$json_url = OVERRIDE_BASE_DIRECTORY . "/rg2/rg2api.php";
 	$script_url = OVERRIDE_BASE_DIRECTORY . "/rg2/js/";
 	$img_url = OVERRIDE_BASE_DIRECTORY . "/rg2/img/";
-
 } else {
 	$json_url = RG_BASE_DIRECTORY . "/rg2/rg2api.php";
 	$script_url = RG_BASE_DIRECTORY . "/rg2/js/";
@@ -43,6 +42,14 @@ $maps_url = RG_BASE_DIRECTORY . "/kartat/";
 // include manager function as parameter for now until we decide the best way forward
 if (isset($_GET['manage'])) {
 	$manager = true;
+  if (defined('OVERRIDE_KARTAT_DIRECTORY')) {
+    $manager_url = OVERRIDE_KARTAT_DIRECTORY;
+  } else {
+    $manager_url = "../kartat/";
+  }
+  // simple cookie generator! Don't need unique, just need something vaguely random
+  $keksi = substr(str_shuffle("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"), 0, 20);
+  file_put_contents($manager_url."keksi.txt", $keksi.PHP_EOL); 
 } else {
 	$manager = false;
 }
@@ -53,6 +60,7 @@ if (isset($_GET['debug']) || $override) {
 } else {
 	$debug = false;
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -68,7 +76,7 @@ if (isset($_GET['debug']) || $override) {
     <title>Routegadget 2.0</title>
     <meta name="description" content="View and save route choices for orienteering events">
     <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
-
+    <link rel="shortcut icon" href="img/favicon.ico"/>
     <link rel="stylesheet" href="css/normalize.min.css">
     <link rel="stylesheet" href="css/rg2.css">
     <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/themes/<?php echo $ui_theme; ?>/jquery-ui.min.css">
@@ -82,7 +90,7 @@ if (isset($_GET['debug']) || $override) {
 
     <div id="rg2-header-container">
       <div  id="rg2-resize-info" title="Hide info panel">
-        <a href="#"><img id="rg2-resize-info-icon" class="hide" src='<?php echo $img_url . "hide-info.png"; ?>'></a>
+        <a href="#"><img id="rg2-resize-info-icon" class="hide" src='<?php echo $img_url . "rg2-logo-32x32.png"; ?>'></a>
       </div>
       <div id="rg2-header"><span id="rg2-event-title">Routegadget 2.0</span></div>  
         <div class="rg2-button"><i id="btn-about" title = "Help" class="fa fa-question"></i></div>
@@ -234,6 +242,9 @@ if (isset($_GET['debug']) || $override) {
       var maps_url = "<?php echo $maps_url; ?>";
       var header_colour = "<?php echo $header_colour; ?>";
       var header_text_colour = "<?php echo $header_text_colour; ?>";
+      <?php if ($manager) { ?>
+      var keksi = "<?php echo $keksi; ?>";
+      <?php } ?>
     </script>
     <?php if ($debug) { ?>
       <script src='<?php echo $script_url . "events.js"; ?>'></script>

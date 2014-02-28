@@ -11,6 +11,7 @@
 /*global header_text_colour:false */
 /*global json_url:false */
 /*global maps_url:false */
+/*global keksi: false */
 /*global Image:false */
 /*global Events:false */
 /*global Event:false */
@@ -42,8 +43,6 @@ var rg2 = ( function() {
     var manager;
     var drawing;
     var infoPanelMaximised;
-    var infoHideIconSrc;
-    var infoShowIconSrc;
     var scaleFactor;
     var lastX;
     var lastY;
@@ -106,7 +105,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.5.4',
+      RG2VERSION: '0.5.5',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -185,10 +184,6 @@ var rg2 = ( function() {
       // looks odd but this works for initialisation
       dragged = true;
       infoPanelMaximised = true;
-
-      // initially loaded file has a close icon
-      infoHideIconSrc = $("#rg2-resize-info-icon").attr("src");
-      infoShowIconSrc = infoHideIconSrc.replace("hide-info", "show-info");
 
       $("#rg2-header-container").css("color", header_text_colour);
       $("#rg2-header-container").css("background", header_colour);
@@ -391,7 +386,7 @@ var rg2 = ( function() {
       });
 
       if (managing) {
-        manager = new Manager();
+        manager = new Manager(keksi);
         $("#rg2-animation-controls").hide();
         $("#rg2-create-tab").hide();
         $("#rg2-edit-tab").hide();
@@ -586,18 +581,15 @@ var rg2 = ( function() {
       });
     }
 
-
     function resizeInfoDisplay() {
       if (infoPanelMaximised) {
         infoPanelMaximised = false;
-        $("#rg2-resize-info-icon").attr("src", infoShowIconSrc);
         $("#rg2-resize-info").prop("title", "Show info panel");
         $("#rg2-hide-info-panel-control").css("left", "0px");
         $("#rg2-hide-info-panel-icon").removeClass("fa-chevron-left").addClass("fa-chevron-right").prop("title", "Show info panel");
         $rg2infopanel.hide();
       } else {
         infoPanelMaximised = true;
-        $("#rg2-resize-info-icon").attr("src", infoHideIconSrc);
         $("#rg2-resize-info").prop("title", "Hide info panel");
         $("#rg2-hide-info-panel-control").css("left", "366px");
         $("#rg2-hide-info-panel-icon").removeClass("fa-chevron-right").addClass("fa-chevron-left").prop("title", "Hide info panel");

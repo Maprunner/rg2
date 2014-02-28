@@ -2,14 +2,16 @@
 /*global Controls:false */
 /*global json_url:false */
 /*global getAngle:false */
-function User() {
+function User(keksi) {
+  this.x = "";
+  this.y = keksi;
   this.name = null;
   this.pwd = null;
 }
 
-function Manager() {
+function Manager(keksi) {
   this.loggedIn = false;
-  this.user = new User();
+  this.user = new User(keksi);
   this.eventName = null;
   this.mapName = null;
   this.eventDate = null;
@@ -36,10 +38,10 @@ function Manager() {
     self.user.name = $("#rg2-user-name").val();
     self.user.pwd = $("#rg2-password").val();
     // check we have user name and password
-    if ((self.user.name) && (self.user.pwd)) {
+    if ((self.user.name.length > 4) && (self.user.pwd.length > 4)) {
       self.logIn();
     } else {
-      var msg = "<div>Please enter user name and password.</div>";
+      var msg = "<div>Please enter user name and password of at least five characters.</div>";
       $(msg).dialog({
         title : "Login failed"
       });
@@ -58,9 +60,26 @@ Manager.prototype = {
 
   Constructor : Manager,
 
+  encodeUser: function () {
+    var data = {};
+    data.x = this.alterString(this.user.name + this.user.pwd, this.user.y);
+    data.y = this.user.y;
+    return data;
+  },
+  
+  alterString : function(input, pattern) {
+    var i;
+    var str = "";
+    for (i = 0; i < input.length; i += 1) {
+      str += input.charAt(i) + pattern.charAt(i);
+    }
+    return str;
+  },
+  
   logIn : function() {
     var url = json_url + '?type=login';
-    var json = JSON.stringify(this.user);
+    var user = this.encodeUser();
+    var json = JSON.stringify(user);
     var self = this;
     $.ajax({
       type : 'POST',
@@ -69,7 +88,16 @@ Manager.prototype = {
       url : url,
       cache : false,
       success : function(data, textStatus, jqXHR) {
-        self.enableEventEdit();
+        // save new cookie
+        self.user.y = data.keksi;
+        if (data.ok) {
+          self.enableEventEdit();
+        } else {
+          var msg = "<div>" + data.status_msg + ". Login failed. Please try again.</div>";
+          $(msg).dialog({
+            title : "Login failed"
+          });
+        }
       },
       error : function(jqXHR, textStatus, errorThrown) {
         console.log(errorThrown);
@@ -367,14 +395,29 @@ Manager.prototype = {
     data.type = $("#rg2-event-level-edit").val();
     data.eventdate = $("#rg2-event-date-edit").val();
     data.club = $("#rg2-club-name-edit").val();
+    var user = this.encodeUser();
+    data.x = user.x;
+    data.y = user.y;
     var json = JSON.stringify(data);
+    var self = this;
     $.ajax({
         data:json,
         type:"POST",
         url:$url,
         dataType:"json",
         success:function(data, textStatus, jqXHR) {
-          console.log(data.status_msg);
+          // save new cookie
+          self.user.y = data.keksi;
+          if (data.ok) {
+            $(msg).dialog({
+              title : "Event updated"
+            });
+          } else {
+            var msg = "<div>" + data.status_msg + ". Event update failed. Please try again.</div>";
+            $(msg).dialog({
+              title : "Update failed"
+            });
+          }
         },
         error:function(jqXHR, textStatus, errorThrown) {
           console.log(textStatus);
@@ -459,13 +502,29 @@ Manager.prototype = {
     var id = $("#rg2-event-selected").val();
     var routeid = $("#rg2-route-selected").val();
     var $url = json_url + "?type=deleteroute&id=" + id + "&routeid=" + routeid;
+    var user = this.encodeUser();
+    var json = JSON.stringify(user);
+    var self = this;
     $.ajax({
-      data:"",
+        data: json,
         type:"POST",
         url:$url,
         dataType:"json",
         success:function(data, textStatus, jqXHR) {
-          console.log(data.status_msg);
+          // save new cookie
+          var msg;
+          self.user.y = data.keksi;
+          if (data.ok) {
+            msg = "<div>Route deleted.</div>";
+            $(msg).dialog({
+              title : "Route deleted"
+            });
+          } else {
+            msg = "<div>" + data.status_msg + ". Delete failed. Please try again.</div>";
+            $(msg).dialog({
+              title : "Delete failed"
+            });
+          }
         },
         error:function(jqXHR, textStatus, errorThrown) {
           console.log(textStatus);
@@ -503,13 +562,27 @@ Manager.prototype = {
     $("#event-delete-dialog").dialog("destroy");
     var id = $("#rg2-event-selected").val();
     var $url = json_url + "?type=deleteevent&id=" + id;
+    var user = this.encodeUser();
+    var json = JSON.stringify(user);
+    var self = this;
     $.ajax({
-        data:"",
+        data: json,
         type:"POST",
         url:$url,
         dataType:"json",
         success:function(data, textStatus, jqXHR) {
-          console.log(data.status_msg);
+          // save new cookie
+          self.user.y = data.keksi;
+          if (data.ok) {
+            $(msg).dialog({
+              title : "Event deleted"
+            });
+          } else {
+            var msg = "<div>" + data.status_msg + ". Event delete failed. Please try again.</div>";
+            $(msg).dialog({
+              title : "Delete failed"
+            });
+          }
         },
         error:function(jqXHR, textStatus, errorThrown) {
           console.log(textStatus);

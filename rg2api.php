@@ -88,47 +88,105 @@ function encode_rg_output($output_str) {
 
 function handlePostRequest($type, $eventid) {
   $data = json_decode(file_get_contents('php://input'));
-
+  $write = array();
   if (lockDatabase() !== FALSE) {
-
-    switch ($type) {  
-    case 'addroute':
-      $write = addNewRoute($eventid, $data);
-      break; 
+    if (logIn($data)) {
+      //rg2log($type);
+      switch ($type) {  
+      case 'addroute':
+        $write = addNewRoute($eventid, $data);
+        break; 
      
-    case 'editevent':
-      $write = editEvent($eventid, $data);
-      break; 
+      case 'editevent':
+        $write = editEvent($eventid, $data);
+        break; 
 
-    case 'deleteevent':
-      $write = deleteEvent($eventid);
-      break; 
+      case 'deleteevent':
+        $write = deleteEvent($eventid);
+       break; 
 
-    case 'deleteroute':
-      $write = deleteRoute($eventid);
-      break; 
-
-
-    case 'deletecourse':
-      $write = deleteCourse($eventid);
-      break; 
+      case 'deleteroute':
+        $write = deleteRoute($eventid);
+        break; 
+        
+      case 'deletecourse':
+        $write = deleteCourse($eventid);
+        break; 
       
-    case 'login':
-      $write = logIn($data);
-      break;  
-    default:
-      $write["status_msg"] = "Request not recognised: ".$type;
+      case 'login':
+        // handled by default before we got here
+        $write["ok"] = TRUE;
+        $write["status_msg"] = "Login successful";        
+        break;
+      
+      default:
+        $write["status_msg"] = "Request not recognised: ".$type;
+        $write["ok"] = FALSE;
+        break;
+      } 
+    } else {
       $write["ok"] = FALSE;
-      break;
-    } 
+      $write["status_msg"] = "Incorrect user name or password";
+    }
     unlockDatabase();
   } else {
     $write["status_msg"] = "File lock error";
     $write["ok"] = FALSE;
   } 
- 
+  
+  $keksi = generateNewKeksi();
+  $write["keksi"] = $keksi;
+  
   header("Content-type: application/json"); 
   echo json_encode($write);
+}
+function logIn ($data) {
+  if (isset($data->x) && isset($data->y)) {  
+    $userdetails = extractString($data->x);
+    $cookie = $data->y;
+  } else {
+    $userdetails = "";
+    $cookie = "";
+  }
+  $ok = TRUE;
+  $keksi = trim(file_get_contents(KARTAT_DIRECTORY."keksi.txt"));
+  rg2log("logIn ".$userdetails." ".$cookie);
+  if (file_exists(KARTAT_DIRECTORY."rg2userinfo.txt")) {
+    $saved_user = trim(file_get_contents(KARTAT_DIRECTORY."rg2userinfo.txt"));
+    $temp = crypt($userdetails, $saved_user);
+    if ($temp != $saved_user) {
+      rg2log("User details incorrect. ".$temp." : ".$saved_user);
+      $ok = FALSE;
+    }
+    if ($keksi != $cookie) {
+      rg2log("Cookies don't match. ".$keksi." : ".$cookie);
+      $ok = FALSE;
+    }
+  } else {
+    // new account being set up: rely on JS end to force a reasonable name/password
+    $temp = crypt($userdetails, $keksi);
+    rg2log("Creating new account ".$temp);
+    file_put_contents(KARTAT_DIRECTORY."rg2userinfo.txt", $temp.PHP_EOL);  
+  }
+  return $ok;
+}
+
+// Mickey Mouse function to extract user name and password
+// just avoids plain text transmission for now so a bit better than RG1
+function extractString($data) {
+  $str = "";
+  for ($i = 0; $i < strlen($data); $i = $i + 2) {
+    $str .= substr($data, $i, 1);
+  }
+  return $str;
+}
+
+function generateNewKeksi() {
+  // simple cookie generator! Don't need unique, just need something vaguely random
+  $keksi = substr(str_shuffle("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"), 0, 20);
+  file_put_contents(KARTAT_DIRECTORY."keksi.txt", $keksi.PHP_EOL);
+  rg2log("Writing keksi.txt ".$keksi);
+  return $keksi; 
 }
 
 function editEvent($eventid, $newdata) {
@@ -441,24 +499,6 @@ function deleteRoute($eventid) {
   }
   
   return($write);
-}
-
-function logIn ($data) {
-
-  if (($handle = fopen(KARTAT_DIRECTORY."uspsw.txt", "r")) !== FALSE) {
-    $pwd = fgets($handle);
-    if ($data->pwd != $pwd) {
-      header('HTTP/1.1 401 Unauthorized', TRUE, 401);
-      $ok = FALSE;
-    } else {
-      $ok = TRUE;
-    }
-  } else {
-    header('HTTP/1.1 401 Unauthorized', TRUE, 401);
-    $ok = FALSE;    
-  }
-  $write["ok"] = $ok;
-  return $write;
 }
 
 function addNewRoute($eventid, $data) {
@@ -953,7 +993,11 @@ function getTracksForEvent($eventid) {
       $detail["name"] = encode_rg_input($data[2]);
       $detail["mystery"] = $data[3];
       list($detail["gpsx"], $detail["gpsy"]) = expandCoords($data[4]);
-      $detail["controls"] = $data[5];
+      if (count($data) > 5) {
+        $detail["controls"] = $data[5];
+      } else {
+        $detail["controls"] = "";
+      }
       $output[$row] = $detail;        
       $row++;
     }
@@ -971,4 +1015,14 @@ function rg2log($msg) {
     error_log(date("c", time())."|".$user_agent."|".$msg.PHP_EOL, 3, RG_LOG_FILE);
   }
 }
+
+function generateCookie() {
+  // simple cookie generator! Don't need unique, just need something vaguely random
+  $keksi = substr(str_shuffle("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"), 0, 20);
+  // overwrite old cookie file  
+  //TODO add error check
+  file_put_contents($manager_url."keksi.txt", $keksi);
+  return $keksi;  
+}
+
 ?>

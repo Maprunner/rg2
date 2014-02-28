@@ -1,4 +1,4 @@
-// Version 0.5.4 2014-02-23T16:52:00;
+// Version 0.5.5 2014-02-28T17:55:58;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -12,6 +12,7 @@
 /*global header_text_colour:false */
 /*global json_url:false */
 /*global maps_url:false */
+/*global keksi: false */
 /*global Image:false */
 /*global Events:false */
 /*global Event:false */
@@ -43,8 +44,6 @@ var rg2 = ( function() {
     var manager;
     var drawing;
     var infoPanelMaximised;
-    var infoHideIconSrc;
-    var infoShowIconSrc;
     var scaleFactor;
     var lastX;
     var lastY;
@@ -74,7 +73,6 @@ var rg2 = ( function() {
       TAB_LOGIN : 4,
       TAB_CREATE : 5,
       TAB_EDIT : 6,
-      TAB_LOGOUT : 7,
       DEFAULT_NEW_COMMENT : "Type your comment",
       DEFAULT_EVENT_COMMENT : "Comments (optional)",
       // added to resultid when saving a GPS track
@@ -108,7 +106,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.5.4',
+      RG2VERSION: '0.5.5',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -174,7 +172,6 @@ var rg2 = ( function() {
       $("#btn-real-time").removeClass('active');
 
       map = new Image();
-      mapLoadingText = "Select an event";
       mapIntensity = config.FULL_INTENSITY;
       overprintWidth = config.DEFAULT_OVERPRINT_LINE_THICKNESS;
       routeWidth = config.DEFAULT_ROUTE_THICKNESS;
@@ -188,10 +185,6 @@ var rg2 = ( function() {
       // looks odd but this works for initialisation
       dragged = true;
       infoPanelMaximised = true;
-
-      // initially loaded file has a close icon
-      infoHideIconSrc = $("#rg2-resize-info-icon").attr("src");
-      infoShowIconSrc = infoHideIconSrc.replace("hide-info", "show-info");
 
       $("#rg2-header-container").css("color", header_text_colour);
       $("#rg2-header-container").css("background", header_colour);
@@ -394,18 +387,20 @@ var rg2 = ( function() {
       });
 
       if (managing) {
-        manager = new Manager();
+        manager = new Manager(keksi);
         $("#rg2-animation-controls").hide();
         $("#rg2-create-tab").hide();
         $("#rg2-edit-tab").hide();
-        $("#rg2-logout-tab").hide();
         $("#rg2-manage-login").show();
         $rg2infopanel.tabs("disable", config.TAB_EVENTS);
         $("#rg2-draw-tab").hide();
         $("#rg2-results-tab").hide();
         $("#rg2-courses-tab").hide();
         $("#rg2-events-tab").hide();
-        $rg2infopanel.tabs("option", "active", config.TAB_LOGIN).tabs("refresh");
+        $rg2infopanel.tabs("option", "active", config.TAB_LOGIN);
+        mapLoadingText = "";
+      } else {
+        mapLoadingText = "Select an event";
       }
      
       canvas.addEventListener('touchstart', handleTouchStart, false);
@@ -587,18 +582,15 @@ var rg2 = ( function() {
       });
     }
 
-
     function resizeInfoDisplay() {
       if (infoPanelMaximised) {
         infoPanelMaximised = false;
-        $("#rg2-resize-info-icon").attr("src", infoShowIconSrc);
         $("#rg2-resize-info").prop("title", "Show info panel");
         $("#rg2-hide-info-panel-control").css("left", "0px");
         $("#rg2-hide-info-panel-icon").removeClass("fa-chevron-left").addClass("fa-chevron-right").prop("title", "Show info panel");
         $rg2infopanel.hide();
       } else {
         infoPanelMaximised = true;
-        $("#rg2-resize-info-icon").attr("src", infoHideIconSrc);
         $("#rg2-resize-info").prop("title", "Hide info panel");
         $("#rg2-hide-info-panel-control").css("left", "366px");
         $("#rg2-hide-info-panel-icon").removeClass("fa-chevron-right").addClass("fa-chevron-left").prop("title", "Hide info panel");
@@ -1125,9 +1117,13 @@ var rg2 = ( function() {
     }
     
     function getCoursesForEvent(id) {
-      return courses.getCoursesForEvent(id);
+      return courses.getCoursesForEvent();
     }
-    
+
+    function getRoutesForEvent() {
+      return results.getRoutesForEvent();
+    }
+        
     return {
       // functions and variables available elsewhere
       init : init,
@@ -1167,7 +1163,8 @@ var rg2 = ( function() {
       createEventEditDropdown : createEventEditDropdown,
       showThreeSeconds: showThreeSeconds,
       getEventInfo: getEventInfo,
-      getCoursesForEvent: getCoursesForEvent
+      getCoursesForEvent: getCoursesForEvent,
+      getRoutesForEvent: getRoutesForEvent
     };
 
   }());
@@ -2181,7 +2178,7 @@ Draw.prototype = {
       if ((trk.routeData.resultid !== null) && (trk.routeData.courseid !== null)) {
         this.addNewPoint(x, y);
       } else {
-        rg2WarningDialog('Select course and name', 'Please select course and name before you start drawing a route or upload a file.');
+        rg2WarningDialog('No course/name', 'Please select course and name before you start drawing a route or upload a file.');
       }
     }
   },
@@ -3387,14 +3384,16 @@ GPSTrack.prototype = {
 /*global Controls:false */
 /*global json_url:false */
 /*global getAngle:false */
-function User() {
+function User(keksi) {
+  this.x = "";
+  this.y = keksi;
   this.name = null;
   this.pwd = null;
 }
 
-function Manager() {
+function Manager(keksi) {
   this.loggedIn = false;
-  this.user = new User();
+  this.user = new User(keksi);
   this.eventName = null;
   this.mapName = null;
   this.eventDate = null;
@@ -3421,10 +3420,10 @@ function Manager() {
     self.user.name = $("#rg2-user-name").val();
     self.user.pwd = $("#rg2-password").val();
     // check we have user name and password
-    if ((self.user.name) && (self.user.pwd)) {
+    if ((self.user.name.length > 4) && (self.user.pwd.length > 4)) {
       self.logIn();
     } else {
-      var msg = "<div>Please enter user name and password.</div>";
+      var msg = "<div>Please enter user name and password of at least five characters.</div>";
       $(msg).dialog({
         title : "Login failed"
       });
@@ -3443,9 +3442,26 @@ Manager.prototype = {
 
   Constructor : Manager,
 
+  encodeUser: function () {
+    var data = {};
+    data.x = this.alterString(this.user.name + this.user.pwd, this.user.y);
+    data.y = this.user.y;
+    return data;
+  },
+  
+  alterString : function(input, pattern) {
+    var i;
+    var str = "";
+    for (i = 0; i < input.length; i += 1) {
+      str += input.charAt(i) + pattern.charAt(i);
+    }
+    return str;
+  },
+  
   logIn : function() {
     var url = json_url + '?type=login';
-    var json = JSON.stringify(this.user);
+    var user = this.encodeUser();
+    var json = JSON.stringify(user);
     var self = this;
     $.ajax({
       type : 'POST',
@@ -3454,7 +3470,16 @@ Manager.prototype = {
       url : url,
       cache : false,
       success : function(data, textStatus, jqXHR) {
-        self.enableEventEdit();
+        // save new cookie
+        self.user.y = data.keksi;
+        if (data.ok) {
+          self.enableEventEdit();
+        } else {
+          var msg = "<div>" + data.status_msg + ". Login failed. Please try again.</div>";
+          $(msg).dialog({
+            title : "Login failed"
+          });
+        }
       },
       error : function(jqXHR, textStatus, errorThrown) {
         console.log(errorThrown);
@@ -3533,39 +3558,29 @@ Manager.prototype = {
         self.setEvent(parseInt($("#rg2-event-selected").val(), 10));
     });
                  
-    $("#btn-add-event").button().click(function() {
-      $("#rg2-add-new-event").dialog({
-        title : "Add new event",
-        width : 'auto',
-        buttons : {
-          Continue : function() {
-            self.doContinue();
-          },
-          Cancel : function() {
-            $(this).dialog('close');
-          }
-        }
-      });
-    });
-
-        
+    $("#btn-create-event").button().click(function() {
+      self.confirmCreateEvent();
+    }).button("disable");
+    
     $("#btn-update-event").button().click(function() {
       self.confirmUpdateEvent();
     }).button("disable");
     
-    $("#btn-delete-course").button().button("disable");
+    $("#btn-delete-course").button().click(function() {
+      self.confirmDeleteCourse();
+    }).button("disable");
     
-    $("#btn-delete-route").button().button("disable");
+    $("#btn-delete-route").button().click(function() {
+      self.confirmDeleteRoute();
+    }).button("disable");
     
     $("#btn-delete-event").button().click(function() {
       self.confirmDeleteEvent();
     }).button("disable");
     
-    $("#rg2-manage-edit").show();
     $("#rg2-manage-create").show();
     $("#rg2-create-tab").show();
     $("#rg2-edit-tab").show();
-    $("#rg2-logout-tab").show();
     $("#rg2-manage-login").hide();
     $("#rg2-login-tab").hide();
     $('#rg2-info-panel').tabs('option', 'active', rg2.config.TAB_CREATE);
@@ -3605,7 +3620,8 @@ Manager.prototype = {
   
   eventFinishedLoading : function () {
     // copy event details to edit-form
-    var kartatid = $("#rg2-event-selected").val();
+    // you tell me why this needs parseInt but the same call above doesn't
+    var kartatid = parseInt($("#rg2-event-selected").val(), 10);
     var event = rg2.getEventInfo(kartatid);
     $("#rg2-event-name-edit").empty().val(event.name);
     $("#rg2-club-name-edit").empty().val(event.club);
@@ -3617,7 +3633,7 @@ Manager.prototype = {
     $("#btn-delete-route").button("enable");
     $("#btn-delete-course").button("enable");
     this.createCourseDeleteDropdown(event.id);
-    //rg2.createRouteDeleteDropdown(id);  
+    this.createRouteDeleteDropdown(event.id);
   },
   
   createCourseDeleteDropdown : function(id) {
@@ -3630,6 +3646,20 @@ Manager.prototype = {
       opt = document.createElement("option");
       opt.value = courses[i].id;
       opt.text = courses[i].name;
+      dropdown.options.add(opt);
+    }
+  },
+
+  createRouteDeleteDropdown : function(id) {
+    $("#rg2-route-selected").empty();
+    var dropdown = document.getElementById("rg2-route-selected");
+    var routes = rg2.getRoutesForEvent(id);
+    var i;
+    var opt;
+    for ( i = 0; i < routes.length; i += 1) {
+      opt = document.createElement("option");
+      opt.value = routes[i].resultid;
+      opt.text = routes[i].resultid + ": " + routes[i].name + " on " + routes[i].coursename;
       dropdown.options.add(opt);
     }
   },
@@ -3661,6 +3691,55 @@ Manager.prototype = {
     }
   },
 
+  confirmCreateEvent : function() {
+
+    var msg = "<div id='event-create-dialog'>Are you sure you want to create this event?</div>";
+    var me = this;
+    $(msg).dialog({
+      title : "Confirm event creation",
+      modal : true,
+      dialogClass : "no-close",
+      closeOnEscape : false,
+      buttons : [{
+        text : "Create event",
+        click : function() {
+          me.doCreateEvent();
+        }
+      }, {
+        text : "Cancel",
+        click : function() {
+          me.doCancelCreateEvent();
+        }
+      }]
+    });
+  },
+  
+  doCancelUpdateEvent : function() {
+    $("#event-create-dialog").dialog("destroy");
+  },
+  
+  doCreateEvent : function() {
+    $("#event-create-dialog").dialog("destroy");
+    var id = $("#rg2-event-selected").val();
+    var $url = json_url + "?type=createevent";
+    var data = {};
+
+    var json = JSON.stringify(data);
+    /* $.ajax({
+        data:json,
+        type:"POST",
+        url:$url,
+        dataType:"json",
+        success:function(data, textStatus, jqXHR) {
+          console.log(data.status_msg);
+        },
+        error:function(jqXHR, textStatus, errorThrown) {
+          console.log(textStatus);
+        }
+        
+    }); */
+  },
+  
   confirmUpdateEvent : function() {
 
     var msg = "<div id='event-update-dialog'>Are you sure you want to update this event?</div>";
@@ -3684,8 +3763,8 @@ Manager.prototype = {
     });
   },
   
-  doCancelUpdateEvent : function() {
-    $("#event-update-dialog").dialog("destroy");
+  doCancelUpdateCourse : function() {
+    $("#course-update-dialog").dialog("destroy");
   },
   
   doUpdateEvent : function() {
@@ -3698,9 +3777,70 @@ Manager.prototype = {
     data.type = $("#rg2-event-level-edit").val();
     data.eventdate = $("#rg2-event-date-edit").val();
     data.club = $("#rg2-club-name-edit").val();
+    var user = this.encodeUser();
+    data.x = user.x;
+    data.y = user.y;
     var json = JSON.stringify(data);
+    var self = this;
     $.ajax({
         data:json,
+        type:"POST",
+        url:$url,
+        dataType:"json",
+        success:function(data, textStatus, jqXHR) {
+          // save new cookie
+          self.user.y = data.keksi;
+          if (data.ok) {
+            $(msg).dialog({
+              title : "Event updated"
+            });
+          } else {
+            var msg = "<div>" + data.status_msg + ". Event update failed. Please try again.</div>";
+            $(msg).dialog({
+              title : "Update failed"
+            });
+          }
+        },
+        error:function(jqXHR, textStatus, errorThrown) {
+          console.log(textStatus);
+        }
+        
+    });
+  },
+  
+  confirmDeleteCourse : function() {
+    var msg = "<div id='course-delete-dialog'>This course will be permanently deleted. Are you sure?</div>";
+    var me = this;
+    $(msg).dialog({
+      title : "Confirm course delete",
+      modal : true,
+      dialogClass : "no-close",
+      closeOnEscape : false,
+      buttons : [{
+        text : "Delete course",
+        click : function() {
+          me.doDeleteCourse();
+        }
+      }, {
+        text : "Cancel",
+        click : function() {
+          me.doCancelDeleteCourse();
+        }
+      }]
+    });
+  },
+  
+  doCancelDeleteCourse : function() {
+    $("#course-delete-dialog").dialog("destroy");
+  },
+  
+  doDeleteCourse : function() {
+    $("#course-delete-dialog").dialog("destroy");
+    var id = $("#rg2-event-selected").val();
+    var routeid = $("#rg2-route-selected").val();
+    var $url = json_url + "?type=deletecourse&id=" + id + "&routeid=" + routeid;
+    /*$.ajax({
+      data:"",
         type:"POST",
         url:$url,
         dataType:"json",
@@ -3709,8 +3849,68 @@ Manager.prototype = {
         },
         error:function(jqXHR, textStatus, errorThrown) {
           console.log(textStatus);
+        } 
+    }); */
+  },
+  
+  confirmDeleteRoute : function() {
+    var msg = "<div id='route-delete-dialog'>This route will be permanently deleted. Are you sure?</div>";
+    var me = this;
+    $(msg).dialog({
+      title : "Confirm route delete",
+      modal : true,
+      dialogClass : "no-close",
+      closeOnEscape : false,
+      buttons : [{
+        text : "Delete route",
+        click : function() {
+          me.doDeleteRoute();
         }
-        
+      }, {
+        text : "Cancel",
+        click : function() {
+          me.doCancelDeleteRoute();
+        }
+      }]
+    });
+  },
+  
+   doCancelDeleteRoute : function() {
+    $("#route-delete-dialog").dialog("destroy");
+  },
+  
+  doDeleteRoute : function() {
+    $("#route-delete-dialog").dialog("destroy");
+    var id = $("#rg2-event-selected").val();
+    var routeid = $("#rg2-route-selected").val();
+    var $url = json_url + "?type=deleteroute&id=" + id + "&routeid=" + routeid;
+    var user = this.encodeUser();
+    var json = JSON.stringify(user);
+    var self = this;
+    $.ajax({
+        data: json,
+        type:"POST",
+        url:$url,
+        dataType:"json",
+        success:function(data, textStatus, jqXHR) {
+          // save new cookie
+          var msg;
+          self.user.y = data.keksi;
+          if (data.ok) {
+            msg = "<div>Route deleted.</div>";
+            $(msg).dialog({
+              title : "Route deleted"
+            });
+          } else {
+            msg = "<div>" + data.status_msg + ". Delete failed. Please try again.</div>";
+            $(msg).dialog({
+              title : "Delete failed"
+            });
+          }
+        },
+        error:function(jqXHR, textStatus, errorThrown) {
+          console.log(textStatus);
+        }
     });
   },
   
@@ -3744,13 +3944,27 @@ Manager.prototype = {
     $("#event-delete-dialog").dialog("destroy");
     var id = $("#rg2-event-selected").val();
     var $url = json_url + "?type=deleteevent&id=" + id;
+    var user = this.encodeUser();
+    var json = JSON.stringify(user);
+    var self = this;
     $.ajax({
-        data:"",
+        data: json,
         type:"POST",
         url:$url,
         dataType:"json",
         success:function(data, textStatus, jqXHR) {
-          console.log(data.status_msg);
+          // save new cookie
+          self.user.y = data.keksi;
+          if (data.ok) {
+            $(msg).dialog({
+              title : "Event deleted"
+            });
+          } else {
+            var msg = "<div>" + data.status_msg + ". Event delete failed. Please try again.</div>";
+            $(msg).dialog({
+              title : "Delete failed"
+            });
+          }
         },
         error:function(jqXHR, textStatus, errorThrown) {
           console.log(textStatus);
@@ -4444,6 +4658,23 @@ Results.prototype = {
 		}
 		return count;
 	},
+
+  getRoutesForEvent : function() {
+    var routes = [];
+    var route;
+    for (var i = 0; i < this.results.length; i += 1) {
+      if (this.results[i].hasValidTrack) {
+        route = {};
+        route.id = i;
+        route.resultid = this.results[i].resultid;
+        route.name = this.results[i].name;
+        route.time = this.results[i].time;
+        route.coursename = this.results[i].coursename;
+        routes.push(route);
+      }
+    }
+    return routes;
+  },
 
 	getTotalResults : function() {
 		return this.results.length;
