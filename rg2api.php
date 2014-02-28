@@ -90,7 +90,13 @@ function handlePostRequest($type, $eventid) {
   $data = json_decode(file_get_contents('php://input'));
   $write = array();
   if (lockDatabase() !== FALSE) {
-    if (logIn($data)) {
+    if ($type != 'addroute') {
+      $loggedIn = logIn($data);
+    } else {
+      // don't need to log in to add a route
+      $loggedIn = TRUE;
+    }
+    if ($loggedIn) {
       //rg2log($type);
       switch ($type) {  
       case 'addroute':
@@ -150,22 +156,22 @@ function logIn ($data) {
   }
   $ok = TRUE;
   $keksi = trim(file_get_contents(KARTAT_DIRECTORY."keksi.txt"));
-  rg2log("logIn ".$userdetails." ".$cookie);
+  //rg2log("logIn ".$userdetails." ".$cookie);
   if (file_exists(KARTAT_DIRECTORY."rg2userinfo.txt")) {
     $saved_user = trim(file_get_contents(KARTAT_DIRECTORY."rg2userinfo.txt"));
     $temp = crypt($userdetails, $saved_user);
     if ($temp != $saved_user) {
-      rg2log("User details incorrect. ".$temp." : ".$saved_user);
+      //rg2log("User details incorrect. ".$temp." : ".$saved_user);
       $ok = FALSE;
     }
     if ($keksi != $cookie) {
-      rg2log("Cookies don't match. ".$keksi." : ".$cookie);
+      //rg2log("Cookies don't match. ".$keksi." : ".$cookie);
       $ok = FALSE;
     }
   } else {
     // new account being set up: rely on JS end to force a reasonable name/password
     $temp = crypt($userdetails, $keksi);
-    rg2log("Creating new account ".$temp);
+    //rg2log("Creating new account ".$temp);
     file_put_contents(KARTAT_DIRECTORY."rg2userinfo.txt", $temp.PHP_EOL);  
   }
   return $ok;
@@ -185,7 +191,7 @@ function generateNewKeksi() {
   // simple cookie generator! Don't need unique, just need something vaguely random
   $keksi = substr(str_shuffle("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"), 0, 20);
   file_put_contents(KARTAT_DIRECTORY."keksi.txt", $keksi.PHP_EOL);
-  rg2log("Writing keksi.txt ".$keksi);
+  //rg2log("Writing keksi.txt ".$keksi);
   return $keksi; 
 }
 
