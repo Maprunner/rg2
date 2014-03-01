@@ -1,4 +1,4 @@
-// Version 0.5.7 2014-03-01T08:39:54;
+// Version 0.5.8 2014-03-01T16:27:34;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -36,6 +36,7 @@ var rg2 = ( function() {
     var mapLoadingText;
     var overprintWidth;
     var routeWidth;
+    var replayFontSize;
     var events;
     var courses;
     var results;
@@ -97,6 +98,7 @@ var rg2 = ( function() {
       START_TRIANGLE_LENGTH : 30,
       DEFAULT_OVERPRINT_LINE_THICKNESS : 3,
       DEFAULT_ROUTE_THICKNESS : 4,
+      DEFAULT_REPLAY_FONT_SIZE: 12,
       START_TRIANGLE_HEIGHT : 40,
       // parameters for call to draw courses
       DIM : 0.75,
@@ -106,7 +108,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.5.7',
+      RG2VERSION: '0.5.8',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -175,6 +177,7 @@ var rg2 = ( function() {
       mapIntensity = config.FULL_INTENSITY;
       overprintWidth = config.DEFAULT_OVERPRINT_LINE_THICKNESS;
       routeWidth = config.DEFAULT_ROUTE_THICKNESS;
+      replayFontSize = config.DEFAULT_REPLAY_FONT_SIZE;
       events = new Events();
       courses = new Courses();
       results = new Results();
@@ -257,6 +260,17 @@ var rg2 = ( function() {
           redraw(false);
         }
       }).val(100);
+
+      $("#spn-name-font-size").spinner({
+        max : 20,
+        min : 5,
+        step: 1,
+        numberFormat: "n",
+        spin : function(event, ui) {
+          replayFontSize = ui.value;
+          redraw(false);
+        }
+      }).val(config.DEFAULT_REPLAY_FONT_SIZE);
 
       $("#spn-course-width").spinner({
         max : 10,
@@ -1107,6 +1121,10 @@ var rg2 = ( function() {
     function getRouteWidth() {
       return routeWidth;
     }
+
+    function getReplayFontSize() {
+      return replayFontSize;
+    }
     
     function showThreeSeconds() {
      return $("#chk-show-three-seconds").prop('checked');
@@ -1131,6 +1149,7 @@ var rg2 = ( function() {
       redraw : redraw,
       getOverprintWidth: getOverprintWidth,
       getRouteWidth: getRouteWidth,
+      getReplayFontSize: getReplayFontSize,
       ctx : ctx,
       getMapSize : getMapSize,
       loadNewMap : loadNewMap,
@@ -1516,7 +1535,7 @@ Animation.prototype = {
 			rg2.ctx.fill();
 			if (this.displayNames) {
 				rg2.ctx.fillStyle = "black";
-				rg2.ctx.font = '20pt Arial';
+				rg2.ctx.font = rg2.getReplayFontSize() + 'pt Arial';
 				rg2.ctx.textAlign = "left";
 				if (this.displayInitials) {
           text = runner.initials;

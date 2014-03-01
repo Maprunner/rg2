@@ -343,7 +343,7 @@ Animation.prototype = {
 			rg2.ctx.fill();
 			if (this.displayNames) {
 				rg2.ctx.fillStyle = "black";
-				rg2.ctx.font = '20pt Arial';
+				rg2.ctx.font = rg2.getReplayFontSize() + 'pt Arial';
 				rg2.ctx.textAlign = "left";
 				if (this.displayInitials) {
           text = runner.initials;
