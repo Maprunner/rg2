@@ -1,4 +1,4 @@
-// Version 0.5.6 2014-02-28T19:38:40;
+// Version 0.5.7 2014-03-01T08:39:54;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -106,7 +106,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.5.6',
+      RG2VERSION: '0.5.7',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -1194,6 +1194,7 @@ $(document).ready(rg2.init);
 	// run each leg as a mass start if true
 	this.massStartByControl = false;
 	this.displayNames = true;
+	this.displayInitials = false;
 }
 
 Animation.prototype = {
@@ -1431,16 +1432,25 @@ Animation.prototype = {
 	},
 
 	toggleNameDisplay : function() {
+		var title = "";
 		if (this.displayNames) {
-			$("#btn-toggle-names").prop("title", "Show names");
-		} else {
-			$("#btn-toggle-names").prop("title", "Hide names");
+      if (this.displayInitials) {
+        this.displayNames = false;
+        this.displayInitials = false;
+        title = "Show names";
+      } else {
+        this.displayInitials = true;
+        title = "Hide names";
+      }
+    } else {
+      this.displayNames = true;
+			title = "Show initials";
 		}
-		this.displayNames = !this.displayNames;
+    $("#btn-toggle-names").prop("title", title);
 	},
 
 	runAnimation : function(fromTimer) {
-
+    var text;
 		// only increment time if called from the timer and we haven't got to the end already
 		if (this.realTime) {
 			if (this.animationSecs < this.latestFinishSecs) {
@@ -1508,7 +1518,12 @@ Animation.prototype = {
 				rg2.ctx.fillStyle = "black";
 				rg2.ctx.font = '20pt Arial';
 				rg2.ctx.textAlign = "left";
-				rg2.ctx.fillText(runner.name, runner.x[t] + 15, runner.y[t] + 7);
+				if (this.displayInitials) {
+          text = runner.initials;
+				} else {
+          text = runner.name;
+				}
+				rg2.ctx.fillText(text, runner.x[t] + 15, runner.y[t] + 7);
 			}
 		}
 		if (this.massStartByControl) {
@@ -1578,17 +1593,6 @@ Animation.prototype = {
 			formattedtime += ":" + seconds;
 		}
 		return formattedtime;
-	},
-
-	// returns seconds as mm:ss
-	formatSecsAsMinutes : function(time) {
-		var minutes = Math.floor(time / 60);
-		var seconds = time - (minutes * 60);
-		if (seconds < 10) {
-			return minutes + ":0" + seconds;
-		} else {
-			return minutes + ":" + seconds;
-		}
 	}
 };
 /*global rg2:false */
@@ -4921,6 +4925,7 @@ function Result(data, isScoreEvent, colour) {
 		this.isGPSTrack = false;
 	}
 	this.name = data.name;
+	this.initials = this.getInitials(this.name);
 	this.starttime = data.starttime;
 	this.time = data.time;
 	// get round iconv problem in API for now
@@ -5153,7 +5158,32 @@ Result.prototype = {
 	},
 	getTime : function() {
 		return this.time;
-	}
+	},
+	
+  getInitials : function (name) {
+    // converts name to initials
+    // remove white space at each end
+    name.trim();
+    var i;
+    var addNext;
+    var len = name.length;
+    var initials = "";
+    if (len === 0) {
+      return "";
+    }
+    addNext = true;
+    for (i = 0; i < len; i += 1) {
+      if (addNext) {
+        initials += name.substr(i, 1);
+        addNext = false;
+      }
+      if (name.charAt(i) === " ") {
+        addNext = true;
+      }
+    }
+    
+    return initials;
+  }
 };
 /*global rg2:false */
 /*exported Runner */
@@ -5161,6 +5191,7 @@ Result.prototype = {
 function Runner(resultid) {
 	var res = rg2.getFullResult(resultid);
 	this.name = res.name;
+	this.initials = res.initials;
 	// careful: we need the index into results, not the resultid from the text file
 	this.runnerid = resultid;
 	this.starttime = res.starttime;

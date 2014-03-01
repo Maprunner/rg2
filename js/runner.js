@@ -4,6 +4,7 @@
 function Runner(resultid) {
 	var res = rg2.getFullResult(resultid);
 	this.name = res.name;
+	this.initials = res.initials;
 	// careful: we need the index into results, not the resultid from the text file
 	this.runnerid = resultid;
 	this.starttime = res.starttime;

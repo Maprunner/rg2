@@ -21,6 +21,7 @@
 	// run each leg as a mass start if true
 	this.massStartByControl = false;
 	this.displayNames = true;
+	this.displayInitials = false;
 }
 
 Animation.prototype = {
@@ -258,16 +259,25 @@ Animation.prototype = {
 	},
 
 	toggleNameDisplay : function() {
+		var title = "";
 		if (this.displayNames) {
-			$("#btn-toggle-names").prop("title", "Show names");
-		} else {
-			$("#btn-toggle-names").prop("title", "Hide names");
+      if (this.displayInitials) {
+        this.displayNames = false;
+        this.displayInitials = false;
+        title = "Show names";
+      } else {
+        this.displayInitials = true;
+        title = "Hide names";
+      }
+    } else {
+      this.displayNames = true;
+			title = "Show initials";
 		}
-		this.displayNames = !this.displayNames;
+    $("#btn-toggle-names").prop("title", title);
 	},
 
 	runAnimation : function(fromTimer) {
-
+    var text;
 		// only increment time if called from the timer and we haven't got to the end already
 		if (this.realTime) {
 			if (this.animationSecs < this.latestFinishSecs) {
@@ -335,7 +345,12 @@ Animation.prototype = {
 				rg2.ctx.fillStyle = "black";
 				rg2.ctx.font = '20pt Arial';
 				rg2.ctx.textAlign = "left";
-				rg2.ctx.fillText(runner.name, runner.x[t] + 15, runner.y[t] + 7);
+				if (this.displayInitials) {
+          text = runner.initials;
+				} else {
+          text = runner.name;
+				}
+				rg2.ctx.fillText(text, runner.x[t] + 15, runner.y[t] + 7);
 			}
 		}
 		if (this.massStartByControl) {
@@ -405,16 +420,5 @@ Animation.prototype = {
 			formattedtime += ":" + seconds;
 		}
 		return formattedtime;
-	},
-
-	// returns seconds as mm:ss
-	formatSecsAsMinutes : function(time) {
-		var minutes = Math.floor(time / 60);
-		var seconds = time - (minutes * 60);
-		if (seconds < 10) {
-			return minutes + ":0" + seconds;
-		} else {
-			return minutes + ":" + seconds;
-		}
 	}
 };

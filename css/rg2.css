@@ -231,7 +231,7 @@ html, body {
    right: 20px;
    height: auto;
    width: auto;
-   z-index: 100;
+   z-index: 90;
    max-height: 500px;
    overflow: auto;
 }

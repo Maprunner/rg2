@@ -1,7 +1,7 @@
 {
   "name": "rg2",
   "description": "Routegadget 2",
-  "version": "0.5.6",
+  "version": "0.5.7",
   "repository": "https://github.com/Maprunner/rg2",
   "devDependencies": {
     "grunt": "~0.4.2",
