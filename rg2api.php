@@ -253,14 +253,12 @@ function deleteEvent($eventid) {
     $write["status_msg"] .= " Save error for kisat.";
   }
   
-  // delete all associated files but don't worry about errors
-  @unlink(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt");
-  @unlink(KARTAT_DIRECTORY."kommentit_".$eventid.".txt");
-  @unlink(KARTAT_DIRECTORY."merkinnat_".$eventid.".txt");
-  @unlink(KARTAT_DIRECTORY."radat_".$eventid.".txt");
-  @unlink(KARTAT_DIRECTORY."ratapisteet_".$eventid.".txt");
-  @unlink(KARTAT_DIRECTORY."sarjat_".$eventid.".txt");
-  @unlink(KARTAT_DIRECTORY."sarjojenkoodit_".$eventid.".txt");
+  // rename all associated files but don't worry about errors
+  // safer than deleting them since you can alwsy add the event again
+  $files = array("kilpailijat_", "kommentit_", "merkinnat_", "radat_", "ratapisteet_", "sarjat_", "sarjojenkoodit_");
+  foreach ($files as $file) {
+    @rename(KARTAT_DIRECTORY.$file.$eventid.".txt", KARTAT_DIRECTORY."deleted_".$file.$eventid.".txt");
+  }
               
   if ($write["status_msg"] == "") {
     $write["ok"] = TRUE;
@@ -750,7 +748,7 @@ function getAllEvents() {
 }
 
 function isScoreEvent($eventid) {
-  if (($handle = fopen(KARTAT_DIRECTORY."kisat.txt", "r")) !== FALSE) {
+  if (($handle = @fopen(KARTAT_DIRECTORY."kisat.txt", "r")) !== FALSE) {
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
       if ($data[0] == $eventid) {
         if ($data[2] == 3) {
@@ -890,7 +888,7 @@ function getCoursesForEvent($eventid) {
   }
 
   // extract control locations based on map co-ords
-  if (($handle = fopen(KARTAT_DIRECTORY."ratapisteet_".$eventid.".txt", "r")) !== FALSE) {
+  if (($handle = @fopen(KARTAT_DIRECTORY."ratapisteet_".$eventid.".txt", "r")) !== FALSE) {
     $row = 0;  
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
       // ignore first field: it is an index  
@@ -920,7 +918,7 @@ function getCoursesForEvent($eventid) {
 
   $row = 0; 
   // set up details for each course
-  if (($handle = fopen(KARTAT_DIRECTORY."sarjat_".$eventid.".txt", "r")) !== FALSE) {
+  if (($handle = @fopen(KARTAT_DIRECTORY."sarjat_".$eventid.".txt", "r")) !== FALSE) {
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
       $detail = array();
       $detail["courseid"] = intval($data[0]);

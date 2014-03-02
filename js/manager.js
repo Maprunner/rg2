@@ -2,6 +2,7 @@
 /*global Controls:false */
 /*global json_url:false */
 /*global getAngle:false */
+/*global rg2WarningDialog:false */
 function User(keksi) {
   this.x = "";
   this.y = keksi;
@@ -121,7 +122,6 @@ Manager.prototype = {
     });
     
     rg2.createEventEditDropdown();
-    
 
     $('#rg2-event-comments').focus(function() {
       // Clear comment box if user focuses on it and it still contains default text
@@ -196,6 +196,9 @@ Manager.prototype = {
       self.confirmDeleteEvent();
     }).button("disable");
     
+    // TODO: hide course delete function for now: not fully implemented yet, and may not be needed...
+    $("#rg2-temp-hide-course-delete").hide();
+    
     $("#rg2-manage-create").show();
     $("#rg2-create-tab").show();
     $("#rg2-edit-tab").show();
@@ -232,11 +235,18 @@ Manager.prototype = {
       $("#rg2-event-date-edit").val("");
       $("#rg2-event-level-edit").val("");
       $("#rg2-edit-event-comments").val("");
+      $("#rg2-route-selected").empty();
     }
       
   },
   
+  eventListLoaded : function() {
+    // called after event list has been updated
+    rg2.createEventEditDropdown();
+  },
+  
   eventFinishedLoading : function () {
+    // called once the requested event has loaded
     // copy event details to edit-form
     // you tell me why this needs parseInt but the same call above doesn't
     var kartatid = parseInt($("#rg2-event-selected").val(), 10);
@@ -332,7 +342,7 @@ Manager.prototype = {
     });
   },
   
-  doCancelUpdateEvent : function() {
+  doCancelCreateEvent : function() {
     $("#event-create-dialog").dialog("destroy");
   },
   
@@ -368,21 +378,21 @@ Manager.prototype = {
       dialogClass : "no-close",
       closeOnEscape : false,
       buttons : [{
-        text : "Update event",
-        click : function() {
-          me.doUpdateEvent();
-        }
-      }, {
         text : "Cancel",
         click : function() {
           me.doCancelUpdateEvent();
+        }
+      }, {
+        text : "Update event",
+        click : function() {
+          me.doUpdateEvent();
         }
       }]
     });
   },
   
-  doCancelUpdateCourse : function() {
-    $("#course-update-dialog").dialog("destroy");
+  doCancelUpdateEvent : function() {
+    $("#event-update-dialog").dialog("destroy");
   },
   
   doUpdateEvent : function() {
@@ -409,14 +419,9 @@ Manager.prototype = {
           // save new cookie
           self.user.y = data.keksi;
           if (data.ok) {
-            $(msg).dialog({
-              title : "Event updated"
-            });
+            rg2WarningDialog("Event updated", "Event has been updated.");
           } else {
-            var msg = "<div>" + data.status_msg + ". Event update failed. Please try again.</div>";
-            $(msg).dialog({
-              title : "Update failed"
-            });
+            rg2WarningDialog("Update failed", data.status_msg + ". Event update failed. Please try again.");
           }
         },
         error:function(jqXHR, textStatus, errorThrown) {
@@ -434,15 +439,15 @@ Manager.prototype = {
       modal : true,
       dialogClass : "no-close",
       closeOnEscape : false,
-      buttons : [{
-        text : "Delete course",
-        click : function() {
-          me.doDeleteCourse();
-        }
-      }, {
+      buttons : [ {
         text : "Cancel",
         click : function() {
           me.doCancelDeleteCourse();
+        }
+      }, {
+        text : "Delete course",
+        click : function() {
+          me.doDeleteCourse();
         }
       }]
     });
@@ -457,6 +462,7 @@ Manager.prototype = {
     var id = $("#rg2-event-selected").val();
     var routeid = $("#rg2-route-selected").val();
     var $url = json_url + "?type=deletecourse&id=" + id + "&routeid=" + routeid;
+    // TODO: add course delete functionality
     /*$.ajax({
       data:"",
         type:"POST",
@@ -480,14 +486,14 @@ Manager.prototype = {
       dialogClass : "no-close",
       closeOnEscape : false,
       buttons : [{
-        text : "Delete route",
-        click : function() {
-          me.doDeleteRoute();
-        }
-      }, {
         text : "Cancel",
         click : function() {
           me.doCancelDeleteRoute();
+        }
+      }, {
+        text : "Delete route",
+        click : function() {
+          me.doDeleteRoute();
         }
       }]
     });
@@ -515,15 +521,9 @@ Manager.prototype = {
           var msg;
           self.user.y = data.keksi;
           if (data.ok) {
-            msg = "<div>Route deleted.</div>";
-            $(msg).dialog({
-              title : "Route deleted"
-            });
+            rg2WarningDialog("Route deleted", "Route has been deleted");
           } else {
-            msg = "<div>" + data.status_msg + ". Delete failed. Please try again.</div>";
-            $(msg).dialog({
-              title : "Delete failed"
-            });
+            rg2WarningDialog("Delete failed", data.status_msg + ". Delete failed. Please try again.");
           }
         },
         error:function(jqXHR, textStatus, errorThrown) {
@@ -534,7 +534,7 @@ Manager.prototype = {
   
   confirmDeleteEvent : function() {
 
-    var msg = "<div id='event-delete-dialog'>This event will be permanently deleted. Are you sure?</div>";
+    var msg = "<div id='event-delete-dialog'>This event will be deleted. Are you sure?</div>";
     var me = this;
     $(msg).dialog({
       title : "Confirm event delete",
@@ -542,14 +542,14 @@ Manager.prototype = {
       dialogClass : "no-close",
       closeOnEscape : false,
       buttons : [{
-        text : "Delete event",
-        click : function() {
-          me.doDeleteEvent();
-        }
-      }, {
         text : "Cancel",
         click : function() {
           me.doCancelDeleteEvent();
+        }
+      }, {
+        text : "Delete event",
+        click : function() {
+          me.doDeleteEvent();
         }
       }]
     });
@@ -565,6 +565,7 @@ Manager.prototype = {
     var user = this.encodeUser();
     var json = JSON.stringify(user);
     var self = this;
+    var msg;
     $.ajax({
         data: json,
         type:"POST",
@@ -574,14 +575,12 @@ Manager.prototype = {
           // save new cookie
           self.user.y = data.keksi;
           if (data.ok) {
-            $(msg).dialog({
-              title : "Event deleted"
-            });
+            rg2WarningDialog("Event deleted", "Event has been deleted");
+            rg2.loadEventList();
+            self.setEvent();
+            $("#rg2-event-selected").empty();
           } else {
-            var msg = "<div>" + data.status_msg + ". Event delete failed. Please try again.</div>";
-            $(msg).dialog({
-              title : "Delete failed"
-            });
+            rg2WarningDialog("Delete failed", data.status_msg + ". Event delete failed. Please try again.");
           }
         },
         error:function(jqXHR, textStatus, errorThrown) {

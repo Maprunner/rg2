@@ -107,7 +107,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.5.8',
+      RG2VERSION: '0.5.9',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -442,22 +442,29 @@ var rg2 = ( function() {
       });
 
       // load event details
+      loadEventList();
+
+      setTimeout(function() {$("#rg2-container").show();}, 1000);
+    }
+    
+    function loadEventList() {
       $.getJSON(json_url, {
         type : "events",
         cache : false
       }).done(function(json) {
         console.log("Events: " + json.data.length);
-        var i = 0;
+        events.deleteAllEvents();
         $.each(json.data, function() {
           events.addEvent(new Event(this));
         });
         createEventMenu();
+        if (managing) {
+          manager.eventListLoaded();
+        }
       }).fail(function(jqxhr, textStatus, error) {
         var err = textStatus + ", " + error;
         console.log("Events request failed: " + err);
       });
-
-      setTimeout(function() {$("#rg2-container").show();}, 1000);
     }
 
     function resetMapState() {
@@ -1153,6 +1160,7 @@ var rg2 = ( function() {
       getMapSize : getMapSize,
       loadNewMap : loadNewMap,
       loadEvent : loadEvent,
+      loadEventList: loadEventList,
       eventHasResults: eventHasResults,
       mapIsGeoreferenced : mapIsGeoreferenced,
       getWorldFile : getWorldFile,
