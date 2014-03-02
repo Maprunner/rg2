@@ -11,6 +11,7 @@
 /*global header_text_colour:false */
 /*global json_url:false */
 /*global maps_url:false */
+/*global keksi: false */
 /*global Image:false */
 /*global Events:false */
 /*global Event:false */
@@ -34,6 +35,7 @@ var rg2 = ( function() {
     var mapLoadingText;
     var overprintWidth;
     var routeWidth;
+    var replayFontSize;
     var events;
     var courses;
     var results;
@@ -42,8 +44,6 @@ var rg2 = ( function() {
     var manager;
     var drawing;
     var infoPanelMaximised;
-    var infoHideIconSrc;
-    var infoShowIconSrc;
     var scaleFactor;
     var lastX;
     var lastY;
@@ -70,7 +70,9 @@ var rg2 = ( function() {
       TAB_COURSES : 1,
       TAB_RESULTS : 2,
       TAB_DRAW : 3,
-      TAB_MANAGE : 4,
+      TAB_LOGIN : 4,
+      TAB_CREATE : 5,
+      TAB_EDIT : 6,
       DEFAULT_NEW_COMMENT : "Type your comment",
       DEFAULT_EVENT_COMMENT : "Comments (optional)",
       // added to resultid when saving a GPS track
@@ -95,6 +97,7 @@ var rg2 = ( function() {
       START_TRIANGLE_LENGTH : 30,
       DEFAULT_OVERPRINT_LINE_THICKNESS : 3,
       DEFAULT_ROUTE_THICKNESS : 4,
+      DEFAULT_REPLAY_FONT_SIZE: 12,
       START_TRIANGLE_HEIGHT : 40,
       // parameters for call to draw courses
       DIM : 0.75,
@@ -104,7 +107,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.5.4',
+      RG2VERSION: '0.5.8',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -120,7 +123,7 @@ var rg2 = ( function() {
       
       $.ajaxSetup({ cache: false });
 
-      if ($('#rg2-manage').length !== 0) {
+      if ($('#rg2-manage-login').length !== 0) {
         managing = true;
       } else {
         managing = false;
@@ -170,10 +173,10 @@ var rg2 = ( function() {
       $("#btn-real-time").removeClass('active');
 
       map = new Image();
-      mapLoadingText = "Select an event";
       mapIntensity = config.FULL_INTENSITY;
       overprintWidth = config.DEFAULT_OVERPRINT_LINE_THICKNESS;
       routeWidth = config.DEFAULT_ROUTE_THICKNESS;
+      replayFontSize = config.DEFAULT_REPLAY_FONT_SIZE;
       events = new Events();
       courses = new Courses();
       results = new Results();
@@ -184,10 +187,6 @@ var rg2 = ( function() {
       // looks odd but this works for initialisation
       dragged = true;
       infoPanelMaximised = true;
-
-      // initially loaded file has a close icon
-      infoHideIconSrc = $("#rg2-resize-info-icon").attr("src");
-      infoShowIconSrc = infoHideIconSrc.replace("hide-info", "show-info");
 
       $("#rg2-header-container").css("color", header_text_colour);
       $("#rg2-header-container").css("background", header_colour);
@@ -225,7 +224,7 @@ var rg2 = ( function() {
       });
 
       $("#rg2-name-select").prop('disabled', true).click(function(event) {
-        drawing.setName(parseInt($("#rg2-name-select").val(), 10));
+        drawing.setName($("#rg2-name-select").val());
       });
 
       $("#rg2-course-select").click(function(event) {
@@ -260,6 +259,17 @@ var rg2 = ( function() {
           redraw(false);
         }
       }).val(100);
+
+      $("#spn-name-font-size").spinner({
+        max : 20,
+        min : 5,
+        step: 1,
+        numberFormat: "n",
+        spin : function(event, ui) {
+          replayFontSize = ui.value;
+          redraw(false);
+        }
+      }).val(config.DEFAULT_REPLAY_FONT_SIZE);
 
       $("#spn-course-width").spinner({
         max : 10,
@@ -390,16 +400,20 @@ var rg2 = ( function() {
       });
 
       if (managing) {
-        manager = new Manager();
+        manager = new Manager(keksi);
         $("#rg2-animation-controls").hide();
-        // hide manager options until login complete
-        $("#rg2-manager-options").hide();
+        $("#rg2-create-tab").hide();
+        $("#rg2-edit-tab").hide();
+        $("#rg2-manage-login").show();
         $rg2infopanel.tabs("disable", config.TAB_EVENTS);
         $("#rg2-draw-tab").hide();
         $("#rg2-results-tab").hide();
         $("#rg2-courses-tab").hide();
         $("#rg2-events-tab").hide();
-        $rg2infopanel.tabs("option", "active", config.TAB_MANAGE);
+        $rg2infopanel.tabs("option", "active", config.TAB_LOGIN);
+        mapLoadingText = "";
+      } else {
+        mapLoadingText = "Select an event";
       }
      
       canvas.addEventListener('touchstart', handleTouchStart, false);
@@ -433,6 +447,7 @@ var rg2 = ( function() {
         cache : false
       }).done(function(json) {
         console.log("Events: " + json.data.length);
+        var i = 0;
         $.each(json.data, function() {
           events.addEvent(new Event(this));
         });
@@ -532,7 +547,7 @@ var rg2 = ( function() {
           controls.drawControls();
           drawing.drawNewTrack();
         } else {
-          if (active === config.TAB_MANAGE) {
+          if (active === config.TAB_CREATE) {
             manager.drawControls();
           } else {
             courses.drawCourses(config.FULL_INTENSITY);
@@ -580,18 +595,15 @@ var rg2 = ( function() {
       });
     }
 
-
     function resizeInfoDisplay() {
       if (infoPanelMaximised) {
         infoPanelMaximised = false;
-        $("#rg2-resize-info-icon").attr("src", infoShowIconSrc);
         $("#rg2-resize-info").prop("title", "Show info panel");
         $("#rg2-hide-info-panel-control").css("left", "0px");
         $("#rg2-hide-info-panel-icon").removeClass("fa-chevron-left").addClass("fa-chevron-right").prop("title", "Show info panel");
         $rg2infopanel.hide();
       } else {
         infoPanelMaximised = true;
-        $("#rg2-resize-info-icon").attr("src", infoHideIconSrc);
         $("#rg2-resize-info").prop("title", "Hide info panel");
         $("#rg2-hide-info-panel-control").css("left", "366px");
         $("#rg2-hide-info-panel-icon").removeClass("fa-chevron-right").addClass("fa-chevron-left").prop("title", "Hide info panel");
@@ -722,8 +734,8 @@ var rg2 = ( function() {
           if (drawing.gpsFileLoaded()) {
             drawing.adjustTrack(Math.round(dragStart.x), Math.round(dragStart.y), Math.round(pt.x), Math.round(pt.y), whichButton ,evt.shiftKey, evt.ctrlKey);
           } else {
-            if ($rg2infopanel.tabs("option", "active") === config.TAB_MANAGE) {
-              manager.adjustControls(Math.round(dragStart.x), Math.round(dragStart.y), Math.round(pt.x), Math.round(pt.y), evt.shiftKey, evt.ctrlKey);
+            if ($rg2infopanel.tabs("option", "active") === config.TAB_CREATE) {
+              manager.adjustControls(Math.round(dragStart.x), Math.round(dragStart.y), Math.round(pt.x), Math.round(pt.y), whichButton, evt.shiftKey, evt.ctrlKey);
             } else {
               ctx.translate(pt.x - dragStart.x, pt.y - dragStart.y);
             }
@@ -737,14 +749,14 @@ var rg2 = ( function() {
     var handleInputUp = function(evt) {
       var active = $rg2infopanel.tabs("option", "active");
       if (!dragged) {
-        if (active === config.TAB_MANAGE) {
+        if (active === config.TAB_CREATE) {
           manager.mouseUp(Math.round(dragStart.x), Math.round(dragStart.y));
         } else {
           // pass button that was clicked
           drawing.mouseUp(Math.round(dragStart.x), Math.round(dragStart.y), evt.which);
         }
       } else {
-        if (active === config.TAB_MANAGE) {
+        if (active === config.TAB_CREATE) {
           manager.dragEnded();
         } else {
           drawing.dragEnded();
@@ -851,18 +863,22 @@ var rg2 = ( function() {
         createResultMenu();
         animation.updateAnimationDetails();
         $('body').css('cursor', 'auto');
-        $rg2infopanel.tabs("enable", config.TAB_COURSES);
-        $rg2infopanel.tabs("enable", config.TAB_RESULTS);
-        $rg2infopanel.tabs("enable", config.TAB_DRAW);
-        // open courses tab for new event: else stay on draw tab
-        var active = $rg2infopanel.tabs("option", "active");
-        // don't change tab if we have come from DRAW since it means
-        // we have just relaoded following a save
-        if (active !== config.TAB_DRAW) {
-          $rg2infopanel.tabs("option", "active", config.TAB_COURSES);
+        if (managing) {
+          manager.eventFinishedLoading();
+        } else {
+          $rg2infopanel.tabs("enable", config.TAB_COURSES);
+          $rg2infopanel.tabs("enable", config.TAB_RESULTS);
+          $rg2infopanel.tabs("enable", config.TAB_DRAW);
+          // open courses tab for new event: else stay on draw tab
+          var active = $rg2infopanel.tabs("option", "active");
+          // don't change tab if we have come from DRAW since it means
+          // we have just relaoded following a save
+          if (active !== config.TAB_DRAW) {
+            $rg2infopanel.tabs("option", "active", config.TAB_COURSES);
+          }
+          $rg2infopanel.tabs("refresh");
+          $("#btn-show-splits").show();
         }
-        $rg2infopanel.tabs("refresh");
-        $("#btn-show-splits").show();
         redraw(false);
       }).fail(function(jqxhr, textStatus, error) {
         $('body').css('cursor', 'auto');
@@ -1104,11 +1120,27 @@ var rg2 = ( function() {
     function getRouteWidth() {
       return routeWidth;
     }
+
+    function getReplayFontSize() {
+      return replayFontSize;
+    }
     
     function showThreeSeconds() {
      return $("#chk-show-three-seconds").prop('checked');
     }
 
+    function getEventInfo(id) {
+      return events.getEventInfo(id);
+    }
+    
+    function getCoursesForEvent(id) {
+      return courses.getCoursesForEvent();
+    }
+
+    function getRoutesForEvent() {
+      return results.getRoutesForEvent();
+    }
+        
     return {
       // functions and variables available elsewhere
       init : init,
@@ -1116,6 +1148,7 @@ var rg2 = ( function() {
       redraw : redraw,
       getOverprintWidth: getOverprintWidth,
       getRouteWidth: getRouteWidth,
+      getReplayFontSize: getReplayFontSize,
       ctx : ctx,
       getMapSize : getMapSize,
       loadNewMap : loadNewMap,
@@ -1146,7 +1179,10 @@ var rg2 = ( function() {
       getControlX : getControlX,
       getControlY : getControlY,
       createEventEditDropdown : createEventEditDropdown,
-      showThreeSeconds: showThreeSeconds
+      showThreeSeconds: showThreeSeconds,
+      getEventInfo: getEventInfo,
+      getCoursesForEvent: getCoursesForEvent,
+      getRoutesForEvent: getRoutesForEvent
     };
 
   }());

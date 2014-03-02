@@ -88,46 +88,423 @@ function encode_rg_output($output_str) {
 
 function handlePostRequest($type, $eventid) {
   $data = json_decode(file_get_contents('php://input'));
-  
-  switch ($type) {  
-  case 'addroute':
-    if (lockDatabase() !== FALSE) {
-      addNewRoute($eventid, $data);
-      unlockDatabase();
+  $write = array();
+  if (lockDatabase() !== FALSE) {
+    if ($type != 'addroute') {
+      $loggedIn = logIn($data);
     } else {
-      $write["status_msg"] = "File lock error";
-      $write["ok"] = FALSE;
-      header("Content-type: application/json"); 
-      echo json_encode($write);
+      // don't need to log in to add a route
+      $loggedIn = TRUE;
     }
-    break;  
+    if ($loggedIn) {
+      //rg2log($type);
+      switch ($type) {  
+      case 'addroute':
+        $write = addNewRoute($eventid, $data);
+        break; 
+     
+      case 'editevent':
+        $write = editEvent($eventid, $data);
+        break; 
+
+      case 'deleteevent':
+        $write = deleteEvent($eventid);
+       break; 
+
+      case 'deleteroute':
+        $write = deleteRoute($eventid);
+        break; 
+        
+      case 'deletecourse':
+        $write = deleteCourse($eventid);
+        break; 
       
-  case 'login':
-    logIn($data);
-    break;  
-  default:
-    die("Request not recognised: ".$type);
-    break;
-  }  
-}
-
-
-function logIn ($data) {
-
-  if (($handle = fopen(KARTAT_DIRECTORY."uspsw.txt", "r")) !== FALSE) {
-    $pwd = fgets($handle);
-    if ($data->pwd != $pwd) {
-      header('HTTP/1.1 401 Unauthorized', TRUE, 401);
-      $ok = FALSE;
+      case 'login':
+        // handled by default before we got here
+        $write["ok"] = TRUE;
+        $write["status_msg"] = "Login successful";        
+        break;
+      
+      default:
+        $write["status_msg"] = "Request not recognised: ".$type;
+        $write["ok"] = FALSE;
+        break;
+      } 
     } else {
-      $ok = TRUE;
+      $write["ok"] = FALSE;
+      $write["status_msg"] = "Incorrect user name or password";
+    }
+    unlockDatabase();
+  } else {
+    $write["status_msg"] = "File lock error";
+    $write["ok"] = FALSE;
+  } 
+  
+  $keksi = generateNewKeksi();
+  $write["keksi"] = $keksi;
+  
+  header("Content-type: application/json"); 
+  echo json_encode($write);
+}
+function logIn ($data) {
+  if (isset($data->x) && isset($data->y)) {  
+    $userdetails = extractString($data->x);
+    $cookie = $data->y;
+  } else {
+    $userdetails = "";
+    $cookie = "";
+  }
+  $ok = TRUE;
+  $keksi = trim(file_get_contents(KARTAT_DIRECTORY."keksi.txt"));
+  //rg2log("logIn ".$userdetails." ".$cookie);
+  if (file_exists(KARTAT_DIRECTORY."rg2userinfo.txt")) {
+    $saved_user = trim(file_get_contents(KARTAT_DIRECTORY."rg2userinfo.txt"));
+    $temp = crypt($userdetails, $saved_user);
+    if ($temp != $saved_user) {
+      //rg2log("User details incorrect. ".$temp." : ".$saved_user);
+      $ok = FALSE;
+    }
+    if ($keksi != $cookie) {
+      //rg2log("Cookies don't match. ".$keksi." : ".$cookie);
+      $ok = FALSE;
     }
   } else {
-    header('HTTP/1.1 401 Unauthorized', TRUE, 401);
-    $ok = FALSE;    
+    // new account being set up: rely on JS end to force a reasonable name/password
+    $temp = crypt($userdetails, $keksi);
+    //rg2log("Creating new account ".$temp);
+    file_put_contents(KARTAT_DIRECTORY."rg2userinfo.txt", $temp.PHP_EOL);  
   }
-  header("Content-type: application/json"); 
-  echo json_encode($ok);
+  return $ok;
+}
+
+// Mickey Mouse function to extract user name and password
+// just avoids plain text transmission for now so a bit better than RG1
+function extractString($data) {
+  $str = "";
+  for ($i = 0; $i < strlen($data); $i = $i + 2) {
+    $str .= substr($data, $i, 1);
+  }
+  return $str;
+}
+
+function generateNewKeksi() {
+  // simple cookie generator! Don't need unique, just need something vaguely random
+  $keksi = substr(str_shuffle("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"), 0, 20);
+  file_put_contents(KARTAT_DIRECTORY."keksi.txt", $keksi.PHP_EOL);
+  //rg2log("Writing keksi.txt ".$keksi);
+  return $keksi; 
+}
+
+function editEvent($eventid, $newdata) {
+  $write["status_msg"] = "";
+  $updatedfile = array();
+  $oldfile = file(KARTAT_DIRECTORY."kisat.txt");
+  foreach ($oldfile as $row) {
+    $data = explode("|", $row);
+    if ($data[0] == $eventid) {
+      //rg2log($eventid);
+      $data[3] = $newdata->name;
+      $data[4] = $newdata->eventdate;
+      $data[5] = $newdata->club;
+      $data[6] = $newdata->type;
+      $data[7] = $newdata->comments;
+      $row = "";
+      // reconstruct |-separated row
+      for ($i = 0; $i < count($data); $i++) {
+        if ($i > 0) {
+          $row .= "|";
+        }
+        $row .= $data[$i];  
+      }
+      $row .= PHP_EOL;
+      //rg2log($row);
+    }
+    $updatedfile[] = $row;
+  }
+  $status = file_put_contents(KARTAT_DIRECTORY."kisat.txt", $updatedfile);   
+  
+  if (!$status) {
+    $write["status_msg"] .= " Save error for kisat.txt.";
+  }
+  if ($write["status_msg"] == "") {
+    $write["ok"] = TRUE;
+    $write["status_msg"] = "Event detail updated";
+    rg2log("Event updated|".$eventid);
+  } else {
+    $write["ok"] = FALSE;    
+  }
+  
+  return($write);
+}
+
+function deleteEvent($eventid) {
+  $write["status_msg"] = "";
+  $updatedfile = array();
+  $oldfile = file(KARTAT_DIRECTORY."kisat.txt");
+  foreach ($oldfile as $row) {
+    $data = explode("|", $row);
+    if ($data[0] != $eventid) {
+      $updatedfile[] = $row;
+    }
+  }
+  $status = file_put_contents(KARTAT_DIRECTORY."kisat.txt", $updatedfile);   
+  
+  if (!$status) {
+    $write["status_msg"] .= " Save error for kisat.";
+  }
+  
+  // delete all associated files but don't worry about errors
+  @unlink(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt");
+  @unlink(KARTAT_DIRECTORY."kommentit_".$eventid.".txt");
+  @unlink(KARTAT_DIRECTORY."merkinnat_".$eventid.".txt");
+  @unlink(KARTAT_DIRECTORY."radat_".$eventid.".txt");
+  @unlink(KARTAT_DIRECTORY."ratapisteet_".$eventid.".txt");
+  @unlink(KARTAT_DIRECTORY."sarjat_".$eventid.".txt");
+  @unlink(KARTAT_DIRECTORY."sarjojenkoodit_".$eventid.".txt");
+              
+  if ($write["status_msg"] == "") {
+    $write["ok"] = TRUE;
+    $write["status_msg"] = "Event deleted";
+    rg2log("Event deleted|".$eventid);
+  } else {
+    $write["ok"] = FALSE;    
+  }
+  
+  return($write);
+}
+
+function deleteCourse($eventid) {
+  $write["status_msg"] = "";
+  if (isset($_GET['courseid'])) {
+    $courseid = $_GET['courseid'];
+    // delete comments
+    $filename = KARTAT_DIRECTORY."kommentit_".$eventid.".txt";
+    $oldfile = file($filename);
+    $updatedfile = array();
+    $deleted = FALSE;
+    foreach ($oldfile as $row) {
+      $data = explode("|", $row);
+      if ($data[0] == $courseid) {
+        $deleted = TRUE;
+      } else {
+        $updatedfile[] = $row;
+      }
+    }
+    $status = file_put_contents($filename, $updatedfile);
+    
+    if (!$status) {
+      $write["status_msg"] .= "Save error for kommentit. ";
+    }
+
+    // delete result records
+    $filename = KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt";
+    $oldfile = file($filename);
+    $updatedfile = array();
+    $deleted = FALSE;
+    foreach ($oldfile as $row) {
+      $data = explode("|", $row);
+      $deleted = FALSE;
+      if ($data[1] == $courseid) {
+        $deleted = TRUE;                    
+      } else {
+        $updatedfile[] = $row;
+      }
+    }
+    $status = file_put_contents($filename, $updatedfile);
+    
+    if (!$status) {
+      $write["status_msg"] .= "Save error for kilpailijat. ";
+    }
+   
+    // delete route
+    $deleted = FALSE;
+    $filename = KARTAT_DIRECTORY."merkinnat_".$eventid.".txt";
+    $oldfile = file($filename);
+    $updatedfile = array();
+    foreach ($oldfile as $row) {
+      $data = explode("|", $row);
+      if ($data[0] == $courseid) {
+        $deleted = TRUE;
+      } else {
+        $updatedfile[] = $row;
+      }
+    }
+    $status = file_put_contents($filename, $updatedfile);   
+  
+    if (!$status) {
+      $write["status_msg"] .= " Save error for merkinnat. ";
+    }
+    
+    // delete course template
+    $filename = KARTAT_DIRECTORY."radat_".$eventid.".txt";
+    $oldfile = file($filename);
+    $updatedfile = array();
+    $deleted = FALSE;
+    foreach ($oldfile as $row) {
+      $data = explode("|", $row);
+      if ($data[0] == $courseid) {
+        $deleted = TRUE;
+      } else {
+        $updatedfile[] = $row;
+      }
+    }
+    $status = file_put_contents($filename, $updatedfile);
+    
+    if (!$status) {
+      $write["status_msg"] .= "Save error for radat. ";
+    }    
+    
+    // delete course template
+    $filename = KARTAT_DIRECTORY."ratapisteet_".$eventid.".txt";
+    $oldfile = file($filename);
+    $updatedfile = array();
+    $deleted = FALSE;
+    foreach ($oldfile as $row) {
+      $data = explode("|", $row);
+      if ($data[0] == $courseid) {
+        $deleted = TRUE;
+      } else {
+        $updatedfile[] = $row;
+      }
+    }
+    $status = file_put_contents($filename, $updatedfile);
+    
+    if (!$status) {
+      $write["status_msg"] .= "Save error for ratapisteet. ";
+    }    
+
+    // delete course names
+    $filename = KARTAT_DIRECTORY."sarjat_".$eventid.".txt";
+    $oldfile = file($filename);
+    $updatedfile = array();
+    $deleted = FALSE;
+    foreach ($oldfile as $row) {
+      $data = explode("|", $row);
+      if ($data[0] == $courseid) {
+        $deleted = TRUE;
+      } else {
+        $updatedfile[] = $row;
+      }
+    }
+    $status = file_put_contents($filename, $updatedfile);
+    
+    if (!$status) {
+      $write["status_msg"] .= "Save error for sarjat. ";
+    } 
+  
+    // delete course control list
+    $filename = KARTAT_DIRECTORY."sarjojenkoodit".$eventid.".txt";
+    $oldfile = file($filename);
+    $updatedfile = array();
+    $deleted = FALSE;
+    foreach ($oldfile as $row) {
+      $data = explode("|", $row);
+      if ($data[0] == $courseid) {
+        $deleted = TRUE;
+      } else {
+        $updatedfile[] = $row;
+      }
+    }
+    $status = file_put_contents($filename, $updatedfile);
+    
+    if (!$status) {
+      $write["status_msg"] .= "Save error for sarjojenkoodit. ";
+    } 
+            
+  } else {
+    $write["status_msg"] = "Invalid course id. ";  
+  }
+  
+  if ($write["status_msg"] == "") {
+    $write["ok"] = TRUE;
+    $write["status_msg"] = "Course deleted.";
+    rg2log("Course deleted|".$eventid."|".$courseid);
+  } else {
+    $write["ok"] = FALSE;    
+  }
+  
+  return($write);
+}
+
+function deleteRoute($eventid) {
+  $write["status_msg"] = "";
+  if (isset($_GET['routeid'])) {
+    $routeid = $_GET['routeid'];
+    // delete comments
+    $filename = KARTAT_DIRECTORY."kommentit_".$eventid.".txt";
+    $oldfile = file($filename);
+    $updatedfile = array();
+    $deleted = FALSE;
+    foreach ($oldfile as $row) {
+      $data = explode("|", $row);
+      if ($data[1] == $routeid) {
+        $deleted = TRUE;
+      } else {
+        $updatedfile[] = $row;
+      }
+    }
+    $status = file_put_contents($filename, $updatedfile);
+    
+    if (!$status) {
+      $write["status_msg"] .= "Save error for kommentit. ";
+    }
+
+    // delete GPS details in result record
+    if ($routeid >= GPS_RESULT_OFFSET) {
+      $filename = KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt";
+      $oldfile = file($filename);
+      $updatedfile = array();
+      foreach ($oldfile as $row) {
+        $data = explode("|", $row);
+        $deleted = FALSE;
+        if ($data[0] == $routeid) {
+          $deleted = TRUE;                    
+        } else {
+          $updatedfile[] = $row;
+        }
+      }
+      $status = file_put_contents($filename, $updatedfile);
+    
+      if (!$status) {
+        $write["status_msg"] .= "Save error for kilpailijat. ";
+      }
+
+    }
+      
+    // delete route
+    $deleted = FALSE;
+    $filename = KARTAT_DIRECTORY."merkinnat_".$eventid.".txt";
+    $oldfile = file($filename);
+    $updatedfile = array();
+    foreach ($oldfile as $row) {
+      $data = explode("|", $row);
+      if ($data[1] == $routeid) {
+        $deleted = TRUE;
+      } else {
+        $updatedfile[] = $row;
+      }
+    }
+    $status = file_put_contents($filename, $updatedfile);   
+  
+    if (!$status) {
+      $write["status_msg"] .= " Save error for merkinnat. ";
+    }
+    if (!$deleted) {
+      $write["status_msg"] .= "Invalid route id. ";
+    }
+  } else {
+    $write["status_msg"] = "Invalid route id. ";  
+  }
+  
+  if ($write["status_msg"] == "") {
+    $write["ok"] = TRUE;
+    $write["status_msg"] = "Route deleted";
+    rg2log("Route deleted|".$eventid."|".$routeid);
+  } else {
+    $write["ok"] = FALSE;    
+  }
+  
+  return($write);
 }
 
 function addNewRoute($eventid, $data) {
@@ -252,8 +629,8 @@ function addNewRoute($eventid, $data) {
     $write["ok"] = FALSE;    
   }
   
-  header("Content-type: application/json"); 
-  echo json_encode($write);
+  return $write;
+
 }
 
 function lockDatabase() {
@@ -622,7 +999,11 @@ function getTracksForEvent($eventid) {
       $detail["name"] = encode_rg_input($data[2]);
       $detail["mystery"] = $data[3];
       list($detail["gpsx"], $detail["gpsy"]) = expandCoords($data[4]);
-      $detail["controls"] = $data[5];
+      if (count($data) > 5) {
+        $detail["controls"] = $data[5];
+      } else {
+        $detail["controls"] = "";
+      }
       $output[$row] = $detail;        
       $row++;
     }
@@ -640,4 +1021,14 @@ function rg2log($msg) {
     error_log(date("c", time())."|".$user_agent."|".$msg.PHP_EOL, 3, RG_LOG_FILE);
   }
 }
+
+function generateCookie() {
+  // simple cookie generator! Don't need unique, just need something vaguely random
+  $keksi = substr(str_shuffle("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"), 0, 20);
+  // overwrite old cookie file  
+  //TODO add error check
+  file_put_contents($manager_url."keksi.txt", $keksi);
+  return $keksi;  
+}
+
 ?>

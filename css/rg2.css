@@ -28,7 +28,7 @@ html, body {
 }
 
 #rg2-manager-event-select {
-  margin-top:100px;
+  /*margin-top:100px;*/
   width: 100%;
 }
 
@@ -142,8 +142,8 @@ html, body {
 }
 
 .rg2-hr {
-	margin-top:20px;
-	margin-bottom:20px;
+	margin-top: 10px;
+	margin-bottom: 10px;
 }
 #rg2-clock {
    font-weight: bold;
@@ -162,7 +162,7 @@ html, body {
   width: 30px;
 }
 
-#spn-map-intensity, #spn-course-width, #spn-route-width {
+#spn-map-intensity, #spn-course-width, #spn-route-width, #spn-name-font-size {
   width: 40px;
 }
 
@@ -171,7 +171,7 @@ html, body {
   padding-right: 5px;
 }
 
-#rg2-route-width-spinner, #rg2-course-width-spinner, #rg2-dim-spinner, #rg2-show-seconds {
+#rg2-route-width-spinner, #rg2-course-width-spinner, #rg2-dim-spinner, #rg2-show-seconds, #rg2-names-spinner {
   float: right;
   padding-right: 5px;
   margin-top: 5px;
@@ -231,7 +231,7 @@ html, body {
    right: 20px;
    height: auto;
    width: auto;
-   z-index: 100;
+   z-index: 90;
    max-height: 500px;
    overflow: auto;
 }
@@ -245,7 +245,7 @@ html, body {
 	float: right;
 }
 
-#rg2-manager-options .ui-button {
+#rg2-manage-edit .ui-button {
 	margin-top: 10px;
   margin-bottom: 10px;
 }
@@ -258,6 +258,7 @@ html, body {
 /* light green background*/
 .valid {
   background-color: #99ffcc;
+  border-radius: 3px;
 }
 
 .coursemenutable tr, td, th {
@@ -354,7 +355,7 @@ height: 20px;
 #rg2-event-comments {
 	margin-top: 10px;
 	margin-bottom: 10px;
-	width: 100%;
+	width: 95%;
 	height: 50px;
 }
 
@@ -414,3 +415,66 @@ image, canvas {
     -webkit-user-drag: none;
 }
 
+.manage-input {
+  margin-top: 3px;
+  margin-right: 3px;
+  width: 200px;
+}
+
+.manage-label {
+  margin-left: 3px;
+}
+
+.no-top-margin {
+  margin-top: 0px;
+  margin-bottom: 2px;
+}
+
+#rg2-manage-create {
+  padding-right: 5px;
+}
+
+.manage-file-input {
+  margin-top: 4px;
+  margin-bottom: 4px;
+  width: 200px;
+}
+
+.manage-file-input-div {
+  height: 41px;
+}
+
+.manage-file-label {
+  margin-top: 9px;
+  margin-bottom: 9px;
+}
+
+.manage-event-edit-div {
+  height: 30px;
+  }
+
+.manage-event-edit-div label, .manage-event-edit-div input {
+  display: inline-block;
+}
+
+.manage-event-edit-div label {
+  width: 80px;
+}
+
+
+#manage-edit-options input {
+  width: 220px;
+}
+
+#manage-edit-options .ui-accordion-content {
+  padding: 1em 0.5em;
+}
+
+#rg2-edit-event-comments {
+  width: 95%;
+  height: 70px;
+}
+
+#rg2-event-selected {
+  width: 95%;
+}

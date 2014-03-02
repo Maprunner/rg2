@@ -77,6 +77,23 @@ Results.prototype = {
 		return count;
 	},
 
+  getRoutesForEvent : function() {
+    var routes = [];
+    var route;
+    for (var i = 0; i < this.results.length; i += 1) {
+      if (this.results[i].hasValidTrack) {
+        route = {};
+        route.id = i;
+        route.resultid = this.results[i].resultid;
+        route.name = this.results[i].name;
+        route.time = this.results[i].time;
+        route.coursename = this.results[i].coursename;
+        routes.push(route);
+      }
+    }
+    return routes;
+  },
+
 	getTotalResults : function() {
 		return this.results.length;
 	},
@@ -322,6 +339,7 @@ function Result(data, isScoreEvent, colour) {
 		this.isGPSTrack = false;
 	}
 	this.name = data.name;
+	this.initials = this.getInitials(this.name);
 	this.starttime = data.starttime;
 	this.time = data.time;
 	// get round iconv problem in API for now
@@ -554,5 +572,30 @@ Result.prototype = {
 	},
 	getTime : function() {
 		return this.time;
-	}
+	},
+	
+  getInitials : function (name) {
+    // converts name to initials
+    // remove white space at each end
+    name.trim();
+    var i;
+    var addNext;
+    var len = name.length;
+    var initials = "";
+    if (len === 0) {
+      return "";
+    }
+    addNext = true;
+    for (i = 0; i < len; i += 1) {
+      if (addNext) {
+        initials += name.substr(i, 1);
+        addNext = false;
+      }
+      if (name.charAt(i) === " ") {
+        addNext = true;
+      }
+    }
+    
+    return initials;
+  }
 };

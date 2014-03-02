@@ -1,0 +1,116 @@
+<div id="rg2-manage-login">
+  <form id="rg2-manager-login-form">
+    <div><strong>RG2 manager functionality is still under development. Make sure you have backed up the kartat directory before you test it.</strong></div>
+    <hr class="rg2-hr">    
+    <div>
+      <label for="rg2-user-name">User name:</label>
+      <input class="pushright" id="rg2-user-name" type="text">
+    </div>
+    <div>
+      <label for="rg2-password">Password:</label>
+      <input class="pushright" id="rg2-password" type="password">
+    </div>
+    <button id="btn-login">
+      Log in
+    </button>
+  </form>
+</div>
+<div id="rg2-manage-create">
+  <h3 class="no-top-margin">Event details</h3>
+  <div id="rg2-select-event-name">
+    <label for="rg2-event-name" class="manage-label"> Event name:</label>
+    <input class="pushright manage-input" id="rg2-event-name" type="text" autofocus>
+  </div>
+  <div id="rg2-select-map-name">
+    <label for="rg2-map-name" class="manage-label">Map name:</label>
+    <input class="pushright manage-input" id="rg2-map-name" type="text">
+  </div>
+  <div id="rg2-select-club-name">
+    <label for="rg2-club-name" class="manage-label">Club name:</label>
+    <input class="pushright manage-input" id="rg2-club-name" type="text">
+  </div>
+  <div id="rg2-select-event-date">
+    <label for="rg2-event-date" class="manage-label">Event date:</label>
+    <input class="pushright manage-input" id="rg2-event-date" type="text">
+  </div>
+  <div id="rg2-select-event-level">
+    <label for="rg2-event-level" class="manage-label">Event level:</label>
+    <select class="pushright manage-input" id="rg2-event-level"></select>
+  </div>
+  <div id="rg2-results-grouping" class="manage-label">
+    Group results by:
+    <div class="pushright">
+      <input type='radio' id='course' name="radio" checked="checked"><label for="course">Course</label>
+      <input type='radio' id='class' name="radio"><label for="class">Class</label>
+    </div>
+  </div>
+  <textarea id="rg2-event-comments"></textarea>
+  <hr class="rg2-hr">
+  <h3 class="no-top-margin">Event files</h3>
+  <div id="rg2-select-map-file" class="manage-file-input-div">
+    <label for="rg2-load-map-file" class="manage-file-label">Map file</label>
+    <input type='file' accept='.jpg' id='rg2-load-map-file' class="pushright manage-file-input" />
+  </div>
+  <div id="rg2-select-results-file" class="manage-file-input-div">
+    <label for="rg2-load-results-file" class="manage-file-label">Results file</label>
+    <input type='file' accept='.csv' id='rg2-load-results-file' class="pushright manage-file-input" />
+  </div>
+  <div id="rg2-select-course-file" class="manage-file-input-div">
+    <label for="rg2-load-course-file" class="manage-file-label">Course file</label>
+    <input type='file' accept='.xml' id='rg2-load-course-file' class="pushright manage-file-input" />
+  </div>
+  <div id="rg2-course-allocations"></div>
+  <input type="checkbox" id="btn-move-map-and-controls">  
+  <label for="btn-move-map-and-controls"> Move map and controls together (or right click-drag)</label>
+  <br/>
+  <br/>
+  <button type="button" id="btn-create-event">Create Event</button>
+</div>
+<div id="rg2-manage-edit">
+  <h3 class="no-top-margin">Select event</h3>
+  <div id="rg2-manager-event-select">
+    <select id="rg2-event-selected"></select>
+  </div>
+  <hr class="rg2-hr">
+  <div id="manage-edit-options">
+    <h3 class="no-top-margin">Edit event details</h3>
+    <div>
+      <div id="rg2-edit-event-name" class="manage-event-edit-div">
+      <label for="rg2-event-name-edit">Event:</label>
+      <input class="pushright manage-event-edit-form" id="rg2-event-name-edit" type="text" autofocus>
+    </div>
+    <div id="rg2-edit-club-name" class="manage-event-edit-div">
+      <label for="rg2-club-name-edit">Club:</label>
+      <input class="pushright manage-event-edit-form" id="rg2-club-name-edit" type="text">
+    </div>
+    <div id="rg2-edit-event-date" class="manage-event-edit-div">
+      <label for="rg2-event-date-edit" class="manage-event-edit-form">Date:</label>
+      <input class="pushright manage-event-edit-form" id="rg2-event-date-edit" type="text">
+    </div>
+    <div id="rg2-edit-event-level" class="manage-event-edit-div">
+      <label for="rg2-event-level-edit">Level:</label>
+      <select class="pushright manage-event-edit-form" id="rg2-event-level-edit"></select>
+    </div>
+    <textarea id="rg2-edit-event-comments"></textarea> 
+    <button type="button" class="manage-file-label" id="btn-update-event">Update event details</button>
+    </div>
+    <hr class="rg2-hr">
+    <h3 class="no-top-margin">Delete course</h3>
+    <div>
+      <select id="rg2-course-selected"></select>
+      <br/>
+      <button type="button" class="manage-file-label" id="btn-delete-course">Delete</button>
+    </div>
+    <hr class="rg2-hr">
+    <h3 class="no-top-margin">Delete route</h3>
+    <div>
+      <select id="rg2-route-selected"></select>
+      <br/>
+      <button type="button" class="manage-file-label" id="btn-delete-route">Delete</button>
+    </div>   
+    <hr class="rg2-hr">
+    <h3 class="no-top-margin">Delete event</h3>
+    <div id="manage-delete-event">
+      <button type="button" id="btn-delete-event">Delete event</button>
+    </div> 
+  </div>

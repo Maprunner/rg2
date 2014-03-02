@@ -2,14 +2,16 @@
 /*global Controls:false */
 /*global json_url:false */
 /*global getAngle:false */
-function User() {
+function User(keksi) {
+  this.x = "";
+  this.y = keksi;
   this.name = null;
   this.pwd = null;
 }
 
-function Manager() {
+function Manager(keksi) {
   this.loggedIn = false;
-  this.user = new User();
+  this.user = new User(keksi);
   this.eventName = null;
   this.mapName = null;
   this.eventDate = null;
@@ -29,17 +31,17 @@ function Manager() {
   this.handleY = null;
   this.HANDLE_DOT_RADIUS = 10;
   this.handleColor = '#ff0000';
-
+  $("#btn-login").button();
   var self = this;
 
-  $("#rg2-manager-login").submit(function(event) {
+  $("#rg2-manager-login-form").submit(function(event) {
     self.user.name = $("#rg2-user-name").val();
     self.user.pwd = $("#rg2-password").val();
     // check we have user name and password
-    if ((self.user.name) && (self.user.pwd)) {
+    if ((self.user.name.length > 4) && (self.user.pwd.length > 4)) {
       self.logIn();
     } else {
-      var msg = "<div>Please enter user name and password.</div>";
+      var msg = "<div>Please enter user name and password of at least five characters.</div>";
       $(msg).dialog({
         title : "Login failed"
       });
@@ -58,9 +60,26 @@ Manager.prototype = {
 
   Constructor : Manager,
 
+  encodeUser: function () {
+    var data = {};
+    data.x = this.alterString(this.user.name + this.user.pwd, this.user.y);
+    data.y = this.user.y;
+    return data;
+  },
+  
+  alterString : function(input, pattern) {
+    var i;
+    var str = "";
+    for (i = 0; i < input.length; i += 1) {
+      str += input.charAt(i) + pattern.charAt(i);
+    }
+    return str;
+  },
+  
   logIn : function() {
     var url = json_url + '?type=login';
-    var json = JSON.stringify(this.user);
+    var user = this.encodeUser();
+    var json = JSON.stringify(user);
     var self = this;
     $.ajax({
       type : 'POST',
@@ -69,7 +88,16 @@ Manager.prototype = {
       url : url,
       cache : false,
       success : function(data, textStatus, jqXHR) {
-        self.enableEventEdit();
+        // save new cookie
+        self.user.y = data.keksi;
+        if (data.ok) {
+          self.enableEventEdit();
+        } else {
+          var msg = "<div>" + data.status_msg + ". Login failed. Please try again.</div>";
+          $(msg).dialog({
+            title : "Login failed"
+          });
+        }
       },
       error : function(jqXHR, textStatus, errorThrown) {
         console.log(errorThrown);
@@ -86,9 +114,14 @@ Manager.prototype = {
     this.loggedIn = true;
     var self = this;
 
-    this.createEventLevelDropdown();
-
+    this.createEventLevelDropdown("rg2-event-level");
+    $("#rg2-event-level").click(function(event) {
+      self.eventLevel = $("#rg2-event-level").val();
+      $("#rg2-select-event-level").addClass('valid');
+    });
+    
     rg2.createEventEditDropdown();
+    
 
     $('#rg2-event-comments').focus(function() {
       // Clear comment box if user focuses on it and it still contains default text
@@ -99,12 +132,18 @@ Manager.prototype = {
     });
 
     $("#rg2-event-date").datepicker({
-      dateFormat : 'dd/mm/yy',
+      dateFormat : 'yy-mm-dd',
       onSelect : function(date) {
         self.setDate(date);
       }
     });
-
+    
+    this.createEventLevelDropdown("rg2-event-level-edit");
+    
+    $("#rg2-event-date-edit").datepicker({
+      dateFormat : 'yy-mm-dd'
+    });
+    
     $("#rg2-event-name").on("change", function(evt) {
       self.setEventName(evt);
     });
@@ -132,33 +171,37 @@ Manager.prototype = {
     $("#btn-move-map-and-controls").click(function(evt) {
       self.toggleMoveAll(evt.target.checked);
     });
-
-    $("#btn-add-event").button().click(function() {
-      $("#rg2-add-new-event").dialog({
-        title : "Add new event",
-        width : 'auto',
-        buttons : {
-          Continue : function() {
-            self.doContinue();
-          },
-          Cancel : function() {
-            $(this).dialog('close');
-          }
-        }
-      });
+     
+    $("#rg2-manager-event-select").click(function(event) {
+        self.setEvent(parseInt($("#rg2-event-selected").val(), 10));
     });
-
-    // TODO buttons disabled until handling code written
-    $("#btn-edit-event").button().click(function() {
-      var id = $("#rg2-manager-event-select").val();
+                 
+    $("#btn-create-event").button().click(function() {
+      self.confirmCreateEvent();
     }).button("disable");
-
+    
+    $("#btn-update-event").button().click(function() {
+      self.confirmUpdateEvent();
+    }).button("disable");
+    
+    $("#btn-delete-course").button().click(function() {
+      self.confirmDeleteCourse();
+    }).button("disable");
+    
+    $("#btn-delete-route").button().click(function() {
+      self.confirmDeleteRoute();
+    }).button("disable");
+    
     $("#btn-delete-event").button().click(function() {
-      var id = $("#rg2-manager-event-select").val();
+      self.confirmDeleteEvent();
     }).button("disable");
-
-    $("#rg2-manager-options").show();
-    $("#rg2-manager-login").hide();
+    
+    $("#rg2-manage-create").show();
+    $("#rg2-create-tab").show();
+    $("#rg2-edit-tab").show();
+    $("#rg2-manage-login").hide();
+    $("#rg2-login-tab").hide();
+    $('#rg2-info-panel').tabs('option', 'active', rg2.config.TAB_CREATE);
   },
 
   doContinue : function() {
@@ -173,6 +216,72 @@ Manager.prototype = {
     }
   },
 
+  setEvent : function(kartatid) {
+    if (kartatid) {
+      // load details for this event
+      var event = rg2.getEventInfo(kartatid);
+      rg2.loadEvent(event.id);
+    } else {
+      // no event selected so disable everything
+      $("#btn-delete-event").button("disable");
+      $("#btn-update-event").button("disable");
+      $("#btn-delete-route").button("disable");
+      $("#btn-delete-course").button("disable");
+      $("#rg2-event-name-edit").val("");
+      $("#rg2-club-name-edit").val("");
+      $("#rg2-event-date-edit").val("");
+      $("#rg2-event-level-edit").val("");
+      $("#rg2-edit-event-comments").val("");
+    }
+      
+  },
+  
+  eventFinishedLoading : function () {
+    // copy event details to edit-form
+    // you tell me why this needs parseInt but the same call above doesn't
+    var kartatid = parseInt($("#rg2-event-selected").val(), 10);
+    var event = rg2.getEventInfo(kartatid);
+    $("#rg2-event-name-edit").empty().val(event.name);
+    $("#rg2-club-name-edit").empty().val(event.club);
+    $("#rg2-event-date-edit").empty().val(event.date);
+    $("#rg2-event-level-edit").val(event.rawtype);
+    $("#rg2-edit-event-comments").empty().val(event.comment);
+    $("#btn-delete-event").button("enable");
+    $("#btn-update-event").button("enable");
+    $("#btn-delete-route").button("enable");
+    $("#btn-delete-course").button("enable");
+    this.createCourseDeleteDropdown(event.id);
+    this.createRouteDeleteDropdown(event.id);
+  },
+  
+  createCourseDeleteDropdown : function(id) {
+    $("#rg2-course-selected").empty();
+    var dropdown = document.getElementById("rg2-course-selected");
+    var courses = rg2.getCoursesForEvent(id);
+    var i;
+    var opt;
+    for ( i = 0; i < courses.length; i += 1) {
+      opt = document.createElement("option");
+      opt.value = courses[i].id;
+      opt.text = courses[i].name;
+      dropdown.options.add(opt);
+    }
+  },
+
+  createRouteDeleteDropdown : function(id) {
+    $("#rg2-route-selected").empty();
+    var dropdown = document.getElementById("rg2-route-selected");
+    var routes = rg2.getRoutesForEvent(id);
+    var i;
+    var opt;
+    for ( i = 0; i < routes.length; i += 1) {
+      opt = document.createElement("option");
+      opt.value = routes[i].resultid;
+      opt.text = routes[i].resultid + ": " + routes[i].name + " on " + routes[i].coursename;
+      dropdown.options.add(opt);
+    }
+  },
+  
   getCoursesFromResults : function() {
     var i;
     this.resultCourses = [];
@@ -200,6 +309,288 @@ Manager.prototype = {
     }
   },
 
+  confirmCreateEvent : function() {
+
+    var msg = "<div id='event-create-dialog'>Are you sure you want to create this event?</div>";
+    var me = this;
+    $(msg).dialog({
+      title : "Confirm event creation",
+      modal : true,
+      dialogClass : "no-close",
+      closeOnEscape : false,
+      buttons : [{
+        text : "Create event",
+        click : function() {
+          me.doCreateEvent();
+        }
+      }, {
+        text : "Cancel",
+        click : function() {
+          me.doCancelCreateEvent();
+        }
+      }]
+    });
+  },
+  
+  doCancelUpdateEvent : function() {
+    $("#event-create-dialog").dialog("destroy");
+  },
+  
+  doCreateEvent : function() {
+    $("#event-create-dialog").dialog("destroy");
+    var id = $("#rg2-event-selected").val();
+    var $url = json_url + "?type=createevent";
+    var data = {};
+
+    var json = JSON.stringify(data);
+    /* $.ajax({
+        data:json,
+        type:"POST",
+        url:$url,
+        dataType:"json",
+        success:function(data, textStatus, jqXHR) {
+          console.log(data.status_msg);
+        },
+        error:function(jqXHR, textStatus, errorThrown) {
+          console.log(textStatus);
+        }
+        
+    }); */
+  },
+  
+  confirmUpdateEvent : function() {
+
+    var msg = "<div id='event-update-dialog'>Are you sure you want to update this event?</div>";
+    var me = this;
+    $(msg).dialog({
+      title : "Confirm event update",
+      modal : true,
+      dialogClass : "no-close",
+      closeOnEscape : false,
+      buttons : [{
+        text : "Update event",
+        click : function() {
+          me.doUpdateEvent();
+        }
+      }, {
+        text : "Cancel",
+        click : function() {
+          me.doCancelUpdateEvent();
+        }
+      }]
+    });
+  },
+  
+  doCancelUpdateCourse : function() {
+    $("#course-update-dialog").dialog("destroy");
+  },
+  
+  doUpdateEvent : function() {
+    $("#event-update-dialog").dialog("destroy");
+    var id = $("#rg2-event-selected").val();
+    var $url = json_url + "?type=editevent&id=" + id;
+    var data = {};
+    data.comments = $("#rg2-edit-event-comments").val();
+    data.name = $("#rg2-event-name-edit").val();
+    data.type = $("#rg2-event-level-edit").val();
+    data.eventdate = $("#rg2-event-date-edit").val();
+    data.club = $("#rg2-club-name-edit").val();
+    var user = this.encodeUser();
+    data.x = user.x;
+    data.y = user.y;
+    var json = JSON.stringify(data);
+    var self = this;
+    $.ajax({
+        data:json,
+        type:"POST",
+        url:$url,
+        dataType:"json",
+        success:function(data, textStatus, jqXHR) {
+          // save new cookie
+          self.user.y = data.keksi;
+          if (data.ok) {
+            $(msg).dialog({
+              title : "Event updated"
+            });
+          } else {
+            var msg = "<div>" + data.status_msg + ". Event update failed. Please try again.</div>";
+            $(msg).dialog({
+              title : "Update failed"
+            });
+          }
+        },
+        error:function(jqXHR, textStatus, errorThrown) {
+          console.log(textStatus);
+        }
+        
+    });
+  },
+  
+  confirmDeleteCourse : function() {
+    var msg = "<div id='course-delete-dialog'>This course will be permanently deleted. Are you sure?</div>";
+    var me = this;
+    $(msg).dialog({
+      title : "Confirm course delete",
+      modal : true,
+      dialogClass : "no-close",
+      closeOnEscape : false,
+      buttons : [{
+        text : "Delete course",
+        click : function() {
+          me.doDeleteCourse();
+        }
+      }, {
+        text : "Cancel",
+        click : function() {
+          me.doCancelDeleteCourse();
+        }
+      }]
+    });
+  },
+  
+  doCancelDeleteCourse : function() {
+    $("#course-delete-dialog").dialog("destroy");
+  },
+  
+  doDeleteCourse : function() {
+    $("#course-delete-dialog").dialog("destroy");
+    var id = $("#rg2-event-selected").val();
+    var routeid = $("#rg2-route-selected").val();
+    var $url = json_url + "?type=deletecourse&id=" + id + "&routeid=" + routeid;
+    /*$.ajax({
+      data:"",
+        type:"POST",
+        url:$url,
+        dataType:"json",
+        success:function(data, textStatus, jqXHR) {
+          console.log(data.status_msg);
+        },
+        error:function(jqXHR, textStatus, errorThrown) {
+          console.log(textStatus);
+        } 
+    }); */
+  },
+  
+  confirmDeleteRoute : function() {
+    var msg = "<div id='route-delete-dialog'>This route will be permanently deleted. Are you sure?</div>";
+    var me = this;
+    $(msg).dialog({
+      title : "Confirm route delete",
+      modal : true,
+      dialogClass : "no-close",
+      closeOnEscape : false,
+      buttons : [{
+        text : "Delete route",
+        click : function() {
+          me.doDeleteRoute();
+        }
+      }, {
+        text : "Cancel",
+        click : function() {
+          me.doCancelDeleteRoute();
+        }
+      }]
+    });
+  },
+  
+   doCancelDeleteRoute : function() {
+    $("#route-delete-dialog").dialog("destroy");
+  },
+  
+  doDeleteRoute : function() {
+    $("#route-delete-dialog").dialog("destroy");
+    var id = $("#rg2-event-selected").val();
+    var routeid = $("#rg2-route-selected").val();
+    var $url = json_url + "?type=deleteroute&id=" + id + "&routeid=" + routeid;
+    var user = this.encodeUser();
+    var json = JSON.stringify(user);
+    var self = this;
+    $.ajax({
+        data: json,
+        type:"POST",
+        url:$url,
+        dataType:"json",
+        success:function(data, textStatus, jqXHR) {
+          // save new cookie
+          var msg;
+          self.user.y = data.keksi;
+          if (data.ok) {
+            msg = "<div>Route deleted.</div>";
+            $(msg).dialog({
+              title : "Route deleted"
+            });
+          } else {
+            msg = "<div>" + data.status_msg + ". Delete failed. Please try again.</div>";
+            $(msg).dialog({
+              title : "Delete failed"
+            });
+          }
+        },
+        error:function(jqXHR, textStatus, errorThrown) {
+          console.log(textStatus);
+        }
+    });
+  },
+  
+  confirmDeleteEvent : function() {
+
+    var msg = "<div id='event-delete-dialog'>This event will be permanently deleted. Are you sure?</div>";
+    var me = this;
+    $(msg).dialog({
+      title : "Confirm event delete",
+      modal : true,
+      dialogClass : "no-close",
+      closeOnEscape : false,
+      buttons : [{
+        text : "Delete event",
+        click : function() {
+          me.doDeleteEvent();
+        }
+      }, {
+        text : "Cancel",
+        click : function() {
+          me.doCancelDeleteEvent();
+        }
+      }]
+    });
+  },
+  doCancelDeleteEvent : function() {
+    $("#event-delete-dialog").dialog("destroy");
+  },
+  
+  doDeleteEvent : function() {
+    $("#event-delete-dialog").dialog("destroy");
+    var id = $("#rg2-event-selected").val();
+    var $url = json_url + "?type=deleteevent&id=" + id;
+    var user = this.encodeUser();
+    var json = JSON.stringify(user);
+    var self = this;
+    $.ajax({
+        data: json,
+        type:"POST",
+        url:$url,
+        dataType:"json",
+        success:function(data, textStatus, jqXHR) {
+          // save new cookie
+          self.user.y = data.keksi;
+          if (data.ok) {
+            $(msg).dialog({
+              title : "Event deleted"
+            });
+          } else {
+            var msg = "<div>" + data.status_msg + ". Event delete failed. Please try again.</div>";
+            $(msg).dialog({
+              title : "Delete failed"
+            });
+          }
+        },
+        error:function(jqXHR, textStatus, errorThrown) {
+          console.log(textStatus);
+        }
+        
+    });
+  },
+  
   readResultsCSV : function(evt) {
 
     var reader = new FileReader();
@@ -504,11 +895,11 @@ Manager.prototype = {
     }
   },
 
-  createEventLevelDropdown : function() {
-    $("#rg2-event-level").empty();
-    var dropdown = document.getElementById("rg2-event-level");
-    var types = ["Local", "Regional", "National", "Training", "International"];
-    var abbrev = ["L", "R", "N", "T", "I"];
+  createEventLevelDropdown : function(id) {
+    $("#" + id).empty();
+    var dropdown = document.getElementById(id);
+    var types = ["Training", "Local", "Regional", "National", "International"];
+    var abbrev = ["T", "L", "R", "N", "I"];
     var opt;
     var i;
     for ( i = 0; i < types.length; i += 1) {
@@ -517,11 +908,6 @@ Manager.prototype = {
       opt.text = types[i];
       dropdown.options.add(opt);
     }
-    var self = this;
-    $("#rg2-event-level").click(function(event) {
-      self.eventLevel = $("#rg2-event-level").val();
-      $("#rg2-select-event-level").addClass('valid');
-    });
 
   },
 
@@ -573,13 +959,13 @@ Manager.prototype = {
   },
 
   // based on adjustTrack from draw.js
-  adjustControls : function(x1, y1, x2, y2, shiftKeyPressed, ctrlKeyPressed) {
+  adjustControls : function(x1, y1, x2, y2, button, shiftKeyPressed, ctrlKeyPressed) {
     var i;
     var x;
     var y;
     var dx;
     var dy;
-    if (this.backgroundLocked) {
+    if ((this.backgroundLocked) || (button === rg2.config.RIGHT_CLICK)) {
       // drag track and background
       rg2.ctx.translate(x2 - x1, y2 - y1);
     } else {

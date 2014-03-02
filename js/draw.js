@@ -102,7 +102,7 @@ Draw.prototype = {
       if ((trk.routeData.resultid !== null) && (trk.routeData.courseid !== null)) {
         this.addNewPoint(x, y);
       } else {
-        rg2WarningDialog('Select course and name', 'Please select course and name before you start drawing a route or upload a file.');
+        rg2WarningDialog('No course/name', 'Please select course and name before you start drawing a route or upload a file.');
       }
     }
   },
