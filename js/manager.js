@@ -3,6 +3,7 @@
 /*global json_url:false */
 /*global getAngle:false */
 /*global rg2WarningDialog:false */
+/*global FormData:false */
 function User(keksi) {
   this.x = "";
   this.y = keksi;
@@ -10,11 +11,37 @@ function User(keksi) {
   this.pwd = null;
 }
 
+function Map(data) {
+  if (data !== undefined){
+    // existing map from database
+    this.mapid = data.mapid;
+    this.name = data.name;
+    this.georeferenced = data.georeferenced;
+    this.A = data.A;
+    this.B = data.B;
+    this.C = data.C;
+    this.D = data.D;
+    this.E = data.E;
+    this.F = data.F;
+  } else {
+    // new map to be added
+    this.mapid = 0;
+    this.name = "";
+    this.georeferenced = false;
+    this.A = 0;
+    this.B = 0;
+    this.C = 0;
+    this.D = 0;
+    this.E = 0;
+    this.F = 0;
+  }
+}
+
 function Manager(keksi) {
   this.loggedIn = false;
   this.user = new User(keksi);
+  this.newMap = new Map();
   this.eventName = null;
-  this.mapName = null;
   this.eventDate = null;
   this.eventLevel = null;
   this.club = null;
@@ -27,9 +54,11 @@ function Manager(keksi) {
   this.allocationsDisplayed = false;
   this.mapWidth = 0;
   this.mapHeight = 0;
+  this.mapFile = undefined;
   this.backgroundLocked = false;
   this.handleX = null;
   this.handleY = null;
+  this.maps = [];
   this.HANDLE_DOT_RADIUS = 10;
   this.handleColor = '#ff0000';
   $("#btn-login").button();
@@ -114,6 +143,8 @@ Manager.prototype = {
   enableEventEdit : function() {
     this.loggedIn = true;
     var self = this;
+    
+    this.getMaps();
 
     this.createEventLevelDropdown("rg2-event-level");
     $("#rg2-event-level").click(function(event) {
@@ -148,12 +179,12 @@ Manager.prototype = {
       self.setEventName(evt);
     });
 
-    $("#rg2-club-name").on("change", function(evt) {
-      self.setClub(evt);
-    });
-
     $("#rg2-map-name").on("change", function(evt) {
       self.setMapName(evt);
+    });
+    
+    $("#rg2-club-name").on("change", function(evt) {
+      self.setClub(evt);
     });
 
     $("#rg2-load-map-file").button().change(function(evt) {
@@ -195,16 +226,41 @@ Manager.prototype = {
     $("#btn-delete-event").button().click(function() {
       self.confirmDeleteEvent();
     }).button("disable");
+
+    $("#btn-add-map").button().click(function() {
+      self.confirmAddMap();
+    }).button("disable");
     
     // TODO: hide course delete function for now: not fully implemented yet, and may not be needed...
     $("#rg2-temp-hide-course-delete").hide();
-    
     $("#rg2-manage-create").show();
     $("#rg2-create-tab").show();
     $("#rg2-edit-tab").show();
+    $("#rg2-map-tab").show();
     $("#rg2-manage-login").hide();
     $("#rg2-login-tab").hide();
     $('#rg2-info-panel').tabs('option', 'active', rg2.config.TAB_CREATE);
+  },
+  
+  getMaps: function() {
+    var self = this;
+    var i;
+  $.getJSON(json_url, {
+    type : "maps",
+    cache : false
+  }).done(function(json) {
+    self.maps.length = 0;
+    console.log("Maps: " + json.data.length);
+    for (i = 0; i < json.data.length; i += 1) {
+      self.maps.push(new Map(json.data[i]));
+    }
+    self.createMapDropdown();
+    $("#btn-toggle-controls").show();
+  }).fail(function(jqxhr, textStatus, error) {
+    $('body').css('cursor', 'auto');
+    var err = textStatus + ", " + error;
+    console.log("Map request failed: " + err);
+  });
   },
 
   doContinue : function() {
@@ -263,6 +319,21 @@ Manager.prototype = {
     this.createCourseDeleteDropdown(event.id);
     this.createRouteDeleteDropdown(event.id);
   },
+  
+  createMapDropdown : function(id) {
+    $("#rg2-map-selected").empty();
+    var dropdown = document.getElementById("rg2-map-selected");
+    var i;
+    var opt;
+    var len = this.maps.length - 1;
+    for ( i = len; i > -1; i -= 1) {
+      opt = document.createElement("option");
+      opt.value = this.maps[i].mapid;
+      opt.text = this.maps[i].mapid + ": " + this.maps[i].name;
+      dropdown.options.add(opt);
+    }
+  },
+
   
   createCourseDeleteDropdown : function(id) {
     $("#rg2-course-selected").empty();
@@ -419,7 +490,7 @@ Manager.prototype = {
           // save new cookie
           self.user.y = data.keksi;
           if (data.ok) {
-            rg2WarningDialog("Event updated", "Event has been updated.");
+            rg2WarningDialog("Event updated", "Event " + id + " has been updated.");
           } else {
             rg2WarningDialog("Update failed", data.status_msg + ". Event update failed. Please try again.");
           }
@@ -521,7 +592,7 @@ Manager.prototype = {
           var msg;
           self.user.y = data.keksi;
           if (data.ok) {
-            rg2WarningDialog("Route deleted", "Route has been deleted");
+            rg2WarningDialog("Route deleted", "Route " + routeid + " has been deleted.");
           } else {
             rg2WarningDialog("Delete failed", data.status_msg + ". Delete failed. Please try again.");
           }
@@ -575,7 +646,7 @@ Manager.prototype = {
           // save new cookie
           self.user.y = data.keksi;
           if (data.ok) {
-            rg2WarningDialog("Event deleted", "Event has been deleted");
+            rg2WarningDialog("Event deleted", "Event " + id + " has been deleted.");
             rg2.loadEventList();
             self.setEvent();
             $("#rg2-event-selected").empty();
@@ -815,6 +886,7 @@ Manager.prototype = {
     reader.onload = function(event) {
       self.processMap(event);
     };
+    this.mapFile = evt.target.files[0];
     reader.readAsDataURL(evt.target.files[0]);
   },
 
@@ -827,6 +899,7 @@ Manager.prototype = {
     this.mapHeight = size.height;
     this.fitControlsToMap();
     rg2.redraw(false);
+    $("#btn-add-map").button("enable");
   },
 
   fitControlsToMap : function() {
@@ -877,8 +950,8 @@ Manager.prototype = {
   },
 
   setMapName : function(evt) {
-    this.mapName = $("#rg2-map-name").val();
-    if (this.mapName) {
+    this.newMap.name = $("#rg2-map-name").val();
+    if (this.newMap.name) {
       $("#rg2-select-map-name").addClass('valid');
     } else {
       $("#rg2-select-map-name").removeClass('valid');
@@ -1019,5 +1092,200 @@ Manager.prototype = {
   // locks or unlocks background when adjusting map
   toggleMoveAll : function(checkedState) {
     this.backgroundLocked = checkedState;
+  },
+  
+  confirmAddMap : function() {
+
+    var msg = "<div id='add-map-dialog'>Are you sure you want to add this map?</div>";
+    var me = this;
+    $(msg).dialog({
+      title : "Confirm new map",
+      modal : true,
+      dialogClass : "no-close",
+      closeOnEscape : false,
+      buttons : [{
+        text : "Cancel",
+        click : function() {
+          me.doCancelAddMap();
+        }
+      }, {
+        text : "Add map",
+        click : function() {
+          me.doUploadMapFile();
+        }
+      }]
+    });
+  },
+  
+  doCancelAddMap : function() {
+    $("#add-map-dialog").dialog("destroy");
+  },
+
+  doUploadMapFile : function(id) {
+    $("#add-map-dialog").dialog("destroy");
+    // first transfer map file to server
+    var url = json_url + "?type=uploadmapfile";
+    var user = this.encodeUser();
+    var self = this;
+    var formData = new FormData();
+    formData.append(this.mapFile.name, this.mapFile);
+    formData.append("name", this.mapFile.name);
+    formData.append("x", user.x);
+    formData.append("y", user.y);
+    $.ajax({
+        url: url,
+        data: formData,
+        type:"POST",
+        mimeType:"multipart/form-data",
+        processData:false,
+        contentType: false,
+        dataType: "json",
+        success:function(data, textStatus, jqXHR) {
+          // save new cookie
+          self.user.y = data.keksi;
+          if (data.ok) {
+            self.doAddMap();
+          } else {
+            rg2WarningDialog("Save failed", data.status_msg + ". Failed to save map. Please try again.");
+          }
+        },
+        error:function(jqXHR, textStatus, errorThrown) {
+          console.log(textStatus);
+        }
+
+    });
+  },
+  
+  doAddMap : function() {
+    // map file uploaded OK so add new details
+    var $url = json_url + "?type=addmap";
+    var data = {};
+    data = this.newMap;
+    var user = this.encodeUser();
+    data.x = user.x;
+    data.y = user.y;
+    var json = JSON.stringify(data);
+    var self = this;
+    $.ajax({
+        data:json,
+        type:"POST",
+        url:$url,
+        dataType:"json",
+        success:function(data, textStatus, jqXHR) {
+          // save new cookie
+          self.user.y = data.keksi;
+          if (data.ok) {
+            rg2WarningDialog("Map added", self.newMap.name + " has been added with id " + data.newid + ".");
+            self.getMaps();
+          } else {
+            rg2WarningDialog("Save failed", data.status_msg + ". Failed to save map. Please try again.");
+          }
+        },
+        error:function(jqXHR, textStatus, errorThrown) {
+          console.log(textStatus);
+        }
+        
+    });
+  },
+  
+  readJGW : function (evt) {
+
+  var reader = new FileReader();
+
+  reader.readAsText(evt.target.files[0]);
+
+  reader.onerror = function(evt) {
+    switch(evt.target.error.code) {
+      case evt.target.error.NOT_FOUND_ERR:
+        alert('File not found');
+        break;
+      case evt.target.error.NOT_READABLE_ERR:
+        alert('File not readable');
+        break;
+      default:
+        alert('An error occurred reading the file.');
+    }
+  };
+
+  reader.onload = function(evt) {
+    // see http://en.wikipedia.org/wiki/World_file
+    // read JGW world file
+    var txt = evt.target.result;
+    var args = txt.split(/[\r\n]+/g);
+
+    // image file size
+    var pxWidth = 1554;
+    var pxHeight = 1140;
+
+    var xScale = parseFloat(args[0]);
+    var ySkew = parseFloat(args[1]);
+    var xSkew = parseFloat(args[2]);
+    var yScale = parseFloat(args[3]);
+
+    var xos = [];
+    var yos = [];
+    var xpx = [];
+    var ypx = [];
+
+    // x0, y0 is top left
+    xos[0] = parseFloat(args[4]);
+    yos[0] = parseFloat(args[5]);
+    xpx[0] = 0;
+    ypx[0] = 0;
+
+    // x1, y1 is bottom right
+    xpx[1] = pxWidth;
+    ypx[1] = pxHeight;
+    xos[1] = (xScale * xpx[1]) + (xSkew * ypx[1]) + xos[0];
+    yos[1] = (yScale * ypx[1]) + (ySkew * xpx[1]) + yos[0];
+
+    // x2, y2 is top right
+    xpx[2] = pxWidth;
+    ypx[2] = 0;
+    xos[2] = (xScale * xpx[2]) + (xSkew * ypx[2]) + xos[0];
+    yos[2] = (yScale * ypx[2]) + (ySkew * xpx[2]) + yos[0];
+
+    // x3, y3 is bottom left
+    xpx[3] = 0;
+    ypx[3] = pxHeight;
+    xos[3] = (xScale * xpx[3]) + (xSkew * ypx[3]) + xos[0];
+    yos[3] = (yScale * ypx[3]) + (ySkew * xpx[3]) + yos[0];
+
+    // translate OS Grid ref to WGS84 (as in GPS file)
+    var o;
+    var osgb36 = [];
+    var ct = [];
+    var WGS84 = [];
+    var i;
+    for (i = 0; i < 4; i += 1) {
+      o = new OsGridRef(parseInt(xos[i] + 0.5, 10), parseInt(yos[i] + 0.5, 10));
+      osgb36[i] = o.osGridToLatLong(o);
+      ct[i] = CoordTransform;
+      WGS84[i] = ct[i].convertOSGB36toWGS84(osgb36[i]);
+    }
+
+    var hypot = getLatLonDistance(WGS84[0]._lat, WGS84[0]._lon, WGS84[2]._lat, WGS84[2]._lon);
+    var adj = getLatLonDistance(WGS84[0]._lat, WGS84[0]._lon, WGS84[0]._lat, WGS84[2]._lon);
+    var angle1 = Math.acos(adj / hypot);
+
+    var hypot2 = getLatLonDistance(WGS84[2]._lat, WGS84[2]._lon, WGS84[1]._lat, WGS84[1]._lon);
+    var adj2 = getLatLonDistance(WGS84[2]._lat, WGS84[2]._lon, WGS84[1]._lat, WGS84[2]._lon);
+    var angle2 = Math.acos(adj2 / hypot2);
+
+    var angle = (angle1 + angle2) / 2;
+
+    var pixResX = (WGS84[2]._lon - WGS84[0]._lon) / pxWidth;
+    var pixResY = (WGS84[2]._lat - WGS84[1]._lat) / pxHeight;
+
+    var A = pixResX * Math.cos(angle);
+    var D = pixResY * Math.sin(angle);
+    var B = pixResX * Math.sin(angle);
+    var E = -1 * pixResY * Math.cos(angle);
+    var C = WGS84[0]._lon;
+    var F = WGS84[0]._lat;
+    console.log(A, D, B, E, C, F);
+  };
   }
+
 };
+

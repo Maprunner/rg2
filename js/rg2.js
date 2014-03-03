@@ -73,6 +73,7 @@ var rg2 = ( function() {
       TAB_LOGIN : 4,
       TAB_CREATE : 5,
       TAB_EDIT : 6,
+      TAB_MAP : 7,
       DEFAULT_NEW_COMMENT : "Type your comment",
       DEFAULT_EVENT_COMMENT : "Comments (optional)",
       // added to resultid when saving a GPS track
@@ -404,6 +405,7 @@ var rg2 = ( function() {
         $("#rg2-animation-controls").hide();
         $("#rg2-create-tab").hide();
         $("#rg2-edit-tab").hide();
+        $("#rg2-map-tab").hide();
         $("#rg2-manage-login").show();
         $rg2infopanel.tabs("disable", config.TAB_EVENTS);
         $("#rg2-draw-tab").hide();

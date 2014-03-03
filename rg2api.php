@@ -32,7 +32,11 @@
   if ($_SERVER['REQUEST_METHOD'] == 'GET') {
     handleGetRequest($type, $id);
   } else if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    handlePostRequest($type, $id);
+    if ($type == 'uploadmapfile') {
+      uploadMapFile();
+    } else {
+      handlePostRequest($type, $id);
+    }
   } else {
     header('HTTP/1.1 405 Method Not Allowed');
     header('Allow: GET, POST');
@@ -86,14 +90,46 @@ function encode_rg_output($output_str) {
   return $encoded;
 }
 
+function uploadMapFile() {
+  $write = array();
+  $write["ok"] = FALSE;
+  $write["status_msg"] = "Map upload failed.";
+  $data = new stdClass();
+  $data->x = $_POST["x"];
+  $data->y = $_POST["y"];
+  if (!logIn($data)) {
+    $write["status_msg"] = "Login failed.";
+  } else {       
+    $filename = $_POST["name"];
+    // PHP changes . and space to _ just for fun
+    $filename = str_replace(".", "_", $filename);
+    $filename = str_replace(" ", "_", $filename);
+    if (is_uploaded_file($_FILES[$filename]['tmp_name'])) {
+      $file = $_FILES[$filename];
+      if ($file['type'] == 'image/jpeg') {
+        if (move_uploaded_file($file['tmp_name'], KARTAT_DIRECTORY."temp.jpg")) {
+            $write["ok"] = TRUE;
+            $write["status_msg"] = "Map uploaded.";
+        }
+      }
+    }
+  }
+  
+  $keksi = generateNewKeksi();
+  $write["keksi"] = $keksi;
+  
+  header("Content-type: application/json"); 
+  echo json_encode($write);
+}
+  
 function handlePostRequest($type, $eventid) {
-  $data = json_decode(file_get_contents('php://input'));
+  $data = json_decode(file_get_contents('php://input')); 
   $write = array();
   if (lockDatabase() !== FALSE) {
     if ($type != 'addroute') {
       $loggedIn = logIn($data);
     } else {
-      // don't need to log in to add a route
+      // don't need to log in to add a route 
       $loggedIn = TRUE;
     }
     if ($loggedIn) {
@@ -102,7 +138,11 @@ function handlePostRequest($type, $eventid) {
       case 'addroute':
         $write = addNewRoute($eventid, $data);
         break; 
-     
+
+      case 'addmap':
+        $write = addNewMap($data);
+        break;     
+ 
       case 'editevent':
         $write = editEvent($eventid, $data);
         break; 
@@ -146,13 +186,14 @@ function handlePostRequest($type, $eventid) {
   header("Content-type: application/json"); 
   echo json_encode($write);
 }
+
 function logIn ($data) {
   if (isset($data->x) && isset($data->y)) {  
     $userdetails = extractString($data->x);
     $cookie = $data->y;
   } else {
-    $userdetails = "";
-    $cookie = "";
+    $userdetails = "anon";
+    $cookie = "none";
   }
   $ok = TRUE;
   $keksi = trim(file_get_contents(KARTAT_DIRECTORY."keksi.txt"));
@@ -161,11 +202,11 @@ function logIn ($data) {
     $saved_user = trim(file_get_contents(KARTAT_DIRECTORY."rg2userinfo.txt"));
     $temp = crypt($userdetails, $saved_user);
     if ($temp != $saved_user) {
-      //rg2log("User details incorrect. ".$temp." : ".$saved_user);
+      rg2log("User details incorrect. ".$temp." : ".$saved_user);
       $ok = FALSE;
     }
     if ($keksi != $cookie) {
-      //rg2log("Cookies don't match. ".$keksi." : ".$cookie);
+      rg2log("Cookies don't match. ".$keksi." : ".$cookie);
       $ok = FALSE;
     }
   } else {
@@ -631,6 +672,48 @@ function addNewRoute($eventid, $data) {
 
 }
 
+function addNewMap($data) {
+  //rg2log("Add new map);
+  $write["status_msg"] = "";
+  if (($handle = @fopen(KARTAT_DIRECTORY."kartat.txt", "r+")) !== FALSE) {
+    // read to end of file to find last entry
+    $oldid = 0;
+    while (($olddata = fgetcsv($handle, 0, "|")) !== FALSE) {  
+      $oldid = intval($olddata[0]);
+    }
+    $newid = $oldid + 1;
+    $renameFile = rename(KARTAT_DIRECTORY."temp.jpg", KARTAT_DIRECTORY.$newid."jpg");
+    if ($renameFile) {
+      $newmap = $newid."|".$data->name;
+      if ($data->georeferenced) {
+        $newmap .= "|||||||||||||".$data->A."| ".$data->D."|".$data->B."|".$data->E."|".$data->C."|".$data->F;
+      }
+      $newmap .= PHP_EOL;
+      $write["newid"] = $newid;
+      $status =fwrite($handle, $newmap);    
+      if (!$status) {
+        $write["status_msg"] = "Save error for kartat. ";
+      }
+    } else {
+        $write["status_msg"] = "Error renaming map file. ";
+    }
+    @fflush($handle);
+    @fclose($handle);
+  }
+
+
+  if ($write["status_msg"] == "") {
+    $write["ok"] = TRUE;
+    $write["status_msg"] = "Map added";
+    rg2log("Map added|".$newid);
+  } else {
+    $write["ok"] = FALSE;    
+  }
+  
+  return $write;
+
+}
+
 function lockDatabase() {
     // lock directory version based on http://docstore.mik.ua/oreilly/webprog/pcook/ch18_25.htm
     // but note mkdir returns TRUE if directory already exists!
@@ -672,14 +755,15 @@ function handleGetRequest($type, $id) {
   switch ($type) {  
   case 'events':
     $output = getAllEvents();
-    rg2log("Get events");
     break;    
   case 'courses':
     $output = getCoursesForEvent($id);
-    rg2log("Get courses|".$id);
     break;  
   case 'results':
     $output = getResultsForEvent($id);
+    break;
+  case 'maps':
+    $output = getMaps();
     break;
   case 'tracks':
     $output = getTracksForEvent($id);
@@ -739,6 +823,39 @@ function getAllEvents() {
       $detail["club"] = encode_rg_input($data[5]);
       $detail["type"] = $data[6];
       $detail["comment"] = encode_rg_input($data[7]);
+      $output[$row] = $detail;        
+      $row++;
+    }
+    fclose($handle);
+  }
+  return $output;
+}
+
+function getMaps() {
+  $output = array();
+  $row = 0;
+  if (($handle = fopen(KARTAT_DIRECTORY."kartat.txt", "r")) !== FALSE) {
+    while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
+      $detail = array();
+      $detail["mapid"] = intval($data[0]);
+      $detail["name"] = $data[1];
+      if (count($data) == 20) {
+        $detail["A"] = $data[14];
+        $detail["D"] = $data[15];
+        $detail["B"] = $data[16];
+        $detail["E"] = $data[17];
+        $detail["C"] = $data[18];
+        $detail["F"] = $data[19];
+        $detail["georeferenced"] = TRUE;
+      } else {
+        $detail["A"] = 0;
+        $detail["D"] = 0;
+        $detail["B"] = 0;
+        $detail["E"] = 0;
+        $detail["C"] = 0;
+        $detail["F"] = 0;
+        $detail["georeferenced"] = FALSE;
+      }
       $output[$row] = $detail;        
       $row++;
     }
