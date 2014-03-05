@@ -195,7 +195,12 @@ if (isset($_GET['debug']) || $override) {
       <script src='<?php echo $script_url . "rg2all.min.js"; ?>'></script>      
     <?php } ?>  
     <?php if ($manager) { ?>
-      <script src='<?php echo $script_url . "manager.js"; ?>'></script>
+      <?php if ($debug) { ?>
+        <script src='<?php echo $script_url . "manager.js"; ?>'></script>
+        <?php } else {?>
+        <script src='<?php echo $script_url . "rg2manager.min.js"; ?>'></script>
+      <?php } ?>      
+      <script src='<?php echo $script_url . "lib/proj4js-compressed.js"; ?>'></script>
     <?php } ?>
   </body>
 </html>

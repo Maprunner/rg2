@@ -4,6 +4,8 @@
 /*global getAngle:false */
 /*global rg2WarningDialog:false */
 /*global FormData:false */
+/*global Proj4js:false */
+/*global getLatLonDistance:false */
 function User(keksi) {
   this.x = "";
   this.y = keksi;
@@ -38,6 +40,8 @@ function Map(data) {
 }
 
 function Manager(keksi) {
+  this.DO_NOT_GEOREF = 0;
+  this.UK_NATIONAL_GRID = 1;
   this.loggedIn = false;
   this.user = new User(keksi);
   this.newMap = new Map();
@@ -59,6 +63,7 @@ function Manager(keksi) {
   this.handleX = null;
   this.handleY = null;
   this.maps = [];
+  this.worldfileArgs = [];
   this.HANDLE_DOT_RADIUS = 10;
   this.handleColor = '#ff0000';
   $("#btn-login").button();
@@ -170,7 +175,8 @@ Manager.prototype = {
     });
     
     this.createEventLevelDropdown("rg2-event-level-edit");
-    
+    this.createGeorefDropdown();
+        
     $("#rg2-event-date-edit").datepicker({
       dateFormat : 'yy-mm-dd'
     });
@@ -188,7 +194,11 @@ Manager.prototype = {
     });
 
     $("#rg2-load-map-file").button().change(function(evt) {
-      self.readMapJPG(evt);
+      self.readMapFile(evt);
+    });
+
+    $("#rg2-load-georef-file").button().change(function(evt) {
+      self.readGeorefFile(evt);
     });
 
     $("#rg2-load-results-file").button().change(function(evt) {
@@ -207,6 +217,10 @@ Manager.prototype = {
         self.setEvent(parseInt($("#rg2-event-selected").val(), 10));
     });
                  
+    $("#rg2-georef-type").click(function(event) {
+        self.setGeoref($("#rg2-georef-selected").val());
+    });
+
     $("#btn-create-event").button().click(function() {
       self.confirmCreateEvent();
     }).button("disable");
@@ -239,7 +253,7 @@ Manager.prototype = {
     $("#rg2-map-tab").show();
     $("#rg2-manage-login").hide();
     $("#rg2-login-tab").hide();
-    $('#rg2-info-panel').tabs('option', 'active', rg2.config.TAB_CREATE);
+    $('#rg2-info-panel').tabs('option', 'active', rg2.config.TAB_MAP);
   },
   
   getMaps: function() {
@@ -261,6 +275,10 @@ Manager.prototype = {
     var err = textStatus + ", " + error;
     console.log("Map request failed: " + err);
   });
+  },
+  
+  setGeoref: function() {
+    this.convertWorldFile(parseInt($("#rg2-georef-selected").val(), 10));
   },
 
   doContinue : function() {
@@ -334,6 +352,21 @@ Manager.prototype = {
     }
   },
 
+  createGeorefDropdown : function(id) {
+    $("#rg2-georef-selected").empty();
+    var dropdown = document.getElementById("rg2-georef-selected");
+    var opt;
+    var i;
+    var coord = ['Not georeferenced', 'GB National Grid'];
+    // assumes this.UK_NATIONAL_GRID is 1
+    // assumes this.DO_NOT_GEOREF = 0;
+    for ( i = 0; i < coord.length; i += 1) {
+      opt = document.createElement("option");
+      opt.value = i;
+      opt.text = coord[i];
+      dropdown.options.add(opt);
+    }
+  },
   
   createCourseDeleteDropdown : function(id) {
     $("#rg2-course-selected").empty();
@@ -880,7 +913,7 @@ Manager.prototype = {
     $("#rg2-select-course-file").addClass('valid');
   },
 
-  readMapJPG : function(evt) {
+  readMapFile : function(evt) {
     var reader = new FileReader();
     var self = this;
     reader.onload = function(event) {
@@ -1176,6 +1209,7 @@ Manager.prototype = {
           self.user.y = data.keksi;
           if (data.ok) {
             rg2WarningDialog("Map added", self.newMap.name + " has been added with id " + data.newid + ".");
+            // update map dropdown
             self.getMaps();
           } else {
             rg2WarningDialog("Save failed", data.status_msg + ". Failed to save map. Please try again.");
@@ -1188,22 +1222,29 @@ Manager.prototype = {
     });
   },
   
-  readJGW : function (evt) {
+  readGeorefFile : function (evt) {
 
   var reader = new FileReader();
-
-  reader.readAsText(evt.target.files[0]);
+  
+  var self = this;
+  try {
+    reader.readAsText(evt.target.files[0]);
+  }
+  catch(err) {
+    rg2WarningDialog("File read error", "Failed to open selected file.");
+    return;
+  }
 
   reader.onerror = function(evt) {
     switch(evt.target.error.code) {
       case evt.target.error.NOT_FOUND_ERR:
-        alert('File not found');
+        console.log('File not found');
         break;
       case evt.target.error.NOT_READABLE_ERR:
-        alert('File not readable');
+        console.log('File not readable');
         break;
       default:
-        alert('An error occurred reading the file.');
+        console.log('An error occurred reading the file.');
     }
   };
 
@@ -1212,15 +1253,40 @@ Manager.prototype = {
     // read JGW world file
     var txt = evt.target.result;
     var args = txt.split(/[\r\n]+/g);
+    var i;
+    for (i = 0; i < 6; i +=1) {
+      self.worldfileArgs[i] = parseFloat(args[i]);
+    }
+    self.convertWorldFile(self.UK_NATIONAL_GRID);
+  };
+  },
+  
+  convertWorldFile : function(type) {
+    if ((this.worldfileArgs.length === 0) || (this.mapWidth === 0)) {
+      // no map or world file loaded
+      return;
+    }
+    // UK National Grid
+    Proj4js.defs["EPSG:27700"] = "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs ";
+    var source;
+    
+    switch (type) {
+    case this.UK_NATIONAL_GRID:
+      source = new Proj4js.Proj("EPSG:27700");
+      break;
+    case this.DO_NOT_GEOREF:
+      this.clearGeorefs();
+      return;
+    default:
+      return;
+    }
+    // WGS84 as used by GPS
+    var dest = new Proj4js.Proj("EPSG:4326");
 
-    // image file size
-    var pxWidth = 1554;
-    var pxHeight = 1140;
-
-    var xScale = parseFloat(args[0]);
-    var ySkew = parseFloat(args[1]);
-    var xSkew = parseFloat(args[2]);
-    var yScale = parseFloat(args[3]);
+    var xScale = this.worldfileArgs[0];
+    var ySkew = this.worldfileArgs[1];
+    var xSkew = this.worldfileArgs[2];
+    var yScale = this.worldfileArgs[3];
 
     var xos = [];
     var yos = [];
@@ -1228,64 +1294,85 @@ Manager.prototype = {
     var ypx = [];
 
     // x0, y0 is top left
-    xos[0] = parseFloat(args[4]);
-    yos[0] = parseFloat(args[5]);
+    xos[0] = this.worldfileArgs[4];
+    yos[0] = this.worldfileArgs[5];
     xpx[0] = 0;
     ypx[0] = 0;
 
     // x1, y1 is bottom right
-    xpx[1] = pxWidth;
-    ypx[1] = pxHeight;
+    xpx[1] = this.mapWidth;
+    ypx[1] = this.mapHeight;
     xos[1] = (xScale * xpx[1]) + (xSkew * ypx[1]) + xos[0];
     yos[1] = (yScale * ypx[1]) + (ySkew * xpx[1]) + yos[0];
 
     // x2, y2 is top right
-    xpx[2] = pxWidth;
+    xpx[2] = this.mapWidth;
     ypx[2] = 0;
     xos[2] = (xScale * xpx[2]) + (xSkew * ypx[2]) + xos[0];
     yos[2] = (yScale * ypx[2]) + (ySkew * xpx[2]) + yos[0];
 
     // x3, y3 is bottom left
     xpx[3] = 0;
-    ypx[3] = pxHeight;
+    ypx[3] = this.mapHeight;
     xos[3] = (xScale * xpx[3]) + (xSkew * ypx[3]) + xos[0];
     yos[3] = (yScale * ypx[3]) + (ySkew * xpx[3]) + yos[0];
 
-    // translate OS Grid ref to WGS84 (as in GPS file)
-    var o;
-    var osgb36 = [];
-    var ct = [];
-    var WGS84 = [];
+    // translate source to WGS84 (as in GPS file)
     var i;
+    var p = [];
+    var pt;
     for (i = 0; i < 4; i += 1) {
-      o = new OsGridRef(parseInt(xos[i] + 0.5, 10), parseInt(yos[i] + 0.5, 10));
-      osgb36[i] = o.osGridToLatLong(o);
-      ct[i] = CoordTransform;
-      WGS84[i] = ct[i].convertOSGB36toWGS84(osgb36[i]);
+      pt = {};
+      pt.x = parseInt(xos[i] + 0.5, 10);
+      pt.y = parseInt(yos[i] + 0.5, 10);
+      p.push(pt);
+      Proj4js.transform(source, dest, p[i]);
+      //console.log(p[i].x, p[i].y);
     }
 
-    var hypot = getLatLonDistance(WGS84[0]._lat, WGS84[0]._lon, WGS84[2]._lat, WGS84[2]._lon);
-    var adj = getLatLonDistance(WGS84[0]._lat, WGS84[0]._lon, WGS84[0]._lat, WGS84[2]._lon);
+    var hypot = getLatLonDistance(p[0].y, p[0].x, p[2].y, p[2].x);
+    var adj = getLatLonDistance(p[0].y, p[0].x, p[0].y, p[2].x);
     var angle1 = Math.acos(adj / hypot);
 
-    var hypot2 = getLatLonDistance(WGS84[2]._lat, WGS84[2]._lon, WGS84[1]._lat, WGS84[1]._lon);
-    var adj2 = getLatLonDistance(WGS84[2]._lat, WGS84[2]._lon, WGS84[1]._lat, WGS84[2]._lon);
+    var hypot2 = getLatLonDistance(p[2].y, p[2].x, p[1].y, p[1].x);
+    var adj2 = getLatLonDistance(p[2].y, p[2].x, p[1].y, p[2].x);
     var angle2 = Math.acos(adj2 / hypot2);
 
     var angle = (angle1 + angle2) / 2;
+    //console.log(hypot, hypot2, adj, adj2, angle1, angle2, angle);
+    var pixResX = (p[2].x - p[0].x) / this.mapWidth;
+    var pixResY = (p[2].y - p[1].y) / this.mapHeight;
 
-    var pixResX = (WGS84[2]._lon - WGS84[0]._lon) / pxWidth;
-    var pixResY = (WGS84[2]._lat - WGS84[1]._lat) / pxHeight;
-
-    var A = pixResX * Math.cos(angle);
-    var D = pixResY * Math.sin(angle);
-    var B = pixResX * Math.sin(angle);
-    var E = -1 * pixResY * Math.cos(angle);
-    var C = WGS84[0]._lon;
-    var F = WGS84[0]._lat;
-    console.log(A, D, B, E, C, F);
-  };
+    this.newMap.A = pixResX * Math.cos(angle);
+    this.newMap.D = pixResY * Math.sin(angle);
+    this.newMap.B = pixResX * Math.sin(angle);
+    this.newMap.E = -1 * pixResY * Math.cos(angle);
+    this.newMap.C = p[0].x;
+    this.newMap.F = p[0].y;
+    $("#georef-A").empty().text("A: " + this.newMap.A);
+    $("#georef-B").empty().text("B: " + this.newMap.B);
+    $("#georef-C").empty().text("C: " + this.newMap.C);
+    $("#georef-D").empty().text("D: " + this.newMap.D);
+    $("#georef-E").empty().text("E: " + this.newMap.E);
+    $("#georef-F").empty().text("F: " + this.newMap.F);
+    $("#rg2-georef-selected").val(type);
+    this.newMap.georeferenced = true;
+  },
+  
+  clearGeorefs : function() {
+    this.newMap.A = 0;
+    this.newMap.D = 0;
+    this.newMap.B = 0;
+    this.newMap.E = 0;
+    this.newMap.C = 0;
+    this.newMap.F = 0;
+    $("#georef-A").empty().text("A: 0");
+    $("#georef-B").empty().text("B: 0");
+    $("#georef-C").empty().text("C: 0");
+    $("#georef-D").empty().text("D: 0");
+    $("#georef-E").empty().text("E: 0");
+    $("#georef-F").empty().text("F: 0");
+    this.newMap.georeferenced = false;
   }
-
 };
 

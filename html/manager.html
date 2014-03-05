@@ -120,12 +120,27 @@
     <input class="pushright manage-input" id="rg2-map-name" type="text">
   </div>
   <div>
-    <label for="rg2-load-map-file" class="manage-file-label">Map file</label>
+    <label for="rg2-load-map-file" class="manage-file-label">Map file:</label>
     <input type='file' accept='.jpg' id='rg2-load-map-file' class="pushright manage-file-input" />
   </div>
   <h3 class="no-top-margin">Georeferencing</h3>
-  <div id="world-file">
+  <div>
+    <label for="rg2-load-georef-file" class="manage-file-label">Georef file:</label>
+    <input type='file' accept='.jgw' id='rg2-load-georef-file' class="pushright manage-file-input" />
+  </div>
+  <div id="rg2-georef-type">
+    <label for="rg2-georef-selected" class="manage-label"> Co-ords:</label>    
+    <select class="pushright manage-input" id="rg2-georef-selected"></select>
+  </div>
+  <div id="rg2-world-file">
+    <p id="georef-A">A:</p>
+    <p id="georef-B">B:</p>
+    <p id="georef-C">C:</p>
+    <p id="georef-D">D:</p>
+    <p id="georef-E">E:</p>
+    <p id="georef-F">F:</p>
   </div> 
+  <hr class="rg2-hr">
   <div id="rg2-add-map">
     <button type="button" id="btn-add-map">Add map</button>
   </div> 
