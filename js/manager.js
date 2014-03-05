@@ -1,6 +1,7 @@
 /*global rg2:false */
 /*global Controls:false */
 /*global json_url:false */
+/*global maps_url:false */
 /*global getAngle:false */
 /*global rg2WarningDialog:false */
 /*global FormData:false */
@@ -42,14 +43,19 @@ function Map(data) {
 function Manager(keksi) {
   this.DO_NOT_GEOREF = 0;
   this.UK_NATIONAL_GRID = 1;
+  this.FORMAT_NORMAL = 1;
+  this.FORMAT_NO_RESULTS = 2;
+  this.FORMAT_SCORE = 3;
   this.loggedIn = false;
   this.user = new User(keksi);
   this.newMap = new Map();
   this.eventName = null;
   this.eventDate = null;
   this.eventLevel = null;
+  this.mapID = 0;
   this.club = null;
   this.comments = null;
+  this.format = this.FORMAT_NORMAL;
   this.newcontrols = new Controls();
   this.xmlcourses = [];
   this.mapLoaded = false;
@@ -154,7 +160,25 @@ Manager.prototype = {
     this.createEventLevelDropdown("rg2-event-level");
     $("#rg2-event-level").click(function(event) {
       self.eventLevel = $("#rg2-event-level").val();
-      $("#rg2-select-event-level").addClass('valid');
+      if (self.eventLevel !== 'X') {
+        $("#rg2-select-event-level").addClass('valid');
+      } else {
+        $("#rg2-select-event-level").removeClass('valid');
+      }
+    });
+
+    $("#rg2-map-selected").click(function(event) {
+      self.mapID = parseInt($("#rg2-map-selected").val(), 10);
+      if (self.mapID) {
+        $("#rg2-manager-map-select").addClass('valid');
+        rg2.loadNewMap(maps_url + "/" + self.mapID + '.jpg');
+        self.mapLoaded = true;
+      } else {
+        $("#rg2-manager-map-select").removeClass('valid');
+        self.mapLoaded = false;
+        self.mapWidth = 0;
+        self.mapHeight = 0;
+      }
     });
     
     rg2.createEventEditDropdown();
@@ -223,7 +247,7 @@ Manager.prototype = {
 
     $("#btn-create-event").button().click(function() {
       self.confirmCreateEvent();
-    }).button("disable");
+    }).button("enable");
     
     $("#btn-update-event").button().click(function() {
       self.confirmUpdateEvent();
@@ -247,13 +271,17 @@ Manager.prototype = {
     
     // TODO: hide course delete function for now: not fully implemented yet, and may not be needed...
     $("#rg2-temp-hide-course-delete").hide();
+    
+    // TODO hide results grouping for now: may never implement
+    $("#rg2-results-grouping").hide();
+    
     $("#rg2-manage-create").show();
     $("#rg2-create-tab").show();
     $("#rg2-edit-tab").show();
     $("#rg2-map-tab").show();
     $("#rg2-manage-login").hide();
     $("#rg2-login-tab").hide();
-    $('#rg2-info-panel').tabs('option', 'active', rg2.config.TAB_MAP);
+    $('#rg2-info-panel').tabs('option', 'active', rg2.config.TAB_CREATE);
   },
   
   getMaps: function() {
@@ -279,18 +307,6 @@ Manager.prototype = {
   
   setGeoref: function() {
     this.convertWorldFile(parseInt($("#rg2-georef-selected").val(), 10));
-  },
-
-  doContinue : function() {
-    //if ((this.eventName) && (this.mapName) && (this.eventDate) && (this.club) && (this.eventLevel) && (this.mapLoaded) && (this.newcontrols) && (this.xmlcourses)) {
-    if (this.xmlcourses) {
-      // allocate courses
-
-      // align controls
-
-    } else {
-      alert("Data entry not complete");
-    }
   },
 
   setEvent : function(kartatid) {
@@ -343,6 +359,10 @@ Manager.prototype = {
     var dropdown = document.getElementById("rg2-map-selected");
     var i;
     var opt;
+    opt = document.createElement("option");
+    opt.value = 0;
+    opt.text = "Select map";
+    dropdown.options.add(opt);
     var len = this.maps.length - 1;
     for ( i = len; i > -1; i -= 1) {
       opt = document.createElement("option");
@@ -414,6 +434,7 @@ Manager.prototype = {
       // using a table to make it easier for now
       var html = "<table><thead></thead><tbody>";
       var i;
+      html += "<tr><td>Results file</td><td>Course name</td></tr>";
       for ( i = 0; i < this.xmlcourses.length; i += 1) {
         html += "<tr><td>" + this.xmlcourses[i].name + "</td><td>" + this.createCourseDropdown(this.xmlcourses[i].name) + "</td></tr>";
       }
@@ -422,9 +443,27 @@ Manager.prototype = {
       this.allocationsDisplayed = true;
     }
   },
-
+  validData : function() {
+    if ((this.eventName) &&
+        (this.mapID) &&
+        (this.eventDate) &&
+        (this.club) &&
+        (this.eventLevel) &&
+        (this.format) &&
+//        (this.newcontrols) &&
+        (this.xmlcourses)) {
+      return true;
+    } else {
+      return false;
+    }
+  
+  },
+  
   confirmCreateEvent : function() {
-
+    if (!this.validData()) {
+      rg2WarningDialog("Data missing", "Please enter all necessary information before creating the event.");
+      return;
+    }
     var msg = "<div id='event-create-dialog'>Are you sure you want to create this event?</div>";
     var me = this;
     $(msg).dialog({
@@ -432,15 +471,15 @@ Manager.prototype = {
       modal : true,
       dialogClass : "no-close",
       closeOnEscape : false,
-      buttons : [{
-        text : "Create event",
-        click : function() {
-          me.doCreateEvent();
-        }
-      }, {
+      buttons : [ {
         text : "Cancel",
         click : function() {
           me.doCancelCreateEvent();
+        }
+      }, {
+        text : "Create event",
+        click : function() {
+          me.doCreateEvent();
         }
       }]
     });
@@ -455,21 +494,79 @@ Manager.prototype = {
     var id = $("#rg2-event-selected").val();
     var $url = json_url + "?type=createevent";
     var data = {};
-
+    data.name = this.eventName;
+    data.mapid = this.mapID;
+    data.eventdate = this.eventDate;
+    data.club = this.club;
+    data.format = this.format;
+    data.level = this.eventLevel;
+    var i;
+    var j;
+    var course;
+    data.courses = [];
+    this.setControlLocations();
+    for (i = 0; i < this.xmlcourses.length; i += 1) {
+      course = {};
+      course.name = this.xmlcourses[i].name;
+      course.controls = this.xmlcourses[i].codes.slice(0);
+      course.x = this.xmlcourses[i].x.slice(0);
+      course.y = this.xmlcourses[i].y.slice(0);
+      data.courses.push(course);
+    }
+    var user = this.encodeUser();
+    data.x = user.x;
+    data.y = user.y;
     var json = JSON.stringify(data);
-    /* $.ajax({
+    var self = this;
+    $.ajax({
         data:json,
         type:"POST",
         url:$url,
         dataType:"json",
         success:function(data, textStatus, jqXHR) {
-          console.log(data.status_msg);
+          // save new cookie
+          self.user.y = data.keksi;
+          if (data.ok) {
+            rg2WarningDialog("Event created", self.eventName + " has been added with id " + data.newid + ".");
+          } else {
+            rg2WarningDialog("Save failed", data.status_msg + ". Failed to create event. Please try again.");
+          }
         },
         error:function(jqXHR, textStatus, errorThrown) {
           console.log(textStatus);
         }
         
-    }); */
+    });
+  },
+  
+  setControlLocations: function() {
+    // called when saving courses
+    // reads control locations and updates course details
+    var i;
+    var j;
+    var c;
+    for (i = 0; i < this.xmlcourses.length; i += 1) {
+      for (j = 0; j < this.xmlcourses[i].codes.length; j += 1) {
+        c = this.getControlXY(this.xmlcourses[i].codes[j]);
+        this.xmlcourses[i].x[j] = c.x;
+        this.xmlcourses[i].y[j] = c.y;
+      }
+    }
+  },
+  
+  getControlXY: function(code) {
+    var i;
+    var c = {};
+    c.x = 0;
+    c.y = 0;
+    for (i = 0; i < this.newcontrols.controls.length; i += 1) {
+      if (this.newcontrols.controls[i].code === code) {
+        c.x = Math.round(this.newcontrols.controls[i].x);
+        c.y = Math.round(this.newcontrols.controls[i].y);
+        return c;
+      }
+    }
+    return c;
   },
   
   confirmUpdateEvent : function() {
@@ -927,15 +1024,15 @@ Manager.prototype = {
     rg2.loadNewMap(event.target.result);
     $("#rg2-select-map-file").addClass('valid');
     this.mapLoaded = true;
-    var size = rg2.getMapSize();
-    this.mapWidth = size.width;
-    this.mapHeight = size.height;
     this.fitControlsToMap();
     rg2.redraw(false);
     $("#btn-add-map").button("enable");
   },
 
   fitControlsToMap : function() {
+    var size = rg2.getMapSize();
+    this.mapWidth = size.width;
+    this.mapHeight = size.height;
     var i;
     if ((this.mapLoaded) && (this.newcontrols.controls.length > 0)) {
       // get max extent of controls
@@ -1003,8 +1100,8 @@ Manager.prototype = {
   createEventLevelDropdown : function(id) {
     $("#" + id).empty();
     var dropdown = document.getElementById(id);
-    var types = ["Training", "Local", "Regional", "National", "International"];
-    var abbrev = ["T", "L", "R", "N", "I"];
+    var types = ["Select level", "Training", "Local", "Regional", "National", "International"];
+    var abbrev = ["X", "T", "L", "R", "N", "I"];
     var opt;
     var i;
     for ( i = 0; i < types.length; i += 1) {
@@ -1262,6 +1359,9 @@ Manager.prototype = {
   },
   
   convertWorldFile : function(type) {
+    var size = rg2.getMapSize();
+    this.mapWidth = size.width;
+    this.mapHeight = size.height;
     if ((this.worldfileArgs.length === 0) || (this.mapWidth === 0)) {
       // no map or world file loaded
       return;

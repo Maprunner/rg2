@@ -142,6 +142,10 @@ function handlePostRequest($type, $eventid) {
       case 'addmap':
         $write = addNewMap($data);
         break;     
+
+      case 'createevent':
+        $write = addNewEvent($data);
+        break;  
  
       case 'editevent':
         $write = editEvent($eventid, $data);
@@ -234,6 +238,85 @@ function generateNewKeksi() {
   file_put_contents(KARTAT_DIRECTORY."keksi.txt", $keksi.PHP_EOL);
   //rg2log("Writing keksi.txt ".$keksi);
   return $keksi; 
+}
+
+function addNewEvent($data) {
+  rg2log("Add new event");
+  $write["status_msg"] = "";
+  if (($handle = @fopen(KARTAT_DIRECTORY."kisat.txt", "r+")) !== FALSE) {
+    // read to end of file to find last entry
+    $oldid = 0;
+    while (($olddata = fgetcsv($handle, 0, "|")) !== FALSE) {  
+      $oldid = intval($olddata[0]);
+    }
+    $newid = $oldid + 1;
+    $newevent = $newid."|".$data->mapid."|".$data->format."|".$data->name."|".$data->eventdate."|".$data->club."|".$data->level."|";
+    $newevent .= PHP_EOL;
+    $write["newid"] = $newid;
+    $status =fwrite($handle, $newevent);    
+    if (!$status) {
+      $write["status_msg"] = "Save error for kisat. ";
+    }
+    @fflush($handle);
+    @fclose($handle);
+  }
+  // create new sarjat file: course names
+  $courses = "";
+  for ($i = 0; $i < count($data->courses); $i++) {
+    $courses .= ($i + 1)."|".$data->courses[$i]->name.PHP_EOL;
+  }
+  file_put_contents(KARTAT_DIRECTORY."sarjat_".$newid.".txt", $courses, FILE_APPEND);
+
+  // create new sarjojenkoodit file: course control lists
+  for ($i = 0; $i < count($data->courses); $i++) {
+    $controls = ($i + 1);
+    for ($j = 0; $j < count($data->courses[$i]->controls); $j++) {
+          $controls .= "|".$data->courses[$i]->controls[$j];
+    }
+    $controls .= PHP_EOL;
+    file_put_contents(KARTAT_DIRECTORY."sarjojenkoodit_".$newid.".txt", $controls, FILE_APPEND);    
+  }
+
+  // create new ratapisteet file: control locations
+  for ($i = 0; $i < count($data->courses); $i++) {
+    $controls = ($i + 1)."|";
+    for ($j = 0; $j < count($data->courses[$i]->x); $j++) {
+          $controls .= $data->courses[$i]->x[$j].";-".$data->courses[$i]->y[$j]."N";
+    }
+    $controls .= PHP_EOL;
+    file_put_contents(KARTAT_DIRECTORY."ratapisteet_".$newid.".txt", $controls, FILE_APPEND);    
+  }
+
+  // create new radat file: course drawing: not used by RG2 so do we still need it...
+  for ($i = 0; $i < count($data->courses); $i++) {
+    $last = count($data->courses[$i]->x) - 1;
+    $course = $i."|1|".$data->courses[$i]->name."|2;";
+    $course .= $data->courses[$i]->x[$last].";".$data->courses[$i]->y[$last].";0;0N";
+    for ($j = 1; $j < count($data->courses[$i]->x); $j++) {
+      $course .= "1;".$data->courses[$i]->x[$j].";-".$data->courses[$i]->y[$j].";0;0;N";
+      // line between controls: drawn from centres for now
+      $course .= "4;".$data->courses[$i]->x[$j].";-".$data->courses[$i]->y[$j].";".$data->courses[$i]->x[$j-1].";-".$data->courses[$i]->y[$j-1].";N";
+      // text: just use 25 offset for now: RG1 seems to use all sorts of values
+      $course .= "3;".($data->courses[$i]->x[$j] + 25).";-".($data->courses[$i]->y[$j] + 25).";".$i.";0;N";   
+    }
+    // start triangle: use 25 for now and align upwards
+    $course .= "4;".($data->courses[$i]->x[0]).";-".($data->courses[$i]->y[0] - 25).";".($data->courses[$i]->x[0] + 12).";-".($data->courses[$i]->y[0] + 11).";N";      
+    $course .= "4;".($data->courses[$i]->x[0] - 12).";-".($data->courses[$i]->y[0] + 11).";".($data->courses[$i]->x[0] + 12).";-".($data->courses[$i]->y[0] + 11).";N";          
+    $course .= "4;".($data->courses[$i]->x[0]).";-".($data->courses[$i]->y[0] - 25).";".($data->courses[$i]->x[0] - 12).";-".($data->courses[$i]->y[0] + 11).";N";      
+
+    $course .= PHP_EOL;
+  }
+  file_put_contents(KARTAT_DIRECTORY."radat_".$newid.".txt", $course);    
+
+  if ($write["status_msg"] == "") {
+    $write["ok"] = TRUE;
+    $write["status_msg"] = "Event created.";
+  } else {
+    $write["ok"] = FALSE;    
+  }
+  
+  return $write;
+
 }
 
 function editEvent($eventid, $newdata) {
@@ -682,7 +765,7 @@ function addNewMap($data) {
       $oldid = intval($olddata[0]);
     }
     $newid = $oldid + 1;
-    $renameFile = rename(KARTAT_DIRECTORY."temp.jpg", KARTAT_DIRECTORY.$newid."jpg");
+    $renameFile = rename(KARTAT_DIRECTORY."temp.jpg", KARTAT_DIRECTORY.$newid.".jpg");
     if ($renameFile) {
       $newmap = $newid."|".$data->name;
       if ($data->georeferenced) {
