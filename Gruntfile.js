@@ -17,7 +17,7 @@ module.exports = function(grunt) {
    'devonoc', 'ebor', 'ecko', 'elo', 'epoc', 'esoc', 'euoc', 'gmoa', 'gramp', 'go', 'happyherts', 'havoc', 'hoc', 'interlopers', 'invoc', 'jk',
    'kerno', 'kfo', 'lamm', 'leioc', 'loc', 'log', 'lok', 'lvo', 'maroc', 'mdoc', 'mvoc', 'nato', 'ngoc', 'noroc', 'nwo', 'od', 'omm', 'ouoc',
    'pfo', 'pow', 'quantock', 'rafo', 'roxburghreivers', 'sa', 'sarum', 'scottish6days', 'seloc', 'slow', 'smbo', 'smoc', 'sn', 'soc', 'solway',
-   'sportident', 'sroc', 'stag', 'start', 'suffoc', 'swoc', 'syo', 'tay', 'test', 'purple-thistle', 'tinto', 'tvoc', 'walton', 'wcoc', 'wim',
+   'sportident', 'sroc', 'stag', 'start', 'suffoc', 'swoc', 'syo', 'tay', 'test', 'purple-thistle', 'tinto', 'tvoc', 'walton', 'waoc', 'wcoc', 'wim',
    'wsco', 'wsoe', 'wsx'];
 
   // Project configuration.
@@ -561,6 +561,12 @@ module.exports = function(grunt) {
         expand : true,
         src : '**',
         dest : 'ftpsite/walton/rg2/'
+      },
+      waoc : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/waoc/rg2/'
       },
       wcoc : {
         cwd : 'rel/',

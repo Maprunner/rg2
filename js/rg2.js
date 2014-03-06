@@ -108,7 +108,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.5.11',
+      RG2VERSION: '0.5.12',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -435,7 +435,7 @@ var rg2 = ( function() {
 
       // force redraw once map has loaded
       map.addEventListener("load", function() {
-        resetMapState();
+        mapLoadedCallback();
       }, false);
 
       // disable right click menu: may add our own later
@@ -446,7 +446,8 @@ var rg2 = ( function() {
       // load event details
       loadEventList();
 
-      setTimeout(function() {$("#rg2-container").show();}, 1000);
+      // slight delay looks better than going straight in....
+      setTimeout(function() {$("#rg2-container").show();}, 500);
     }
     
     function loadEventList() {
@@ -468,7 +469,14 @@ var rg2 = ( function() {
         console.log("Events request failed: " + err);
       });
     }
-
+ 
+    function mapLoadedCallback() {
+      resetMapState();
+      if (managing) {
+        manager.mapLoadCallback();
+      }
+    }
+ 
     function resetMapState() {
       // place map in centre of canvas and scale it down to fit
       var mapscale;

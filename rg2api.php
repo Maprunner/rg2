@@ -270,8 +270,8 @@ function addNewEvent($data) {
   // create new sarjojenkoodit file: course control lists
   for ($i = 0; $i < count($data->courses); $i++) {
     $controls = ($i + 1);
-    for ($j = 0; $j < count($data->courses[$i]->controls); $j++) {
-          $controls .= "|".$data->courses[$i]->controls[$j];
+    for ($j = 0; $j < count($data->courses[$i]->codes); $j++) {
+          $controls .= "|".$data->courses[$i]->codes[$j];
     }
     $controls .= PHP_EOL;
     file_put_contents(KARTAT_DIRECTORY."sarjojenkoodit_".$newid.".txt", $controls, FILE_APPEND);    
@@ -287,27 +287,49 @@ function addNewEvent($data) {
     file_put_contents(KARTAT_DIRECTORY."ratapisteet_".$newid.".txt", $controls, FILE_APPEND);    
   }
 
-  // create new radat file: course drawing: not used by RG2 so do we still need it...
+  // create new radat file: course drawing: not used by RG2 ...
+  $course = "";
   for ($i = 0; $i < count($data->courses); $i++) {
-    $last = count($data->courses[$i]->x) - 1;
-    $course = $i."|1|".$data->courses[$i]->name."|2;";
-    $course .= $data->courses[$i]->x[$last].";".$data->courses[$i]->y[$last].";0;0N";
-    for ($j = 1; $j < count($data->courses[$i]->x); $j++) {
-      $course .= "1;".$data->courses[$i]->x[$j].";-".$data->courses[$i]->y[$j].";0;0;N";
-      // line between controls: drawn from centres for now
-      $course .= "4;".$data->courses[$i]->x[$j].";-".$data->courses[$i]->y[$j].";".$data->courses[$i]->x[$j-1].";-".$data->courses[$i]->y[$j-1].";N";
-      // text: just use 25 offset for now: RG1 seems to use all sorts of values
-      $course .= "3;".($data->courses[$i]->x[$j] + 25).";-".($data->courses[$i]->y[$j] + 25).";".$i.";0;N";   
+    $a = $data->courses[$i];
+    $finish = count($a->x) - 1;
+    $course .= ($i + 1)."|1|".$a->name."|2;";
+    $course .= $a->x[$finish].";-".$a->y[$finish].";0;0N";
+    // loop from first to last control
+    for ($j = 1; $j < $finish; $j++) {
+      // control circle
+      $course .= "1;".$a->x[$j].";-".$a->y[$j].";0;0;N";
+      // line between controls
+      list($x1, $y1, $x2, $y2) = getLineEnds($a->x[$j], $a->y[$j], $a->x[$j-1], $a->y[$j-1]);
+      $course .= "4;".$x1.";-".$y1.";".$x2.";-".$y2.";N";
+      // text: just use 20 offset for now: RG1 and RGJS seem happy
+      $course .= "3;".($a->x[$j] + 20).";-".($a->y[$j] + 20).";".$j.";0;N";   
     }
-    // start triangle: use 25 for now and align upwards
-    $course .= "4;".($data->courses[$i]->x[0]).";-".($data->courses[$i]->y[0] - 25).";".($data->courses[$i]->x[0] + 12).";-".($data->courses[$i]->y[0] + 11).";N";      
-    $course .= "4;".($data->courses[$i]->x[0] - 12).";-".($data->courses[$i]->y[0] + 11).";".($data->courses[$i]->x[0] + 12).";-".($data->courses[$i]->y[0] + 11).";N";          
-    $course .= "4;".($data->courses[$i]->x[0]).";-".($data->courses[$i]->y[0] - 25).";".($data->courses[$i]->x[0] - 12).";-".($data->courses[$i]->y[0] + 11).";N";      
+    // start triangle
+    $side = 20;
+    $angle = getAngle($a->x[0], $a->y[0], $a->x[1], $a->y[1]);
+    $angle = $angle + (M_PI / 2);  
+    $x0 = (int) ($a->x[0] + ($side * sin($angle)));
+    $y0 = (int) ($a->y[0] - ($side * cos($angle)));
+    $x1 = (int) ($a->x[0] + ($side * sin($angle + (2 * M_PI / 3))));
+    $y1 = (int) ($a->y[0] - ($side * cos($angle + (2 * M_PI / 3))));
+    $x2 = (int) ($a->x[0] + ($side * sin($angle - (2 * M_PI / 3))));
+    $y2 = (int) ($a->y[0] - ($side * cos($angle - (2 * M_PI / 3))));
+    
+    $course .= "4;".$x0.";-".$y0.";".$x1.";-".$y1.";N";      
+    $course .= "4;".$x1.";-".$y1.";".$x2.";-".$y2.";N";      
+    $course .= "4;".$x2.";-".$y2.";".$x0.";-".$y0.";N";      
 
     $course .= PHP_EOL;
   }
   file_put_contents(KARTAT_DIRECTORY."radat_".$newid.".txt", $course);    
 
+  // create new kilpailijat file: results
+  for ($i = 0; $i < count($data->results); $i++) {
+    $a = $data->results[$i];
+    $result = ($i + 1)."|".$a->courseid."|".$a->course."|".trim($a->name)."|".$a->starttime."|".$a->dbid."||".$a->time."|".$a->splits.PHP_EOL;
+    file_put_contents(KARTAT_DIRECTORY."kilpailijat_".$newid.".txt", $result, FILE_APPEND);    
+  }
+  
   if ($write["status_msg"] == "") {
     $write["ok"] = TRUE;
     $write["status_msg"] = "Event created.";
@@ -319,6 +341,24 @@ function addNewEvent($data) {
 
 }
 
+function getAngle($x1, $y1, $x2, $y2) {
+  $angle = atan2($y2 - $y1, $x2 - $x1);
+  if ($angle < 0) {
+    $angle = $angle + (2 * M_PI);
+  }
+  return $angle;  
+}
+
+function getLineEnds($x1, $y1, $x2, $y2) {
+  $offset = 20;
+  $angle = getAngle($x1, $y1, $x2, $y2);
+  $c1x = (int) ($x1 + ($offset * cos($angle)));
+  $c1y = (int) ($y1 + ($offset * sin($angle)));
+  $c2x = (int) ($x2 - ($offset * cos($angle)));
+  $c2y = (int) ($y2 - ($offset * sin($angle)));
+  return array($c1x, $c1y, $c2x, $c2y);
+}
+      
 function editEvent($eventid, $newdata) {
   $write["status_msg"] = "";
   $updatedfile = array();

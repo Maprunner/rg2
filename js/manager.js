@@ -172,7 +172,6 @@ Manager.prototype = {
       if (self.mapID) {
         $("#rg2-manager-map-select").addClass('valid');
         rg2.loadNewMap(maps_url + "/" + self.mapID + '.jpg');
-        self.mapLoaded = true;
       } else {
         $("#rg2-manager-map-select").removeClass('valid');
         self.mapLoaded = false;
@@ -226,11 +225,11 @@ Manager.prototype = {
     });
 
     $("#rg2-load-results-file").button().change(function(evt) {
-      self.readResultsCSV(evt);
+      self.readResults(evt);
     });
 
     $("#rg2-load-course-file").button().change(function(evt) {
-      self.readCourseXML(evt);
+      self.readCourses(evt);
     });
 
     $("#btn-move-map-and-controls").click(function(evt) {
@@ -432,17 +431,17 @@ Manager.prototype = {
 
       // create html for course allocation list
       // using a table to make it easier for now
-      var html = "<table><thead></thead><tbody>";
+      var html = "<table><thead><tr><th>Results file</th><th>Course name</th></tr></thead><tbody>";
       var i;
-      html += "<tr><td>Results file</td><td>Course name</td></tr>";
       for ( i = 0; i < this.xmlcourses.length; i += 1) {
         html += "<tr><td>" + this.xmlcourses[i].name + "</td><td>" + this.createCourseDropdown(this.xmlcourses[i].name) + "</td></tr>";
       }
       html += "</tbody></table>";
-      $("#rg2-course-allocations").append(html);
+      $("#rg2-course-allocations").empty().append(html);
       this.allocationsDisplayed = true;
     }
   },
+  
   validData : function() {
     if ((this.eventName) &&
         (this.mapID) &&
@@ -500,19 +499,10 @@ Manager.prototype = {
     data.club = this.club;
     data.format = this.format;
     data.level = this.eventLevel;
-    var i;
-    var j;
-    var course;
-    data.courses = [];
     this.setControlLocations();
-    for (i = 0; i < this.xmlcourses.length; i += 1) {
-      course = {};
-      course.name = this.xmlcourses[i].name;
-      course.controls = this.xmlcourses[i].codes.slice(0);
-      course.x = this.xmlcourses[i].x.slice(0);
-      course.y = this.xmlcourses[i].y.slice(0);
-      data.courses.push(course);
-    }
+    this.mapResultsToCourses();
+    data.courses = this.xmlcourses.slice(0);
+    data.results = this.results.slice(0);
     var user = this.encodeUser();
     data.x = user.x;
     data.y = user.y;
@@ -537,6 +527,25 @@ Manager.prototype = {
         }
         
     });
+  },
+  
+  mapResultsToCourses: function() {
+    // called when saving courses
+    // generates the necessary course IDs for the results file 
+    var i;
+    for (i = 0; i < this.results.length; i += 1) {
+      this.results[i].courseid = this.getCourseIDForCourseName(this.results[i].course);
+    }
+  },
+  
+  getCourseIDForCourseName : function(course) {
+    var i;
+    for (i = 0; i < this.xmlcourses.length; i += 1) {
+      if (this.xmlcourses[i].name === course) {
+        return this.xmlcourses[i].courseid;
+      }
+    }
+    return 0;
   },
   
   setControlLocations: function() {
@@ -791,7 +800,7 @@ Manager.prototype = {
     });
   },
   
-  readResultsCSV : function(evt) {
+  readResults : function(evt) {
 
     var reader = new FileReader();
     var self = this;
@@ -818,7 +827,7 @@ Manager.prototype = {
     reader.readAsText(evt.target.files[0]);
   },
 
-  readCourseXML : function(evt) {
+  readCourses : function(evt) {
 
     var reader = new FileReader();
     reader.onerror = function(evt) {
@@ -836,6 +845,9 @@ Manager.prototype = {
     var self = this;
     reader.onload = function(evt) {
       self.processIOFXML(evt);
+      self.displayCourseAllocations();
+      self.fitControlsToMap();
+      rg2.redraw(false);
     };
 
     reader.readAsText(evt.target.files[0]);
@@ -866,9 +878,6 @@ Manager.prototype = {
     // extract all courses
     nodelist = xml.getElementsByTagName('Course');
     this.extractCourses(nodelist);
-    this.displayCourseAllocations();
-    this.fitControlsToMap();
-    rg2.redraw(false);
   },
 
   /*
@@ -908,8 +917,8 @@ Manager.prototype = {
       if (fields[i].length >= FIRST_SPLIT_IDX) {
         result = {};
         result.chipid = fields[i][CHIP_IDX];
-        result.name = fields[i][FIRST_NAME_IDX] + " " + fields[i][SURNAME_IDX];
-        result.dbid = fields[i][DB_IDX] + "_" + result.name;
+        result.name = (fields[i][FIRST_NAME_IDX] + " " + fields[i][SURNAME_IDX]).trim();
+        result.dbid = fields[i][DB_IDX] + "__" + result.name;
         result.starttime = this.convertHHMMSSToSecs(fields[i][START_TIME_IDX]);
         result.time = fields[i][TOTAL_TIME_IDX];
         result.club = fields[i][CLUB_IDX];
@@ -936,7 +945,6 @@ Manager.prototype = {
     }
     // extract courses from results
     this.getCoursesFromResults();
-
     this.displayCourseAllocations();
   },
 
@@ -1003,6 +1011,7 @@ Manager.prototype = {
       codes.push(tmp.trim());
 
       course.codes = codes;
+      course.courseid = i + 1;
       course.x = x;
       course.y = y;
       this.xmlcourses.push(course);
@@ -1019,6 +1028,13 @@ Manager.prototype = {
     this.mapFile = evt.target.files[0];
     reader.readAsDataURL(evt.target.files[0]);
   },
+  
+  mapLoadCallback : function() {
+    //callback when map image is loaded from an existing map file
+    this.mapLoaded = true;
+    this.fitControlsToMap();
+    rg2.redraw(false);
+  },
 
   processMap : function(event) {
     rg2.loadNewMap(event.target.result);
@@ -1030,11 +1046,12 @@ Manager.prototype = {
   },
 
   fitControlsToMap : function() {
-    var size = rg2.getMapSize();
-    this.mapWidth = size.width;
-    this.mapHeight = size.height;
     var i;
     if ((this.mapLoaded) && (this.newcontrols.controls.length > 0)) {
+      var size = rg2.getMapSize();
+      this.mapWidth = size.width;
+      this.mapHeight = size.height;
+      
       // get max extent of controls
       // find bounding box for track
       var minX = this.newcontrols.controls[0].x;
@@ -1048,9 +1065,12 @@ Manager.prototype = {
         minX = Math.min(minX, this.newcontrols.controls[i].x);
         minY = Math.min(minY, this.newcontrols.controls[i].y);
       }
-
-      var xRange = maxX - minX;
-      var yRange = maxY - minY;
+      // fit within the map since this is probably needed anyway
+      var scale = 1.25;
+      var xRange = scale * (maxX - minX);
+      var yRange = scale * (maxY - minY);
+      minX *= scale;
+      minY *= scale;
       for ( i = 0; i < this.newcontrols.controls.length; i += 1) {
         this.newcontrols.controls[i].x = (this.newcontrols.controls[i].x - minX) * (this.mapWidth / xRange);
         this.newcontrols.controls[i].y = this.mapHeight - ((this.newcontrols.controls[i].y - minY) * (this.mapHeight/ yRange));
