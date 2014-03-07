@@ -540,6 +540,8 @@ Manager.prototype = {
   },
   
   renumberResults : function() {
+    // updates the course id when we know the mapping
+    // and deletes results for courses not required
     var i;
     var id;
     var newResults = [];
@@ -617,7 +619,6 @@ Manager.prototype = {
   },
   
   confirmUpdateEvent : function() {
-
     var msg = "<div id='event-update-dialog'>Are you sure you want to update this event?</div>";
     var me = this;
     $(msg).dialog({
@@ -858,6 +859,8 @@ Manager.prototype = {
     reader.onload = function(evt) {
       var csv = evt.target.result;
       var rows = evt.target.result.split(/[\r\n|\n]+/);
+      
+      self.results.length = 0;
       // only one valid format for now...
       self.processSICSVResults(rows);
       $("#rg2-select-results-file").addClass('valid');
@@ -882,7 +885,9 @@ Manager.prototype = {
     };
     var self = this;
     reader.onload = function(evt) {
-      self.processIOFXML(evt);
+      self.courses.length = 0;
+      self.newcontrols.deleteAllControls();
+      self.processXML(evt);
       self.displayCourseAllocations();
       self.fitControlsToMap();
       rg2.redraw(false);
@@ -891,31 +896,165 @@ Manager.prototype = {
     reader.readAsText(evt.target.files[0]);
   },
 
-  processIOFXML : function(evt) {
+  processXML : function(evt) {
     var xml;
     var version;
     var i;
     var nodelist;
-
-    xml = $.parseXML(evt.target.result);
-    version = xml.getElementsByTagName('IOFVersion')[0].getAttribute('version');
-    if (version !== "2.0.3") {
-      alert('Invalid IOF file format. Version ' + version + ' not supported.');
+    version = "";
+    try {
+      xml = $.parseXML(evt.target.result);
+      
+      // test for IOF Version 2
+      nodelist = xml.getElementsByTagName('IOFVersion');
+      if (nodelist.length > 0) {
+        version = nodelist[0].getAttribute('version');
+      }
+      if (version === "") {
+        // test for IOF Version 3
+        nodelist = xml.getElementsByTagName('CourseData');
+        if (nodelist.length > 0) {
+          version = nodelist[0].getAttribute('iofVersion');
+        }
+      }
+    }
+    catch (err) {
+      rg2WarningDialog("XML file error", "File is not a valid XML event file.");
       return;
     }
+     
+    switch (version) {
+      case "2.0.3":
+        this.processIOFV2XML(xml);
+        break;
+      case "3.0":
+        this.processIOFV3XML(xml);
+        break;
+      default:
+        rg2WarningDialog("XML file error", 'Invalid IOF file format. Version ' + version + ' not supported.');
+    }
+  },
+
+  extractV2Courses : function(nodelist) {
+    var i;
+    var j;
+    var course;
+    var codes;
+    var x;
+    var y;
+    var controllist;
+    var tmp;
+    for ( i = 0; i < nodelist.length; i += 1) {
+      course = {};
+      codes = [];
+      x = [];
+      y = [];
+      course.name = nodelist[i].getElementsByTagName('CourseName')[0].textContent;
+      tmp = nodelist[i].getElementsByTagName('StartPointCode')[0].textContent;
+      codes.push(tmp.trim());
+      controllist = nodelist[i].getElementsByTagName('CourseControl');
+      for ( j = 0; j < controllist.length; j += 1) {
+        tmp = controllist[j].getElementsByTagName('ControlCode')[0].textContent;
+        codes.push(tmp.trim());
+      }
+      tmp = nodelist[i].getElementsByTagName('FinishPointCode')[0].textContent;
+      codes.push(tmp.trim());
+
+      course.codes = codes;
+      // 0 for now: set when result mapping is known
+      course.courseid = 0;
+      course.x = x;
+      course.y = y;
+      this.courses.push(course);
+    }
+    $("#rg2-select-course-file").addClass('valid');
+  },
+
+extractV3Courses : function(nodelist) {
+    var i;
+    var j;
+    var course;
+    var codes;
+    var x;
+    var y;
+    var controllist;
+    var tmp;
+    for ( i = 0; i < nodelist.length; i += 1) {
+      course = {};
+      codes = [];
+      x = [];
+      y = [];
+      course.name = nodelist[i].getElementsByTagName('Name')[0].textContent;
+      controllist = nodelist[i].getElementsByTagName('CourseControl');
+      for ( j = 0; j < controllist.length; j += 1) {
+        tmp = controllist[j].getElementsByTagName('Control')[0].textContent;
+        codes.push(tmp.trim());
+      }
+
+      course.codes = codes;
+      // 0 for now: set when result mapping is known
+      course.courseid = 0;
+      course.x = x;
+      course.y = y;
+      this.courses.push(course);
+    }
+    $("#rg2-select-course-file").addClass('valid');
+  },
+
+  processIOFV3XML: function(xml) {
+    // extract all controls
+    var nodelist;
+    var i;
+    var code;
+    var mappos;
+    var x;
+    var y;
+    nodelist = xml.getElementsByTagName('Control');
+    // only need first-level Controls
+    for (i = 0; i < nodelist.length; i += 1) {
+      if (nodelist[i].parentNode.nodeName === 'RaceCourseData') {
+        code = nodelist[i].getElementsByTagName("Id")[0].textContent;
+        mappos = nodelist[i].getElementsByTagName("MapPosition");
+        x = mappos[0].getAttribute('x');
+        y = mappos[0].getAttribute('y');
+        this.newcontrols.addControl(code.trim(), x, y);
+      }
+    }
+    // extract all courses
+    nodelist = xml.getElementsByTagName('Course');
+    this.extractV3Courses(nodelist);
+  },
+    
+  processIOFV2XML: function(xml) {
+    var nodelist;
     // extract all start controls
     nodelist = xml.getElementsByTagName('StartPoint');
-    this.extractControls(nodelist);
+    this.extractV2Controls(nodelist, 'StartPointCode');
     // extract all normal controls
     nodelist = xml.getElementsByTagName('Control');
-    this.extractControls(nodelist);
+    this.extractV2Controls(nodelist, 'ControlCode');
     // extract all finish controls
     nodelist = xml.getElementsByTagName('FinishPoint');
-    this.extractControls(nodelist);
+    this.extractV2Controls(nodelist, 'FinishPointCode');
 
     // extract all courses
     nodelist = xml.getElementsByTagName('Course');
-    this.extractCourses(nodelist);
+    this.extractV2Courses(nodelist);
+  },
+
+  extractV2Controls : function(nodelist, type) {
+    var i;
+    var x;
+    var y;
+    var code;
+    var mappos;
+    for ( i = 0; i < nodelist.length; i += 1) {
+      code = nodelist[i].getElementsByTagName(type)[0].textContent;
+      mappos = nodelist[i].getElementsByTagName("MapPosition");
+      x = mappos[0].getAttribute('x');
+      y = mappos[0].getAttribute('y');
+      this.newcontrols.addControl(code.trim(), x, y);
+    }
   },
 
   /*
@@ -945,9 +1084,19 @@ Manager.prototype = {
     var result;
     var nextsplit;
     var temp;
+    // try and work out what the separator is
+    var commas = rows[0].split(',' ).length - 1;
+    var semicolons = rows[0].split(';' ).length - 1;
+    
+    var separator;
+    if (commas > semicolons) {
+      separator = ',';
+    } else {
+      separator = ";";
+    }
     // extract all fields in all rows
     for ( i = 0; i < rows.length; i += 1) {
-      fields[i] = rows[i].split(";");
+      fields[i] = rows[i].split(separator);
     }
     // extract what we need: first row is headers so ignore
     for ( i = 1; i < rows.length; i += 1) {
@@ -1010,54 +1159,6 @@ Manager.prototype = {
     }
   },
 
-  extractControls : function(nodelist) {
-    var i;
-    var x;
-    var y;
-    var code;
-    for ( i = 0; i < nodelist.length; i += 1) {
-      code = nodelist[i].childNodes[1].textContent;
-      x = nodelist[i].childNodes[3].getAttribute('x');
-      y = nodelist[i].childNodes[3].getAttribute('y');
-      this.newcontrols.addControl(code.trim(), x, y);
-    }
-  },
-
-  extractCourses : function(nodelist) {
-    // assumes IOF Version 2.0 XML
-    var i;
-    var j;
-    var course;
-    var codes;
-    var x;
-    var y;
-    var controllist;
-    var tmp;
-    for ( i = 0; i < nodelist.length; i += 1) {
-      course = {};
-      codes = [];
-      x = [];
-      y = [];
-      course.name = nodelist[i].getElementsByTagName('CourseName')[0].textContent;
-      tmp = nodelist[i].getElementsByTagName('StartPointCode')[0].textContent;
-      codes.push(tmp.trim());
-      controllist = nodelist[i].getElementsByTagName('CourseControl');
-      for ( j = 0; j < controllist.length; j += 1) {
-        tmp = controllist[j].childNodes[3].textContent;
-        codes.push(tmp.trim());
-      }
-      tmp = nodelist[i].getElementsByTagName('FinishPointCode')[0].textContent;
-      codes.push(tmp.trim());
-
-      course.codes = codes;
-      // 0 for now: set when result mapping is known
-      course.courseid = 0;
-      course.x = x;
-      course.y = y;
-      this.courses.push(course);
-    }
-    $("#rg2-select-course-file").addClass('valid');
-  },
 
   readMapFile : function(evt) {
     var reader = new FileReader();
@@ -1395,7 +1496,7 @@ Manager.prototype = {
     reader.readAsText(evt.target.files[0]);
   }
   catch(err) {
-    rg2WarningDialog("File read error", "Failed to open selected file.");
+    rg2WarningDialog("File read error", "Failed to open selected world file.");
     return;
   }
 
