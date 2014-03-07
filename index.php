@@ -37,7 +37,12 @@ if (defined('OVERRIDE_BASE_DIRECTORY')) {
 	$img_url = RG_BASE_DIRECTORY . "/rg2/img/";
 }
 
-$maps_url = RG_BASE_DIRECTORY . "/kartat/";
+if (defined('OVERRIDE_KARTAT_DIRECTORY')) {
+  $maps_url = OVERRIDE_KARTAT_DIRECTORY;
+} else {
+  $maps_url = RG_BASE_DIRECTORY . "/kartat/";
+}
+
 
 // include manager function as parameter for now until we decide the best way forward
 if (isset($_GET['manage'])) {
@@ -108,10 +113,13 @@ if (isset($_GET['debug']) || $override) {
             <a href="#rg2-manage-login">Login</a>
           </li>
           <li id="rg2-create-tab">
-          	<a href="#rg2-manage-create">Create Event</a>
+          	<a href="#rg2-manage-create">Add event</a>
           </li>
           <li id="rg2-edit-tab">
-          	<a href="#rg2-manage-edit">Edit Event</a>
+          	<a href="#rg2-manage-edit">Edit event</a>
+          </li>
+          <li id="rg2-map-tab">
+            <a href="#rg2-manage-map">Add map</a>
           </li>
           <?php } ?>
    			</ul>
@@ -187,7 +195,12 @@ if (isset($_GET['debug']) || $override) {
       <script src='<?php echo $script_url . "rg2all.min.js"; ?>'></script>      
     <?php } ?>  
     <?php if ($manager) { ?>
-      <script src='<?php echo $script_url . "manager.js"; ?>'></script>
+      <?php if ($debug) { ?>
+        <script src='<?php echo $script_url . "manager.js"; ?>'></script>
+        <?php } else {?>
+        <script src='<?php echo $script_url . "rg2manager.min.js"; ?>'></script>
+      <?php } ?>      
+      <script src='<?php echo $script_url . "lib/proj4js-compressed.js"; ?>'></script>
     <?php } ?>
   </body>
 </html>

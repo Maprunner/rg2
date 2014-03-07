@@ -73,6 +73,7 @@ var rg2 = ( function() {
       TAB_LOGIN : 4,
       TAB_CREATE : 5,
       TAB_EDIT : 6,
+      TAB_MAP : 7,
       DEFAULT_NEW_COMMENT : "Type your comment",
       DEFAULT_EVENT_COMMENT : "Comments (optional)",
       // added to resultid when saving a GPS track
@@ -107,7 +108,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.5.8',
+      RG2VERSION: '0.6.0',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -404,6 +405,7 @@ var rg2 = ( function() {
         $("#rg2-animation-controls").hide();
         $("#rg2-create-tab").hide();
         $("#rg2-edit-tab").hide();
+        $("#rg2-map-tab").hide();
         $("#rg2-manage-login").show();
         $rg2infopanel.tabs("disable", config.TAB_EVENTS);
         $("#rg2-draw-tab").hide();
@@ -433,7 +435,7 @@ var rg2 = ( function() {
 
       // force redraw once map has loaded
       map.addEventListener("load", function() {
-        resetMapState();
+        mapLoadedCallback();
       }, false);
 
       // disable right click menu: may add our own later
@@ -442,24 +444,39 @@ var rg2 = ( function() {
       });
 
       // load event details
+      loadEventList();
+
+      // slight delay looks better than going straight in....
+      setTimeout(function() {$("#rg2-container").show();}, 500);
+    }
+    
+    function loadEventList() {
       $.getJSON(json_url, {
         type : "events",
         cache : false
       }).done(function(json) {
         console.log("Events: " + json.data.length);
-        var i = 0;
+        events.deleteAllEvents();
         $.each(json.data, function() {
           events.addEvent(new Event(this));
         });
         createEventMenu();
+        if (managing) {
+          manager.eventListLoaded();
+        }
       }).fail(function(jqxhr, textStatus, error) {
         var err = textStatus + ", " + error;
         console.log("Events request failed: " + err);
       });
-
-      setTimeout(function() {$("#rg2-container").show();}, 1000);
     }
-
+ 
+    function mapLoadedCallback() {
+      resetMapState();
+      if (managing) {
+        manager.mapLoadCallback();
+      }
+    }
+ 
     function resetMapState() {
       // place map in centre of canvas and scale it down to fit
       var mapscale;
@@ -1153,6 +1170,7 @@ var rg2 = ( function() {
       getMapSize : getMapSize,
       loadNewMap : loadNewMap,
       loadEvent : loadEvent,
+      loadEventList: loadEventList,
       eventHasResults: eventHasResults,
       mapIsGeoreferenced : mapIsGeoreferenced,
       getWorldFile : getWorldFile,

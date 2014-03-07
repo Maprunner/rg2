@@ -32,7 +32,11 @@
   if ($_SERVER['REQUEST_METHOD'] == 'GET') {
     handleGetRequest($type, $id);
   } else if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    handlePostRequest($type, $id);
+    if ($type == 'uploadmapfile') {
+      uploadMapFile();
+    } else {
+      handlePostRequest($type, $id);
+    }
   } else {
     header('HTTP/1.1 405 Method Not Allowed');
     header('Allow: GET, POST');
@@ -86,14 +90,46 @@ function encode_rg_output($output_str) {
   return $encoded;
 }
 
+function uploadMapFile() {
+  $write = array();
+  $write["ok"] = FALSE;
+  $write["status_msg"] = "Map upload failed.";
+  $data = new stdClass();
+  $data->x = $_POST["x"];
+  $data->y = $_POST["y"];
+  if (!logIn($data)) {
+    $write["status_msg"] = "Login failed.";
+  } else {       
+    $filename = $_POST["name"];
+    // PHP changes . and space to _ just for fun
+    $filename = str_replace(".", "_", $filename);
+    $filename = str_replace(" ", "_", $filename);
+    if (is_uploaded_file($_FILES[$filename]['tmp_name'])) {
+      $file = $_FILES[$filename];
+      if ($file['type'] == 'image/jpeg') {
+        if (move_uploaded_file($file['tmp_name'], KARTAT_DIRECTORY."temp.jpg")) {
+            $write["ok"] = TRUE;
+            $write["status_msg"] = "Map uploaded.";
+        }
+      }
+    }
+  }
+  
+  $keksi = generateNewKeksi();
+  $write["keksi"] = $keksi;
+  
+  header("Content-type: application/json"); 
+  echo json_encode($write);
+}
+  
 function handlePostRequest($type, $eventid) {
-  $data = json_decode(file_get_contents('php://input'));
+  $data = json_decode(file_get_contents('php://input')); 
   $write = array();
   if (lockDatabase() !== FALSE) {
     if ($type != 'addroute') {
       $loggedIn = logIn($data);
     } else {
-      // don't need to log in to add a route
+      // don't need to log in to add a route 
       $loggedIn = TRUE;
     }
     if ($loggedIn) {
@@ -102,7 +138,15 @@ function handlePostRequest($type, $eventid) {
       case 'addroute':
         $write = addNewRoute($eventid, $data);
         break; 
-     
+
+      case 'addmap':
+        $write = addNewMap($data);
+        break;     
+
+      case 'createevent':
+        $write = addNewEvent($data);
+        break;  
+ 
       case 'editevent':
         $write = editEvent($eventid, $data);
         break; 
@@ -146,13 +190,14 @@ function handlePostRequest($type, $eventid) {
   header("Content-type: application/json"); 
   echo json_encode($write);
 }
+
 function logIn ($data) {
   if (isset($data->x) && isset($data->y)) {  
     $userdetails = extractString($data->x);
     $cookie = $data->y;
   } else {
-    $userdetails = "";
-    $cookie = "";
+    $userdetails = "anon";
+    $cookie = "none";
   }
   $ok = TRUE;
   $keksi = trim(file_get_contents(KARTAT_DIRECTORY."keksi.txt"));
@@ -161,11 +206,11 @@ function logIn ($data) {
     $saved_user = trim(file_get_contents(KARTAT_DIRECTORY."rg2userinfo.txt"));
     $temp = crypt($userdetails, $saved_user);
     if ($temp != $saved_user) {
-      //rg2log("User details incorrect. ".$temp." : ".$saved_user);
+      rg2log("User details incorrect. ".$temp." : ".$saved_user);
       $ok = FALSE;
     }
     if ($keksi != $cookie) {
-      //rg2log("Cookies don't match. ".$keksi." : ".$cookie);
+      rg2log("Cookies don't match. ".$keksi." : ".$cookie);
       $ok = FALSE;
     }
   } else {
@@ -195,6 +240,125 @@ function generateNewKeksi() {
   return $keksi; 
 }
 
+function addNewEvent($data) {
+  rg2log("Add new event");
+  $write["status_msg"] = "";
+  if (($handle = @fopen(KARTAT_DIRECTORY."kisat.txt", "r+")) !== FALSE) {
+    // read to end of file to find last entry
+    $oldid = 0;
+    while (($olddata = fgetcsv($handle, 0, "|")) !== FALSE) {  
+      $oldid = intval($olddata[0]);
+    }
+    $newid = $oldid + 1;
+    $newevent = $newid."|".$data->mapid."|".$data->format."|".$data->name."|".$data->eventdate."|".$data->club."|".$data->level."|";
+    $newevent .= PHP_EOL;
+    $write["newid"] = $newid;
+    $status =fwrite($handle, $newevent);    
+    if (!$status) {
+      $write["status_msg"] = "Save error for kisat. ";
+    }
+    @fflush($handle);
+    @fclose($handle);
+  }
+  // create new sarjat file: course names
+  $courses = "";
+  for ($i = 0; $i < count($data->courses); $i++) {
+    $courses .= ($i + 1)."|".$data->courses[$i]->name.PHP_EOL;
+  }
+  file_put_contents(KARTAT_DIRECTORY."sarjat_".$newid.".txt", $courses, FILE_APPEND);
+
+  // create new sarjojenkoodit file: course control lists
+  for ($i = 0; $i < count($data->courses); $i++) {
+    $controls = ($i + 1);
+    for ($j = 0; $j < count($data->courses[$i]->codes); $j++) {
+          $controls .= "|".$data->courses[$i]->codes[$j];
+    }
+    $controls .= PHP_EOL;
+    file_put_contents(KARTAT_DIRECTORY."sarjojenkoodit_".$newid.".txt", $controls, FILE_APPEND);    
+  }
+
+  // create new ratapisteet file: control locations
+  for ($i = 0; $i < count($data->courses); $i++) {
+    $controls = ($i + 1)."|";
+    for ($j = 0; $j < count($data->courses[$i]->x); $j++) {
+          $controls .= $data->courses[$i]->x[$j].";-".$data->courses[$i]->y[$j]."N";
+    }
+    $controls .= PHP_EOL;
+    file_put_contents(KARTAT_DIRECTORY."ratapisteet_".$newid.".txt", $controls, FILE_APPEND);    
+  }
+
+  // create new radat file: course drawing: not used by RG2 ...
+  $course = "";
+  for ($i = 0; $i < count($data->courses); $i++) {
+    $a = $data->courses[$i];
+    $finish = count($a->x) - 1;
+    $course .= ($i + 1)."|1|".$a->name."|2;";
+    $course .= $a->x[$finish].";-".$a->y[$finish].";0;0N";
+    // loop from first to last control
+    for ($j = 1; $j < $finish; $j++) {
+      // control circle
+      $course .= "1;".$a->x[$j].";-".$a->y[$j].";0;0;N";
+      // line between controls
+      list($x1, $y1, $x2, $y2) = getLineEnds($a->x[$j], $a->y[$j], $a->x[$j-1], $a->y[$j-1]);
+      $course .= "4;".$x1.";-".$y1.";".$x2.";-".$y2.";N";
+      // text: just use 20 offset for now: RG1 and RGJS seem happy
+      $course .= "3;".($a->x[$j] + 20).";-".($a->y[$j] + 20).";".$j.";0;N";   
+    }
+    // start triangle
+    $side = 20;
+    $angle = getAngle($a->x[0], $a->y[0], $a->x[1], $a->y[1]);
+    $angle = $angle + (M_PI / 2);  
+    $x0 = (int) ($a->x[0] + ($side * sin($angle)));
+    $y0 = (int) ($a->y[0] - ($side * cos($angle)));
+    $x1 = (int) ($a->x[0] + ($side * sin($angle + (2 * M_PI / 3))));
+    $y1 = (int) ($a->y[0] - ($side * cos($angle + (2 * M_PI / 3))));
+    $x2 = (int) ($a->x[0] + ($side * sin($angle - (2 * M_PI / 3))));
+    $y2 = (int) ($a->y[0] - ($side * cos($angle - (2 * M_PI / 3))));
+    
+    $course .= "4;".$x0.";-".$y0.";".$x1.";-".$y1.";N";      
+    $course .= "4;".$x1.";-".$y1.";".$x2.";-".$y2.";N";      
+    $course .= "4;".$x2.";-".$y2.";".$x0.";-".$y0.";N";      
+
+    $course .= PHP_EOL;
+  }
+  file_put_contents(KARTAT_DIRECTORY."radat_".$newid.".txt", $course);    
+
+  // create new kilpailijat file: results
+  for ($i = 0; $i < count($data->results); $i++) {
+    $a = $data->results[$i];
+    $result = ($i + 1)."|".$a->courseid."|".$a->course."|".trim($a->name)."|".$a->starttime."|".$a->dbid."||".$a->time."|".$a->splits.PHP_EOL;
+    file_put_contents(KARTAT_DIRECTORY."kilpailijat_".$newid.".txt", $result, FILE_APPEND);    
+  }
+  
+  if ($write["status_msg"] == "") {
+    $write["ok"] = TRUE;
+    $write["status_msg"] = "Event created.";
+  } else {
+    $write["ok"] = FALSE;    
+  }
+  
+  return $write;
+
+}
+
+function getAngle($x1, $y1, $x2, $y2) {
+  $angle = atan2($y2 - $y1, $x2 - $x1);
+  if ($angle < 0) {
+    $angle = $angle + (2 * M_PI);
+  }
+  return $angle;  
+}
+
+function getLineEnds($x1, $y1, $x2, $y2) {
+  $offset = 20;
+  $angle = getAngle($x1, $y1, $x2, $y2);
+  $c1x = (int) ($x1 + ($offset * cos($angle)));
+  $c1y = (int) ($y1 + ($offset * sin($angle)));
+  $c2x = (int) ($x2 - ($offset * cos($angle)));
+  $c2y = (int) ($y2 - ($offset * sin($angle)));
+  return array($c1x, $c1y, $c2x, $c2y);
+}
+      
 function editEvent($eventid, $newdata) {
   $write["status_msg"] = "";
   $updatedfile = array();
@@ -253,14 +417,12 @@ function deleteEvent($eventid) {
     $write["status_msg"] .= " Save error for kisat.";
   }
   
-  // delete all associated files but don't worry about errors
-  @unlink(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt");
-  @unlink(KARTAT_DIRECTORY."kommentit_".$eventid.".txt");
-  @unlink(KARTAT_DIRECTORY."merkinnat_".$eventid.".txt");
-  @unlink(KARTAT_DIRECTORY."radat_".$eventid.".txt");
-  @unlink(KARTAT_DIRECTORY."ratapisteet_".$eventid.".txt");
-  @unlink(KARTAT_DIRECTORY."sarjat_".$eventid.".txt");
-  @unlink(KARTAT_DIRECTORY."sarjojenkoodit_".$eventid.".txt");
+  // rename all associated files but don't worry about errors
+  // safer than deleting them since you can alwsy add the event again
+  $files = array("kilpailijat_", "kommentit_", "merkinnat_", "radat_", "ratapisteet_", "sarjat_", "sarjojenkoodit_");
+  foreach ($files as $file) {
+    @rename(KARTAT_DIRECTORY.$file.$eventid.".txt", KARTAT_DIRECTORY."deleted_".$file.$eventid.".txt");
+  }
               
   if ($write["status_msg"] == "") {
     $write["ok"] = TRUE;
@@ -633,6 +795,48 @@ function addNewRoute($eventid, $data) {
 
 }
 
+function addNewMap($data) {
+  //rg2log("Add new map);
+  $write["status_msg"] = "";
+  if (($handle = @fopen(KARTAT_DIRECTORY."kartat.txt", "r+")) !== FALSE) {
+    // read to end of file to find last entry
+    $oldid = 0;
+    while (($olddata = fgetcsv($handle, 0, "|")) !== FALSE) {  
+      $oldid = intval($olddata[0]);
+    }
+    $newid = $oldid + 1;
+    $renameFile = rename(KARTAT_DIRECTORY."temp.jpg", KARTAT_DIRECTORY.$newid.".jpg");
+    if ($renameFile) {
+      $newmap = $newid."|".$data->name;
+      if ($data->georeferenced) {
+        $newmap .= "|||||||||||||".$data->A."| ".$data->D."|".$data->B."|".$data->E."|".$data->C."|".$data->F;
+      }
+      $newmap .= PHP_EOL;
+      $write["newid"] = $newid;
+      $status =fwrite($handle, $newmap);    
+      if (!$status) {
+        $write["status_msg"] = "Save error for kartat. ";
+      }
+    } else {
+        $write["status_msg"] = "Error renaming map file. ";
+    }
+    @fflush($handle);
+    @fclose($handle);
+  }
+
+
+  if ($write["status_msg"] == "") {
+    $write["ok"] = TRUE;
+    $write["status_msg"] = "Map added";
+    rg2log("Map added|".$newid);
+  } else {
+    $write["ok"] = FALSE;    
+  }
+  
+  return $write;
+
+}
+
 function lockDatabase() {
     // lock directory version based on http://docstore.mik.ua/oreilly/webprog/pcook/ch18_25.htm
     // but note mkdir returns TRUE if directory already exists!
@@ -674,14 +878,15 @@ function handleGetRequest($type, $id) {
   switch ($type) {  
   case 'events':
     $output = getAllEvents();
-    rg2log("Get events");
     break;    
   case 'courses':
     $output = getCoursesForEvent($id);
-    rg2log("Get courses|".$id);
     break;  
   case 'results':
     $output = getResultsForEvent($id);
+    break;
+  case 'maps':
+    $output = getMaps();
     break;
   case 'tracks':
     $output = getTracksForEvent($id);
@@ -749,8 +954,41 @@ function getAllEvents() {
   return $output;
 }
 
+function getMaps() {
+  $output = array();
+  $row = 0;
+  if (($handle = fopen(KARTAT_DIRECTORY."kartat.txt", "r")) !== FALSE) {
+    while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
+      $detail = array();
+      $detail["mapid"] = intval($data[0]);
+      $detail["name"] = $data[1];
+      if (count($data) == 20) {
+        $detail["A"] = $data[14];
+        $detail["D"] = $data[15];
+        $detail["B"] = $data[16];
+        $detail["E"] = $data[17];
+        $detail["C"] = $data[18];
+        $detail["F"] = $data[19];
+        $detail["georeferenced"] = TRUE;
+      } else {
+        $detail["A"] = 0;
+        $detail["D"] = 0;
+        $detail["B"] = 0;
+        $detail["E"] = 0;
+        $detail["C"] = 0;
+        $detail["F"] = 0;
+        $detail["georeferenced"] = FALSE;
+      }
+      $output[$row] = $detail;        
+      $row++;
+    }
+    fclose($handle);
+  }
+  return $output;
+}
+
 function isScoreEvent($eventid) {
-  if (($handle = fopen(KARTAT_DIRECTORY."kisat.txt", "r")) !== FALSE) {
+  if (($handle = @fopen(KARTAT_DIRECTORY."kisat.txt", "r")) !== FALSE) {
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
       if ($data[0] == $eventid) {
         if ($data[2] == 3) {
@@ -890,7 +1128,7 @@ function getCoursesForEvent($eventid) {
   }
 
   // extract control locations based on map co-ords
-  if (($handle = fopen(KARTAT_DIRECTORY."ratapisteet_".$eventid.".txt", "r")) !== FALSE) {
+  if (($handle = @fopen(KARTAT_DIRECTORY."ratapisteet_".$eventid.".txt", "r")) !== FALSE) {
     $row = 0;  
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
       // ignore first field: it is an index  
@@ -920,7 +1158,7 @@ function getCoursesForEvent($eventid) {
 
   $row = 0; 
   // set up details for each course
-  if (($handle = fopen(KARTAT_DIRECTORY."sarjat_".$eventid.".txt", "r")) !== FALSE) {
+  if (($handle = @fopen(KARTAT_DIRECTORY."sarjat_".$eventid.".txt", "r")) !== FALSE) {
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
       $detail = array();
       $detail["courseid"] = intval($data[0]);

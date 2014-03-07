@@ -7,6 +7,11 @@ function Events() {
 Events.prototype = {
 	Constructor : Events,
 
+  deleteAllEvents: function() {
+    this.events.length = 0;
+    this.activeEventID = null;
+  },
+  
 	addEvent : function(eventObject) {
 		this.events.push(eventObject);
 	},
@@ -64,14 +69,16 @@ Events.prototype = {
 		$("#rg2-event-selected").empty();
 		var dropdown = document.getElementById("rg2-event-selected");
 		var i;
+		var len;
 		var opt = document.createElement("option");
     opt.value = null;
     opt.text = 'No event selected';
     dropdown.options.add(opt);
-		for (i = 0; i < this.events.length; i += 1) {
+    len = this.events.length - 1;
+		for (i = len; i > -1; i -= 1) {
       opt = document.createElement("option");
 			opt.value = this.events[i].kartatid;
-			opt.text = this.events[i].date + ": " + this.events[i].name;
+			opt.text = this.events[i].kartatid + ": " + this.events[i].date + ": " + this.events[i].name;
 			dropdown.options.add(opt);
 		}
 	},

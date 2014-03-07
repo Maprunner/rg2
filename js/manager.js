@@ -1,7 +1,12 @@
 /*global rg2:false */
 /*global Controls:false */
 /*global json_url:false */
+/*global maps_url:false */
 /*global getAngle:false */
+/*global rg2WarningDialog:false */
+/*global FormData:false */
+/*global Proj4js:false */
+/*global getLatLonDistance:false */
 function User(keksi) {
   this.x = "";
   this.y = keksi;
@@ -9,26 +14,62 @@ function User(keksi) {
   this.pwd = null;
 }
 
+function Map(data) {
+  if (data !== undefined){
+    // existing map from database
+    this.mapid = data.mapid;
+    this.name = data.name;
+    this.georeferenced = data.georeferenced;
+    this.A = data.A;
+    this.B = data.B;
+    this.C = data.C;
+    this.D = data.D;
+    this.E = data.E;
+    this.F = data.F;
+  } else {
+    // new map to be added
+    this.mapid = 0;
+    this.name = "";
+    this.georeferenced = false;
+    this.A = 0;
+    this.B = 0;
+    this.C = 0;
+    this.D = 0;
+    this.E = 0;
+    this.F = 0;
+  }
+}
+
 function Manager(keksi) {
+  this.DO_NOT_SAVE_COURSE = 9999;
+  this.DO_NOT_GEOREF = 0;
+  this.UK_NATIONAL_GRID = 1;
+  this.FORMAT_NORMAL = 1;
+  this.FORMAT_NO_RESULTS = 2;
+  this.FORMAT_SCORE = 3;
   this.loggedIn = false;
   this.user = new User(keksi);
+  this.newMap = new Map();
   this.eventName = null;
-  this.mapName = null;
   this.eventDate = null;
   this.eventLevel = null;
+  this.mapID = 0;
   this.club = null;
   this.comments = null;
+  this.format = this.FORMAT_NORMAL;
   this.newcontrols = new Controls();
-  this.xmlcourses = [];
+  this.courses = [];
   this.mapLoaded = false;
   this.results = [];
   this.resultCourses = [];
-  this.allocationsDisplayed = false;
   this.mapWidth = 0;
   this.mapHeight = 0;
+  this.mapFile = undefined;
   this.backgroundLocked = false;
   this.handleX = null;
   this.handleY = null;
+  this.maps = [];
+  this.worldfileArgs = [];
   this.HANDLE_DOT_RADIUS = 10;
   this.handleColor = '#ff0000';
   $("#btn-login").button();
@@ -113,15 +154,33 @@ Manager.prototype = {
   enableEventEdit : function() {
     this.loggedIn = true;
     var self = this;
+    
+    this.getMaps();
 
     this.createEventLevelDropdown("rg2-event-level");
     $("#rg2-event-level").click(function(event) {
       self.eventLevel = $("#rg2-event-level").val();
-      $("#rg2-select-event-level").addClass('valid');
+      if (self.eventLevel !== 'X') {
+        $("#rg2-select-event-level").addClass('valid');
+      } else {
+        $("#rg2-select-event-level").removeClass('valid');
+      }
+    });
+
+    $("#rg2-map-selected").click(function(event) {
+      self.mapID = parseInt($("#rg2-map-selected").val(), 10);
+      if (self.mapID) {
+        $("#rg2-manager-map-select").addClass('valid');
+        rg2.loadNewMap(maps_url + "/" + self.mapID + '.jpg');
+      } else {
+        $("#rg2-manager-map-select").removeClass('valid');
+        self.mapLoaded = false;
+        self.mapWidth = 0;
+        self.mapHeight = 0;
+      }
     });
     
     rg2.createEventEditDropdown();
-    
 
     $('#rg2-event-comments').focus(function() {
       // Clear comment box if user focuses on it and it still contains default text
@@ -139,7 +198,8 @@ Manager.prototype = {
     });
     
     this.createEventLevelDropdown("rg2-event-level-edit");
-    
+    this.createGeorefDropdown();
+        
     $("#rg2-event-date-edit").datepicker({
       dateFormat : 'yy-mm-dd'
     });
@@ -148,24 +208,28 @@ Manager.prototype = {
       self.setEventName(evt);
     });
 
+    $("#rg2-map-name").on("change", function(evt) {
+      self.setMapName(evt);
+    });
+    
     $("#rg2-club-name").on("change", function(evt) {
       self.setClub(evt);
     });
 
-    $("#rg2-map-name").on("change", function(evt) {
-      self.setMapName(evt);
+    $("#rg2-load-map-file").button().change(function(evt) {
+      self.readMapFile(evt);
     });
 
-    $("#rg2-load-map-file").button().change(function(evt) {
-      self.readMapJPG(evt);
+    $("#rg2-load-georef-file").button().change(function(evt) {
+      self.readGeorefFile(evt);
     });
 
     $("#rg2-load-results-file").button().change(function(evt) {
-      self.readResultsCSV(evt);
+      self.readResults(evt);
     });
 
     $("#rg2-load-course-file").button().change(function(evt) {
-      self.readCourseXML(evt);
+      self.readCourses(evt);
     });
 
     $("#btn-move-map-and-controls").click(function(evt) {
@@ -176,9 +240,13 @@ Manager.prototype = {
         self.setEvent(parseInt($("#rg2-event-selected").val(), 10));
     });
                  
+    $("#rg2-georef-type").click(function(event) {
+        self.setGeoref($("#rg2-georef-selected").val());
+    });
+
     $("#btn-create-event").button().click(function() {
       self.confirmCreateEvent();
-    }).button("disable");
+    }).button("enable");
     
     $("#btn-update-event").button().click(function() {
       self.confirmUpdateEvent();
@@ -195,25 +263,49 @@ Manager.prototype = {
     $("#btn-delete-event").button().click(function() {
       self.confirmDeleteEvent();
     }).button("disable");
+
+    $("#btn-add-map").button().click(function() {
+      self.confirmAddMap();
+    }).button("disable");
+    
+    // TODO: hide course delete function for now: not fully implemented yet, and may not be needed...
+    $("#rg2-temp-hide-course-delete").hide();
+    
+    // TODO hide results grouping for now: may never implement
+    $("#rg2-results-grouping").hide();
     
     $("#rg2-manage-create").show();
     $("#rg2-create-tab").show();
     $("#rg2-edit-tab").show();
+    $("#rg2-map-tab").show();
     $("#rg2-manage-login").hide();
     $("#rg2-login-tab").hide();
     $('#rg2-info-panel').tabs('option', 'active', rg2.config.TAB_CREATE);
   },
-
-  doContinue : function() {
-    //if ((this.eventName) && (this.mapName) && (this.eventDate) && (this.club) && (this.eventLevel) && (this.mapLoaded) && (this.newcontrols) && (this.xmlcourses)) {
-    if (this.xmlcourses) {
-      // allocate courses
-
-      // align controls
-
-    } else {
-      alert("Data entry not complete");
+  
+  getMaps: function() {
+    var self = this;
+    var i;
+  $.getJSON(json_url, {
+    type : "maps",
+    cache : false
+  }).done(function(json) {
+    self.maps.length = 0;
+    console.log("Maps: " + json.data.length);
+    for (i = 0; i < json.data.length; i += 1) {
+      self.maps.push(new Map(json.data[i]));
     }
+    self.createMapDropdown();
+    $("#btn-toggle-controls").show();
+  }).fail(function(jqxhr, textStatus, error) {
+    $('body').css('cursor', 'auto');
+    var err = textStatus + ", " + error;
+    console.log("Map request failed: " + err);
+  });
+  },
+  
+  setGeoref: function() {
+    this.convertWorldFile(parseInt($("#rg2-georef-selected").val(), 10));
   },
 
   setEvent : function(kartatid) {
@@ -232,11 +324,18 @@ Manager.prototype = {
       $("#rg2-event-date-edit").val("");
       $("#rg2-event-level-edit").val("");
       $("#rg2-edit-event-comments").val("");
+      $("#rg2-route-selected").empty();
     }
       
   },
   
+  eventListLoaded : function() {
+    // called after event list has been updated
+    rg2.createEventEditDropdown();
+  },
+  
   eventFinishedLoading : function () {
+    // called once the requested event has loaded
     // copy event details to edit-form
     // you tell me why this needs parseInt but the same call above doesn't
     var kartatid = parseInt($("#rg2-event-selected").val(), 10);
@@ -252,6 +351,40 @@ Manager.prototype = {
     $("#btn-delete-course").button("enable");
     this.createCourseDeleteDropdown(event.id);
     this.createRouteDeleteDropdown(event.id);
+  },
+  
+  createMapDropdown : function(id) {
+    $("#rg2-map-selected").empty();
+    var dropdown = document.getElementById("rg2-map-selected");
+    var i;
+    var opt;
+    opt = document.createElement("option");
+    opt.value = 0;
+    opt.text = "Select map";
+    dropdown.options.add(opt);
+    var len = this.maps.length - 1;
+    for ( i = len; i > -1; i -= 1) {
+      opt = document.createElement("option");
+      opt.value = this.maps[i].mapid;
+      opt.text = this.maps[i].mapid + ": " + this.maps[i].name;
+      dropdown.options.add(opt);
+    }
+  },
+
+  createGeorefDropdown : function(id) {
+    $("#rg2-georef-selected").empty();
+    var dropdown = document.getElementById("rg2-georef-selected");
+    var opt;
+    var i;
+    var coord = ['Not georeferenced', 'GB National Grid'];
+    // assumes this.UK_NATIONAL_GRID is 1
+    // assumes this.DO_NOT_GEOREF = 0;
+    for ( i = 0; i < coord.length; i += 1) {
+      opt = document.createElement("option");
+      opt.value = i;
+      opt.text = coord[i];
+      dropdown.options.add(opt);
+    }
   },
   
   createCourseDeleteDropdown : function(id) {
@@ -283,34 +416,62 @@ Manager.prototype = {
   },
   
   getCoursesFromResults : function() {
+    // creates an array of all course names in the results file
     var i;
+    var j;
+    var a;
+    var idx;
     this.resultCourses = [];
     for ( i = 0; i < this.results.length; i += 1) {
-      if (this.resultCourses.indexOf(this.results[i].course) === -1) {
-        this.resultCourses.push(this.results[i].course);
+      // have we already found this course?
+      idx = -1;
+      for (j = 0; j < this.resultCourses.length; j += 1) {
+        if (this.resultCourses[j].course === this.results[i].course) {
+          idx = j;
+          break;
+        }
+      }
+      if (idx === -1) {
+        a = {};
+        a.course = this.results[i].course;
+        // set later when mapping is known
+        a.courseid = this.DO_NOT_SAVE_COURSE;
+        this.resultCourses.push(a);
       }
     }
 
   },
 
   displayCourseAllocations : function() {
-    if ((this.xmlcourses.length) && (this.resultCourses) && (!this.allocationsDisplayed)) {
+    if ((this.courses.length) && (this.resultCourses.length)) {
 
       // create html for course allocation list
       // using a table to make it easier for now
-      var html = "<table><thead></thead><tbody>";
+      var html = "<div id='rg2-course-allocations'><table><thead><tr><th>Course file</th><th>Results</th></tr></thead><tbody>";
       var i;
-      for ( i = 0; i < this.xmlcourses.length; i += 1) {
-        html += "<tr><td>" + this.xmlcourses[i].name + "</td><td>" + this.createCourseDropdown(this.xmlcourses[i].name) + "</td></tr>";
+      for ( i = 0; i < this.courses.length; i += 1) {
+        html += "<tr><td>" + this.courses[i].name + "</td><td>" + this.createCourseDropdown(this.courses[i].name, i) + "</td></tr>";
       }
-      html += "</tbody></table>";
-      $("#rg2-course-allocations").append(html);
-      this.allocationsDisplayed = true;
+      html += "</tbody></table></div>";
+      $("#rg2-course-allocations").empty().append(html);
     }
   },
-
+  
+  validData : function() {
+    if ((this.eventName) && (this.mapID) && (this.eventDate) && (this.club) && (this.eventLevel) && (this.format) &&
+        (this.newcontrols) && (this.courses)) {
+      return true;
+    } else {
+      return false;
+    }
+  
+  },
+  
   confirmCreateEvent : function() {
-
+    if (!this.validData()) {
+      rg2WarningDialog("Data missing", "Please enter all necessary information before creating the event.");
+      return;
+    }
     var msg = "<div id='event-create-dialog'>Are you sure you want to create this event?</div>";
     var me = this;
     $(msg).dialog({
@@ -318,21 +479,21 @@ Manager.prototype = {
       modal : true,
       dialogClass : "no-close",
       closeOnEscape : false,
-      buttons : [{
-        text : "Create event",
-        click : function() {
-          me.doCreateEvent();
-        }
-      }, {
+      buttons : [ {
         text : "Cancel",
         click : function() {
           me.doCancelCreateEvent();
+        }
+      }, {
+        text : "Create event",
+        click : function() {
+          me.doCreateEvent();
         }
       }]
     });
   },
   
-  doCancelUpdateEvent : function() {
+  doCancelCreateEvent : function() {
     $("#event-create-dialog").dialog("destroy");
   },
   
@@ -341,25 +502,123 @@ Manager.prototype = {
     var id = $("#rg2-event-selected").val();
     var $url = json_url + "?type=createevent";
     var data = {};
-
+    data.name = this.eventName;
+    data.mapid = this.mapID;
+    data.eventdate = this.eventDate;
+    data.club = this.club;
+    data.format = this.format;
+    data.level = this.eventLevel;
+    this.setControlLocations();
+    this.mapResultsToCourses();
+    this.renumberResults();
+    data.courses = this.courses.slice(0);
+    data.results = this.results.slice(0);
+    var user = this.encodeUser();
+    data.x = user.x;
+    data.y = user.y;
     var json = JSON.stringify(data);
-    /* $.ajax({
+    var self = this;
+    $.ajax({
         data:json,
         type:"POST",
         url:$url,
         dataType:"json",
         success:function(data, textStatus, jqXHR) {
-          console.log(data.status_msg);
+          // save new cookie
+          self.user.y = data.keksi;
+          if (data.ok) {
+            rg2WarningDialog("Event created", self.eventName + " has been added with id " + data.newid + ".");
+          } else {
+            rg2WarningDialog("Save failed", data.status_msg + ". Failed to create event. Please try again.");
+          }
         },
         error:function(jqXHR, textStatus, errorThrown) {
           console.log(textStatus);
         }
         
-    }); */
+    });
+  },
+  
+  renumberResults : function() {
+    // updates the course id when we know the mapping
+    // and deletes results for courses not required
+    var i;
+    var id;
+    var newResults = [];
+    
+    for (i = 0; i < this.results.length; i += 1) {
+      id = this.getCourseIDForResult(this.results[i].course);
+      if (id !== this.DO_NOT_SAVE_COURSE) {
+        this.results[i].courseid = id;
+        newResults.push(this.results[i]);
+      }
+    }
+    this.results = newResults;
+  },
+ 
+  mapResultsToCourses: function() {
+    // called when saving courses
+    // generates the necessary course IDs for the results file 
+    // deletes unwanted courses
+    var i;
+    var selector;
+    var id;
+    var newCourses = [];
+    var courseid = 1;
+    for (i = 0; i < this.courses.length; i += 1) {
+      selector = "#rg2-alloc-" + i;
+      id = parseInt($(selector).val(), 10);
+      if (id !== this.DO_NOT_SAVE_COURSE) {
+        this.courses[i].courseid = courseid;
+        this.resultCourses[id].courseid = courseid;
+        newCourses.push(this.courses[i]);
+        courseid += 1;
+      }
+    }
+    this.courses = newCourses;
+  },
+  
+  getCourseIDForResult: function(course) {
+    var i;
+    for (i = 0; i < this.resultCourses.length; i += 1) {
+      if (this.resultCourses[i].course === course) {
+        return this.resultCourses[i].courseid;
+      }
+    }
+    return 0;
+  },
+   
+  setControlLocations: function() {
+    // called when saving courses
+    // reads control locations and updates course details
+    var i;
+    var j;
+    var c;
+    for (i = 0; i < this.courses.length; i += 1) {
+      for (j = 0; j < this.courses[i].codes.length; j += 1) {
+        c = this.getControlXY(this.courses[i].codes[j]);
+        this.courses[i].x[j] = c.x;
+        this.courses[i].y[j] = c.y;
+      }
+    }
+  },
+  
+  getControlXY: function(code) {
+    var i;
+    var c = {};
+    c.x = 0;
+    c.y = 0;
+    for (i = 0; i < this.newcontrols.controls.length; i += 1) {
+      if (this.newcontrols.controls[i].code === code) {
+        c.x = Math.round(this.newcontrols.controls[i].x);
+        c.y = Math.round(this.newcontrols.controls[i].y);
+        return c;
+      }
+    }
+    return c;
   },
   
   confirmUpdateEvent : function() {
-
     var msg = "<div id='event-update-dialog'>Are you sure you want to update this event?</div>";
     var me = this;
     $(msg).dialog({
@@ -368,21 +627,21 @@ Manager.prototype = {
       dialogClass : "no-close",
       closeOnEscape : false,
       buttons : [{
-        text : "Update event",
-        click : function() {
-          me.doUpdateEvent();
-        }
-      }, {
         text : "Cancel",
         click : function() {
           me.doCancelUpdateEvent();
+        }
+      }, {
+        text : "Update event",
+        click : function() {
+          me.doUpdateEvent();
         }
       }]
     });
   },
   
-  doCancelUpdateCourse : function() {
-    $("#course-update-dialog").dialog("destroy");
+  doCancelUpdateEvent : function() {
+    $("#event-update-dialog").dialog("destroy");
   },
   
   doUpdateEvent : function() {
@@ -409,14 +668,9 @@ Manager.prototype = {
           // save new cookie
           self.user.y = data.keksi;
           if (data.ok) {
-            $(msg).dialog({
-              title : "Event updated"
-            });
+            rg2WarningDialog("Event updated", "Event " + id + " has been updated.");
           } else {
-            var msg = "<div>" + data.status_msg + ". Event update failed. Please try again.</div>";
-            $(msg).dialog({
-              title : "Update failed"
-            });
+            rg2WarningDialog("Update failed", data.status_msg + ". Event update failed. Please try again.");
           }
         },
         error:function(jqXHR, textStatus, errorThrown) {
@@ -434,15 +688,15 @@ Manager.prototype = {
       modal : true,
       dialogClass : "no-close",
       closeOnEscape : false,
-      buttons : [{
-        text : "Delete course",
-        click : function() {
-          me.doDeleteCourse();
-        }
-      }, {
+      buttons : [ {
         text : "Cancel",
         click : function() {
           me.doCancelDeleteCourse();
+        }
+      }, {
+        text : "Delete course",
+        click : function() {
+          me.doDeleteCourse();
         }
       }]
     });
@@ -457,6 +711,7 @@ Manager.prototype = {
     var id = $("#rg2-event-selected").val();
     var routeid = $("#rg2-route-selected").val();
     var $url = json_url + "?type=deletecourse&id=" + id + "&routeid=" + routeid;
+    // TODO: add course delete functionality
     /*$.ajax({
       data:"",
         type:"POST",
@@ -480,14 +735,14 @@ Manager.prototype = {
       dialogClass : "no-close",
       closeOnEscape : false,
       buttons : [{
-        text : "Delete route",
-        click : function() {
-          me.doDeleteRoute();
-        }
-      }, {
         text : "Cancel",
         click : function() {
           me.doCancelDeleteRoute();
+        }
+      }, {
+        text : "Delete route",
+        click : function() {
+          me.doDeleteRoute();
         }
       }]
     });
@@ -515,15 +770,9 @@ Manager.prototype = {
           var msg;
           self.user.y = data.keksi;
           if (data.ok) {
-            msg = "<div>Route deleted.</div>";
-            $(msg).dialog({
-              title : "Route deleted"
-            });
+            rg2WarningDialog("Route deleted", "Route " + routeid + " has been deleted.");
           } else {
-            msg = "<div>" + data.status_msg + ". Delete failed. Please try again.</div>";
-            $(msg).dialog({
-              title : "Delete failed"
-            });
+            rg2WarningDialog("Delete failed", data.status_msg + ". Delete failed. Please try again.");
           }
         },
         error:function(jqXHR, textStatus, errorThrown) {
@@ -534,7 +783,7 @@ Manager.prototype = {
   
   confirmDeleteEvent : function() {
 
-    var msg = "<div id='event-delete-dialog'>This event will be permanently deleted. Are you sure?</div>";
+    var msg = "<div id='event-delete-dialog'>This event will be deleted. Are you sure?</div>";
     var me = this;
     $(msg).dialog({
       title : "Confirm event delete",
@@ -542,14 +791,14 @@ Manager.prototype = {
       dialogClass : "no-close",
       closeOnEscape : false,
       buttons : [{
-        text : "Delete event",
-        click : function() {
-          me.doDeleteEvent();
-        }
-      }, {
         text : "Cancel",
         click : function() {
           me.doCancelDeleteEvent();
+        }
+      }, {
+        text : "Delete event",
+        click : function() {
+          me.doDeleteEvent();
         }
       }]
     });
@@ -565,6 +814,7 @@ Manager.prototype = {
     var user = this.encodeUser();
     var json = JSON.stringify(user);
     var self = this;
+    var msg;
     $.ajax({
         data: json,
         type:"POST",
@@ -574,14 +824,12 @@ Manager.prototype = {
           // save new cookie
           self.user.y = data.keksi;
           if (data.ok) {
-            $(msg).dialog({
-              title : "Event deleted"
-            });
+            rg2WarningDialog("Event deleted", "Event " + id + " has been deleted.");
+            rg2.loadEventList();
+            self.setEvent();
+            $("#rg2-event-selected").empty();
           } else {
-            var msg = "<div>" + data.status_msg + ". Event delete failed. Please try again.</div>";
-            $(msg).dialog({
-              title : "Delete failed"
-            });
+            rg2WarningDialog("Delete failed", data.status_msg + ". Event delete failed. Please try again.");
           }
         },
         error:function(jqXHR, textStatus, errorThrown) {
@@ -591,7 +839,7 @@ Manager.prototype = {
     });
   },
   
-  readResultsCSV : function(evt) {
+  readResults : function(evt) {
 
     var reader = new FileReader();
     var self = this;
@@ -611,6 +859,8 @@ Manager.prototype = {
     reader.onload = function(evt) {
       var csv = evt.target.result;
       var rows = evt.target.result.split(/[\r\n|\n]+/);
+      
+      self.results.length = 0;
       // only one valid format for now...
       self.processSICSVResults(rows);
       $("#rg2-select-results-file").addClass('valid');
@@ -618,7 +868,7 @@ Manager.prototype = {
     reader.readAsText(evt.target.files[0]);
   },
 
-  readCourseXML : function(evt) {
+  readCourses : function(evt) {
 
     var reader = new FileReader();
     reader.onerror = function(evt) {
@@ -635,40 +885,176 @@ Manager.prototype = {
     };
     var self = this;
     reader.onload = function(evt) {
-      self.processIOFXML(evt);
+      self.courses.length = 0;
+      self.newcontrols.deleteAllControls();
+      self.processXML(evt);
+      self.displayCourseAllocations();
+      self.fitControlsToMap();
+      rg2.redraw(false);
     };
 
     reader.readAsText(evt.target.files[0]);
   },
 
-  processIOFXML : function(evt) {
+  processXML : function(evt) {
     var xml;
     var version;
     var i;
     var nodelist;
-
-    xml = $.parseXML(evt.target.result);
-    version = xml.getElementsByTagName('IOFVersion')[0].getAttribute('version');
-    if (version !== "2.0.3") {
-      alert('Invalid IOF file format. Version ' + version + ' not supported.');
+    version = "";
+    try {
+      xml = $.parseXML(evt.target.result);
+      
+      // test for IOF Version 2
+      nodelist = xml.getElementsByTagName('IOFVersion');
+      if (nodelist.length > 0) {
+        version = nodelist[0].getAttribute('version');
+      }
+      if (version === "") {
+        // test for IOF Version 3
+        nodelist = xml.getElementsByTagName('CourseData');
+        if (nodelist.length > 0) {
+          version = nodelist[0].getAttribute('iofVersion');
+        }
+      }
+    }
+    catch (err) {
+      rg2WarningDialog("XML file error", "File is not a valid XML event file.");
       return;
     }
+     
+    switch (version) {
+      case "2.0.3":
+        this.processIOFV2XML(xml);
+        break;
+      case "3.0":
+        this.processIOFV3XML(xml);
+        break;
+      default:
+        rg2WarningDialog("XML file error", 'Invalid IOF file format. Version ' + version + ' not supported.');
+    }
+  },
+
+  extractV2Courses : function(nodelist) {
+    var i;
+    var j;
+    var course;
+    var codes;
+    var x;
+    var y;
+    var controllist;
+    var tmp;
+    for ( i = 0; i < nodelist.length; i += 1) {
+      course = {};
+      codes = [];
+      x = [];
+      y = [];
+      course.name = nodelist[i].getElementsByTagName('CourseName')[0].textContent;
+      tmp = nodelist[i].getElementsByTagName('StartPointCode')[0].textContent;
+      codes.push(tmp.trim());
+      controllist = nodelist[i].getElementsByTagName('CourseControl');
+      for ( j = 0; j < controllist.length; j += 1) {
+        tmp = controllist[j].getElementsByTagName('ControlCode')[0].textContent;
+        codes.push(tmp.trim());
+      }
+      tmp = nodelist[i].getElementsByTagName('FinishPointCode')[0].textContent;
+      codes.push(tmp.trim());
+
+      course.codes = codes;
+      // 0 for now: set when result mapping is known
+      course.courseid = 0;
+      course.x = x;
+      course.y = y;
+      this.courses.push(course);
+    }
+    $("#rg2-select-course-file").addClass('valid');
+  },
+
+extractV3Courses : function(nodelist) {
+    var i;
+    var j;
+    var course;
+    var codes;
+    var x;
+    var y;
+    var controllist;
+    var tmp;
+    for ( i = 0; i < nodelist.length; i += 1) {
+      course = {};
+      codes = [];
+      x = [];
+      y = [];
+      course.name = nodelist[i].getElementsByTagName('Name')[0].textContent;
+      controllist = nodelist[i].getElementsByTagName('CourseControl');
+      for ( j = 0; j < controllist.length; j += 1) {
+        tmp = controllist[j].getElementsByTagName('Control')[0].textContent;
+        codes.push(tmp.trim());
+      }
+
+      course.codes = codes;
+      // 0 for now: set when result mapping is known
+      course.courseid = 0;
+      course.x = x;
+      course.y = y;
+      this.courses.push(course);
+    }
+    $("#rg2-select-course-file").addClass('valid');
+  },
+
+  processIOFV3XML: function(xml) {
+    // extract all controls
+    var nodelist;
+    var i;
+    var code;
+    var mappos;
+    var x;
+    var y;
+    nodelist = xml.getElementsByTagName('Control');
+    // only need first-level Controls
+    for (i = 0; i < nodelist.length; i += 1) {
+      if (nodelist[i].parentNode.nodeName === 'RaceCourseData') {
+        code = nodelist[i].getElementsByTagName("Id")[0].textContent;
+        mappos = nodelist[i].getElementsByTagName("MapPosition");
+        x = mappos[0].getAttribute('x');
+        y = mappos[0].getAttribute('y');
+        this.newcontrols.addControl(code.trim(), x, y);
+      }
+    }
+    // extract all courses
+    nodelist = xml.getElementsByTagName('Course');
+    this.extractV3Courses(nodelist);
+  },
+    
+  processIOFV2XML: function(xml) {
+    var nodelist;
     // extract all start controls
     nodelist = xml.getElementsByTagName('StartPoint');
-    this.extractControls(nodelist);
+    this.extractV2Controls(nodelist, 'StartPointCode');
     // extract all normal controls
     nodelist = xml.getElementsByTagName('Control');
-    this.extractControls(nodelist);
+    this.extractV2Controls(nodelist, 'ControlCode');
     // extract all finish controls
     nodelist = xml.getElementsByTagName('FinishPoint');
-    this.extractControls(nodelist);
+    this.extractV2Controls(nodelist, 'FinishPointCode');
 
     // extract all courses
     nodelist = xml.getElementsByTagName('Course');
-    this.extractCourses(nodelist);
-    this.displayCourseAllocations();
-    this.fitControlsToMap();
-    rg2.redraw(false);
+    this.extractV2Courses(nodelist);
+  },
+
+  extractV2Controls : function(nodelist, type) {
+    var i;
+    var x;
+    var y;
+    var code;
+    var mappos;
+    for ( i = 0; i < nodelist.length; i += 1) {
+      code = nodelist[i].getElementsByTagName(type)[0].textContent;
+      mappos = nodelist[i].getElementsByTagName("MapPosition");
+      x = mappos[0].getAttribute('x');
+      y = mappos[0].getAttribute('y');
+      this.newcontrols.addControl(code.trim(), x, y);
+    }
   },
 
   /*
@@ -698,9 +1084,19 @@ Manager.prototype = {
     var result;
     var nextsplit;
     var temp;
+    // try and work out what the separator is
+    var commas = rows[0].split(',' ).length - 1;
+    var semicolons = rows[0].split(';' ).length - 1;
+    
+    var separator;
+    if (commas > semicolons) {
+      separator = ',';
+    } else {
+      separator = ";";
+    }
     // extract all fields in all rows
     for ( i = 0; i < rows.length; i += 1) {
-      fields[i] = rows[i].split(";");
+      fields[i] = rows[i].split(separator);
     }
     // extract what we need: first row is headers so ignore
     for ( i = 1; i < rows.length; i += 1) {
@@ -708,8 +1104,8 @@ Manager.prototype = {
       if (fields[i].length >= FIRST_SPLIT_IDX) {
         result = {};
         result.chipid = fields[i][CHIP_IDX];
-        result.name = fields[i][FIRST_NAME_IDX] + " " + fields[i][SURNAME_IDX];
-        result.dbid = fields[i][DB_IDX] + "_" + result.name;
+        result.name = (fields[i][FIRST_NAME_IDX] + " " + fields[i][SURNAME_IDX]).trim();
+        result.dbid = fields[i][DB_IDX] + "__" + result.name;
         result.starttime = this.convertHHMMSSToSecs(fields[i][START_TIME_IDX]);
         result.time = fields[i][TOTAL_TIME_IDX];
         result.club = fields[i][CLUB_IDX];
@@ -736,7 +1132,6 @@ Manager.prototype = {
     }
     // extract courses from results
     this.getCoursesFromResults();
-
     this.displayCourseAllocations();
   },
 
@@ -764,75 +1159,40 @@ Manager.prototype = {
     }
   },
 
-  extractControls : function(nodelist) {
-    var i;
-    var x;
-    var y;
-    var code;
-    for ( i = 0; i < nodelist.length; i += 1) {
-      code = nodelist[i].children[0].textContent;
-      x = nodelist[i].children[1].getAttribute('x');
-      y = nodelist[i].children[1].getAttribute('y');
-      this.newcontrols.addControl(code.trim(), x, y);
-    }
-  },
 
-  extractCourses : function(nodelist) {
-    var i;
-    var j;
-    var course;
-    var codes;
-    var x;
-    var y;
-    var controllist;
-    var tmp;
-    for ( i = 0; i < nodelist.length; i += 1) {
-      course = {};
-      codes = [];
-      x = [];
-      y = [];
-      course.name = nodelist[i].getElementsByTagName('CourseName')[0].textContent;
-      tmp = nodelist[i].getElementsByTagName('StartPointCode')[0].textContent;
-      codes.push(tmp.trim());
-      controllist = nodelist[i].getElementsByTagName('CourseControl');
-      for ( j = 0; j < controllist.length; j += 1) {
-        tmp = controllist[j].children[1].textContent;
-        codes.push(tmp.trim());
-      }
-      tmp = nodelist[i].getElementsByTagName('FinishPointCode')[0].textContent;
-      codes.push(tmp.trim());
-
-      course.codes = codes;
-      course.x = x;
-      course.y = y;
-      this.xmlcourses.push(course);
-    }
-    $("#rg2-select-course-file").addClass('valid');
-  },
-
-  readMapJPG : function(evt) {
+  readMapFile : function(evt) {
     var reader = new FileReader();
     var self = this;
     reader.onload = function(event) {
       self.processMap(event);
     };
+    this.mapFile = evt.target.files[0];
     reader.readAsDataURL(evt.target.files[0]);
+  },
+  
+  mapLoadCallback : function() {
+    //callback when map image is loaded from an existing map file
+    this.mapLoaded = true;
+    this.fitControlsToMap();
+    rg2.redraw(false);
   },
 
   processMap : function(event) {
     rg2.loadNewMap(event.target.result);
     $("#rg2-select-map-file").addClass('valid');
     this.mapLoaded = true;
-    var size = rg2.getMapSize();
-    this.mapWidth = size.width;
-    this.mapHeight = size.height;
     this.fitControlsToMap();
     rg2.redraw(false);
+    $("#btn-add-map").button("enable");
   },
 
   fitControlsToMap : function() {
     var i;
     if ((this.mapLoaded) && (this.newcontrols.controls.length > 0)) {
+      var size = rg2.getMapSize();
+      this.mapWidth = size.width;
+      this.mapHeight = size.height;
+      
       // get max extent of controls
       // find bounding box for track
       var minX = this.newcontrols.controls[0].x;
@@ -846,9 +1206,12 @@ Manager.prototype = {
         minX = Math.min(minX, this.newcontrols.controls[i].x);
         minY = Math.min(minY, this.newcontrols.controls[i].y);
       }
-
-      var xRange = maxX - minX;
-      var yRange = maxY - minY;
+      // fit within the map since this is probably needed anyway
+      var scale = 1.25;
+      var xRange = scale * (maxX - minX);
+      var yRange = scale * (maxY - minY);
+      minX *= scale;
+      minY *= scale;
       for ( i = 0; i < this.newcontrols.controls.length; i += 1) {
         this.newcontrols.controls[i].x = (this.newcontrols.controls[i].x - minX) * (this.mapWidth / xRange);
         this.newcontrols.controls[i].y = this.mapHeight - ((this.newcontrols.controls[i].y - minY) * (this.mapHeight/ yRange));
@@ -878,8 +1241,8 @@ Manager.prototype = {
   },
 
   setMapName : function(evt) {
-    this.mapName = $("#rg2-map-name").val();
-    if (this.mapName) {
+    this.newMap.name = $("#rg2-map-name").val();
+    if (this.newMap.name) {
       $("#rg2-select-map-name").addClass('valid');
     } else {
       $("#rg2-select-map-name").removeClass('valid');
@@ -898,8 +1261,8 @@ Manager.prototype = {
   createEventLevelDropdown : function(id) {
     $("#" + id).empty();
     var dropdown = document.getElementById(id);
-    var types = ["Training", "Local", "Regional", "National", "International"];
-    var abbrev = ["T", "L", "R", "N", "I"];
+    var types = ["Select level", "Training", "Local", "Regional", "National", "International"];
+    var abbrev = ["X", "T", "L", "R", "N", "I"];
     var opt;
     var i;
     for ( i = 0; i < types.length; i += 1) {
@@ -911,25 +1274,32 @@ Manager.prototype = {
 
   },
 
-  createCourseDropdown : function(course) {
+  createCourseDropdown : function(course, courseidx) {
     /*
      * Input: course name to match
      *
      * Output: html select
      */
     var i;
-    var idx = this.resultCourses.indexOf(course);
-    var html = "<select name='a'><option value=999";
+    var idx = -1;
+    // do results include this course name?
+    for (i = 0; i < this.resultCourses.length; i += 1) {
+      if (this.resultCourses[i].course === course) {
+        idx = i;
+        break;
+      }
+    }
+    var html = "<select id='rg2-alloc-" + courseidx + "'><option value=" + this.DO_NOT_SAVE_COURSE;
     if (idx === -1) {
       html += " selected";
     }
-    html += ">Skip this class</option>";
+    html += ">Do not save</option>";
     for ( i = 0; i < this.resultCourses.length; i += 1) {
       html += "<option value=" + i;
       if (idx === i) {
         html += " selected";
       }
-      html += ">" + this.resultCourses[i] + "</option>";
+      html += ">" + this.resultCourses[i].course + "</option>";
     }
     html += "</select>";
     return html;
@@ -1020,5 +1390,257 @@ Manager.prototype = {
   // locks or unlocks background when adjusting map
   toggleMoveAll : function(checkedState) {
     this.backgroundLocked = checkedState;
+  },
+  
+  confirmAddMap : function() {
+
+    var msg = "<div id='add-map-dialog'>Are you sure you want to add this map?</div>";
+    var me = this;
+    $(msg).dialog({
+      title : "Confirm new map",
+      modal : true,
+      dialogClass : "no-close",
+      closeOnEscape : false,
+      buttons : [{
+        text : "Cancel",
+        click : function() {
+          me.doCancelAddMap();
+        }
+      }, {
+        text : "Add map",
+        click : function() {
+          me.doUploadMapFile();
+        }
+      }]
+    });
+  },
+  
+  doCancelAddMap : function() {
+    $("#add-map-dialog").dialog("destroy");
+  },
+
+  doUploadMapFile : function(id) {
+    $("#add-map-dialog").dialog("destroy");
+    // first transfer map file to server
+    var url = json_url + "?type=uploadmapfile";
+    var user = this.encodeUser();
+    var self = this;
+    var formData = new FormData();
+    formData.append(this.mapFile.name, this.mapFile);
+    formData.append("name", this.mapFile.name);
+    formData.append("x", user.x);
+    formData.append("y", user.y);
+    $.ajax({
+        url: url,
+        data: formData,
+        type:"POST",
+        mimeType:"multipart/form-data",
+        processData:false,
+        contentType: false,
+        dataType: "json",
+        success:function(data, textStatus, jqXHR) {
+          // save new cookie
+          self.user.y = data.keksi;
+          if (data.ok) {
+            self.doAddMap();
+          } else {
+            rg2WarningDialog("Save failed", data.status_msg + ". Failed to save map. Please try again.");
+          }
+        },
+        error:function(jqXHR, textStatus, errorThrown) {
+          console.log(textStatus);
+        }
+
+    });
+  },
+  
+  doAddMap : function() {
+    // map file uploaded OK so add new details
+    var $url = json_url + "?type=addmap";
+    var data = {};
+    data = this.newMap;
+    var user = this.encodeUser();
+    data.x = user.x;
+    data.y = user.y;
+    var json = JSON.stringify(data);
+    var self = this;
+    $.ajax({
+        data:json,
+        type:"POST",
+        url:$url,
+        dataType:"json",
+        success:function(data, textStatus, jqXHR) {
+          // save new cookie
+          self.user.y = data.keksi;
+          if (data.ok) {
+            rg2WarningDialog("Map added", self.newMap.name + " has been added with id " + data.newid + ".");
+            // update map dropdown
+            self.getMaps();
+          } else {
+            rg2WarningDialog("Save failed", data.status_msg + ". Failed to save map. Please try again.");
+          }
+        },
+        error:function(jqXHR, textStatus, errorThrown) {
+          console.log(textStatus);
+        }
+        
+    });
+  },
+  
+  readGeorefFile : function (evt) {
+
+  var reader = new FileReader();
+  
+  var self = this;
+  try {
+    reader.readAsText(evt.target.files[0]);
+  }
+  catch(err) {
+    rg2WarningDialog("File read error", "Failed to open selected world file.");
+    return;
+  }
+
+  reader.onerror = function(evt) {
+    switch(evt.target.error.code) {
+      case evt.target.error.NOT_FOUND_ERR:
+        console.log('File not found');
+        break;
+      case evt.target.error.NOT_READABLE_ERR:
+        console.log('File not readable');
+        break;
+      default:
+        console.log('An error occurred reading the file.');
+    }
+  };
+
+  reader.onload = function(evt) {
+    // see http://en.wikipedia.org/wiki/World_file
+    // read JGW world file
+    var txt = evt.target.result;
+    var args = txt.split(/[\r\n]+/g);
+    var i;
+    for (i = 0; i < 6; i +=1) {
+      self.worldfileArgs[i] = parseFloat(args[i]);
+    }
+    self.convertWorldFile(self.UK_NATIONAL_GRID);
+  };
+  },
+  
+  convertWorldFile : function(type) {
+    var size = rg2.getMapSize();
+    this.mapWidth = size.width;
+    this.mapHeight = size.height;
+    if ((this.worldfileArgs.length === 0) || (this.mapWidth === 0)) {
+      // no map or world file loaded
+      return;
+    }
+    // UK National Grid
+    Proj4js.defs["EPSG:27700"] = "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs ";
+    var source;
+    
+    switch (type) {
+    case this.UK_NATIONAL_GRID:
+      source = new Proj4js.Proj("EPSG:27700");
+      break;
+    case this.DO_NOT_GEOREF:
+      this.clearGeorefs();
+      return;
+    default:
+      return;
+    }
+    // WGS84 as used by GPS
+    var dest = new Proj4js.Proj("EPSG:4326");
+
+    var xScale = this.worldfileArgs[0];
+    var ySkew = this.worldfileArgs[1];
+    var xSkew = this.worldfileArgs[2];
+    var yScale = this.worldfileArgs[3];
+
+    var xos = [];
+    var yos = [];
+    var xpx = [];
+    var ypx = [];
+
+    // x0, y0 is top left
+    xos[0] = this.worldfileArgs[4];
+    yos[0] = this.worldfileArgs[5];
+    xpx[0] = 0;
+    ypx[0] = 0;
+
+    // x1, y1 is bottom right
+    xpx[1] = this.mapWidth;
+    ypx[1] = this.mapHeight;
+    xos[1] = (xScale * xpx[1]) + (xSkew * ypx[1]) + xos[0];
+    yos[1] = (yScale * ypx[1]) + (ySkew * xpx[1]) + yos[0];
+
+    // x2, y2 is top right
+    xpx[2] = this.mapWidth;
+    ypx[2] = 0;
+    xos[2] = (xScale * xpx[2]) + (xSkew * ypx[2]) + xos[0];
+    yos[2] = (yScale * ypx[2]) + (ySkew * xpx[2]) + yos[0];
+
+    // x3, y3 is bottom left
+    xpx[3] = 0;
+    ypx[3] = this.mapHeight;
+    xos[3] = (xScale * xpx[3]) + (xSkew * ypx[3]) + xos[0];
+    yos[3] = (yScale * ypx[3]) + (ySkew * xpx[3]) + yos[0];
+
+    // translate source to WGS84 (as in GPS file)
+    var i;
+    var p = [];
+    var pt;
+    for (i = 0; i < 4; i += 1) {
+      pt = {};
+      pt.x = parseInt(xos[i] + 0.5, 10);
+      pt.y = parseInt(yos[i] + 0.5, 10);
+      p.push(pt);
+      Proj4js.transform(source, dest, p[i]);
+      //console.log(p[i].x, p[i].y);
+    }
+
+    var hypot = getLatLonDistance(p[0].y, p[0].x, p[2].y, p[2].x);
+    var adj = getLatLonDistance(p[0].y, p[0].x, p[0].y, p[2].x);
+    var angle1 = Math.acos(adj / hypot);
+
+    var hypot2 = getLatLonDistance(p[2].y, p[2].x, p[1].y, p[1].x);
+    var adj2 = getLatLonDistance(p[2].y, p[2].x, p[1].y, p[2].x);
+    var angle2 = Math.acos(adj2 / hypot2);
+
+    var angle = (angle1 + angle2) / 2;
+    //console.log(hypot, hypot2, adj, adj2, angle1, angle2, angle);
+    var pixResX = (p[2].x - p[0].x) / this.mapWidth;
+    var pixResY = (p[2].y - p[1].y) / this.mapHeight;
+
+    this.newMap.A = pixResX * Math.cos(angle);
+    this.newMap.D = pixResY * Math.sin(angle);
+    this.newMap.B = pixResX * Math.sin(angle);
+    this.newMap.E = -1 * pixResY * Math.cos(angle);
+    this.newMap.C = p[0].x;
+    this.newMap.F = p[0].y;
+    $("#georef-A").empty().text("A: " + this.newMap.A);
+    $("#georef-B").empty().text("B: " + this.newMap.B);
+    $("#georef-C").empty().text("C: " + this.newMap.C);
+    $("#georef-D").empty().text("D: " + this.newMap.D);
+    $("#georef-E").empty().text("E: " + this.newMap.E);
+    $("#georef-F").empty().text("F: " + this.newMap.F);
+    $("#rg2-georef-selected").val(type);
+    this.newMap.georeferenced = true;
+  },
+  
+  clearGeorefs : function() {
+    this.newMap.A = 0;
+    this.newMap.D = 0;
+    this.newMap.B = 0;
+    this.newMap.E = 0;
+    this.newMap.C = 0;
+    this.newMap.F = 0;
+    $("#georef-A").empty().text("A: 0");
+    $("#georef-B").empty().text("B: 0");
+    $("#georef-C").empty().text("C: 0");
+    $("#georef-D").empty().text("D: 0");
+    $("#georef-E").empty().text("E: 0");
+    $("#georef-F").empty().text("F: 0");
+    this.newMap.georeferenced = false;
   }
 };
+
