@@ -41,6 +41,7 @@ function Map(data) {
 }
 
 function Manager(keksi) {
+  this.DO_NOT_SAVE_COURSE = 9999;
   this.DO_NOT_GEOREF = 0;
   this.UK_NATIONAL_GRID = 1;
   this.FORMAT_NORMAL = 1;
@@ -57,11 +58,10 @@ function Manager(keksi) {
   this.comments = null;
   this.format = this.FORMAT_NORMAL;
   this.newcontrols = new Controls();
-  this.xmlcourses = [];
+  this.courses = [];
   this.mapLoaded = false;
   this.results = [];
   this.resultCourses = [];
-  this.allocationsDisplayed = false;
   this.mapWidth = 0;
   this.mapHeight = 0;
   this.mapFile = undefined;
@@ -416,41 +416,50 @@ Manager.prototype = {
   },
   
   getCoursesFromResults : function() {
+    // creates an array of all course names in the results file
     var i;
+    var j;
+    var a;
+    var idx;
     this.resultCourses = [];
     for ( i = 0; i < this.results.length; i += 1) {
-      if (this.resultCourses.indexOf(this.results[i].course) === -1) {
-        this.resultCourses.push(this.results[i].course);
+      // have we already found this course?
+      idx = -1;
+      for (j = 0; j < this.resultCourses.length; j += 1) {
+        if (this.resultCourses[j].course === this.results[i].course) {
+          idx = j;
+          break;
+        }
+      }
+      if (idx === -1) {
+        a = {};
+        a.course = this.results[i].course;
+        // set later when mapping is known
+        a.courseid = this.DO_NOT_SAVE_COURSE;
+        this.resultCourses.push(a);
       }
     }
 
   },
 
   displayCourseAllocations : function() {
-    if ((this.xmlcourses.length) && (this.resultCourses) && (!this.allocationsDisplayed)) {
+    if ((this.courses.length) && (this.resultCourses.length)) {
 
       // create html for course allocation list
       // using a table to make it easier for now
-      var html = "<table><thead><tr><th>Results file</th><th>Course name</th></tr></thead><tbody>";
+      var html = "<div id='rg2-course-allocations'><table><thead><tr><th>Course file</th><th>Results</th></tr></thead><tbody>";
       var i;
-      for ( i = 0; i < this.xmlcourses.length; i += 1) {
-        html += "<tr><td>" + this.xmlcourses[i].name + "</td><td>" + this.createCourseDropdown(this.xmlcourses[i].name) + "</td></tr>";
+      for ( i = 0; i < this.courses.length; i += 1) {
+        html += "<tr><td>" + this.courses[i].name + "</td><td>" + this.createCourseDropdown(this.courses[i].name, i) + "</td></tr>";
       }
-      html += "</tbody></table>";
+      html += "</tbody></table></div>";
       $("#rg2-course-allocations").empty().append(html);
-      this.allocationsDisplayed = true;
     }
   },
   
   validData : function() {
-    if ((this.eventName) &&
-        (this.mapID) &&
-        (this.eventDate) &&
-        (this.club) &&
-        (this.eventLevel) &&
-        (this.format) &&
-//        (this.newcontrols) &&
-        (this.xmlcourses)) {
+    if ((this.eventName) && (this.mapID) && (this.eventDate) && (this.club) && (this.eventLevel) && (this.format) &&
+        (this.newcontrols) && (this.courses)) {
       return true;
     } else {
       return false;
@@ -501,7 +510,8 @@ Manager.prototype = {
     data.level = this.eventLevel;
     this.setControlLocations();
     this.mapResultsToCourses();
-    data.courses = this.xmlcourses.slice(0);
+    this.renumberResults();
+    data.courses = this.courses.slice(0);
     data.results = this.results.slice(0);
     var user = this.encodeUser();
     data.x = user.x;
@@ -529,36 +539,64 @@ Manager.prototype = {
     });
   },
   
+  renumberResults : function() {
+    var i;
+    var id;
+    var newResults = [];
+    
+    for (i = 0; i < this.results.length; i += 1) {
+      id = this.getCourseIDForResult(this.results[i].course);
+      if (id !== this.DO_NOT_SAVE_COURSE) {
+        this.results[i].courseid = id;
+        newResults.push(this.results[i]);
+      }
+    }
+    this.results = newResults;
+  },
+ 
   mapResultsToCourses: function() {
     // called when saving courses
     // generates the necessary course IDs for the results file 
+    // deletes unwanted courses
     var i;
-    for (i = 0; i < this.results.length; i += 1) {
-      this.results[i].courseid = this.getCourseIDForCourseName(this.results[i].course);
+    var selector;
+    var id;
+    var newCourses = [];
+    var courseid = 1;
+    for (i = 0; i < this.courses.length; i += 1) {
+      selector = "#rg2-alloc-" + i;
+      id = parseInt($(selector).val(), 10);
+      if (id !== this.DO_NOT_SAVE_COURSE) {
+        this.courses[i].courseid = courseid;
+        this.resultCourses[id].courseid = courseid;
+        newCourses.push(this.courses[i]);
+        courseid += 1;
+      }
     }
+    this.courses = newCourses;
   },
   
-  getCourseIDForCourseName : function(course) {
+  getCourseIDForResult: function(course) {
     var i;
-    for (i = 0; i < this.xmlcourses.length; i += 1) {
-      if (this.xmlcourses[i].name === course) {
-        return this.xmlcourses[i].courseid;
+    for (i = 0; i < this.resultCourses.length; i += 1) {
+      if (this.resultCourses[i].course === course) {
+        return this.resultCourses[i].courseid;
       }
     }
     return 0;
   },
-  
+   
   setControlLocations: function() {
     // called when saving courses
     // reads control locations and updates course details
     var i;
     var j;
     var c;
-    for (i = 0; i < this.xmlcourses.length; i += 1) {
-      for (j = 0; j < this.xmlcourses[i].codes.length; j += 1) {
-        c = this.getControlXY(this.xmlcourses[i].codes[j]);
-        this.xmlcourses[i].x[j] = c.x;
-        this.xmlcourses[i].y[j] = c.y;
+    for (i = 0; i < this.courses.length; i += 1) {
+      for (j = 0; j < this.courses[i].codes.length; j += 1) {
+        c = this.getControlXY(this.courses[i].codes[j]);
+        this.courses[i].x[j] = c.x;
+        this.courses[i].y[j] = c.y;
       }
     }
   },
@@ -978,14 +1016,15 @@ Manager.prototype = {
     var y;
     var code;
     for ( i = 0; i < nodelist.length; i += 1) {
-      code = nodelist[i].children[0].textContent;
-      x = nodelist[i].children[1].getAttribute('x');
-      y = nodelist[i].children[1].getAttribute('y');
+      code = nodelist[i].childNodes[1].textContent;
+      x = nodelist[i].childNodes[3].getAttribute('x');
+      y = nodelist[i].childNodes[3].getAttribute('y');
       this.newcontrols.addControl(code.trim(), x, y);
     }
   },
 
   extractCourses : function(nodelist) {
+    // assumes IOF Version 2.0 XML
     var i;
     var j;
     var course;
@@ -1004,17 +1043,18 @@ Manager.prototype = {
       codes.push(tmp.trim());
       controllist = nodelist[i].getElementsByTagName('CourseControl');
       for ( j = 0; j < controllist.length; j += 1) {
-        tmp = controllist[j].children[1].textContent;
+        tmp = controllist[j].childNodes[3].textContent;
         codes.push(tmp.trim());
       }
       tmp = nodelist[i].getElementsByTagName('FinishPointCode')[0].textContent;
       codes.push(tmp.trim());
 
       course.codes = codes;
-      course.courseid = i + 1;
+      // 0 for now: set when result mapping is known
+      course.courseid = 0;
       course.x = x;
       course.y = y;
-      this.xmlcourses.push(course);
+      this.courses.push(course);
     }
     $("#rg2-select-course-file").addClass('valid');
   },
@@ -1133,25 +1173,32 @@ Manager.prototype = {
 
   },
 
-  createCourseDropdown : function(course) {
+  createCourseDropdown : function(course, courseidx) {
     /*
      * Input: course name to match
      *
      * Output: html select
      */
     var i;
-    var idx = this.resultCourses.indexOf(course);
-    var html = "<select name='a'><option value=999";
+    var idx = -1;
+    // do results include this course name?
+    for (i = 0; i < this.resultCourses.length; i += 1) {
+      if (this.resultCourses[i].course === course) {
+        idx = i;
+        break;
+      }
+    }
+    var html = "<select id='rg2-alloc-" + courseidx + "'><option value=" + this.DO_NOT_SAVE_COURSE;
     if (idx === -1) {
       html += " selected";
     }
-    html += ">Skip this class</option>";
+    html += ">Do not save</option>";
     for ( i = 0; i < this.resultCourses.length; i += 1) {
       html += "<option value=" + i;
       if (idx === i) {
         html += " selected";
       }
-      html += ">" + this.resultCourses[i] + "</option>";
+      html += ">" + this.resultCourses[i].course + "</option>";
     }
     html += "</select>";
     return html;
