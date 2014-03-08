@@ -1,12 +1,7 @@
 # Routegadget 2.0
 
 ## Latest news
-Version 0.5.0 was released on 15 February 2014 and has been installed on all routegadget.co.uk sites. The main changes are:
-* Enhanced GPS file adjustment. You can now add intermediate points to your route and adjust them.
-* Improved touch interface that should support drag and pinch-zoom on most devices.
-* Configuration menu (cog icon in top right). You can set course overprint and route line widths and set map intensity.
-* Replay control panel is now only displayed when you are on the results tab.
-* Several other minor improvements based on user feedback.
+Version 0.6.0 was released on 7 March 2014 and has been installed on all routegadget.co.uk sites. The main change is the inclusion of Manager functionality to allow the creation of new events. For more details see the [wiki](https://github.com/Maprunner/rg2/wiki/Manager-details).
 
 ## What is RouteGadget?
 Routegadget is a Web application for drawing and comparing orienteering routes. The original version was developed by Jarkko Ryyppö, and
