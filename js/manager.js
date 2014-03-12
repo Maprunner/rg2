@@ -14,30 +14,34 @@ function User(keksi) {
   this.pwd = null;
 }
 
+function Worldfile(a, b, c, d, e, f) {
+  this.A = a;
+  this.B = b;
+  this.C = c;
+  this.D = d;
+  this.E = e;
+  this.F = f;
+}
+
 function Map(data) {
   if (data !== undefined){
     // existing map from database
     this.mapid = data.mapid;
     this.name = data.name;
     this.georeferenced = data.georeferenced;
-    this.A = data.A;
-    this.B = data.B;
-    this.C = data.C;
-    this.D = data.D;
-    this.E = data.E;
-    this.F = data.F;
+    this.worldfile = new Worldfile(data.A, data.B, data.C, data.D, data.E, data.F);
+
   } else {
     // new map to be added
     this.mapid = 0;
     this.name = "";
     this.georeferenced = false;
-    this.A = 0;
-    this.B = 0;
-    this.C = 0;
-    this.D = 0;
-    this.E = 0;
-    this.F = 0;
+    this.worldfile = new Worldfile(0, 0, 0, 0, 0, 0);
   }
+  this.xpx = [];
+  this.ypx = [];
+  this.lat = [];
+  this.lon = [];
 }
 
 function Manager(keksi) {
@@ -1173,14 +1177,21 @@ extractV3Courses : function(nodelist) {
   mapLoadCallback : function() {
     //callback when map image is loaded from an existing map file
     this.mapLoaded = true;
+    var size = rg2.getMapSize();
+    this.mapWidth = size.width;
+    this.mapHeight = size.height;
     this.fitControlsToMap();
     rg2.redraw(false);
   },
 
   processMap : function(event) {
+    // called when new map is loaded locally
     rg2.loadNewMap(event.target.result);
     $("#rg2-select-map-file").addClass('valid');
     this.mapLoaded = true;
+    var size = rg2.getMapSize();
+    this.mapWidth = size.width;
+    this.mapHeight = size.height;
     this.fitControlsToMap();
     rg2.redraw(false);
     $("#btn-add-map").button("enable");
@@ -1189,10 +1200,6 @@ extractV3Courses : function(nodelist) {
   fitControlsToMap : function() {
     var i;
     if ((this.mapLoaded) && (this.newcontrols.controls.length > 0)) {
-      var size = rg2.getMapSize();
-      this.mapWidth = size.width;
-      this.mapHeight = size.height;
-      
       // get max extent of controls
       // find bounding box for track
       var minX = this.newcontrols.controls[0].x;
@@ -1556,45 +1563,44 @@ extractV3Courses : function(nodelist) {
     var xSkew = this.worldfileArgs[2];
     var yScale = this.worldfileArgs[3];
 
-    var xos = [];
-    var yos = [];
+    var xsrc = [];
+    var ysrc = [];
     var xpx = [];
     var ypx = [];
 
     // x0, y0 is top left
-    xos[0] = this.worldfileArgs[4];
-    yos[0] = this.worldfileArgs[5];
+    xsrc[0] = this.worldfileArgs[4];
+    ysrc[0] = this.worldfileArgs[5];
     xpx[0] = 0;
     ypx[0] = 0;
 
     // x1, y1 is bottom right
     xpx[1] = this.mapWidth;
     ypx[1] = this.mapHeight;
-    xos[1] = (xScale * xpx[1]) + (xSkew * ypx[1]) + xos[0];
-    yos[1] = (yScale * ypx[1]) + (ySkew * xpx[1]) + yos[0];
+    xsrc[1] = (xScale * xpx[1]) + (xSkew * ypx[1]) + xsrc[0];
+    ysrc[1] = (yScale * ypx[1]) + (ySkew * xpx[1]) + ysrc[0];
 
     // x2, y2 is top right
     xpx[2] = this.mapWidth;
     ypx[2] = 0;
-    xos[2] = (xScale * xpx[2]) + (xSkew * ypx[2]) + xos[0];
-    yos[2] = (yScale * ypx[2]) + (ySkew * xpx[2]) + yos[0];
-
-    // x3, y3 is bottom left
-    xpx[3] = 0;
-    ypx[3] = this.mapHeight;
-    xos[3] = (xScale * xpx[3]) + (xSkew * ypx[3]) + xos[0];
-    yos[3] = (yScale * ypx[3]) + (ySkew * xpx[3]) + yos[0];
+    xsrc[2] = (xScale * xpx[2]) + (xSkew * ypx[2]) + xsrc[0];
+    ysrc[2] = (yScale * ypx[2]) + (ySkew * xpx[2]) + ysrc[0];
 
     // translate source to WGS84 (as in GPS file)
     var i;
     var p = [];
     var pt;
-    for (i = 0; i < 4; i += 1) {
+    for (i = 0; i < 3; i += 1) {
       pt = {};
-      pt.x = parseInt(xos[i] + 0.5, 10);
-      pt.y = parseInt(yos[i] + 0.5, 10);
+      pt.x = parseInt(xsrc[i] + 0.5, 10);
+      pt.y = parseInt(ysrc[i] + 0.5, 10);
       p.push(pt);
       Proj4js.transform(source, dest, p[i]);
+      this.newMap.xpx.push(xpx[i]);
+      this.newMap.ypx.push(ypx[i]);
+      this.newMap.lat.push(p[i].y);
+      this.newMap.lon.push(p[i].x);
+      
       //console.log(p[i].x, p[i].y);
     }
 
@@ -1611,29 +1617,29 @@ extractV3Courses : function(nodelist) {
     var pixResX = (p[2].x - p[0].x) / this.mapWidth;
     var pixResY = (p[2].y - p[1].y) / this.mapHeight;
 
-    this.newMap.A = pixResX * Math.cos(angle);
-    this.newMap.D = pixResY * Math.sin(angle);
-    this.newMap.B = pixResX * Math.sin(angle);
-    this.newMap.E = -1 * pixResY * Math.cos(angle);
-    this.newMap.C = p[0].x;
-    this.newMap.F = p[0].y;
-    $("#georef-A").empty().text("A: " + this.newMap.A);
-    $("#georef-B").empty().text("B: " + this.newMap.B);
-    $("#georef-C").empty().text("C: " + this.newMap.C);
-    $("#georef-D").empty().text("D: " + this.newMap.D);
-    $("#georef-E").empty().text("E: " + this.newMap.E);
-    $("#georef-F").empty().text("F: " + this.newMap.F);
+    this.newMap.worldfile.A = pixResX * Math.cos(angle);
+    this.newMap.worldfile.D = pixResY * Math.sin(angle);
+    this.newMap.worldfile.B = pixResX * Math.sin(angle);
+    this.newMap.worldfile.E = -1 * pixResY * Math.cos(angle);
+    this.newMap.worldfile.C = p[0].x;
+    this.newMap.worldfile.F = p[0].y;
+    $("#georef-A").empty().text("A: " + this.newMap.worldfile.A);
+    $("#georef-B").empty().text("B: " + this.newMap.worldfile.B);
+    $("#georef-C").empty().text("C: " + this.newMap.worldfile.C);
+    $("#georef-D").empty().text("D: " + this.newMap.worldfile.D);
+    $("#georef-E").empty().text("E: " + this.newMap.worldfile.E);
+    $("#georef-F").empty().text("F: " + this.newMap.worldfile.F);
     $("#rg2-georef-selected").val(type);
     this.newMap.georeferenced = true;
   },
   
   clearGeorefs : function() {
-    this.newMap.A = 0;
-    this.newMap.D = 0;
-    this.newMap.B = 0;
-    this.newMap.E = 0;
-    this.newMap.C = 0;
-    this.newMap.F = 0;
+    this.newMap.worldfile.A = 0;
+    this.newMap.worldfile.D = 0;
+    this.newMap.worldfile.B = 0;
+    this.newMap.worldfile.E = 0;
+    this.newMap.worldfile.C = 0;
+    this.newMap.worldfile.F = 0;
     $("#georef-A").empty().text("A: 0");
     $("#georef-B").empty().text("B: 0");
     $("#georef-C").empty().text("C: 0");
