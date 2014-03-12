@@ -1,6 +1,5 @@
 <?php
   error_reporting(E_ALL);
- 
   require_once( dirname(__FILE__) . '/rg2-config.php' );
   // override allows testing of a local configuration such as c:/xampp/htdocs/rg2
   if (file_exists(dirname(__FILE__) . '/rg2-override-config.php')) {
@@ -809,7 +808,9 @@ function addNewMap($data) {
     if ($renameFile) {
       $newmap = $newid."|".$data->name;
       if ($data->georeferenced) {
-        $newmap .= "|||||||||||||".$data->A."| ".$data->D."|".$data->B."|".$data->E."|".$data->C."|".$data->F;
+        $newmap .= "|".$data->xpx[0]."|".$data->lon[0]."|".$data->ypx[0]."|".$data->lat[0];
+        $newmap .= "|".$data->xpx[1]."|".$data->lon[1]."|".$data->ypx[1]."|".$data->lat[1];
+        $newmap .= "|".$data->xpx[2]."|".$data->lon[2]."|".$data->ypx[2]."|".$data->lat[2];
       }
       $newmap .= PHP_EOL;
       $write["newid"] = $newid;
@@ -906,16 +907,19 @@ function getAllEvents() {
   $maps = array();
   if (($handle = fopen(KARTAT_DIRECTORY."kartat.txt", "r")) !== FALSE) {
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
-      // mapid, map name, 12 old georef values, 6 world file values
-      if (count($data) == 20) {
-        $maps[$referenced]["mapid"] = intval($data[0]);
-        $maps[$referenced]["A"] = $data[14];
-        $maps[$referenced]["D"] = $data[15];
-        $maps[$referenced]["B"] = $data[16];
-        $maps[$referenced]["E"] = $data[17];
-        $maps[$referenced]["C"] = $data[18];
-        $maps[$referenced]["F"] = $data[19];
-        $referenced++;
+      if (count($data) == 14) {
+        list($A, $B, $C, $D, $E, $F) = generateWorldFile($data);
+        // make sure it worked OK
+        if (($E != 0) && ($F != 0)) {
+          $maps[$referenced]["mapid"] = intval($data[0]);
+          $maps[$referenced]["A"] = $A;
+          $maps[$referenced]["D"] = $D;
+          $maps[$referenced]["B"] = $B;
+          $maps[$referenced]["E"] = $E;
+          $maps[$referenced]["C"] = $C;
+          $maps[$referenced]["F"] = $F;       
+          $referenced++;
+        }
       }
     }
     fclose($handle);
@@ -962,22 +966,26 @@ function getMaps() {
       $detail = array();
       $detail["mapid"] = intval($data[0]);
       $detail["name"] = $data[1];
-      if (count($data) == 20) {
-        $detail["A"] = $data[14];
-        $detail["D"] = $data[15];
-        $detail["B"] = $data[16];
-        $detail["E"] = $data[17];
-        $detail["C"] = $data[18];
-        $detail["F"] = $data[19];
-        $detail["georeferenced"] = TRUE;
+      $detail["georeferenced"] = FALSE;
+      if (count($data) == 14) {
+        list($A, $B, $C, $D, $E, $F) = generateWorldFile($data);
+        $detail["A"] = $A;
+        $detail["B"] = $B;
+        $detail["C"] = $C;
+        $detail["D"] = $D;
+        $detail["E"] = $E;
+        $detail["F"] = $F;
+        // make sure it worked OK
+        if (($E != 0) && ($F != 0)) {
+          $detail["georeferenced"] = TRUE;
+        }
       } else {
         $detail["A"] = 0;
-        $detail["D"] = 0;
         $detail["B"] = 0;
-        $detail["E"] = 0;
         $detail["C"] = 0;
+        $detail["D"] = 0;
+        $detail["E"] = 0;
         $detail["F"] = 0;
-        $detail["georeferenced"] = FALSE;
       }
       $output[$row] = $detail;        
       $row++;
@@ -1267,6 +1275,76 @@ function generateCookie() {
   //TODO add error check
   file_put_contents($manager_url."keksi.txt", $keksi);
   return $keksi;  
+}
+
+function generateWorldFile($data) {
+  // takes three georeferenced points in a kartat row and converts to World File format
+  try {
+  for ($i = 0; $i < 3; $i++) {
+    $x[$i] = intval($data[2 + ($i * 4)]);
+    $lon[$i] = floatval($data[3 + ($i * 4)]);
+    $y[$i] = intval($data[4 + ($i * 4)]);
+    $lat[$i] = floatval($data[5 + ($i * 4)]);
+    rg2log($data[0].", ".$lat[$i].", ".$lon[$i].", ".$x[$i].", ".$y[$i]);
+  }  
+  $hypot = getLatLonDistance($lat[0], $lon[0], $lat[2], $lon[2]);
+  $adj = getLatLonDistance($lat[0], $lon[0], $lat[0], $lon[2]);
+  rg2log($hypot.", ".$adj);
+  if ($hypot == 0) {
+    throw(new Exception('Division by zero.'));
+  }
+  $angle1 = acos($adj / $hypot);
+  
+  $hypot2 = getLatLonDistance($lat[2], $lon[2], $lat[1], $lon[1]);
+  $adj2 = getLatLonDistance($lat[2], $lon[2], $lat[1], $lon[2]);
+  rg2log($hypot2.", ".$adj2);
+  if ($hypot2 == 0) {
+    throw(new Exception('Division by zero.'));
+  }
+  $angle2 = acos($adj2 / $hypot2);
+
+  if ((($x[2] - $x[0]) == 0) || (($y[1] - $y[0]) == 0)) {
+    throw(new Exception('Division by zero.'));
+  }
+  $angle = ($angle1 + $angle2) / 2;
+  $pixResX = ($lon[2] - $lon[0]) / ($x[2] - $x[0]);
+  $pixResY = ($lat[2] - $lat[1]) / ($y[1] - $y[2]);
+  rg2log($pixResX.", ".$pixResY);
+  $A = $pixResX * cos($angle);
+  $D = $pixResY * sin($angle);
+  $B = $pixResX * sin($angle);
+  $E = -1 * $pixResY * cos($angle);
+  $C = $lon[0];
+  $F = $lat[0];
+  
+  }
+  
+  catch(Exception $e) {
+    // don't do anything clever: just give up
+    // mainly filtering out old RG1 values
+    $A = 0;
+    $D = 0;
+    $B = 0;
+    $E = 0;
+    $C = 0;
+    $F = 0;
+    
+  }
+  return array($A, $B, $C, $D, $E, $F);
+}
+
+/**
+ * @return distance in metres between two points
+*/
+function getLatLonDistance($lat1, $lon1, $lat2, $lon2) {
+  // Haversine formula (http://www.codecodex.com/wiki/Calculate_distance_between_two_points_on_a_globe)
+  //echo $lat1, " ", $lon1, " ",$lat2, " ",$lon2, "<br />";     
+  $dLat = deg2rad($lat2 - $lat1);  
+  $dLon = deg2rad($lon2 - $lon1);     
+  $a = sin($dLat/2) * sin($dLat/2) + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLon/2) * sin($dLon/2);  
+  $c = 2 * asin(sqrt($a));  
+  // multiply by IUUG earth mean radius (http://en.wikipedia.org/wiki/Earth_radius) in metres
+  return 6371009 * $c;
 }
 
 ?>
