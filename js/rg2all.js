@@ -1,4 +1,4 @@
-// Version 0.6.1 2014-03-12T08:11:33;
+// Version 0.6.3 2014-03-13T18:59:12;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -109,7 +109,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.6.1',
+      RG2VERSION: '0.6.3',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -3434,6 +3434,7 @@ GPSTrack.prototype = {
 /* exported rg2WarningDialog */
 /* exported formatSecsAsMMSS */
 /* exported getSecsFromMMSS */
+/* exported getSecsFromHHMMSS */
 /* exported trackTransforms */
 // Avoid `console` errors in browsers that lack a console.
 ( function() {
@@ -3524,6 +3525,17 @@ function formatSecsAsMMSS(secs) {
   }
   return formattedtime;
 
+}
+
+function getSecsFromHHMMSS(time) {
+  var secs = 0;
+  var bits = time.split(":");
+  secs = (parseInt(bits[0], 10) * 3600) + (parseInt(bits[1], 10) * 60) + parseInt(bits[2], 10);
+  if (isNaN(secs)) {
+    return 0;
+  } else {
+    return secs;
+  }
 }
 
 // converts MM:SS to seconds
