@@ -4,6 +4,7 @@
 /* exported rg2WarningDialog */
 /* exported formatSecsAsMMSS */
 /* exported getSecsFromMMSS */
+/* exported getSecsFromHHMMSS */
 /* exported trackTransforms */
 // Avoid `console` errors in browsers that lack a console.
 ( function() {
@@ -94,6 +95,17 @@ function formatSecsAsMMSS(secs) {
   }
   return formattedtime;
 
+}
+
+function getSecsFromHHMMSS(time) {
+  var secs = 0;
+  var bits = time.split(":");
+  secs = (parseInt(bits[0], 10) * 3600) + (parseInt(bits[1], 10) * 60) + parseInt(bits[2], 10);
+  if (isNaN(secs)) {
+    return 0;
+  } else {
+    return secs;
+  }
 }
 
 // converts MM:SS to seconds

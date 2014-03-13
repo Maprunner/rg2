@@ -7,6 +7,8 @@
 /*global FormData:false */
 /*global Proj4js:false */
 /*global getLatLonDistance:false */
+/*global getSecsFromHHMMSS: false */
+/*global getSecsFromMMSS: false */
 function User(keksi) {
   this.x = "";
   this.y = keksi;
@@ -71,6 +73,7 @@ function Manager(keksi) {
   this.mapWidth = 0;
   this.mapHeight = 0;
   this.mapFile = undefined;
+  this.resultsFileFormat = "";
   this.backgroundLocked = false;
   this.handleX = null;
   this.handleY = null;
@@ -509,7 +512,7 @@ Manager.prototype = {
     var $url = json_url + "?type=createevent";
     var data = {};
     data.name = this.eventName;
-    data.mapid = this.mapIndex;
+    data.mapid = this.maps[this.mapIndex].mapid;
     data.eventdate = this.eventDate;
     data.club = this.club;
     data.format = this.format;
@@ -863,15 +866,140 @@ Manager.prototype = {
       }
     };
     reader.onload = function(evt) {
-      var csv = evt.target.result;
-      var rows = evt.target.result.split(/[\r\n|\n]+/);
-      
       self.results.length = 0;
-      // only one valid format for now...
-      self.processSICSVResults(rows);
-      $("#rg2-select-results-file").addClass('valid');
+      switch (self.resultsFileFormat) {
+      case 'CSV':
+        var csv = evt.target.result;
+        var rows = evt.target.result.split(/[\r\n|\n]+/);
+        // only one format at present
+        self.processSICSVResults(rows);
+        $("#rg2-select-results-file").addClass('valid');
+        break;
+      case 'XML':
+        self.processResultsXML(evt);
+        $("#rg2-select-results-file").addClass('valid');
+        break;
+      default:
+        // shouldn't ever get here but...
+        rg2WarningDialog("File type error", "Results file type is not recognised. Please select a valid file.");
+        return;
+      }
+      // extract courses from results
+      self.getCoursesFromResults();
+      self.displayCourseAllocations();
     };
-    reader.readAsText(evt.target.files[0]);
+    var format = evt.target.files[0].name.substr(-3,3);
+    format = format.toUpperCase();
+    // if ((format === 'XML') || (format === 'CSV')) {
+    if (format === 'CSV') {
+      this.resultsFileFormat = format;
+      reader.readAsText(evt.target.files[0]);
+    } else {
+      rg2WarningDialog("File type error", "Results file type is not recognised. Please select a valid file.");
+    }
+  },
+
+  processResultsXML : function(evt) {
+    var xml;
+    var version;
+    var i;
+    var nodelist;
+    version = "";
+    try {
+      xml = $.parseXML(evt.target.result);
+      
+      // test for IOF Version 2
+      nodelist = xml.getElementsByTagName('IOFVersion');
+      if (nodelist.length > 0) {
+        version = nodelist[0].getAttribute('version');
+      }
+      if (version === "") {
+        // test for IOF Version 3
+        nodelist = xml.getElementsByTagName('ResultList');
+        if (nodelist.length > 0) {
+          version = nodelist[0].getAttribute('iofVersion');
+        }
+      }
+    }
+    catch (err) {
+      rg2WarningDialog("XML file error", "File is not a valid XML results file.");
+      return;
+    }
+     
+    switch (version) {
+      case "2.0.3":
+        this.processIOFV2XMLResults(xml);
+        break;
+      case "3.0":
+        this.processIOFV3XMLResults(xml);
+        break;
+      default:
+        rg2WarningDialog("XML file error", 'Invalid IOF file format. Version ' + version + ' not supported.');
+    }
+  },
+
+processIOFV2XMLResults: function(xml) {
+    var classlist;
+    var personlist;
+    var resultlist;
+    var splitlist;
+    var i;
+    var j;
+    var k;
+    var l;
+    var result;
+    var course;
+    var time;
+    var temp;
+    try {
+    classlist = xml.getElementsByTagName('ClassResult');
+    for (i = 0; i < classlist.length; i += 1) {
+      course = classlist[i].getElementsByTagName('ClassShortName')[0].textContent;
+      personlist = classlist[i].getElementsByTagName('PersonResult');
+      for (j = 0; j < personlist.length; j += 1) {
+        result = {};
+        result.course = course;
+        result.name = personlist[j].getElementsByTagName('Given')[0].textContent  + " " + personlist[j].getElementsByTagName('Family')[0].textContent;
+        temp = personlist[j].getElementsByTagName('PersonId')[0].textContent;
+        // remove new lines from empty <PersonId> tags
+        temp.replace(/[\n\r]/g, '');
+        result.dbid =  temp.trim() + "__" + result.name;
+        result.club = personlist[j].getElementsByTagName('ShortName')[0].textContent;
+        resultlist = personlist[j].getElementsByTagName('Result');
+        for (k = 0; k < resultlist.length; k += 1) {
+          result.chipid = resultlist[k].getElementsByTagName('CCardId')[0].textContent;
+          // assuming first <Time> is the total time...
+          result.time = resultlist[k].getElementsByTagName('Time')[0].textContent;
+          temp = resultlist[k].getElementsByTagName('StartTime');
+          time = temp[0].getElementsByTagName('Clock')[0].textContent;
+          result.starttime = getSecsFromHHMMSS(time);
+          result.splits = "";
+          splitlist = resultlist[k].getElementsByTagName('SplitTime');
+          result.controls = splitlist.length;
+          for ( l = 0; l < splitlist.length; l += 1) {
+            if (l > 0) {
+              result.splits += ";";
+            }
+            temp = splitlist[l].getElementsByTagName('Time')[0].textContent;
+            // assume MMM:SS for now
+            result.splits += getSecsFromMMSS(temp);
+          }
+          // add finish split
+          result.splits += ";";
+          temp = resultlist[k].getElementsByTagName('FinishTime');
+          time = temp[0].getElementsByTagName('Clock')[0].textContent;
+          result.splits += getSecsFromHHMMSS(time)- result.starttime;
+        }
+        this.results.push(result);
+      }
+
+    }
+    }
+    catch(err) {
+      rg2WarningDialog("XML parse error", "Error processing XML file. Error is : " + err.message);
+      return;
+    }
+
   },
 
   readCourses : function(evt) {
@@ -893,7 +1021,7 @@ Manager.prototype = {
     reader.onload = function(evt) {
       self.courses.length = 0;
       self.newcontrols.deleteAllControls();
-      self.processXML(evt);
+      self.processCoursesXML(evt);
       self.displayCourseAllocations();
       self.fitControlsToMap();
       rg2.redraw(false);
@@ -902,7 +1030,7 @@ Manager.prototype = {
     reader.readAsText(evt.target.files[0]);
   },
 
-  processXML : function(evt) {
+  processCoursesXML : function(evt) {
     var xml;
     var version;
     var i;
@@ -1144,7 +1272,7 @@ extractV3Courses : function(nodelist) {
         result.chipid = fields[i][CHIP_IDX];
         result.name = (fields[i][FIRST_NAME_IDX] + " " + fields[i][SURNAME_IDX]).trim();
         result.dbid = fields[i][DB_IDX] + "__" + result.name;
-        result.starttime = this.convertHHMMSSToSecs(fields[i][START_TIME_IDX]);
+        result.starttime = getSecsFromHHMMSS(fields[i][START_TIME_IDX]);
         result.time = fields[i][TOTAL_TIME_IDX];
         result.club = fields[i][CLUB_IDX];
         // if club name not set then it may be in city field instead
@@ -1159,53 +1287,33 @@ extractV3Courses : function(nodelist) {
           if (j > 0) {
             result.splits += ";";
           }
-          result.splits += this.convertMMSSToSecs(fields[i][nextsplit]);
+          result.splits += getSecsFromMMSS(fields[i][nextsplit]);
           nextsplit += SPLIT_IDX_STEP;
         }
         // add finish split
         result.splits += ";";
-        result.splits += this.convertMMSSToSecs(result.time);
+        result.splits += getSecsFromMMSS(result.time);
         this.results.push(result);
       }
     }
-    // extract courses from results
-    this.getCoursesFromResults();
-    this.displayCourseAllocations();
   },
-
-  convertMMSSToSecs : function(mmss) {
-    if (mmss) {
-      //takes in (MM)M:SS, returns seconds
-      var bits = mmss.split(":");
-      var mins = parseInt(bits[0], 0) * 60;
-      var secs = parseInt(bits[1], 0);
-      return mins + secs;
-    } else {
-      return 0;
-    }
-  },
-
-  convertHHMMSSToSecs : function(hhmmss) {
-    if (hhmmss) {
-      //takes in HH:MM:SS, returns seconds
-      var hours = parseInt(hhmmss.substr(0, 2), 0) * 3600;
-      var mins = parseInt(hhmmss.substr(3, 2), 0) * 60;
-      var secs = parseInt(hhmmss.substr(6, 2), 0);
-      return hours + mins + secs;
-    } else {
-      return 0;
-    }
-  },
-
 
   readMapFile : function(evt) {
     var reader = new FileReader();
     var self = this;
+    var format;
     reader.onload = function(event) {
       self.processMap(event);
     };
-    this.mapFile = evt.target.files[0];
-    reader.readAsDataURL(evt.target.files[0]);
+    format = evt.target.files[0].name.substr(-3,3);
+    format = format.toUpperCase();
+    if (format === 'JPG') {
+      this.mapFile = evt.target.files[0];
+      reader.readAsDataURL(evt.target.files[0]);
+    } else {
+      rg2WarningDialog("File type error", evt.target.files[0].name + " is not recognised. Only .jpg files are supported at present.");
+    }
+    
   },
   
   mapLoadCallback : function() {
