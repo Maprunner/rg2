@@ -46,6 +46,7 @@ function Map(data) {
 
 function Manager(keksi) {
   this.DO_NOT_SAVE_COURSE = 9999;
+  this.INVALID_MAP_ID = 9999;
   this.DO_NOT_GEOREF = 0;
   this.UK_NATIONAL_GRID = 1;
   this.FORMAT_NORMAL = 1;
@@ -57,13 +58,14 @@ function Manager(keksi) {
   this.eventName = null;
   this.eventDate = null;
   this.eventLevel = null;
-  this.mapID = 0;
+  this.mapIndex = this.INVALID_MAP_ID;
   this.club = null;
   this.comments = null;
   this.format = this.FORMAT_NORMAL;
   this.newcontrols = new Controls();
   this.courses = [];
   this.mapLoaded = false;
+  this.coursesGeoreferenced = false;
   this.results = [];
   this.resultCourses = [];
   this.mapWidth = 0;
@@ -172,10 +174,10 @@ Manager.prototype = {
     });
 
     $("#rg2-map-selected").click(function(event) {
-      self.mapID = parseInt($("#rg2-map-selected").val(), 10);
-      if (self.mapID) {
+      self.mapIndex = parseInt($("#rg2-map-selected").val(), 10);
+      if (self.mapIndex !== self.INVALID_MAP_ID) {
         $("#rg2-manager-map-select").addClass('valid');
-        rg2.loadNewMap(maps_url + "/" + self.mapID + '.jpg');
+        rg2.loadNewMap(maps_url + "/" + self.maps[self.mapIndex].mapid + '.jpg');
       } else {
         $("#rg2-manager-map-select").removeClass('valid');
         self.mapLoaded = false;
@@ -363,13 +365,13 @@ Manager.prototype = {
     var i;
     var opt;
     opt = document.createElement("option");
-    opt.value = 0;
+    opt.value = this.INVALID_MAP_ID;
     opt.text = "Select map";
     dropdown.options.add(opt);
     var len = this.maps.length - 1;
     for ( i = len; i > -1; i -= 1) {
       opt = document.createElement("option");
-      opt.value = this.maps[i].mapid;
+      opt.value = i;
       opt.text = this.maps[i].mapid + ": " + this.maps[i].name;
       dropdown.options.add(opt);
     }
@@ -462,7 +464,7 @@ Manager.prototype = {
   },
   
   validData : function() {
-    if ((this.eventName) && (this.mapID) && (this.eventDate) && (this.club) && (this.eventLevel) && (this.format) &&
+    if ((this.eventName) && (this.mapIndex !== this.INVALID_MAP_ID) && (this.eventDate) && (this.club) && (this.eventLevel) && (this.format) &&
         (this.newcontrols) && (this.courses)) {
       return true;
     } else {
@@ -507,7 +509,7 @@ Manager.prototype = {
     var $url = json_url + "?type=createevent";
     var data = {};
     data.name = this.eventName;
-    data.mapid = this.mapID;
+    data.mapid = this.mapIndex;
     data.eventdate = this.eventDate;
     data.club = this.club;
     data.format = this.format;
@@ -1013,14 +1015,46 @@ extractV3Courses : function(nodelist) {
     var mappos;
     var x;
     var y;
+    var w;
+    var AEDB;
+    var xCorrection;
+    var yCorrection;
+    var georef = false;
+    
+    if (this.mapIndex !== this.INVALID_MAP_ID) {
+      if (this.maps[this.mapIndex].georeferenced) {
+        // translate lat/lon to x,y based on world file info: see http://en.wikipedia.org/wiki/World_file
+        w = this.maps[this.mapIndex].worldfile;
+        // simplify calculation a little
+        AEDB = (w.A * w.E) - (w.D * w.B);
+        xCorrection = (w.B * w.F) - (w.E * w.C);
+        yCorrection = (w.D * w.C) - (w.A * w.F);
+        georef = true;
+      }
+    }
+
     nodelist = xml.getElementsByTagName('Control');
+    
+    var latlng;
+    var lat;
+    var lng;
     // only need first-level Controls
     for (i = 0; i < nodelist.length; i += 1) {
       if (nodelist[i].parentNode.nodeName === 'RaceCourseData') {
         code = nodelist[i].getElementsByTagName("Id")[0].textContent;
-        mappos = nodelist[i].getElementsByTagName("MapPosition");
-        x = mappos[0].getAttribute('x');
-        y = mappos[0].getAttribute('y');
+        latlng = nodelist[i].getElementsByTagName("Position");
+        if ((georef) && (latlng.length > 0)) {
+          lat = latlng[0].getAttribute('lat');
+          lng = latlng[0].getAttribute('lng');
+          x = Math.round(((w.E * lng) - (w.B * lat) + xCorrection) / AEDB);
+          y = Math.round(((-1 * w.D * lng) + (w.A * lat) + yCorrection) / AEDB);
+          this.coursesGeoreferenced = true;
+        } else {
+          // only works if all controls have lat/lon or none do: surely a asfe assumption...
+          mappos = nodelist[i].getElementsByTagName("MapPosition");
+          x = mappos[0].getAttribute('x');
+          y = mappos[0].getAttribute('y');
+        }
         this.newcontrols.addControl(code.trim(), x, y);
       }
     }
@@ -1199,29 +1233,53 @@ extractV3Courses : function(nodelist) {
 
   fitControlsToMap : function() {
     var i;
+    var georefOK = false;
     if ((this.mapLoaded) && (this.newcontrols.controls.length > 0)) {
-      // get max extent of controls
-      // find bounding box for track
-      var minX = this.newcontrols.controls[0].x;
-      var maxX = this.newcontrols.controls[0].x;
-      var minY = this.newcontrols.controls[0].y;
-      var maxY = this.newcontrols.controls[0].y;
-
-      for ( i = 1; i < this.newcontrols.controls.length; i += 1) {
-        maxX = Math.max(maxX, this.newcontrols.controls[i].x);
-        maxY = Math.max(maxY, this.newcontrols.controls[i].y);
-        minX = Math.min(minX, this.newcontrols.controls[i].x);
-        minY = Math.min(minY, this.newcontrols.controls[i].y);
+      if (this.coursesGeoreferenced) {
+        // check we are somewhere on the map
+        if ((maxX < 0) || (minX > this.mapWidth) || (minY > this.mapHeight) || (maxY < 0)) {
+          // warn and fit to track
+          var msg = "<div id='GPS-problem-dialog'>Your course file does not match the map co-ordinates. Please check you have selected the correct file.</div>";
+          $(msg).dialog({
+            title : "Course file problem"
+          });
+        } else {
+          georefOK = true;
+        }
       }
-      // fit within the map since this is probably needed anyway
-      var scale = 1.25;
-      var xRange = scale * (maxX - minX);
-      var yRange = scale * (maxY - minY);
-      minX *= scale;
-      minY *= scale;
+      
+      if (georefOK) {
+        // lock background to prevent accidentally moving the aligned controls
+        // user can always unlock and adjust 
+        this.backgroundLocked = true;
+        $('#btn-move-map-and-controls').prop('checked', true);
+      } else {
+        // get max extent of controls
+        // find bounding box for track
+        var minX = this.newcontrols.controls[0].x;
+        var maxX = this.newcontrols.controls[0].x;
+        var minY = this.newcontrols.controls[0].y;
+        var maxY = this.newcontrols.controls[0].y;
+
+        for ( i = 1; i < this.newcontrols.controls.length; i += 1) {
+          maxX = Math.max(maxX, this.newcontrols.controls[i].x);
+          maxY = Math.max(maxY, this.newcontrols.controls[i].y);
+          minX = Math.min(minX, this.newcontrols.controls[i].x);
+          minY = Math.min(minY, this.newcontrols.controls[i].y);
+        }
+        // fit within the map since this is probably needed anyway
+        var scale = 1.25;
+        var xRange = scale * (maxX - minX);
+        var yRange = scale * (maxY - minY);
+        minX *= scale;
+        minY *= scale;
+        
+        for ( i = 0; i < this.newcontrols.controls.length; i += 1) {
+          this.newcontrols.controls[i].x = (this.newcontrols.controls[i].x - minX) * (this.mapWidth / xRange);
+          this.newcontrols.controls[i].y = this.mapHeight - ((this.newcontrols.controls[i].y - minY) * (this.mapHeight/ yRange));
+        }
+      }
       for ( i = 0; i < this.newcontrols.controls.length; i += 1) {
-        this.newcontrols.controls[i].x = (this.newcontrols.controls[i].x - minX) * (this.mapWidth / xRange);
-        this.newcontrols.controls[i].y = this.mapHeight - ((this.newcontrols.controls[i].y - minY) * (this.mapHeight/ yRange));
         this.newcontrols.controls[i].oldX = this.newcontrols.controls[i].x;
         this.newcontrols.controls[i].oldY = this.newcontrols.controls[i].y;
       }
@@ -1534,6 +1592,7 @@ extractV3Courses : function(nodelist) {
   },
   
   convertWorldFile : function(type) {
+    // takes in a World file for the map image and translates it to WGS84 (GPS)
     var size = rg2.getMapSize();
     this.mapWidth = size.width;
     this.mapHeight = size.height;
