@@ -78,7 +78,7 @@ if (isset($_GET['debug']) || $override) {
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Routegadget 2.0</title>
+    <title>Routegadget 2</title>
     <meta name="description" content="View and save route choices for orienteering events">
     <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
     <link rel="shortcut icon" href="img/favicon.ico"/>
@@ -92,6 +92,7 @@ if (isset($_GET['debug']) || $override) {
     <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
     <![endif]-->
     <?php include 'html/header.html'; ?>
+    <noscript><h3>You have javascript disabled. Routegadget cannot run. Please update your browser configuration.</h3></noscript>
     <div id="rg2-container">
       <div id="rg2-info-panel">
         <div id="rg2-info-panel-tab-headers">

@@ -141,6 +141,10 @@ html, body {
 	float: right;
 }
 
+.allitemsrow {
+  font-weight: bold;  
+}
+
 .rg2-hr {
 	margin-top: 10px;
 	margin-bottom: 10px;

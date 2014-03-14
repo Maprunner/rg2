@@ -108,7 +108,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.6.3',
+      RG2VERSION: '0.6.4',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -961,18 +961,6 @@ var rg2 = ( function() {
     function createResultMenu() {
       //loads menu from populated result array
       var html = results.formatResultListAsAccordion();
-      // checkbox on course tab to show a course
-      $(".courselist").unbind('click').click(function(event) {
-        if (event.target.checked) {
-          courses.putOnDisplay(parseInt(event.currentTarget.id, 10));
-        } else {
-          courses.removeFromDisplay(parseInt(event.currentTarget.id, 10));
-          // make sure the all checkbox is not checked
-          $(".allcourses").prop('checked', false);
-        }
-        redraw();
-
-      });
       $("#rg2-result-list").empty().append(html);
 
       $("#rg2-result-list").accordion("refresh");
@@ -1000,7 +988,7 @@ var rg2 = ( function() {
         redraw(false);
       });
       // checkbox to animate a result
-      $(".replay").click(function(event) {
+      $(".showreplay").click(function(event) {
         if (event.target.checked) {
           animation.addRunner(new Runner(event.target.id));
         } else {
@@ -1008,6 +996,55 @@ var rg2 = ( function() {
         }
         redraw(false);
       });
+
+      // checkbox to display all tracks for course
+      $(".allcoursetracks").click(function(event) {
+        var runners;
+        var selector;
+        runners = results.getAllRunnersForCourse(parseInt(event.target.id, 10));
+        var i;
+        for (i = 0; i < runners.length; i += 1) {
+          if (event.target.checked) {
+            results.putOneTrackOnDisplay(runners[i]);
+          } else {
+            results.removeOneTrackFromDisplay(runners[i]);
+          }
+        }
+        selector = ".showtrack-" + event.target.id;
+        if (event.target.checked) {
+          // select all the individual checkboxes for the course
+          $(selector).prop('checked', true);
+        } else {
+          $(selector).prop('checked', false);
+        }
+        
+        redraw(false);
+      });
+      
+      // checkbox to animate all results for course
+      $(".allcoursereplay").click(function(event) {
+        var runners;
+        var selector;
+        runners = results.getAllRunnersForCourse(parseInt(event.target.id, 10));
+        var i;
+        for (i = 0; i < runners.length; i += 1) {
+          if (event.target.checked) {
+            animation.addRunner(new Runner(runners[i]));
+          } else {
+            animation.removeRunner(runners[i]);
+          }
+        }
+        selector = ".showreplay-" + event.target.id;
+        if (event.target.checked) {
+          // select all the individual checkboxes for each course
+          $(selector).prop('checked', true);
+        } else {
+          $(selector).prop('checked', false);
+        }
+        
+        redraw(false);
+      });
+
       // disable control dropdown if we have no controls
       if (courses.getHighestControlNumber() === 0) {
         $("#rg2-control-select").prop('disabled', true);

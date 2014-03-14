@@ -19,8 +19,19 @@ Results.prototype = {
 		this.generateLegPositions();
 	},
 
-  generateLegPositions: function() {
+  // lists all runners on a given course
+  getAllRunnersForCourse : function(courseid) {
+    var i;
+    var runners = [];
+    for (i = 0; i < this.results.length; i += 1) {
+      if (this.results[i].courseid === courseid) {
+        runners.push(i);
+      }
+    }
+    return runners;
+  },
 
+  generateLegPositions: function() {
     var i;
     var j;
     var k;
@@ -270,6 +281,7 @@ Results.prototype = {
 		var oldCourseID = 0;
     var i;
     var l;
+    var tracksForThisCourse = 0;
     l = this.results.length;
 		for (i = 0; i < l; i += 1) {
 			temp = this.results[i];
@@ -278,8 +290,19 @@ Results.prototype = {
 				if (firstCourse) {
 					firstCourse = false;
 				} else {
+          // add bottom row for all tracks checkboxes
+          // <CAREFUL!> these lines need to be identical to those below
+          html += "<tr class='allitemsrow'><td>All</td><td></td>";
+          if (tracksForThisCourse > 0) {
+            html += "<td><input class='allcoursetracks' id=" + oldCourseID + " type=checkbox name=track></input></td>";
+          } else {
+            html += "<td></td>";
+          }
+          html += "<td><input class='allcoursereplay' id=" + oldCourseID + " type=checkbox name=replay></input></td></tr>";
+          // </CAREFUL!>
 					html += "</table></div>";
 				}
+				tracksForThisCourse = 0;
 				html += "<h3>" + temp.coursename;
 				html += "<input class='showcourse' id=" + temp.courseid + " type=checkbox name=course title='Show course'></input></h3><div>";
 				html += "<table class='resulttable'><tr><th>Name</th><th>Time</th><th>Track</th><th>Replay</th></tr>";
@@ -291,17 +314,28 @@ Results.prototype = {
 				html += "<tr><td>" + temp.name + "</td><td>" + temp.time + "</td>";
 			}
 			if (temp.hasValidTrack) {
-				html += "<td><input class='showtrack' id=" + i + " type=checkbox name=result></input></td>";
+        tracksForThisCourse += 1;
+				html += "<td><input class='showtrack showtrack-" + oldCourseID + "' id=" + i + " type=checkbox name=result></input></td>";
 			} else {
 				html += "<td></td>";
 			}
-			html += "<td><input class='replay' id=" + i + " type=checkbox name=replay></input></td></tr>";
+			html += "<td><input class='showreplay showreplay-" + oldCourseID + "' id=" + i + " type=checkbox name=replay></input></td></tr>";
 		}
 		
 		if (html === "") {
 			html = "<p>No results available.</p>";
 		} else {
-			html += "</table></div></div>";
+      // add bottom row for all tracks checkboxes
+      // <CAREFUL!> these lines need to be identical to those above
+      html += "<tr class='allitemsrow'><td>All</td><td></td>";
+      if (tracksForThisCourse > 0) {
+        html += "<td><input class='allcoursetracks' id=" + oldCourseID + " type=checkbox name=track></input></td>";
+      } else {
+        html += "<td></td>";
+      }
+      html += "<td><input class='allcoursereplay' id=" + oldCourseID + " type=checkbox name=replay></input></td></tr>";
+      // </CAREFUL!>
+      html += "</table></div></div>";
 		}
 		return html;
 	},
