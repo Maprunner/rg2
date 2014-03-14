@@ -199,7 +199,7 @@ Courses.prototype = {
 			}
 		}
 		// add bottom row for all courses checkboxes
-		html += "<tr><td>All</td>";
+		html += "<tr class='allitemsrow'><td>All</td>";
 		html += "<td><input class='allcourses' id=" + i + " type=checkbox name=course></input></td>";
 		html += "<td>" + rg2.getTotalResults() + "</td>";
 		if (this.totaltracks > 0) {
