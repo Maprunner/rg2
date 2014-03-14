@@ -1,4 +1,4 @@
-// Version 0.6.3 2014-03-13T18:59:12;
+// Version 0.6.4 2014-03-14T17:29:47;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -109,7 +109,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.6.3',
+      RG2VERSION: '0.6.4',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -962,18 +962,6 @@ var rg2 = ( function() {
     function createResultMenu() {
       //loads menu from populated result array
       var html = results.formatResultListAsAccordion();
-      // checkbox on course tab to show a course
-      $(".courselist").unbind('click').click(function(event) {
-        if (event.target.checked) {
-          courses.putOnDisplay(parseInt(event.currentTarget.id, 10));
-        } else {
-          courses.removeFromDisplay(parseInt(event.currentTarget.id, 10));
-          // make sure the all checkbox is not checked
-          $(".allcourses").prop('checked', false);
-        }
-        redraw();
-
-      });
       $("#rg2-result-list").empty().append(html);
 
       $("#rg2-result-list").accordion("refresh");
@@ -1001,7 +989,7 @@ var rg2 = ( function() {
         redraw(false);
       });
       // checkbox to animate a result
-      $(".replay").click(function(event) {
+      $(".showreplay").click(function(event) {
         if (event.target.checked) {
           animation.addRunner(new Runner(event.target.id));
         } else {
@@ -1009,6 +997,55 @@ var rg2 = ( function() {
         }
         redraw(false);
       });
+
+      // checkbox to display all tracks for course
+      $(".allcoursetracks").click(function(event) {
+        var runners;
+        var selector;
+        runners = results.getAllRunnersForCourse(parseInt(event.target.id, 10));
+        var i;
+        for (i = 0; i < runners.length; i += 1) {
+          if (event.target.checked) {
+            results.putOneTrackOnDisplay(runners[i]);
+          } else {
+            results.removeOneTrackFromDisplay(runners[i]);
+          }
+        }
+        selector = ".showtrack-" + event.target.id;
+        if (event.target.checked) {
+          // select all the individual checkboxes for the course
+          $(selector).prop('checked', true);
+        } else {
+          $(selector).prop('checked', false);
+        }
+        
+        redraw(false);
+      });
+      
+      // checkbox to animate all results for course
+      $(".allcoursereplay").click(function(event) {
+        var runners;
+        var selector;
+        runners = results.getAllRunnersForCourse(parseInt(event.target.id, 10));
+        var i;
+        for (i = 0; i < runners.length; i += 1) {
+          if (event.target.checked) {
+            animation.addRunner(new Runner(runners[i]));
+          } else {
+            animation.removeRunner(runners[i]);
+          }
+        }
+        selector = ".showreplay-" + event.target.id;
+        if (event.target.checked) {
+          // select all the individual checkboxes for each course
+          $(selector).prop('checked', true);
+        } else {
+          $(selector).prop('checked', false);
+        }
+        
+        redraw(false);
+      });
+
       // disable control dropdown if we have no controls
       if (courses.getHighestControlNumber() === 0) {
         $("#rg2-control-select").prop('disabled', true);
@@ -2027,7 +2064,7 @@ Courses.prototype = {
 			}
 		}
 		// add bottom row for all courses checkboxes
-		html += "<tr><td>All</td>";
+		html += "<tr class='allitemsrow'><td>All</td>";
 		html += "<td><input class='allcourses' id=" + i + " type=checkbox name=course></input></td>";
 		html += "<td>" + rg2.getTotalResults() + "</td>";
 		if (this.totaltracks > 0) {
@@ -3636,8 +3673,19 @@ Results.prototype = {
 		this.generateLegPositions();
 	},
 
-  generateLegPositions: function() {
+  // lists all runners on a given course
+  getAllRunnersForCourse : function(courseid) {
+    var i;
+    var runners = [];
+    for (i = 0; i < this.results.length; i += 1) {
+      if (this.results[i].courseid === courseid) {
+        runners.push(i);
+      }
+    }
+    return runners;
+  },
 
+  generateLegPositions: function() {
     var i;
     var j;
     var k;
@@ -3887,6 +3935,7 @@ Results.prototype = {
 		var oldCourseID = 0;
     var i;
     var l;
+    var tracksForThisCourse = 0;
     l = this.results.length;
 		for (i = 0; i < l; i += 1) {
 			temp = this.results[i];
@@ -3895,8 +3944,19 @@ Results.prototype = {
 				if (firstCourse) {
 					firstCourse = false;
 				} else {
+          // add bottom row for all tracks checkboxes
+          // <CAREFUL!> these lines need to be identical to those below
+          html += "<tr class='allitemsrow'><td>All</td><td></td>";
+          if (tracksForThisCourse > 0) {
+            html += "<td><input class='allcoursetracks' id=" + oldCourseID + " type=checkbox name=track></input></td>";
+          } else {
+            html += "<td></td>";
+          }
+          html += "<td><input class='allcoursereplay' id=" + oldCourseID + " type=checkbox name=replay></input></td></tr>";
+          // </CAREFUL!>
 					html += "</table></div>";
 				}
+				tracksForThisCourse = 0;
 				html += "<h3>" + temp.coursename;
 				html += "<input class='showcourse' id=" + temp.courseid + " type=checkbox name=course title='Show course'></input></h3><div>";
 				html += "<table class='resulttable'><tr><th>Name</th><th>Time</th><th>Track</th><th>Replay</th></tr>";
@@ -3908,17 +3968,28 @@ Results.prototype = {
 				html += "<tr><td>" + temp.name + "</td><td>" + temp.time + "</td>";
 			}
 			if (temp.hasValidTrack) {
-				html += "<td><input class='showtrack' id=" + i + " type=checkbox name=result></input></td>";
+        tracksForThisCourse += 1;
+				html += "<td><input class='showtrack showtrack-" + oldCourseID + "' id=" + i + " type=checkbox name=result></input></td>";
 			} else {
 				html += "<td></td>";
 			}
-			html += "<td><input class='replay' id=" + i + " type=checkbox name=replay></input></td></tr>";
+			html += "<td><input class='showreplay showreplay-" + oldCourseID + "' id=" + i + " type=checkbox name=replay></input></td></tr>";
 		}
 		
 		if (html === "") {
 			html = "<p>No results available.</p>";
 		} else {
-			html += "</table></div></div>";
+      // add bottom row for all tracks checkboxes
+      // <CAREFUL!> these lines need to be identical to those above
+      html += "<tr class='allitemsrow'><td>All</td><td></td>";
+      if (tracksForThisCourse > 0) {
+        html += "<td><input class='allcoursetracks' id=" + oldCourseID + " type=checkbox name=track></input></td>";
+      } else {
+        html += "<td></td>";
+      }
+      html += "<td><input class='allcoursereplay' id=" + oldCourseID + " type=checkbox name=replay></input></td></tr>";
+      // </CAREFUL!>
+      html += "</table></div></div>";
 		}
 		return html;
 	},

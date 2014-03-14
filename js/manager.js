@@ -9,6 +9,7 @@
 /*global getLatLonDistance:false */
 /*global getSecsFromHHMMSS: false */
 /*global getSecsFromMMSS: false */
+/*global formatSecsAsMMSS: false */
 function User(keksi) {
   this.x = "";
   this.y = keksi;
@@ -890,8 +891,7 @@ Manager.prototype = {
     };
     var format = evt.target.files[0].name.substr(-3,3);
     format = format.toUpperCase();
-    // if ((format === 'XML') || (format === 'CSV')) {
-    if (format === 'CSV') {
+    if ((format === 'XML') || (format === 'CSV')) {
       this.resultsFileFormat = format;
       reader.readAsText(evt.target.files[0]);
     } else {
@@ -971,8 +971,12 @@ processIOFV2XMLResults: function(xml) {
           // assuming first <Time> is the total time...
           result.time = resultlist[k].getElementsByTagName('Time')[0].textContent;
           temp = resultlist[k].getElementsByTagName('StartTime');
-          time = temp[0].getElementsByTagName('Clock')[0].textContent;
-          result.starttime = getSecsFromHHMMSS(time);
+          if (temp.length > 0) {
+            time = temp[0].getElementsByTagName('Clock')[0].textContent;
+            result.starttime = getSecsFromHHMMSS(time);
+          } else {
+            result.starttime = 0;
+          }
           result.splits = "";
           splitlist = resultlist[k].getElementsByTagName('SplitTime');
           result.controls = splitlist.length;
@@ -987,8 +991,12 @@ processIOFV2XMLResults: function(xml) {
           // add finish split
           result.splits += ";";
           temp = resultlist[k].getElementsByTagName('FinishTime');
-          time = temp[0].getElementsByTagName('Clock')[0].textContent;
-          result.splits += getSecsFromHHMMSS(time)- result.starttime;
+          if (temp.length > 0) {
+            time = temp[0].getElementsByTagName('Clock')[0].textContent;
+            result.splits += getSecsFromHHMMSS(time)- result.starttime;
+          } else {
+            result.splits += 0;
+          }
         }
         this.results.push(result);
       }
@@ -1001,6 +1009,119 @@ processIOFV2XMLResults: function(xml) {
     }
 
   },
+
+processIOFV3XMLResults: function(xml) {
+    var classlist;
+    var personlist;
+    var resultlist;
+    var splitlist;
+    var i;
+    var j;
+    var k;
+    var l;
+    var result;
+    var course;
+    var time;
+    var temp;
+    var temp2;
+    var runnerCount;
+    try {
+    classlist = xml.getElementsByTagName('ClassResult');
+    for (i = 0; i < classlist.length; i += 1) {
+      temp = classlist[i].getElementsByTagName('Class');
+      course = temp[0].getElementsByTagName('Name')[0].textContent;
+      personlist = classlist[i].getElementsByTagName('PersonResult');
+      for (j = 0; j < personlist.length; j += 1) {
+        result = {};
+        result.course = course;
+        result.name = personlist[j].getElementsByTagName('Given')[0].textContent  + " " + personlist[j].getElementsByTagName('Family')[0].textContent;
+        temp = personlist[j].getElementsByTagName('Id');
+        if (temp.length > 0) {
+          temp2 = temp[0].textContent;
+          // remove new lines from empty <Id> tags
+          temp2.replace(/[\n\r]/g, '');
+          result.dbid =  temp2.trim() + "__" + result.name;
+        } else {
+          // no id defined so just use count of runners
+          result.dbid =  this.results.length + "__" + result.name;
+        }
+        temp = personlist[j].getElementsByTagName('Organisation');
+        if (temp.length > 0) {
+          result.club = temp[0].getElementsByTagName('Name')[0].textContent;
+        } else {
+          result.club = "";
+        }
+        resultlist = personlist[j].getElementsByTagName('Result');
+        for (k = 0; k < resultlist.length; k += 1) {
+          temp = resultlist[k].getElementsByTagName('CCardId');
+          if (temp.length > 0) {
+            result.chipid = temp[0].textContent;
+          } else {
+            result.chipid = 0;
+          }
+          // assuming first <Time> is the total time...
+          // this one is in seconds and might even have tenths...
+          temp = resultlist[k].getElementsByTagName('Time');
+          if (temp.length > 0) {
+            result.time = formatSecsAsMMSS(parseInt(temp[0].textContent,10));
+          } else {
+            result.time = 0;
+          }
+          temp = resultlist[k].getElementsByTagName('StartTime');
+          if (temp.length > 0) {
+            temp2 = temp[0].textContent;
+            if (temp2.length >= 19) {
+              // format is yyyy-mm-ddThh:mm:ss and might have extra Z or +nn
+              result.starttime = getSecsFromHHMMSS(temp2.substr(11,8));
+            } else {
+              result.starttime= 0;
+            }
+          } else {
+            result.starttime = 0;
+          }
+          result.splits = "";
+          splitlist = resultlist[k].getElementsByTagName('SplitTime');
+          result.controls = splitlist.length;
+          for ( l = 0; l < splitlist.length; l += 1) {
+            if (l > 0) {
+              result.splits += ";";
+            }
+            temp = splitlist[l].getElementsByTagName('Time');
+            if (temp.length > 0) {
+              result.splits += temp[0].textContent;
+            } else {
+              result.splits += 0;
+            }
+          }
+          // add finish split
+          result.splits += ";";
+          temp = resultlist[k].getElementsByTagName('FinishTime');
+          if (temp.length > 0) {
+            temp2 = temp[0].textContent;
+            if (temp.length >= 19) {
+              // format is yyyy-mm-ddThh:mm:ss and might have extra Z or +nn
+              time = getSecsFromHHMMSS(temp.substr(11,8));
+            } else {
+              time = 0;
+            }
+          } else {
+            time = 0;
+          }
+          result.splits += time - result.starttime;
+        }
+        this.results.push(result);
+      }
+
+    }
+    }
+    catch(err) {
+      rg2WarningDialog("XML parse error", "Error processing XML file. Error is : " + err.message);
+      return;
+    }
+
+  },
+
+
 
   readCourses : function(evt) {
 
