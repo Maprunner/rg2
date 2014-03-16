@@ -102,7 +102,7 @@ Draw.prototype = {
       if ((trk.routeData.resultid !== null) && (trk.routeData.courseid !== null)) {
         this.addNewPoint(x, y);
       } else {
-        rg2WarningDialog('No course/name', 'Please select course and name before you start drawing a route or upload a file.');
+        rg2WarningDialog('No course/name', 'Please select course, name and time before you start drawing a route or upload a file.');
       }
     }
   },
@@ -286,6 +286,7 @@ Draw.prototype = {
   },
 
   setName : function(resultid) {
+    // callback from select box when we have results
     if (!isNaN(resultid)) {
       this.gpstrack.routeData.resultid = rg2.getKartatResultID(resultid);
       this.gpstrack.routeData.name = rg2.getRunnerName(resultid);
@@ -294,6 +295,7 @@ Draw.prototype = {
   },
   
   setNameAndTime :function(event) {
+    // callback for an entered name when no results available
     var t;
     var time;
     var name = $("#rg2-name-entry").val();

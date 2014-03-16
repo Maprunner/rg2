@@ -69,6 +69,8 @@ function Manager(keksi) {
   this.courses = [];
   this.mapLoaded = false;
   this.coursesGeoreferenced = false;
+  this.drawingCourses = false;
+  this.drawnCourse = {};
   this.results = [];
   this.resultCourses = [];
   this.mapWidth = 0;
@@ -246,6 +248,32 @@ Manager.prototype = {
       self.toggleMoveAll(evt.target.checked);
     });
      
+    $("#btn-no-results").click(function(evt) {
+      self.toggleResultsRequired(evt.target.checked);
+    });
+
+    $('#rg2-draw-courses').hide();
+
+    $("#btn-draw-courses").button().click(function(evt) {
+      if (self.mapLoaded) {
+        self.drawingCourses = true;
+        self.courses.length = 0;
+        self.newcontrols.deleteAllControls();
+        self.drawnCourse.name = 'Course';
+        self.drawnCourse.x = [];
+        self.drawnCourse.y = [];
+        self.drawnCourse.codes = [];
+        $('#rg2-new-course-name').val('Course');
+        $('#rg2-draw-courses').show();
+      } else {
+        rg2WarningDialog("No map selected", "Please load a map before drawing courses");
+      }
+    });
+    
+    $("#rg2-new-course-name").on("change", function(evt) {
+      self.setCourseName(evt);
+    });
+        
     $("#rg2-manager-event-select").click(function(event) {
         self.setEvent(parseInt($("#rg2-event-selected").val(), 10));
     });
@@ -467,19 +495,43 @@ Manager.prototype = {
     }
   },
   
-  validData : function() {
-    if ((this.eventName) && (this.mapIndex !== this.INVALID_MAP_ID) && (this.eventDate) && (this.club) && (this.eventLevel) && (this.format) &&
-        (this.newcontrols) && (this.courses)) {
-      return true;
-    } else {
-      return false;
+  validateData : function() {
+    if (!this.eventName) {
+      return 'Event name is not valid.';
     }
+    if (this.mapIndex === this.INVALID_MAP_ID) {
+      return 'No map selected.';
+    }
+    if (!this.club) {
+      return 'Club name is not valid.';
+    }
+    if (!this.eventDate) {
+      return 'Event date is not valid.';
+    }
+    if (!this.eventLevel) {
+      return 'Event level is not valid.';
+    }
+    if (!this.format) {
+      return 'Event format is not valid.';
+    }
+    if (this.courses.length === 0) {
+      if (!this.drawingCourses) {
+        return 'No course information.';
+      }
+    }
+    if (this.results.length === 0) {
+      if (this.format !== this.FORMAT_NO_RESULTS) {
+        return 'No results information.';
+      }
+    }
+    return 'OK';
   
   },
   
   confirmCreateEvent : function() {
-    if (!this.validData()) {
-      rg2WarningDialog("Data missing", "Please enter all necessary information before creating the event.");
+    var valid = this.validateData();
+    if (valid !== 'OK') {
+      rg2WarningDialog("Data missing", valid + " Please enter all necessary information before creating the event.");
       return;
     }
     var msg = "<div id='event-create-dialog'>Are you sure you want to create this event?</div>";
@@ -518,6 +570,9 @@ Manager.prototype = {
     data.club = this.club;
     data.format = this.format;
     data.level = this.eventLevel;
+    if (this.drawingCourses) {
+      this.courses.push(this.drawnCourse);
+    }
     this.setControlLocations();
     this.mapResultsToCourses();
     this.renumberResults();
@@ -577,10 +632,14 @@ Manager.prototype = {
     var courseid = 1;
     for (i = 0; i < this.courses.length; i += 1) {
       selector = "#rg2-alloc-" + i;
+      // comes back as NaN if selector doesn't exist when we have no results, which works OK
       id = parseInt($(selector).val(), 10);
       if (id !== this.DO_NOT_SAVE_COURSE) {
         this.courses[i].courseid = courseid;
-        this.resultCourses[id].courseid = courseid;
+        // handle case where we have courses but no results
+        if (this.resultCourses.length > 0) {
+          this.resultCourses[id].courseid = courseid;
+        }
         newCourses.push(this.courses[i]);
         courseid += 1;
       }
@@ -758,7 +817,7 @@ Manager.prototype = {
     });
   },
   
-   doCancelDeleteRoute : function() {
+  doCancelDeleteRoute : function() {
     $("#route-delete-dialog").dialog("destroy");
   },
   
@@ -938,7 +997,7 @@ Manager.prototype = {
     }
   },
 
-processIOFV2XMLResults: function(xml) {
+  processIOFV2XMLResults: function(xml) {
     var classlist;
     var personlist;
     var resultlist;
@@ -1010,7 +1069,7 @@ processIOFV2XMLResults: function(xml) {
 
   },
 
-processIOFV3XMLResults: function(xml) {
+  processIOFV3XMLResults: function(xml) {
     var classlist;
     var personlist;
     var resultlist;
@@ -1121,8 +1180,6 @@ processIOFV3XMLResults: function(xml) {
 
   },
 
-
-
   readCourses : function(evt) {
 
     var reader = new FileReader();
@@ -1225,7 +1282,7 @@ processIOFV3XMLResults: function(xml) {
     $("#rg2-select-course-file").addClass('valid');
   },
 
-extractV3Courses : function(nodelist) {
+  extractV3Courses : function(nodelist) {
     var i;
     var j;
     var course;
@@ -1344,9 +1401,7 @@ extractV3Courses : function(nodelist) {
     }
   },
 
-  /*
-   * rows: array of raw lines from SI results csv file
-   */
+  // rows: array of raw lines from SI results csv file
   processSICSVResults : function(rows) {
     var CHIP_IDX = 1;
     var DB_IDX = 2;
@@ -1534,6 +1589,14 @@ extractV3Courses : function(nodelist) {
     }
   },
 
+  setCourseName : function(evt) {
+    var course = $("#rg2-new-course-name").val();
+    if (course) {
+      this.drawnCourse.name = course;
+    }
+  },
+
+
   setMapName : function(evt) {
     this.newMap.name = $("#rg2-map-name").val();
     if (this.newMap.name) {
@@ -1669,6 +1732,10 @@ extractV3Courses : function(nodelist) {
   },
 
   mouseUp : function(x, y) {
+    if (this.drawingCourses) {
+      this.addNewControl(x, y);
+      return;
+    }
     if ((this.mapLoaded) && (this.newcontrols.controls.length > 0)) {
       // adjusting the track
       if (this.handleX === null) {
@@ -1680,14 +1747,39 @@ extractV3Courses : function(nodelist) {
       }
     }
   },
+  
+  addNewControl : function (x, y) {
+    // add new control: generate a code for it
+    var code;
+    if (this.newcontrols.controls.length === 0) {
+      code = 'S' + (this.newcontrols.controls.length + 1);
+    } else {
+      code = 'X' + (this.newcontrols.controls.length + 1);
+    }
+    this.newcontrols.addControl(code, x, y);
+    this.newcontrols.displayAllControls();
+    this.drawnCourse.codes.push(code);
+    this.drawnCourse.x.push(x);
+    this.drawnCourse.y.push(y);
+  },
 
   // locks or unlocks background when adjusting map
   toggleMoveAll : function(checkedState) {
     this.backgroundLocked = checkedState;
   },
+
+  // determines if a results file is needed
+  // TODO: score events
+  toggleResultsRequired : function(noResults) {
+    if (noResults) {
+      this.format = this.FORMAT_NO_RESULTS;
+    } else {
+      this.format = this.FORMAT_NORMAL;
+    }
+    
+  },
   
   confirmAddMap : function() {
-
     var msg = "<div id='add-map-dialog'>Are you sure you want to add this map?</div>";
     var me = this;
     $(msg).dialog({

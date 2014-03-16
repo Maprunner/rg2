@@ -675,7 +675,12 @@ function addNewRoute($eventid, $data) {
   if (($data->resultid == 0) || ($data->resultid == GPS_RESULT_OFFSET)) {
     // result needs to be allocated a new id
     $newresult = TRUE;
-    $rows = count(file(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt"));
+    // allow for this being the first entry for an event with no results
+    if (file_exists(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt")) {
+      $rows = count(file(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt"));
+    } else {
+      $rows = 0;
+    }
     $rows++;
     if ($data->resultid == 0) {
       $id = $rows;
