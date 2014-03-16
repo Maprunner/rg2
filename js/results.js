@@ -611,6 +611,9 @@ Result.prototype = {
   getInitials : function (name) {
     // converts name to initials
     // remove white space at each end
+    if (name === null) {
+      return "";
+    }
     name.trim();
     var i;
     var addNext;

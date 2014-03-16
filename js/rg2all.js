@@ -1,4 +1,4 @@
-// Version 0.6.4 2014-03-14T17:29:47;
+// Version 0.6.5 2014-03-16T19:20:43;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -109,7 +109,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.6.4',
+      RG2VERSION: '0.6.5',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -2256,7 +2256,7 @@ Draw.prototype = {
       if ((trk.routeData.resultid !== null) && (trk.routeData.courseid !== null)) {
         this.addNewPoint(x, y);
       } else {
-        rg2WarningDialog('No course/name', 'Please select course and name before you start drawing a route or upload a file.');
+        rg2WarningDialog('No course/name', 'Please select course, name and time before you start drawing a route or upload a file.');
       }
     }
   },
@@ -2440,6 +2440,7 @@ Draw.prototype = {
   },
 
   setName : function(resultid) {
+    // callback from select box when we have results
     if (!isNaN(resultid)) {
       this.gpstrack.routeData.resultid = rg2.getKartatResultID(resultid);
       this.gpstrack.routeData.name = rg2.getRunnerName(resultid);
@@ -2448,6 +2449,7 @@ Draw.prototype = {
   },
   
   setNameAndTime :function(event) {
+    // callback for an entered name when no results available
     var t;
     var time;
     var name = $("#rg2-name-entry").val();
@@ -4265,6 +4267,9 @@ Result.prototype = {
   getInitials : function (name) {
     // converts name to initials
     // remove white space at each end
+    if (name === null) {
+      return "";
+    }
     name.trim();
     var i;
     var addNext;
