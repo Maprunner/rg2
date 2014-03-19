@@ -990,9 +990,9 @@ var rg2 = ( function() {
       // checkbox to animate a result
       $(".showreplay").click(function(event) {
         if (event.target.checked) {
-          animation.addRunner(new Runner(event.target.id));
+          animation.addRunner(new Runner(parseInt(event.target.id, 10)));
         } else {
-          animation.removeRunner(event.target.id);
+          animation.removeRunner(parseInt(event.target.id, 10));
         }
         redraw(false);
       });

@@ -54,7 +54,7 @@ function Manager(keksi) {
   this.UK_NATIONAL_GRID = 1;
   this.FORMAT_NORMAL = 1;
   this.FORMAT_NO_RESULTS = 2;
-  this.FORMAT_SCORE = 3;
+  this.FORMAT_SCORE_EVENT = 3;
   this.loggedIn = false;
   this.user = new User(keksi);
   this.newMap = new Map();
@@ -561,6 +561,10 @@ Manager.prototype = {
   
   doCreateEvent : function() {
     $("#event-create-dialog").dialog("destroy");
+    var i;
+    var codes;
+    var x;
+    var y;
     var id = $("#rg2-event-selected").val();
     var $url = json_url + "?type=createevent";
     var data = {};
@@ -569,6 +573,10 @@ Manager.prototype = {
     data.eventdate = this.eventDate;
     data.club = this.club;
     data.format = this.format;
+    // assume we can just overwrite 1 or 2 at this point
+    if ($('#btn-score-event').prop('checked')) {
+      data.format = this.FORMAT_SCORE_EVENT;
+    }
     data.level = this.eventLevel;
     if (this.drawingCourses) {
       this.courses.push(this.drawnCourse);
@@ -576,6 +584,23 @@ Manager.prototype = {
     this.setControlLocations();
     this.mapResultsToCourses();
     this.renumberResults();
+    if (data.format === this.FORMAT_SCORE_EVENT) {
+      // copy in controls
+      codes= [];
+      x = [];
+      y = [];
+      for (i = 0; i < this.newcontrols.controls.length; i += 1) {
+        codes.push(this.newcontrols.controls[i].code);
+        x.push(Math.round(this.newcontrols.controls[i].x));
+        y.push(Math.round(this.newcontrols.controls[i].y));
+
+      }
+      for (i = 0; i < this.courses.length; i += 1) {
+        this.courses[i].x = x;
+        this.courses[i].y = y;
+        this.courses[i].codes = codes;
+      }
+    }
     data.courses = this.courses.slice(0);
     data.results = this.results.slice(0);
     var user = this.encodeUser();
@@ -1037,6 +1062,7 @@ Manager.prototype = {
             result.starttime = 0;
           }
           result.splits = "";
+          result.codes = [];
           splitlist = resultlist[k].getElementsByTagName('SplitTime');
           result.controls = splitlist.length;
           for ( l = 0; l < splitlist.length; l += 1) {
@@ -1046,6 +1072,7 @@ Manager.prototype = {
             temp = splitlist[l].getElementsByTagName('Time')[0].textContent;
             // assume MMM:SS for now
             result.splits += getSecsFromMMSS(temp);
+            result.codes[l] = splitlist[l].getElementsByTagName('ControlCode')[0].textContent;
           }
           // add finish split
           result.splits += ";";
@@ -1139,6 +1166,7 @@ Manager.prototype = {
             result.starttime = 0;
           }
           result.splits = "";
+          result.codes = [];
           splitlist = resultlist[k].getElementsByTagName('SplitTime');
           result.controls = splitlist.length;
           for ( l = 0; l < splitlist.length; l += 1) {
@@ -1151,6 +1179,13 @@ Manager.prototype = {
             } else {
               result.splits += 0;
             }
+            temp = splitlist[l].getElementsByTagName('ControlCode');
+            if (temp.length > 0) {
+              result.codes[l] = temp[0].textContent;
+            } else {
+              result.codes[l] += 'X' + l;
+            }
+
           }
           // add finish split
           result.splits += ";";
@@ -1406,6 +1441,7 @@ Manager.prototype = {
     var CHIP_IDX = 1;
     var DB_IDX = 2;
     var SURNAME_IDX = 3;
+    var FIRST_NAME_IDX = 4;
     var START_TIME_IDX = 9;
     var TOTAL_TIME_IDX = 11;
     var CLUB_IDX = 15;
@@ -1417,14 +1453,16 @@ Manager.prototype = {
     var NUM_CONTROLS_IDX = 42;
     var START_PUNCH_IDX = 44;
     var FIRST_SPLIT_IDX = 47;
-    var FIRST_NAME_IDX = 4;
     var SPLIT_IDX_STEP = 2;
+    var FIRST_CODE_IDX = 46;
+    var CODE_IDX_STEP = 2;
 
     var i;
     var j;
     var fields = {};
     var result;
     var nextsplit;
+    var nextcode;
     var temp;
     // try and work out what the separator is
     var commas = rows[0].split(',' ).length - 1;
@@ -1458,13 +1496,17 @@ Manager.prototype = {
         result.course = fields[i][COURSE_IDX];
         result.controls = parseInt(fields[i][NUM_CONTROLS_IDX], 10);
         nextsplit = FIRST_SPLIT_IDX;
+        nextcode = FIRST_CODE_IDX;
         result.splits = "";
+        result.codes = [];
         for ( j = 0; j < result.controls; j += 1) {
           if (j > 0) {
             result.splits += ";";
           }
+          result.codes[j] = fields[i][nextcode];
           result.splits += getSecsFromMMSS(fields[i][nextsplit]);
           nextsplit += SPLIT_IDX_STEP;
+          nextcode += CODE_IDX_STEP;
         }
         // add finish split
         result.splits += ";";

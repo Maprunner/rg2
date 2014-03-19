@@ -1,4 +1,4 @@
-// Version 0.6.5 2014-03-16T19:20:43;
+// Version 0.6.5 2014-03-19T20:01:37;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -991,9 +991,9 @@ var rg2 = ( function() {
       // checkbox to animate a result
       $(".showreplay").click(function(event) {
         if (event.target.checked) {
-          animation.addRunner(new Runner(event.target.id));
+          animation.addRunner(new Runner(parseInt(event.target.id, 10)));
         } else {
-          animation.removeRunner(event.target.id);
+          animation.removeRunner(parseInt(event.target.id, 10));
         }
         redraw(false);
       });
@@ -1284,6 +1284,13 @@ Animation.prototype = {
 	},
 
 	addRunner : function(runner) {
+		var i;
+		for (i = 0; i < this.runners.length; i += 1) {
+      if (this.runners[i].runnerid === runner.runnerid) {
+      // runner already exists so ignore
+      return;
+      }
+		}
 		this.runners.push(runner);
 		this.updateAnimationDetails();
 	},
@@ -3497,7 +3504,7 @@ GPSTrack.prototype = {
 
 function Colours() {
   // used to generate track colours: add extra colours as necessary
-  this.colours = ["#ff0000", "#ff8000",  "#ff00ff", "#ff0080", "#008080", "#008000", "#00ff00", "#0080ff", "#0000ff", "#8000ff", "#000000", "#00ffff", "#808080"];
+  this.colours = ["#ff0000", "#ff8000",  "#ff00ff", "#ff0080", "#008080", "#008000", "#00ff00", "#0080ff", "#0000ff", "#8000ff", "#00ffff", "#808080"];
   this.colourIndex = 0;
 }
 
@@ -4053,6 +4060,7 @@ function Result(data, isScoreEvent, colour) {
 		// save control locations for score course result
 		this.scorex = data.scorex;
 		this.scorey = data.scorey;
+		this.scorecodes = data.scorecodes;
 	}
 
 	// calculated cumulative distance in pixels
@@ -4296,7 +4304,9 @@ Result.prototype = {
 /*exported Runner */
 // animated runner details
 function Runner(resultid) {
-	var res = rg2.getFullResult(resultid);
+	var res;
+	var course;
+	res = rg2.getFullResult(resultid);
 	this.name = res.name;
 	this.initials = res.initials;
 	// careful: we need the index into results, not the resultid from the text file
@@ -4306,8 +4316,18 @@ function Runner(resultid) {
 	this.legpos = res.legpos;
 	this.colour = res.trackColour;
 	// get course details
-	var course = rg2.getCourseDetails(res.courseid);
-	this.coursename = course.name;
+	if (res.isScoreEvent) {
+    course = {};
+    course.name = res.name;
+    course.x = res.scorex;
+    course.y = res.scorey;
+    course.codes = res.scorecodes;
+	} else {
+    course = rg2.getCourseDetails(res.courseid);
+
+	}
+  
+  this.coursename = course.name;
 	// used to stop runners when doing replay by control
 	this.nextStopTime = rg2.config.VERY_HIGH_TIME_IN_SECS;
 	this.x = [];

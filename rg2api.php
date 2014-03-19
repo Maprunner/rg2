@@ -16,6 +16,7 @@
   define ('LOCK_DIRECTORY', dirname(__FILE__)."/lock/saving/");
   define('GPS_RESULT_OFFSET', 50000);
   define('GPS_INTERVAL', 3);
+  define('SCORE_EVENT_FORMAT', 3);
   
   if (isset($_GET['type'])) {
     $type = $_GET['type'];
@@ -241,6 +242,7 @@ function generateNewKeksi() {
 
 function addNewEvent($data) {
   rg2log("Add new event");
+  $format = $data->format;
   $write["status_msg"] = "";
   if (($handle = @fopen(KARTAT_DIRECTORY."kisat.txt", "r+")) !== FALSE) {
     // read to end of file to find last entry
@@ -277,13 +279,53 @@ function addNewEvent($data) {
   }
 
   // create new ratapisteet file: control locations
-  for ($i = 0; $i < count($data->courses); $i++) {
-    $controls = ($i + 1)."|";
-    for ($j = 0; $j < count($data->courses[$i]->x); $j++) {
-          $controls .= $data->courses[$i]->x[$j].";-".$data->courses[$i]->y[$j]."N";
+  // this assumes we can use course 0 to pick up S, F and control locations
+  if ($format == SCORE_EVENT_FORMAT) {
+    for ($i = 0; $i < count($data->results); $i++) {
+      $controls = ($i + 1)."|".$data->courses[0]->x[0].";-".$data->courses[0]->y[0]."N";   
+      for ($j = 0; $j < count($data->results[$i]->codes); $j++) {
+        $code = $data->results[$i]->codes[$j];
+        $x = 0;
+        $y = 0;
+        for ($k = 0; $k < count($data->courses[0]->codes); $k++) {
+          if ($data->courses[0]->codes[$k] == $code) {
+            $x = $data->courses[0]->x[$k];
+            $y = $data->courses[0]->y[$k];
+            break;
+          }
+        }
+
+        $controls .= $x.";-".$y."N";
+      }
+      $finish = count($data->courses[0]->x);
+      $controls .= $data->courses[0]->x[$finish - 1].";-".$data->courses[0]->y[$finish - 1]."N"; 
+      $controls .= PHP_EOL;
+      file_put_contents(KARTAT_DIRECTORY."ratapisteet_".$newid.".txt", $controls, FILE_APPEND);
+    }    
+  } else {
+    for ($i = 0; $i < count($data->courses); $i++) {
+      $controls = ($i + 1)."|";
+      for ($j = 0; $j < count($data->courses[$i]->x); $j++) {
+        $controls .= $data->courses[$i]->x[$j].";-".$data->courses[$i]->y[$j]."N";
+      }
+      $controls .= PHP_EOL;
+      file_put_contents(KARTAT_DIRECTORY."ratapisteet_".$newid.".txt", $controls, FILE_APPEND);
     }
-    $controls .= PHP_EOL;
-    file_put_contents(KARTAT_DIRECTORY."ratapisteet_".$newid.".txt", $controls, FILE_APPEND);    
+  }
+
+  // create new hajontakanta file: control sequences
+  if ($format == SCORE_EVENT_FORMAT) {
+    for ($i = 0; $i < count($data->results); $i++) {
+      $controls = ($i + 1)."|Score ".$data->results[$i]->name."|";
+      for ($j = 0; $j < count($data->results[$i]->codes); $j++) {
+        if ($j > 0) {
+          $controls .= "_";
+        }
+        $controls .= $data->results[$i]->codes[$j];
+      }
+      $controls .= PHP_EOL;
+      file_put_contents(KARTAT_DIRECTORY."hajontakanta_".$newid.".txt", $controls, FILE_APPEND);
+    } 
   }
 
   // create new radat file: course drawing: not used by RG2 ...
@@ -325,7 +367,12 @@ function addNewEvent($data) {
   // create new kilpailijat file: results
   for ($i = 0; $i < count($data->results); $i++) {
     $a = $data->results[$i];
-    $result = ($i + 1)."|".$a->courseid."|".$a->course."|".trim($a->name)."|".$a->starttime."|".$a->dbid."||".$a->time."|".$a->splits.PHP_EOL;
+    if ($format == SCORE_EVENT_FORMAT) {
+      $scoreid = $i + 1;
+    } else {
+      $scoreid = "";
+    }
+    $result = ($i + 1)."|".$a->courseid."|".$a->course."|".trim($a->name)."|".$a->starttime."|".$a->dbid."|".$scoreid."|".$a->time."|".$a->splits.PHP_EOL;
     file_put_contents(KARTAT_DIRECTORY."kilpailijat_".$newid.".txt", $result, FILE_APPEND);    
   }
   
@@ -1039,6 +1086,7 @@ function getResultsForEvent($eventid) {
   }
 
   if (isScoreEvent($eventid)) {
+    // read control locations visited
     if (($handle = @fopen(KARTAT_DIRECTORY."ratapisteet_".$eventid.".txt", "r")) !== FALSE) {
       $row = 0;  
       while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
@@ -1062,6 +1110,16 @@ function getResultsForEvent($eventid) {
       }
       fclose($handle);
     }
+    // read control codes visited
+    if (($handle = @fopen(KARTAT_DIRECTORY."hajontakanta_".$eventid.".txt", "r")) !== FALSE) {
+      $row = 0;  
+      while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
+        $codes[$row] =  explode("_", $data[2]);
+        $row++;    
+      }
+      fclose($handle);
+    }
+
   }
 
   // @ suppresses error report if file does not exist
@@ -1080,7 +1138,8 @@ function getResultsForEvent($eventid) {
         for ($i = 0; $i < count($scoreref); $i++) {
           if ($scoreref[$i] == $data[6]) {
             $detail["scorex"] = $xpos[$i];  
-            $detail["scorey"] = $ypos[$i];  
+            $detail["scorey"] = $ypos[$i];
+            $detail["scorecodes"] = $codes[$i];
           }
         }          
       }

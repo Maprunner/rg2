@@ -28,7 +28,7 @@
 
 function Colours() {
   // used to generate track colours: add extra colours as necessary
-  this.colours = ["#ff0000", "#ff8000",  "#ff00ff", "#ff0080", "#008080", "#008000", "#00ff00", "#0080ff", "#0000ff", "#8000ff", "#000000", "#00ffff", "#808080"];
+  this.colours = ["#ff0000", "#ff8000",  "#ff00ff", "#ff0080", "#008080", "#008000", "#00ff00", "#0080ff", "#0000ff", "#8000ff", "#00ffff", "#808080"];
   this.colourIndex = 0;
 }
 
