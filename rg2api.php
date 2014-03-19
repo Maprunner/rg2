@@ -66,7 +66,7 @@ function encode_rg_input($input_str) {
 }
 
 //
-// Handle the encondig for output data if
+// Handle the encoding for output data if
 // output encoding is not set to UTF-8
 //
 
@@ -417,7 +417,7 @@ function deleteEvent($eventid) {
   }
   
   // rename all associated files but don't worry about errors
-  // safer than deleting them since you can alwsy add the event again
+  // safer than deleting them since you can always add the event again
   $files = array("kilpailijat_", "kommentit_", "merkinnat_", "radat_", "ratapisteet_", "sarjat_", "sarjojenkoodit_");
   foreach ($files as $file) {
     @rename(KARTAT_DIRECTORY.$file.$eventid.".txt", KARTAT_DIRECTORY."deleted_".$file.$eventid.".txt");
@@ -1290,11 +1290,11 @@ function generateWorldFile($data) {
     $lon[$i] = floatval($data[3 + ($i * 4)]);
     $y[$i] = intval($data[4 + ($i * 4)]);
     $lat[$i] = floatval($data[5 + ($i * 4)]);
-    rg2log($data[0].", ".$lat[$i].", ".$lon[$i].", ".$x[$i].", ".$y[$i]);
+    //rg2log($data[0].", ".$lat[$i].", ".$lon[$i].", ".$x[$i].", ".$y[$i]);
   }  
   $hypot = getLatLonDistance($lat[0], $lon[0], $lat[2], $lon[2]);
   $adj = getLatLonDistance($lat[0], $lon[0], $lat[0], $lon[2]);
-  rg2log($hypot.", ".$adj);
+  //rg2log($hypot.", ".$adj);
   if ($hypot == 0) {
     throw(new Exception('Division by zero.'));
   }
@@ -1302,7 +1302,7 @@ function generateWorldFile($data) {
   
   $hypot2 = getLatLonDistance($lat[2], $lon[2], $lat[1], $lon[1]);
   $adj2 = getLatLonDistance($lat[2], $lon[2], $lat[1], $lon[2]);
-  rg2log($hypot2.", ".$adj2);
+  //rg2log($hypot2.", ".$adj2);
   if ($hypot2 == 0) {
     throw(new Exception('Division by zero.'));
   }
@@ -1314,7 +1314,7 @@ function generateWorldFile($data) {
   $angle = ($angle1 + $angle2) / 2;
   $pixResX = ($lon[2] - $lon[0]) / ($x[2] - $x[0]);
   $pixResY = ($lat[2] - $lat[1]) / ($y[1] - $y[2]);
-  rg2log($pixResX.", ".$pixResY);
+  //rg2log($pixResX.", ".$pixResY);
   $A = $pixResX * cos($angle);
   $D = $pixResY * sin($angle);
   $B = $pixResX * sin($angle);
