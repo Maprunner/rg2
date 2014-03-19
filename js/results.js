@@ -397,6 +397,7 @@ function Result(data, isScoreEvent, colour) {
 		// save control locations for score course result
 		this.scorex = data.scorex;
 		this.scorey = data.scorey;
+		this.scorecodes = data.scorecodes;
 	}
 
 	// calculated cumulative distance in pixels
