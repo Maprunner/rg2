@@ -37,6 +37,10 @@
     <label for="rg2-event-level" class="manage-label">Event level:</label>
     <select class="pushright manage-input" id="rg2-event-level"></select>
   </div>
+  <div>
+    <input type="checkbox" id="btn-score-event">
+    <label for="btn-score-event">Score event</label>
+  </div>
   <div id="rg2-results-grouping" class="manage-label">
     Group results by:
     <div class="pushright">
@@ -51,15 +55,24 @@
     <label for="rg2-load-results-file" class="manage-file-label">Results file</label>
     <input type='file' accept='.csv, .xml' id='rg2-load-results-file' class="pushright manage-file-input" />
   </div>
+  <div>
+    <input type="checkbox" id="btn-no-results">
+    <label for="btn-no-results">No results file</label>
+  </div>
   <div id="rg2-select-course-file" class="manage-file-input-div">
     <label for="rg2-load-course-file" class="manage-file-label">Course file</label>
     <input type='file' accept='.xml' id='rg2-load-course-file' class="pushright manage-file-input" />
   </div>
-  <div id="rg2-course-allocations"></div>
   <input type="checkbox" id="btn-move-map-and-controls">  
-  <label for="btn-move-map-and-controls"> Move map and controls together (or right click-drag)</label>
-  <br/>
-  <br/>
+  <label for="btn-move-map-and-controls"> Move map and controls together</label>
+  <br />
+  <button type="button" id="btn-draw-courses">Draw course</button>
+  <div id="rg2-draw-courses">
+    <label for="rg2-new-course-name" class="manage-label"> Name:</label>
+    <input class="pushright manage-input" id="rg2-new-course-name" type="text">
+  </div>
+  <div id="rg2-course-allocations"></div>
+  <hr class="rg2-hr">
   <button type="button" id="btn-create-event">Create Event</button>
 </div>
 <div id="rg2-manage-edit">

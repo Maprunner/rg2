@@ -37,6 +37,13 @@ Animation.prototype = {
 	},
 
 	addRunner : function(runner) {
+		var i;
+		for (i = 0; i < this.runners.length; i += 1) {
+      if (this.runners[i].runnerid === runner.runnerid) {
+      // runner already exists so ignore
+      return;
+      }
+		}
 		this.runners.push(runner);
 		this.updateAnimationDetails();
 	},

@@ -117,10 +117,6 @@ Results.prototype = {
 		return this.results[resultid];
 	},
 
-	getKartatResultID : function(resultid) {
-		return this.results[resultid].resultid;
-	},
-
 	drawTracks : function() {
     var show;
     // check if +3 to be displayed once here rather than every time through loop
@@ -397,6 +393,7 @@ function Result(data, isScoreEvent, colour) {
 		// save control locations for score course result
 		this.scorex = data.scorex;
 		this.scorey = data.scorey;
+		this.scorecodes = data.scorecodes;
 	}
 
 	// calculated cumulative distance in pixels
@@ -443,11 +440,8 @@ Result.prototype = {
 	},
 	
 	addTrack: function(data) {
-    // copy arrays but ignore first value: that's just how it needs to work
     this.trackx = data.gpsx;
     this.tracky = data.gpsy;
-    this.trackx.splice(0,1);
-    this.tracky.splice(0,1);
     var trackOK;
     if (this.isGPSTrack) {
       trackOK = this.expandGPSTrack();
@@ -611,6 +605,9 @@ Result.prototype = {
   getInitials : function (name) {
     // converts name to initials
     // remove white space at each end
+    if (name === null) {
+      return "";
+    }
     name.trim();
     var i;
     var addNext;

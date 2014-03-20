@@ -1,4 +1,4 @@
-// Version 0.6.4 2014-03-14T17:29:47;
+// Version 0.6.6 2014-03-20T09:15:40;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -109,7 +109,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.6.4',
+      RG2VERSION: '0.6.6',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -226,7 +226,7 @@ var rg2 = ( function() {
       });
 
       $("#rg2-name-select").prop('disabled', true).click(function(event) {
-        drawing.setName($("#rg2-name-select").val());
+        drawing.setName(parseInt($("#rg2-name-select").val(), 10));
       });
 
       $("#rg2-course-select").click(function(event) {
@@ -991,9 +991,9 @@ var rg2 = ( function() {
       // checkbox to animate a result
       $(".showreplay").click(function(event) {
         if (event.target.checked) {
-          animation.addRunner(new Runner(event.target.id));
+          animation.addRunner(new Runner(parseInt(event.target.id, 10)));
         } else {
-          animation.removeRunner(event.target.id);
+          animation.removeRunner(parseInt(event.target.id, 10));
         }
         redraw(false);
       });
@@ -1125,10 +1125,6 @@ var rg2 = ( function() {
       return results.resultIDExists(resultid);
     }
 
-    function getKartatResultID(resultid) {
-      return results.getKartatResultID(resultid);
-    }
-
     function getTimeForID(resultid) {
       return results.getTimeForID(resultid);
     }
@@ -1225,7 +1221,6 @@ var rg2 = ( function() {
       createNameDropdown : createNameDropdown,
       incrementTracksCount : incrementTracksCount,
       getKartatEventID : getKartatEventID,
-      getKartatResultID : getKartatResultID,
       getActiveEventID : getActiveEventID,
       getHighestControlNumber : getHighestControlNumber,
       getCourseDetails : getCourseDetails,
@@ -1284,6 +1279,13 @@ Animation.prototype = {
 	},
 
 	addRunner : function(runner) {
+		var i;
+		for (i = 0; i < this.runners.length; i += 1) {
+      if (this.runners[i].runnerid === runner.runnerid) {
+      // runner already exists so ignore
+      return;
+      }
+		}
 		this.runners.push(runner);
 		this.updateAnimationDetails();
 	},
@@ -2256,7 +2258,7 @@ Draw.prototype = {
       if ((trk.routeData.resultid !== null) && (trk.routeData.courseid !== null)) {
         this.addNewPoint(x, y);
       } else {
-        rg2WarningDialog('No course/name', 'Please select course and name before you start drawing a route or upload a file.');
+        rg2WarningDialog('No course/name', 'Please select course, name and time before you start drawing a route or upload a file.');
       }
     }
   },
@@ -2345,10 +2347,11 @@ Draw.prototype = {
   },
 
   initialiseCourse : function(courseid) {
+    var course;
     this.gpstrack.routeData.eventid = rg2.getKartatEventID();
     this.gpstrack.routeData.courseid = courseid;
     rg2.putOnDisplay(courseid);
-    var course = rg2.getCourseDetails(courseid);
+    course = rg2.getCourseDetails(courseid);
     this.gpstrack.routeData.coursename = course.name;
     this.controlx = course.x;
     this.controly = course.y;
@@ -2356,6 +2359,7 @@ Draw.prototype = {
     this.gpstrack.routeData.y.length = 0;
     this.gpstrack.routeData.x[0] = this.controlx[0];
     this.gpstrack.routeData.y[0] = this.controly[0];
+    // TODO could leabve at 0 for score events
     this.nextControl = 1;
     rg2.createNameDropdown(courseid);
     $("#rg2-name-select").prop('disabled', false);
@@ -2440,14 +2444,28 @@ Draw.prototype = {
   },
 
   setName : function(resultid) {
+    // callback from select box when we have results
+    var res;
     if (!isNaN(resultid)) {
-      this.gpstrack.routeData.resultid = rg2.getKartatResultID(resultid);
-      this.gpstrack.routeData.name = rg2.getRunnerName(resultid);
+      res = rg2.getFullResult(resultid);
+      this.gpstrack.routeData.resultid = res.resultid;
+      this.gpstrack.routeData.name = res.name;
+      // set up individual course if this is a score event
+      if (res.isScoreEvent) {
+        this.controlx = res.scorex;
+        this.controly = res.scorey;
+        this.gpstrack.routeData.x.length = 0;
+        this.gpstrack.routeData.y.length = 0;
+        this.gpstrack.routeData.x[0] = this.controlx[0];
+        this.gpstrack.routeData.y[0] = this.controly[0];
+        this.nextControl = 1;
+      }
       this.startDrawing();
     }
   },
   
   setNameAndTime :function(event) {
+    // callback for an entered name when no results available
     var t;
     var time;
     var name = $("#rg2-name-entry").val();
@@ -3495,7 +3513,7 @@ GPSTrack.prototype = {
 
 function Colours() {
   // used to generate track colours: add extra colours as necessary
-  this.colours = ["#ff0000", "#ff8000",  "#ff00ff", "#ff0080", "#008080", "#008000", "#00ff00", "#0080ff", "#0000ff", "#8000ff", "#000000", "#00ffff", "#808080"];
+  this.colours = ["#ff0000", "#ff8000",  "#ff00ff", "#ff0080", "#008080", "#008000", "#00ff00", "#0080ff", "#0000ff", "#8000ff", "#00ffff", "#808080"];
   this.colourIndex = 0;
 }
 
@@ -3769,10 +3787,6 @@ Results.prototype = {
 
 	getFullResult : function(resultid) {
 		return this.results[resultid];
-	},
-
-	getKartatResultID : function(resultid) {
-		return this.results[resultid].resultid;
 	},
 
 	drawTracks : function() {
@@ -4051,6 +4065,7 @@ function Result(data, isScoreEvent, colour) {
 		// save control locations for score course result
 		this.scorex = data.scorex;
 		this.scorey = data.scorey;
+		this.scorecodes = data.scorecodes;
 	}
 
 	// calculated cumulative distance in pixels
@@ -4097,11 +4112,8 @@ Result.prototype = {
 	},
 	
 	addTrack: function(data) {
-    // copy arrays but ignore first value: that's just how it needs to work
     this.trackx = data.gpsx;
     this.tracky = data.gpsy;
-    this.trackx.splice(0,1);
-    this.tracky.splice(0,1);
     var trackOK;
     if (this.isGPSTrack) {
       trackOK = this.expandGPSTrack();
@@ -4265,6 +4277,9 @@ Result.prototype = {
   getInitials : function (name) {
     // converts name to initials
     // remove white space at each end
+    if (name === null) {
+      return "";
+    }
     name.trim();
     var i;
     var addNext;
@@ -4291,7 +4306,9 @@ Result.prototype = {
 /*exported Runner */
 // animated runner details
 function Runner(resultid) {
-	var res = rg2.getFullResult(resultid);
+	var res;
+	var course;
+	res = rg2.getFullResult(resultid);
 	this.name = res.name;
 	this.initials = res.initials;
 	// careful: we need the index into results, not the resultid from the text file
@@ -4301,8 +4318,18 @@ function Runner(resultid) {
 	this.legpos = res.legpos;
 	this.colour = res.trackColour;
 	// get course details
-	var course = rg2.getCourseDetails(res.courseid);
-	this.coursename = course.name;
+	if (res.isScoreEvent) {
+    course = {};
+    course.name = res.name;
+    course.x = res.scorex;
+    course.y = res.scorey;
+    course.codes = res.scorecodes;
+	} else {
+    course = rg2.getCourseDetails(res.courseid);
+
+	}
+  
+  this.coursename = course.name;
 	// used to stop runners when doing replay by control
 	this.nextStopTime = rg2.config.VERY_HIGH_TIME_IN_SECS;
 	this.x = [];

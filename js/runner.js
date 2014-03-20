@@ -2,7 +2,9 @@
 /*exported Runner */
 // animated runner details
 function Runner(resultid) {
-	var res = rg2.getFullResult(resultid);
+	var res;
+	var course;
+	res = rg2.getFullResult(resultid);
 	this.name = res.name;
 	this.initials = res.initials;
 	// careful: we need the index into results, not the resultid from the text file
@@ -12,8 +14,18 @@ function Runner(resultid) {
 	this.legpos = res.legpos;
 	this.colour = res.trackColour;
 	// get course details
-	var course = rg2.getCourseDetails(res.courseid);
-	this.coursename = course.name;
+	if (res.isScoreEvent) {
+    course = {};
+    course.name = res.name;
+    course.x = res.scorex;
+    course.y = res.scorey;
+    course.codes = res.scorecodes;
+	} else {
+    course = rg2.getCourseDetails(res.courseid);
+
+	}
+  
+  this.coursename = course.name;
 	// used to stop runners when doing replay by control
 	this.nextStopTime = rg2.config.VERY_HIGH_TIME_IN_SECS;
 	this.x = [];

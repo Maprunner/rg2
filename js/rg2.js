@@ -108,7 +108,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.6.4',
+      RG2VERSION: '0.6.6',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -225,7 +225,7 @@ var rg2 = ( function() {
       });
 
       $("#rg2-name-select").prop('disabled', true).click(function(event) {
-        drawing.setName($("#rg2-name-select").val());
+        drawing.setName(parseInt($("#rg2-name-select").val(), 10));
       });
 
       $("#rg2-course-select").click(function(event) {
@@ -990,9 +990,9 @@ var rg2 = ( function() {
       // checkbox to animate a result
       $(".showreplay").click(function(event) {
         if (event.target.checked) {
-          animation.addRunner(new Runner(event.target.id));
+          animation.addRunner(new Runner(parseInt(event.target.id, 10)));
         } else {
-          animation.removeRunner(event.target.id);
+          animation.removeRunner(parseInt(event.target.id, 10));
         }
         redraw(false);
       });
@@ -1124,10 +1124,6 @@ var rg2 = ( function() {
       return results.resultIDExists(resultid);
     }
 
-    function getKartatResultID(resultid) {
-      return results.getKartatResultID(resultid);
-    }
-
     function getTimeForID(resultid) {
       return results.getTimeForID(resultid);
     }
@@ -1224,7 +1220,6 @@ var rg2 = ( function() {
       createNameDropdown : createNameDropdown,
       incrementTracksCount : incrementTracksCount,
       getKartatEventID : getKartatEventID,
-      getKartatResultID : getKartatResultID,
       getActiveEventID : getActiveEventID,
       getHighestControlNumber : getHighestControlNumber,
       getCourseDetails : getCourseDetails,

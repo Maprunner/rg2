@@ -16,6 +16,7 @@
   define ('LOCK_DIRECTORY', dirname(__FILE__)."/lock/saving/");
   define('GPS_RESULT_OFFSET', 50000);
   define('GPS_INTERVAL', 3);
+  define('SCORE_EVENT_FORMAT', 3);
   
   if (isset($_GET['type'])) {
     $type = $_GET['type'];
@@ -66,7 +67,7 @@ function encode_rg_input($input_str) {
 }
 
 //
-// Handle the encondig for output data if
+// Handle the encoding for output data if
 // output encoding is not set to UTF-8
 //
 
@@ -241,6 +242,7 @@ function generateNewKeksi() {
 
 function addNewEvent($data) {
   rg2log("Add new event");
+  $format = $data->format;
   $write["status_msg"] = "";
   if (($handle = @fopen(KARTAT_DIRECTORY."kisat.txt", "r+")) !== FALSE) {
     // read to end of file to find last entry
@@ -277,13 +279,53 @@ function addNewEvent($data) {
   }
 
   // create new ratapisteet file: control locations
-  for ($i = 0; $i < count($data->courses); $i++) {
-    $controls = ($i + 1)."|";
-    for ($j = 0; $j < count($data->courses[$i]->x); $j++) {
-          $controls .= $data->courses[$i]->x[$j].";-".$data->courses[$i]->y[$j]."N";
+  // this assumes we can use course 0 to pick up S, F and control locations
+  if ($format == SCORE_EVENT_FORMAT) {
+    for ($i = 0; $i < count($data->results); $i++) {
+      $controls = ($i + 1)."|".$data->courses[0]->x[0].";-".$data->courses[0]->y[0]."N";   
+      for ($j = 0; $j < count($data->results[$i]->codes); $j++) {
+        $code = $data->results[$i]->codes[$j];
+        $x = 0;
+        $y = 0;
+        for ($k = 0; $k < count($data->courses[0]->codes); $k++) {
+          if ($data->courses[0]->codes[$k] == $code) {
+            $x = $data->courses[0]->x[$k];
+            $y = $data->courses[0]->y[$k];
+            break;
+          }
+        }
+
+        $controls .= $x.";-".$y."N";
+      }
+      $finish = count($data->courses[0]->x);
+      $controls .= $data->courses[0]->x[$finish - 1].";-".$data->courses[0]->y[$finish - 1]."N"; 
+      $controls .= PHP_EOL;
+      file_put_contents(KARTAT_DIRECTORY."ratapisteet_".$newid.".txt", $controls, FILE_APPEND);
+    }    
+  } else {
+    for ($i = 0; $i < count($data->courses); $i++) {
+      $controls = ($i + 1)."|";
+      for ($j = 0; $j < count($data->courses[$i]->x); $j++) {
+        $controls .= $data->courses[$i]->x[$j].";-".$data->courses[$i]->y[$j]."N";
+      }
+      $controls .= PHP_EOL;
+      file_put_contents(KARTAT_DIRECTORY."ratapisteet_".$newid.".txt", $controls, FILE_APPEND);
     }
-    $controls .= PHP_EOL;
-    file_put_contents(KARTAT_DIRECTORY."ratapisteet_".$newid.".txt", $controls, FILE_APPEND);    
+  }
+
+  // create new hajontakanta file: control sequences
+  if ($format == SCORE_EVENT_FORMAT) {
+    for ($i = 0; $i < count($data->results); $i++) {
+      $controls = ($i + 1)."|Score ".$data->results[$i]->name."|";
+      for ($j = 0; $j < count($data->results[$i]->codes); $j++) {
+        if ($j > 0) {
+          $controls .= "_";
+        }
+        $controls .= $data->results[$i]->codes[$j];
+      }
+      $controls .= PHP_EOL;
+      file_put_contents(KARTAT_DIRECTORY."hajontakanta_".$newid.".txt", $controls, FILE_APPEND);
+    } 
   }
 
   // create new radat file: course drawing: not used by RG2 ...
@@ -325,7 +367,12 @@ function addNewEvent($data) {
   // create new kilpailijat file: results
   for ($i = 0; $i < count($data->results); $i++) {
     $a = $data->results[$i];
-    $result = ($i + 1)."|".$a->courseid."|".$a->course."|".trim($a->name)."|".$a->starttime."|".$a->dbid."||".$a->time."|".$a->splits.PHP_EOL;
+    if ($format == SCORE_EVENT_FORMAT) {
+      $scoreid = $i + 1;
+    } else {
+      $scoreid = "";
+    }
+    $result = ($i + 1)."|".$a->courseid."|".$a->course."|".trim($a->name)."|".$a->starttime."|".$a->dbid."|".$scoreid."|".$a->time."|".$a->splits.PHP_EOL;
     file_put_contents(KARTAT_DIRECTORY."kilpailijat_".$newid.".txt", $result, FILE_APPEND);    
   }
   
@@ -417,7 +464,7 @@ function deleteEvent($eventid) {
   }
   
   // rename all associated files but don't worry about errors
-  // safer than deleting them since you can alwsy add the event again
+  // safer than deleting them since you can always add the event again
   $files = array("kilpailijat_", "kommentit_", "merkinnat_", "radat_", "ratapisteet_", "sarjat_", "sarjojenkoodit_");
   foreach ($files as $file) {
     @rename(KARTAT_DIRECTORY.$file.$eventid.".txt", KARTAT_DIRECTORY."deleted_".$file.$eventid.".txt");
@@ -675,7 +722,12 @@ function addNewRoute($eventid, $data) {
   if (($data->resultid == 0) || ($data->resultid == GPS_RESULT_OFFSET)) {
     // result needs to be allocated a new id
     $newresult = TRUE;
-    $rows = count(file(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt"));
+    // allow for this being the first entry for an event with no results
+    if (file_exists(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt")) {
+      $rows = count(file(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt"));
+    } else {
+      $rows = 0;
+    }
     $rows++;
     if ($data->resultid == 0) {
       $id = $rows;
@@ -1034,6 +1086,7 @@ function getResultsForEvent($eventid) {
   }
 
   if (isScoreEvent($eventid)) {
+    // read control locations visited
     if (($handle = @fopen(KARTAT_DIRECTORY."ratapisteet_".$eventid.".txt", "r")) !== FALSE) {
       $row = 0;  
       while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
@@ -1057,6 +1110,16 @@ function getResultsForEvent($eventid) {
       }
       fclose($handle);
     }
+    // read control codes visited
+    if (($handle = @fopen(KARTAT_DIRECTORY."hajontakanta_".$eventid.".txt", "r")) !== FALSE) {
+      $row = 0;  
+      while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
+        $codes[$row] =  explode("_", $data[2]);
+        $row++;    
+      }
+      fclose($handle);
+    }
+
   }
 
   // @ suppresses error report if file does not exist
@@ -1075,7 +1138,8 @@ function getResultsForEvent($eventid) {
         for ($i = 0; $i < count($scoreref); $i++) {
           if ($scoreref[$i] == $data[6]) {
             $detail["scorex"] = $xpos[$i];  
-            $detail["scorey"] = $ypos[$i];  
+            $detail["scorey"] = $ypos[$i];
+            $detail["scorecodes"] = $codes[$i];
           }
         }          
       }
@@ -1285,11 +1349,11 @@ function generateWorldFile($data) {
     $lon[$i] = floatval($data[3 + ($i * 4)]);
     $y[$i] = intval($data[4 + ($i * 4)]);
     $lat[$i] = floatval($data[5 + ($i * 4)]);
-    rg2log($data[0].", ".$lat[$i].", ".$lon[$i].", ".$x[$i].", ".$y[$i]);
+    //rg2log($data[0].", ".$lat[$i].", ".$lon[$i].", ".$x[$i].", ".$y[$i]);
   }  
   $hypot = getLatLonDistance($lat[0], $lon[0], $lat[2], $lon[2]);
   $adj = getLatLonDistance($lat[0], $lon[0], $lat[0], $lon[2]);
-  rg2log($hypot.", ".$adj);
+  //rg2log($hypot.", ".$adj);
   if ($hypot == 0) {
     throw(new Exception('Division by zero.'));
   }
@@ -1297,7 +1361,7 @@ function generateWorldFile($data) {
   
   $hypot2 = getLatLonDistance($lat[2], $lon[2], $lat[1], $lon[1]);
   $adj2 = getLatLonDistance($lat[2], $lon[2], $lat[1], $lon[2]);
-  rg2log($hypot2.", ".$adj2);
+  //rg2log($hypot2.", ".$adj2);
   if ($hypot2 == 0) {
     throw(new Exception('Division by zero.'));
   }
@@ -1309,7 +1373,7 @@ function generateWorldFile($data) {
   $angle = ($angle1 + $angle2) / 2;
   $pixResX = ($lon[2] - $lon[0]) / ($x[2] - $x[0]);
   $pixResY = ($lat[2] - $lat[1]) / ($y[1] - $y[2]);
-  rg2log($pixResX.", ".$pixResY);
+  //rg2log($pixResX.", ".$pixResY);
   $A = $pixResX * cos($angle);
   $D = $pixResY * sin($angle);
   $B = $pixResX * sin($angle);

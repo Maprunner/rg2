@@ -54,7 +54,7 @@ function Manager(keksi) {
   this.UK_NATIONAL_GRID = 1;
   this.FORMAT_NORMAL = 1;
   this.FORMAT_NO_RESULTS = 2;
-  this.FORMAT_SCORE = 3;
+  this.FORMAT_SCORE_EVENT = 3;
   this.loggedIn = false;
   this.user = new User(keksi);
   this.newMap = new Map();
@@ -69,6 +69,8 @@ function Manager(keksi) {
   this.courses = [];
   this.mapLoaded = false;
   this.coursesGeoreferenced = false;
+  this.drawingCourses = false;
+  this.drawnCourse = {};
   this.results = [];
   this.resultCourses = [];
   this.mapWidth = 0;
@@ -246,6 +248,32 @@ Manager.prototype = {
       self.toggleMoveAll(evt.target.checked);
     });
      
+    $("#btn-no-results").click(function(evt) {
+      self.toggleResultsRequired(evt.target.checked);
+    });
+
+    $('#rg2-draw-courses').hide();
+
+    $("#btn-draw-courses").button().click(function(evt) {
+      if (self.mapLoaded) {
+        self.drawingCourses = true;
+        self.courses.length = 0;
+        self.newcontrols.deleteAllControls();
+        self.drawnCourse.name = 'Course';
+        self.drawnCourse.x = [];
+        self.drawnCourse.y = [];
+        self.drawnCourse.codes = [];
+        $('#rg2-new-course-name').val('Course');
+        $('#rg2-draw-courses').show();
+      } else {
+        rg2WarningDialog("No map selected", "Please load a map before drawing courses");
+      }
+    });
+    
+    $("#rg2-new-course-name").on("change", function(evt) {
+      self.setCourseName(evt);
+    });
+        
     $("#rg2-manager-event-select").click(function(event) {
         self.setEvent(parseInt($("#rg2-event-selected").val(), 10));
     });
@@ -467,19 +495,43 @@ Manager.prototype = {
     }
   },
   
-  validData : function() {
-    if ((this.eventName) && (this.mapIndex !== this.INVALID_MAP_ID) && (this.eventDate) && (this.club) && (this.eventLevel) && (this.format) &&
-        (this.newcontrols) && (this.courses)) {
-      return true;
-    } else {
-      return false;
+  validateData : function() {
+    if (!this.eventName) {
+      return 'Event name is not valid.';
     }
+    if (this.mapIndex === this.INVALID_MAP_ID) {
+      return 'No map selected.';
+    }
+    if (!this.club) {
+      return 'Club name is not valid.';
+    }
+    if (!this.eventDate) {
+      return 'Event date is not valid.';
+    }
+    if (!this.eventLevel) {
+      return 'Event level is not valid.';
+    }
+    if (!this.format) {
+      return 'Event format is not valid.';
+    }
+    if (this.courses.length === 0) {
+      if (!this.drawingCourses) {
+        return 'No course information.';
+      }
+    }
+    if (this.results.length === 0) {
+      if (this.format !== this.FORMAT_NO_RESULTS) {
+        return 'No results information.';
+      }
+    }
+    return 'OK';
   
   },
   
   confirmCreateEvent : function() {
-    if (!this.validData()) {
-      rg2WarningDialog("Data missing", "Please enter all necessary information before creating the event.");
+    var valid = this.validateData();
+    if (valid !== 'OK') {
+      rg2WarningDialog("Data missing", valid + " Please enter all necessary information before creating the event.");
       return;
     }
     var msg = "<div id='event-create-dialog'>Are you sure you want to create this event?</div>";
@@ -509,6 +561,10 @@ Manager.prototype = {
   
   doCreateEvent : function() {
     $("#event-create-dialog").dialog("destroy");
+    var i;
+    var codes;
+    var x;
+    var y;
     var id = $("#rg2-event-selected").val();
     var $url = json_url + "?type=createevent";
     var data = {};
@@ -517,10 +573,34 @@ Manager.prototype = {
     data.eventdate = this.eventDate;
     data.club = this.club;
     data.format = this.format;
+    // assume we can just overwrite 1 or 2 at this point
+    if ($('#btn-score-event').prop('checked')) {
+      data.format = this.FORMAT_SCORE_EVENT;
+    }
     data.level = this.eventLevel;
+    if (this.drawingCourses) {
+      this.courses.push(this.drawnCourse);
+    }
     this.setControlLocations();
     this.mapResultsToCourses();
     this.renumberResults();
+    if (data.format === this.FORMAT_SCORE_EVENT) {
+      // copy in controls
+      codes= [];
+      x = [];
+      y = [];
+      for (i = 0; i < this.newcontrols.controls.length; i += 1) {
+        codes.push(this.newcontrols.controls[i].code);
+        x.push(Math.round(this.newcontrols.controls[i].x));
+        y.push(Math.round(this.newcontrols.controls[i].y));
+
+      }
+      for (i = 0; i < this.courses.length; i += 1) {
+        this.courses[i].x = x;
+        this.courses[i].y = y;
+        this.courses[i].codes = codes;
+      }
+    }
     data.courses = this.courses.slice(0);
     data.results = this.results.slice(0);
     var user = this.encodeUser();
@@ -577,10 +657,14 @@ Manager.prototype = {
     var courseid = 1;
     for (i = 0; i < this.courses.length; i += 1) {
       selector = "#rg2-alloc-" + i;
+      // comes back as NaN if selector doesn't exist when we have no results, which works OK
       id = parseInt($(selector).val(), 10);
       if (id !== this.DO_NOT_SAVE_COURSE) {
         this.courses[i].courseid = courseid;
-        this.resultCourses[id].courseid = courseid;
+        // handle case where we have courses but no results
+        if (this.resultCourses.length > 0) {
+          this.resultCourses[id].courseid = courseid;
+        }
         newCourses.push(this.courses[i]);
         courseid += 1;
       }
@@ -758,7 +842,7 @@ Manager.prototype = {
     });
   },
   
-   doCancelDeleteRoute : function() {
+  doCancelDeleteRoute : function() {
     $("#route-delete-dialog").dialog("destroy");
   },
   
@@ -938,7 +1022,7 @@ Manager.prototype = {
     }
   },
 
-processIOFV2XMLResults: function(xml) {
+  processIOFV2XMLResults: function(xml) {
     var classlist;
     var personlist;
     var resultlist;
@@ -978,6 +1062,7 @@ processIOFV2XMLResults: function(xml) {
             result.starttime = 0;
           }
           result.splits = "";
+          result.codes = [];
           splitlist = resultlist[k].getElementsByTagName('SplitTime');
           result.controls = splitlist.length;
           for ( l = 0; l < splitlist.length; l += 1) {
@@ -987,6 +1072,7 @@ processIOFV2XMLResults: function(xml) {
             temp = splitlist[l].getElementsByTagName('Time')[0].textContent;
             // assume MMM:SS for now
             result.splits += getSecsFromMMSS(temp);
+            result.codes[l] = splitlist[l].getElementsByTagName('ControlCode')[0].textContent;
           }
           // add finish split
           result.splits += ";";
@@ -1010,7 +1096,7 @@ processIOFV2XMLResults: function(xml) {
 
   },
 
-processIOFV3XMLResults: function(xml) {
+  processIOFV3XMLResults: function(xml) {
     var classlist;
     var personlist;
     var resultlist;
@@ -1080,6 +1166,7 @@ processIOFV3XMLResults: function(xml) {
             result.starttime = 0;
           }
           result.splits = "";
+          result.codes = [];
           splitlist = resultlist[k].getElementsByTagName('SplitTime');
           result.controls = splitlist.length;
           for ( l = 0; l < splitlist.length; l += 1) {
@@ -1092,6 +1179,13 @@ processIOFV3XMLResults: function(xml) {
             } else {
               result.splits += 0;
             }
+            temp = splitlist[l].getElementsByTagName('ControlCode');
+            if (temp.length > 0) {
+              result.codes[l] = temp[0].textContent;
+            } else {
+              result.codes[l] += 'X' + l;
+            }
+
           }
           // add finish split
           result.splits += ";";
@@ -1121,21 +1215,19 @@ processIOFV3XMLResults: function(xml) {
 
   },
 
-
-
   readCourses : function(evt) {
 
     var reader = new FileReader();
     reader.onerror = function(evt) {
       switch(evt.target.error.code) {
         case evt.target.error.NOT_FOUND_ERR:
-          alert('File not found');
+          rg2WarningDialog('File not found', 'The selected file could not be found.');
           break;
         case evt.target.error.NOT_READABLE_ERR:
-          alert('File not readable');
+          rg2WarningDialog('File not readable', 'The selected file could not be read.');
           break;
         default:
-          alert('An error occurred reading the file.');
+          rg2WarningDialog('File error.', 'The selected file could not be read.');
       }
     };
     var self = this;
@@ -1225,7 +1317,7 @@ processIOFV3XMLResults: function(xml) {
     $("#rg2-select-course-file").addClass('valid');
   },
 
-extractV3Courses : function(nodelist) {
+  extractV3Courses : function(nodelist) {
     var i;
     var j;
     var course;
@@ -1344,13 +1436,12 @@ extractV3Courses : function(nodelist) {
     }
   },
 
-  /*
-   * rows: array of raw lines from SI results csv file
-   */
+  // rows: array of raw lines from SI results csv file
   processSICSVResults : function(rows) {
     var CHIP_IDX = 1;
     var DB_IDX = 2;
     var SURNAME_IDX = 3;
+    var FIRST_NAME_IDX = 4;
     var START_TIME_IDX = 9;
     var TOTAL_TIME_IDX = 11;
     var CLUB_IDX = 15;
@@ -1362,14 +1453,16 @@ extractV3Courses : function(nodelist) {
     var NUM_CONTROLS_IDX = 42;
     var START_PUNCH_IDX = 44;
     var FIRST_SPLIT_IDX = 47;
-    var FIRST_NAME_IDX = 4;
     var SPLIT_IDX_STEP = 2;
+    var FIRST_CODE_IDX = 46;
+    var CODE_IDX_STEP = 2;
 
     var i;
     var j;
     var fields = {};
     var result;
     var nextsplit;
+    var nextcode;
     var temp;
     // try and work out what the separator is
     var commas = rows[0].split(',' ).length - 1;
@@ -1403,13 +1496,17 @@ extractV3Courses : function(nodelist) {
         result.course = fields[i][COURSE_IDX];
         result.controls = parseInt(fields[i][NUM_CONTROLS_IDX], 10);
         nextsplit = FIRST_SPLIT_IDX;
+        nextcode = FIRST_CODE_IDX;
         result.splits = "";
+        result.codes = [];
         for ( j = 0; j < result.controls; j += 1) {
           if (j > 0) {
             result.splits += ";";
           }
+          result.codes[j] = fields[i][nextcode];
           result.splits += getSecsFromMMSS(fields[i][nextsplit]);
           nextsplit += SPLIT_IDX_STEP;
+          nextcode += CODE_IDX_STEP;
         }
         // add finish split
         result.splits += ";";
@@ -1533,6 +1630,14 @@ extractV3Courses : function(nodelist) {
       $("#rg2-select-event-name").removeClass('valid');
     }
   },
+
+  setCourseName : function(evt) {
+    var course = $("#rg2-new-course-name").val();
+    if (course) {
+      this.drawnCourse.name = course;
+    }
+  },
+
 
   setMapName : function(evt) {
     this.newMap.name = $("#rg2-map-name").val();
@@ -1669,6 +1774,10 @@ extractV3Courses : function(nodelist) {
   },
 
   mouseUp : function(x, y) {
+    if (this.drawingCourses) {
+      this.addNewControl(x, y);
+      return;
+    }
     if ((this.mapLoaded) && (this.newcontrols.controls.length > 0)) {
       // adjusting the track
       if (this.handleX === null) {
@@ -1680,14 +1789,39 @@ extractV3Courses : function(nodelist) {
       }
     }
   },
+  
+  addNewControl : function (x, y) {
+    // add new control: generate a code for it
+    var code;
+    if (this.newcontrols.controls.length === 0) {
+      code = 'S' + (this.newcontrols.controls.length + 1);
+    } else {
+      code = 'X' + (this.newcontrols.controls.length + 1);
+    }
+    this.newcontrols.addControl(code, x, y);
+    this.newcontrols.displayAllControls();
+    this.drawnCourse.codes.push(code);
+    this.drawnCourse.x.push(x);
+    this.drawnCourse.y.push(y);
+  },
 
   // locks or unlocks background when adjusting map
   toggleMoveAll : function(checkedState) {
     this.backgroundLocked = checkedState;
   },
+
+  // determines if a results file is needed
+  // TODO: score events
+  toggleResultsRequired : function(noResults) {
+    if (noResults) {
+      this.format = this.FORMAT_NO_RESULTS;
+    } else {
+      this.format = this.FORMAT_NORMAL;
+    }
+    
+  },
   
   confirmAddMap : function() {
-
     var msg = "<div id='add-map-dialog'>Are you sure you want to add this map?</div>";
     var me = this;
     $(msg).dialog({
