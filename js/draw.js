@@ -191,10 +191,11 @@ Draw.prototype = {
   },
 
   initialiseCourse : function(courseid) {
+    var course;
     this.gpstrack.routeData.eventid = rg2.getKartatEventID();
     this.gpstrack.routeData.courseid = courseid;
     rg2.putOnDisplay(courseid);
-    var course = rg2.getCourseDetails(courseid);
+    course = rg2.getCourseDetails(courseid);
     this.gpstrack.routeData.coursename = course.name;
     this.controlx = course.x;
     this.controly = course.y;
@@ -202,6 +203,7 @@ Draw.prototype = {
     this.gpstrack.routeData.y.length = 0;
     this.gpstrack.routeData.x[0] = this.controlx[0];
     this.gpstrack.routeData.y[0] = this.controly[0];
+    // TODO could leabve at 0 for score events
     this.nextControl = 1;
     rg2.createNameDropdown(courseid);
     $("#rg2-name-select").prop('disabled', false);
@@ -287,9 +289,21 @@ Draw.prototype = {
 
   setName : function(resultid) {
     // callback from select box when we have results
+    var res;
     if (!isNaN(resultid)) {
-      this.gpstrack.routeData.resultid = rg2.getKartatResultID(resultid);
-      this.gpstrack.routeData.name = rg2.getRunnerName(resultid);
+      res = rg2.getFullResult(resultid);
+      this.gpstrack.routeData.resultid = res.resultid;
+      this.gpstrack.routeData.name = res.name;
+      // set up individual course if this is a score event
+      if (res.isScoreEvent) {
+        this.controlx = res.scorex;
+        this.controly = res.scorey;
+        this.gpstrack.routeData.x.length = 0;
+        this.gpstrack.routeData.y.length = 0;
+        this.gpstrack.routeData.x[0] = this.controlx[0];
+        this.gpstrack.routeData.y[0] = this.controly[0];
+        this.nextControl = 1;
+      }
       this.startDrawing();
     }
   },

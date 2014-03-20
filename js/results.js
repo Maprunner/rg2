@@ -117,10 +117,6 @@ Results.prototype = {
 		return this.results[resultid];
 	},
 
-	getKartatResultID : function(resultid) {
-		return this.results[resultid].resultid;
-	},
-
 	drawTracks : function() {
     var show;
     // check if +3 to be displayed once here rather than every time through loop

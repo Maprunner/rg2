@@ -225,7 +225,7 @@ var rg2 = ( function() {
       });
 
       $("#rg2-name-select").prop('disabled', true).click(function(event) {
-        drawing.setName($("#rg2-name-select").val());
+        drawing.setName(parseInt($("#rg2-name-select").val(), 10));
       });
 
       $("#rg2-course-select").click(function(event) {
@@ -1124,10 +1124,6 @@ var rg2 = ( function() {
       return results.resultIDExists(resultid);
     }
 
-    function getKartatResultID(resultid) {
-      return results.getKartatResultID(resultid);
-    }
-
     function getTimeForID(resultid) {
       return results.getTimeForID(resultid);
     }
@@ -1224,7 +1220,6 @@ var rg2 = ( function() {
       createNameDropdown : createNameDropdown,
       incrementTracksCount : incrementTracksCount,
       getKartatEventID : getKartatEventID,
-      getKartatResultID : getKartatResultID,
       getActiveEventID : getActiveEventID,
       getHighestControlNumber : getHighestControlNumber,
       getCourseDetails : getCourseDetails,
