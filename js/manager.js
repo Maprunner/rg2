@@ -1221,13 +1221,13 @@ Manager.prototype = {
     reader.onerror = function(evt) {
       switch(evt.target.error.code) {
         case evt.target.error.NOT_FOUND_ERR:
-          alert('File not found');
+          rg2WarningDialog('File not found', 'The selected file could not be found.');
           break;
         case evt.target.error.NOT_READABLE_ERR:
-          alert('File not readable');
+          rg2WarningDialog('File not readable', 'The selected file could not be read.');
           break;
         default:
-          alert('An error occurred reading the file.');
+          rg2WarningDialog('File error.', 'The selected file could not be read.');
       }
     };
     var self = this;

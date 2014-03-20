@@ -440,11 +440,8 @@ Result.prototype = {
 	},
 	
 	addTrack: function(data) {
-    // copy arrays but ignore first value: that's just how it needs to work
     this.trackx = data.gpsx;
     this.tracky = data.gpsy;
-    this.trackx.splice(0,1);
-    this.tracky.splice(0,1);
     var trackOK;
     if (this.isGPSTrack) {
       trackOK = this.expandGPSTrack();
