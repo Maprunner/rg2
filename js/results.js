@@ -405,6 +405,7 @@ function Result(data, isScoreEvent, colour) {
 	// raw track data
 	this.trackx = [];
 	this.tracky = [];
+	this.speedColour = [];
 	// interpolated times
 	this.xysecs = [];
 	if (this.isGPSTrack) {
@@ -486,6 +487,13 @@ Result.prototype = {
         }
         oldx = this.trackx[i];
         oldy = this.tracky[i];
+        if (this.isGPSTrack) {
+          // draw speed colouring: may make this an option later
+          rg2.ctx.strokeStyle = this.speedColour[i];
+          rg2.ctx.stroke();
+          rg2.ctx.beginPath();
+          rg2.ctx.moveTo(oldx, oldy);
+        }
 			}
 			rg2.ctx.stroke();
 		}
@@ -572,21 +580,65 @@ Result.prototype = {
 		var oldy = this.tracky[0];
 		var x = 0;
 		var y = 0;
+		var delta;
+		var maxSpeed = 0;
+		var oldDelta = 0;
+		var sum;
+		var POWER_FACTOR = 1;
 		// in theory we get one point every three seconds
 		var l = this.trackx.length;
 		for ( t = 0; t < l; t += 1) {
 			this.xysecs[t] = 3 * t;
 			x = this.trackx[t];
 			y = this.tracky[t];
-			dist += getDistanceBetweenPoints(x, y, oldx, oldy);
+			delta = getDistanceBetweenPoints(x, y, oldx, oldy);
+			dist += delta;
+			sum = delta + oldDelta;
+			if (maxSpeed < sum) {
+        maxSpeed = sum;
+			}
+      this.speedColour[t] = Math.pow(sum, POWER_FACTOR);
 			this.cumulativeDistance[t] = Math.round(dist);
 			oldx = x;
 			oldy = y;
+			oldDelta = delta;
 		}
+
+		this.setSpeedColours(Math.pow(maxSpeed, POWER_FACTOR));
 		this.hasValidTrack = true;
 		return this.hasValidTrack;
 
 	},
+
+  setSpeedColours: function(maxspeed) {
+    var i;
+    var red;
+    var green;
+    var halfmax;
+    console.log("'Max speed = " + maxspeed);
+    halfmax = maxspeed / 2;
+    // speedColour comes in with speeds at each point and gets updated to the associated colour
+    for ( i = 1; i < this.speedColour.length; i += 1) {
+      if (this.speedColour[i] > halfmax) {
+        // fade green to orange
+        red = Math.round(255 * (this.speedColour[i] - halfmax) / halfmax);
+        green = 255;
+      } else {
+        // fade orange to red
+        green = Math.round(255 * this.speedColour[i] /halfmax);
+        red = 255;
+      }
+      this.speedColour[i] = '#';
+      if (red < 16) {
+        this.speedColour[i] += '0';
+      }
+      this.speedColour[i] += red.toString(16);
+      if (green < 16) {
+        this.speedColour[i] += '0';
+      }
+      this.speedColour[i] += green.toString(16) + '00';
+    }
+  },
 
 	getCourseName : function() {
 		if (this.coursename !== "") {
