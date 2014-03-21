@@ -1,4 +1,4 @@
-// Version 0.6.7 2014-03-21T19:41:16;
+// Version 0.6.8 2014-03-21T20:11:34;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -18,6 +18,7 @@
 /*global Event:false */
 /*global Courses:false */
 /*global Controls:false */
+/*global Colours:false */
 /*global Results:false */
 /*global Animation:false */
 /*global Draw:false */
@@ -41,6 +42,7 @@ var rg2 = ( function() {
     var courses;
     var results;
     var controls;
+    var colours;
     var animation;
     var manager;
     var drawing;
@@ -109,7 +111,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.6.7',
+      RG2VERSION: '0.6.8',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -181,6 +183,7 @@ var rg2 = ( function() {
       replayFontSize = config.DEFAULT_REPLAY_FONT_SIZE;
       events = new Events();
       courses = new Courses();
+      colours = new Colours();
       results = new Results();
       controls = new Controls();
       animation = new Animation();
@@ -1191,6 +1194,10 @@ var rg2 = ( function() {
     function getRoutesForEvent() {
       return results.getRoutesForEvent();
     }
+
+    function getNextRouteColour() {
+      return colours.getNextColour();
+    }
         
     return {
       // functions and variables available elsewhere
@@ -1233,7 +1240,8 @@ var rg2 = ( function() {
       showThreeSeconds: showThreeSeconds,
       getEventInfo: getEventInfo,
       getCoursesForEvent: getCoursesForEvent,
-      getRoutesForEvent: getRoutesForEvent
+      getRoutesForEvent: getRoutesForEvent,
+      getNextRouteColour: getNextRouteColour
     };
 
   }());
@@ -3675,7 +3683,6 @@ function trackTransforms(ctx) {
 /*global getDistanceBetweenPoints:false */
 function Results() {
 	this.results = [];
-	this.colours = new Colours();
 }
 
 Results.prototype = {
@@ -3685,7 +3692,7 @@ Results.prototype = {
 		// for each result
 		var l = data.length;
 		for (var i = 0; i < l; i += 1) {
-			var result = new Result(data[i], isScoreEvent, this.colours.getNextColour());
+			var result = new Result(data[i], isScoreEvent);
 			this.results.push(result);
 		}
 		this.generateLegPositions();
@@ -4028,7 +4035,7 @@ Results.prototype = {
 	}
 };
 
-function Result(data, isScoreEvent, colour) {
+function Result(data, isScoreEvent) {
 	// resultid is the kartat id value
 	this.resultid = data.resultid;
 	this.isScoreEvent = isScoreEvent;
@@ -4073,7 +4080,7 @@ function Result(data, isScoreEvent, colour) {
 	// set true if track includes all expected controls in correct order or is a GPS track
 	this.hasValidTrack = false;
 	this.displayTrack = false;
-	this.trackColour = colour;
+	this.trackColour = null;
 	// raw track data
 	this.trackx = [];
 	this.tracky = [];
@@ -4102,6 +4109,9 @@ Result.prototype = {
 
 	putTrackOnDisplay : function() {
 		if (this.hasValidTrack) {
+      if (this.trackColour === null) {
+        this.trackColour = rg2.getNextRouteColour();
+      }
 			this.displayTrack = true;
 		}
 	},
@@ -4368,7 +4378,11 @@ function Runner(resultid) {
 	this.starttime = res.starttime;
 	this.splits = res.splits;
 	this.legpos = res.legpos;
-	this.colour = res.trackColour;
+	if (res.trackColour === null) {
+    this.colour = rg2.getNextRouteColour();
+  } else {
+    this.colour = res.trackColour;
+  }
 	// get course details
 	if (res.isScoreEvent) {
     course = {};

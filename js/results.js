@@ -3,7 +3,6 @@
 /*global getDistanceBetweenPoints:false */
 function Results() {
 	this.results = [];
-	this.colours = new Colours();
 }
 
 Results.prototype = {
@@ -13,7 +12,7 @@ Results.prototype = {
 		// for each result
 		var l = data.length;
 		for (var i = 0; i < l; i += 1) {
-			var result = new Result(data[i], isScoreEvent, this.colours.getNextColour());
+			var result = new Result(data[i], isScoreEvent);
 			this.results.push(result);
 		}
 		this.generateLegPositions();
@@ -356,7 +355,7 @@ Results.prototype = {
 	}
 };
 
-function Result(data, isScoreEvent, colour) {
+function Result(data, isScoreEvent) {
 	// resultid is the kartat id value
 	this.resultid = data.resultid;
 	this.isScoreEvent = isScoreEvent;
@@ -401,7 +400,7 @@ function Result(data, isScoreEvent, colour) {
 	// set true if track includes all expected controls in correct order or is a GPS track
 	this.hasValidTrack = false;
 	this.displayTrack = false;
-	this.trackColour = colour;
+	this.trackColour = null;
 	// raw track data
 	this.trackx = [];
 	this.tracky = [];
@@ -430,6 +429,9 @@ Result.prototype = {
 
 	putTrackOnDisplay : function() {
 		if (this.hasValidTrack) {
+      if (this.trackColour === null) {
+        this.trackColour = rg2.getNextRouteColour();
+      }
 			this.displayTrack = true;
 		}
 	},

@@ -17,6 +17,7 @@
 /*global Event:false */
 /*global Courses:false */
 /*global Controls:false */
+/*global Colours:false */
 /*global Results:false */
 /*global Animation:false */
 /*global Draw:false */
@@ -40,6 +41,7 @@ var rg2 = ( function() {
     var courses;
     var results;
     var controls;
+    var colours;
     var animation;
     var manager;
     var drawing;
@@ -108,7 +110,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.6.7',
+      RG2VERSION: '0.6.8',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -180,6 +182,7 @@ var rg2 = ( function() {
       replayFontSize = config.DEFAULT_REPLAY_FONT_SIZE;
       events = new Events();
       courses = new Courses();
+      colours = new Colours();
       results = new Results();
       controls = new Controls();
       animation = new Animation();
@@ -1190,6 +1193,10 @@ var rg2 = ( function() {
     function getRoutesForEvent() {
       return results.getRoutesForEvent();
     }
+
+    function getNextRouteColour() {
+      return colours.getNextColour();
+    }
         
     return {
       // functions and variables available elsewhere
@@ -1232,7 +1239,8 @@ var rg2 = ( function() {
       showThreeSeconds: showThreeSeconds,
       getEventInfo: getEventInfo,
       getCoursesForEvent: getCoursesForEvent,
-      getRoutesForEvent: getRoutesForEvent
+      getRoutesForEvent: getRoutesForEvent,
+      getNextRouteColour: getNextRouteColour
     };
 
   }());
