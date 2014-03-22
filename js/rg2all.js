@@ -1,4 +1,4 @@
-// Version 0.6.8 2014-03-21T20:11:34;
+// Version 0.6.9 2014-03-22T10:25:13;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -111,7 +111,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.6.8',
+      RG2VERSION: '0.6.9',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -4297,7 +4297,7 @@ Result.prototype = {
     var red;
     var green;
     var halfmax;
-    console.log("'Max speed = " + maxspeed);
+    //console.log("'Max speed = " + maxspeed);
     halfmax = maxspeed / 2;
     // speedColour comes in with speeds at each point and gets updated to the associated colour
     for ( i = 1; i < this.speedColour.length; i += 1) {
@@ -4386,7 +4386,7 @@ function Runner(resultid) {
 	// get course details
 	if (res.isScoreEvent) {
     course = {};
-    course.name = res.name;
+    course.name = res.coursename;
     course.x = res.scorex;
     course.y = res.scorey;
     course.codes = res.scorecodes;

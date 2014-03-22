@@ -1086,6 +1086,24 @@ function getResultsForEvent($eventid) {
   }
 
   if (isScoreEvent($eventid)) {
+    // extract start and finish control codes
+    $start = array();
+    $finish = array();
+    if (($handle = @fopen(KARTAT_DIRECTORY."sarjojenkoodit_".$eventid.".txt", "r")) !== FALSE) {
+      $row = 0;
+      while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
+        // ignore first field: it is an index  
+        $start[$row] = $data[1];
+        $finish[$row] = $data[count($data) - 1];
+        $row++;    
+      }
+      fclose($handle);
+    } else {
+      // just in case
+      $start[0] = 'S';
+      $finish[0] = 'F';
+    }
+    
     // read control locations visited
     if (($handle = @fopen(KARTAT_DIRECTORY."ratapisteet_".$eventid.".txt", "r")) !== FALSE) {
       $row = 0;  
@@ -1112,9 +1130,17 @@ function getResultsForEvent($eventid) {
     }
     // read control codes visited
     if (($handle = @fopen(KARTAT_DIRECTORY."hajontakanta_".$eventid.".txt", "r")) !== FALSE) {
-      $row = 0;  
+      $codes = array();
+      $row = 0;
       while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
-        $codes[$row] =  explode("_", $data[2]);
+        // should really index start and finish by course but this works unless you have two
+        // or more score courses with different starts and finishes which is a bit unlikely
+        $allcodes =  explode("_", $data[2]);
+        // add start at beginning of array
+        array_unshift($allcodes, $start[0]);
+        // add finish at end of array
+        array_push($allcodes, $finish[0]);
+        $codes[$row] = $allcodes;
         $row++;    
       }
       fclose($handle);
@@ -1309,11 +1335,11 @@ function getTracksForEvent($eventid) {
       $detail["name"] = encode_rg_input($data[2]);
       $detail["mystery"] = $data[3];
       list($detail["gpsx"], $detail["gpsy"]) = expandCoords($data[4]);
-      if (count($data) > 5) {
-        $detail["controls"] = $data[5];
-      } else {
-        $detail["controls"] = "";
-      }
+      //if (count($data) > 5) {
+      //  $detail["controls"] = $data[5];
+      //} else {
+       // $detail["controls"] = "";
+      //}
       $output[$row] = $detail;        
       $row++;
     }

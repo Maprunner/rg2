@@ -617,7 +617,7 @@ Result.prototype = {
     var red;
     var green;
     var halfmax;
-    console.log("'Max speed = " + maxspeed);
+    //console.log("'Max speed = " + maxspeed);
     halfmax = maxspeed / 2;
     // speedColour comes in with speeds at each point and gets updated to the associated colour
     for ( i = 1; i < this.speedColour.length; i += 1) {

@@ -20,7 +20,7 @@ function Runner(resultid) {
 	// get course details
 	if (res.isScoreEvent) {
     course = {};
-    course.name = res.name;
+    course.name = res.coursename;
     course.x = res.scorex;
     course.y = res.scorey;
     course.codes = res.scorecodes;
