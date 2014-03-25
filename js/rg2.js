@@ -110,7 +110,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.6.9',
+      RG2VERSION: '0.6.10',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -296,6 +296,10 @@ var rg2 = ( function() {
       }).val(config.DEFAULT_ROUTE_THICKNESS);
       
       $("#chk-show-three-seconds").prop('checked', false).click(function() {
+        redraw(false);
+      });
+
+      $("#chk-show-GPS-speed").prop('checked', false).click(function() {
         redraw(false);
       });
       
@@ -1182,6 +1186,10 @@ var rg2 = ( function() {
      return $("#chk-show-three-seconds").prop('checked');
     }
 
+    function showGPSSpeed() {
+     return $("#chk-show-GPS-speed").prop('checked');
+    }
+
     function getEventInfo(id) {
       return events.getEventInfo(id);
     }
@@ -1237,6 +1245,7 @@ var rg2 = ( function() {
       getControlY : getControlY,
       createEventEditDropdown : createEventEditDropdown,
       showThreeSeconds: showThreeSeconds,
+      showGPSSpeed: showGPSSpeed,
       getEventInfo: getEventInfo,
       getCoursesForEvent: getCoursesForEvent,
       getRoutesForEvent: getRoutesForEvent,

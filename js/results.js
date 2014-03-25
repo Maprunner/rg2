@@ -117,11 +117,13 @@ Results.prototype = {
 	},
 
 	drawTracks : function() {
-    var show;
+    var showthreesecs;
+    var showGPSspeed;
     // check if +3 to be displayed once here rather than every time through loop
-    show = rg2.showThreeSeconds();
+    showthreesecs = rg2.showThreeSeconds();
+    showGPSspeed = rg2.showGPSSpeed();
 		for (var i = 0; i < this.results.length; i += 1) {
-			this.results[i].drawTrack(show);
+			this.results[i].drawTrack(showthreesecs, showGPSspeed);
 		}
 	},
 
@@ -456,7 +458,7 @@ Result.prototype = {
     }
 	},
 
-	drawTrack : function(showThreeSeconds) {
+	drawTrack : function(showThreeSeconds, showGPSSpeed) {
 		var l;
 		if (this.displayTrack) {
 			rg2.ctx.lineWidth = rg2.getRouteWidth();
@@ -489,8 +491,7 @@ Result.prototype = {
         }
         oldx = this.trackx[i];
         oldy = this.tracky[i];
-        if (this.isGPSTrack) {
-          // draw speed colouring: may make this an option later
+        if (this.isGPSTrack && showGPSSpeed) {
           rg2.ctx.strokeStyle = this.speedColour[i];
           rg2.ctx.stroke();
           rg2.ctx.beginPath();
