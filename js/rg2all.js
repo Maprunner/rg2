@@ -1,4 +1,4 @@
-// Version 0.6.10 2014-03-25T19:50:27;
+// Version 0.6.11 2014-03-26T19:24:39;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -28,16 +28,13 @@
 /*global trackTransforms:false */
 /*global getDistanceBetweenPoints:false */
 /*global setTimeout:false */
+/*global localStorage:false */
 var rg2 = ( function() {
     'use strict';
     var canvas = $("#rg2-map-canvas")[0];
     var ctx = canvas.getContext('2d');
     var map;
-    var mapIntensity;
     var mapLoadingText;
-    var overprintWidth;
-    var routeWidth;
-    var replayFontSize;
     var events;
     var courses;
     var results;
@@ -99,9 +96,6 @@ var rg2 = ( function() {
       FINISH_OUTER_RADIUS : 23.4,
       RUNNER_DOT_RADIUS : 6,
       START_TRIANGLE_LENGTH : 30,
-      DEFAULT_OVERPRINT_LINE_THICKNESS : 3,
-      DEFAULT_ROUTE_THICKNESS : 4,
-      DEFAULT_REPLAY_FONT_SIZE: 12,
       START_TRIANGLE_HEIGHT : 40,
       // parameters for call to draw courses
       DIM : 0.75,
@@ -111,11 +105,22 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.6.10',
+      RG2VERSION: '0.6.11',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
       RIGHT_CLICK : 3
+    };
+    
+    var options = {
+      // initialised to default values: overwritten from storage later
+      mapIntensity: 100,
+      routeIntensity: 100,
+      replayFontSize: 12,
+      courseWidth: 3,
+      routeWidth: 4,
+      showThreeSeconds: false,
+      showGPSSpeed: false
     };
 
     function init() {
@@ -177,10 +182,6 @@ var rg2 = ( function() {
       $("#btn-real-time").removeClass('active');
 
       map = new Image();
-      mapIntensity = config.FULL_INTENSITY;
-      overprintWidth = config.DEFAULT_OVERPRINT_LINE_THICKNESS;
-      routeWidth = config.DEFAULT_ROUTE_THICKNESS;
-      replayFontSize = config.DEFAULT_REPLAY_FONT_SIZE;
       events = new Events();
       courses = new Courses();
       colours = new Colours();
@@ -202,10 +203,6 @@ var rg2 = ( function() {
 
       $("#btn-about").click(function() {
         displayAboutDialog();
-      });
-
-      $("#btn-options").click(function() {
-        displayOptionsDialog();
       });
 
       $("#rg2-resize-info").click(function() {
@@ -251,58 +248,7 @@ var rg2 = ( function() {
         }
       });
       
-      $("#rg2-option-controls").hide();
-
-      // set default to 100% = full intensity
-      $("#spn-map-intensity").spinner({
-        max : 100,
-        min : 0,
-        step: 10,
-        numberFormat: "n",
-        spin : function(event, ui) {
-          mapIntensity = (ui.value / 100);
-          redraw(false);
-        }
-      }).val(100);
-
-      $("#spn-name-font-size").spinner({
-        max : 20,
-        min : 5,
-        step: 1,
-        numberFormat: "n",
-        spin : function(event, ui) {
-          replayFontSize = ui.value;
-          redraw(false);
-        }
-      }).val(config.DEFAULT_REPLAY_FONT_SIZE);
-
-      $("#spn-course-width").spinner({
-        max : 10,
-        min : 1,
-        step: 0.5,
-        spin : function(event, ui) {
-          overprintWidth = ui.value;
-          redraw(false);
-        }
-      }).val(config.DEFAULT_OVERPRINT_LINE_THICKNESS);
-
-      $("#spn-route-width").spinner({
-        max : 10,
-        min : 1,
-        step: 0.5,
-        spin : function(event, ui) {
-          routeWidth = ui.value;
-          redraw(false);
-        }
-      }).val(config.DEFAULT_ROUTE_THICKNESS);
-      
-      $("#chk-show-three-seconds").prop('checked', false).click(function() {
-        redraw(false);
-      });
-
-      $("#chk-show-GPS-speed").prop('checked', false).click(function() {
-        redraw(false);
-      });
+      setConfigOptions();
       
       $("#rg2-animation-controls").hide();
 
@@ -458,6 +404,86 @@ var rg2 = ( function() {
       setTimeout(function() {$("#rg2-container").show();}, 500);
     }
     
+    function setConfigOptions() {
+      try {
+        if (('localStorage' in window) && (window.localStorage !== null)) {
+          if (localStorage.getItem( 'rg2-options') !== null) {
+            options = JSON.parse(localStorage.getItem( 'rg2-options'));
+          }
+        }
+      } catch (e) {
+        // storage not supported so just continue
+        console.log('Local storage not supported');
+      }
+      
+      $("#rg2-option-controls").hide();
+
+      $("#spn-map-intensity").spinner({
+        max : 100,
+        min : 0,
+        step: 10,
+        numberFormat: "n",
+        spin : function(event, ui) {
+          options.mapIntensity = ui.value;
+          redraw(false);
+        }
+      }).val(options.mapIntensity);
+      
+      $("#spn-route-intensity").spinner({
+        max : 100,
+        min : 0,
+        step: 10,
+        numberFormat: "n",
+        spin : function(event, ui) {
+          options.routeIntensity = ui.value;
+          redraw(false);
+        }
+      }).val(options.routeIntensity);
+
+      $("#spn-name-font-size").spinner({
+        max : 30,
+        min : 5,
+        step: 1,
+        numberFormat: "n",
+        spin : function(event, ui) {
+          options.replayFontSize = ui.value;
+          redraw(false);
+        }
+      }).val(options.replayFontSize);
+
+      $("#spn-course-width").spinner({
+        max : 10,
+        min : 1,
+        step: 0.5,
+        spin : function(event, ui) {
+          options.courseWidth = ui.value;
+          redraw(false);
+        }
+      }).val(options.courseWidth);
+
+      $("#spn-route-width").spinner({
+        max : 10,
+        min : 1,
+        step: 0.5,
+        spin : function(event, ui) {
+          options.routeWidth = ui.value;
+          redraw(false);
+        }
+      }).val(options.routeWidth);
+      
+      $("#chk-show-three-seconds").prop('checked', options.showGPSSpeed).click(function() {
+        redraw(false);
+      });
+
+      $("#chk-show-GPS-speed").prop('checked', options.showGPSSpeed).click(function() {
+        redraw(false);
+      });
+      
+      $("#btn-options").click(function() {
+        displayOptionsDialog();
+      });
+    }
+    
     function loadEventList() {
       $.getJSON(json_url, {
         type : "events",
@@ -561,7 +587,7 @@ var rg2 = ( function() {
       // go back to where we started
       ctx.restore();
       // set transparency of map
-      ctx.globalAlpha = mapIntensity;
+      ctx.globalAlpha = (options.mapIntensity / 100);
 
       if (map.height > 0) {
         // using non-zero map height to show we have a map loaded
@@ -612,12 +638,23 @@ var rg2 = ( function() {
       $("#rg2-option-controls").dialog({
         //modal : true,
         minWidth : 400,
-        buttons : {
-          Ok : function() {
-            $(this).dialog("close");
-          }
+        close: function( event, ui ) {
+          saveConfigOptions();
         }
       });
+    }
+    
+    function saveConfigOptions() {
+      try {
+        if (('localStorage' in window) && (window.localStorage !== null)) {
+          options.showThreeSeconds = $("#chk-show-three-seconds").prop('checked');
+          options.showGPSSpeed = $("#chk-show-GPS-speed").prop('checked');
+          localStorage.setItem( 'rg2-options', JSON.stringify(options) );
+        }
+      } catch (e) {
+        // storage not supported so just return
+        return;
+      }
     }
 
     function resizeInfoDisplay() {
@@ -1172,15 +1209,20 @@ var rg2 = ( function() {
     }
     
     function getOverprintWidth() {
-      return overprintWidth;
+      return options.courseWidth;
     }
 
     function getRouteWidth() {
-      return routeWidth;
+      return options.routeWidth;
+    }
+
+    function getRouteIntensity() {
+      // stored as %, but used as 0 to 1.
+      return (options.routeIntensity / 100);
     }
 
     function getReplayFontSize() {
-      return replayFontSize;
+      return options.replayFontSize;
     }
     
     function showThreeSeconds() {
@@ -1211,9 +1253,11 @@ var rg2 = ( function() {
       // functions and variables available elsewhere
       init : init,
       config : config,
+      options: options,
       redraw : redraw,
       getOverprintWidth: getOverprintWidth,
       getRouteWidth: getRouteWidth,
+      getRouteIntensity: getRouteIntensity,
       getReplayFontSize: getReplayFontSize,
       ctx : ctx,
       getMapSize : getMapSize,
@@ -1587,6 +1631,7 @@ Animation.prototype = {
 				}
 			}
 			rg2.ctx.strokeStyle = runner.colour;
+			rg2.ctx.globalAlpha = rg2.getRouteIntensity();
 			rg2.ctx.beginPath();
 			rg2.ctx.moveTo(runner.x[tailStartTimeSecs - timeOffset], runner.y[tailStartTimeSecs - timeOffset]);
 
@@ -1610,6 +1655,7 @@ Animation.prototype = {
 			if (this.displayNames) {
 				rg2.ctx.fillStyle = "black";
 				rg2.ctx.font = rg2.getReplayFontSize() + 'pt Arial';
+				rg2.ctx.globalAlpha = rg2.config.FULL_INTENSITY;
 				rg2.ctx.textAlign = "left";
 				if (this.displayInitials) {
           text = runner.initials;
@@ -2183,7 +2229,7 @@ Course.prototype = {
 function Draw() {
   this.trackColor = '#ff0000';
   this.HANDLE_DOT_RADIUS = 7;
-  this.CLOSE_ENOUGH = 10;
+  this.CLOSE_ENOUGH = 7;
   this.hasResults = false;
   this.initialiseDrawing();
 }
@@ -4152,7 +4198,7 @@ Result.prototype = {
 		if (this.displayTrack) {
 			rg2.ctx.lineWidth = rg2.getRouteWidth();
 			rg2.ctx.strokeStyle = this.trackColour;
-			rg2.ctx.globalAlpha = 1.0;
+			rg2.ctx.globalAlpha = rg2.getRouteIntensity();
       rg2.ctx.fillStyle = this.trackColour;
       rg2.ctx.font = '10pt Arial';
       rg2.ctx.textAlign = "left";

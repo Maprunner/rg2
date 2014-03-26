@@ -104,7 +104,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.6.10',
+      RG2VERSION: '0.6.11',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -114,7 +114,7 @@ var rg2 = ( function() {
     var options = {
       // initialised to default values: overwritten from storage later
       mapIntensity: 100,
-      routeIntensity: 50,
+      routeIntensity: 100,
       replayFontSize: 12,
       courseWidth: 3,
       routeWidth: 4,
