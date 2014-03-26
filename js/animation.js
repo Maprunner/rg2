@@ -328,6 +328,7 @@ Animation.prototype = {
 				}
 			}
 			rg2.ctx.strokeStyle = runner.colour;
+			rg2.ctx.globalAlpha = rg2.getRouteIntensity();
 			rg2.ctx.beginPath();
 			rg2.ctx.moveTo(runner.x[tailStartTimeSecs - timeOffset], runner.y[tailStartTimeSecs - timeOffset]);
 
@@ -351,6 +352,7 @@ Animation.prototype = {
 			if (this.displayNames) {
 				rg2.ctx.fillStyle = "black";
 				rg2.ctx.font = rg2.getReplayFontSize() + 'pt Arial';
+				rg2.ctx.globalAlpha = rg2.config.FULL_INTENSITY;
 				rg2.ctx.textAlign = "left";
 				if (this.displayInitials) {
           text = runner.initials;

@@ -10,7 +10,7 @@
 function Draw() {
   this.trackColor = '#ff0000';
   this.HANDLE_DOT_RADIUS = 7;
-  this.CLOSE_ENOUGH = 10;
+  this.CLOSE_ENOUGH = 7;
   this.hasResults = false;
   this.initialiseDrawing();
 }

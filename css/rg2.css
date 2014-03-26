@@ -166,16 +166,17 @@ html, body {
   width: 30px;
 }
 
-#spn-map-intensity, #spn-course-width, #spn-route-width, #spn-name-font-size {
-  width: 40px;
-}
-
 #rg2-tails-spinner {
   float: right;
   padding-right: 5px;
 }
 
-#rg2-route-width-spinner, #rg2-course-width-spinner, #rg2-dim-spinner, #rg2-show-seconds, #rg2-show-GPS-speed, #rg2-names-spinner {
+
+#spn-map-intensity, #spn-course-width, #spn-route-width, #spn-name-font-size, #spn-route-intensity {
+  width: 40px;
+}
+
+.options {
   float: right;
   padding-right: 5px;
   margin-top: 5px;

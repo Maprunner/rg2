@@ -114,6 +114,7 @@ var rg2 = ( function() {
     var options = {
       // initialised to default values: overwritten from storage later
       mapIntensity: 100,
+      routeIntensity: 50,
       replayFontSize: 12,
       courseWidth: 3,
       routeWidth: 4,
@@ -426,6 +427,17 @@ var rg2 = ( function() {
           redraw(false);
         }
       }).val(options.mapIntensity);
+      
+      $("#spn-route-intensity").spinner({
+        max : 100,
+        min : 0,
+        step: 10,
+        numberFormat: "n",
+        spin : function(event, ui) {
+          options.routeIntensity = ui.value;
+          redraw(false);
+        }
+      }).val(options.routeIntensity);
 
       $("#spn-name-font-size").spinner({
         max : 30,
@@ -1203,6 +1215,11 @@ var rg2 = ( function() {
       return options.routeWidth;
     }
 
+    function getRouteIntensity() {
+      // stored as %, but used as 0 to 1.
+      return (options.routeIntensity / 100);
+    }
+
     function getReplayFontSize() {
       return options.replayFontSize;
     }
@@ -1239,6 +1256,7 @@ var rg2 = ( function() {
       redraw : redraw,
       getOverprintWidth: getOverprintWidth,
       getRouteWidth: getRouteWidth,
+      getRouteIntensity: getRouteIntensity,
       getReplayFontSize: getReplayFontSize,
       ctx : ctx,
       getMapSize : getMapSize,
