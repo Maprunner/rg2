@@ -1022,6 +1022,11 @@ var rg2 = ( function() {
         }
         redraw(false);
       });
+      // checkbox to show an individual score course
+      $(".showscorecourse").click(function(event) {
+        results.displayScoreCourse(parseInt(event.target.id, 10), event.target.checked);
+        redraw(false);
+      });
       // checkbox to show a result
       $(".showtrack").click(function(event) {
         if (event.target.checked) {

@@ -1,6 +1,7 @@
 /*global rg2:false */
 /*global Colours:false */
 /*global getDistanceBetweenPoints:false */
+/*global getAngle:false */
 function Results() {
 	this.results = [];
 }
@@ -72,6 +73,10 @@ Results.prototype = {
     }
   },
 
+  displayScoreCourse : function(id, display) {
+   this.results[id].displayScoreCourse = display;
+  },
+  
   sortTimes : function(a, b) {
     return a.time - b.time;
   },
@@ -124,6 +129,7 @@ Results.prototype = {
     showGPSspeed = rg2.showGPSSpeed();
 		for (var i = 0; i < this.results.length; i += 1) {
 			this.results[i].drawTrack(showthreesecs, showGPSspeed);
+			this.results[i].drawScoreCourse();
 		}
 	},
 
@@ -273,6 +279,7 @@ Results.prototype = {
 		this.results.sort(this.sortByCourseIDThenResultID);
 
 		var html = "";
+		var namehtml = "";
 		var temp;
 		var firstCourse = true;
 		var oldCourseID = 0;
@@ -305,10 +312,16 @@ Results.prototype = {
 				html += "<table class='resulttable'><tr><th>Name</th><th>Time</th><th>Track</th><th>Replay</th></tr>";
 				oldCourseID = temp.courseid;
 			}
+      if (temp.isScoreEvent) {
+        namehtml = "<input class='showscorecourse showscorecourse-" + i + "' id=" + i + " type=checkbox name=scorecourse></input> " + temp.name;
+      } else {
+        namehtml = temp.name;
+      }
+      
 			if (temp.comments !== "") {
-				html += "<tr><td><a href='#' title='" + temp.comments + "'>" + temp.name + "</a></td><td>" + temp.time + "</td>";
+				html += "<tr><td><a href='#' title='" + temp.comments + "'>" + namehtml + "</a></td><td>" + temp.time + "</td>";
 			} else {
-				html += "<tr><td>" + temp.name + "</td><td>" + temp.time + "</td>";
+				html += "<tr><td>" + namehtml + "</td><td>" + temp.time + "</td>";
 			}
 			if (temp.hasValidTrack) {
         tracksForThisCourse += 1;
@@ -402,6 +415,7 @@ function Result(data, isScoreEvent) {
 	// set true if track includes all expected controls in correct order or is a GPS track
 	this.hasValidTrack = false;
 	this.displayTrack = false;
+	this.displayScoreCourse = false;
 	this.trackColour = null;
 	// raw track data
 	this.trackx = [];
@@ -501,6 +515,52 @@ Result.prototype = {
 			rg2.ctx.stroke();
 		}
 	},
+
+drawScoreCourse : function() {
+    // draws a score course for an individual runner to show where they went
+    // based on drawCourse in courses.js
+    // could refactor in future...
+    // > 1 since we need at least a start and finsih to draw something
+    if ((this.displayScoreCourse) && (this.scorex.length > 1)) {
+      var angle;
+      var c1x;
+      var c1y;
+      var c2x;
+      var c2y;
+      var i;
+      rg2.ctx.globalAlpha = rg2.config.FULL_INTENSITY;
+      rg2.ctx.lineWidth = rg2.getOverprintWidth();
+      rg2.ctx.strokeStyle = rg2.config.PURPLE;
+      angle = getAngle(this.scorex[0], this.scorey[0], this.scorex[1], this.scorey[1]);
+      rg2.drawStart(this.scorex[0], this.scorey[0], "", angle);
+      for ( i = 0; i < (this.scorex.length - 1); i += 1) {
+        angle = getAngle(this.scorex[i], this.scorey[i], this.scorex[i + 1], this.scorey[i + 1]);
+        if (i === 0) {
+          c1x = this.scorex[i] + (rg2.config.START_TRIANGLE_LENGTH * Math.cos(angle));
+          c1y = this.scorey[i] + (rg2.config.START_TRIANGLE_LENGTH * Math.sin(angle));
+        } else {
+          c1x = this.scorex[i] + (rg2.config.CONTROL_CIRCLE_RADIUS * Math.cos(angle));
+          c1y = this.scorey[i] + (rg2.config.CONTROL_CIRCLE_RADIUS * Math.sin(angle));
+        }
+        //Assume the last control in the array is a finish
+        if (i === this.scorex.length - 2) {
+          c2x = this.scorex[i + 1] - (rg2.config.FINISH_OUTER_RADIUS * Math.cos(angle));
+          c2y = this.scorey[i + 1] - (rg2.config.FINISH_OUTER_RADIUS * Math.sin(angle));
+        } else {
+          c2x = this.scorex[i + 1] - (rg2.config.CONTROL_CIRCLE_RADIUS * Math.cos(angle));
+          c2y = this.scorey[i + 1] - (rg2.config.CONTROL_CIRCLE_RADIUS * Math.sin(angle));
+        }
+        rg2.ctx.beginPath();
+        rg2.ctx.moveTo(c1x, c1y);
+        rg2.ctx.lineTo(c2x, c2y);
+        rg2.ctx.stroke();
+      }
+      for (i = 1; i < (this.scorex.length - 1); i += 1) {
+        rg2.drawSingleControl(this.scorex[i], this.scorey[i], i);
+      }
+      rg2.drawFinish(this.scorex[this.scorex.length - 1], this.scorey[this.scorey.length - 1], "");
+    }
+  },
 
 	expandNormalTrack : function() {
 		// add times and distances at each position
