@@ -419,7 +419,13 @@ Draw.prototype = {
     var l;
     var t = this.gpstrack.routeData.time[this.gpstrack.routeData.time.length - 1] - this.gpstrack.routeData.time[0];
     this.gpstrack.routeData.totaltime = formatSecsAsMMSS(t);
-    this.gpstrack.routeData.startsecs = this.gpstrack.routeData.time[0];
+    // GPS uses UTC: adjust to local time based on local user setting
+    // only affects replay in real time
+    var date = new Date();
+    // returns offset in minutes, so convert to seconds
+    var offset = date.getTimezoneOffset() * 60;
+    this.gpstrack.routeData.startsecs = this.gpstrack.routeData.time[0] - offset;
+        
     l = this.gpstrack.routeData.x.length;
     for ( i = 0; i < l; i += 1) {
       this.gpstrack.routeData.x[i] = Math.round(this.gpstrack.routeData.x[i]);

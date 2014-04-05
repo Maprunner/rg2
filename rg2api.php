@@ -1369,7 +1369,6 @@ function generateCookie() {
 
 function generateWorldFile($data) {
   // takes three georeferenced points in a kartat row and converts to World File format
-  try {
   for ($i = 0; $i < 3; $i++) {
     $x[$i] = intval($data[2 + ($i * 4)]);
     $lon[$i] = floatval($data[3 + ($i * 4)]);
@@ -1381,7 +1380,7 @@ function generateWorldFile($data) {
   $adj = getLatLonDistance($lat[0], $lon[0], $lat[0], $lon[2]);
   //rg2log($hypot.", ".$adj);
   if ($hypot == 0) {
-    throw(new Exception('Division by zero.'));
+    return array(0, 0, 0, 0, 0, 0);
   }
   $angle1 = acos($adj / $hypot);
   
@@ -1389,12 +1388,12 @@ function generateWorldFile($data) {
   $adj2 = getLatLonDistance($lat[2], $lon[2], $lat[1], $lon[2]);
   //rg2log($hypot2.", ".$adj2);
   if ($hypot2 == 0) {
-    throw(new Exception('Division by zero.'));
+    return array(0, 0, 0, 0, 0, 0);
   }
   $angle2 = acos($adj2 / $hypot2);
 
   if ((($x[2] - $x[0]) == 0) || (($y[1] - $y[0]) == 0)) {
-    throw(new Exception('Division by zero.'));
+    return array(0, 0, 0, 0, 0, 0);
   }
   $angle = ($angle1 + $angle2) / 2;
   $pixResX = ($lon[2] - $lon[0]) / ($x[2] - $x[0]);
@@ -1406,20 +1405,7 @@ function generateWorldFile($data) {
   $E = -1 * $pixResY * cos($angle);
   $C = $lon[0];
   $F = $lat[0];
-  
-  }
-  
-  catch(Exception $e) {
-    // don't do anything clever: just give up
-    // mainly filtering out old RG1 values
-    $A = 0;
-    $D = 0;
-    $B = 0;
-    $E = 0;
-    $C = 0;
-    $F = 0;
-    
-  }
+
   return array($A, $B, $C, $D, $E, $F);
 }
 

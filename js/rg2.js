@@ -104,7 +104,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.6.11',
+      RG2VERSION: '0.6.13',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -1020,6 +1020,11 @@ var rg2 = ( function() {
         } else {
           courses.removeFromDisplay(event.target.id);
         }
+        redraw(false);
+      });
+      // checkbox to show an individual score course
+      $(".showscorecourse").click(function(event) {
+        results.displayScoreCourse(parseInt(event.target.id, 10), event.target.checked);
         redraw(false);
       });
       // checkbox to show a result

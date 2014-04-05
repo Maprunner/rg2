@@ -442,6 +442,12 @@ module.exports = function(grunt) {
         src : '**',
         dest : 'ftpsite/scottish6days/rg2/'
       },
+      sboc : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/sboc/rg2/'
+      },
       seloc : {
         cwd : 'rel/',
         expand : true,
