@@ -179,6 +179,10 @@ if (isset($_GET['debug']) || $override) {
       var header_text_colour = "<?php echo $header_text_colour; ?>";
     <?php if ($manager) { ?>
       var keksi = "<?php echo $keksi; ?>";
+      <?php if (defined('EPSG_CODE')) { ?>
+        var epsg_code = "<?php echo EPSG_CODE; ?>";
+        var epsg_params = "<?php echo EPSG_PARAMS; ?>";
+      <?php } ?>
     <?php } ?>
     </script>
     <?php if ($debug) { ?>

@@ -2,6 +2,8 @@
 /*global Controls:false */
 /*global json_url:false */
 /*global maps_url:false */
+/*global epsg_code:false */
+/*global epsg_params:false */
 /*global getAngle:false */
 /*global rg2WarningDialog:false */
 /*global FormData:false */
@@ -24,6 +26,12 @@ function Worldfile(a, b, c, d, e, f) {
   this.D = d;
   this.E = e;
   this.F = f;
+}
+
+function Georef(description, name, params) {
+  this.description = description;
+  this.name = name;
+  this.params = params;
 }
 
 function Map(data) {
@@ -50,8 +58,6 @@ function Map(data) {
 function Manager(keksi) {
   this.DO_NOT_SAVE_COURSE = 9999;
   this.INVALID_MAP_ID = 9999;
-  this.DO_NOT_GEOREF = 0;
-  this.UK_NATIONAL_GRID = 1;
   this.FORMAT_NORMAL = 1;
   this.FORMAT_NO_RESULTS = 2;
   this.FORMAT_SCORE_EVENT = 3;
@@ -85,6 +91,19 @@ function Manager(keksi) {
   this.HANDLE_DOT_RADIUS = 10;
   this.handleColor = '#ff0000';
   $("#btn-login").button();
+  
+  this.georefsystems = [];
+  this.DO_NOT_GEOREF = "none";
+  this.georefsystems.push(new Georef("Not georeferenced", this.DO_NOT_GEOREF, ""));
+  this.georefsystems.push(new Georef("GB National Grid", "EPSG:27700", "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs"));
+  this.georefsystems.push(new Georef("Google EPSG:900913", "EPSG:900913", "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs"));
+  if (typeof epsg_code !== 'undefined') {
+    this.georefsystems.push(new Georef(epsg_code, epsg_code.replace(" ", ""), epsg_params));
+    this.defaultGeorefVal = epsg_code.replace(" ", "");
+  } else {
+    this.defaultGeorefVal = "EPSG:27700";
+  }
+
   var self = this;
 
   $("#rg2-manager-login-form").submit(function(event) {
@@ -342,8 +361,10 @@ Manager.prototype = {
   });
   },
   
-  setGeoref: function() {
-    this.convertWorldFile(parseInt($("#rg2-georef-selected").val(), 10));
+  setGeoref: function(code) {
+    if (code !== null) {
+      this.convertWorldFile(code);
+    }
   },
 
   setEvent : function(kartatid) {
@@ -414,13 +435,10 @@ Manager.prototype = {
     var dropdown = document.getElementById("rg2-georef-selected");
     var opt;
     var i;
-    var coord = ['Not georeferenced', 'GB National Grid'];
-    // assumes this.UK_NATIONAL_GRID is 1
-    // assumes this.DO_NOT_GEOREF = 0;
-    for ( i = 0; i < coord.length; i += 1) {
+    for ( i = 0; i < this.georefsystems.length; i += 1) {
       opt = document.createElement("option");
-      opt.value = i;
-      opt.text = coord[i];
+      opt.value = this.georefsystems[i].name;
+      opt.text = this.georefsystems[i].description;
       dropdown.options.add(opt);
     }
   },
@@ -1950,33 +1968,31 @@ Manager.prototype = {
     for (i = 0; i < 6; i +=1) {
       self.worldfileArgs[i] = parseFloat(args[i]);
     }
-    self.convertWorldFile(self.UK_NATIONAL_GRID);
+    $("#rg2-georef-selected").val(self.defaultGeorefVal);
+    self.convertWorldFile(self.defaultGeorefVal);
   };
   },
   
   convertWorldFile : function(type) {
     // takes in a World file for the map image and translates it to WGS84 (GPS)
+    try {
     var size = rg2.getMapSize();
     this.mapWidth = size.width;
     this.mapHeight = size.height;
-    if ((this.worldfileArgs.length === 0) || (this.mapWidth === 0)) {
-      // no map or world file loaded
-      return;
-    }
-    // UK National Grid
-    Proj4js.defs["EPSG:27700"] = "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs ";
-    var source;
-    
-    switch (type) {
-    case this.UK_NATIONAL_GRID:
-      source = new Proj4js.Proj("EPSG:27700");
-      break;
-    case this.DO_NOT_GEOREF:
+    if ((this.worldfileArgs.length === 0) || (this.mapWidth === 0) || (type === this.DO_NOT_GEOREF)) {
+      // no map or world file loaded or user selected do not georef
       this.clearGeorefs();
       return;
-    default:
-      return;
     }
+
+    // first entry is no georef so don't initialize it'
+    for (i = 1; i < this.georefsystems.length; i += 1) {
+      Proj4js.defs[this.georefsystems[i].name] = this.georefsystems[i].params;
+    }
+ 
+    var source;
+    source = new Proj4js.Proj(type);
+
     // WGS84 as used by GPS
     var dest = new Proj4js.Proj("EPSG:4326");
 
@@ -2008,6 +2024,11 @@ Manager.prototype = {
     xsrc[2] = (xScale * xpx[2]) + (xSkew * ypx[2]) + xsrc[0];
     ysrc[2] = (yScale * ypx[2]) + (ySkew * xpx[2]) + ysrc[0];
 
+
+    this.newMap.xpx.length = 0;
+    this.newMap.ypx.length = 0;
+    this.newMap.lat.length = 0;
+    this.newMap.lon.length = 0;
     // translate source to WGS84 (as in GPS file)
     var i;
     var p = [];
@@ -2051,8 +2072,14 @@ Manager.prototype = {
     $("#georef-D").empty().text("D: " + this.newMap.worldfile.D);
     $("#georef-E").empty().text("E: " + this.newMap.worldfile.E);
     $("#georef-F").empty().text("F: " + this.newMap.worldfile.F);
-    $("#rg2-georef-selected").val(type);
     this.newMap.georeferenced = true;
+    
+    }
+    
+    catch (err) {
+      this.clearGeorefs();
+      return;
+    }
   },
   
   clearGeorefs : function() {
