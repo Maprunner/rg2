@@ -1,7 +1,7 @@
 # Routegadget 2.0
 
 ## Latest news
-Version 0.6.0 was released on 7 March 2014 and has been installed on all routegadget.co.uk sites. The main change is the inclusion of Manager functionality to allow the creation of new events. For more details see the [wiki](https://github.com/Maprunner/rg2/wiki/Manager-details).
+Version 0.6.13 was released on 5 April 2014 and has been installed on all routegadget.co.uk sites. This includes a number of minor updates to address user comments.
 
 ## What is RouteGadget?
 Routegadget is a Web application for drawing and comparing orienteering routes. The original version was developed by Jarkko Ryyppö, and
@@ -26,7 +26,9 @@ To use Routegadget 2.0 you need to install it in an existing Routegadget install
 
 1. Download the [files] (https://github.com/Maprunner/rg2/archive/master.zip) and extract them. Note that this will extract them to a directory called rg-master, which needs to be renamed to rg2.
 
-2. Use ftp to transfer them to your Routegadget server. Everything sits in or below a new directory called rg2 which is in the main Routegadget
+2. Rename the rg2-config.txt file to rg2-config.php in the /rg2 directory and enter the URL for your existing Routegadget installation. Change other configuration options as necessary.
+ 
+3. Use ftp to transfer them to your Routegadget server. Everything sits in or below a new directory called rg2 which is in the main Routegadget
 directory, at the same level as the kartat directory where the data files are stored. You should end up with a structure similar to:
 
          www.club.routegadget.co.uk
@@ -41,8 +43,6 @@ directory, at the same level as the kartat directory where the data files are st
                  /log
                  /js
                      /lib
-
-3. Edit the rg2-config.php file in the /rg2 directory and enter the URL for your existing Routegadget installation. Change other configuration options as necessary.
 
 4. Your data should now be available at e.g. http://www.club.routegadget.co.uk/rg2/index.php
 
