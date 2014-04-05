@@ -28,4 +28,17 @@
 
   // text displayed at bottom of info dialog. Use '' to leave blank.
   define('ADDITIONAL_INFO_TEXT', 'Maps published on this web site that contain OS data by permission of Ordnance Survey® Licence Number 100046745.');
+  
+  // proj4 co-ordinate reference system for new maps
+  // see http://spatialreference.org/ref/epsg/ for master list
+  // see http://spatialreference.org/ref/epsg/27700/ for example of UK National Grid
+  // select "proj4" in the list see http://spatialreference.org/ref/epsg/27700/proj4/ for example parameter string
+  //
+  // Note: EPSG:27700 is built in to RG2 as default so you do NOT need to declare it here: this is just an example
+  // EPSG:900913 (Google) is also built in
+  // Uncomment the following lines and edit for the required co-ordinate system
+  //
+  //define('EPSG_CODE', "EPSG:27700");
+  //define('EPSG_PARAMS', "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs ");
+
 ?>
