@@ -43,50 +43,37 @@
   }
 
 
-//
-// Handle the encoding for input data if
-// input encoding is not set to UTF-8
+// Note: input refers to the app, so is the output from the API
+// Handle the encoding for input data if input encoding is not set to UTF-8
 //
 function encode_rg_input($input_str) {
-  //
   $encoded = '';
-  //
   if ( RG_INPUT_ENCODING != 'UTF-8' ) {
-    //
-    $encoded = @iconv( RG_INPUT_ENCODING, RG_OUTPUT_ENCODING, $input_str);
+    $temp = @iconv( RG_INPUT_ENCODING, RG_OUTPUT_ENCODING, $input_str);
+    $encoded = htmlentities($temp, ENT_SUBSTITUTE, RG_INPUT_ENCODING);
   } else {
-    //
-    $encoded = $input_str;
+    // this removes any non-UTF-8 characters that are stored locally, normally by an original Routegadget installation
+    $temp = mb_convert_encoding($input_str, 'UTF-8', 'UTF-8');
+    $encoded = htmlentities($temp, ENT_SUBSTITUTE, 'UTF-8');
   }
-  //
   if ( !$encoded ) {
     $encoded = "";
   }
-  //
   return $encoded;
 }
 
-//
-// Handle the encoding for output data if
-// output encoding is not set to UTF-8
-//
-
+// Note: output refers to the app, so is the input to the API
+// Handle the encoding for output data if output encoding is not set to UTF-8
 function encode_rg_output($output_str) {
-  //
   $encoded = '';
-  //
   if ( RG_INPUT_ENCODING != 'UTF-8' ) {
-    //
     $encoded = @iconv( RG_OUTPUT_ENCODING, RG_INPUT_ENCODING, $output_str);
   } else {
-    //
     $encoded = $output_str;
   }
-  //
   if ( !$encoded ) {
     $encoded = "";
   }
-  //
   return $encoded;
 }
 
@@ -251,7 +238,9 @@ function addNewEvent($data) {
       $oldid = intval($olddata[0]);
     }
     $newid = $oldid + 1;
-    $newevent = $newid."|".$data->mapid."|".$data->format."|".$data->name."|".$data->eventdate."|".$data->club."|".$data->level."|";
+    $name = encode_rg_output($data->name);
+    $club = encode_rg_output($data->club);
+    $newevent = $newid."|".$data->mapid."|".$data->format."|".$name."|".$data->eventdate."|".$club."|".$data->level."|";
     $newevent .= PHP_EOL;
     $write["newid"] = $newid;
     $status =fwrite($handle, $newevent);    
@@ -264,7 +253,7 @@ function addNewEvent($data) {
   // create new sarjat file: course names
   $courses = "";
   for ($i = 0; $i < count($data->courses); $i++) {
-    $courses .= ($i + 1)."|".$data->courses[$i]->name.PHP_EOL;
+    $courses .= ($i + 1)."|".encode_rg_output($data->courses[$i]->name).PHP_EOL;
   }
   file_put_contents(KARTAT_DIRECTORY."sarjat_".$newid.".txt", $courses, FILE_APPEND);
 
@@ -316,7 +305,7 @@ function addNewEvent($data) {
   // create new hajontakanta file: control sequences
   if ($format == SCORE_EVENT_FORMAT) {
     for ($i = 0; $i < count($data->results); $i++) {
-      $controls = ($i + 1)."|Score ".$data->results[$i]->name."|";
+      $controls = ($i + 1)."|Score ".encode_rg_output($data->results[$i]->name)."|";
       for ($j = 0; $j < count($data->results[$i]->codes); $j++) {
         if ($j > 0) {
           $controls .= "_";
@@ -333,7 +322,7 @@ function addNewEvent($data) {
   for ($i = 0; $i < count($data->courses); $i++) {
     $a = $data->courses[$i];
     $finish = count($a->x) - 1;
-    $course .= ($i + 1)."|1|".$a->name."|2;";
+    $course .= ($i + 1)."|1|".encode_rg_output($a->name)."|2;";
     $course .= $a->x[$finish].";-".$a->y[$finish].";0;0N";
     // loop from first to last control
     for ($j = 1; $j < $finish; $j++) {
@@ -372,7 +361,8 @@ function addNewEvent($data) {
     } else {
       $scoreid = "";
     }
-    $result = ($i + 1)."|".$a->courseid."|".$a->course."|".trim($a->name)."|".$a->starttime."|".$a->dbid."|".$scoreid."|".$a->time."|".$a->splits.PHP_EOL;
+    $result = ($i + 1)."|".$a->courseid."|".encode_rg_output($a->course)."|".encode_rg_output(trim($a->name))."|";
+    $result .= $a->starttime."|".encode_rg_output($a->dbid)."|".$scoreid."|".$a->time."|".$a->splits.PHP_EOL;
     file_put_contents(KARTAT_DIRECTORY."kilpailijat_".$newid.".txt", $result, FILE_APPEND);    
   }
   
@@ -413,11 +403,11 @@ function editEvent($eventid, $newdata) {
     $data = explode("|", $row);
     if ($data[0] == $eventid) {
       //rg2log($eventid);
-      $data[3] = $newdata->name;
+      $data[3] = encode_rg_output($newdata->name);
       $data[4] = $newdata->eventdate;
-      $data[5] = $newdata->club;
+      $data[5] = encode_rg_output($newdata->club);
       $data[6] = $newdata->type;
-      $data[7] = $newdata->comments;
+      $data[7] = encode_rg_output($newdata->comments);
       $row = "";
       // reconstruct |-separated row
       for ($i = 0; $i < count($data); $i++) {
@@ -751,10 +741,10 @@ function addNewRoute($eventid, $data) {
   // remove HTML tags: probably not needed but do it anyway
   $comments = strip_tags($comments);
   //
-  $comments = encode_rg_output($comments);
   // remove line breaks and keep compatibility with RG1
   $comments = str_replace("\r", "", $comments);
   $comments = str_replace("\n", "#cr##nl#", $comments);
+  $comments = encode_rg_output($comments);
   $newcommentdata = $data->courseid."|".$id."|".$name."||".$comments.PHP_EOL;
 
   // convert x,y to internal RG format
@@ -799,7 +789,7 @@ function addNewRoute($eventid, $data) {
       }            
     }
   
-    $newresultdata = $id."|".$data->courseid."|".$data->coursename."|".$name;
+    $newresultdata = $id."|".$data->courseid."|".encode_rg_output($data->coursename)."|".$name;
     $newresultdata .= "|".$data->startsecs."|||".$data->totaltime."||".$track.PHP_EOL;
   }
 
@@ -858,7 +848,7 @@ function addNewMap($data) {
     $newid = $oldid + 1;
     $renameFile = rename(KARTAT_DIRECTORY."temp.jpg", KARTAT_DIRECTORY.$newid.".jpg");
     if ($renameFile) {
-      $newmap = $newid."|".$data->name;
+      $newmap = $newid."|".encode_rg_output($data->name);
       if ($data->georeferenced) {
         $newmap .= "|".$data->xpx[0]."|".$data->lon[0]."|".$data->ypx[0]."|".$data->lat[0];
         $newmap .= "|".$data->xpx[1]."|".$data->lon[1]."|".$data->ypx[1]."|".$data->lat[1];
@@ -1017,7 +1007,7 @@ function getMaps() {
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
       $detail = array();
       $detail["mapid"] = intval($data[0]);
-      $detail["name"] = $data[1];
+      $detail["name"] = encode_rg_input($data[1]);
       $detail["georeferenced"] = FALSE;
       if (count($data) == 14) {
         list($A, $B, $C, $D, $E, $F) = generateWorldFile($data);
@@ -1158,7 +1148,7 @@ function getResultsForEvent($eventid) {
       $detail["coursename"] = encode_rg_input($data[2]);
       $detail["name"] = encode_rg_input($data[3]);
       $detail["starttime"] = intval($data[4]);
-      $detail["databaseid"] = $data[5];
+      $detail["databaseid"] = encode_rg_input($data[5]);
       $detail["scoreref"] = $data[6];
       if ($data[6] != "") {
         for ($i = 0; $i < count($scoreref); $i++) {
