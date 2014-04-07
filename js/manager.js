@@ -1543,13 +1543,12 @@ Manager.prototype = {
     };
     format = evt.target.files[0].name.substr(-3,3);
     format = format.toUpperCase();
-    if (format === 'JPG') {
+    if ((format === 'JPG') || (format === 'GIF')) {
       this.mapFile = evt.target.files[0];
       reader.readAsDataURL(evt.target.files[0]);
     } else {
-      rg2WarningDialog("File type error", evt.target.files[0].name + " is not recognised. Only .jpg files are supported at present.");
+      rg2WarningDialog("File type error", evt.target.files[0].name + " is not recognised. Only .jpg and .gif files are supported at present.");
     }
-    
   },
   
   mapLoadCallback : function() {

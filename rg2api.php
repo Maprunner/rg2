@@ -99,6 +99,14 @@ function uploadMapFile() {
             $write["status_msg"] = "Map uploaded.";
         }
       }
+      if ($file['type'] == 'image/gif') {
+        if ($image = imagecreatefromgif($file['tmp_name'])) {
+          if (imagejpeg($image, KARTAT_DIRECTORY."temp.jpg")) {
+            $write["ok"] = TRUE;
+            $write["status_msg"] = "Map uploaded.";
+          }
+        }
+      }
     }
   }
   
