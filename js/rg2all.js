@@ -1,4 +1,4 @@
-// Version 0.6.13 2014-04-05T16:04:55;
+// Version 0.6.14 2014-04-07T19:15:00;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -105,7 +105,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.6.13',
+      RG2VERSION: '0.6.14',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -2516,6 +2516,9 @@ Draw.prototype = {
     var res;
     if (!isNaN(resultid)) {
       res = rg2.getFullResult(resultid);
+      if (res.hasValidTrack) {
+        rg2WarningDialog("Route already drawn", "If you draw a new route it will overwrite the old route for this runner. GPS routes are saved separately and will not be overwritten.");
+      }
       this.gpstrack.routeData.resultid = res.resultid;
       this.gpstrack.routeData.name = res.name;
       // set up individual course if this is a score event
@@ -4104,8 +4107,7 @@ Results.prototype = {
 		opt.text = 'Select name';
 		dropdown.options.add(opt);
 		for (var i = 0; i < this.results.length; i += 1) {
-			// don't include result if it has a valid track already
-			if ((this.results[i].courseid === courseid) && (!this.results[i].hasValidTrack)) {
+			if (this.results[i].courseid === courseid) {
 				opt = document.createElement("option");
 				opt.value = i;
 				opt.text = this.results[i].name;

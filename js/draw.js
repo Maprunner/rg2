@@ -292,6 +292,9 @@ Draw.prototype = {
     var res;
     if (!isNaN(resultid)) {
       res = rg2.getFullResult(resultid);
+      if (res.hasValidTrack) {
+        rg2WarningDialog("Route already drawn", "If you draw a new route it will overwrite the old route for this runner. GPS routes are saved separately and will not be overwritten.");
+      }
       this.gpstrack.routeData.resultid = res.resultid;
       this.gpstrack.routeData.name = res.name;
       // set up individual course if this is a score event

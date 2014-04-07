@@ -358,8 +358,7 @@ Results.prototype = {
 		opt.text = 'Select name';
 		dropdown.options.add(opt);
 		for (var i = 0; i < this.results.length; i += 1) {
-			// don't include result if it has a valid track already
-			if ((this.results[i].courseid === courseid) && (!this.results[i].hasValidTrack)) {
+			if (this.results[i].courseid === courseid) {
 				opt = document.createElement("option");
 				opt.value = i;
 				opt.text = this.results[i].name;
