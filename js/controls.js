@@ -37,8 +37,8 @@ Controls.prototype = {
 			rg2.ctx.globalAlpha = 1.0;
 			l = this.controls.length;
 			for (i = 0; i < l; i += 1) {
-				// Assume things starting with 'F' are a Finish
-				if (this.controls[i].code.indexOf('F') === 0) {
+				// Assume things starting with 'F' or 'M' are Finish or Mal
+				if ((this.controls[i].code.indexOf('F') === 0) ||(this.controls[i].code.indexOf('M') === 0)) {
 					this.drawFinish(this.controls[i].x, this.controls[i].y, this.controls[i].code);
 				} else {
 					// Assume things starting with 'S' are a Start
