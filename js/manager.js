@@ -1069,7 +1069,12 @@ Manager.prototype = {
         result.club = personlist[j].getElementsByTagName('ShortName')[0].textContent;
         resultlist = personlist[j].getElementsByTagName('Result');
         for (k = 0; k < resultlist.length; k += 1) {
-          result.chipid = resultlist[k].getElementsByTagName('CCardId')[0].textContent;
+          temp = resultlist[k].getElementsByTagName('CCardId');
+          if (temp.length > 0) {
+            result.chipid = temp[0].textContent;
+          } else {
+            result.chipid = 0;
+          }
           // assuming first <Time> is the total time...
           result.time = resultlist[k].getElementsByTagName('Time')[0].textContent;
           temp = resultlist[k].getElementsByTagName('StartTime');
@@ -1409,7 +1414,7 @@ Manager.prototype = {
           y = Math.round(((-1 * w.D * lng) + (w.A * lat) + yCorrection) / AEDB);
           this.coursesGeoreferenced = true;
         } else {
-          // only works if all controls have lat/lon or none do: surely a asfe assumption...
+          // only works if all controls have lat/lon or none do: surely a safe assumption...
           mappos = nodelist[i].getElementsByTagName("MapPosition");
           x = mappos[0].getAttribute('x');
           y = mappos[0].getAttribute('y');
@@ -1424,6 +1429,7 @@ Manager.prototype = {
     
   processIOFV2XML: function(xml) {
     var nodelist;
+
     // extract all start controls
     nodelist = xml.getElementsByTagName('StartPoint');
     this.extractV2Controls(nodelist, 'StartPointCode');
@@ -1611,15 +1617,13 @@ Manager.prototype = {
           minY = Math.min(minY, this.newcontrols.controls[i].y);
         }
         // fit within the map since this is probably needed anyway
-        var scale = 1.25;
-        var xRange = scale * (maxX - minX);
-        var yRange = scale * (maxY - minY);
-        minX *= scale;
-        minY *= scale;
-        
+        var scale = 0.8;
+        var xRange = (maxX - minX);
+        var yRange = (maxY - minY);
+
         for ( i = 0; i < this.newcontrols.controls.length; i += 1) {
-          this.newcontrols.controls[i].x = (this.newcontrols.controls[i].x - minX) * (this.mapWidth / xRange);
-          this.newcontrols.controls[i].y = this.mapHeight - ((this.newcontrols.controls[i].y - minY) * (this.mapHeight/ yRange));
+          this.newcontrols.controls[i].x = ((this.newcontrols.controls[i].x - minX) * (this.mapWidth / xRange) * scale) + (this.mapWidth * (1 - scale) * 0.5);
+          this.newcontrols.controls[i].y = (this.mapHeight - ((this.newcontrols.controls[i].y - minY) * (this.mapHeight/ yRange)) * scale) - (this.mapHeight * (1 - scale) * 0.5);
         }
       }
       for ( i = 0; i < this.newcontrols.controls.length; i += 1) {
