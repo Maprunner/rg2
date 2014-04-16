@@ -1429,7 +1429,13 @@ Manager.prototype = {
     
   processIOFV2XML: function(xml) {
     var nodelist;
-
+    var controlsGeoref;
+    var i;
+    var x;
+    var y;
+    var AEDB;
+    var xCorrection;
+    var yCorrection;
     // extract all start controls
     nodelist = xml.getElementsByTagName('StartPoint');
     this.extractV2Controls(nodelist, 'StartPointCode');
@@ -1438,26 +1444,55 @@ Manager.prototype = {
     this.extractV2Controls(nodelist, 'ControlCode');
     // extract all finish controls
     nodelist = xml.getElementsByTagName('FinishPoint');
-    this.extractV2Controls(nodelist, 'FinishPointCode');
+    controlsGeoref = this.extractV2Controls(nodelist, 'FinishPointCode');
 
+    if (controlsGeoref) {
+      if (this.worldfileArgs.length > 0) {
+        // rg2WarningDialog("Controls georeferenced", "The world file from the 'Add map' tab will be used to georeference controls.");
+        // simplify calculation a little
+        AEDB = (this.worldfileArgs[0] * this.worldfileArgs[3]) - (this.worldfileArgs[1] * this.worldfileArgs[2]);
+        xCorrection = (this.worldfileArgs[2] * this.worldfileArgs[5]) - (this.worldfileArgs[3] * this.worldfileArgs[4]);
+        yCorrection = (this.worldfileArgs[2] * this.worldfileArgs[4]) - (this.worldfileArgs[0] * this.worldfileArgs[5]);
+        for (i = 0; i < this.newcontrols.controls.length; i += 1) {
+          x = this.newcontrols.controls[i].x;
+          y = this.newcontrols.controls[i].y;
+          this.newcontrols.controls[i].x = Math.round(((this.worldfileArgs[3] * x) - (this.worldfileArgs[2] * y) + xCorrection) / AEDB);
+          this.newcontrols.controls[i].y = Math.round(((-1 * this.worldfileArgs[1] * x) + (this.worldfileArgs[0] * y) + yCorrection) / AEDB);
+        }
+        this.coursesGeoreferenced = true;
+      } else {
+        rg2WarningDialog("No world file", "The controls are georeferenced but no world file has been loaded on the 'Add map' tab.");
+      }
+    }
     // extract all courses
     nodelist = xml.getElementsByTagName('Course');
     this.extractV2Courses(nodelist);
   },
 
+  // returns true if controls are georeferenced
   extractV2Controls : function(nodelist, type) {
     var i;
     var x;
     var y;
     var code;
     var mappos;
+    var geopos;
+    var isGeoref = false;
     for ( i = 0; i < nodelist.length; i += 1) {
       code = nodelist[i].getElementsByTagName(type)[0].textContent;
-      mappos = nodelist[i].getElementsByTagName("MapPosition");
-      x = mappos[0].getAttribute('x');
-      y = mappos[0].getAttribute('y');
+      geopos = nodelist[i].getElementsByTagName("ControlPosition");
+      if (geopos.length > 0) {
+        x = parseFloat(geopos[0].getAttribute('x'));
+        y = parseFloat(geopos[0].getAttribute('y'));
+        isGeoref = true;
+      } else {
+        mappos = nodelist[i].getElementsByTagName("MapPosition");
+        x = mappos[0].getAttribute('x');
+        y = mappos[0].getAttribute('y');
+      }
       this.newcontrols.addControl(code.trim(), x, y);
     }
+    return isGeoref;
   },
 
   // rows: array of raw lines from SI results csv file
