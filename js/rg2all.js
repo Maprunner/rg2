@@ -1,4 +1,4 @@
-// Version 0.6.14 2014-04-07T19:15:00;
+// Version 0.6.15 2014-04-16T16:46:11;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -105,7 +105,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.6.14',
+      RG2VERSION: '0.6.15',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -1778,8 +1778,8 @@ Controls.prototype = {
 			rg2.ctx.globalAlpha = 1.0;
 			l = this.controls.length;
 			for (i = 0; i < l; i += 1) {
-				// Assume things starting with 'F' are a Finish
-				if (this.controls[i].code.indexOf('F') === 0) {
+				// Assume things starting with 'F' or 'M' are Finish or Mal
+				if ((this.controls[i].code.indexOf('F') === 0) ||(this.controls[i].code.indexOf('M') === 0)) {
 					this.drawFinish(this.controls[i].x, this.controls[i].y, this.controls[i].code);
 				} else {
 					// Assume things starting with 'S' are a Start
