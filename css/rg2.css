@@ -172,7 +172,7 @@ html, body {
 }
 
 
-#spn-map-intensity, #spn-course-width, #spn-route-width, #spn-name-font-size, #spn-route-intensity {
+#spn-map-intensity, #spn-course-width, #spn-route-width, #spn-name-font-size, #spn-route-intensity, #spn-control-circle {
   width: 40px;
 }
 

@@ -90,12 +90,7 @@ var rg2 = ( function() {
       GREEN : '#00ff00',
       WHITE : '#ffffff',
       BLACK : '#ffoooo',
-      CONTROL_CIRCLE_RADIUS : 20,
-      FINISH_INNER_RADIUS : 16.4,
-      FINISH_OUTER_RADIUS : 23.4,
       RUNNER_DOT_RADIUS : 6,
-      START_TRIANGLE_LENGTH : 30,
-      START_TRIANGLE_HEIGHT : 40,
       // parameters for call to draw courses
       DIM : 0.75,
       FULL_INTENSITY : 1.0,
@@ -118,6 +113,7 @@ var rg2 = ( function() {
       replayFontSize: 12,
       courseWidth: 3,
       routeWidth: 4,
+      circleSize: 20,
       showThreeSeconds: false,
       showGPSSpeed: false
     };
@@ -469,6 +465,16 @@ var rg2 = ( function() {
           redraw(false);
         }
       }).val(options.routeWidth);
+      
+      $("#spn-control-circle").spinner({
+        max : 30,
+        min : 5,
+        step: 1,
+        spin : function(event, ui) {
+          options.circleSize = ui.value;
+          redraw(false);
+        }
+      }).val(options.circleSize);
       
       $("#chk-show-three-seconds").prop('checked', options.showGPSSpeed).click(function() {
         redraw(false);
@@ -1121,16 +1127,16 @@ var rg2 = ( function() {
       return results.getTotalResults();
     }
 
-    function drawStart(x, y, text, angle) {
-      return controls.drawStart(x, y, text, angle);
+    function drawStart(x, y, text, angle, opt) {
+      return controls.drawStart(x, y, text, angle, opt);
     }
 
-    function drawSingleControl(x, y, i) {
-      return controls.drawSingleControl(x, y, i);
+    function drawSingleControl(x, y, i, opt) {
+      return controls.drawSingleControl(x, y, i, opt);
     }
 
-    function drawFinish(x, y, text) {
-      return controls.drawFinish(x, y, text);
+    function drawFinish(x, y, text, opt) {
+      return controls.drawFinish(x, y, text, opt);
     }
 
     function getFullResult(resultid) {
@@ -1211,13 +1217,22 @@ var rg2 = ( function() {
     function createEventEditDropdown() {
       events.createEventEditDropdown();
     }
-    
-    function getOverprintWidth() {
-      return options.courseWidth;
-    }
 
     function getRouteWidth() {
       return options.routeWidth;
+    }
+
+    function getOverprintDetails() {
+      var opt = {};
+      // ratios based on IOF ISOM overprint specification
+      opt.controlRadius = options.circleSize;
+      opt.finishInnerRadius = options.circleSize * (5 / 6);
+      opt.finishOuterRadius = options.circleSize * (7 / 6);
+      opt.startTriangleLength = options.circleSize * (7 / 6);
+      //opt.startTriangleHeight = opt.StartTriangleLength * (4 / 3);
+      opt.overprintWidth = options.courseWidth;
+      opt.font = options.circleSize + 'pt Arial';
+      return opt;
     }
 
     function getRouteIntensity() {
@@ -1259,7 +1274,7 @@ var rg2 = ( function() {
       config : config,
       options: options,
       redraw : redraw,
-      getOverprintWidth: getOverprintWidth,
+      getOverprintDetails: getOverprintDetails,
       getRouteWidth: getRouteWidth,
       getRouteIntensity: getRouteIntensity,
       getReplayFontSize: getReplayFontSize,

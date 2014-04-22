@@ -822,7 +822,8 @@ Draw.prototype = {
   drawNewTrack : function() {
     var i;
     var l;
-    rg2.ctx.lineWidth = rg2.getRouteWidth();
+    var opt = rg2.getOverprintDetails();
+    rg2.ctx.lineWidth = opt.overprintWidth;
     rg2.ctx.strokeStyle = this.trackColor;
     rg2.ctx.fillStyle = this.trackColour;
     rg2.ctx.font = '10pt Arial';
@@ -833,13 +834,13 @@ Draw.prototype = {
       rg2.ctx.beginPath();
       if (this.nextControl < (this.controlx.length - 1)) {
         // normal control
-        rg2.ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], rg2.config.CONTROL_CIRCLE_RADIUS, 0, 2 * Math.PI, false);
+        rg2.ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], opt.controlRadius, 0, 2 * Math.PI, false);
       } else {
         // finish
-        rg2.ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], rg2.config.FINISH_INNER_RADIUS, 0, 2 * Math.PI, false);
+        rg2.ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], opt.finishInnerRadius, 0, 2 * Math.PI, false);
         rg2.ctx.stroke();
         rg2.ctx.beginPath();
-        rg2.ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], rg2.config.FINISH_OUTER_RADIUS, 0, 2 * Math.PI, false);
+        rg2.ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], opt.finishOuterRadius, 0, 2 * Math.PI, false);
       }
       // dot at centre of control circle
       rg2.ctx.fillRect(this.controlx[this.nextControl] - 1, this.controly[this.nextControl] - 1, 3, 3);

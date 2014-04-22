@@ -244,8 +244,9 @@ Course.prototype = {
 			var c1y;
 			var c2x;
 			var c2y;
+			var opt = rg2.getOverprintDetails();
 			rg2.ctx.globalAlpha = intensity;
-			rg2.ctx.lineWidth = rg2.getOverprintWidth();
+			rg2.ctx.lineWidth = opt.overprintWidth;
 			rg2.ctx.strokeStyle = rg2.config.PURPLE;
 			if (this.isScoreCourse) {
 				// align score event start triangle upwards
@@ -253,23 +254,23 @@ Course.prototype = {
 			} else {
 				angle = getAngle(this.x[0], this.y[0], this.x[1], this.y[1]);
 			}
-			rg2.drawStart(this.x[0], this.y[0], "", angle);
+			rg2.drawStart(this.x[0], this.y[0], "", angle, opt);
 			for ( i = 0; i < (this.x.length - 1); i += 1) {
 				angle = getAngle(this.x[i], this.y[i], this.x[i + 1], this.y[i + 1]);
 				if (i === 0) {
-					c1x = this.x[i] + (rg2.config.START_TRIANGLE_LENGTH * Math.cos(angle));
-					c1y = this.y[i] + (rg2.config.START_TRIANGLE_LENGTH * Math.sin(angle));
+					c1x = this.x[i] + (opt.startTriangleLength * Math.cos(angle));
+					c1y = this.y[i] + (opt.startTriangleLength * Math.sin(angle));
 				} else {
-					c1x = this.x[i] + (rg2.config.CONTROL_CIRCLE_RADIUS * Math.cos(angle));
-					c1y = this.y[i] + (rg2.config.CONTROL_CIRCLE_RADIUS * Math.sin(angle));
+					c1x = this.x[i] + (opt.controlRadius * Math.cos(angle));
+					c1y = this.y[i] + (opt.controlRadius * Math.sin(angle));
 				}
 				//Assume the last control in the array is a finish
 				if (i === this.x.length - 2) {
-					c2x = this.x[i + 1] - (rg2.config.FINISH_OUTER_RADIUS * Math.cos(angle));
-					c2y = this.y[i + 1] - (rg2.config.FINISH_OUTER_RADIUS * Math.sin(angle));
+					c2x = this.x[i + 1] - (opt.finishOuterRadius * Math.cos(angle));
+					c2y = this.y[i + 1] - (opt.finishOuterRadius * Math.sin(angle));
 				} else {
-					c2x = this.x[i + 1] - (rg2.config.CONTROL_CIRCLE_RADIUS * Math.cos(angle));
-					c2y = this.y[i + 1] - (rg2.config.CONTROL_CIRCLE_RADIUS * Math.sin(angle));
+					c2x = this.x[i + 1] - (opt.controlRadius * Math.cos(angle));
+					c2y = this.y[i + 1] - (opt.controlRadius * Math.sin(angle));
 				}
 				// don't join up controls for score events
 				if (!this.isScoreCourse) {
@@ -281,9 +282,9 @@ Course.prototype = {
 
 			}
 			for (var i = 1; i < (this.x.length - 1); i += 1) {
-				rg2.drawSingleControl(this.x[i], this.y[i], i);
+				rg2.drawSingleControl(this.x[i], this.y[i], i, opt);
 			}
-			rg2.drawFinish(this.x[this.x.length - 1], this.y[this.y.length - 1], "");
+			rg2.drawFinish(this.x[this.x.length - 1], this.y[this.y.length - 1], "", opt);
 		}
 	}
 };
