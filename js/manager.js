@@ -1092,10 +1092,20 @@ Manager.prototype = {
             if (l > 0) {
               result.splits += ";";
             }
-            temp = splitlist[l].getElementsByTagName('Time')[0].textContent;
-            // assume MMM:SS for now
-            result.splits += getSecsFromMMSS(temp);
-            result.codes[l] = splitlist[l].getElementsByTagName('ControlCode')[0].textContent;
+            temp = splitlist[l].getElementsByTagName('Time');
+            if (temp.length > 0) {
+              // assume MMM:SS for now
+              result.splits += getSecsFromMMSS(temp[0].textContent);
+              temp = splitlist[l].getElementsByTagName('ControlCode')[0];
+              if (temp.length > 0) {
+                result.codes[l] = temp[0].textContent;
+              } else {
+                result.codes[l] = "";
+              }
+            } else {
+              result.splits += 0;
+              result.codes[l] = "";
+            }
           }
           // add finish split
           result.splits += ";";
