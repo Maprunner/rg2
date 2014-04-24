@@ -519,7 +519,7 @@ drawScoreCourse : function() {
     // draws a score course for an individual runner to show where they went
     // based on drawCourse in courses.js
     // could refactor in future...
-    // > 1 since we need at least a start and finsih to draw something
+    // > 1 since we need at least a start and finish to draw something
     if ((this.displayScoreCourse) && (this.scorex.length > 1)) {
       var angle;
       var c1x;
@@ -527,27 +527,28 @@ drawScoreCourse : function() {
       var c2x;
       var c2y;
       var i;
+      var opt = rg2.getOverprintDetails();
       rg2.ctx.globalAlpha = rg2.config.FULL_INTENSITY;
-      rg2.ctx.lineWidth = rg2.getOverprintWidth();
+      rg2.ctx.lineWidth = opt.overprintWidth;
       rg2.ctx.strokeStyle = rg2.config.PURPLE;
       angle = getAngle(this.scorex[0], this.scorey[0], this.scorex[1], this.scorey[1]);
-      rg2.drawStart(this.scorex[0], this.scorey[0], "", angle);
+      rg2.drawStart(this.scorex[0], this.scorey[0], "", angle, opt);
       for ( i = 0; i < (this.scorex.length - 1); i += 1) {
         angle = getAngle(this.scorex[i], this.scorey[i], this.scorex[i + 1], this.scorey[i + 1]);
         if (i === 0) {
-          c1x = this.scorex[i] + (rg2.config.START_TRIANGLE_LENGTH * Math.cos(angle));
-          c1y = this.scorey[i] + (rg2.config.START_TRIANGLE_LENGTH * Math.sin(angle));
+          c1x = this.scorex[i] + (opt.startTriangleLength * Math.cos(angle));
+          c1y = this.scorey[i] + (opt.startTriangleLength * Math.sin(angle));
         } else {
-          c1x = this.scorex[i] + (rg2.config.CONTROL_CIRCLE_RADIUS * Math.cos(angle));
-          c1y = this.scorey[i] + (rg2.config.CONTROL_CIRCLE_RADIUS * Math.sin(angle));
+          c1x = this.scorex[i] + (opt.controlRadius * Math.cos(angle));
+          c1y = this.scorey[i] + (opt.controlRadius * Math.sin(angle));
         }
         //Assume the last control in the array is a finish
         if (i === this.scorex.length - 2) {
-          c2x = this.scorex[i + 1] - (rg2.config.FINISH_OUTER_RADIUS * Math.cos(angle));
-          c2y = this.scorey[i + 1] - (rg2.config.FINISH_OUTER_RADIUS * Math.sin(angle));
+          c2x = this.scorex[i + 1] - (opt.finishOuterRadius * Math.cos(angle));
+          c2y = this.scorey[i + 1] - (opt.finishOuterRadius * Math.sin(angle));
         } else {
-          c2x = this.scorex[i + 1] - (rg2.config.CONTROL_CIRCLE_RADIUS * Math.cos(angle));
-          c2y = this.scorey[i + 1] - (rg2.config.CONTROL_CIRCLE_RADIUS * Math.sin(angle));
+          c2x = this.scorex[i + 1] - (opt.controlRadius * Math.cos(angle));
+          c2y = this.scorey[i + 1] - (opt.controlRadius * Math.sin(angle));
         }
         rg2.ctx.beginPath();
         rg2.ctx.moveTo(c1x, c1y);
@@ -555,9 +556,9 @@ drawScoreCourse : function() {
         rg2.ctx.stroke();
       }
       for (i = 1; i < (this.scorex.length - 1); i += 1) {
-        rg2.drawSingleControl(this.scorex[i], this.scorey[i], i);
+        rg2.drawSingleControl(this.scorex[i], this.scorey[i], i, opt);
       }
-      rg2.drawFinish(this.scorex[this.scorex.length - 1], this.scorey[this.scorey.length - 1], "");
+      rg2.drawFinish(this.scorex[this.scorex.length - 1], this.scorey[this.scorey.length - 1], "", opt);
     }
   },
 
