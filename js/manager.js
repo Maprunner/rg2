@@ -1052,6 +1052,7 @@ Manager.prototype = {
     var result;
     var course;
     var time;
+    var timeFormat;
     var temp;
     try {
     classlist = xml.getElementsByTagName('ClassResult');
@@ -1076,7 +1077,8 @@ Manager.prototype = {
             result.chipid = 0;
           }
           // assuming first <Time> is the total time...
-          result.time = resultlist[k].getElementsByTagName('Time')[0].textContent;
+          temp = resultlist[k].getElementsByTagName('Time')[0].textContent;
+          result.time = temp.replace(/[\n\r]/g, '');
           temp = resultlist[k].getElementsByTagName('StartTime');
           if (temp.length > 0) {
             time = temp[0].getElementsByTagName('Clock')[0].textContent;
@@ -1092,10 +1094,25 @@ Manager.prototype = {
             if (l > 0) {
               result.splits += ";";
             }
-            temp = splitlist[l].getElementsByTagName('Time')[0].textContent;
-            // assume MMM:SS for now
-            result.splits += getSecsFromMMSS(temp);
-            result.codes[l] = splitlist[l].getElementsByTagName('ControlCode')[0].textContent;
+            temp = splitlist[l].getElementsByTagName('Time');
+            if (temp.length > 0) {
+              timeFormat = temp[0].getAttribute('timeFormat');
+              if (timeFormat === 'HH:MM:SS') {
+                result.splits += getSecsFromHHMMSS(temp[0].textContent);
+              } else {
+                // assume MMM:SS for now
+                result.splits += getSecsFromMMSS(temp[0].textContent);
+              }
+              temp = splitlist[l].getElementsByTagName('ControlCode');
+              if (temp.length > 0) {
+                result.codes[l] = temp[0].textContent;
+              } else {
+                result.codes[l] = "";
+              }
+            } else {
+              result.splits += 0;
+              result.codes[l] = "";
+            }
           }
           // add finish split
           result.splits += ";";
@@ -1448,7 +1465,7 @@ Manager.prototype = {
 
     if (controlsGeoref) {
       if (this.worldfileArgs.length > 0) {
-        // rg2WarningDialog("Controls georeferenced", "The world file from the 'Add map' tab will be used to georeference controls.");
+        rg2WarningDialog("Controls georeferenced", "The world file from the 'Add map' tab will be used to georeference controls.");
         // simplify calculation a little
         AEDB = (this.worldfileArgs[0] * this.worldfileArgs[3]) - (this.worldfileArgs[1] * this.worldfileArgs[2]);
         xCorrection = (this.worldfileArgs[2] * this.worldfileArgs[5]) - (this.worldfileArgs[3] * this.worldfileArgs[4]);
@@ -1763,10 +1780,10 @@ Manager.prototype = {
   drawControls : function() {
     if ((this.mapLoaded) && (this.newcontrols.controls.length > 0)) {
       this.newcontrols.drawControls();
-
+      var opt = rg2.getOverprintDetails();
       // locked point for control edit
       if (this.handleX !== null) {
-        rg2.ctx.lineWidth = rg2.getOverprintWidth();
+        rg2.ctx.lineWidth = opt.overprintWidth;
         rg2.ctx.strokeStyle = this.handleColor;
         rg2.ctx.fillStyle = this.handleColour;
         rg2.ctx.globalAlpha = 1.0;

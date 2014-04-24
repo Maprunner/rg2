@@ -30,7 +30,8 @@ Controls.prototype = {
 			var y;
 			var i;
 			var l;
-			rg2.ctx.lineWidth = rg2.getOverprintWidth();
+			var opt = rg2.getOverprintDetails();
+			rg2.ctx.lineWidth = opt.overprintWidth;
 			rg2.ctx.strokeStyle = rg2.config.PURPLE;
 			rg2.ctx.font = '20pt Arial';
 			rg2.ctx.fillStyle = rg2.config.PURPLE;
@@ -39,79 +40,81 @@ Controls.prototype = {
 			for (i = 0; i < l; i += 1) {
 				// Assume things starting with 'F' or 'M' are Finish or Mal
 				if ((this.controls[i].code.indexOf('F') === 0) ||(this.controls[i].code.indexOf('M') === 0)) {
-					this.drawFinish(this.controls[i].x, this.controls[i].y, this.controls[i].code);
+					this.drawFinish(this.controls[i].x, this.controls[i].y, this.controls[i].code, opt);
 				} else {
 					// Assume things starting with 'S' are a Start
 					if (this.controls[i].code.indexOf('S') === 0) {
-						this.drawStart(this.controls[i].x, this.controls[i].y, this.controls[i].code, (6 * Math.PI / 4));
+						this.drawStart(this.controls[i].x, this.controls[i].y, this.controls[i].code, (6 * Math.PI / 4), opt);
 					} else {
 						// Else it's a normal control
-						this.drawSingleControl(this.controls[i].x, this.controls[i].y, this.controls[i].code);
+						this.drawSingleControl(this.controls[i].x, this.controls[i].y, this.controls[i].code, opt);
 
 					}
 				}
 			}
 		}
 	},
-	drawSingleControl : function(x, y, code) {
+	drawSingleControl : function(x, y, code, opt) {
 		//Draw the white halo around the controls
 		rg2.ctx.beginPath();
 		rg2.ctx.strokeStyle = "white";
-		rg2.ctx.lineWidth = rg2.getOverprintWidth() + 2;
-		rg2.ctx.arc(x, y, 20, 0, 2 * Math.PI, false);
+		rg2.ctx.lineWidth = opt.overprintWidth + 2;
+		rg2.ctx.arc(x, y, opt.controlRadius, 0, 2 * Math.PI, false);
 		rg2.ctx.stroke();
 		//Draw the white halo around the control code
 		rg2.ctx.beginPath();
 		rg2.ctx.textAlign = "left";
-		rg2.ctx.font = "20pt Arial";
+		rg2.ctx.font = opt.font;
 		rg2.ctx.strokeStyle = "white";
 		rg2.ctx.miterLimit = 2;
 		rg2.ctx.lineJoin = "circle";
 		rg2.ctx.lineWidth = 1.5;
-		rg2.ctx.strokeText(code, x + 25, y + 20);
+    // text offset looks OK with these values: no real science involved
+		rg2.ctx.strokeText(code, x + (opt.controlRadius * 1.25), y + opt.controlRadius);
 		//Draw the purple control
 		rg2.ctx.beginPath();
-		rg2.ctx.font = "20pt Arial";
+		rg2.ctx.font = opt.font;
 		rg2.ctx.fillStyle = rg2.config.PURPLE;
 		rg2.ctx.strokeStyle = rg2.config.PURPLE;
-		rg2.ctx.lineWidth = rg2.getOverprintWidth();
-		rg2.ctx.arc(x, y, 20, 0, 2 * Math.PI, false);
-		rg2.ctx.fillText(code, x + 25, y + 20);
+		rg2.ctx.lineWidth = opt.overprintWidth;
+		rg2.ctx.arc(x, y, opt.controlRadius, 0, 2 * Math.PI, false);
+		// text offset looks OK with these values: no real science involved
+		rg2.ctx.fillText(code, x + (opt.controlRadius * 1.25), y + opt.controlRadius);
 		rg2.ctx.stroke();
 	},
-	drawFinish : function(x, y, code) {
+	drawFinish : function(x, y, code, opt) {
 		//Draw the white halo around the finish control
 		rg2.ctx.strokeStyle = "white";
-		rg2.ctx.lineWidth = rg2.getOverprintWidth() + 2;
+		rg2.ctx.lineWidth = opt.overprintWidth + 2;
 		rg2.ctx.beginPath();
-		rg2.ctx.arc(x, y, rg2.config.FINISH_INNER_RADIUS, 0, 2 * Math.PI, false);
+		rg2.ctx.arc(x, y, opt.finishInnerRadius, 0, 2 * Math.PI, false);
 		rg2.ctx.stroke();
 		rg2.ctx.beginPath();
-		rg2.ctx.arc(x, y, rg2.config.FINISH_OUTER_RADIUS, 0, 2 * Math.PI, false);
+		rg2.ctx.arc(x, y, opt.finishOuterRadius, 0, 2 * Math.PI, false);
 		rg2.ctx.stroke();
 		//Draw the white halo around the finish code
 		rg2.ctx.beginPath();
-		rg2.ctx.font = "20pt Arial";
+		rg2.ctx.font = opt.font;
 		rg2.ctx.textAlign = "left";
 		rg2.ctx.strokeStyle = "white";
 		rg2.ctx.miterLimit = 2;
 		rg2.ctx.lineJoin = "circle";
 		rg2.ctx.lineWidth = 1.5;
-		rg2.ctx.strokeText(code, x + 30, y + 20);
+		rg2.ctx.strokeText(code, x + (opt.controlRadius * 1.5), y + opt.controlRadius);
 		rg2.ctx.stroke();
 		//Draw the purple finish control
 		rg2.ctx.beginPath();
 		rg2.ctx.fillStyle = rg2.config.PURPLE;
 		rg2.ctx.strokeStyle = rg2.config.PURPLE;
-		rg2.ctx.lineWidth = rg2.getOverprintWidth();
-		rg2.ctx.arc(x, y, rg2.config.FINISH_INNER_RADIUS, 0, 2 * Math.PI, false);
+		rg2.ctx.lineWidth = opt.overprintWidth;
+		rg2.ctx.arc(x, y, opt.finishInnerRadius, 0, 2 * Math.PI, false);
 		rg2.ctx.stroke();
 		rg2.ctx.beginPath();
-		rg2.ctx.arc(x, y, rg2.config.FINISH_OUTER_RADIUS, 0, 2 * Math.PI, false);
-		rg2.ctx.fillText(code, x + 30, y + 20);
+		rg2.ctx.arc(x, y, opt.finishOuterRadius, 0, 2 * Math.PI, false);
+		rg2.ctx.fillText(code, x + (opt.controlRadius * 1.5), y + opt.controlRadius);
 		rg2.ctx.stroke();
 	},
-	drawStart : function(startx, starty, code, angle) {
+	drawStart : function(startx, starty, code, angle, opt) {
 		//Draw the white halo around the start triangle
 		var x = [];
 		var y = [];
@@ -119,19 +122,19 @@ Controls.prototype = {
 		angle = angle + (Math.PI / 2);
 		rg2.ctx.lineCap = 'round';
 		rg2.ctx.strokeStyle = "white";
-		rg2.ctx.lineWidth = rg2.getOverprintWidth() + 2;
+		rg2.ctx.lineWidth = opt.overprintWidth + 2;
 		rg2.ctx.beginPath();
-		x[0] = startx + (rg2.config.START_TRIANGLE_LENGTH * Math.sin(angle));
-		y[0] = starty - (rg2.config.START_TRIANGLE_LENGTH * Math.cos(angle));
+		x[0] = startx + (opt.startTriangleLength * Math.sin(angle));
+		y[0] = starty - (opt.startTriangleLength * Math.cos(angle));
 		rg2.ctx.moveTo(x[0], y[0]);
-		x[1] = startx + (rg2.config.START_TRIANGLE_LENGTH * Math.sin(angle + DEGREES_120));
-		y[1] = starty - (rg2.config.START_TRIANGLE_LENGTH * Math.cos(angle + DEGREES_120));
+		x[1] = startx + (opt.startTriangleLength * Math.sin(angle + DEGREES_120));
+		y[1] = starty - (opt.startTriangleLength * Math.cos(angle + DEGREES_120));
 		rg2.ctx.lineTo(x[1], y[1]);
 		rg2.ctx.stroke();
 		rg2.ctx.beginPath();
 		rg2.ctx.moveTo(x[1], y[1]);
-		x[2] = startx + (rg2.config.START_TRIANGLE_LENGTH * Math.sin(angle - DEGREES_120));
-		y[2] = starty - (rg2.config.START_TRIANGLE_LENGTH * Math.cos(angle - DEGREES_120));
+		x[2] = startx + (opt.startTriangleLength * Math.sin(angle - DEGREES_120));
+		y[2] = starty - (opt.startTriangleLength * Math.cos(angle - DEGREES_120));
 		rg2.ctx.lineTo(x[2], y[2]);
 		rg2.ctx.stroke();
 		rg2.ctx.beginPath();
@@ -140,18 +143,18 @@ Controls.prototype = {
 		rg2.ctx.stroke();
 		//Draw the white halo around the start code
 		rg2.ctx.beginPath();
-		rg2.ctx.font = "20pt Arial";
+		rg2.ctx.font = opt.font;
 		rg2.ctx.textAlign = "left";
 		rg2.ctx.strokeStyle = "white";
 		rg2.ctx.miterLimit = 2;
 		rg2.ctx.lineJoin = "circle";
 		rg2.ctx.lineWidth = 1.5;
-		rg2.ctx.strokeText(code, x[0] + 25, y[0] + 25);
+		rg2.ctx.strokeText(code, x[0] + (opt.controlRadius * 1.25), y[0] + (opt.controlRadius * 1.25));
 		rg2.ctx.stroke();
 		//Draw the purple start control
 		rg2.ctx.strokeStyle = rg2.config.PURPLE;
-		rg2.ctx.lineWidth = rg2.getOverprintWidth();
-		rg2.ctx.font = "20pt Arial";
+		rg2.ctx.lineWidth = opt.overprintWidth;
+		rg2.ctx.font = opt.font;
 		rg2.ctx.fillStyle = rg2.config.PURPLE;
 		rg2.ctx.beginPath();
 		rg2.ctx.moveTo(x[0], y[0]);
@@ -164,7 +167,7 @@ Controls.prototype = {
 		rg2.ctx.beginPath();
 		rg2.ctx.moveTo(x[2], y[2]);
 		rg2.ctx.lineTo(x[0], y[0]);
-		rg2.ctx.fillText(code, x[0] + 25, y[0] + 25);
+		rg2.ctx.fillText(code, x[0] + (opt.controlRadius * 1.25), y[0] + (opt.controlRadius * 1.25));
 		rg2.ctx.stroke();
 	},
 	toggleControlDisplay : function() {

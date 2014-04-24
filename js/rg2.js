@@ -90,12 +90,7 @@ var rg2 = ( function() {
       GREEN : '#00ff00',
       WHITE : '#ffffff',
       BLACK : '#ffoooo',
-      CONTROL_CIRCLE_RADIUS : 20,
-      FINISH_INNER_RADIUS : 16.4,
-      FINISH_OUTER_RADIUS : 23.4,
       RUNNER_DOT_RADIUS : 6,
-      START_TRIANGLE_LENGTH : 30,
-      START_TRIANGLE_HEIGHT : 40,
       // parameters for call to draw courses
       DIM : 0.75,
       FULL_INTENSITY : 1.0,
@@ -104,7 +99,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.6.15',
+      RG2VERSION: '0.6.16',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -118,6 +113,7 @@ var rg2 = ( function() {
       replayFontSize: 12,
       courseWidth: 3,
       routeWidth: 4,
+      circleSize: 20,
       showThreeSeconds: false,
       showGPSSpeed: false
     };
@@ -408,6 +404,8 @@ var rg2 = ( function() {
         if (('localStorage' in window) && (window.localStorage !== null)) {
           if (localStorage.getItem( 'rg2-options') !== null) {
             options = JSON.parse(localStorage.getItem( 'rg2-options'));
+            // best to keep this at default?
+            options.circleSize = 20;
           }
         }
       } catch (e) {
@@ -469,6 +467,16 @@ var rg2 = ( function() {
           redraw(false);
         }
       }).val(options.routeWidth);
+      
+      $("#spn-control-circle").spinner({
+        max : 30,
+        min : 5,
+        step: 1,
+        spin : function(event, ui) {
+          options.circleSize = ui.value;
+          redraw(false);
+        }
+      }).val(options.circleSize);
       
       $("#chk-show-three-seconds").prop('checked', options.showGPSSpeed).click(function() {
         redraw(false);
@@ -595,6 +603,7 @@ var rg2 = ( function() {
         if (active === config.TAB_DRAW) {
           courses.drawCourses(config.DIM);
           controls.drawControls();
+          results.drawTracks();
           drawing.drawNewTrack();
         } else {
           if (active === config.TAB_CREATE) {
@@ -903,6 +912,11 @@ var rg2 = ( function() {
         console.log("Results: " + json.data.length);
         var isScoreEvent = events.isScoreEvent();
         results.addResults(json.data, isScoreEvent);
+        if (isScoreEvent) {
+          controls.deleteAllControls();
+          results.generateScoreCourses();
+          courses.generateControlList(controls);
+        }
         $("#rg2-result-list").accordion("refresh");
         getGPSTracks();
       }).fail(function(jqxhr, textStatus, error) {
@@ -1121,16 +1135,16 @@ var rg2 = ( function() {
       return results.getTotalResults();
     }
 
-    function drawStart(x, y, text, angle) {
-      return controls.drawStart(x, y, text, angle);
+    function drawStart(x, y, text, angle, opt) {
+      return controls.drawStart(x, y, text, angle, opt);
     }
 
-    function drawSingleControl(x, y, i) {
-      return controls.drawSingleControl(x, y, i);
+    function drawSingleControl(x, y, i, opt) {
+      return controls.drawSingleControl(x, y, i, opt);
     }
 
-    function drawFinish(x, y, text) {
-      return controls.drawFinish(x, y, text);
+    function drawFinish(x, y, text, opt) {
+      return controls.drawFinish(x, y, text, opt);
     }
 
     function getFullResult(resultid) {
@@ -1155,6 +1169,10 @@ var rg2 = ( function() {
 
     function putOnDisplay(courseid) {
       courses.putOnDisplay(courseid);
+    }
+    
+    function putScoreCourseOnDisplay(resultid, display) {
+      results.putScoreCourseOnDisplay(resultid, display);
     }
 
     function removeFromDisplay(courseid) {
@@ -1211,13 +1229,22 @@ var rg2 = ( function() {
     function createEventEditDropdown() {
       events.createEventEditDropdown();
     }
-    
-    function getOverprintWidth() {
-      return options.courseWidth;
-    }
 
     function getRouteWidth() {
       return options.routeWidth;
+    }
+
+    function getOverprintDetails() {
+      var opt = {};
+      // ratios based on IOF ISOM overprint specification
+      opt.controlRadius = options.circleSize;
+      opt.finishInnerRadius = options.circleSize * (5 / 6);
+      opt.finishOuterRadius = options.circleSize * (7 / 6);
+      opt.startTriangleLength = options.circleSize * (7 / 6);
+      //opt.startTriangleHeight = opt.StartTriangleLength * (4 / 3);
+      opt.overprintWidth = options.courseWidth;
+      opt.font = options.circleSize + 'pt Arial';
+      return opt;
     }
 
     function getRouteIntensity() {
@@ -1252,6 +1279,9 @@ var rg2 = ( function() {
     function getNextRouteColour() {
       return colours.getNextColour();
     }
+    function updateScoreCourse(courseid, codes, x, y) {
+      courses.updateScoreCourse(courseid, codes, x, y);
+    }
         
     return {
       // functions and variables available elsewhere
@@ -1259,7 +1289,7 @@ var rg2 = ( function() {
       config : config,
       options: options,
       redraw : redraw,
-      getOverprintWidth: getOverprintWidth,
+      getOverprintDetails: getOverprintDetails,
       getRouteWidth: getRouteWidth,
       getRouteIntensity: getRouteIntensity,
       getReplayFontSize: getReplayFontSize,
@@ -1280,6 +1310,7 @@ var rg2 = ( function() {
       resultIDExists : resultIDExists,
       getRunnerName : getRunnerName,
       putOnDisplay : putOnDisplay,
+      putScoreCourseOnDisplay: putScoreCourseOnDisplay,
       removeFromDisplay : removeFromDisplay,
       createNameDropdown : createNameDropdown,
       incrementTracksCount : incrementTracksCount,
@@ -1298,7 +1329,8 @@ var rg2 = ( function() {
       getEventInfo: getEventInfo,
       getCoursesForEvent: getCoursesForEvent,
       getRoutesForEvent: getRoutesForEvent,
-      getNextRouteColour: getNextRouteColour
+      getNextRouteColour: getNextRouteColour,
+      updateScoreCourse: updateScoreCourse
     };
 
   }());

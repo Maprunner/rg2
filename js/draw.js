@@ -194,17 +194,18 @@ Draw.prototype = {
     var course;
     this.gpstrack.routeData.eventid = rg2.getKartatEventID();
     this.gpstrack.routeData.courseid = courseid;
-    rg2.putOnDisplay(courseid);
     course = rg2.getCourseDetails(courseid);
-    this.gpstrack.routeData.coursename = course.name;
-    this.controlx = course.x;
-    this.controly = course.y;
-    this.gpstrack.routeData.x.length = 0;
-    this.gpstrack.routeData.y.length = 0;
-    this.gpstrack.routeData.x[0] = this.controlx[0];
-    this.gpstrack.routeData.y[0] = this.controly[0];
-    // TODO could leabve at 0 for score events
-    this.nextControl = 1;
+    if (!course.isScoreCourse) {
+      rg2.putOnDisplay(courseid);
+      this.gpstrack.routeData.coursename = course.name;
+      this.controlx = course.x;
+      this.controly = course.y;
+      this.gpstrack.routeData.x.length = 0;
+      this.gpstrack.routeData.y.length = 0;
+      this.gpstrack.routeData.x[0] = this.controlx[0];
+      this.gpstrack.routeData.y[0] = this.controly[0];
+      this.nextControl = 1;
+    }
     rg2.createNameDropdown(courseid);
     $("#rg2-name-select").prop('disabled', false);
     $("#btn-undo-gps-adjust").button("disable");
@@ -299,6 +300,7 @@ Draw.prototype = {
       this.gpstrack.routeData.name = res.name;
       // set up individual course if this is a score event
       if (res.isScoreEvent) {
+        rg2.putScoreCourseOnDisplay(res.resultid, true);
         this.controlx = res.scorex;
         this.controly = res.scorey;
         this.gpstrack.routeData.x.length = 0;
@@ -306,6 +308,7 @@ Draw.prototype = {
         this.gpstrack.routeData.x[0] = this.controlx[0];
         this.gpstrack.routeData.y[0] = this.controly[0];
         this.nextControl = 1;
+        rg2.redraw(false);
       }
       this.startDrawing();
     }
@@ -822,7 +825,8 @@ Draw.prototype = {
   drawNewTrack : function() {
     var i;
     var l;
-    rg2.ctx.lineWidth = rg2.getRouteWidth();
+    var opt = rg2.getOverprintDetails();
+    rg2.ctx.lineWidth = opt.overprintWidth;
     rg2.ctx.strokeStyle = this.trackColor;
     rg2.ctx.fillStyle = this.trackColour;
     rg2.ctx.font = '10pt Arial';
@@ -833,13 +837,13 @@ Draw.prototype = {
       rg2.ctx.beginPath();
       if (this.nextControl < (this.controlx.length - 1)) {
         // normal control
-        rg2.ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], rg2.config.CONTROL_CIRCLE_RADIUS, 0, 2 * Math.PI, false);
+        rg2.ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], opt.controlRadius, 0, 2 * Math.PI, false);
       } else {
         // finish
-        rg2.ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], rg2.config.FINISH_INNER_RADIUS, 0, 2 * Math.PI, false);
+        rg2.ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], opt.finishInnerRadius, 0, 2 * Math.PI, false);
         rg2.ctx.stroke();
         rg2.ctx.beginPath();
-        rg2.ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], rg2.config.FINISH_OUTER_RADIUS, 0, 2 * Math.PI, false);
+        rg2.ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], opt.finishOuterRadius, 0, 2 * Math.PI, false);
       }
       // dot at centre of control circle
       rg2.ctx.fillRect(this.controlx[this.nextControl] - 1, this.controly[this.nextControl] - 1, 3, 3);
