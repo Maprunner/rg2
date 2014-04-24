@@ -99,7 +99,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.6.15',
+      RG2VERSION: '0.6.16',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -404,6 +404,8 @@ var rg2 = ( function() {
         if (('localStorage' in window) && (window.localStorage !== null)) {
           if (localStorage.getItem( 'rg2-options') !== null) {
             options = JSON.parse(localStorage.getItem( 'rg2-options'));
+            // best to keep this at default?
+            options.circleSize = 20;
           }
         }
       } catch (e) {
@@ -601,6 +603,7 @@ var rg2 = ( function() {
         if (active === config.TAB_DRAW) {
           courses.drawCourses(config.DIM);
           controls.drawControls();
+          results.drawTracks();
           drawing.drawNewTrack();
         } else {
           if (active === config.TAB_CREATE) {
@@ -909,6 +912,11 @@ var rg2 = ( function() {
         console.log("Results: " + json.data.length);
         var isScoreEvent = events.isScoreEvent();
         results.addResults(json.data, isScoreEvent);
+        if (isScoreEvent) {
+          controls.deleteAllControls();
+          results.generateScoreCourses();
+          courses.generateControlList(controls);
+        }
         $("#rg2-result-list").accordion("refresh");
         getGPSTracks();
       }).fail(function(jqxhr, textStatus, error) {
@@ -1162,6 +1170,10 @@ var rg2 = ( function() {
     function putOnDisplay(courseid) {
       courses.putOnDisplay(courseid);
     }
+    
+    function putScoreCourseOnDisplay(resultid, display) {
+      results.putScoreCourseOnDisplay(resultid, display);
+    }
 
     function removeFromDisplay(courseid) {
       courses.removeFromDisplay(courseid);
@@ -1267,6 +1279,9 @@ var rg2 = ( function() {
     function getNextRouteColour() {
       return colours.getNextColour();
     }
+    function updateScoreCourse(courseid, codes, x, y) {
+      courses.updateScoreCourse(courseid, codes, x, y);
+    }
         
     return {
       // functions and variables available elsewhere
@@ -1295,6 +1310,7 @@ var rg2 = ( function() {
       resultIDExists : resultIDExists,
       getRunnerName : getRunnerName,
       putOnDisplay : putOnDisplay,
+      putScoreCourseOnDisplay: putScoreCourseOnDisplay,
       removeFromDisplay : removeFromDisplay,
       createNameDropdown : createNameDropdown,
       incrementTracksCount : incrementTracksCount,
@@ -1313,7 +1329,8 @@ var rg2 = ( function() {
       getEventInfo: getEventInfo,
       getCoursesForEvent: getCoursesForEvent,
       getRoutesForEvent: getRoutesForEvent,
-      getNextRouteColour: getNextRouteColour
+      getNextRouteColour: getNextRouteColour,
+      updateScoreCourse: updateScoreCourse
     };
 
   }());

@@ -330,7 +330,7 @@ function addNewEvent($data) {
   // create new radat file: course drawing: RG2 uses this for score event control locations
   $course = "";
   if ($format == SCORE_EVENT_FORMAT) {
-    // using first course to get start and finsih for now. Not totally correct... 
+    // using first course to get start and finish for now. Not totally correct... 
     $b = $data->courses[0];
     // start triangle
     $side = 20;
@@ -348,7 +348,7 @@ function addNewEvent($data) {
     // score event: one row per result    
     for ($i = 0; $i < count($data->results); $i++) {
       $a = $data->results[$i];
-      $course .= ($i + 1)."|1|".encode_rg_output($a->course)." ".encode_rg_output($a->name)."|2;";
+      $course .= ($i + 1)."|".$a->courseid."|".encode_rg_output($a->course)." ".encode_rg_output($a->name)."|2;";
       $course .= $finishx.";-".$finishy.";0;0N";
       $oldx = $b->x[0];
       $oldy = $b->y[0];
@@ -365,36 +365,39 @@ function addNewEvent($data) {
         }
         
         // control circle
-        $course .= "1;".$x.";-".$y.";0;0;N";
+        $course .= "1;".$x.";-".$y.";0;0N";
         // line between controls
         list($x1, $y1, $x2, $y2) = getLineEnds($x, $y, $oldx, $oldy);
-        $course .= "4;".$x1.";-".$y1.";".$x2.";-".$y2.";N";
+        $course .= "4;".$x1.";-".$y1.";".$x2.";-".$y2."N";
         // text: just use 20 offset for now: RG1 and RGJS seem happy
-        $course .= "3;".($x + 20).";-".($y + 20).";".$j.";0;N";
+        $course .= "3;".($x + 20).";-".($y + 20).";".$j.";0N";
         
         $oldx = $x;
         $oldy = $y; 
       }   
-      $course .= "4;".$xS0.";-".$yS0.";".$xS1.";-".$yS1.";N";
-      $course .= "4;".$xS1.";-".$yS1.";".$xS2.";-".$yS2.";N";
-      $course .= "4;".$xS2.";-".$yS2.";".$xS0.";-".$yS0.";N";
+      $course .= "4;".$xS0.";-".$yS0.";".$xS1.";-".$yS1."N";
+      $course .= "4;".$xS1.";-".$yS1.";".$xS2.";-".$yS2."N";
+      $course .= "4;".$xS2.";-".$yS2.";".$xS0.";-".$yS0."N";
+    
+      $course .= PHP_EOL;
     }
+
   } else {
     // normal event: one row per course
     for ($i = 0; $i < count($data->courses); $i++) {
       $a = $data->courses[$i];
       $finish = count($a->x) - 1;
-      $course .= ($i + 1)."|1|".encode_rg_output($a->name)."|2;";
+      $course .= ($i + 1)."|".$a->courseid."|".encode_rg_output($a->name)."|2;";
       $course .= $a->x[$finish].";-".$a->y[$finish].";0;0N";
       // loop from first to last control
       for ($j = 1; $j < $finish; $j++) {
         // control circle
-        $course .= "1;".$a->x[$j].";-".$a->y[$j].";0;0;N";
+        $course .= "1;".$a->x[$j].";-".$a->y[$j].";0;0N";
         // line between controls
         list($x1, $y1, $x2, $y2) = getLineEnds($a->x[$j], $a->y[$j], $a->x[$j-1], $a->y[$j-1]);
-        $course .= "4;".$x1.";-".$y1.";".$x2.";-".$y2.";N";
+        $course .= "4;".$x1.";-".$y1.";".$x2.";-".$y2."N";
         // text: just use 20 offset for now: RG1 and RGJS seem happy
-        $course .= "3;".($a->x[$j] + 20).";-".($a->y[$j] + 20).";".$j.";0;N";   
+        $course .= "3;".($a->x[$j] + 20).";-".($a->y[$j] + 20).";".$j.";0N";   
       }
       // start triangle
       $side = 20;
@@ -407,15 +410,15 @@ function addNewEvent($data) {
       $x2 = (int) ($a->x[0] + ($side * sin($angle - (2 * M_PI / 3))));
       $y2 = (int) ($a->y[0] - ($side * cos($angle - (2 * M_PI / 3))));
     
-      $course .= "4;".$x0.";-".$y0.";".$x1.";-".$y1.";N";
-      $course .= "4;".$x1.";-".$y1.";".$x2.";-".$y2.";N";
-      $course .= "4;".$x2.";-".$y2.";".$x0.";-".$y0.";N";
+      $course .= "4;".$x0.";-".$y0.";".$x1.";-".$y1."N";
+      $course .= "4;".$x1.";-".$y1.";".$x2.";-".$y2."N";
+      $course .= "4;".$x2.";-".$y2.";".$x0.";-".$y0."N";
+    
+      $course .= PHP_EOL;
     }
-  }
+  }    
+  file_put_contents(KARTAT_DIRECTORY."radat_".$newid.".txt", $course);
   
-  $course .= PHP_EOL;
-  file_put_contents(KARTAT_DIRECTORY."radat_".$newid.".txt", $course);    
-
   // create new kilpailijat file: results
   for ($i = 0; $i < count($data->results); $i++) {
     $a = $data->results[$i];

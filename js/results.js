@@ -31,6 +31,59 @@ Results.prototype = {
     return runners;
   },
 
+  // read through results to get list of all controls on score courses
+  // since there is no master list of controls!
+  generateScoreCourses: function () {
+    var i;
+    var j;
+    var k;
+    var res;
+    var courses;
+    var codes;
+    var x;
+    var y;
+    var newControl;
+    var courseid;
+    courses = [];
+    codes = [];
+    x = [];
+    y = [];
+    for (i = 0; i < this.results.length; i += 1) {
+      res = this.results[i];
+      if (res.resultid >= rg2.config.GPS_RESULT_OFFSET) {
+        continue;
+      }
+      courseid = res.courseid;
+      // save courseid if it is new
+      if (courses.indexOf(courseid) === -1) {
+        courses.push(courseid);
+        codes[courseid] = [];
+        x[courseid] = [];
+        y[courseid] = [];
+      }
+      // read all controls for this result and save if new
+      for (j = 0; j < res.scorecodes.length; j += 1) {
+        newControl = true;
+        for (k = 0; k < codes[courseid].length; k += 1) {
+          if (res.scorecodes[j] === codes[courseid][k]) {
+            newControl = false;
+            break;
+          }
+        }
+        if (newControl) {
+          codes[courseid].push(res.scorecodes[j]);
+          x[courseid].push(res.scorex[j]);
+          y[courseid].push(res.scorey[j]);
+        }
+      }
+      
+    }
+    // save the details we have just generated
+    for (i = 0; i < courses.length; i += 1) {
+      rg2.updateScoreCourse(i, codes[i], x[i], y[i]);
+    }
+  },
+
   generateLegPositions: function() {
     var i;
     var j;
@@ -72,6 +125,18 @@ Results.prototype = {
       }
     }
   },
+
+  putScoreCourseOnDisplay : function(resultid, display) {
+    var i;
+    for (i = 0; i < this.results.length; i += 1) {
+      if (this.results[i].resultid === resultid) {
+        this.results[i].displayScoreCourse = display;
+      }
+    }
+
+
+  },
+  
 
   displayScoreCourse : function(id, display) {
    this.results[id].displayScoreCourse = display;

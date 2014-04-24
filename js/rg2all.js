@@ -1,4 +1,4 @@
-// Version 0.6.15 2014-04-16T16:46:11;
+// Version 0.6.16 2014-04-24T22:27:03;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -91,12 +91,7 @@ var rg2 = ( function() {
       GREEN : '#00ff00',
       WHITE : '#ffffff',
       BLACK : '#ffoooo',
-      CONTROL_CIRCLE_RADIUS : 20,
-      FINISH_INNER_RADIUS : 16.4,
-      FINISH_OUTER_RADIUS : 23.4,
       RUNNER_DOT_RADIUS : 6,
-      START_TRIANGLE_LENGTH : 30,
-      START_TRIANGLE_HEIGHT : 40,
       // parameters for call to draw courses
       DIM : 0.75,
       FULL_INTENSITY : 1.0,
@@ -105,7 +100,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.6.15',
+      RG2VERSION: '0.6.16',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -119,6 +114,7 @@ var rg2 = ( function() {
       replayFontSize: 12,
       courseWidth: 3,
       routeWidth: 4,
+      circleSize: 20,
       showThreeSeconds: false,
       showGPSSpeed: false
     };
@@ -409,6 +405,8 @@ var rg2 = ( function() {
         if (('localStorage' in window) && (window.localStorage !== null)) {
           if (localStorage.getItem( 'rg2-options') !== null) {
             options = JSON.parse(localStorage.getItem( 'rg2-options'));
+            // best to keep this at default?
+            options.circleSize = 20;
           }
         }
       } catch (e) {
@@ -470,6 +468,16 @@ var rg2 = ( function() {
           redraw(false);
         }
       }).val(options.routeWidth);
+      
+      $("#spn-control-circle").spinner({
+        max : 30,
+        min : 5,
+        step: 1,
+        spin : function(event, ui) {
+          options.circleSize = ui.value;
+          redraw(false);
+        }
+      }).val(options.circleSize);
       
       $("#chk-show-three-seconds").prop('checked', options.showGPSSpeed).click(function() {
         redraw(false);
@@ -596,6 +604,7 @@ var rg2 = ( function() {
         if (active === config.TAB_DRAW) {
           courses.drawCourses(config.DIM);
           controls.drawControls();
+          results.drawTracks();
           drawing.drawNewTrack();
         } else {
           if (active === config.TAB_CREATE) {
@@ -904,6 +913,11 @@ var rg2 = ( function() {
         console.log("Results: " + json.data.length);
         var isScoreEvent = events.isScoreEvent();
         results.addResults(json.data, isScoreEvent);
+        if (isScoreEvent) {
+          controls.deleteAllControls();
+          results.generateScoreCourses();
+          courses.generateControlList(controls);
+        }
         $("#rg2-result-list").accordion("refresh");
         getGPSTracks();
       }).fail(function(jqxhr, textStatus, error) {
@@ -1122,16 +1136,16 @@ var rg2 = ( function() {
       return results.getTotalResults();
     }
 
-    function drawStart(x, y, text, angle) {
-      return controls.drawStart(x, y, text, angle);
+    function drawStart(x, y, text, angle, opt) {
+      return controls.drawStart(x, y, text, angle, opt);
     }
 
-    function drawSingleControl(x, y, i) {
-      return controls.drawSingleControl(x, y, i);
+    function drawSingleControl(x, y, i, opt) {
+      return controls.drawSingleControl(x, y, i, opt);
     }
 
-    function drawFinish(x, y, text) {
-      return controls.drawFinish(x, y, text);
+    function drawFinish(x, y, text, opt) {
+      return controls.drawFinish(x, y, text, opt);
     }
 
     function getFullResult(resultid) {
@@ -1156,6 +1170,10 @@ var rg2 = ( function() {
 
     function putOnDisplay(courseid) {
       courses.putOnDisplay(courseid);
+    }
+    
+    function putScoreCourseOnDisplay(resultid, display) {
+      results.putScoreCourseOnDisplay(resultid, display);
     }
 
     function removeFromDisplay(courseid) {
@@ -1212,13 +1230,22 @@ var rg2 = ( function() {
     function createEventEditDropdown() {
       events.createEventEditDropdown();
     }
-    
-    function getOverprintWidth() {
-      return options.courseWidth;
-    }
 
     function getRouteWidth() {
       return options.routeWidth;
+    }
+
+    function getOverprintDetails() {
+      var opt = {};
+      // ratios based on IOF ISOM overprint specification
+      opt.controlRadius = options.circleSize;
+      opt.finishInnerRadius = options.circleSize * (5 / 6);
+      opt.finishOuterRadius = options.circleSize * (7 / 6);
+      opt.startTriangleLength = options.circleSize * (7 / 6);
+      //opt.startTriangleHeight = opt.StartTriangleLength * (4 / 3);
+      opt.overprintWidth = options.courseWidth;
+      opt.font = options.circleSize + 'pt Arial';
+      return opt;
     }
 
     function getRouteIntensity() {
@@ -1253,6 +1280,9 @@ var rg2 = ( function() {
     function getNextRouteColour() {
       return colours.getNextColour();
     }
+    function updateScoreCourse(courseid, codes, x, y) {
+      courses.updateScoreCourse(courseid, codes, x, y);
+    }
         
     return {
       // functions and variables available elsewhere
@@ -1260,7 +1290,7 @@ var rg2 = ( function() {
       config : config,
       options: options,
       redraw : redraw,
-      getOverprintWidth: getOverprintWidth,
+      getOverprintDetails: getOverprintDetails,
       getRouteWidth: getRouteWidth,
       getRouteIntensity: getRouteIntensity,
       getReplayFontSize: getReplayFontSize,
@@ -1281,6 +1311,7 @@ var rg2 = ( function() {
       resultIDExists : resultIDExists,
       getRunnerName : getRunnerName,
       putOnDisplay : putOnDisplay,
+      putScoreCourseOnDisplay: putScoreCourseOnDisplay,
       removeFromDisplay : removeFromDisplay,
       createNameDropdown : createNameDropdown,
       incrementTracksCount : incrementTracksCount,
@@ -1299,7 +1330,8 @@ var rg2 = ( function() {
       getEventInfo: getEventInfo,
       getCoursesForEvent: getCoursesForEvent,
       getRoutesForEvent: getRoutesForEvent,
-      getNextRouteColour: getNextRouteColour
+      getNextRouteColour: getNextRouteColour,
+      updateScoreCourse: updateScoreCourse
     };
 
   }());
@@ -1771,7 +1803,8 @@ Controls.prototype = {
 			var y;
 			var i;
 			var l;
-			rg2.ctx.lineWidth = rg2.getOverprintWidth();
+			var opt = rg2.getOverprintDetails();
+			rg2.ctx.lineWidth = opt.overprintWidth;
 			rg2.ctx.strokeStyle = rg2.config.PURPLE;
 			rg2.ctx.font = '20pt Arial';
 			rg2.ctx.fillStyle = rg2.config.PURPLE;
@@ -1780,79 +1813,81 @@ Controls.prototype = {
 			for (i = 0; i < l; i += 1) {
 				// Assume things starting with 'F' or 'M' are Finish or Mal
 				if ((this.controls[i].code.indexOf('F') === 0) ||(this.controls[i].code.indexOf('M') === 0)) {
-					this.drawFinish(this.controls[i].x, this.controls[i].y, this.controls[i].code);
+					this.drawFinish(this.controls[i].x, this.controls[i].y, this.controls[i].code, opt);
 				} else {
 					// Assume things starting with 'S' are a Start
 					if (this.controls[i].code.indexOf('S') === 0) {
-						this.drawStart(this.controls[i].x, this.controls[i].y, this.controls[i].code, (6 * Math.PI / 4));
+						this.drawStart(this.controls[i].x, this.controls[i].y, this.controls[i].code, (6 * Math.PI / 4), opt);
 					} else {
 						// Else it's a normal control
-						this.drawSingleControl(this.controls[i].x, this.controls[i].y, this.controls[i].code);
+						this.drawSingleControl(this.controls[i].x, this.controls[i].y, this.controls[i].code, opt);
 
 					}
 				}
 			}
 		}
 	},
-	drawSingleControl : function(x, y, code) {
+	drawSingleControl : function(x, y, code, opt) {
 		//Draw the white halo around the controls
 		rg2.ctx.beginPath();
 		rg2.ctx.strokeStyle = "white";
-		rg2.ctx.lineWidth = rg2.getOverprintWidth() + 2;
-		rg2.ctx.arc(x, y, 20, 0, 2 * Math.PI, false);
+		rg2.ctx.lineWidth = opt.overprintWidth + 2;
+		rg2.ctx.arc(x, y, opt.controlRadius, 0, 2 * Math.PI, false);
 		rg2.ctx.stroke();
 		//Draw the white halo around the control code
 		rg2.ctx.beginPath();
 		rg2.ctx.textAlign = "left";
-		rg2.ctx.font = "20pt Arial";
+		rg2.ctx.font = opt.font;
 		rg2.ctx.strokeStyle = "white";
 		rg2.ctx.miterLimit = 2;
 		rg2.ctx.lineJoin = "circle";
 		rg2.ctx.lineWidth = 1.5;
-		rg2.ctx.strokeText(code, x + 25, y + 20);
+    // text offset looks OK with these values: no real science involved
+		rg2.ctx.strokeText(code, x + (opt.controlRadius * 1.25), y + opt.controlRadius);
 		//Draw the purple control
 		rg2.ctx.beginPath();
-		rg2.ctx.font = "20pt Arial";
+		rg2.ctx.font = opt.font;
 		rg2.ctx.fillStyle = rg2.config.PURPLE;
 		rg2.ctx.strokeStyle = rg2.config.PURPLE;
-		rg2.ctx.lineWidth = rg2.getOverprintWidth();
-		rg2.ctx.arc(x, y, 20, 0, 2 * Math.PI, false);
-		rg2.ctx.fillText(code, x + 25, y + 20);
+		rg2.ctx.lineWidth = opt.overprintWidth;
+		rg2.ctx.arc(x, y, opt.controlRadius, 0, 2 * Math.PI, false);
+		// text offset looks OK with these values: no real science involved
+		rg2.ctx.fillText(code, x + (opt.controlRadius * 1.25), y + opt.controlRadius);
 		rg2.ctx.stroke();
 	},
-	drawFinish : function(x, y, code) {
+	drawFinish : function(x, y, code, opt) {
 		//Draw the white halo around the finish control
 		rg2.ctx.strokeStyle = "white";
-		rg2.ctx.lineWidth = rg2.getOverprintWidth() + 2;
+		rg2.ctx.lineWidth = opt.overprintWidth + 2;
 		rg2.ctx.beginPath();
-		rg2.ctx.arc(x, y, rg2.config.FINISH_INNER_RADIUS, 0, 2 * Math.PI, false);
+		rg2.ctx.arc(x, y, opt.finishInnerRadius, 0, 2 * Math.PI, false);
 		rg2.ctx.stroke();
 		rg2.ctx.beginPath();
-		rg2.ctx.arc(x, y, rg2.config.FINISH_OUTER_RADIUS, 0, 2 * Math.PI, false);
+		rg2.ctx.arc(x, y, opt.finishOuterRadius, 0, 2 * Math.PI, false);
 		rg2.ctx.stroke();
 		//Draw the white halo around the finish code
 		rg2.ctx.beginPath();
-		rg2.ctx.font = "20pt Arial";
+		rg2.ctx.font = opt.font;
 		rg2.ctx.textAlign = "left";
 		rg2.ctx.strokeStyle = "white";
 		rg2.ctx.miterLimit = 2;
 		rg2.ctx.lineJoin = "circle";
 		rg2.ctx.lineWidth = 1.5;
-		rg2.ctx.strokeText(code, x + 30, y + 20);
+		rg2.ctx.strokeText(code, x + (opt.controlRadius * 1.5), y + opt.controlRadius);
 		rg2.ctx.stroke();
 		//Draw the purple finish control
 		rg2.ctx.beginPath();
 		rg2.ctx.fillStyle = rg2.config.PURPLE;
 		rg2.ctx.strokeStyle = rg2.config.PURPLE;
-		rg2.ctx.lineWidth = rg2.getOverprintWidth();
-		rg2.ctx.arc(x, y, rg2.config.FINISH_INNER_RADIUS, 0, 2 * Math.PI, false);
+		rg2.ctx.lineWidth = opt.overprintWidth;
+		rg2.ctx.arc(x, y, opt.finishInnerRadius, 0, 2 * Math.PI, false);
 		rg2.ctx.stroke();
 		rg2.ctx.beginPath();
-		rg2.ctx.arc(x, y, rg2.config.FINISH_OUTER_RADIUS, 0, 2 * Math.PI, false);
-		rg2.ctx.fillText(code, x + 30, y + 20);
+		rg2.ctx.arc(x, y, opt.finishOuterRadius, 0, 2 * Math.PI, false);
+		rg2.ctx.fillText(code, x + (opt.controlRadius * 1.5), y + opt.controlRadius);
 		rg2.ctx.stroke();
 	},
-	drawStart : function(startx, starty, code, angle) {
+	drawStart : function(startx, starty, code, angle, opt) {
 		//Draw the white halo around the start triangle
 		var x = [];
 		var y = [];
@@ -1860,19 +1895,19 @@ Controls.prototype = {
 		angle = angle + (Math.PI / 2);
 		rg2.ctx.lineCap = 'round';
 		rg2.ctx.strokeStyle = "white";
-		rg2.ctx.lineWidth = rg2.getOverprintWidth() + 2;
+		rg2.ctx.lineWidth = opt.overprintWidth + 2;
 		rg2.ctx.beginPath();
-		x[0] = startx + (rg2.config.START_TRIANGLE_LENGTH * Math.sin(angle));
-		y[0] = starty - (rg2.config.START_TRIANGLE_LENGTH * Math.cos(angle));
+		x[0] = startx + (opt.startTriangleLength * Math.sin(angle));
+		y[0] = starty - (opt.startTriangleLength * Math.cos(angle));
 		rg2.ctx.moveTo(x[0], y[0]);
-		x[1] = startx + (rg2.config.START_TRIANGLE_LENGTH * Math.sin(angle + DEGREES_120));
-		y[1] = starty - (rg2.config.START_TRIANGLE_LENGTH * Math.cos(angle + DEGREES_120));
+		x[1] = startx + (opt.startTriangleLength * Math.sin(angle + DEGREES_120));
+		y[1] = starty - (opt.startTriangleLength * Math.cos(angle + DEGREES_120));
 		rg2.ctx.lineTo(x[1], y[1]);
 		rg2.ctx.stroke();
 		rg2.ctx.beginPath();
 		rg2.ctx.moveTo(x[1], y[1]);
-		x[2] = startx + (rg2.config.START_TRIANGLE_LENGTH * Math.sin(angle - DEGREES_120));
-		y[2] = starty - (rg2.config.START_TRIANGLE_LENGTH * Math.cos(angle - DEGREES_120));
+		x[2] = startx + (opt.startTriangleLength * Math.sin(angle - DEGREES_120));
+		y[2] = starty - (opt.startTriangleLength * Math.cos(angle - DEGREES_120));
 		rg2.ctx.lineTo(x[2], y[2]);
 		rg2.ctx.stroke();
 		rg2.ctx.beginPath();
@@ -1881,18 +1916,18 @@ Controls.prototype = {
 		rg2.ctx.stroke();
 		//Draw the white halo around the start code
 		rg2.ctx.beginPath();
-		rg2.ctx.font = "20pt Arial";
+		rg2.ctx.font = opt.font;
 		rg2.ctx.textAlign = "left";
 		rg2.ctx.strokeStyle = "white";
 		rg2.ctx.miterLimit = 2;
 		rg2.ctx.lineJoin = "circle";
 		rg2.ctx.lineWidth = 1.5;
-		rg2.ctx.strokeText(code, x[0] + 25, y[0] + 25);
+		rg2.ctx.strokeText(code, x[0] + (opt.controlRadius * 1.25), y[0] + (opt.controlRadius * 1.25));
 		rg2.ctx.stroke();
 		//Draw the purple start control
 		rg2.ctx.strokeStyle = rg2.config.PURPLE;
-		rg2.ctx.lineWidth = rg2.getOverprintWidth();
-		rg2.ctx.font = "20pt Arial";
+		rg2.ctx.lineWidth = opt.overprintWidth;
+		rg2.ctx.font = opt.font;
 		rg2.ctx.fillStyle = rg2.config.PURPLE;
 		rg2.ctx.beginPath();
 		rg2.ctx.moveTo(x[0], y[0]);
@@ -1905,7 +1940,7 @@ Controls.prototype = {
 		rg2.ctx.beginPath();
 		rg2.ctx.moveTo(x[2], y[2]);
 		rg2.ctx.lineTo(x[0], y[0]);
-		rg2.ctx.fillText(code, x[0] + 25, y[0] + 25);
+		rg2.ctx.fillText(code, x[0] + (opt.controlRadius * 1.25), y[0] + (opt.controlRadius * 1.25));
 		rg2.ctx.stroke();
 	},
 	toggleControlDisplay : function() {
@@ -2117,6 +2152,20 @@ Courses.prototype = {
 		}
 	},
 
+  updateScoreCourse : function (courseid, codes, x, y) {
+    var i;
+    for (i = 0; i < this.courses.length; i += 1) {
+      if (this.courses[i] !== undefined) {
+        if (this.courses[i].courseid === courseid) {
+          this.courses[i].codes = codes;
+          this.courses[i].x = x;
+          this.courses[i].y = y;
+          break;
+        }
+      }
+    }
+  },
+   
 	formatCoursesAsTable : function() {
 		var html = "<table class='coursemenutable'><tr><th>Course</th><th>Show</th><th>Runners</th><th>Tracks</th><th>Show</th></tr>";
 		for (var i = 0; i < this.courses.length; i += 1) {
@@ -2179,8 +2228,10 @@ Course.prototype = {
 			var c1y;
 			var c2x;
 			var c2y;
+			var i;
+			var opt = rg2.getOverprintDetails();
 			rg2.ctx.globalAlpha = intensity;
-			rg2.ctx.lineWidth = rg2.getOverprintWidth();
+			rg2.ctx.lineWidth = opt.overprintWidth;
 			rg2.ctx.strokeStyle = rg2.config.PURPLE;
 			if (this.isScoreCourse) {
 				// align score event start triangle upwards
@@ -2188,37 +2239,48 @@ Course.prototype = {
 			} else {
 				angle = getAngle(this.x[0], this.y[0], this.x[1], this.y[1]);
 			}
-			rg2.drawStart(this.x[0], this.y[0], "", angle);
-			for ( i = 0; i < (this.x.length - 1); i += 1) {
-				angle = getAngle(this.x[i], this.y[i], this.x[i + 1], this.y[i + 1]);
-				if (i === 0) {
-					c1x = this.x[i] + (rg2.config.START_TRIANGLE_LENGTH * Math.cos(angle));
-					c1y = this.y[i] + (rg2.config.START_TRIANGLE_LENGTH * Math.sin(angle));
-				} else {
-					c1x = this.x[i] + (rg2.config.CONTROL_CIRCLE_RADIUS * Math.cos(angle));
-					c1y = this.y[i] + (rg2.config.CONTROL_CIRCLE_RADIUS * Math.sin(angle));
-				}
-				//Assume the last control in the array is a finish
-				if (i === this.x.length - 2) {
-					c2x = this.x[i + 1] - (rg2.config.FINISH_OUTER_RADIUS * Math.cos(angle));
-					c2y = this.y[i + 1] - (rg2.config.FINISH_OUTER_RADIUS * Math.sin(angle));
-				} else {
-					c2x = this.x[i + 1] - (rg2.config.CONTROL_CIRCLE_RADIUS * Math.cos(angle));
-					c2y = this.y[i + 1] - (rg2.config.CONTROL_CIRCLE_RADIUS * Math.sin(angle));
-				}
-				// don't join up controls for score events
-				if (!this.isScoreCourse) {
+			rg2.drawStart(this.x[0], this.y[0], "", angle, opt);
+      // don't join up controls for score events
+      if (!this.isScoreCourse) {
+        for ( i = 0; i < (this.x.length - 1); i += 1) {
+          angle = getAngle(this.x[i], this.y[i], this.x[i + 1], this.y[i + 1]);
+          if (i === 0) {
+            c1x = this.x[i] + (opt.startTriangleLength * Math.cos(angle));
+            c1y = this.y[i] + (opt.startTriangleLength * Math.sin(angle));
+          } else {
+            c1x = this.x[i] + (opt.controlRadius * Math.cos(angle));
+            c1y = this.y[i] + (opt.controlRadius * Math.sin(angle));
+          }
+          //Assume the last control in the array is a finish
+          if (i === this.x.length - 2) {
+            c2x = this.x[i + 1] - (opt.finishOuterRadius * Math.cos(angle));
+            c2y = this.y[i + 1] - (opt.finishOuterRadius * Math.sin(angle));
+          } else {
+            c2x = this.x[i + 1] - (opt.controlRadius * Math.cos(angle));
+            c2y = this.y[i + 1] - (opt.controlRadius * Math.sin(angle));
+          }
 					rg2.ctx.beginPath();
 					rg2.ctx.moveTo(c1x, c1y);
 					rg2.ctx.lineTo(c2x, c2y);
 					rg2.ctx.stroke();
 				}
+			}
+			
+			if (this.isScoreCourse) {
+        for (i = 1; i < (this.x.length); i += 1) {
+          if ((this.codes[i].indexOf('F') === 0) ||(this.codes[i].indexOf('M') === 0)) {
+            rg2.drawFinish(this.x[i], this.y[i], "", opt);
+          } else {
+            rg2.drawSingleControl(this.x[i], this.y[i], this.codes[i], opt);
+          }
+        }
 
+			} else {
+        for (i = 1; i < (this.x.length - 1); i += 1) {
+          rg2.drawSingleControl(this.x[i], this.y[i], i, opt);
+        }
+        rg2.drawFinish(this.x[this.x.length - 1], this.y[this.y.length - 1], "", opt);
 			}
-			for (var i = 1; i < (this.x.length - 1); i += 1) {
-				rg2.drawSingleControl(this.x[i], this.y[i], i);
-			}
-			rg2.drawFinish(this.x[this.x.length - 1], this.y[this.y.length - 1], "");
 		}
 	}
 };
@@ -2418,17 +2480,18 @@ Draw.prototype = {
     var course;
     this.gpstrack.routeData.eventid = rg2.getKartatEventID();
     this.gpstrack.routeData.courseid = courseid;
-    rg2.putOnDisplay(courseid);
     course = rg2.getCourseDetails(courseid);
-    this.gpstrack.routeData.coursename = course.name;
-    this.controlx = course.x;
-    this.controly = course.y;
-    this.gpstrack.routeData.x.length = 0;
-    this.gpstrack.routeData.y.length = 0;
-    this.gpstrack.routeData.x[0] = this.controlx[0];
-    this.gpstrack.routeData.y[0] = this.controly[0];
-    // TODO could leabve at 0 for score events
-    this.nextControl = 1;
+    if (!course.isScoreCourse) {
+      rg2.putOnDisplay(courseid);
+      this.gpstrack.routeData.coursename = course.name;
+      this.controlx = course.x;
+      this.controly = course.y;
+      this.gpstrack.routeData.x.length = 0;
+      this.gpstrack.routeData.y.length = 0;
+      this.gpstrack.routeData.x[0] = this.controlx[0];
+      this.gpstrack.routeData.y[0] = this.controly[0];
+      this.nextControl = 1;
+    }
     rg2.createNameDropdown(courseid);
     $("#rg2-name-select").prop('disabled', false);
     $("#btn-undo-gps-adjust").button("disable");
@@ -2523,6 +2586,7 @@ Draw.prototype = {
       this.gpstrack.routeData.name = res.name;
       // set up individual course if this is a score event
       if (res.isScoreEvent) {
+        rg2.putScoreCourseOnDisplay(res.resultid, true);
         this.controlx = res.scorex;
         this.controly = res.scorey;
         this.gpstrack.routeData.x.length = 0;
@@ -2530,6 +2594,7 @@ Draw.prototype = {
         this.gpstrack.routeData.x[0] = this.controlx[0];
         this.gpstrack.routeData.y[0] = this.controly[0];
         this.nextControl = 1;
+        rg2.redraw(false);
       }
       this.startDrawing();
     }
@@ -3046,7 +3111,8 @@ Draw.prototype = {
   drawNewTrack : function() {
     var i;
     var l;
-    rg2.ctx.lineWidth = rg2.getRouteWidth();
+    var opt = rg2.getOverprintDetails();
+    rg2.ctx.lineWidth = opt.overprintWidth;
     rg2.ctx.strokeStyle = this.trackColor;
     rg2.ctx.fillStyle = this.trackColour;
     rg2.ctx.font = '10pt Arial';
@@ -3057,13 +3123,13 @@ Draw.prototype = {
       rg2.ctx.beginPath();
       if (this.nextControl < (this.controlx.length - 1)) {
         // normal control
-        rg2.ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], rg2.config.CONTROL_CIRCLE_RADIUS, 0, 2 * Math.PI, false);
+        rg2.ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], opt.controlRadius, 0, 2 * Math.PI, false);
       } else {
         // finish
-        rg2.ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], rg2.config.FINISH_INNER_RADIUS, 0, 2 * Math.PI, false);
+        rg2.ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], opt.finishInnerRadius, 0, 2 * Math.PI, false);
         rg2.ctx.stroke();
         rg2.ctx.beginPath();
-        rg2.ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], rg2.config.FINISH_OUTER_RADIUS, 0, 2 * Math.PI, false);
+        rg2.ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], opt.finishOuterRadius, 0, 2 * Math.PI, false);
       }
       // dot at centre of control circle
       rg2.ctx.fillRect(this.controlx[this.nextControl] - 1, this.controly[this.nextControl] - 1, 3, 3);
@@ -3780,6 +3846,59 @@ Results.prototype = {
     return runners;
   },
 
+  // read through results to get list of all controls on score courses
+  // since there is no master list of controls!
+  generateScoreCourses: function () {
+    var i;
+    var j;
+    var k;
+    var res;
+    var courses;
+    var codes;
+    var x;
+    var y;
+    var newControl;
+    var courseid;
+    courses = [];
+    codes = [];
+    x = [];
+    y = [];
+    for (i = 0; i < this.results.length; i += 1) {
+      res = this.results[i];
+      if (res.resultid >= rg2.config.GPS_RESULT_OFFSET) {
+        continue;
+      }
+      courseid = res.courseid;
+      // save courseid if it is new
+      if (courses.indexOf(courseid) === -1) {
+        courses.push(courseid);
+        codes[courseid] = [];
+        x[courseid] = [];
+        y[courseid] = [];
+      }
+      // read all controls for this result and save if new
+      for (j = 0; j < res.scorecodes.length; j += 1) {
+        newControl = true;
+        for (k = 0; k < codes[courseid].length; k += 1) {
+          if (res.scorecodes[j] === codes[courseid][k]) {
+            newControl = false;
+            break;
+          }
+        }
+        if (newControl) {
+          codes[courseid].push(res.scorecodes[j]);
+          x[courseid].push(res.scorex[j]);
+          y[courseid].push(res.scorey[j]);
+        }
+      }
+      
+    }
+    // save the details we have just generated
+    for (i = 0; i < courses.length; i += 1) {
+      rg2.updateScoreCourse(i, codes[i], x[i], y[i]);
+    }
+  },
+
   generateLegPositions: function() {
     var i;
     var j;
@@ -3821,6 +3940,18 @@ Results.prototype = {
       }
     }
   },
+
+  putScoreCourseOnDisplay : function(resultid, display) {
+    var i;
+    for (i = 0; i < this.results.length; i += 1) {
+      if (this.results[i].resultid === resultid) {
+        this.results[i].displayScoreCourse = display;
+      }
+    }
+
+
+  },
+  
 
   displayScoreCourse : function(id, display) {
    this.results[id].displayScoreCourse = display;
@@ -4268,7 +4399,7 @@ drawScoreCourse : function() {
     // draws a score course for an individual runner to show where they went
     // based on drawCourse in courses.js
     // could refactor in future...
-    // > 1 since we need at least a start and finsih to draw something
+    // > 1 since we need at least a start and finish to draw something
     if ((this.displayScoreCourse) && (this.scorex.length > 1)) {
       var angle;
       var c1x;
@@ -4276,27 +4407,28 @@ drawScoreCourse : function() {
       var c2x;
       var c2y;
       var i;
+      var opt = rg2.getOverprintDetails();
       rg2.ctx.globalAlpha = rg2.config.FULL_INTENSITY;
-      rg2.ctx.lineWidth = rg2.getOverprintWidth();
+      rg2.ctx.lineWidth = opt.overprintWidth;
       rg2.ctx.strokeStyle = rg2.config.PURPLE;
       angle = getAngle(this.scorex[0], this.scorey[0], this.scorex[1], this.scorey[1]);
-      rg2.drawStart(this.scorex[0], this.scorey[0], "", angle);
+      rg2.drawStart(this.scorex[0], this.scorey[0], "", angle, opt);
       for ( i = 0; i < (this.scorex.length - 1); i += 1) {
         angle = getAngle(this.scorex[i], this.scorey[i], this.scorex[i + 1], this.scorey[i + 1]);
         if (i === 0) {
-          c1x = this.scorex[i] + (rg2.config.START_TRIANGLE_LENGTH * Math.cos(angle));
-          c1y = this.scorey[i] + (rg2.config.START_TRIANGLE_LENGTH * Math.sin(angle));
+          c1x = this.scorex[i] + (opt.startTriangleLength * Math.cos(angle));
+          c1y = this.scorey[i] + (opt.startTriangleLength * Math.sin(angle));
         } else {
-          c1x = this.scorex[i] + (rg2.config.CONTROL_CIRCLE_RADIUS * Math.cos(angle));
-          c1y = this.scorey[i] + (rg2.config.CONTROL_CIRCLE_RADIUS * Math.sin(angle));
+          c1x = this.scorex[i] + (opt.controlRadius * Math.cos(angle));
+          c1y = this.scorey[i] + (opt.controlRadius * Math.sin(angle));
         }
         //Assume the last control in the array is a finish
         if (i === this.scorex.length - 2) {
-          c2x = this.scorex[i + 1] - (rg2.config.FINISH_OUTER_RADIUS * Math.cos(angle));
-          c2y = this.scorey[i + 1] - (rg2.config.FINISH_OUTER_RADIUS * Math.sin(angle));
+          c2x = this.scorex[i + 1] - (opt.finishOuterRadius * Math.cos(angle));
+          c2y = this.scorey[i + 1] - (opt.finishOuterRadius * Math.sin(angle));
         } else {
-          c2x = this.scorex[i + 1] - (rg2.config.CONTROL_CIRCLE_RADIUS * Math.cos(angle));
-          c2y = this.scorey[i + 1] - (rg2.config.CONTROL_CIRCLE_RADIUS * Math.sin(angle));
+          c2x = this.scorex[i + 1] - (opt.controlRadius * Math.cos(angle));
+          c2y = this.scorey[i + 1] - (opt.controlRadius * Math.sin(angle));
         }
         rg2.ctx.beginPath();
         rg2.ctx.moveTo(c1x, c1y);
@@ -4304,9 +4436,9 @@ drawScoreCourse : function() {
         rg2.ctx.stroke();
       }
       for (i = 1; i < (this.scorex.length - 1); i += 1) {
-        rg2.drawSingleControl(this.scorex[i], this.scorey[i], i);
+        rg2.drawSingleControl(this.scorex[i], this.scorey[i], i, opt);
       }
-      rg2.drawFinish(this.scorex[this.scorex.length - 1], this.scorey[this.scorey.length - 1], "");
+      rg2.drawFinish(this.scorex[this.scorex.length - 1], this.scorey[this.scorey.length - 1], "", opt);
     }
   },
 
