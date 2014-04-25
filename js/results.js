@@ -80,7 +80,8 @@ Results.prototype = {
     }
     // save the details we have just generated
     for (i = 0; i < courses.length; i += 1) {
-      rg2.updateScoreCourse(i, codes[i], x[i], y[i]);
+      id = courses[i];
+      rg2.updateScoreCourse(id, codes[id], x[id], y[id]);
     }
   },
 
