@@ -10,13 +10,29 @@ Results.prototype = {
 	Constructor : Results,
 
 	addResults : function(data, isScoreEvent) {
-		// for each result
+		var i;
+		var result;
+		var id;
+		var baseresult;
 		var l = data.length;
-		for (var i = 0; i < l; i += 1) {
-			var result = new Result(data[i], isScoreEvent);
+		for (i = 0; i < l; i += 1) {
+			result = new Result(data[i], isScoreEvent);
 			this.results.push(result);
 		}
-		this.generateLegPositions();
+    // don't get score course info for GPS tracks so find it from original result
+    for (i = 0; i < this.results.length; i += 1) {
+      if (this.results[i].resultid >= rg2.config.GPS_RESULT_OFFSET) {
+        id = this.results[i].resultid;
+        while (id >= rg2.config.GPS_RESULT_OFFSET) {
+          id -= rg2.config.GPS_RESULT_OFFSET;
+        }
+        baseresult = this.getFullResult(id);
+        this.results[i].scorex = baseresult.scorex;
+        this.results[i].scorey = baseresult.scorey;
+        this.results[i].scorecodes = baseresult.scorecodes;
+      }
+    }
+    this.generateLegPositions();
 	},
 
   // lists all runners on a given course
