@@ -19,6 +19,7 @@ function RouteData() {
   this.courseid = null;
   this.coursename = null;
   this.resultid = null;
+  this.isScoreCourse = false;
   this.eventid = null;
   this.name = null;
   this.comments = null;
@@ -142,6 +143,7 @@ Draw.prototype = {
     this.controlx = [];
     this.controly = [];
     this.nextControl = 0;
+    this.isScoreCourse = false;
     this.gpstrack.initialiseGPS();
     this.hasResults = rg2.eventHasResults();
     if (this.hasResults) {
@@ -180,6 +182,9 @@ Draw.prototype = {
           this.confirmCourseChange();
         } else {
           // nothing done yet so just change course
+          if (this.gpstrack.routeData.resultid !== null) {
+            rg2.putScoreCourseOnDisplay(this.gpstrack.routeData.resultid, false);
+          }
           rg2.removeFromDisplay(this.gpstrack.routeData.courseid);
           this.initialiseCourse(courseid);
         }
@@ -195,7 +200,8 @@ Draw.prototype = {
     this.gpstrack.routeData.eventid = rg2.getKartatEventID();
     this.gpstrack.routeData.courseid = courseid;
     course = rg2.getCourseDetails(courseid);
-    if (!course.isScoreCourse) {
+    this.isScoreCourse = course.isScoreCourse;
+    if (!this.isScoreCourse) {
       rg2.putOnDisplay(courseid);
       this.gpstrack.routeData.coursename = course.name;
       this.controlx = course.x;
@@ -261,6 +267,9 @@ Draw.prototype = {
   doChangeCourse : function() {
     $('#course-change-dialog').dialog("destroy");
     rg2.removeFromDisplay(this.gpstrack.routeData.courseid);
+    if (this.gpstrack.routeData.resultid !== null) {
+      rg2.putScoreCourseOnDisplay(this.gpstrack.routeData.resultid, false);
+    }
     this.doDrawingReset();
     this.initialiseCourse(this.pendingCourseid);
   },
@@ -284,7 +293,11 @@ Draw.prototype = {
 
   showCourseInProgress : function() {
     if (this.gpstrack.routeData.courseid !== null) {
-      rg2.putOnDisplay(this.gpstrack.routeData.courseid);
+      if (this.isScoreCourse) {
+        rg2.putScoreCourseOnDisplay(this.gpstrack.routeData.resultid, true);
+      } else {
+        rg2.putOnDisplay(this.gpstrack.routeData.courseid);
+      }
     }
   },
 
@@ -296,10 +309,14 @@ Draw.prototype = {
       if (res.hasValidTrack) {
         rg2WarningDialog("Route already drawn", "If you draw a new route it will overwrite the old route for this runner. GPS routes are saved separately and will not be overwritten.");
       }
+      // remove old course from display just in case we missed it somewhere else
+      if (this.gpstrack.routeData.resultid !== null) {
+        rg2.putScoreCourseOnDisplay(this.gpstrack.routeData.resultid, false);
+      }
       this.gpstrack.routeData.resultid = res.resultid;
       this.gpstrack.routeData.name = res.name;
       // set up individual course if this is a score event
-      if (res.isScoreEvent) {
+      if (this.isScoreCourse) {
         rg2.putScoreCourseOnDisplay(res.resultid, true);
         this.controlx = res.scorex;
         this.controly = res.scorey;
