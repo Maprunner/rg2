@@ -1,4 +1,4 @@
-// Version 0.6.18 2014-04-25T14:38:39;
+// Version 0.6.18 2014-04-25T14:49:51;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -3843,6 +3843,7 @@ Results.prototype = {
 
 	addResults : function(data, isScoreEvent) {
 		var i;
+		var j;
 		var result;
 		var id;
 		var baseresult;
@@ -3858,10 +3859,16 @@ Results.prototype = {
         while (id >= rg2.config.GPS_RESULT_OFFSET) {
           id -= rg2.config.GPS_RESULT_OFFSET;
         }
-        baseresult = this.getFullResult(id);
-        this.results[i].scorex = baseresult.scorex;
-        this.results[i].scorey = baseresult.scorey;
-        this.results[i].scorecodes = baseresult.scorecodes;
+        for (j = 0; j < this.results.length; j += 1) {
+          if (id === this.results[j].resultid) {
+            baseresult = this.getFullResult(j);
+          }
+        }
+        if (baseresult !== null) {
+          this.results[i].scorex = baseresult.scorex;
+          this.results[i].scorey = baseresult.scorey;
+          this.results[i].scorecodes = baseresult.scorecodes;
+        }
       }
     }
     this.generateLegPositions();
