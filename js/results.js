@@ -32,10 +32,12 @@ Results.prototype = {
             baseresult = this.getFullResult(j);
           }
         }
-        if (baseresult !== null) {
-          this.results[i].scorex = baseresult.scorex;
-          this.results[i].scorey = baseresult.scorey;
-          this.results[i].scorecodes = baseresult.scorecodes;
+        if (typeof baseresult !== 'undefined') {
+          if (typeof baseresult.scorex !== 'undefined') {
+            this.results[i].scorex = baseresult.scorex;
+            this.results[i].scorey = baseresult.scorey;
+            this.results[i].scorecodes = baseresult.scorecodes;
+          }
         }
       }
     }
