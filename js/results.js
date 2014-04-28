@@ -170,11 +170,14 @@ Results.prototype = {
     return a.time - b.time;
   },
   
-	getResultsByCourseID : function(courseid) {
+	countResultsByCourseID : function(courseid) {
 		var count = 0;
 		for (var i = 0; i < this.results.length; i += 1) {
 			if (this.results[i].courseid === courseid) {
-				count += 1;
+        // don't double-count GPS tracks
+        if (this.results[i].resultid < rg2.config.GPS_RESULT_OFFSET) {
+        count += 1;
+				}
 			}
 
 		}
@@ -197,10 +200,6 @@ Results.prototype = {
     }
     return routes;
   },
-
-	getTotalResults : function() {
-		return this.results.length;
-	},
 
 	getCourseID : function(resultid) {
 		return this.results[resultid].courseid;
