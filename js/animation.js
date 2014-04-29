@@ -2,6 +2,8 @@
 /*global formatSecsAsMMSS:false */
 /*global clearInterval:false */
 /*global setInterval:false */
+/*global getLatLonDistance:false */
+/*global getDistanceBetweenPoints:false */
  function Animation() {
 	'use strict';
 	this.runners = [];
@@ -85,9 +87,36 @@ Animation.prototype = {
 		var i;
 		var j;
 		var run;
+		var metresPerPixel;
+		var size;
+		var pixels;
+		var metres;
+		var units;
+		var w;
+		var lat1;
+		var lat2;
+		var lon1;
+		var lon2;
+		
 		if (this.runners.length < 1) {
 			return "<p>Select runners on Results tab.</p>";
 		}
+
+    if (rg2.mapIsGeoreferenced()) {
+      size = rg2.getMapSize();
+      pixels = getDistanceBetweenPoints(0, 0, size.width, size.height);
+      w = rg2.getWorldFile();
+      lon1 = w.C;
+      lat1 = w.F;
+      lon2 = (w.A * size.width) + (w.B * size.height) + w.C;
+      lat2 = (w.D * size.width) + (w.E * size.height) + w.F;
+      metres = getLatLonDistance(lat1, lon1, lat2, lon2);
+      metresPerPixel = metres / pixels;
+      units = "metres";
+    } else {
+      metresPerPixel = 1;
+      units = "pixels";
+    }
 
 		var maxControls = 0;
 		var legSplit = [];
@@ -119,9 +148,9 @@ Animation.prototype = {
 			for ( j = 1; j < run.splits.length; j += 1) {
 				html += "<td>" + formatSecsAsMMSS(legSplit[j]) + "</td>";
 			}
-			html += "</tr><tr class='splitsdistance-row'><td></td><td>pixels</td>";
+			html += "</tr><tr class='splitsdistance-row'><td></td><td>" + Math.round(metresPerPixel * run.cumulativeTrackDistance[run.cumulativeTrackDistance.length - 1]) + " " + units + "</td>";
 			for ( j = 1; j < run.splits.length; j += 1) {
-				html += "<td>" + run.legTrackDistance[j] + "</td>";
+				html += "<td>" + Math.round(metresPerPixel * run.legTrackDistance[j]) + "</td>";
 			}
 
 		}
