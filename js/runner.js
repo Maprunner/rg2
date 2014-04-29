@@ -57,6 +57,8 @@ function Runner(resultid) {
 	var t;
 	var xy;
 	var dist;
+	var lastPointIndex;
+	var ind;
 
 	if (res.hasValidTrack) {
 		// x,y are indexed by time in seconds
@@ -127,17 +129,23 @@ function Runner(resultid) {
 	// add track distances for each leg
 	this.legTrackDistance[0] = 0;
 	this.cumulativeTrackDistance[0] = 0;
-
+  lastPointIndex = cumulativeDistance.length - 1;
 	if (typeof (course.codes) !== 'undefined') {
     if (res.splits !== rg2.config.SPLITS_NOT_FOUND) {
       for ( control = 1; control < course.codes.length; control += 1) {
-        this.cumulativeTrackDistance[control] = Math.round(cumulativeDistance[res.splits[control]]);
+        // avoid NaN values for GPS tracks that are shorter than the result time
+        if (res.splits[control] <= lastPointIndex) {
+          ind = res.splits[control];
+        } else {
+          ind = lastPointIndex;
+        }
+        this.cumulativeTrackDistance[control] = Math.round(cumulativeDistance[ind]);
         this.legTrackDistance[control] = this.cumulativeTrackDistance[control] - this.cumulativeTrackDistance[control - 1];
       }
     } else {
       // allows for tracks at events with no results so no splits: just use start and finish
-      this.legTrackDistance[1] = Math.round(cumulativeDistance[cumulativeDistance.length - 1]);
-      this.cumulativeTrackDistance[1] = Math.round(cumulativeDistance[cumulativeDistance.length - 1]);
+      this.legTrackDistance[1] = Math.round(cumulativeDistance[lastPointIndex]);
+      this.cumulativeTrackDistance[1] = Math.round(cumulativeDistance[lastPointIndex]);
 		}
 	}
 
