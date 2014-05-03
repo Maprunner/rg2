@@ -1396,22 +1396,19 @@ Manager.prototype = {
     var mappos;
     var x;
     var y;
-    var w;
     var AEDB;
     var xCorrection;
     var yCorrection;
     var georef = false;
     
-    if (this.mapIndex !== this.INVALID_MAP_ID) {
-      if (this.maps[this.mapIndex].georeferenced) {
-        // translate lat/lon to x,y based on world file info: see http://en.wikipedia.org/wiki/World_file
-        w = this.maps[this.mapIndex].worldfile;
-        // simplify calculation a little
-        AEDB = (w.A * w.E) - (w.D * w.B);
-        xCorrection = (w.B * w.F) - (w.E * w.C);
-        yCorrection = (w.D * w.C) - (w.A * w.F);
-        georef = true;
-      }
+    if (this.worldfileArgs.length > 0) {
+      // uses world file loaded on map tab if there is one
+      rg2WarningDialog("Controls georeferenced", "The world file from the 'Add map' tab will be used to georeference controls.");
+      // simplify calculation a little
+      AEDB = (this.worldfileArgs[0] * this.worldfileArgs[3]) - (this.worldfileArgs[1] * this.worldfileArgs[2]);
+      xCorrection = (this.worldfileArgs[2] * this.worldfileArgs[5]) - (this.worldfileArgs[3] * this.worldfileArgs[4]);
+      yCorrection = (this.worldfileArgs[2] * this.worldfileArgs[4]) - (this.worldfileArgs[0] * this.worldfileArgs[5]);
+      georef = true;
     }
 
     nodelist = xml.getElementsByTagName('Control');
@@ -1427,8 +1424,8 @@ Manager.prototype = {
         if ((georef) && (latlng.length > 0)) {
           lat = latlng[0].getAttribute('lat');
           lng = latlng[0].getAttribute('lng');
-          x = Math.round(((w.E * lng) - (w.B * lat) + xCorrection) / AEDB);
-          y = Math.round(((-1 * w.D * lng) + (w.A * lat) + yCorrection) / AEDB);
+          x = Math.round(((this.worldfileArgs[3] * lng) - (this.worldfileArgs[2] * lat) + xCorrection) / AEDB);
+          y = Math.round(((-1 * this.worldfileArgs[1] * lng) + (this.worldfileArgs[0] * lat) + yCorrection) / AEDB);
           this.coursesGeoreferenced = true;
         } else {
           // only works if all controls have lat/lon or none do: surely a safe assumption...

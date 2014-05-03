@@ -99,7 +99,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.6.16',
+      RG2VERSION: '0.7.0',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -912,6 +912,7 @@ var rg2 = ( function() {
         console.log("Results: " + json.data.length);
         var isScoreEvent = events.isScoreEvent();
         results.addResults(json.data, isScoreEvent);
+        courses.setResultsCount();
         if (isScoreEvent) {
           controls.deleteAllControls();
           results.generateScoreCourses();
@@ -1127,12 +1128,8 @@ var rg2 = ( function() {
       return courses.getCourseName(courseid);
     }
 
-    function getResultsByCourseID(courseid) {
-      return results.getResultsByCourseID(courseid);
-    }
-
-    function getTotalResults() {
-      return results.getTotalResults();
+    function countResultsByCourseID(courseid) {
+      return results.countResultsByCourseID(courseid);
     }
 
     function drawStart(x, y, text, angle, opt) {
@@ -1319,8 +1316,7 @@ var rg2 = ( function() {
       getHighestControlNumber : getHighestControlNumber,
       getCourseDetails : getCourseDetails,
       getCourseName : getCourseName,
-      getResultsByCourseID : getResultsByCourseID,
-      getTotalResults : getTotalResults,
+      countResultsByCourseID : countResultsByCourseID,
       getControlX : getControlX,
       getControlY : getControlY,
       createEventEditDropdown : createEventEditDropdown,

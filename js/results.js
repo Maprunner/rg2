@@ -10,13 +10,38 @@ Results.prototype = {
 	Constructor : Results,
 
 	addResults : function(data, isScoreEvent) {
-		// for each result
+		var i;
+		var j;
+		var result;
+		var id;
+		var baseresult;
 		var l = data.length;
-		for (var i = 0; i < l; i += 1) {
-			var result = new Result(data[i], isScoreEvent);
+		for (i = 0; i < l; i += 1) {
+			result = new Result(data[i], isScoreEvent);
 			this.results.push(result);
 		}
-		this.generateLegPositions();
+    // don't get score course info for GPS tracks so find it from original result
+    for (i = 0; i < this.results.length; i += 1) {
+      if (this.results[i].resultid >= rg2.config.GPS_RESULT_OFFSET) {
+        id = this.results[i].resultid;
+        while (id >= rg2.config.GPS_RESULT_OFFSET) {
+          id -= rg2.config.GPS_RESULT_OFFSET;
+        }
+        for (j = 0; j < this.results.length; j += 1) {
+          if (id === this.results[j].resultid) {
+            baseresult = this.getFullResult(j);
+          }
+        }
+        if (typeof baseresult !== 'undefined') {
+          if (typeof baseresult.scorex !== 'undefined') {
+            this.results[i].scorex = baseresult.scorex;
+            this.results[i].scorey = baseresult.scorey;
+            this.results[i].scorecodes = baseresult.scorecodes;
+          }
+        }
+      }
+    }
+    this.generateLegPositions();
 	},
 
   // lists all runners on a given course
@@ -80,7 +105,8 @@ Results.prototype = {
     }
     // save the details we have just generated
     for (i = 0; i < courses.length; i += 1) {
-      rg2.updateScoreCourse(i, codes[i], x[i], y[i]);
+      courseid = courses[i];
+      rg2.updateScoreCourse(courseid, codes[courseid], x[courseid], y[courseid]);
     }
   },
 
@@ -146,11 +172,14 @@ Results.prototype = {
     return a.time - b.time;
   },
   
-	getResultsByCourseID : function(courseid) {
+	countResultsByCourseID : function(courseid) {
 		var count = 0;
 		for (var i = 0; i < this.results.length; i += 1) {
 			if (this.results[i].courseid === courseid) {
-				count += 1;
+        // don't double-count GPS tracks
+        if (this.results[i].resultid < rg2.config.GPS_RESULT_OFFSET) {
+        count += 1;
+				}
 			}
 
 		}
@@ -173,10 +202,6 @@ Results.prototype = {
     }
     return routes;
   },
-
-	getTotalResults : function() {
-		return this.results.length;
-	},
 
 	getCourseID : function(resultid) {
 		return this.results[resultid].courseid;

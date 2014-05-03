@@ -1,4 +1,4 @@
-// Version 0.6.16 2014-04-24T22:27:03;
+// Version 0.7.0 2014-04-29T21:11:34;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -100,7 +100,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.6.16',
+      RG2VERSION: '0.7.0',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -913,6 +913,7 @@ var rg2 = ( function() {
         console.log("Results: " + json.data.length);
         var isScoreEvent = events.isScoreEvent();
         results.addResults(json.data, isScoreEvent);
+        courses.setResultsCount();
         if (isScoreEvent) {
           controls.deleteAllControls();
           results.generateScoreCourses();
@@ -1128,12 +1129,8 @@ var rg2 = ( function() {
       return courses.getCourseName(courseid);
     }
 
-    function getResultsByCourseID(courseid) {
-      return results.getResultsByCourseID(courseid);
-    }
-
-    function getTotalResults() {
-      return results.getTotalResults();
+    function countResultsByCourseID(courseid) {
+      return results.countResultsByCourseID(courseid);
     }
 
     function drawStart(x, y, text, angle, opt) {
@@ -1320,8 +1317,7 @@ var rg2 = ( function() {
       getHighestControlNumber : getHighestControlNumber,
       getCourseDetails : getCourseDetails,
       getCourseName : getCourseName,
-      getResultsByCourseID : getResultsByCourseID,
-      getTotalResults : getTotalResults,
+      countResultsByCourseID : countResultsByCourseID,
       getControlX : getControlX,
       getControlY : getControlY,
       createEventEditDropdown : createEventEditDropdown,
@@ -1342,6 +1338,8 @@ $(document).ready(rg2.init);
 /*global formatSecsAsMMSS:false */
 /*global clearInterval:false */
 /*global setInterval:false */
+/*global getLatLonDistance:false */
+/*global getDistanceBetweenPoints:false */
  function Animation() {
 	'use strict';
 	this.runners = [];
@@ -1425,9 +1423,36 @@ Animation.prototype = {
 		var i;
 		var j;
 		var run;
+		var metresPerPixel;
+		var size;
+		var pixels;
+		var metres;
+		var units;
+		var w;
+		var lat1;
+		var lat2;
+		var lon1;
+		var lon2;
+		
 		if (this.runners.length < 1) {
 			return "<p>Select runners on Results tab.</p>";
 		}
+
+    if (rg2.mapIsGeoreferenced()) {
+      size = rg2.getMapSize();
+      pixels = getDistanceBetweenPoints(0, 0, size.width, size.height);
+      w = rg2.getWorldFile();
+      lon1 = w.C;
+      lat1 = w.F;
+      lon2 = (w.A * size.width) + (w.B * size.height) + w.C;
+      lat2 = (w.D * size.width) + (w.E * size.height) + w.F;
+      metres = getLatLonDistance(lat1, lon1, lat2, lon2);
+      metresPerPixel = metres / pixels;
+      units = "metres";
+    } else {
+      metresPerPixel = 1;
+      units = "pixels";
+    }
 
 		var maxControls = 0;
 		var legSplit = [];
@@ -1459,9 +1484,9 @@ Animation.prototype = {
 			for ( j = 1; j < run.splits.length; j += 1) {
 				html += "<td>" + formatSecsAsMMSS(legSplit[j]) + "</td>";
 			}
-			html += "</tr><tr class='splitsdistance-row'><td></td><td>pixels</td>";
+			html += "</tr><tr class='splitsdistance-row'><td></td><td>" + Math.round(metresPerPixel * run.cumulativeTrackDistance[run.cumulativeTrackDistance.length - 1]) + " " + units + "</td>";
 			for ( j = 1; j < run.splits.length; j += 1) {
-				html += "<td>" + run.legTrackDistance[j] + "</td>";
+				html += "<td>" + Math.round(metresPerPixel * run.legTrackDistance[j]) + "</td>";
 			}
 
 		}
@@ -2166,13 +2191,25 @@ Courses.prototype = {
     }
   },
    
+   
+  setResultsCount : function() {
+    var i;
+    for (i = 0; i < this.courses.length; i += 1) {
+      if (this.courses[i] !== undefined) {
+        this.courses[i].resultcount = rg2.countResultsByCourseID(i);
+      }
+    }
+  },
+  
 	formatCoursesAsTable : function() {
+		var res = 0;
 		var html = "<table class='coursemenutable'><tr><th>Course</th><th>Show</th><th>Runners</th><th>Tracks</th><th>Show</th></tr>";
 		for (var i = 0; i < this.courses.length; i += 1) {
 			if (this.courses[i] !== undefined) {
 				html += "<tr><td>" + this.courses[i].name + "</td>";
 				html += "<td><input class='courselist' id=" + i + " type=checkbox name=course></input></td>";
-				html += "<td>" + rg2.getResultsByCourseID(i) + "</td>";
+				html += "<td>" + this.courses[i].resultcount + "</td>";
+				res += this.courses[i].resultcount;
 				html += "<td>" + this.courses[i].trackcount + "</td>";
 				if (this.courses[i].trackcount > 0) {
 					html += "<td><input id=" + i + " class='tracklist' type=checkbox name=track></input></td>";
@@ -2185,7 +2222,7 @@ Courses.prototype = {
 		// add bottom row for all courses checkboxes
 		html += "<tr class='allitemsrow'><td>All</td>";
 		html += "<td><input class='allcourses' id=" + i + " type=checkbox name=course></input></td>";
-		html += "<td>" + rg2.getTotalResults() + "</td>";
+		html += "<td>" + res + "</td>";
 		if (this.totaltracks > 0) {
 			html += "<td>" + this.totaltracks + "</td><td><input id=" + i + " class='alltracks' type=checkbox name=track></input></td>";
 		} else {
@@ -2205,6 +2242,7 @@ function Course(data, isScoreCourse) {
 	this.x = data.xpos;
 	this.y = data.ypos;
 	this.isScoreCourse = isScoreCourse;
+	this.resultcount = 0;
 }
 
 Course.prototype = {
@@ -2305,6 +2343,7 @@ function RouteData() {
   this.courseid = null;
   this.coursename = null;
   this.resultid = null;
+  this.isScoreCourse = false;
   this.eventid = null;
   this.name = null;
   this.comments = null;
@@ -2428,6 +2467,7 @@ Draw.prototype = {
     this.controlx = [];
     this.controly = [];
     this.nextControl = 0;
+    this.isScoreCourse = false;
     this.gpstrack.initialiseGPS();
     this.hasResults = rg2.eventHasResults();
     if (this.hasResults) {
@@ -2466,6 +2506,9 @@ Draw.prototype = {
           this.confirmCourseChange();
         } else {
           // nothing done yet so just change course
+          if (this.gpstrack.routeData.resultid !== null) {
+            rg2.putScoreCourseOnDisplay(this.gpstrack.routeData.resultid, false);
+          }
           rg2.removeFromDisplay(this.gpstrack.routeData.courseid);
           this.initialiseCourse(courseid);
         }
@@ -2481,7 +2524,8 @@ Draw.prototype = {
     this.gpstrack.routeData.eventid = rg2.getKartatEventID();
     this.gpstrack.routeData.courseid = courseid;
     course = rg2.getCourseDetails(courseid);
-    if (!course.isScoreCourse) {
+    this.isScoreCourse = course.isScoreCourse;
+    if (!this.isScoreCourse) {
       rg2.putOnDisplay(courseid);
       this.gpstrack.routeData.coursename = course.name;
       this.controlx = course.x;
@@ -2547,6 +2591,9 @@ Draw.prototype = {
   doChangeCourse : function() {
     $('#course-change-dialog').dialog("destroy");
     rg2.removeFromDisplay(this.gpstrack.routeData.courseid);
+    if (this.gpstrack.routeData.resultid !== null) {
+      rg2.putScoreCourseOnDisplay(this.gpstrack.routeData.resultid, false);
+    }
     this.doDrawingReset();
     this.initialiseCourse(this.pendingCourseid);
   },
@@ -2570,7 +2617,11 @@ Draw.prototype = {
 
   showCourseInProgress : function() {
     if (this.gpstrack.routeData.courseid !== null) {
-      rg2.putOnDisplay(this.gpstrack.routeData.courseid);
+      if (this.isScoreCourse) {
+        rg2.putScoreCourseOnDisplay(this.gpstrack.routeData.resultid, true);
+      } else {
+        rg2.putOnDisplay(this.gpstrack.routeData.courseid);
+      }
     }
   },
 
@@ -2582,10 +2633,14 @@ Draw.prototype = {
       if (res.hasValidTrack) {
         rg2WarningDialog("Route already drawn", "If you draw a new route it will overwrite the old route for this runner. GPS routes are saved separately and will not be overwritten.");
       }
+      // remove old course from display just in case we missed it somewhere else
+      if (this.gpstrack.routeData.resultid !== null) {
+        rg2.putScoreCourseOnDisplay(this.gpstrack.routeData.resultid, false);
+      }
       this.gpstrack.routeData.resultid = res.resultid;
       this.gpstrack.routeData.name = res.name;
       // set up individual course if this is a score event
-      if (res.isScoreEvent) {
+      if (this.isScoreCourse) {
         rg2.putScoreCourseOnDisplay(res.resultid, true);
         this.controlx = res.scorex;
         this.controly = res.scorey;
@@ -3825,13 +3880,38 @@ Results.prototype = {
 	Constructor : Results,
 
 	addResults : function(data, isScoreEvent) {
-		// for each result
+		var i;
+		var j;
+		var result;
+		var id;
+		var baseresult;
 		var l = data.length;
-		for (var i = 0; i < l; i += 1) {
-			var result = new Result(data[i], isScoreEvent);
+		for (i = 0; i < l; i += 1) {
+			result = new Result(data[i], isScoreEvent);
 			this.results.push(result);
 		}
-		this.generateLegPositions();
+    // don't get score course info for GPS tracks so find it from original result
+    for (i = 0; i < this.results.length; i += 1) {
+      if (this.results[i].resultid >= rg2.config.GPS_RESULT_OFFSET) {
+        id = this.results[i].resultid;
+        while (id >= rg2.config.GPS_RESULT_OFFSET) {
+          id -= rg2.config.GPS_RESULT_OFFSET;
+        }
+        for (j = 0; j < this.results.length; j += 1) {
+          if (id === this.results[j].resultid) {
+            baseresult = this.getFullResult(j);
+          }
+        }
+        if (typeof baseresult !== 'undefined') {
+          if (typeof baseresult.scorex !== 'undefined') {
+            this.results[i].scorex = baseresult.scorex;
+            this.results[i].scorey = baseresult.scorey;
+            this.results[i].scorecodes = baseresult.scorecodes;
+          }
+        }
+      }
+    }
+    this.generateLegPositions();
 	},
 
   // lists all runners on a given course
@@ -3895,7 +3975,8 @@ Results.prototype = {
     }
     // save the details we have just generated
     for (i = 0; i < courses.length; i += 1) {
-      rg2.updateScoreCourse(i, codes[i], x[i], y[i]);
+      courseid = courses[i];
+      rg2.updateScoreCourse(courseid, codes[courseid], x[courseid], y[courseid]);
     }
   },
 
@@ -3961,11 +4042,14 @@ Results.prototype = {
     return a.time - b.time;
   },
   
-	getResultsByCourseID : function(courseid) {
+	countResultsByCourseID : function(courseid) {
 		var count = 0;
 		for (var i = 0; i < this.results.length; i += 1) {
 			if (this.results[i].courseid === courseid) {
-				count += 1;
+        // don't double-count GPS tracks
+        if (this.results[i].resultid < rg2.config.GPS_RESULT_OFFSET) {
+        count += 1;
+				}
 			}
 
 		}
@@ -3988,10 +4072,6 @@ Results.prototype = {
     }
     return routes;
   },
-
-	getTotalResults : function() {
-		return this.results.length;
-	},
 
 	getCourseID : function(resultid) {
 		return this.results[resultid].courseid;
@@ -4684,6 +4764,8 @@ function Runner(resultid) {
 	var t;
 	var xy;
 	var dist;
+	var lastPointIndex;
+	var ind;
 
 	if (res.hasValidTrack) {
 		// x,y are indexed by time in seconds
@@ -4754,11 +4836,23 @@ function Runner(resultid) {
 	// add track distances for each leg
 	this.legTrackDistance[0] = 0;
 	this.cumulativeTrackDistance[0] = 0;
-
-	if (course.codes !== undefined) {
-		for ( control = 1; control < course.codes.length; control += 1) {
-			this.cumulativeTrackDistance[control] = Math.round(cumulativeDistance[res.splits[control]]);
-			this.legTrackDistance[control] = this.cumulativeTrackDistance[control] - this.cumulativeTrackDistance[control - 1];
+  lastPointIndex = cumulativeDistance.length - 1;
+	if (typeof (course.codes) !== 'undefined') {
+    if (res.splits !== rg2.config.SPLITS_NOT_FOUND) {
+      for ( control = 1; control < course.codes.length; control += 1) {
+        // avoid NaN values for GPS tracks that are shorter than the result time
+        if (res.splits[control] <= lastPointIndex) {
+          ind = res.splits[control];
+        } else {
+          ind = lastPointIndex;
+        }
+        this.cumulativeTrackDistance[control] = Math.round(cumulativeDistance[ind]);
+        this.legTrackDistance[control] = this.cumulativeTrackDistance[control] - this.cumulativeTrackDistance[control - 1];
+      }
+    } else {
+      // allows for tracks at events with no results so no splits: just use start and finish
+      this.legTrackDistance[1] = Math.round(cumulativeDistance[lastPointIndex]);
+      this.cumulativeTrackDistance[1] = Math.round(cumulativeDistance[lastPointIndex]);
 		}
 	}
 

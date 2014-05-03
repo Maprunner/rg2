@@ -1063,7 +1063,12 @@ function getAllEvents() {
     }
     fclose($handle);
   }
+  usort($output, "sortEventsByDate");
   return $output;
+}
+
+function sortEventsByDate($a, $b) {
+  return strcmp($a["date"], $b["date"]);
 }
 
 function getMaps() {

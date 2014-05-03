@@ -196,13 +196,25 @@ Courses.prototype = {
     }
   },
    
+   
+  setResultsCount : function() {
+    var i;
+    for (i = 0; i < this.courses.length; i += 1) {
+      if (this.courses[i] !== undefined) {
+        this.courses[i].resultcount = rg2.countResultsByCourseID(i);
+      }
+    }
+  },
+  
 	formatCoursesAsTable : function() {
+		var res = 0;
 		var html = "<table class='coursemenutable'><tr><th>Course</th><th>Show</th><th>Runners</th><th>Tracks</th><th>Show</th></tr>";
 		for (var i = 0; i < this.courses.length; i += 1) {
 			if (this.courses[i] !== undefined) {
 				html += "<tr><td>" + this.courses[i].name + "</td>";
 				html += "<td><input class='courselist' id=" + i + " type=checkbox name=course></input></td>";
-				html += "<td>" + rg2.getResultsByCourseID(i) + "</td>";
+				html += "<td>" + this.courses[i].resultcount + "</td>";
+				res += this.courses[i].resultcount;
 				html += "<td>" + this.courses[i].trackcount + "</td>";
 				if (this.courses[i].trackcount > 0) {
 					html += "<td><input id=" + i + " class='tracklist' type=checkbox name=track></input></td>";
@@ -215,7 +227,7 @@ Courses.prototype = {
 		// add bottom row for all courses checkboxes
 		html += "<tr class='allitemsrow'><td>All</td>";
 		html += "<td><input class='allcourses' id=" + i + " type=checkbox name=course></input></td>";
-		html += "<td>" + rg2.getTotalResults() + "</td>";
+		html += "<td>" + res + "</td>";
 		if (this.totaltracks > 0) {
 			html += "<td>" + this.totaltracks + "</td><td><input id=" + i + " class='alltracks' type=checkbox name=track></input></td>";
 		} else {
@@ -235,6 +247,7 @@ function Course(data, isScoreCourse) {
 	this.x = data.xpos;
 	this.y = data.ypos;
 	this.isScoreCourse = isScoreCourse;
+	this.resultcount = 0;
 }
 
 Course.prototype = {
