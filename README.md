@@ -1,7 +1,7 @@
 # Routegadget 2.0
 
 ## Latest news
-Version 0.6.13 was released on 5 April 2014 and has been installed on all routegadget.co.uk sites. This includes a number of minor updates to address user comments.
+Version 0.7.0 was released on 3 May 2014 and has been installed on all routegadget.co.uk sites. This includes a number of minor updates to address user comments, as well as a fully functioning manager interface to allow new events to be created.
 
 ## What is RouteGadget?
 Routegadget is a Web application for drawing and comparing orienteering routes. The original version was developed by Jarkko Ryyppö, and
