@@ -61,7 +61,7 @@ Events.prototype = {
 		if (this.activeEventID !== null) {
 			return this.events[this.activeEventID].name;
 		} else {
-			return "Routegadget 2.0";
+			return "Routegadget 2";
 		}
 	},
 

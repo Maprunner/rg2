@@ -1,4 +1,4 @@
-// Version 0.7.0 2014-04-29T21:11:34;
+// Version 0.7.1 2014-05-08T20:02:30;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -27,6 +27,7 @@
 /*global Course:false */
 /*global trackTransforms:false */
 /*global getDistanceBetweenPoints:false */
+/*global rg2WarningDialog:false */
 /*global setTimeout:false */
 /*global localStorage:false */
 var rg2 = ( function() {
@@ -100,7 +101,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.7.0',
+      RG2VERSION: '0.7.1',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -407,6 +408,9 @@ var rg2 = ( function() {
             options = JSON.parse(localStorage.getItem( 'rg2-options'));
             // best to keep this at default?
             options.circleSize = 20;
+            if (options.mapIntensity === 0) {
+              rg2WarningDialog("Map is hidden", "Your saved settings have the map intensity set to 0% so the map will be invisible. You can adjust this on the configuration menu");
+            }
           }
         }
       } catch (e) {
@@ -631,7 +635,7 @@ var rg2 = ( function() {
     }
 
     function displayAboutDialog() {
-      $("#rg2-version-info").empty().append("Version information: " + config.RG2VERSION);
+      $("#rg2-version-info").empty().append("This is RG2 Version " + config.RG2VERSION);
       $("#rg2-about-dialog").dialog({
         //modal : true,
         minWidth : 400,
@@ -3284,7 +3288,7 @@ Events.prototype = {
 		if (this.activeEventID !== null) {
 			return this.events[this.activeEventID].name;
 		} else {
-			return "Routegadget 2.0";
+			return "Routegadget 2";
 		}
 	},
 
@@ -4523,9 +4527,14 @@ drawScoreCourse : function() {
   },
 
 	expandNormalTrack : function() {
-		// add times and distances at each position
+    // allow for getting two tracks for same result: should have been filtered in API...
+    this.xysecs.length = 0;
+    this.cumulativeDistance.length = 0;
+    
+    // add times and distances at each position	
 		this.xysecs[0] = 0;
 		this.cumulativeDistance[0] = 0;
+		
 		// get course details
 		var course = {};
 		// each person has their own defined score course

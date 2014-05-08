@@ -26,6 +26,7 @@
 /*global Course:false */
 /*global trackTransforms:false */
 /*global getDistanceBetweenPoints:false */
+/*global rg2WarningDialog:false */
 /*global setTimeout:false */
 /*global localStorage:false */
 var rg2 = ( function() {
@@ -99,7 +100,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.7.0',
+      RG2VERSION: '0.7.1',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -406,6 +407,9 @@ var rg2 = ( function() {
             options = JSON.parse(localStorage.getItem( 'rg2-options'));
             // best to keep this at default?
             options.circleSize = 20;
+            if (options.mapIntensity === 0) {
+              rg2WarningDialog("Map is hidden", "Your saved settings have the map intensity set to 0% so the map will be invisible. You can adjust this on the configuration menu");
+            }
           }
         }
       } catch (e) {
@@ -630,7 +634,7 @@ var rg2 = ( function() {
     }
 
     function displayAboutDialog() {
-      $("#rg2-version-info").empty().append("Version information: " + config.RG2VERSION);
+      $("#rg2-version-info").empty().append("This is RG2 Version " + config.RG2VERSION);
       $("#rg2-about-dialog").dialog({
         //modal : true,
         minWidth : 400,
