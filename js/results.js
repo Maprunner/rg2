@@ -653,9 +653,14 @@ drawScoreCourse : function() {
   },
 
 	expandNormalTrack : function() {
-		// add times and distances at each position
+    // allow for getting two tracks for same result: should have been filtered in API...
+    this.xysecs.length = 0;
+    this.cumulativeDistance.length = 0;
+    
+    // add times and distances at each position	
 		this.xysecs[0] = 0;
 		this.cumulativeDistance[0] = 0;
+		
 		// get course details
 		var course = {};
 		// each person has their own defined score course

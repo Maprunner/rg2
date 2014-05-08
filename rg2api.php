@@ -870,13 +870,24 @@ function addNewRoute($eventid, $data) {
     @fclose($handle);
   }
   
-  if (($handle = @fopen(KARTAT_DIRECTORY."merkinnat_".$eventid.".txt", "a")) !== FALSE) {
-    $status =fwrite($handle, $newtrackdata);  
-    if (!$status) {
-      $write["status_msg"] .= " Save error for merkinnat. ";
+  $filename = KARTAT_DIRECTORY."merkinnat_".$eventid.".txt";
+  $oldfile = file($filename);
+  $updatedfile = array();
+  // copy each existing row to output file
+  foreach ($oldfile as $row) {
+    $data = explode("|", $row);
+    // but not if it is a drawn route for the current result
+    if (($data[1] != $id) || ($data[1] >= GPS_RESULT_OFFSET)) {
+      $updatedfile[] = $row;
     }
-    @fflush($handle);
-    @fclose($handle);
+  }
+  // add new track at end of file
+  $updatedfile[] = $newtrackdata;
+  
+  $status = file_put_contents($filename, $updatedfile);  
+ 
+  if (!$status) {
+    $write["status_msg"] .= " Save error for merkinnat. ";
   }
 
   if (($newresult == TRUE) || ($id >= GPS_RESULT_OFFSET)) {
@@ -1395,11 +1406,6 @@ function getTracksForEvent($eventid) {
       $detail["name"] = encode_rg_input($data[2]);
       $detail["mystery"] = $data[3];
       list($detail["gpsx"], $detail["gpsy"]) = expandCoords($data[4]);
-      //if (count($data) > 5) {
-      //  $detail["controls"] = $data[5];
-      //} else {
-       // $detail["controls"] = "";
-      //}
       $output[$row] = $detail;        
       $row++;
     }
