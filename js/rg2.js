@@ -100,7 +100,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.7.0',
+      RG2VERSION: '0.7.1',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -634,7 +634,7 @@ var rg2 = ( function() {
     }
 
     function displayAboutDialog() {
-      $("#rg2-version-info").empty().append("Version information: " + config.RG2VERSION);
+      $("#rg2-version-info").empty().append("This is RG2 Version " + config.RG2VERSION);
       $("#rg2-about-dialog").dialog({
         //modal : true,
         minWidth : 400,

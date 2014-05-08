@@ -824,7 +824,7 @@ function addNewRoute($eventid, $data) {
     $controls .= 'N'.$data->controlx[$i].';-'.$data->controly[$i];
   }
   
-  $newtrackdata = $data->courseid."|".$id."| ".$name."|null|".$track."|".$controls.PHP_EOL;
+  $newtrackdata = $data->courseid."|".$id."|".$name."|null|".$track."|".$controls.PHP_EOL;
 
   $newresultdata = "";
   if (($newresult == TRUE) || ($id >= GPS_RESULT_OFFSET)) {
