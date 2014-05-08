@@ -26,6 +26,7 @@
 /*global Course:false */
 /*global trackTransforms:false */
 /*global getDistanceBetweenPoints:false */
+/*global rg2WarningDialog:false */
 /*global setTimeout:false */
 /*global localStorage:false */
 var rg2 = ( function() {
@@ -406,6 +407,9 @@ var rg2 = ( function() {
             options = JSON.parse(localStorage.getItem( 'rg2-options'));
             // best to keep this at default?
             options.circleSize = 20;
+            if (options.mapIntensity === 0) {
+              rg2WarningDialog("Map is hidden", "Your saved settings have the map intensity set to 0% so the map will be invisible. You can adjust this on the configuration menu");
+            }
           }
         }
       } catch (e) {
