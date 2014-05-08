@@ -558,14 +558,7 @@ var rg2 = ( function() {
       canvas.width = winwidth;
       // allow for header
       canvas.height = winheight - 36;
-      // set title bar
-      if (window.innerWidth >= config.BIG_SCREEN_BREAK_POINT) {
-        $rg2eventtitle.text(events.getActiveEventName() + " " + events.getActiveEventDate()).show();
-      } else if (window.innerWidth > config.SMALL_SCREEN_BREAK_POINT) {
-        $rg2eventtitle.text(events.getActiveEventName()).show();
-      } else {
-        $rg2eventtitle.hide();
-      }
+      setTitleBar();
       resetMapState();
     }
 
@@ -871,14 +864,8 @@ var rg2 = ( function() {
       loadNewMap(maps_url + "/" + events.getActiveMapID() + '.jpg');
       redraw(false);
 
-      // set title bar
-      if (window.innerWidth >= config.BIG_SCREEN_BREAK_POINT) {
-        $rg2eventtitle.text(events.getActiveEventName() + " " + events.getActiveEventDate()).show();
-      } else if (window.innerWidth > config.SMALL_SCREEN_BREAK_POINT) {
-        $rg2eventtitle.text(events.getActiveEventName()).show();
-      } else {
-        $rg2eventtitle.hide();
-      }
+      setTitleBar();
+
       // get courses for event
       $.getJSON(json_url, {
         id : events.getKartatEventID(),
@@ -900,6 +887,19 @@ var rg2 = ( function() {
         console.log("Courses request failed: " + err);
       });
 
+    }
+
+    function setTitleBar() {
+      var title;
+      if (window.innerWidth >= config.BIG_SCREEN_BREAK_POINT) {
+        title = events.getActiveEventName() + " " + events.getActiveEventDate();
+        $rg2eventtitle.html(title).show();
+      } else if (window.innerWidth > config.SMALL_SCREEN_BREAK_POINT) {
+        title = events.getActiveEventName();
+        $rg2eventtitle.html(title).show();
+      } else {
+        $rg2eventtitle.hide();
+      }
     }
 
     function loadNewMap(mapFile) {
