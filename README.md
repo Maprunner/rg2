@@ -1,4 +1,4 @@
-# Routegadget 2.0
+# Routegadget 2
 
 ## Latest news
 Version 0.7.0 was released on 3 May 2014 and has been installed on all routegadget.co.uk sites. This includes a number of minor updates to address user comments, as well as a fully functioning manager interface to allow new events to be created.
@@ -13,16 +13,16 @@ If you are still lost then try:
 * The original [Hertfordshire Orienteering Club Routegadget site] (http://www.happyherts.routegadget.co.uk/cgi-bin/reitti.cgi).
 * The new [Hertfordshire Orientering Club Routegadget 2.0 site] (http://www.happyherts.routegadget.co.uk/rg2/index.php).
 
-## Why Routegadget 2.0?
+## Why Routegadget 2?
 The original Routegadget makes extensive use of Java, and this has caused increasing difficulties.
-Routegadget 2.0 allows you to view existing Routegadget information in any modern (HTML5-compliant) browser without the need for Java.
+Routegadget 2 allows you to view existing Routegadget information in any modern (HTML5-compliant) browser without the need for Java.
 It also adds a modern user interface as well as updated functionality for analysis.
 
 ## GPS file adjustment
 When you upload a file it is initially fitted to the course as closely as possible. Adjustment handles (small dots) are added at the start and end of the route. These are green when free to move and red when locked. Left click on a handle to toggle the lock. You can stretch and rotate around a single locked point, or between two locked points. In future the plan is to georeference maps and courses when they are added to RG2, and no adjustment will then be needed.
 
 ##Installation
-To use Routegadget 2.0 you need to install it in an existing Routegadget installation. This will require ftp access to your server. If this makes no sense then the following information is not for you.
+To use Routegadget 2 you need to install it in an existing Routegadget installation. This will require ftp access to your server. If this makes no sense then the following information is not for you.
 
 1. Download the [files] (https://github.com/Maprunner/rg2/archive/master.zip) and extract them. Note that this will extract them to a directory called rg-master, which needs to be renamed to rg2.
 
