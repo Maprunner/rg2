@@ -1,4 +1,4 @@
-// Version 0.7.1 2014-05-08T20:02:30;
+// Version 0.7.2 2014-05-10T17:25:42;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -101,7 +101,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.7.1',
+      RG2VERSION: '0.7.2',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -559,14 +559,7 @@ var rg2 = ( function() {
       canvas.width = winwidth;
       // allow for header
       canvas.height = winheight - 36;
-      // set title bar
-      if (window.innerWidth >= config.BIG_SCREEN_BREAK_POINT) {
-        $rg2eventtitle.text(events.getActiveEventName() + " " + events.getActiveEventDate()).show();
-      } else if (window.innerWidth > config.SMALL_SCREEN_BREAK_POINT) {
-        $rg2eventtitle.text(events.getActiveEventName()).show();
-      } else {
-        $rg2eventtitle.hide();
-      }
+      setTitleBar();
       resetMapState();
     }
 
@@ -872,14 +865,8 @@ var rg2 = ( function() {
       loadNewMap(maps_url + "/" + events.getActiveMapID() + '.jpg');
       redraw(false);
 
-      // set title bar
-      if (window.innerWidth >= config.BIG_SCREEN_BREAK_POINT) {
-        $rg2eventtitle.text(events.getActiveEventName() + " " + events.getActiveEventDate()).show();
-      } else if (window.innerWidth > config.SMALL_SCREEN_BREAK_POINT) {
-        $rg2eventtitle.text(events.getActiveEventName()).show();
-      } else {
-        $rg2eventtitle.hide();
-      }
+      setTitleBar();
+
       // get courses for event
       $.getJSON(json_url, {
         id : events.getKartatEventID(),
@@ -901,6 +888,19 @@ var rg2 = ( function() {
         console.log("Courses request failed: " + err);
       });
 
+    }
+
+    function setTitleBar() {
+      var title;
+      if (window.innerWidth >= config.BIG_SCREEN_BREAK_POINT) {
+        title = events.getActiveEventName() + " " + events.getActiveEventDate();
+        $rg2eventtitle.html(title).show();
+      } else if (window.innerWidth > config.SMALL_SCREEN_BREAK_POINT) {
+        title = events.getActiveEventName();
+        $rg2eventtitle.html(title).show();
+      } else {
+        $rg2eventtitle.hide();
+      }
     }
 
     function loadNewMap(mapFile) {

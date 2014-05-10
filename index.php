@@ -31,10 +31,12 @@ if (defined('OVERRIDE_BASE_DIRECTORY')) {
 	$json_url = OVERRIDE_BASE_DIRECTORY . "/rg2/rg2api.php";
 	$script_url = OVERRIDE_BASE_DIRECTORY . "/rg2/js/";
 	$img_url = OVERRIDE_BASE_DIRECTORY . "/rg2/img/";
+  $css_url = OVERRIDE_BASE_DIRECTORY . "/rg2/css/";
 } else {
 	$json_url = RG_BASE_DIRECTORY . "/rg2/rg2api.php";
 	$script_url = RG_BASE_DIRECTORY . "/rg2/js/";
 	$img_url = RG_BASE_DIRECTORY . "/rg2/img/";
+  $css_url = RG_BASE_DIRECTORY . "/rg2/css/";
 }
 
 if (defined('OVERRIDE_KARTAT_DIRECTORY')) {
@@ -82,8 +84,8 @@ if (isset($_GET['debug']) || $override) {
     <meta name="description" content="View and save route choices for orienteering events">
     <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
     <link rel="shortcut icon" href="img/favicon.ico"/>
-    <link rel="stylesheet" href="css/normalize.min.css">
-    <link rel="stylesheet" href="css/rg2.css">
+    <link rel="stylesheet" href='<?php echo $css_url ."normalize.min.css'>"; ?>  
+    <link rel="stylesheet" href='<?php echo $css_url ."rg2.css'>"; ?>
     <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/themes/<?php echo $ui_theme; ?>/jquery-ui.min.css">
     <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
   </head>
