@@ -11,7 +11,9 @@ For a quick start try:
  
 2. Video: [A quick introduction to RG2] (http://screencast-o-matic.com/u/VJsd/RG2-Quick-Introduction)
 
-3. Video: [A quick introduction to RG2 manager functions] (http://screencast-o-matic.com/u/VJsd/RG2-Cassiobury-Manager-Demo)
+3. Video: [Drawing a route] (http://screencast-o-matic.com/u/VJsd/RG2-Draw-A-Route)
+
+4. Video: [A quick introduction to RG2 manager functions] (http://screencast-o-matic.com/u/VJsd/RG2-Cassiobury-Manager-Demo)
 
 ## What is RouteGadget?
 Routegadget is a Web application for drawing and comparing orienteering routes. The original version was developed by Jarkko Ryyppö, and
