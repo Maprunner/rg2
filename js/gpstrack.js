@@ -167,6 +167,9 @@ GPSTrack.prototype = {
 				});
 				this.fitTrackInsideCourse();
 
+			} else {
+        // everything OK so lock background to avoid accidental adjustment
+        $('#btn-move-all').prop('checked', true);
 			}
 		} else {
 			this.fitTrackInsideCourse();

@@ -1,4 +1,4 @@
-// Version 0.7.2 2014-05-10T17:25:42;
+// Version 0.7.3 2014-05-11T14:21:02;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -101,7 +101,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.7.2',
+      RG2VERSION: '0.7.3',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -257,9 +257,7 @@ var rg2 = ( function() {
         drawing.saveGPSRoute();
       });
 
-      $("#btn-move-all").prop('checked', false).click(function(evt) {
-        drawing.toggleMoveAll(evt.target.checked);
-      });
+      $("#btn-move-all").prop('checked', false);
 
       $("#btn-undo").click(function() {
         drawing.undoLastPoint();
@@ -862,9 +860,8 @@ var rg2 = ( function() {
       results.deleteAllResults();
       events.setActiveEventID(eventid);
       drawing.initialiseDrawing(events.hasResults(eventid));
-      loadNewMap(maps_url + "/" + events.getActiveMapID() + '.jpg');
+      loadNewMap(maps_url + events.getActiveMapID() + '.jpg');
       redraw(false);
-
       setTitleBar();
 
       // get courses for event
@@ -900,6 +897,11 @@ var rg2 = ( function() {
         $rg2eventtitle.html(title).show();
       } else {
         $rg2eventtitle.hide();
+      }
+      if (events.mapIsGeoreferenced()) {
+        $("#rg2-event-title-icon").addClass("fa fa-globe");
+      } else {
+        $("#rg2-event-title-icon").removeClass("fa fa-globe");
       }
     }
 
@@ -2456,15 +2458,9 @@ Draw.prototype = {
     }
   },
 
-  // locks or unlocks background when adjusting map
-  toggleMoveAll : function(checkedState) {
-    this.backgroundLocked = checkedState;
-  },
-
   initialiseDrawing : function() {
     this.gpstrack = new GPSTrack();
     this.gpstrack.routeData = new RouteData();
-    this.backgroundLocked = false;
     this.pointsLocked = 0;
     this.pendingCourseID = null;
     // the RouteData versions of these have the start control removed for saving
@@ -2491,7 +2487,7 @@ Draw.prototype = {
     $("#rg2-name-select").empty();
     $("#rg2-new-comments").empty().val(rg2.config.DEFAULT_NEW_COMMENT);
     $("#rg2-event-comments").empty().val(rg2.config.DEFAULT_EVENT_COMMENT);
-    $("rg2-move-all").prop('checked', false);
+    $("#btn-move-all").prop('checked', false);
     $("#rg2-load-gps-file").button('disable');
     $("#rg2-name-entry").empty().val('');
     $("#rg2-time-entry").empty().val('');
@@ -2894,8 +2890,10 @@ Draw.prototype = {
     var lockedHandle2;
     var fromTime;
     var toTime;
+    var backgroundLocked;
     //console.log("adjustTrack ", x1, y1, x2, y2);
-    if ((this.backgroundLocked) || (button === rg2.config.RIGHT_CLICK)) {
+    backgroundLocked = $('#btn-move-all').prop('checked');
+    if ((backgroundLocked) || (button === rg2.config.RIGHT_CLICK)) {
       rg2.ctx.translate(x2 - x1, y2 - y1);
     } else {
       trk = this.gpstrack;
@@ -3331,7 +3329,11 @@ Events.prototype = {
   },
 
 	mapIsGeoreferenced : function() {
-		return this.events[this.activeEventID].georeferenced;
+		if (this.activeEventID === null) {
+      return false;
+		} else {
+      return this.events[this.activeEventID].georeferenced;
+		}
 	},
 
 	getWorldFile : function() {
@@ -3343,15 +3345,21 @@ Events.prototype = {
 		var html = '';
 		var i;
 		for (i = this.events.length - 1; i >= 0; i -= 1) {
+			title = this.events[i].type + " event on " + this.events[i].date;
+      if (this.events[i].georeferenced) {
+        title += ": Map is georeferenced";
+      }
+
 			if (this.events[i].comment !== "") {
-				title = this.events[i].type + " event on " + this.events[i].date + ": " + this.events[i].comment;
-			} else {
-				title = this.events[i].type + " event on " + this.events[i].date;
+				title += ": " + this.events[i].comment;
 			}
 			html += "<li title='" + title + "' id=" + i + "><a href='#" + this.events[i].kartatid + "'>";
 			if (this.events[i].comment !== "") {
 				html += "<i class='fa fa-info-circle event-info-icon' id='info-" + i + "'></i>";
 			}
+      if (this.events[i].georeferenced) {
+        html += "<i class='fa fa-globe event-info-icon' id='info-" + i + "'>&nbsp</i>";
+      }
 			html += this.events[i].name + "</a></li>";
 		}
 		return html;
@@ -3576,6 +3584,9 @@ GPSTrack.prototype = {
 				});
 				this.fitTrackInsideCourse();
 
+			} else {
+        // everything OK so lock background to avoid accidental adjustment
+        $('#btn-move-all').prop('checked', true);
 			}
 		} else {
 			this.fitTrackInsideCourse();
