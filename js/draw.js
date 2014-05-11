@@ -128,15 +128,9 @@ Draw.prototype = {
     }
   },
 
-  // locks or unlocks background when adjusting map
-  toggleMoveAll : function(checkedState) {
-    this.backgroundLocked = checkedState;
-  },
-
   initialiseDrawing : function() {
     this.gpstrack = new GPSTrack();
     this.gpstrack.routeData = new RouteData();
-    this.backgroundLocked = false;
     this.pointsLocked = 0;
     this.pendingCourseID = null;
     // the RouteData versions of these have the start control removed for saving
@@ -163,7 +157,7 @@ Draw.prototype = {
     $("#rg2-name-select").empty();
     $("#rg2-new-comments").empty().val(rg2.config.DEFAULT_NEW_COMMENT);
     $("#rg2-event-comments").empty().val(rg2.config.DEFAULT_EVENT_COMMENT);
-    $("rg2-move-all").prop('checked', false);
+    $("#btn-move-all").prop('checked', false);
     $("#rg2-load-gps-file").button('disable');
     $("#rg2-name-entry").empty().val('');
     $("#rg2-time-entry").empty().val('');
@@ -566,8 +560,10 @@ Draw.prototype = {
     var lockedHandle2;
     var fromTime;
     var toTime;
+    var backgroundLocked;
     //console.log("adjustTrack ", x1, y1, x2, y2);
-    if ((this.backgroundLocked) || (button === rg2.config.RIGHT_CLICK)) {
+    backgroundLocked = $('#btn-move-all').prop('checked');
+    if ((backgroundLocked) || (button === rg2.config.RIGHT_CLICK)) {
       rg2.ctx.translate(x2 - x1, y2 - y1);
     } else {
       trk = this.gpstrack;

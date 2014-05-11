@@ -104,7 +104,11 @@ Events.prototype = {
   },
 
 	mapIsGeoreferenced : function() {
-		return this.events[this.activeEventID].georeferenced;
+		if (this.activeEventID === null) {
+      return false;
+		} else {
+      return this.events[this.activeEventID].georeferenced;
+		}
 	},
 
 	getWorldFile : function() {
@@ -116,15 +120,21 @@ Events.prototype = {
 		var html = '';
 		var i;
 		for (i = this.events.length - 1; i >= 0; i -= 1) {
+			title = this.events[i].type + " event on " + this.events[i].date;
+      if (this.events[i].georeferenced) {
+        title += ": Map is georeferenced";
+      }
+
 			if (this.events[i].comment !== "") {
-				title = this.events[i].type + " event on " + this.events[i].date + ": " + this.events[i].comment;
-			} else {
-				title = this.events[i].type + " event on " + this.events[i].date;
+				title += ": " + this.events[i].comment;
 			}
 			html += "<li title='" + title + "' id=" + i + "><a href='#" + this.events[i].kartatid + "'>";
 			if (this.events[i].comment !== "") {
 				html += "<i class='fa fa-info-circle event-info-icon' id='info-" + i + "'></i>";
 			}
+      if (this.events[i].georeferenced) {
+        html += "<i class='fa fa-globe event-info-icon' id='info-" + i + "'>&nbsp</i>";
+      }
 			html += this.events[i].name + "</a></li>";
 		}
 		return html;

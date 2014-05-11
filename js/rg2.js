@@ -100,7 +100,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.7.2',
+      RG2VERSION: '0.7.3',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -256,9 +256,7 @@ var rg2 = ( function() {
         drawing.saveGPSRoute();
       });
 
-      $("#btn-move-all").prop('checked', false).click(function(evt) {
-        drawing.toggleMoveAll(evt.target.checked);
-      });
+      $("#btn-move-all").prop('checked', false);
 
       $("#btn-undo").click(function() {
         drawing.undoLastPoint();
@@ -861,9 +859,8 @@ var rg2 = ( function() {
       results.deleteAllResults();
       events.setActiveEventID(eventid);
       drawing.initialiseDrawing(events.hasResults(eventid));
-      loadNewMap(maps_url + "/" + events.getActiveMapID() + '.jpg');
+      loadNewMap(maps_url + events.getActiveMapID() + '.jpg');
       redraw(false);
-
       setTitleBar();
 
       // get courses for event
@@ -899,6 +896,11 @@ var rg2 = ( function() {
         $rg2eventtitle.html(title).show();
       } else {
         $rg2eventtitle.hide();
+      }
+      if (events.mapIsGeoreferenced()) {
+        $("#rg2-event-title-icon").addClass("fa fa-globe");
+      } else {
+        $("#rg2-event-title-icon").removeClass("fa fa-globe");
       }
     }
 
