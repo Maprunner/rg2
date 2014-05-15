@@ -1350,9 +1350,14 @@ function getCoursesForEvent($eventid) {
 
 function expandCoords($coords) {
   // Split Nxx;-yy,0Nxxx;-yy,0N.. into x,y arrays
-  // but note that somestimes you don't get the ,0
+  // but note that sometimes you don't get the ,0
   $x = array();
   $y = array();
+  // handle empty coord string: found some examples in Jukola files
+  // 5 is enough for one coordinate set, but the problem files just had "0"
+  if (strlen($coords) < 5) {
+    return array(array_map('intval', $x), array_map('intval', $y));    
+  }
   $xy = explode("N", $coords);
   foreach ($xy as $point) {
     $temp = explode(";", $point);
@@ -1366,7 +1371,6 @@ function expandCoords($coords) {
       } else {
         $y[] = substr($temp[1], 1);
       }
-
     }
   }
   // return the two arrays converted to integer values
