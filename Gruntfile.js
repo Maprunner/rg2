@@ -152,7 +152,7 @@ module.exports = function(grunt) {
         cwd : 'rel/',
         expand : true,
         src : '**',
-        dest : 'ftpsite/clok/rg2/'
+        dest : 'ftpsite/clok/gadget/rg2/'
       },
       claro : {
         cwd : 'rel/',
@@ -218,7 +218,7 @@ module.exports = function(grunt) {
         cwd : 'rel/',
         expand : true,
         src : '**',
-        dest : 'ftpsite/epoc/gadget/rg2/'
+        dest : 'ftpsite/epoc/rg2/'
       },
       esoc : {
         cwd : 'rel/',
