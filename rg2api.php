@@ -1196,6 +1196,7 @@ function getResultsForEvent($eventid) {
         $scoreref[$row] = $data[0];
         $xpos[$row] = $x;
         $ypos[$row] = $y;
+        $sentalready[$row] = false;
         $row++;    
       }
       fclose($handle);
@@ -1231,13 +1232,17 @@ function getResultsForEvent($eventid) {
       $detail["name"] = encode_rg_input($data[3]);
       $detail["starttime"] = intval($data[4]);
       $detail["databaseid"] = encode_rg_input($data[5]);
-      $detail["scoreref"] = $data[6];
+      $detail["scoreref"] = intval($data[6]);
       if ($data[6] != "") {
         for ($i = 0; $i < count($scoreref); $i++) {
+          // only send course details the first time they occur: makes response a lot smaller for big (Jukola!) relays
           if ($scoreref[$i] == $data[6]) {
-            $detail["scorex"] = $xpos[$i];  
-            $detail["scorey"] = $ypos[$i];
-            $detail["scorecodes"] = $codes[$i];
+            if (!$sentalready[$i]) {
+              $detail["scorex"] = $xpos[$i];  
+              $detail["scorey"] = $ypos[$i];
+              $detail["scorecodes"] = $codes[$i];
+              $sentalready[$i] = true;
+            }
           }
         }          
       }
