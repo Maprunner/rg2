@@ -429,9 +429,9 @@ Results.prototype = {
 				oldCourseID = temp.courseid;
 			}
       if (temp.isScoreEvent) {
-        namehtml = "<input class='showscorecourse showscorecourse-" + i + "' id=" + i + " type=checkbox name=scorecourse></input> " + temp.name;
+        namehtml = "<input class='showscorecourse showscorecourse-" + i + "' id=" + i + " type=checkbox name=scorecourse></input><div>" + temp.name + "</div>";
       } else {
-        namehtml = temp.name;
+        namehtml = "<div>" + temp.name + "</div>";
       }
       
 			if (temp.comments !== "") {

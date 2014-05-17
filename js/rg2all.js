@@ -1,4 +1,4 @@
-// Version 0.7.3 2014-05-11T14:21:02;
+// Version 0.7.4 2014-05-17T15:45:08;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -101,7 +101,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.7.3',
+      RG2VERSION: '0.7.4',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -197,6 +197,9 @@ var rg2 = ( function() {
       $("#rg2-splits-display").hide();
       $("#rg2-track-names").hide();
       $("#rg2-add-new-event").hide();
+      
+      $("#rg2-load-progress-bar").progressbar({value: false});
+      $("#rg2-load-progress").hide();
 
       $("#btn-about").click(function() {
         displayAboutDialog();
@@ -854,6 +857,8 @@ var rg2 = ( function() {
     function loadEvent(eventid) {
       // new event selected: show we are waiting
       $('body').css('cursor', 'wait');
+      $("#rg2-load-progress-label").text("Loading courses");
+      $("#rg2-load-progress").show();
       courses.deleteAllCourses();
       controls.deleteAllControls();
       animation.resetAnimation();
@@ -870,6 +875,7 @@ var rg2 = ( function() {
         type : "courses",
         cache : false
       }).done(function(json) {
+        $("#rg2-load-progress-label").text("Saving courses");
         console.log("Courses: " + json.data.length);
         $.each(json.data, function() {
           courses.addCourse(new Course(this, events.isScoreEvent()));
@@ -881,6 +887,7 @@ var rg2 = ( function() {
         getResults();
       }).fail(function(jqxhr, textStatus, error) {
         $('body').css('cursor', 'auto');
+        $("#rg2-load-progress").hide();
         var err = textStatus + ", " + error;
         console.log("Courses request failed: " + err);
       });
@@ -911,12 +918,14 @@ var rg2 = ( function() {
     }
 
     function getResults() {
+      $("#rg2-load-progress-label").text("Loading results");
       $.getJSON(json_url, {
         id : events.getKartatEventID(),
         type : "results",
         cache : false
       }).done(function(json) {
         console.log("Results: " + json.data.length);
+        $("#rg2-load-progress-label").text("Saving results");
         var isScoreEvent = events.isScoreEvent();
         results.addResults(json.data, isScoreEvent);
         courses.setResultsCount();
@@ -931,15 +940,18 @@ var rg2 = ( function() {
         $('body').css('cursor', 'auto');
         var err = textStatus + ", " + error;
         console.log("Results request failed: " + err);
+        $("#rg2-load-progress").hide();
       });
     }
 
     function getGPSTracks() {
+      $("#rg2-load-progress-label").text("Loading routes");
       $.getJSON(json_url, {
         id : events.getKartatEventID(),
         type : "tracks",
         cache : false
       }).done(function(json) {
+        $("#rg2-load-progress-label").text("Saving routes");
         console.log("Tracks: " + json.data.length);
         results.addTracks(json.data);
         createCourseMenu();
@@ -962,11 +974,13 @@ var rg2 = ( function() {
           $rg2infopanel.tabs("refresh");
           $("#btn-show-splits").show();
         }
+        $("#rg2-load-progress").hide();
         redraw(false);
       }).fail(function(jqxhr, textStatus, error) {
         $('body').css('cursor', 'auto');
         var err = textStatus + ", " + error;
         console.log("Tracks request failed: " + err);
+        $("#rg2-load-progress").hide();
       });
     }
 
@@ -1061,9 +1075,9 @@ var rg2 = ( function() {
       // checkbox to animate a result
       $(".showreplay").click(function(event) {
         if (event.target.checked) {
-          animation.addRunner(new Runner(parseInt(event.target.id, 10)));
+          animation.addRunner(new Runner(parseInt(event.target.id, 10)), true);
         } else {
-          animation.removeRunner(parseInt(event.target.id, 10));
+          animation.removeRunner(parseInt(event.target.id, 10), true);
         }
         redraw(false);
       });
@@ -1094,17 +1108,10 @@ var rg2 = ( function() {
       
       // checkbox to animate all results for course
       $(".allcoursereplay").click(function(event) {
-        var runners;
+        var courseresults;
         var selector;
-        runners = results.getAllRunnersForCourse(parseInt(event.target.id, 10));
-        var i;
-        for (i = 0; i < runners.length; i += 1) {
-          if (event.target.checked) {
-            animation.addRunner(new Runner(runners[i]));
-          } else {
-            animation.removeRunner(runners[i]);
-          }
-        }
+        courseresults = results.getAllRunnersForCourse(parseInt(event.target.id, 10));
+        animation.animateRunners(courseresults, event.target.checked);
         selector = ".showreplay-" + event.target.id;
         if (event.target.checked) {
           // select all the individual checkboxes for each course
@@ -1344,6 +1351,7 @@ $(document).ready(rg2.init);
 /*global formatSecsAsMMSS:false */
 /*global clearInterval:false */
 /*global setInterval:false */
+/*global Runner:false */
 /*global getLatLonDistance:false */
 /*global getDistanceBetweenPoints:false */
  function Animation() {
@@ -1379,8 +1387,22 @@ Animation.prototype = {
 		$("#btn-start-stop").removeClass("fa-pause").addClass("fa-play");
 		$("#btn-start-stop").prop("title", "Run");
 	},
+	
+	// @@param courseresults: array of results to be removed
+	// @@param doAnimate: true if add to replay, false if remove from replay 
+	animateRunners : function(courseresults, doAnimate) {
+    var i;
+    for (i = 0; i < courseresults.length; i += 1) {
+      if (doAnimate) {
+        this.addRunner(new Runner(courseresults[i]), false);
+      } else {
+        this.removeRunner(courseresults[i], false);
+      }
+    }
+    this.updateAnimationDetails();
+	},
 
-	addRunner : function(runner) {
+	addRunner : function(runner, updateDetails) {
 		var i;
 		for (i = 0; i < this.runners.length; i += 1) {
       if (this.runners[i].runnerid === runner.runnerid) {
@@ -1389,7 +1411,9 @@ Animation.prototype = {
       }
 		}
 		this.runners.push(runner);
-		this.updateAnimationDetails();
+		if (updateDetails) {
+      this.updateAnimationDetails();
+		}
 	},
 
 	updateAnimationDetails : function() {
@@ -1500,14 +1524,16 @@ Animation.prototype = {
 		return html;
 	},
 
-	removeRunner : function(runnerid) {
+	removeRunner : function(runnerid, updateDetails) {
 		for (var i = 0; i < this.runners.length; i += 1) {
 			if (this.runners[i].runnerid == runnerid) {
 				// delete 1 runner at position i
 				this.runners.splice(i, 1);
 			}
 		}
-		this.updateAnimationDetails();
+		if (updateDetails) {
+      this.updateAnimationDetails();
+		}
 	},
 
 	toggleAnimation : function() {
@@ -3900,9 +3926,35 @@ Results.prototype = {
 		var result;
 		var id;
 		var baseresult;
+		var scoreref;
+		var codes;
+		var scorex;
+		var scorey;
 		var l = data.length;
+		// extract score course details if necessary
+    if (isScoreEvent) {
+      codes = [];
+      scorex = [];
+      scorey = [];
+      // details are only sent the first time a scoreref occurs (to reduce file size quite a lot in some cases)
+      // so need to extract them for use later
+      for (i = 0; i < l; i += 1) {
+        scoreref = data[i].scoreref;
+        if (typeof codes[scoreref] === 'undefined') {
+          codes[scoreref] = data[i].scorecodes;
+          scorex[scoreref] = data[i].scorex;
+          scorey[scoreref] = data[i].scorey;
+        }
+      }
+    }
+    // save each result
 		for (i = 0; i < l; i += 1) {
-			result = new Result(data[i], isScoreEvent);
+			if (isScoreEvent) {
+        scoreref = data[i].scoreref;
+        result = new Result(data[i], isScoreEvent, codes[scoreref], scorex[scoreref], scorey[scoreref]);
+			} else {
+        result = new Result(data[i], isScoreEvent);
+			}
 			this.results.push(result);
 		}
     // don't get score course info for GPS tracks so find it from original result
@@ -4288,9 +4340,9 @@ Results.prototype = {
 				oldCourseID = temp.courseid;
 			}
       if (temp.isScoreEvent) {
-        namehtml = "<input class='showscorecourse showscorecourse-" + i + "' id=" + i + " type=checkbox name=scorecourse></input> " + temp.name;
+        namehtml = "<input class='showscorecourse showscorecourse-" + i + "' id=" + i + " type=checkbox name=scorecourse></input><div>" + temp.name + "</div>";
       } else {
-        namehtml = temp.name;
+        namehtml = "<div>" + temp.name + "</div>";
       }
       
 			if (temp.comments !== "") {
@@ -4344,7 +4396,7 @@ Results.prototype = {
 	}
 };
 
-function Result(data, isScoreEvent) {
+function Result(data, isScoreEvent, scorecodes, scorex, scorey) {
 	// resultid is the kartat id value
 	this.resultid = data.resultid;
 	this.isScoreEvent = isScoreEvent;
@@ -4379,9 +4431,9 @@ function Result(data, isScoreEvent) {
 
 	if (data.scoreref !== "") {
 		// save control locations for score course result
-		this.scorex = data.scorex;
-		this.scorey = data.scorey;
-		this.scorecodes = data.scorecodes;
+		this.scorex = scorex;
+		this.scorey = scorey;
+		this.scorecodes = scorecodes;
 	}
 
 	// calculated cumulative distance in pixels
