@@ -15,9 +15,35 @@ Results.prototype = {
 		var result;
 		var id;
 		var baseresult;
+		var scoreref;
+		var codes;
+		var scorex;
+		var scorey;
 		var l = data.length;
+		// extract score course details if necessary
+    if (isScoreEvent) {
+      codes = [];
+      scorex = [];
+      scorey = [];
+      // details are only sent the first time a scoreref occurs (to reduce file size quite a lot in some cases)
+      // so need to extract them for use later
+      for (i = 0; i < l; i += 1) {
+        scoreref = data[i].scoreref;
+        if (typeof codes[scoreref] === 'undefined') {
+          codes[scoreref] = data[i].scorecodes;
+          scorex[scoreref] = data[i].scorex;
+          scorey[scoreref] = data[i].scorey;
+        }
+      }
+    }
+    // save each result
 		for (i = 0; i < l; i += 1) {
-			result = new Result(data[i], isScoreEvent);
+			if (isScoreEvent) {
+        scoreref = data[i].scoreref;
+        result = new Result(data[i], isScoreEvent, codes[scoreref], scorex[scoreref], scorey[scoreref]);
+			} else {
+        result = new Result(data[i], isScoreEvent);
+			}
 			this.results.push(result);
 		}
     // don't get score course info for GPS tracks so find it from original result
@@ -403,9 +429,9 @@ Results.prototype = {
 				oldCourseID = temp.courseid;
 			}
       if (temp.isScoreEvent) {
-        namehtml = "<input class='showscorecourse showscorecourse-" + i + "' id=" + i + " type=checkbox name=scorecourse></input> " + temp.name;
+        namehtml = "<input class='showscorecourse showscorecourse-" + i + "' id=" + i + " type=checkbox name=scorecourse></input><div>" + temp.name + "</div>";
       } else {
-        namehtml = temp.name;
+        namehtml = "<div>" + temp.name + "</div>";
       }
       
 			if (temp.comments !== "") {
@@ -459,7 +485,7 @@ Results.prototype = {
 	}
 };
 
-function Result(data, isScoreEvent) {
+function Result(data, isScoreEvent, scorecodes, scorex, scorey) {
 	// resultid is the kartat id value
 	this.resultid = data.resultid;
 	this.isScoreEvent = isScoreEvent;
@@ -494,9 +520,9 @@ function Result(data, isScoreEvent) {
 
 	if (data.scoreref !== "") {
 		// save control locations for score course result
-		this.scorex = data.scorex;
-		this.scorey = data.scorey;
-		this.scorecodes = data.scorecodes;
+		this.scorex = scorex;
+		this.scorey = scorey;
+		this.scorecodes = scorecodes;
 	}
 
 	// calculated cumulative distance in pixels

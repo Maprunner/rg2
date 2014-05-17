@@ -1156,32 +1156,15 @@ function getResultsForEvent($eventid) {
     }
     fclose($handle);
   }
-
-  if (isScoreEvent($eventid)) {
-    // extract start and finish control codes
-    $start = array();
-    $finish = array();
-    if (($handle = @fopen(KARTAT_DIRECTORY."sarjojenkoodit_".$eventid.".txt", "r")) !== FALSE) {
-      $row = 0;
-      while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
-        // ignore first field: it is an index  
-        $start[$row] = $data[1];
-        $finish[$row] = $data[count($data) - 1];
-        $row++;    
-      }
-      fclose($handle);
-    } else {
-      // just in case
-      $start[0] = 'S';
-      $finish[0] = 'F';
-    }
-    
-    // read control locations visited
+  $codes = array();
+  if (isScoreEvent($eventid)) {  
+    // read control locations visited: this includes start and finish
     if (($handle = @fopen(KARTAT_DIRECTORY."ratapisteet_".$eventid.".txt", "r")) !== FALSE) {
-      $row = 0;  
+      $row = 0;
       while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
         $x = array();
         $y = array();
+				$tempcodes = array();
         // field is N separated and then comma separated  
         $pairs = explode("N", $data[1]);
         for ($j = 0; $j < count($pairs); $j++) {
@@ -1191,27 +1174,31 @@ function getResultsForEvent($eventid) {
             $x[$j] = 1 * $xy[0];
             // make it easier to draw map
             $y[$j] = -1 * $xy[1];
+						// needs to be a string for javascript
+						$tempcodes[$j] = strval($j);
           }            
          }
         $scoreref[$row] = $data[0];
         $xpos[$row] = $x;
         $ypos[$row] = $y;
+				$codes[$row] = $tempcodes;
+        $sentalready[$row] = false;
         $row++;    
       }
       fclose($handle);
     }
     // read control codes visited
     if (($handle = @fopen(KARTAT_DIRECTORY."hajontakanta_".$eventid.".txt", "r")) !== FALSE) {
+      // if file exists then we can delete the old codes list and get the real one
+      unset($codes);
       $codes = array();
       $row = 0;
       while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
-        // should really index start and finish by course but this works unless you have two
-        // or more score courses with different starts and finishes which is a bit unlikely
         $allcodes =  explode("_", $data[2]);
         // add start at beginning of array
-        array_unshift($allcodes, $start[0]);
+        array_unshift($allcodes, "S");
         // add finish at end of array
-        array_push($allcodes, $finish[0]);
+        array_push($allcodes, "F");
         $codes[$row] = $allcodes;
         $row++;    
       }
@@ -1231,13 +1218,17 @@ function getResultsForEvent($eventid) {
       $detail["name"] = encode_rg_input($data[3]);
       $detail["starttime"] = intval($data[4]);
       $detail["databaseid"] = encode_rg_input($data[5]);
-      $detail["scoreref"] = $data[6];
+      $detail["scoreref"] = intval($data[6]);
       if ($data[6] != "") {
         for ($i = 0; $i < count($scoreref); $i++) {
+          // only send course details the first time they occur: makes response a lot smaller for big (Jukola!) relays
           if ($scoreref[$i] == $data[6]) {
-            $detail["scorex"] = $xpos[$i];  
-            $detail["scorey"] = $ypos[$i];
-            $detail["scorecodes"] = $codes[$i];
+            if (!$sentalready[$i]) {
+              $detail["scorex"] = $xpos[$i];  
+              $detail["scorey"] = $ypos[$i];
+              $detail["scorecodes"] = $codes[$i];
+              $sentalready[$i] = true;
+            }
           }
         }          
       }
@@ -1350,9 +1341,14 @@ function getCoursesForEvent($eventid) {
 
 function expandCoords($coords) {
   // Split Nxx;-yy,0Nxxx;-yy,0N.. into x,y arrays
-  // but note that somestimes you don't get the ,0
+  // but note that sometimes you don't get the ,0
   $x = array();
   $y = array();
+  // handle empty coord string: found some examples in Jukola files
+  // 5 is enough for one coordinate set, but the problem files just had "0"
+  if (strlen($coords) < 5) {
+    return array(array_map('intval', $x), array_map('intval', $y));    
+  }
   $xy = explode("N", $coords);
   foreach ($xy as $point) {
     $temp = explode(";", $point);
@@ -1366,7 +1362,6 @@ function expandCoords($coords) {
       } else {
         $y[] = substr($temp[1], 1);
       }
-
     }
   }
   // return the two arrays converted to integer values

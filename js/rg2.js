@@ -100,7 +100,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.7.3',
+      RG2VERSION: '0.7.4',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -196,6 +196,9 @@ var rg2 = ( function() {
       $("#rg2-splits-display").hide();
       $("#rg2-track-names").hide();
       $("#rg2-add-new-event").hide();
+      
+      $("#rg2-load-progress-bar").progressbar({value: false});
+      $("#rg2-load-progress").hide();
 
       $("#btn-about").click(function() {
         displayAboutDialog();
@@ -853,6 +856,8 @@ var rg2 = ( function() {
     function loadEvent(eventid) {
       // new event selected: show we are waiting
       $('body').css('cursor', 'wait');
+      $("#rg2-load-progress-label").text("Loading courses");
+      $("#rg2-load-progress").show();
       courses.deleteAllCourses();
       controls.deleteAllControls();
       animation.resetAnimation();
@@ -869,6 +874,7 @@ var rg2 = ( function() {
         type : "courses",
         cache : false
       }).done(function(json) {
+        $("#rg2-load-progress-label").text("Saving courses");
         console.log("Courses: " + json.data.length);
         $.each(json.data, function() {
           courses.addCourse(new Course(this, events.isScoreEvent()));
@@ -880,6 +886,7 @@ var rg2 = ( function() {
         getResults();
       }).fail(function(jqxhr, textStatus, error) {
         $('body').css('cursor', 'auto');
+        $("#rg2-load-progress").hide();
         var err = textStatus + ", " + error;
         console.log("Courses request failed: " + err);
       });
@@ -910,12 +917,14 @@ var rg2 = ( function() {
     }
 
     function getResults() {
+      $("#rg2-load-progress-label").text("Loading results");
       $.getJSON(json_url, {
         id : events.getKartatEventID(),
         type : "results",
         cache : false
       }).done(function(json) {
         console.log("Results: " + json.data.length);
+        $("#rg2-load-progress-label").text("Saving results");
         var isScoreEvent = events.isScoreEvent();
         results.addResults(json.data, isScoreEvent);
         courses.setResultsCount();
@@ -930,15 +939,18 @@ var rg2 = ( function() {
         $('body').css('cursor', 'auto');
         var err = textStatus + ", " + error;
         console.log("Results request failed: " + err);
+        $("#rg2-load-progress").hide();
       });
     }
 
     function getGPSTracks() {
+      $("#rg2-load-progress-label").text("Loading routes");
       $.getJSON(json_url, {
         id : events.getKartatEventID(),
         type : "tracks",
         cache : false
       }).done(function(json) {
+        $("#rg2-load-progress-label").text("Saving routes");
         console.log("Tracks: " + json.data.length);
         results.addTracks(json.data);
         createCourseMenu();
@@ -961,11 +973,13 @@ var rg2 = ( function() {
           $rg2infopanel.tabs("refresh");
           $("#btn-show-splits").show();
         }
+        $("#rg2-load-progress").hide();
         redraw(false);
       }).fail(function(jqxhr, textStatus, error) {
         $('body').css('cursor', 'auto');
         var err = textStatus + ", " + error;
         console.log("Tracks request failed: " + err);
+        $("#rg2-load-progress").hide();
       });
     }
 
@@ -1060,9 +1074,9 @@ var rg2 = ( function() {
       // checkbox to animate a result
       $(".showreplay").click(function(event) {
         if (event.target.checked) {
-          animation.addRunner(new Runner(parseInt(event.target.id, 10)));
+          animation.addRunner(new Runner(parseInt(event.target.id, 10)), true);
         } else {
-          animation.removeRunner(parseInt(event.target.id, 10));
+          animation.removeRunner(parseInt(event.target.id, 10), true);
         }
         redraw(false);
       });
@@ -1093,17 +1107,10 @@ var rg2 = ( function() {
       
       // checkbox to animate all results for course
       $(".allcoursereplay").click(function(event) {
-        var runners;
+        var courseresults;
         var selector;
-        runners = results.getAllRunnersForCourse(parseInt(event.target.id, 10));
-        var i;
-        for (i = 0; i < runners.length; i += 1) {
-          if (event.target.checked) {
-            animation.addRunner(new Runner(runners[i]));
-          } else {
-            animation.removeRunner(runners[i]);
-          }
-        }
+        courseresults = results.getAllRunnersForCourse(parseInt(event.target.id, 10));
+        animation.animateRunners(courseresults, event.target.checked);
         selector = ".showreplay-" + event.target.id;
         if (event.target.checked) {
           // select all the individual checkboxes for each course

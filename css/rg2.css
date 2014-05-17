@@ -226,6 +226,20 @@ html, body {
    z-index: 50;
 }
 
+#rg2-load-progress {
+   border: 1px solid darkgray;
+   background: rgba(204, 204, 204, 1.0);
+   padding : 2px;
+   position: absolute;
+   font:1.0em/1.0em arial;
+   text-align:center;
+   top: 100px;
+   left: 400px;
+   height: auto;
+   width: 200px;
+   z-index: 90;
+}
+
 #rg2-track-names, #rg2-animation-names {
    border: 1px solid darkgray;
    background: rgba(204, 204, 204, 0.75);
