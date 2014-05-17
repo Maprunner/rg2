@@ -1074,9 +1074,9 @@ var rg2 = ( function() {
       // checkbox to animate a result
       $(".showreplay").click(function(event) {
         if (event.target.checked) {
-          animation.addRunner(new Runner(parseInt(event.target.id, 10)));
+          animation.addRunner(new Runner(parseInt(event.target.id, 10)), true);
         } else {
-          animation.removeRunner(parseInt(event.target.id, 10));
+          animation.removeRunner(parseInt(event.target.id, 10), true);
         }
         redraw(false);
       });
@@ -1107,17 +1107,10 @@ var rg2 = ( function() {
       
       // checkbox to animate all results for course
       $(".allcoursereplay").click(function(event) {
-        var runners;
+        var courseresults;
         var selector;
-        runners = results.getAllRunnersForCourse(parseInt(event.target.id, 10));
-        var i;
-        for (i = 0; i < runners.length; i += 1) {
-          if (event.target.checked) {
-            animation.addRunner(new Runner(runners[i]));
-          } else {
-            animation.removeRunner(runners[i]);
-          }
-        }
+        courseresults = results.getAllRunnersForCourse(parseInt(event.target.id, 10));
+        animation.animateRunners(courseresults, event.target.checked);
         selector = ".showreplay-" + event.target.id;
         if (event.target.checked) {
           // select all the individual checkboxes for each course

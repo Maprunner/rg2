@@ -2,6 +2,7 @@
 /*global formatSecsAsMMSS:false */
 /*global clearInterval:false */
 /*global setInterval:false */
+/*global Runner:false */
 /*global getLatLonDistance:false */
 /*global getDistanceBetweenPoints:false */
  function Animation() {
@@ -37,8 +38,22 @@ Animation.prototype = {
 		$("#btn-start-stop").removeClass("fa-pause").addClass("fa-play");
 		$("#btn-start-stop").prop("title", "Run");
 	},
+	
+	// @@param courseresults: array of results to be removed
+	// @@param doAnimate: true if add to replay, false if remove from replay 
+	animateRunners : function(courseresults, doAnimate) {
+    var i;
+    for (i = 0; i < courseresults.length; i += 1) {
+      if (doAnimate) {
+        this.addRunner(new Runner(courseresults[i]), false);
+      } else {
+        this.removeRunner(courseresults[i], false);
+      }
+    }
+    this.updateAnimationDetails();
+	},
 
-	addRunner : function(runner) {
+	addRunner : function(runner, updateDetails) {
 		var i;
 		for (i = 0; i < this.runners.length; i += 1) {
       if (this.runners[i].runnerid === runner.runnerid) {
@@ -47,7 +62,9 @@ Animation.prototype = {
       }
 		}
 		this.runners.push(runner);
-		this.updateAnimationDetails();
+		if (updateDetails) {
+      this.updateAnimationDetails();
+		}
 	},
 
 	updateAnimationDetails : function() {
@@ -158,14 +175,16 @@ Animation.prototype = {
 		return html;
 	},
 
-	removeRunner : function(runnerid) {
+	removeRunner : function(runnerid, updateDetails) {
 		for (var i = 0; i < this.runners.length; i += 1) {
 			if (this.runners[i].runnerid == runnerid) {
 				// delete 1 runner at position i
 				this.runners.splice(i, 1);
 			}
 		}
-		this.updateAnimationDetails();
+		if (updateDetails) {
+      this.updateAnimationDetails();
+		}
 	},
 
 	toggleAnimation : function() {
