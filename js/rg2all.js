@@ -1,4 +1,4 @@
-// Version 0.7.4 2014-05-17T15:45:08;
+// Version 0.7.5 2014-05-17T16:01:29;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -101,7 +101,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.7.4',
+      RG2VERSION: '0.7.5',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -4340,7 +4340,7 @@ Results.prototype = {
 				oldCourseID = temp.courseid;
 			}
       if (temp.isScoreEvent) {
-        namehtml = "<input class='showscorecourse showscorecourse-" + i + "' id=" + i + " type=checkbox name=scorecourse></input><div>" + temp.name + "</div>";
+        namehtml = "<div><input class='showscorecourse showscorecourse-" + i + "' id=" + i + " type=checkbox name=scorecourse></input> " + temp.name + "</div>";
       } else {
         namehtml = "<div>" + temp.name + "</div>";
       }

@@ -429,7 +429,7 @@ Results.prototype = {
 				oldCourseID = temp.courseid;
 			}
       if (temp.isScoreEvent) {
-        namehtml = "<input class='showscorecourse showscorecourse-" + i + "' id=" + i + " type=checkbox name=scorecourse></input><div>" + temp.name + "</div>";
+        namehtml = "<div><input class='showscorecourse showscorecourse-" + i + "' id=" + i + " type=checkbox name=scorecourse></input> " + temp.name + "</div>";
       } else {
         namehtml = "<div>" + temp.name + "</div>";
       }
