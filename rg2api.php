@@ -11,6 +11,10 @@
   } else {
     $url = "../kartat/";
   }
+
+  if (!defined('SPLITSBROWSER_DIRECTORY')) {
+    define(SPLITSBROWSER_DIRECTORY, "../splitsbrowser/");
+  }
   
   define('KARTAT_DIRECTORY', $url);
   define ('LOCK_DIRECTORY', dirname(__FILE__)."/lock/saving/");
@@ -1011,13 +1015,71 @@ function handleGetRequest($type, $id) {
   case 'tracks':
     $output = getTracksForEvent($id);
     break;
+  case 'splitsbrowser':
+    $output = getSplitsbrowser($id);
+    break;
   default:
     die("Request not recognised: ".$type);
     break;
   }
-  // output JSON data
-  header("Content-type: application/json"); 
-  echo "{\"data\":" .json_encode($output). "}";
+  if ($type == 'splitsbrowser') {
+  	echo $output;
+  } else {
+    // output JSON data
+    header("Content-type: application/json"); 
+    echo "{\"data\":" .json_encode($output). "}";
+	}
+}
+
+function getSplitsbrowser($eventid) {
+	  $page = file_get_contents("html\splitsbrowser.html");
+		$eventname = getEventName($eventid);
+		$page = str_replace('<EVENT_NAME>', $eventname, $page);
+		$page = str_replace('<SPLITSBROWSER_DIRECTORY>', SPLITSBROWSER_DIRECTORY, $page);
+		
+		//$result_data = 'One control, 1\nFirst,runner,ABC,10:00,01:48,07:38\nSecond,runner,DEF,10:30,03:27,06:52\nThird,runner,GHI,11:00,04:41,07:55\n';
+		$result_data = getResultsSICSV($eventid);
+		$page = str_replace('<SPLITSBROWSER_DATA>', $result_data, $page);
+		return $page;
+}
+
+function getResultsSICSV($eventid) {
+  $result_data = "";
+	$results = file(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt");
+  foreach ($results as $result) {
+    $data = explode("|", $result);
+    if (intval($data[0]) < GPS_RESULT_OFFSET) {
+      // 1: startno, so use resultid
+      $result_data .= intval($data[0]).";;;";
+      // 4: surname
+      $result_data .= encode_rg_input($data[3]).";;;;;;";
+      // 10: start time
+      $result_data .= intval($data[4]).";;";
+      // 11: time
+      $t = str_replace('.:', ':', $data[7]);
+      $t = str_replace('::', ":", $t);
+      $result_data .= $t.";;;;;;;;;;;;;;;;;;;;;;;;;;;;";  
+			// 39: course number, 40: course
+			$result_data .= intval($data[1]).";".encode_rg_input($data[2]);
+
+      // split array at ; and force to integers
+      //$detail["splits"] = array_map('intval', explode(";", $temp));
+      $result_data .= "\n";  
+    }
+ 	}
+ 	return $result_data;
+}
+
+function getEventName($eventid) {
+  $event_name = "Unknown event";
+	$events = file(KARTAT_DIRECTORY."kisat.txt");
+  foreach ($events as $event) {
+    $data = explode("|", $event);
+    if (intval($data[0]) == $eventid) {
+      $event_name = encode_rg_input($data[3])." on ".$data[4];
+    };
+ 	}
+ 	return $event_name;
 }
 
 function getAllEvents() {

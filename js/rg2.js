@@ -310,6 +310,8 @@ var rg2 = ( function() {
         redraw(false);
       }).hide();
 
+      $("#btn-splitsbrowser").hide();
+
       $("#btn-show-splits").click(function() {
         $("#rg2-splits-table")
         .empty()
@@ -966,12 +968,15 @@ var rg2 = ( function() {
           // open courses tab for new event: else stay on draw tab
           var active = $rg2infopanel.tabs("option", "active");
           // don't change tab if we have come from DRAW since it means
-          // we have just relaoded following a save
+          // we have just reloaded following a save
           if (active !== config.TAB_DRAW) {
             $rg2infopanel.tabs("option", "active", config.TAB_COURSES);
           }
           $rg2infopanel.tabs("refresh");
           $("#btn-show-splits").show();
+          $("#btn-splitsbrowser").off().click(function() {
+            window.open(json_url + "?type=splitsbrowser&id=" + events.getKartatEventID());          
+          }).show();
         }
         $("#rg2-load-progress").hide();
         redraw(false);

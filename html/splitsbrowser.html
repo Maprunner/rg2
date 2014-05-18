@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+ <meta charset="utf-8">
+ <link rel="stylesheet" type="text/css" href="<SPLITSBROWSER_DIRECTORY>css/styles.css">
+ <title><EVENT_NAME></title>
+ <script type="text/javascript" charset="utf-8" src="<SPLITSBROWSER_DIRECTORY>modernizr-2.7.1-svg.min.js"></script>
+ <script type="text/javascript">
+  if (!Modernizr.svg) {
+    document.location = "unsupported-browser.html";
+  }
+ </script>
+ <script type="text/javascript" charset="utf-8" src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+ <script type="text/javascript" src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+ <!--script type="text/javascript" charset="utf-8" src="<SPLITSBROWSER_DIRECTORY>splitsbrowser.min.js"></script-->
+ <script type="text/javascript" charset="utf-8" src="<SPLITSBROWSER_DIRECTORY>js/core.js"></script>
+ <script type="text/javascript" charset="utf-8" src="<SPLITSBROWSER_DIRECTORY>js/messages.js"></script>
+ <script type="text/javascript" charset="utf-8" src="<SPLITSBROWSER_DIRECTORY>js/util.js"></script>
+ <script type="text/javascript" charset="utf-8" src="<SPLITSBROWSER_DIRECTORY>js/time.js"></script>
+ <script type="text/javascript" charset="utf-8" src="<SPLITSBROWSER_DIRECTORY>js/competitor.js"></script>
+ <script type="text/javascript" charset="utf-8" src="<SPLITSBROWSER_DIRECTORY>js/age-class.js"></script>
+ <script type="text/javascript" charset="utf-8" src="<SPLITSBROWSER_DIRECTORY>js/age-class-set.js"></script>
+ <script type="text/javascript" charset="utf-8" src="<SPLITSBROWSER_DIRECTORY>js/course.js"></script>
+ <script type="text/javascript" charset="utf-8" src="<SPLITSBROWSER_DIRECTORY>js/event.js"></script>
+ <script type="text/javascript" charset="utf-8" src="<SPLITSBROWSER_DIRECTORY>js/chart-types.js"></script>
+ <script type="text/javascript" charset="utf-8" src="<SPLITSBROWSER_DIRECTORY>js/csv-reader.js"></script>
+ <script type="text/javascript" charset="utf-8" src="<SPLITSBROWSER_DIRECTORY>js/data-repair.js"></script>
+ <script type="text/javascript" charset="utf-8" src="<SPLITSBROWSER_DIRECTORY>js/si-reader.js"></script>
+ <script type="text/javascript" charset="utf-8" src="<SPLITSBROWSER_DIRECTORY>js/si-html-reader.js"></script>
+ <script type="text/javascript" charset="utf-8" src="<SPLITSBROWSER_DIRECTORY>js/alternative-csv-reader.js"></script>
+ <script type="text/javascript" charset="utf-8" src="<SPLITSBROWSER_DIRECTORY>js/iof-xml-reader.js"></script>
+ <script type="text/javascript" charset="utf-8" src="<SPLITSBROWSER_DIRECTORY>js/input.js"></script>
+ <script type="text/javascript" charset="utf-8" src="<SPLITSBROWSER_DIRECTORY>js/chart-popup-data.js"></script>
+ <script type="text/javascript" charset="utf-8" src="<SPLITSBROWSER_DIRECTORY>js/chart-popup.js"></script>
+ <script type="text/javascript" charset="utf-8" src="<SPLITSBROWSER_DIRECTORY>js/chart.js"></script>
+ <script type="text/javascript" charset="utf-8" src="<SPLITSBROWSER_DIRECTORY>js/competitor-selection.js"></script>
+ <script type="text/javascript" charset="utf-8" src="<SPLITSBROWSER_DIRECTORY>js/statistics-selector.js"></script>
+ <script type="text/javascript" charset="utf-8" src="<SPLITSBROWSER_DIRECTORY>js/class-selector.js"></script>
+ <script type="text/javascript" charset="utf-8" src="<SPLITSBROWSER_DIRECTORY>js/competitor-listbox.js"></script>
+ <script type="text/javascript" charset="utf-8" src="<SPLITSBROWSER_DIRECTORY>js/comparison-selector.js"></script>
+ <script type="text/javascript" charset="utf-8" src="<SPLITSBROWSER_DIRECTORY>js/chart-type-selector.js"></script>
+ <script type="text/javascript" charset="utf-8" src="<SPLITSBROWSER_DIRECTORY>js/original-data-selector.js"></script>
+ <script type="text/javascript" charset="utf-8" src="<SPLITSBROWSER_DIRECTORY>js/results-table.js"></script>
+ <script type="text/javascript" charset="utf-8" src="<SPLITSBROWSER_DIRECTORY>js/viewer.js"></script>
+ <script type="text/javascript" charset="utf-8" src="<SPLITSBROWSER_DIRECTORY>lang/messages-en_gb.js"></script>
+</head>
+<body>
+ <script type="text/javascript">
+  var data = "<SPLITSBROWSER_DATA>";
+
+  SplitsBrowser.readEvent(data);
+ </script>
+ <noscript>
+  <h1>SplitsBrowser &ndash; JavaScript is disabled</h1>
+
+  <p>Your browser is set to disable JavaScript.</p>
+  
+  <p>SplitsBrowser cannot run if JavaScript is not enabled.  Please enable JavaScript in your browser.</p>
+ </noscript>
+</body>
+</html>
