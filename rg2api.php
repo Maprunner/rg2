@@ -871,16 +871,20 @@ function addNewRoute($eventid, $data) {
   }
   
   $filename = KARTAT_DIRECTORY."merkinnat_".$eventid.".txt";
-  $oldfile = file($filename);
-  $updatedfile = array();
-  // copy each existing row to output file
-  foreach ($oldfile as $row) {
-    $data = explode("|", $row);
-    // but not if it is a drawn route for the current result
-    if (($data[1] != $id) || ($data[1] >= GPS_RESULT_OFFSET)) {
-      $updatedfile[] = $row;
+  // don't report error if file doesn't exist yet
+  $oldfile = @file($filename);
+	// if we read something...
+  if ($oldfile) {
+  	$updatedfile = array();
+    // copy each existing row to output file
+    foreach ($oldfile as $row) {
+      $data = explode("|", $row);
+      // but not if it is a drawn route for the current result
+      if (($data[1] != $id) || ($data[1] >= GPS_RESULT_OFFSET)) {
+        $updatedfile[] = $row;
+      }
     }
-  }
+	}
   // add new track at end of file
   $updatedfile[] = $newtrackdata;
   
