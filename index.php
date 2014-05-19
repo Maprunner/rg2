@@ -1,11 +1,11 @@
 <?php
 
-require_once ('rg2-config.php');
+require_once( dirname(__FILE__) . '/rg2-config.php' );
 
 // override allows testing of a local configuration such as c:/xampp/htdocs/rg2
-if (file_exists('rg2-override-config.php')) {
+if (file_exists( dirname(__FILE__) . 'rg2-override-config.php')) {
 	$override = true;
-	require_once ('rg2-override-config.php');
+	require_once ( dirname(__FILE__) . 'rg2-override-config.php');
 } else {
 	$override = false;
 }
@@ -44,7 +44,6 @@ if (defined('OVERRIDE_KARTAT_DIRECTORY')) {
 } else {
   $maps_url = RG_BASE_DIRECTORY . "/kartat/";
 }
-
 
 // include manager function as parameter for now until we decide the best way forward
 if (isset($_GET['manage'])) {
@@ -179,11 +178,16 @@ if (isset($_GET['debug']) || $override) {
       var maps_url = "<?php echo $maps_url; ?>";
       var header_colour = "<?php echo $header_colour; ?>";
       var header_text_colour = "<?php echo $header_text_colour; ?>";
+      <?php if (defined('SPLITSBROWSER_DIRECTORY')) { ?>
+      var enable_splitsbrowser = true;
+      <?php } else { ?>
+      var enable_splitsbrowser = false;
+      <?php } ?>      
     <?php if ($manager) { ?>
       var keksi = "<?php echo $keksi; ?>";
       <?php if (defined('EPSG_CODE')) { ?>
-        var epsg_code = "<?php echo EPSG_CODE; ?>";
-        var epsg_params = "<?php echo EPSG_PARAMS; ?>";
+      var epsg_code = "<?php echo EPSG_CODE; ?>";
+      var epsg_params = "<?php echo EPSG_PARAMS; ?>";
       <?php } ?>
     <?php } ?>
     </script>

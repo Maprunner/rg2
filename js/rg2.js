@@ -10,6 +10,7 @@
 /*global header_colour:false */
 /*global header_text_colour:false */
 /*global json_url:false */
+/*global enable_splitsbrowser:false */
 /*global maps_url:false */
 /*global keksi: false */
 /*global Image:false */
@@ -100,7 +101,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.7.4',
+      RG2VERSION: '0.7.7',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -310,7 +311,7 @@ var rg2 = ( function() {
         redraw(false);
       }).hide();
 
-      $("#btn-splitsbrowser").hide();
+      $("#rg2-splitsbrowser").hide();
 
       $("#btn-show-splits").click(function() {
         $("#rg2-splits-table")
@@ -974,9 +975,11 @@ var rg2 = ( function() {
           }
           $rg2infopanel.tabs("refresh");
           $("#btn-show-splits").show();
-          $("#btn-splitsbrowser").off().click(function() {
-            window.open(json_url + "?type=splitsbrowser&id=" + events.getKartatEventID());          
-          }).show();
+          if (enable_splitsbrowser) {
+            $("#rg2-splitsbrowser").off().click(function() {
+              window.open(json_url + "?type=splitsbrowser&id=" + events.getKartatEventID());
+            }).show();
+          }
         }
         $("#rg2-load-progress").hide();
         redraw(false);
