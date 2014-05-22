@@ -10,6 +10,8 @@
   // Example define('RG_BASE_DIRECTORY', 'http://www.happyherts.routegadget.co.uk');
   define('RG_BASE_DIRECTORY', 'http://www.happyherts.routegadget.co.uk');
 
+  // location of Splitsbrowser files if required: see Wiki for details of how to install Splitsbrowser
+  define('SPLITSBROWSER_DIRECTORY', 'http://www.happyherts.routegadget.co.uk/splitsbrowser');
   //
   // Set encoding for input data default UTF-8
   define('RG_INPUT_ENCODING', 'UTF-8');
