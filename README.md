@@ -1,7 +1,7 @@
 # Routegadget 2
 
 ## Latest news
-Version 0.7.0 was released on 3 May 2014 and has been installed on all routegadget.co.uk sites. This includes a number of minor updates to address user comments, as well as a fully functioning manager interface to allow new events to be created.
+Version 0.7.9 was released on 22 May 2014 and has been installed on all routegadget.co.uk sites. This includes integration with the new javascript version of Splitsbrowser, as well as some performance enhancements.
 
 ## User Guide and Introductory Videos
 
