@@ -797,7 +797,8 @@ var rg2 = ( function() {
         //console.log ("Mousemove after" + pt.x + ": " + pt.y);
         // allow for Webkit which gives us mousemove events with no movement!
         // Math.floor is a lot quicker than parseInt, plus it removes some of the small moves since you need to move at least a pixel
-        if ((Math.floor(pt.x) !== Math.floor(dragStart.x)) || (Math.floor(pt.y) !== Math.floor(dragStart.y))) {
+		// When drawing route interpreting short drags as clicks makes drawing a lot more convenient
+        if (!drawing.gpsFileLoaded() && $rg2infopanel.tabs("option", "active") === config.TAB_DRAW  && (Math.abs(Math.floor(pt.x) - Math.floor(dragStart.x))+ Math.abs(Math.floor(pt.y) - Math.floor(dragStart.y)) > 6) || $rg2infopanel.tabs("option", "active") !== config.TAB_DRAW && ((Math.floor(pt.x) !== Math.floor(dragStart.x)) || (Math.floor(pt.y) !== Math.floor(dragStart.y)))) {          // but use Math.round here to get that extra 0.5 pixel accuracy!
           // but use Math.round here to get that extra 0.5 pixel accuracy!
           if (drawing.gpsFileLoaded()) {
             drawing.adjustTrack(Math.round(dragStart.x), Math.round(dragStart.y), Math.round(pt.x), Math.round(pt.y), whichButton ,evt.shiftKey, evt.ctrlKey);
