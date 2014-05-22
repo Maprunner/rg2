@@ -1,4 +1,4 @@
-// Version 0.7.7 2014-05-19T19:24:11;
+// Version 0.7.9 2014-05-22T20:41:37;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -102,7 +102,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.7.7',
+      RG2VERSION: '0.7.9',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -976,10 +976,12 @@ var rg2 = ( function() {
           }
           $rg2infopanel.tabs("refresh");
           $("#btn-show-splits").show();
-          if (enable_splitsbrowser) {
+          if ((enable_splitsbrowser) && (events.hasResults())) {
             $("#rg2-splitsbrowser").off().click(function() {
               window.open(json_url + "?type=splitsbrowser&id=" + events.getKartatEventID());
             }).show();
+          } else {
+            $("#rg2-splitsbrowser").off().hide();
           }
         }
         $("#rg2-load-progress").hide();

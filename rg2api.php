@@ -11,10 +11,6 @@
   } else {
     $url = "../kartat/";
   }
-
-  if (!defined('SPLITSBROWSER_DIRECTORY')) {
-    define('SPLITSBROWSER_DIRECTORY', "../splitsbrowser/");
-  }
   
   define('KARTAT_DIRECTORY', $url);
   define ('LOCK_DIRECTORY', dirname(__FILE__)."/lock/saving/");
@@ -1073,7 +1069,8 @@ function getResultsCSV($eventid) {
       // 0: startno, so use resultid
       $result_data .= "'".intval($data[0]).";;;";
       // 3: surname
-      $name = str_replace("'", "\'", encode_rg_input($data[3]));
+      // escape apostrophe in names
+      $name = str_replace("'", "\'", $data[3]);
       $result_data .= $name.";;;;;;";
       // 9: start time
       $result_data .= convertSecondsToHHMMSS(intval($data[4])).";;";
@@ -1084,13 +1081,14 @@ function getResultsCSV($eventid) {
 			// 18: course
 			$result_data .= encode_rg_input($data[2]).";;;;;;;;;;;;;;;;;;;;";	
       // 38: course number, 39: course
-			$result_data .= intval($data[1]).";".encode_rg_input($data[2]).";;;";
+			$result_data .= intval($data[1]).";".$data[2].";;;";
       // trim trailing ; which create null fields when expanded
       $temp = rtrim($data[8], ";");
       // split array at ; and force to integers
       $splits = array_map('intval', explode(";", $temp));
       // 42: control count, 44 start time
-      $split_count = count($splits);
+      // RG2 has finish split, but Splitsbrowser doesn't need it
+      $split_count = count($splits) -  1;
       $result_data .= $split_count.";;".convertSecondsToHHMMSS(intval($data[4])).";";
       // 45: finish time
       if ($split_count > 0) {
@@ -1099,11 +1097,9 @@ function getResultsCSV($eventid) {
       	$finish_secs = intval($data[4]);
       }
       $result_data .= convertSecondsToHHMMSS($finish_secs).";";
-      $i = 1;
-      foreach ($splits as $split) {
+      for ($i = 0; $i < $split_count; $i++) {
       	// 46: control 1 number, 47: control 1 split...
-        $result_data .= $i.";".convertSecondsToMMSS($split).";";
-        $i++;  				
+        $result_data .= ($i + 1).";".convertSecondsToMMSS($splits[$i]).";";			
 			}
 
       $result_data .= "\\n'";  
@@ -1111,6 +1107,10 @@ function getResultsCSV($eventid) {
  	}
 	$result_data .= ";";
 	$result_data = str_replace("&amp;", "\&", $result_data);
+	if ($first_line) {
+		// we didn't find any results
+		$results_data = "";
+	}
  	return $result_data;
 }
 
