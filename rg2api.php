@@ -4,8 +4,8 @@
   // override allows testing of a local configuration such as c:/xampp/htdocs/rg2
   if (file_exists(dirname(__FILE__) . '/rg2-override-config.php')) {
      require_once ( dirname(__FILE__) . '/rg2-override-config.php');
-  }
-  
+	}
+	
   if (defined('OVERRIDE_KARTAT_DIRECTORY')) {
     $url = OVERRIDE_KARTAT_DIRECTORY;
   } else {
@@ -873,9 +873,9 @@ function addNewRoute($eventid, $data) {
   $filename = KARTAT_DIRECTORY."merkinnat_".$eventid.".txt";
   // don't report error if file doesn't exist yet
   $oldfile = @file($filename);
-	// if we read something...
+  // if we read something...
   if ($oldfile) {
-  	$updatedfile = array();
+    $updatedfile = array();
     // copy each existing row to output file
     foreach ($oldfile as $row) {
       $data = explode("|", $row);
@@ -1015,13 +1015,128 @@ function handleGetRequest($type, $id) {
   case 'tracks':
     $output = getTracksForEvent($id);
     break;
+  case 'splitsbrowser':
+    $output = getSplitsbrowser($id);
+    break;
   default:
     die("Request not recognised: ".$type);
     break;
   }
-  // output JSON data
-  header("Content-type: application/json"); 
-  echo "{\"data\":" .json_encode($output). "}";
+  if ($type == 'splitsbrowser') {
+  	echo $output;
+  } else {
+    // output JSON data
+    header("Content-type: application/json"); 
+    echo "{\"data\":" .json_encode($output). "}";
+	}
+}
+
+function getSplitsbrowser($eventid) {
+	  $page = file_get_contents("html/splitsbrowser.html");
+		$eventname = getEventName($eventid);
+		$page = str_replace('<EVENT_NAME>', $eventname, $page);
+		if (isset($_GET['debug'])) {
+		  $page = str_replace('DEBUG_CLOSE', "", $page);			
+		  $page = str_replace('DEBUG', "", $page);			
+		  $page = str_replace('MINIFIED_CLOSE', "--", $page);			
+		  $page = str_replace('MINIFIED', "!--", $page);	
+		} else {
+		  $page = str_replace('DEBUG_CLOSE', "--", $page);			
+		  $page = str_replace('DEBUG', "!--", $page);			
+		  $page = str_replace('MINIFIED_CLOSE', "", $page);			
+		  $page = str_replace('MINIFIED', "", $page);			
+		}
+		$page = str_replace('<SPLITSBROWSER_DIRECTORY>', SPLITSBROWSER_DIRECTORY, $page);
+		$result_data = getResultsCSV($eventid);
+		$page = str_replace('<SPLITSBROWSER_DATA>', $result_data, $page);
+		return $page;
+}
+
+// formats results as needed for Splitsbrowser
+function getResultsCSV($eventid) {
+  $result_data = "\n'Headers;\\n' + \n";
+	$first_line = true;
+	$results = file(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt");
+  foreach ($results as $result) {
+    $data = explode("|", $result);
+    if (intval($data[0]) < GPS_RESULT_OFFSET) {
+      if ($first_line) {
+      	$first_line = false;
+			} else {
+				$result_data .= " +\n";
+      }
+			// 0-based column indexes
+      // 0: startno, so use resultid
+      $result_data .= "'".intval($data[0]).";;;";
+      // 3: surname
+      // escape apostrophe in names
+      $name = str_replace("'", "\'", $data[3]);
+      $result_data .= $name.";;;;;;";
+      // 9: start time
+      $result_data .= convertSecondsToHHMMSS(intval($data[4])).";;";
+      // 11: time
+      $t = str_replace('.:', ':', $data[7]);
+      $t = str_replace('::', ":", $t);
+      $result_data .= $t.";;;;;;;";  
+			// 18: course
+			$result_data .= encode_rg_input($data[2]).";;;;;;;;;;;;;;;;;;;;";	
+      // 38: course number, 39: course
+			$result_data .= intval($data[1]).";".$data[2].";;;";
+      // trim trailing ; which create null fields when expanded
+      $temp = rtrim($data[8], ";");
+      // split array at ; and force to integers
+      $splits = array_map('intval', explode(";", $temp));
+      // 42: control count, 44 start time
+      // RG2 has finish split, but Splitsbrowser doesn't need it
+      $split_count = count($splits) -  1;
+      $result_data .= $split_count.";;".convertSecondsToHHMMSS(intval($data[4])).";";
+      // 45: finish time
+      if ($split_count > 0) {
+      	$finish_secs = intval($splits[$split_count - 1]) + intval($data[4]);
+      } else {
+      	$finish_secs = intval($data[4]);
+      }
+      $result_data .= convertSecondsToHHMMSS($finish_secs).";";
+      for ($i = 0; $i < $split_count; $i++) {
+      	// 46: control 1 number, 47: control 1 split...
+        $result_data .= ($i + 1).";".convertSecondsToMMSS($splits[$i]).";";			
+			}
+
+      $result_data .= "\\n'";  
+    }
+ 	}
+	$result_data .= ";";
+	$result_data = str_replace("&amp;", "\&", $result_data);
+	if ($first_line) {
+		// we didn't find any results
+		$results_data = "";
+	}
+ 	return $result_data;
+}
+
+function convertSecondsToHHMMSS($seconds) {
+  $hours = floor($seconds / 3600);
+  $mins = floor(($seconds - ($hours*3600)) / 60);
+  $secs = floor($seconds % 60);
+  return sprintf('%02d:%02d:%02d', $hours, $mins, $secs);;
+}
+
+function convertSecondsToMMSS($seconds) {
+  $mins = floor($seconds / 60);
+  $secs = floor($seconds % 60);
+  return sprintf('%d:%02d', $mins, $secs);;
+}
+
+function getEventName($eventid) {
+  $event_name = "Unknown event";
+	$events = file(KARTAT_DIRECTORY."kisat.txt");
+  foreach ($events as $event) {
+    $data = explode("|", $event);
+    if (intval($data[0]) == $eventid) {
+      $event_name = encode_rg_input($data[3])." on ".$data[4];
+    };
+ 	}
+ 	return $event_name;
 }
 
 function getAllEvents() {

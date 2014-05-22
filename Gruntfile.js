@@ -16,7 +16,7 @@ module.exports = function(grunt) {
   var clubs = ['aire', 'bado', 'baoc', 'basoc', 'bko', 'boc', 'bok', 'bl', 'chig', 'claro', 'clok', 'clyde', 'cuoc', 'cvfr', 'darkandwhite', 'dee',
    'devonoc', 'ebor', 'ecko', 'elo', 'epoc', 'esoc', 'euoc', 'gmoa', 'gramp', 'go', 'happyherts', 'havoc', 'hoc', 'interlopers', 'invoc', 'jk',
    'kerno', 'kfo', 'lamm', 'leioc', 'loc', 'log', 'lok', 'lvo', 'maroc', 'mdoc', 'mvoc', 'nato', 'ngoc', 'noroc', 'nwo', 'od', 'omm', 'ouoc',
-   'pfo', 'pow', 'quantock', 'rafo', 'roxburghreivers', 'sa', 'sarum', 'scottish6days', 'seloc', 'slow', 'smbo', 'smoc', 'sn', 'soc', 'solway',
+   'pfo', 'pow', 'quantock', 'rafo', 'roxburghreivers', 'sa', 'sarum', 'scottish6days', 'seloc', 'slow', 'smbo', 'smoc', 'sn', 'soa', 'soc', 'solway',
    'sportident', 'sroc', 'stag', 'start', 'suffoc', 'swoc', 'syo', 'tay', 'test', 'purple-thistle', 'tinto', 'tvoc', 'walton', 'waoc', 'wcoc', 'wim',
    'wsco', 'wsoe', 'wsx'];
 
@@ -477,6 +477,12 @@ module.exports = function(grunt) {
         expand : true,
         src : '**',
         dest : 'ftpsite/sn/rg2/'
+      },
+      soa : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/soa/rg2/'
       },
       soc : {
         cwd : 'rel/',
