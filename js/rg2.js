@@ -633,8 +633,10 @@ var rg2 = ( function() {
     function displayAboutDialog() {
       $("#rg2-event-stats").empty().html(getEventStats());
       $("#rg2-about-dialog").dialog({
-        minWidth : 400,
+        width : Math.min(1000, (canvas.width * 0.8)),
+        height : Math.min(1000, (canvas.height * 0.9)),
         title: "RG2 Version " + config.RG2VERSION,
+        resizable: false,
         buttons : {
           Ok : function() {
             $(this).dialog("close");
@@ -839,12 +841,16 @@ var rg2 = ( function() {
       var stats;
       var coursearray;
       var resultsinfo;
+      // check there os an event to report on
+      if (events.getActiveEventID() === null) {
+        return "";
+      }
       coursearray = courses.getCoursesForEvent();
       resultsinfo = results.getResultsInfo();
       stats = "<h3>Event statistics</h3>";
-      stats += "<p><strong>Courses:</strong> " + coursearray.length + " <strong>Results:</strong> " + resultsinfo.results + "</p>";
+      stats += "<p><strong>Courses:</strong> " + coursearray.length + " <strong>Results:</strong> " + resultsinfo.results;
+      stats += "<strong> Drawn routes:</strong> " + resultsinfo.drawnroutes + " <strong>GPS routes:</strong> " + resultsinfo.gpsroutes + " (" + resultsinfo.percent + "%)</p>";
       stats += "<p><strong>Total time:</strong> " + resultsinfo.time + "</p>";
-      stats += "<p><strong>Drawn routes:</strong> " + resultsinfo.drawnroutes + " <strong>GPS routes:</strong> " + resultsinfo.gpsroutes + " (" + resultsinfo.percent + "%)</p>";
       stats += "<p><strong>Comments:</strong></p>";
       stats += results.getComments();
       return stats;
