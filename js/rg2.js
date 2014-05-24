@@ -101,7 +101,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.7.9',
+      RG2VERSION: '0.8.0',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -798,10 +798,8 @@ var rg2 = ( function() {
       if (dragStart) {
         var pt = ctx.transformedPoint(lastX, lastY);
         //console.log ("Mousemove after" + pt.x + ": " + pt.y);
-        // allow for Webkit which gives us mousemove events with no movement!
-        // Math.floor is a lot quicker than parseInt, plus it removes some of the small moves since you need to move at least a pixel
-        if ((Math.floor(pt.x) !== Math.floor(dragStart.x)) || (Math.floor(pt.y) !== Math.floor(dragStart.y))) {
-          // but use Math.round here to get that extra 0.5 pixel accuracy!
+        // simple debounce so that very small drags are treated as clicks instead
+        if ((Math.abs(pt.x - dragStart.x) + Math.abs(pt.y - dragStart.y)) > 5) {
           if (drawing.gpsFileLoaded()) {
             drawing.adjustTrack(Math.round(dragStart.x), Math.round(dragStart.y), Math.round(pt.x), Math.round(pt.y), whichButton ,evt.shiftKey, evt.ctrlKey);
           } else {
