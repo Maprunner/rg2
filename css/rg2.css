@@ -209,6 +209,10 @@ html, body {
    height: 95.5%
 }
 
+#rg2-event-list .ui-menu-item {
+  list-style-image: none;
+}
+
 #rg2-hide-info-panel-control {
   position:absolute;
   left: 366px;
