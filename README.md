@@ -1,7 +1,7 @@
 # Routegadget 2
 
 ## Latest news
-Version 0.7.9 was released on 22 May 2014 and has been installed on all routegadget.co.uk sites. This includes integration with the new javascript version of Splitsbrowser, as well as some performance enhancements.
+Version 0.8.0 was released on 24 May 2014 and has been installed on all routegadget.co.uk sites. This includes integration with the new javascript version of Splitsbrowser, as well as several user interface modifications and performance enhancements. You can now see event statistics (including all user comments) on the About dialog. This version may also have solved the drag/click problem when using a wireless mouse to draw routes, but since my mouse doesn't seem to have the problem I'm not sure yet.
 
 ## User Guide and Introductory Videos
 
