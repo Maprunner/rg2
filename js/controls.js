@@ -24,7 +24,7 @@ Controls.prototype = {
 		this.controls.length = 0;
 	},
 
-	drawControls : function() {
+	drawControls : function(drawDot) {
 		if (this.displayControls) {
 			var x;
 			var y;
@@ -48,6 +48,9 @@ Controls.prototype = {
 					} else {
 						// Else it's a normal control
 						this.drawSingleControl(this.controls[i].x, this.controls[i].y, this.controls[i].code, opt);
+						if (drawDot) {
+              rg2.ctx.fillRect(this.controls[i].x - 1, this.controls[i].y - 1, 3, 3);
+						}
 
 					}
 				}

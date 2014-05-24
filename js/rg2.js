@@ -603,7 +603,7 @@ var rg2 = ( function() {
         var active = $rg2infopanel.tabs("option", "active");
         if (active === config.TAB_DRAW) {
           courses.drawCourses(config.DIM);
-          controls.drawControls();
+          controls.drawControls(false);
           results.drawTracks();
           drawing.drawNewTrack();
         } else {
@@ -612,7 +612,7 @@ var rg2 = ( function() {
           } else {
             courses.drawCourses(config.FULL_INTENSITY);
             results.drawTracks();
-            controls.drawControls();
+            controls.drawControls(false);
             // parameter determines if animation time is updated or not
             if (fromTimer) {
               animation.runAnimation(true);

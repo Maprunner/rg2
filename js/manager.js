@@ -1776,7 +1776,7 @@ Manager.prototype = {
 
   drawControls : function() {
     if ((this.mapLoaded) && (this.newcontrols.controls.length > 0)) {
-      this.newcontrols.drawControls();
+      this.newcontrols.drawControls(true);
       var opt = rg2.getOverprintDetails();
       // locked point for control edit
       if (this.handleX !== null) {
