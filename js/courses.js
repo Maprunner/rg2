@@ -24,6 +24,7 @@ Courses.prototype = {
         course = {};
         course.id = this.courses[i].courseid;
         course.name = this.courses[i].name;
+        course.results = this.courses[i].resultcount;
         courses.push(course);
       }
     }

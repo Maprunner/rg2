@@ -631,10 +631,10 @@ var rg2 = ( function() {
     }
 
     function displayAboutDialog() {
-      $("#rg2-version-info").empty().append("This is RG2 Version " + config.RG2VERSION);
+      $("#rg2-event-stats").empty().html(getEventStats());
       $("#rg2-about-dialog").dialog({
-        //modal : true,
         minWidth : 400,
+        title: "RG2 Version " + config.RG2VERSION,
         buttons : {
           Ok : function() {
             $(this).dialog("close");
@@ -836,6 +836,21 @@ var rg2 = ( function() {
       dragStart = null;
       redraw(false);
     };
+    
+    function getEventStats() {
+      var stats;
+      var coursearray;
+      var resultsinfo;
+      coursearray = courses.getCoursesForEvent();
+      resultsinfo = results.getResultsInfo();
+      stats = "<h3>Event statistics</h3>";
+      stats += "<p><strong>Courses:</strong> " + coursearray.length + " <strong>Results:</strong> " + resultsinfo.results + "</p>";
+      stats += "<p><strong>Total time:</strong> " + resultsinfo.time + "</p>";
+      stats += "<p><strong>Drawn routes:</strong> " + resultsinfo.drawnroutes + " <strong>GPS routes:</strong> " + resultsinfo.gpsroutes + " (" + resultsinfo.percent + "%)</p>";
+      stats += "<p><strong>Comments:</strong></p>";
+      stats += results.getComments();
+      return stats;
+    }
 
     function createEventMenu() {
       //loads menu from populated events array
