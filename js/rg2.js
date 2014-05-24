@@ -845,7 +845,6 @@ var rg2 = ( function() {
           loadEvent(ui.item[0].id);
         }
       });
-
       // load requested event if set
       // input is kartat ID so need to find internal ID first
       if (requestedEventID) {
@@ -857,7 +856,9 @@ var rg2 = ( function() {
     }
 
     function loadEvent(eventid) {
-      // new event selected: show we are waiting
+      // highlight the selected event
+      $('#rg2-event-list > li').removeClass('rg2-active-event').filter('#' + eventid).addClass('rg2-active-event');
+      // show we are waiting
       $('body').css('cursor', 'wait');
       $("#rg2-load-progress-label").text("Loading courses");
       $("#rg2-load-progress").show();
