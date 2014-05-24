@@ -228,6 +228,42 @@ Results.prototype = {
     }
     return routes;
   },
+  
+  getResultsInfo : function () {
+    var info = {};
+    var res;
+    var temp;
+    info.results = 0;
+    info.drawnroutes = 0;
+    info.gpsroutes = 0;
+    info.secs = 0;
+    for (var i = 0; i < this.results.length; i += 1) {
+      res = this.results[i];
+      if (res.resultid < rg2.config.GPS_RESULT_OFFSET) {
+        info.results += 1;
+        info.secs += res.splits[res.splits.length - 1];
+      }
+      if (res.hasValidTrack) {
+        if (res.resultid < rg2.config.GPS_RESULT_OFFSET) {
+          info.drawnroutes += 1;
+        } else {
+          info.gpsroutes += 1;
+        }
+      }
+    }
+    if (info.results > 0) {
+      info.percent = (100 * (info.drawnroutes + info.gpsroutes) / info.results).toFixed(1);
+    } else {
+      info.percent = 0;
+    }
+    info.time = Math.floor(info.secs / 86400) + " days ";
+    temp = info.secs - (86400 * Math.floor(info.secs / 86400));
+    info.time += Math.floor(temp / 3600) + " hours ";
+    temp = temp - (3600 * Math.floor(temp / 3600));
+    info.time += Math.floor(temp / 60) + " minutes ";
+    info.time += temp - (60 * Math.floor(temp / 60)) + " seconds ";
+    return info;
+  },
 
 	getCourseID : function(resultid) {
 		return this.results[resultid].courseid;
@@ -465,6 +501,16 @@ Results.prototype = {
 		}
 		return html;
 	},
+
+  getComments : function() {
+    var comments = "";
+    for (var i = 0; i < this.results.length; i += 1) {
+      if (this.results[i].comments !== "") {
+        comments += "<p><strong>" + this.results[i].name + "</strong>: " + this.results[i].coursename + ": " + this.results[i].comments + "</p>";
+      }
+    }
+    return comments;
+  },
 
 	createNameDropdown : function(courseid) {
 		$("#rg2-name-select").empty();

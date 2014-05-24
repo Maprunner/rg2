@@ -101,7 +101,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.7.9',
+      RG2VERSION: '0.8.0',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -603,7 +603,7 @@ var rg2 = ( function() {
         var active = $rg2infopanel.tabs("option", "active");
         if (active === config.TAB_DRAW) {
           courses.drawCourses(config.DIM);
-          controls.drawControls();
+          controls.drawControls(false);
           results.drawTracks();
           drawing.drawNewTrack();
         } else {
@@ -612,7 +612,7 @@ var rg2 = ( function() {
           } else {
             courses.drawCourses(config.FULL_INTENSITY);
             results.drawTracks();
-            controls.drawControls();
+            controls.drawControls(false);
             // parameter determines if animation time is updated or not
             if (fromTimer) {
               animation.runAnimation(true);
@@ -631,10 +631,12 @@ var rg2 = ( function() {
     }
 
     function displayAboutDialog() {
-      $("#rg2-version-info").empty().append("This is RG2 Version " + config.RG2VERSION);
+      $("#rg2-event-stats").empty().html(getEventStats());
       $("#rg2-about-dialog").dialog({
-        //modal : true,
-        minWidth : 400,
+        width : Math.min(1000, (canvas.width * 0.8)),
+        height : Math.min(1000, (canvas.height * 0.9)),
+        title: "RG2 Version " + config.RG2VERSION,
+        resizable: false,
         buttons : {
           Ok : function() {
             $(this).dialog("close");
@@ -798,10 +800,8 @@ var rg2 = ( function() {
       if (dragStart) {
         var pt = ctx.transformedPoint(lastX, lastY);
         //console.log ("Mousemove after" + pt.x + ": " + pt.y);
-        // allow for Webkit which gives us mousemove events with no movement!
-        // Math.floor is a lot quicker than parseInt, plus it removes some of the small moves since you need to move at least a pixel
-        if ((Math.floor(pt.x) !== Math.floor(dragStart.x)) || (Math.floor(pt.y) !== Math.floor(dragStart.y))) {
-          // but use Math.round here to get that extra 0.5 pixel accuracy!
+        // simple debounce so that very small drags are treated as clicks instead
+        if ((Math.abs(pt.x - dragStart.x) + Math.abs(pt.y - dragStart.y)) > 5) {
           if (drawing.gpsFileLoaded()) {
             drawing.adjustTrack(Math.round(dragStart.x), Math.round(dragStart.y), Math.round(pt.x), Math.round(pt.y), whichButton ,evt.shiftKey, evt.ctrlKey);
           } else {
@@ -836,6 +836,25 @@ var rg2 = ( function() {
       dragStart = null;
       redraw(false);
     };
+    
+    function getEventStats() {
+      var stats;
+      var coursearray;
+      var resultsinfo;
+      // check there os an event to report on
+      if (events.getActiveEventID() === null) {
+        return "";
+      }
+      coursearray = courses.getCoursesForEvent();
+      resultsinfo = results.getResultsInfo();
+      stats = "<h3>Event statistics</h3>";
+      stats += "<p><strong>Courses:</strong> " + coursearray.length + " <strong>Results:</strong> " + resultsinfo.results;
+      stats += "<strong> Drawn routes:</strong> " + resultsinfo.drawnroutes + " <strong>GPS routes:</strong> " + resultsinfo.gpsroutes + " (" + resultsinfo.percent + "%)</p>";
+      stats += "<p><strong>Total time:</strong> " + resultsinfo.time + "</p>";
+      stats += "<p><strong>Comments:</strong></p>";
+      stats += results.getComments();
+      return stats;
+    }
 
     function createEventMenu() {
       //loads menu from populated events array
@@ -845,7 +864,6 @@ var rg2 = ( function() {
           loadEvent(ui.item[0].id);
         }
       });
-
       // load requested event if set
       // input is kartat ID so need to find internal ID first
       if (requestedEventID) {
@@ -857,7 +875,9 @@ var rg2 = ( function() {
     }
 
     function loadEvent(eventid) {
-      // new event selected: show we are waiting
+      // highlight the selected event
+      $('#rg2-event-list > li').removeClass('rg2-active-event').filter('#' + eventid).addClass('rg2-active-event');
+      // show we are waiting
       $('body').css('cursor', 'wait');
       $("#rg2-load-progress-label").text("Loading courses");
       $("#rg2-load-progress").show();

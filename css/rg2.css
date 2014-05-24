@@ -209,6 +209,15 @@ html, body {
    height: 95.5%
 }
 
+#rg2-event-list .ui-menu-item {
+  list-style-image: none;
+}
+
+.rg2-active-event {
+   border: 1px solid darkgray;
+   background: rgba(204, 204, 204, 0.75);
+}
+   
 #rg2-hide-info-panel-control {
   position:absolute;
   left: 366px;

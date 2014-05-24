@@ -67,9 +67,16 @@ Draw.prototype = {
     if (trk.fileLoaded) {
       handle = this.getHandleClicked(x, y);
       if (handle !== undefined) {
+        // delete or unlock if not first or last entry
         if ((button === rg2.config.RIGHT_CLICK) &&  (handle !== 0) && (handle !== trk.handles.length)) {
-          // delete handle if not first or last entries
-          trk.handles.splice(handle, 1);
+          if (trk.handles[handle].locked) {
+            // unlock, don't delete
+            trk.handles[handle].locked = false;
+            this.pointsLocked -= 1;
+          } else {
+          // delete handle
+            trk.handles.splice(handle, 1);
+          }
         } else {
           // clicked in a handle area so toggle state
           if (trk.handles[handle].locked) {
