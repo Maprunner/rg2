@@ -531,6 +531,36 @@ var rg2 = ( function() {
       $('#btn-toggle-controls').prop('title', t(temp));
       temp = $('#btn-toggle-names').prop('title');
       $('#btn-toggle-names').prop('title', t(temp));
+      $('#rg2-splits-table').prop('title', t('Splits table'));
+      $('#btn-slower').prop('title', t('Slower'));
+      $('#btn-faster').prop('title', t('Faster'));
+      temp = $('#btn-start-stop').prop('title');
+      $('#btn-start-stop').prop('title', t(temp));
+      $('#btn-real-time').prop('title', t('Real time'));
+      $('#btn-mass-start').prop('title', t('Mass start'));
+      $('label[for=rg2-control-select]').prop('textContent', t('Start at'));
+      $('label[for=btn-full-tails]').prop('textContent', t('Full tails'));
+      $('label[for=spn-tail-length]').prop('textContent', t('Length'));
+      $('#rg2-option-controls').prop('title', t('Configuration options'));
+      $('label[for=spn-map-intensity]').prop('textContent', t('Map intensity'));
+      $('label[for=spn-route-intensity]').prop('textContent', t('Route intensity'));
+      $('label[for=spn-route-width]').prop('textContent', t('Route width'));
+      $('label[for=spn-name-font-size]').prop('textContent', t('Replay label font size'));
+      $('label[for=spn-course-width]').prop('textContent', t('Course overprint width'));
+      $('label[for=spn-control-circle]').prop('textContent', t('Control circle size'));
+      $('label[for=chk-show-three-seconds]').prop('textContent', t('Show +3 time loss for GPS routes'));
+      $('label[for=chk-show-GPS-speed]').prop('textContent', t('Show GPS speed colours'));
+      $('#btn-undo').button('option', 'label', t('Undo'));
+      $('#btn-undo-gps-adjust').button('option', 'label', t('Undo'));
+      $('#btn-save-route').button('option', 'label', t('Save'));
+      $('#btn-reset-drawing').button('option', 'label', t('Reset'));
+      $('#btn-three-seconds').button('option', 'label', t('+3 sec'));
+      $('#btn-save-gps-route').button('option', 'label', t('Save GPS route'));
+      $('#rg2-draw-title').text(t('Draw route'));
+      $('#rg2-load-gps-title').text(t('Load GPS file (GPX or TCX)'));
+      $('label[for=rg2-course-select]').prop('textContent', t('Select course'));
+      $('label[for=rg2-name-select]').prop('textContent', t('Select name'));
+      $('label[for=btn-move-all]').prop('textContent', t('Move track and map together (or right click-drag)'));
     }
     
     function loadEventList() {
@@ -881,11 +911,12 @@ var rg2 = ( function() {
       }
       coursearray = courses.getCoursesForEvent();
       resultsinfo = results.getResultsInfo();
-      stats = "<h3>Event statistics</h3>";
-      stats += "<p><strong>Courses:</strong> " + coursearray.length + " <strong>Results:</strong> " + resultsinfo.results;
-      stats += "<strong> Drawn routes:</strong> " + resultsinfo.drawnroutes + " <strong>GPS routes:</strong> " + resultsinfo.gpsroutes + " (" + resultsinfo.percent + "%)</p>";
+      stats = "<h3>" + t("Event statistics") + "</h3>";
+      stats += "<p><strong>" + t("Courses") + ":</strong> " + coursearray.length + " <strong>" + t("Results") + ":</strong> " + resultsinfo.results;
+      stats += "<strong> " + t("Drawn routes") + ":</strong> " + resultsinfo.drawnroutes + " <strong>" + t("GPS routes");
+      stats += ":</strong> " + resultsinfo.gpsroutes + " (" + resultsinfo.percent + "%)</p>";
       stats += "<p><strong>Total time:</strong> " + resultsinfo.time + "</p>";
-      stats += "<p><strong>Comments:</strong></p>";
+      stats += "<p><strong>" + t("Comments") + ":</strong></p>";
       stats += results.getComments();
       return stats;
     }

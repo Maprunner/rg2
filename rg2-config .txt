@@ -12,7 +12,11 @@
 
   // location of Splitsbrowser files if required: see Wiki for details of how to install Splitsbrowser
   define('SPLITSBROWSER_DIRECTORY', 'http://www.happyherts.routegadget.co.uk/splitsbrowser');
-  //
+  
+  // default language if not English: this is overridden if the query includes a language (e.g. ?lang=fi)
+  // requires a dictionary file xx.js in the lang directory
+  // Example define('DEFAULT_LANGUAGE', 'fi');
+  
   // Set encoding for input data default UTF-8
   define('RG_INPUT_ENCODING', 'UTF-8');
   //

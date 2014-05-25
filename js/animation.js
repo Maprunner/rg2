@@ -37,7 +37,7 @@ Animation.prototype = {
 		this.timer = null;
 		this.updateAnimationDetails();
 		$("#btn-start-stop").removeClass("fa-pause").addClass("fa-play");
-		$("#btn-start-stop").prop("title", "Run");
+		$("#btn-start-stop").prop("title", rg2.t("Run"));
 	},
 	
 	// @@param courseresults: array of results to be removed
@@ -192,11 +192,11 @@ Animation.prototype = {
 		if (this.timer === null) {
 			this.startAnimation();
 			$("#btn-start-stop").removeClass("fa-play").addClass("fa-pause");
-			$("#btn-start-stop").prop("title", "Pause");
+			$("#btn-start-stop").prop("title", rg2.t("Pause"));
 		} else {
 			this.stopAnimation();
 			$("#btn-start-stop").removeClass("fa-pause").addClass("fa-play");
-			$("#btn-start-stop").prop("title", "Run");
+			$("#btn-start-stop").prop("title", rg2.t("Run"));
 		}
 	},
 
@@ -320,16 +320,16 @@ Animation.prototype = {
       if (this.displayInitials) {
         this.displayNames = false;
         this.displayInitials = false;
-        title = t("Show names");
+        title = "Show names";
       } else {
         this.displayInitials = true;
-        title = t("Hide names");
+        title = "Hide names";
       }
     } else {
       this.displayNames = true;
-			title = t("Show initials");
+			title = "Show initials";
 		}
-    $("#btn-toggle-names").prop("title", title);
+    $("#btn-toggle-names").prop("title", rg2.t(title));
 	},
 
 	runAnimation : function(fromTimer) {

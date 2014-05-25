@@ -177,10 +177,10 @@ Controls.prototype = {
 	toggleControlDisplay : function() {
 		if (this.displayControls) {
 			$("#btn-toggle-controls").removeClass("fa-ban").addClass("fa-circle-o");
-			$("#btn-toggle-controls").prop("title", t("Show controls"));
+			$("#btn-toggle-controls").prop("title", rg2.t("Show controls"));
 		} else {
 			$("#btn-toggle-controls").removeClass("fa-circle-o").addClass("fa-ban");
-			$("#btn-toggle-controls").prop("title", t("Hide controls"));
+			$("#btn-toggle-controls").prop("title", rg2.t("Hide controls"));
 		}
 		this.displayControls = !this.displayControls;
 	},

@@ -6,6 +6,7 @@
 /* exported getSecsFromMMSS */
 /* exported getSecsFromHHMMSS */
 /* exported trackTransforms */
+/* global rg2:false */
 // Avoid `console` errors in browsers that lack a console.
 ( function() {
     var method;
@@ -50,9 +51,9 @@ Number.prototype.toRad = function() {
 
 
 function rg2WarningDialog(title, text) {
-  var msg = '<div>' + text + '</div>';
+  var msg = '<div>' + rg2.t(text) + '</div>';
   $(msg).dialog({
-    title : title
+    title : rg2.t(title)
   });
 }
 

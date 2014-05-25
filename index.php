@@ -72,8 +72,17 @@ if (isset($_GET['debug']) || $override) {
 }
 
 // include language file if requested
-if (isset($_GET['lang']) && (file_exists( dirname(__FILE__) . '/lang/'.$_GET['lang'].'.js'))) {
-	$dictionary = file_get_contents(dirname(__FILE__) . '/lang/'.$_GET['lang'].'.js');
+if (isset($_GET['lang'])) {
+	$lang = $_GET['lang'];
+} else {
+	if ((defined('DEFAULT_LANGUAGE'))) {
+		$lang = DEFAULT_LANGUAGE;
+	} else {
+		$lang = "";
+	}
+}
+if (file_exists( dirname(__FILE__) . '/lang/'.$lang.'.js')) {
+	$dictionary = file_get_contents(dirname(__FILE__) . '/lang/'.$lang.'.js');
 } else {
 	$dictionary = "";
 }
@@ -144,15 +153,18 @@ if (isset($_GET['lang']) && (file_exists( dirname(__FILE__) . '/lang/'.$_GET['la
         </div>
         <div id="rg2-result-list"></div>
       <div id="rg2-draw">
-          <h3 class="no-top-margin">Draw route</h3>
+          <h3 class="no-top-margin" id='rg2-draw-title'>Draw route</h3>
           <div id="rg2-select-course">
-           Select course: <select  id="rg2-course-select"></select>
+           <label for='rg2-course-select'>Select course: </label>
+           <select  id="rg2-course-select"></select>
           </div>     
           <div id="rg2-select-name">
-           Select name: <select  id="rg2-name-select"></select>
+           <label for='rg2-name-select'>Select name: </label>
+           <select id="rg2-name-select"></select>
           </div>
           <div id="rg2-enter-name">
-           <p id = "rg2-name">Enter name: <input  id="rg2-name-entry" class="pushright" type="text"></p>
+           <label for='rg2-name'>Enter name: </label>
+           <p id = "rg2-name"><input id="rg2-name-entry" class="pushright" type="text"></p>
            <p id = "rg2-time">Enter time (mm:ss): <input  id="rg2-time-entry" class="pushright" type="text"></p>
           </div>
           <div>
@@ -163,7 +175,7 @@ if (isset($_GET['lang']) && (file_exists( dirname(__FILE__) . '/lang/'.$_GET['la
        <button id="btn-save-route">Save</button>
        <button class="pushright" id="btn-reset-drawing">Reset</button>
           <hr class="rg2-hr">
-          <h3>Load GPS file (GPX or TCX)</h3>
+          <h3 id='rg2-load-gps-title'>Load GPS file (GPX or TCX)</h3>
           <div id="rg2-select-gps-file">
            <input type='file' accept='.gpx, .tcx' id='rg2-load-gps-file'>
           </div>

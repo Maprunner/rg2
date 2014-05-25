@@ -448,7 +448,7 @@ Results.prototype = {
 				} else {
           // add bottom row for all tracks checkboxes
           // <CAREFUL!> these lines need to be identical to those below
-          html += "<tr class='allitemsrow'><td>All</td><td></td>";
+          html += "<tr class='allitemsrow'><td>" + rg2.t("All") + "</td><td></td>";
           if (tracksForThisCourse > 0) {
             html += "<td><input class='allcoursetracks' id=" + oldCourseID + " type=checkbox name=track></input></td>";
           } else {
@@ -461,7 +461,8 @@ Results.prototype = {
 				tracksForThisCourse = 0;
 				html += "<h3>" + temp.coursename;
 				html += "<input class='showcourse' id=" + temp.courseid + " type=checkbox name=course title='Show course'></input></h3><div>";
-				html += "<table class='resulttable'><tr><th>Name</th><th>Time</th><th>Track</th><th>Replay</th></tr>";
+				html += "<table class='resulttable'><tr><th>" + rg2.t("Name") + "</th><th>" + rg2.t("Time") + "</th><th>" + rg2.t("Route");
+				html += "</th><th>" + rg2.t("Replay") + "</th></tr>";
 				oldCourseID = temp.courseid;
 			}
       if (temp.isScoreEvent) {
@@ -485,11 +486,11 @@ Results.prototype = {
 		}
 		
 		if (html === "") {
-			html = "<p>No results available.</p>";
+			html = "<p>" + rg2.t("No results available") + "</p>";
 		} else {
       // add bottom row for all tracks checkboxes
       // <CAREFUL!> these lines need to be identical to those above
-      html += "<tr class='allitemsrow'><td>All</td><td></td>";
+      html += "<tr class='allitemsrow'><td>" + rg2.t("All") + "</td><td></td>";
       if (tracksForThisCourse > 0) {
         html += "<td><input class='allcoursetracks' id=" + oldCourseID + " type=checkbox name=track></input></td>";
       } else {
@@ -517,7 +518,7 @@ Results.prototype = {
 		var dropdown = document.getElementById("rg2-name-select");
 		var opt = document.createElement("option");
 		opt.value = null;
-		opt.text = 'Select name';
+		opt.text = rg2.t('Select name');
 		dropdown.options.add(opt);
 		for (var i = 0; i < this.results.length; i += 1) {
 			if (this.results[i].courseid === courseid) {
@@ -537,7 +538,6 @@ function Result(data, isScoreEvent, scorecodes, scorex, scorey) {
 	this.isScoreEvent = isScoreEvent;
 	// GPS track ids are normal resultid + GPS_RESULT_OFFSET
 	if (this.resultid >= rg2.config.GPS_RESULT_OFFSET) {
-		//this.name = (data.name).replace("GPS ", "");
 		this.isGPSTrack = true;
 	} else {
 		//this.name = data.name;
