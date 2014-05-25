@@ -3,6 +3,7 @@
 /*global clearInterval:false */
 /*global setInterval:false */
 /*global Runner:false */
+/*global t:false */
 /*global getLatLonDistance:false */
 /*global getDistanceBetweenPoints:false */
  function Animation() {
@@ -319,14 +320,14 @@ Animation.prototype = {
       if (this.displayInitials) {
         this.displayNames = false;
         this.displayInitials = false;
-        title = "Show names";
+        title = t("Show names");
       } else {
         this.displayInitials = true;
-        title = "Hide names";
+        title = t("Hide names");
       }
     } else {
       this.displayNames = true;
-			title = "Show initials";
+			title = t("Show initials");
 		}
     $("#btn-toggle-names").prop("title", title);
 	},

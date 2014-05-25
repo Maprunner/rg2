@@ -71,6 +71,13 @@ if (isset($_GET['debug']) || $override) {
 	$debug = FALSE;
 }
 
+// include language file if requested
+if (isset($_GET['lang']) && (file_exists( dirname(__FILE__) . '/lang/'.$_GET['lang'].'.js'))) {
+	$dictionary = file_get_contents(dirname(__FILE__) . '/lang/'.$_GET['lang'].'.js');
+} else {
+	$dictionary = "";
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -194,6 +201,7 @@ if (isset($_GET['debug']) || $override) {
       var epsg_params = "<?php echo EPSG_PARAMS; ?>";
       <?php } ?>
     <?php } ?>
+    <?php echo $dictionary; ?> 
     </script>
     <?php if ($debug) { ?>
       <script src='<?php echo $source_url . "/js/events.js"; ?>'></script>

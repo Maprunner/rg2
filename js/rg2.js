@@ -11,6 +11,7 @@
 /*global header_text_colour:false */
 /*global json_url:false */
 /*global enable_splitsbrowser:false */
+/*global rg2Dictionary:false */
 /*global maps_url:false */
 /*global keksi: false */
 /*global Image:false */
@@ -64,7 +65,7 @@ var rg2 = ( function() {
     // jQuery cache items
     var $rg2infopanel;
     var $rg2eventtitle;
-
+         
     var config = {
       DEFAULT_SCALE_FACTOR : 1.1,
       TAB_EVENTS : 0,
@@ -369,7 +370,7 @@ var rg2 = ( function() {
         $rg2infopanel.tabs("option", "active", config.TAB_LOGIN);
         mapLoadingText = "";
       } else {
-        mapLoadingText = "Select an event";
+        mapLoadingText = t("Select an event");
       }
      
       canvas.addEventListener('touchstart', handleTouchStart, false);
@@ -397,6 +398,8 @@ var rg2 = ( function() {
         evt.preventDefault();
       });
 
+      translateFixedText();
+      
       // load event details
       loadEventList();
 
@@ -497,6 +500,37 @@ var rg2 = ( function() {
       $("#btn-options").click(function() {
         displayOptionsDialog();
       });
+    }
+    
+    // translation function
+    function t(str) {
+      if (typeof rg2Dictionary === 'undefined') {
+        return str;
+      } else {
+        if (rg2Dictionary.hasOwnProperty(str)) {
+          return rg2Dictionary[str];
+        } else {
+          return str;
+        }
+      }
+    }
+    
+    function translateFixedText() {
+      var temp;
+      $("#rg2-events-tab a").text(t('Events'));
+      $("#rg2-courses-tab a").text(t('Courses'));
+      $("#rg2-results-tab a").text(t('Results'));
+      $("#rg2-draw-tab a").text(t('Draw'));
+      $('#btn-about').prop('title', t('Help'));
+      $('#btn-options').prop('title', t('Options'));
+      $('#btn-zoom-out').prop('title', t('Zoom out'));
+      $('#btn-zoom-in').prop('title', t('Zoom in'));
+      $('#btn-reset').prop('title', t('Reset'));
+      $('#btn-show-splits').prop('title', t('Splits'));
+      temp = $('#btn-toggle-controls').prop('title');
+      $('#btn-toggle-controls').prop('title', t(temp));
+      temp = $('#btn-toggle-names').prop('title');
+      $('#btn-toggle-names').prop('title', t(temp));
     }
     
     function loadEventList() {
@@ -671,15 +705,15 @@ var rg2 = ( function() {
     function resizeInfoDisplay() {
       if (infoPanelMaximised) {
         infoPanelMaximised = false;
-        $("#rg2-resize-info").prop("title", "Show info panel");
+        $("#rg2-resize-info").prop("title", t("Show info panel"));
         $("#rg2-hide-info-panel-control").css("left", "0px");
-        $("#rg2-hide-info-panel-icon").removeClass("fa-chevron-left").addClass("fa-chevron-right").prop("title", "Show info panel");
+        $("#rg2-hide-info-panel-icon").removeClass("fa-chevron-left").addClass("fa-chevron-right").prop("title", t("Show info panel"));
         $rg2infopanel.hide();
       } else {
         infoPanelMaximised = true;
-        $("#rg2-resize-info").prop("title", "Hide info panel");
+        $("#rg2-resize-info").prop("title", t("Hide info panel"));
         $("#rg2-hide-info-panel-control").css("left", "366px");
-        $("#rg2-hide-info-panel-icon").removeClass("fa-chevron-right").addClass("fa-chevron-left").prop("title", "Hide info panel");
+        $("#rg2-hide-info-panel-icon").removeClass("fa-chevron-right").addClass("fa-chevron-left").prop("title", t("Hide info panel"));
         $rg2infopanel.show();
       }
       // move map around if necesssary
@@ -1325,6 +1359,7 @@ var rg2 = ( function() {
         
     return {
       // functions and variables available elsewhere
+      t: t,
       init : init,
       config : config,
       options: options,
