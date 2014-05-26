@@ -505,11 +505,11 @@ Draw.prototype = {
   },
 
   saveError : function(text) {
-    rg2WarningDialog(this.gpstrack.routeData.name, 'Your route was not saved. Please try again.' + text);
+    rg2WarningDialog(this.gpstrack.routeData.name, rg2.t('Your route was not saved. Please try again') + '. ' + text);
   },
 
   routeSaved : function(text) {
-    rg2WarningDialog(this.gpstrack.routeData.name, 'Your route has been saved.');
+    rg2WarningDialog(this.gpstrack.routeData.name, rg2.t('Your route has been saved') + '.');
     rg2.loadEvent(rg2.getActiveEventID());
   },
 

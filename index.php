@@ -75,20 +75,31 @@ if (isset($_GET['debug']) || $override) {
 if (isset($_GET['lang'])) {
 	$lang = $_GET['lang'];
 } else {
-	if ((defined('DEFAULT_LANGUAGE'))) {
-		$lang = DEFAULT_LANGUAGE;
+	if ((defined('START_LANGUAGE'))) {
+		$lang = START_LANGUAGE;
 	} else {
 		$lang = "";
 	}
 }
-if (file_exists( dirname(__FILE__) . '/lang/'.$lang.'.js')) {
-	$dictionary = file_get_contents(dirname(__FILE__) . '/lang/'.$lang.'.js');
+$langdir = dirname(__FILE__) . '/lang/';
+if (file_exists($langdir.$lang.'.js')) {
+	$dictionary = file_get_contents($langdir.$lang.'.js');
 } else {
-	$dictionary = "";
+	$dictionary = "var rg2Dictionary = {};";
+}
+
+// create list of available languages
+$languages = "var rg2Languages = {};".PHP_EOL;
+foreach(glob($langdir.'*.js') as $file) {
+	// requested language will already be defined so don't add it again
+	// xx is a dummy file to hold the master list of terms
+  if (($file != $langdir.$lang.'.js') && ($file != $langdir.'xx.js')) {
+    $lines = explode(PHP_EOL, file_get_contents($file));
+    $languages .= $lines[0];
+	}
 }
 
 ?>
-
 <!DOCTYPE html>
 <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
 <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
@@ -197,24 +208,26 @@ if (file_exists( dirname(__FILE__) . '/lang/'.$lang.'.js')) {
     </div>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
-    <script type="text/javascript">var json_url =  "<?php echo $json_url; ?>";
-      var maps_url = "<?php echo $maps_url; ?>";
-      var header_colour = "<?php echo $header_colour; ?>";
-      var header_text_colour = "<?php echo $header_text_colour; ?>";
-      <?php if (defined('SPLITSBROWSER_DIRECTORY')) { ?>
-      var enable_splitsbrowser = true;
-      <?php } else { ?>
-      var enable_splitsbrowser = false;
-      <?php } ?>      
-    <?php if ($manager) { ?>
-      var keksi = "<?php echo $keksi; ?>";
-      <?php if (defined('EPSG_CODE')) { ?>
-      var epsg_code = "<?php echo EPSG_CODE; ?>";
-      var epsg_params = "<?php echo EPSG_PARAMS; ?>";
-      <?php } ?>
-    <?php } ?>
-    <?php echo $dictionary; ?> 
-    </script>
+    <script type="text/javascript">
+var json_url =  "<?php echo $json_url; ?>";
+var maps_url = "<?php echo $maps_url; ?>";
+var header_colour = "<?php echo $header_colour; ?>";
+var header_text_colour = "<?php echo $header_text_colour; ?>";
+<?php if (defined('SPLITSBROWSER_DIRECTORY')) { ?>
+var enable_splitsbrowser = true;
+<?php } else { ?>
+var enable_splitsbrowser = false;
+<?php } ?>      
+<?php if ($manager) { ?>
+var keksi = "<?php echo $keksi; ?>";
+<?php if (defined('EPSG_CODE')) { ?>
+var epsg_code = "<?php echo EPSG_CODE; ?>";
+var epsg_params = "<?php echo EPSG_PARAMS; ?>";
+<?php } ?>
+<?php } ?>
+<?php echo $languages; ?> 
+<?php echo $dictionary; ?> 
+</script>
     <?php if ($debug) { ?>
       <script src='<?php echo $source_url . "/js/events.js"; ?>'></script>
       <script src='<?php echo $source_url . "/js/results.js"; ?>'></script>

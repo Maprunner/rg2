@@ -12,6 +12,7 @@
 /*global json_url:false */
 /*global enable_splitsbrowser:false */
 /*global rg2Dictionary:false */
+/*global rg2Languages:false */
 /*global maps_url:false */
 /*global keksi: false */
 /*global Image:false */
@@ -35,6 +36,7 @@ var rg2 = ( function() {
     'use strict';
     var canvas = $("#rg2-map-canvas")[0];
     var ctx = canvas.getContext('2d');
+    var dictionary;
     var map;
     var mapLoadingText;
     var events;
@@ -61,7 +63,7 @@ var rg2 = ( function() {
     var requestedHash;
     var requestedEventID;
     var managing;
-
+    
     // jQuery cache items
     var $rg2infopanel;
     var $rg2eventtitle;
@@ -102,7 +104,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.8.0',
+      RG2VERSION: '0.8.1',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -123,6 +125,14 @@ var rg2 = ( function() {
 
     function init() {
       $("#rg2-container").hide();
+      
+      // use English unless a dictionary was passed in  
+      if (typeof rg2Dictionary === 'undefined') {
+        dictionary = {};
+        dictionary.code = 'en';
+      } else {
+        dictionary = rg2Dictionary;
+      }
       
       // cache jQuery things we use a lot
       $rg2infopanel = $("#rg2-info-panel");
@@ -250,6 +260,20 @@ var rg2 = ( function() {
       });
       
       setConfigOptions();
+      
+      $("#rg2-select-language").click(function(event) {
+        var newlang;
+        newlang = $("#rg2-select-language").val();
+        if (newlang !== dictionary.code) {
+          if (newlang === 'en') {
+            dictionary = {};
+            dictionary.code = 'en';
+            setNewLanguage();
+          } else {
+            getNewLanguage(newlang);
+          }
+        }
+      });
       
       $("#rg2-animation-controls").hide();
 
@@ -415,7 +439,7 @@ var rg2 = ( function() {
             // best to keep this at default?
             options.circleSize = 20;
             if (options.mapIntensity === 0) {
-              rg2WarningDialog("Map is hidden", "Your saved settings have the map intensity set to 0% so the map will be invisible. You can adjust this on the configuration menu");
+              rg2WarningDialog("Warning", "Your saved settings have 0% map intensity so the map is invisible. You can adjust this on the configuration menu");
             }
           }
         }
@@ -425,6 +449,8 @@ var rg2 = ( function() {
       }
       
       $("#rg2-option-controls").hide();
+      
+      createLanguageDropdown();
 
       $("#spn-map-intensity").spinner({
         max : 100,
@@ -504,14 +530,10 @@ var rg2 = ( function() {
     
     // translation function
     function t(str) {
-      if (typeof rg2Dictionary === 'undefined') {
-        return str;
+      if (dictionary.hasOwnProperty(str)) {
+        return dictionary[str];
       } else {
-        if (rg2Dictionary.hasOwnProperty(str)) {
-          return rg2Dictionary[str];
-        } else {
-          return str;
-        }
+        return str;
       }
     }
     
@@ -521,6 +543,7 @@ var rg2 = ( function() {
       $("#rg2-courses-tab a").text(t('Courses'));
       $("#rg2-results-tab a").text(t('Results'));
       $("#rg2-draw-tab a").text(t('Draw'));
+      $("#rg2-hide-info-panel-icon").prop("title", t("Hide info panel"));
       $('#btn-about').prop('title', t('Help'));
       $('#btn-options').prop('title', t('Options'));
       $('#btn-zoom-out').prop('title', t('Zoom out'));
@@ -541,7 +564,8 @@ var rg2 = ( function() {
       $('label[for=rg2-control-select]').prop('textContent', t('Start at'));
       $('label[for=btn-full-tails]').prop('textContent', t('Full tails'));
       $('label[for=spn-tail-length]').prop('textContent', t('Length'));
-      $('#rg2-option-controls').prop('title', t('Configuration options'));
+      $('.rg2-options-dialog span').text(t('Configuration options'));
+      $('label[for=rg2-select-language]').prop('textContent', t('Language'));
       $('label[for=spn-map-intensity]').prop('textContent', t('Map intensity'));
       $('label[for=spn-route-intensity]').prop('textContent', t('Route intensity'));
       $('label[for=spn-route-width]').prop('textContent', t('Route width'));
@@ -563,6 +587,47 @@ var rg2 = ( function() {
       $('label[for=btn-move-all]').prop('textContent', t('Move track and map together (or right click-drag)'));
     }
     
+    function createLanguageDropdown() {
+      $("#rg2-select-language").empty();
+      var dropdown = document.getElementById("rg2-select-language");
+      var i;
+      var opt;
+      opt = document.createElement("option");
+      opt.value = "en";
+      opt.text = "en: English";
+      dropdown.options.add(opt);
+      for (i in rg2Languages) {
+        opt = document.createElement("option");
+        opt.value = i;
+        opt.text = i + ": " + rg2Languages[i];
+        dropdown.options.add(opt);
+      }
+    }
+    
+    function getNewLanguage(lang) {
+      $.getJSON(json_url, {
+        id: lang,
+        type: 'lang',
+        cache : false
+      }).done(function(json) {
+        dictionary = json.data;
+        setNewLanguage();
+      }).fail(function(jqxhr, textStatus, error) {
+        var err = textStatus + ", " + error;
+        console.log("Language request failed: " + err);
+      });
+    }
+    
+    function setNewLanguage() {
+      translateFixedText();
+      createEventMenu();
+      if (events.getActiveEventID() !== null) {
+        createCourseMenu();
+        createResultMenu();
+      }
+      redraw(false);
+    }
+    
     function loadEventList() {
       $.getJSON(json_url, {
         type : "events",
@@ -574,6 +639,14 @@ var rg2 = ( function() {
           events.addEvent(new Event(this));
         });
         createEventMenu();
+        // load requested event if set
+        // input is kartat ID so need to find internal ID first
+        if (requestedEventID) {
+          var eventID = events.getEventIDForKartatID(requestedEventID);
+          if (eventID !== undefined) {
+            loadEvent(eventID);
+          }
+        }
         if (managing) {
           manager.eventListLoaded();
         }
@@ -711,8 +784,9 @@ var rg2 = ( function() {
 
     function displayOptionsDialog() {
       $("#rg2-option-controls").dialog({
-        //modal : true,
         minWidth : 400,
+        title: t("Configuration options"),
+        dialogClass: "rg2-options-dialog",
         close: function( event, ui ) {
           saveConfigOptions();
         }
@@ -929,14 +1003,6 @@ var rg2 = ( function() {
           loadEvent(ui.item[0].id);
         }
       });
-      // load requested event if set
-      // input is kartat ID so need to find internal ID first
-      if (requestedEventID) {
-        var eventID = events.getEventIDForKartatID(requestedEventID);
-        if (eventID !== undefined) {
-          loadEvent(eventID);
-        }
-      }
     }
 
     function loadEvent(eventid) {

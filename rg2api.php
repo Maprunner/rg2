@@ -27,7 +27,7 @@
     $id = $_GET['id'];
   } else {
    $id = 0;
-  } 
+  }
 
   if ($_SERVER['REQUEST_METHOD'] == 'GET') {
     handleGetRequest($type, $id);
@@ -1015,6 +1015,9 @@ function handleGetRequest($type, $id) {
   case 'tracks':
     $output = getTracksForEvent($id);
     break;
+	case 'lang':
+		$output = getLanguage($id);
+		break;
   case 'splitsbrowser':
     $output = getSplitsbrowser($id);
     break;
@@ -1050,6 +1053,30 @@ function getSplitsbrowser($eventid) {
 		$result_data = getResultsCSV($eventid);
 		$page = str_replace('<SPLITSBROWSER_DATA>', $result_data, $page);
 		return $page;
+}
+
+function getLanguage($lang) {
+	$langdir = dirname(__FILE__) . '/lang/';
+  $dict = array();
+  if (file_exists($langdir.$lang.'.js')) {
+    // not very pretty way to generate the necessary php array from the js file
+    $lines = explode("\n", file_get_contents($langdir.$lang.'.js'));
+		// delete first two lines
+    array_splice($lines, 0, 2);
+		// delete last line
+		array_pop($lines);
+		// extract each string pair into php array
+		foreach ($lines as $line) {
+			// remove all quotation marks
+			$line = str_replace("'", "", $line);
+			// split into two bits
+      $temp = explode(":", trim($line));
+			// remove trailing comma
+			$temp[1] = rtrim($temp[1], ',');
+			$dict[trim($temp[0])] = trim($temp[1]);			
+		}
+  }
+	return $dict;
 }
 
 // formats results as needed for Splitsbrowser

@@ -120,9 +120,9 @@ Events.prototype = {
 		var html = '';
 		var i;
 		for (i = this.events.length - 1; i >= 0; i -= 1) {
-			title = this.events[i].type + " event on " + this.events[i].date;
+			title = rg2.t(this.events[i].type) + ": " + this.events[i].date;
       if (this.events[i].georeferenced) {
-        title += ": Map is georeferenced";
+        title += ": " + rg2.t("Map is georeferenced");
       }
 
 			if (this.events[i].comment !== "") {
@@ -164,19 +164,19 @@ function Event(data) {
 	this.rawtype = data.type;
 	switch(data.type) {
 		case "I":
-			this.type = "International";
+			this.type = "International event";
 			break;
 		case "N":
-			this.type = "National";
+			this.type = "National event";
 			break;
 		case "R":
-			this.type = "Regional";
+			this.type = "Regional event";
 			break;
 		case "L":
-			this.type = "Local";
+			this.type = "Local event";
 			break;
 		case "T":
-			this.type = "Training";
+			this.type = "Training event";
 			break;
 		default:
 			this.type = "Unknown";

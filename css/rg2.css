@@ -498,6 +498,10 @@ image, canvas {
   padding: 1em 0.5em;
 }
 
+#rg2-option-controls input[type="checkbox"] {
+  margin-left: 10px;
+}
+
 #rg2-edit-event-comments {
   width: 95%;
   height: 70px;

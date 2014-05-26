@@ -1,6 +1,6 @@
-rg2Languages.xx = 'Test language';
+rg2Languages.de = 'Deutsch';
 var rg2Dictionary = {
-code: 'xx',
+code: 'de',
 'Events' : 'Evnts',
 'Course' : 'Crse',
 'Courses': 'Crses',
