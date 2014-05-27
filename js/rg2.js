@@ -6,15 +6,8 @@
 * Licensed under the MIT license.
 * https://github.com/Maprunner/rg2/blob/master/LICENSE
 */
+/*global rg2Config:false */
 /*global $:false */
-/*global header_colour:false */
-/*global header_text_colour:false */
-/*global json_url:false */
-/*global enable_splitsbrowser:false */
-/*global rg2Dictionary:false */
-/*global rg2Languages:false */
-/*global maps_url:false */
-/*global keksi: false */
 /*global Image:false */
 /*global Events:false */
 /*global Event:false */
@@ -127,11 +120,11 @@ var rg2 = ( function() {
       $("#rg2-container").hide();
       
       // use English unless a dictionary was passed in  
-      if (typeof rg2Dictionary === 'undefined') {
+      if (typeof rg2Config.dictionary === 'undefined') {
         dictionary = {};
         dictionary.code = 'en';
       } else {
-        dictionary = rg2Dictionary;
+        dictionary = rg2Config.dictionary;
       }
       
       // cache jQuery things we use a lot
@@ -202,14 +195,15 @@ var rg2 = ( function() {
       dragged = true;
       infoPanelMaximised = true;
 
-      $("#rg2-header-container").css("color", header_text_colour);
-      $("#rg2-header-container").css("background", header_colour);
+      $("#rg2-header-container").css("color", rg2Config.header_text_colour);
+      $("#rg2-header-container").css("background", rg2Config.header_colour);
       $("#rg2-about-dialog").hide();
       $("#rg2-splits-display").hide();
       $("#rg2-track-names").hide();
       $("#rg2-add-new-event").hide();
       
       $("#rg2-load-progress-bar").progressbar({value: false});
+      $("#rg2-load-progress-label").text("");
       $("#rg2-load-progress").hide();
 
       $("#btn-about").click(function() {
@@ -380,7 +374,7 @@ var rg2 = ( function() {
       });
 
       if (managing) {
-        manager = new Manager(keksi);
+        manager = new Manager(rg2Config.keksi);
         $("#rg2-animation-controls").hide();
         $("#rg2-create-tab").hide();
         $("#rg2-edit-tab").hide();
@@ -595,17 +589,23 @@ var rg2 = ( function() {
       opt = document.createElement("option");
       opt.value = "en";
       opt.text = "en: English";
+      if (dictionary.code === "en") {
+        opt.selected = true;
+      }
       dropdown.options.add(opt);
-      for (i in rg2Languages) {
+      for (i in rg2Config.languages) {
         opt = document.createElement("option");
         opt.value = i;
-        opt.text = i + ": " + rg2Languages[i];
+        opt.text = i + ": " + rg2Config.languages[i];
+        if (dictionary.code === i) {
+          opt.selected = true;
+        }
         dropdown.options.add(opt);
       }
     }
     
     function getNewLanguage(lang) {
-      $.getJSON(json_url, {
+      $.getJSON(rg2Config.json_url, {
         id: lang,
         type: 'lang',
         cache : false
@@ -621,7 +621,12 @@ var rg2 = ( function() {
     function setNewLanguage() {
       translateFixedText();
       createEventMenu();
-      if (events.getActiveEventID() !== null) {
+      var eventid = events.getActiveEventID();
+      if (eventid !== null) {
+        courses.removeAllFromDisplay();
+        results.removeAllTracksFromDisplay();
+        animation.resetAnimation();
+        drawing.initialiseDrawing(events.hasResults(eventid));
         createCourseMenu();
         createResultMenu();
       }
@@ -629,7 +634,7 @@ var rg2 = ( function() {
     }
     
     function loadEventList() {
-      $.getJSON(json_url, {
+      $.getJSON(rg2Config.json_url, {
         type : "events",
         cache : false
       }).done(function(json) {
@@ -1010,7 +1015,7 @@ var rg2 = ( function() {
       $('#rg2-event-list > li').removeClass('rg2-active-event').filter('#' + eventid).addClass('rg2-active-event');
       // show we are waiting
       $('body').css('cursor', 'wait');
-      $("#rg2-load-progress-label").text("Loading courses");
+      $("#rg2-load-progress-label").text(t("Loading courses"));
       $("#rg2-load-progress").show();
       courses.deleteAllCourses();
       controls.deleteAllControls();
@@ -1018,17 +1023,17 @@ var rg2 = ( function() {
       results.deleteAllResults();
       events.setActiveEventID(eventid);
       drawing.initialiseDrawing(events.hasResults(eventid));
-      loadNewMap(maps_url + events.getActiveMapID() + '.jpg');
+      loadNewMap(rg2Config.maps_url + events.getActiveMapID() + '.jpg');
       redraw(false);
       setTitleBar();
 
       // get courses for event
-      $.getJSON(json_url, {
+      $.getJSON(rg2Config.json_url, {
         id : events.getKartatEventID(),
         type : "courses",
         cache : false
       }).done(function(json) {
-        $("#rg2-load-progress-label").text("Saving courses");
+        $("#rg2-load-progress-label").text(t("Saving courses"));
         console.log("Courses: " + json.data.length);
         $.each(json.data, function() {
           courses.addCourse(new Course(this, events.isScoreEvent()));
@@ -1066,19 +1071,19 @@ var rg2 = ( function() {
     }
 
     function loadNewMap(mapFile) {
-      mapLoadingText = "Map loading...";
+      mapLoadingText = t("Loading map");
       map.src = mapFile;
     }
 
     function getResults() {
-      $("#rg2-load-progress-label").text("Loading results");
-      $.getJSON(json_url, {
+      $("#rg2-load-progress-label").text(t("Loading results"));
+      $.getJSON(rg2Config.json_url, {
         id : events.getKartatEventID(),
         type : "results",
         cache : false
       }).done(function(json) {
         console.log("Results: " + json.data.length);
-        $("#rg2-load-progress-label").text("Saving results");
+        $("#rg2-load-progress-label").text(t("Saving results"));
         var isScoreEvent = events.isScoreEvent();
         results.addResults(json.data, isScoreEvent);
         courses.setResultsCount();
@@ -1098,13 +1103,13 @@ var rg2 = ( function() {
     }
 
     function getGPSTracks() {
-      $("#rg2-load-progress-label").text("Loading routes");
-      $.getJSON(json_url, {
+      $("#rg2-load-progress-label").text(t("Loading routes"));
+      $.getJSON(rg2Config.json_url, {
         id : events.getKartatEventID(),
         type : "tracks",
         cache : false
       }).done(function(json) {
-        $("#rg2-load-progress-label").text("Saving routes");
+        $("#rg2-load-progress-label").text(t("Saving routes"));
         console.log("Tracks: " + json.data.length);
         results.addTracks(json.data);
         createCourseMenu();
@@ -1126,14 +1131,15 @@ var rg2 = ( function() {
           }
           $rg2infopanel.tabs("refresh");
           $("#btn-show-splits").show();
-          if ((enable_splitsbrowser) && (events.hasResults())) {
+          if ((rg2Config.enable_splitsbrowser) && (events.hasResults())) {
             $("#rg2-splitsbrowser").off().click(function() {
-              window.open(json_url + "?type=splitsbrowser&id=" + events.getKartatEventID());
+              window.open(rg2Config.json_url + "?type=splitsbrowser&id=" + events.getKartatEventID());
             }).show();
           } else {
             $("#rg2-splitsbrowser").off().hide();
           }
         }
+        $("#rg2-load-progress-label").text("");
         $("#rg2-load-progress").hide();
         redraw(false);
       }).fail(function(jqxhr, textStatus, error) {

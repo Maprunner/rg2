@@ -82,22 +82,41 @@ if (isset($_GET['lang'])) {
 	}
 }
 $langdir = dirname(__FILE__) . '/lang/';
-if (file_exists($langdir.$lang.'.js')) {
-	$dictionary = file_get_contents($langdir.$lang.'.js');
+if (file_exists($langdir.$lang.'.txt')) {
+	$dictionary = 'dictionary: {'.PHP_EOL;
+	$dictionary .= file_get_contents($langdir.$lang.'.txt').PHP_EOL;
+	$dictionary .= '}'.PHP_EOL; 
 } else {
-	$dictionary = "var rg2Dictionary = {};";
+	$dictionary = "dictionary: {}".PHP_EOL;
 }
 
 // create list of available languages
-$languages = "var rg2Languages = {};".PHP_EOL;
-foreach(glob($langdir.'*.js') as $file) {
+$languages = "languages: {".PHP_EOL;
+foreach(glob($langdir.'*.txt') as $file) {
 	// requested language will already be defined so don't add it again
 	// xx is a dummy file to hold the master list of terms
-  if (($file != $langdir.$lang.'.js') && ($file != $langdir.'xx.js')) {
+  if ($file != $langdir.'xx.txt') {
     $lines = explode(PHP_EOL, file_get_contents($file));
-    $languages .= $lines[0];
+    $code = "";
+		$name = "";
+    foreach ($lines as $line) {
+      if (strpos($line, 'code') !== FALSE) {
+      	$codepos = strpos($line, "'") + 1;
+				$code = substr($line, $codepos, 2);
+			}
+      if (strpos($line, 'language') !== FALSE) {
+      	$namepos = strpos($line, "'");
+				$name = substr($line, $namepos);
+				$name = rtrim($name, ',');
+				break;
+      }
+		}
+		if (($code != "") && ($name != "")) {
+		  $languages .= $code.': '.$name.','.PHP_EOL;
+		}
 	}
 }
+$languages .= '},'.PHP_EOL;
 
 ?>
 <!DOCTYPE html>
@@ -206,49 +225,45 @@ foreach(glob($langdir.'*.js') as $file) {
       <?php include 'html/options.html'; ?>
       <?php include 'html/misc.html'; ?>
     </div>
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
-    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
-    <script type="text/javascript">
-var json_url =  "<?php echo $json_url; ?>";
-var maps_url = "<?php echo $maps_url; ?>";
-var header_colour = "<?php echo $header_colour; ?>";
-var header_text_colour = "<?php echo $header_text_colour; ?>";
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+<script type="text/javascript">
+var rg2Config = {
+json_url: "<?php echo $json_url; ?>",
+maps_url: "<?php echo $maps_url; ?>",
+header_colour: "<?php echo $header_colour; ?>",
+header_text_colour: "<?php echo $header_text_colour; ?>",
 <?php if (defined('SPLITSBROWSER_DIRECTORY')) { ?>
-var enable_splitsbrowser = true;
+enable_splitsbrowser: true,
 <?php } else { ?>
-var enable_splitsbrowser = false;
-<?php } ?>      
+enable_splitsbrowser: false,
+<?php } ?>
 <?php if ($manager) { ?>
-var keksi = "<?php echo $keksi; ?>";
+keksi: "<?php echo $keksi; ?>",
 <?php if (defined('EPSG_CODE')) { ?>
-var epsg_code = "<?php echo EPSG_CODE; ?>";
-var epsg_params = "<?php echo EPSG_PARAMS; ?>";
+epsg_code: "<?php echo EPSG_CODE; ?>",
+epsg_params: "<?php echo EPSG_PARAMS; ?>",
 <?php } ?>
 <?php } ?>
-<?php echo $languages; ?> 
-<?php echo $dictionary; ?> 
+<?php echo $languages; ?>
+<?php echo $dictionary; ?>
+};
 </script>
-    <?php if ($debug) { ?>
-      <script src='<?php echo $source_url . "/js/events.js"; ?>'></script>
-      <script src='<?php echo $source_url . "/js/results.js"; ?>'></script>
-      <script src='<?php echo $source_url . "/js/gpstrack.js"; ?>'></script>
-      <script src='<?php echo $source_url . "/js/controls.js"; ?>'></script>
-      <script src='<?php echo $source_url . "/js/courses.js"; ?>'></script>
-      <script src='<?php echo $source_url . "/js/draw.js"; ?>'></script>
-      <script src='<?php echo $source_url . "/js/animation.js"; ?>'></script>
-      <script src='<?php echo $source_url . "/js/runner.js"; ?>'></script>
-      <script src='<?php echo $source_url . "/js/plugins.js"; ?>'></script>
-      <script src='<?php echo $source_url . "/js/rg2.js"; ?>'></script>
-    <?php } else { ?>
-      <script src='<?php echo $source_url . "/js/rg2all.min.js"; ?>'></script>      
-    <?php } ?>  
-    <?php if ($manager) { ?>
-      <?php if ($debug) { ?>
-        <script src='<?php echo $source_url . "/js/manager.js"; ?>'></script>
-        <?php } else {?>
-        <script src='<?php echo $source_url . "/js/rg2manager.min.js"; ?>'></script>
-      <?php } ?>      
-      <script src='<?php echo $source_url . "/js/lib/proj4js-compressed.js"; ?>'></script>
-    <?php } ?>
-  </body>
+<?php if ($debug) { ?>
+<script src='<?php echo $source_url . "/js/events.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/results.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/gpstrack.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/controls.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/courses.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/draw.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/animation.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/runner.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/plugins.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/rg2.js"; ?>'></script><?php } else { ?>
+<script src='<?php echo $source_url . "/js/rg2all.min.js"; ?>'></script><?php } ?>  
+<?php if ($manager) { ?><?php if ($debug) { ?>
+<script src='<?php echo $source_url . "/js/manager.js"; ?>'></script><?php } else {?>
+<script src='<?php echo $source_url . "/js/rg2manager.min.js"; ?>'></script><?php } ?>      
+<script src='<?php echo $source_url . "/js/lib/proj4js-compressed.js"; ?>'></script><?php } ?>
+</body>
 </html>

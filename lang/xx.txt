@@ -1,6 +1,5 @@
-rg2Languages.xx = 'Test language';
-var rg2Dictionary = {
 code: 'xx',
+language: 'Test language',
 'Events' : 'Evnts',
 'Course' : 'Crse',
 'Courses': 'Crses',
@@ -76,5 +75,12 @@ code: 'xx',
 'Unknown': 'Unknwn',
 'Warning': 'Wrning',
 'Your route has been saved': 'Your rte has been saved',
-'Your route was not saved. Please try again': 'Your rte was not saved. Please try again'
-};
+'Your route was not saved. Please try again': 'Your rte was not saved. Please try again',
+'Loading courses': 'Loadng courses',
+'Loading results': 'Loadng results',
+'Loading map': 'Loadng map',
+'Loading routes': 'Loadng routes',
+'Saving courses': 'Savng courses',
+'Saving results': 'Savng results',
+'Saving routes': 'Savng routes',
+'Map loaded': 'Map loadd'

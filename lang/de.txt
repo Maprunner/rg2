@@ -1,6 +1,5 @@
-rg2Languages.de = 'Deutsch';
-var rg2Dictionary = {
 code: 'de',
+language: 'Deutsch',
 'Events' : 'Evnts',
 'Course' : 'Crse',
 'Courses': 'Crses',
@@ -77,4 +76,3 @@ code: 'de',
 'Warning': 'Wrning',
 'Your route has been saved': 'Your rte has been saved',
 'Your route was not saved. Please try again': 'Your rte was not saved. Please try again'
-};

@@ -1058,13 +1058,9 @@ function getSplitsbrowser($eventid) {
 function getLanguage($lang) {
 	$langdir = dirname(__FILE__) . '/lang/';
   $dict = array();
-  if (file_exists($langdir.$lang.'.js')) {
-    // not very pretty way to generate the necessary php array from the js file
-    $lines = explode("\n", file_get_contents($langdir.$lang.'.js'));
-		// delete first two lines
-    array_splice($lines, 0, 2);
-		// delete last line
-		array_pop($lines);
+  if (file_exists($langdir.$lang.'.txt')) {
+    // generate the necessary php array from the txt file
+    $lines = explode(PHP_EOL, file_get_contents($langdir.$lang.'.txt'));
 		// extract each string pair into php array
 		foreach ($lines as $line) {
 			// remove all quotation marks
