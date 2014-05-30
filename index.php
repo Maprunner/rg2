@@ -92,30 +92,36 @@ if (file_exists($langdir.$lang.'.txt')) {
 
 // create list of available languages
 $languages = "languages: {".PHP_EOL;
-foreach(glob($langdir.'*.txt') as $file) {
-	// requested language will already be defined so don't add it again
+foreach(glob($langdir.'??.txt') as $file) {
 	// xx is a dummy file to hold the master list of terms
   if ($file != $langdir.'xx.txt') {
     $lines = explode(PHP_EOL, file_get_contents($file));
     $code = "";
 		$name = "";
     foreach ($lines as $line) {
+    	$line = trim($line);
       if (strpos($line, 'code') !== FALSE) {
       	$codepos = strpos($line, "'") + 1;
 				$code = substr($line, $codepos, 2);
+				if ($name !== "") {
+					break;
+				}
 			}
       if (strpos($line, 'language') !== FALSE) {
       	$namepos = strpos($line, "'");
 				$name = substr($line, $namepos);
-				$name = rtrim($name, ',');
-				break;
+				if ($code !== "") {
+					break;
+				}
       }
 		}
-		if (($code != "") && ($name != "")) {
-		  $languages .= $code.': '.$name.','.PHP_EOL;
-		}
+		
+	  if (($code != "") && ($name != "")) {
+	    $languages .= $code.': '.$name.PHP_EOL;
+	  }
 	}
 }
+
 $languages .= '},'.PHP_EOL;
 
 ?>
@@ -203,7 +209,7 @@ $languages .= '},'.PHP_EOL;
        <button id="btn-three-seconds">+3 sec</button>
        <button id="btn-undo">Undo</button>
        <button id="btn-save-route">Save</button>
-       <button class="pushright" id="btn-reset-drawing">Reset</button>
+       <button id="btn-reset-drawing">Reset</button>
           <hr class="rg2-hr">
           <h3 id='rg2-load-gps-title'>Load GPS file (GPX or TCX)</h3>
           <div id="rg2-select-gps-file">

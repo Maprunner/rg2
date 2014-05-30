@@ -97,7 +97,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.8.1',
+      RG2VERSION: '0.8.3',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -126,7 +126,8 @@ var rg2 = ( function() {
       } else {
         dictionary = rg2Config.dictionary;
       }
-      
+      createLanguageDropdown();
+            
       // cache jQuery things we use a lot
       $rg2infopanel = $("#rg2-info-panel");
       $rg2eventtitle = $("#rg2-event-title");
@@ -254,6 +255,83 @@ var rg2 = ( function() {
       });
       
       setConfigOptions();
+      
+      $("#rg2-option-controls").hide();
+      
+      $("#spn-map-intensity").spinner({
+        max : 100,
+        min : 0,
+        step: 10,
+        numberFormat: "n",
+        spin : function(event, ui) {
+          options.mapIntensity = ui.value;
+          redraw(false);
+        }
+      }).val(options.mapIntensity);
+      
+      $("#spn-route-intensity").spinner({
+        max : 100,
+        min : 0,
+        step: 10,
+        numberFormat: "n",
+        spin : function(event, ui) {
+          options.routeIntensity = ui.value;
+          redraw(false);
+        }
+      }).val(options.routeIntensity);
+
+      $("#spn-name-font-size").spinner({
+        max : 30,
+        min : 5,
+        step: 1,
+        numberFormat: "n",
+        spin : function(event, ui) {
+          options.replayFontSize = ui.value;
+          redraw(false);
+        }
+      }).val(options.replayFontSize);
+
+      $("#spn-course-width").spinner({
+        max : 10,
+        min : 1,
+        step: 0.5,
+        spin : function(event, ui) {
+          options.courseWidth = ui.value;
+          redraw(false);
+        }
+      }).val(options.courseWidth);
+
+      $("#spn-route-width").spinner({
+        max : 10,
+        min : 1,
+        step: 0.5,
+        spin : function(event, ui) {
+          options.routeWidth = ui.value;
+          redraw(false);
+        }
+      }).val(options.routeWidth);
+      
+      $("#spn-control-circle").spinner({
+        max : 30,
+        min : 5,
+        step: 1,
+        spin : function(event, ui) {
+          options.circleSize = ui.value;
+          redraw(false);
+        }
+      }).val(options.circleSize);
+      
+      $("#chk-show-three-seconds").prop('checked', options.showGPSSpeed).click(function() {
+        redraw(false);
+      });
+
+      $("#chk-show-GPS-speed").prop('checked', options.showGPSSpeed).click(function() {
+        redraw(false);
+      });
+      
+      $("#btn-options").click(function() {
+        displayOptionsDialog();
+      });
       
       $("#rg2-select-language").click(function(event) {
         var newlang;
@@ -388,7 +466,8 @@ var rg2 = ( function() {
         $rg2infopanel.tabs("option", "active", config.TAB_LOGIN);
         mapLoadingText = "";
       } else {
-        mapLoadingText = t("Select an event");
+        // translated when displayed
+        mapLoadingText = "Select an event";
       }
      
       canvas.addEventListener('touchstart', handleTouchStart, false);
@@ -415,7 +494,7 @@ var rg2 = ( function() {
       $(document).bind("contextmenu", function(evt) {
         evt.preventDefault();
       });
-
+      
       translateFixedText();
       
       // load event details
@@ -441,85 +520,6 @@ var rg2 = ( function() {
         // storage not supported so just continue
         console.log('Local storage not supported');
       }
-      
-      $("#rg2-option-controls").hide();
-      
-      createLanguageDropdown();
-
-      $("#spn-map-intensity").spinner({
-        max : 100,
-        min : 0,
-        step: 10,
-        numberFormat: "n",
-        spin : function(event, ui) {
-          options.mapIntensity = ui.value;
-          redraw(false);
-        }
-      }).val(options.mapIntensity);
-      
-      $("#spn-route-intensity").spinner({
-        max : 100,
-        min : 0,
-        step: 10,
-        numberFormat: "n",
-        spin : function(event, ui) {
-          options.routeIntensity = ui.value;
-          redraw(false);
-        }
-      }).val(options.routeIntensity);
-
-      $("#spn-name-font-size").spinner({
-        max : 30,
-        min : 5,
-        step: 1,
-        numberFormat: "n",
-        spin : function(event, ui) {
-          options.replayFontSize = ui.value;
-          redraw(false);
-        }
-      }).val(options.replayFontSize);
-
-      $("#spn-course-width").spinner({
-        max : 10,
-        min : 1,
-        step: 0.5,
-        spin : function(event, ui) {
-          options.courseWidth = ui.value;
-          redraw(false);
-        }
-      }).val(options.courseWidth);
-
-      $("#spn-route-width").spinner({
-        max : 10,
-        min : 1,
-        step: 0.5,
-        spin : function(event, ui) {
-          options.routeWidth = ui.value;
-          redraw(false);
-        }
-      }).val(options.routeWidth);
-      
-      $("#spn-control-circle").spinner({
-        max : 30,
-        min : 5,
-        step: 1,
-        spin : function(event, ui) {
-          options.circleSize = ui.value;
-          redraw(false);
-        }
-      }).val(options.circleSize);
-      
-      $("#chk-show-three-seconds").prop('checked', options.showGPSSpeed).click(function() {
-        redraw(false);
-      });
-
-      $("#chk-show-GPS-speed").prop('checked', options.showGPSSpeed).click(function() {
-        redraw(false);
-      });
-      
-      $("#btn-options").click(function() {
-        displayOptionsDialog();
-      });
     }
     
     // translation function
@@ -558,10 +558,10 @@ var rg2 = ( function() {
       $('label[for=rg2-control-select]').prop('textContent', t('Start at'));
       $('label[for=btn-full-tails]').prop('textContent', t('Full tails'));
       $('label[for=spn-tail-length]').prop('textContent', t('Length'));
-      $('.rg2-options-dialog span').text(t('Configuration options'));
+      $('.rg2-options-dialog .ui-dialog-title').text(t('Configuration options'));
       $('label[for=rg2-select-language]').prop('textContent', t('Language'));
-      $('label[for=spn-map-intensity]').prop('textContent', t('Map intensity'));
-      $('label[for=spn-route-intensity]').prop('textContent', t('Route intensity'));
+      $('label[for=spn-map-intensity]').prop('textContent', t('Map intensity %'));
+      $('label[for=spn-route-intensity]').prop('textContent', t('Route intensity %'));
       $('label[for=spn-route-width]').prop('textContent', t('Route width'));
       $('label[for=spn-name-font-size]').prop('textContent', t('Replay label font size'));
       $('label[for=spn-course-width]').prop('textContent', t('Course overprint width'));
@@ -619,7 +619,6 @@ var rg2 = ( function() {
     }
     
     function setNewLanguage() {
-      translateFixedText();
       createEventMenu();
       var eventid = events.getActiveEventID();
       if (eventid !== null) {
@@ -630,6 +629,8 @@ var rg2 = ( function() {
         createCourseMenu();
         createResultMenu();
       }
+      translateFixedText();
+      $rg2infopanel.tabs( "refresh" );
       redraw(false);
     }
     
@@ -767,7 +768,7 @@ var rg2 = ( function() {
         ctx.font = '30pt Arial';
         ctx.textAlign = 'center';
         ctx.fillStyle = config.BLACK;
-        ctx.fillText(mapLoadingText, canvas.width / 2, canvas.height / 2);
+        ctx.fillText(t(mapLoadingText), canvas.width / 2, canvas.height / 2);
       }
 
     }
@@ -776,7 +777,7 @@ var rg2 = ( function() {
       $("#rg2-event-stats").empty().html(getEventStats());
       $("#rg2-about-dialog").dialog({
         width : Math.min(1000, (canvas.width * 0.8)),
-        height : Math.min(1000, (canvas.height * 0.9)),
+        maxHeight : Math.min(1000, (canvas.height * 0.9)),
         title: "RG2 Version " + config.RG2VERSION,
         resizable: false,
         buttons : {
@@ -994,7 +995,7 @@ var rg2 = ( function() {
       stats += "<p><strong>" + t("Courses") + ":</strong> " + coursearray.length + " <strong>" + t("Results") + ":</strong> " + resultsinfo.results;
       stats += "<strong> " + t("Drawn routes") + ":</strong> " + resultsinfo.drawnroutes + " <strong>" + t("GPS routes");
       stats += ":</strong> " + resultsinfo.gpsroutes + " (" + resultsinfo.percent + "%)</p>";
-      stats += "<p><strong>Total time:</strong> " + resultsinfo.time + "</p>";
+      stats += "<p><strong>" + t("Total time") + ":</strong> " + resultsinfo.time + "</p>";
       stats += "<p><strong>" + t("Comments") + ":</strong></p>";
       stats += results.getComments();
       return stats;
@@ -1071,7 +1072,8 @@ var rg2 = ( function() {
     }
 
     function loadNewMap(mapFile) {
-      mapLoadingText = t("Loading map");
+      // translated when displayed
+      mapLoadingText = "Loading map";
       map.src = mapFile;
     }
 
