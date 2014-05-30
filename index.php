@@ -71,8 +71,60 @@ if (isset($_GET['debug']) || $override) {
 	$debug = FALSE;
 }
 
-?>
+// include language file if requested
+if (isset($_GET['lang'])) {
+	$lang = $_GET['lang'];
+} else {
+	if ((defined('START_LANGUAGE'))) {
+		$lang = START_LANGUAGE;
+	} else {
+		$lang = "";
+	}
+}
+$langdir = dirname(__FILE__) . '/lang/';
+if (file_exists($langdir.$lang.'.txt')) {
+	$dictionary = 'dictionary: {'.PHP_EOL;
+	$dictionary .= file_get_contents($langdir.$lang.'.txt').PHP_EOL;
+	$dictionary .= '}'.PHP_EOL; 
+} else {
+	$dictionary = "dictionary: {}".PHP_EOL;
+}
 
+// create list of available languages
+$languages = "languages: {".PHP_EOL;
+foreach(glob($langdir.'??.txt') as $file) {
+	// xx is a dummy file to hold the master list of terms
+  if ($file != $langdir.'xx.txt') {
+    $lines = explode(PHP_EOL, file_get_contents($file));
+    $code = "";
+		$name = "";
+    foreach ($lines as $line) {
+    	$line = trim($line);
+      if (strpos($line, 'code') !== FALSE) {
+      	$codepos = strpos($line, "'") + 1;
+				$code = substr($line, $codepos, 2);
+				if ($name !== "") {
+					break;
+				}
+			}
+      if (strpos($line, 'language') !== FALSE) {
+      	$namepos = strpos($line, "'");
+				$name = substr($line, $namepos);
+				if ($code !== "") {
+					break;
+				}
+      }
+		}
+		
+	  if (($code != "") && ($name != "")) {
+	    $languages .= $code.': '.$name.PHP_EOL;
+	  }
+	}
+}
+
+$languages .= '},'.PHP_EOL;
+
+?>
 <!DOCTYPE html>
 <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
 <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
@@ -137,15 +189,18 @@ if (isset($_GET['debug']) || $override) {
         </div>
         <div id="rg2-result-list"></div>
       <div id="rg2-draw">
-          <h3 class="no-top-margin">Draw route</h3>
+          <h3 class="no-top-margin" id='rg2-draw-title'>Draw route</h3>
           <div id="rg2-select-course">
-           Select course: <select  id="rg2-course-select"></select>
+           <label for='rg2-course-select'>Select course: </label>
+           <select  id="rg2-course-select"></select>
           </div>     
           <div id="rg2-select-name">
-           Select name: <select  id="rg2-name-select"></select>
+           <label for='rg2-name-select'>Select name: </label>
+           <select id="rg2-name-select"></select>
           </div>
           <div id="rg2-enter-name">
-           <p id = "rg2-name">Enter name: <input  id="rg2-name-entry" class="pushright" type="text"></p>
+           <label for='rg2-name'>Enter name: </label>
+           <p id = "rg2-name"><input id="rg2-name-entry" class="pushright" type="text"></p>
            <p id = "rg2-time">Enter time (mm:ss): <input  id="rg2-time-entry" class="pushright" type="text"></p>
           </div>
           <div>
@@ -154,9 +209,9 @@ if (isset($_GET['debug']) || $override) {
        <button id="btn-three-seconds">+3 sec</button>
        <button id="btn-undo">Undo</button>
        <button id="btn-save-route">Save</button>
-       <button class="pushright" id="btn-reset-drawing">Reset</button>
+       <button id="btn-reset-drawing">Reset</button>
           <hr class="rg2-hr">
-          <h3>Load GPS file (GPX or TCX)</h3>
+          <h3 id='rg2-load-gps-title'>Load GPS file (GPX or TCX)</h3>
           <div id="rg2-select-gps-file">
            <input type='file' accept='.gpx, .tcx' id='rg2-load-gps-file'>
           </div>
@@ -176,46 +231,45 @@ if (isset($_GET['debug']) || $override) {
       <?php include 'html/options.html'; ?>
       <?php include 'html/misc.html'; ?>
     </div>
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
-    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
-    <script type="text/javascript">var json_url =  "<?php echo $json_url; ?>";
-      var maps_url = "<?php echo $maps_url; ?>";
-      var header_colour = "<?php echo $header_colour; ?>";
-      var header_text_colour = "<?php echo $header_text_colour; ?>";
-      <?php if (defined('SPLITSBROWSER_DIRECTORY')) { ?>
-      var enable_splitsbrowser = true;
-      <?php } else { ?>
-      var enable_splitsbrowser = false;
-      <?php } ?>      
-    <?php if ($manager) { ?>
-      var keksi = "<?php echo $keksi; ?>";
-      <?php if (defined('EPSG_CODE')) { ?>
-      var epsg_code = "<?php echo EPSG_CODE; ?>";
-      var epsg_params = "<?php echo EPSG_PARAMS; ?>";
-      <?php } ?>
-    <?php } ?>
-    </script>
-    <?php if ($debug) { ?>
-      <script src='<?php echo $source_url . "/js/events.js"; ?>'></script>
-      <script src='<?php echo $source_url . "/js/results.js"; ?>'></script>
-      <script src='<?php echo $source_url . "/js/gpstrack.js"; ?>'></script>
-      <script src='<?php echo $source_url . "/js/controls.js"; ?>'></script>
-      <script src='<?php echo $source_url . "/js/courses.js"; ?>'></script>
-      <script src='<?php echo $source_url . "/js/draw.js"; ?>'></script>
-      <script src='<?php echo $source_url . "/js/animation.js"; ?>'></script>
-      <script src='<?php echo $source_url . "/js/runner.js"; ?>'></script>
-      <script src='<?php echo $source_url . "/js/plugins.js"; ?>'></script>
-      <script src='<?php echo $source_url . "/js/rg2.js"; ?>'></script>
-    <?php } else { ?>
-      <script src='<?php echo $source_url . "/js/rg2all.min.js"; ?>'></script>      
-    <?php } ?>  
-    <?php if ($manager) { ?>
-      <?php if ($debug) { ?>
-        <script src='<?php echo $source_url . "/js/manager.js"; ?>'></script>
-        <?php } else {?>
-        <script src='<?php echo $source_url . "/js/rg2manager.min.js"; ?>'></script>
-      <?php } ?>      
-      <script src='<?php echo $source_url . "/js/lib/proj4js-compressed.js"; ?>'></script>
-    <?php } ?>
-  </body>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+<script type="text/javascript">
+var rg2Config = {
+json_url: "<?php echo $json_url; ?>",
+maps_url: "<?php echo $maps_url; ?>",
+header_colour: "<?php echo $header_colour; ?>",
+header_text_colour: "<?php echo $header_text_colour; ?>",
+<?php if (defined('SPLITSBROWSER_DIRECTORY')) { ?>
+enable_splitsbrowser: true,
+<?php } else { ?>
+enable_splitsbrowser: false,
+<?php } ?>
+<?php if ($manager) { ?>
+keksi: "<?php echo $keksi; ?>",
+<?php if (defined('EPSG_CODE')) { ?>
+epsg_code: "<?php echo EPSG_CODE; ?>",
+epsg_params: "<?php echo EPSG_PARAMS; ?>",
+<?php } ?>
+<?php } ?>
+<?php echo $languages; ?>
+<?php echo $dictionary; ?>
+};
+</script>
+<?php if ($debug) { ?>
+<script src='<?php echo $source_url . "/js/events.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/results.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/gpstrack.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/controls.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/courses.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/draw.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/animation.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/runner.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/plugins.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/rg2.js"; ?>'></script><?php } else { ?>
+<script src='<?php echo $source_url . "/js/rg2all.min.js"; ?>'></script><?php } ?>  
+<?php if ($manager) { ?><?php if ($debug) { ?>
+<script src='<?php echo $source_url . "/js/manager.js"; ?>'></script><?php } else {?>
+<script src='<?php echo $source_url . "/js/rg2manager.min.js"; ?>'></script><?php } ?>      
+<script src='<?php echo $source_url . "/js/lib/proj4js-compressed.js"; ?>'></script><?php } ?>
+</body>
 </html>

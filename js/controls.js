@@ -1,4 +1,5 @@
 /*global rg2:false */
+/*global t:false */
 function Controls() {
 	this.controls = [];
 	this.displayControls = false;
@@ -176,10 +177,10 @@ Controls.prototype = {
 	toggleControlDisplay : function() {
 		if (this.displayControls) {
 			$("#btn-toggle-controls").removeClass("fa-ban").addClass("fa-circle-o");
-			$("#btn-toggle-controls").prop("title", "Show all controls map");
+			$("#btn-toggle-controls").prop("title", rg2.t("Show controls"));
 		} else {
 			$("#btn-toggle-controls").removeClass("fa-circle-o").addClass("fa-ban");
-			$("#btn-toggle-controls").prop("title", "Hide all controls map");
+			$("#btn-toggle-controls").prop("title", rg2.t("Hide controls"));
 		}
 		this.displayControls = !this.displayControls;
 	},

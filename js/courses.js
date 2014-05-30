@@ -72,7 +72,7 @@ Courses.prototype = {
 		var dropdown = document.getElementById("rg2-course-select");
 		var opt = document.createElement("option");
 		opt.value = null;
-		opt.text = "Select course";
+		opt.text = rg2.t("Select course");
 		dropdown.options.add(opt);
 
 		for (i = 0; i < this.courses.length; i += 1) {
@@ -209,7 +209,8 @@ Courses.prototype = {
   
 	formatCoursesAsTable : function() {
 		var res = 0;
-		var html = "<table class='coursemenutable'><tr><th>Course</th><th>Show</th><th>Runners</th><th>Tracks</th><th>Show</th></tr>";
+		var html = "<table class='coursemenutable'><tr><th>" + rg2.t("Course") + "</th><th>" + rg2.t("Show");
+		html += "</th><th>" + rg2.t("Runners") + "</th><th>" + rg2.t("Routes") + "</th><th>" + rg2.t("Show") + "</th></tr>";
 		for (var i = 0; i < this.courses.length; i += 1) {
 			if (this.courses[i] !== undefined) {
 				html += "<tr><td>" + this.courses[i].name + "</td>";
@@ -226,7 +227,7 @@ Courses.prototype = {
 			}
 		}
 		// add bottom row for all courses checkboxes
-		html += "<tr class='allitemsrow'><td>All</td>";
+		html += "<tr class='allitemsrow'><td>" + rg2.t("All") + "</td>";
 		html += "<td><input class='allcourses' id=" + i + " type=checkbox name=course></input></td>";
 		html += "<td>" + res + "</td>";
 		if (this.totaltracks > 0) {

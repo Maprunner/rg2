@@ -1,4 +1,4 @@
-// Version 0.8.0 2014-05-24T17:44:44;
+// Version 0.8.3 2014-05-30T08:48:55;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -7,13 +7,8 @@
 * Licensed under the MIT license.
 * https://github.com/Maprunner/rg2/blob/master/LICENSE
 */
+/*global rg2Config:false */
 /*global $:false */
-/*global header_colour:false */
-/*global header_text_colour:false */
-/*global json_url:false */
-/*global enable_splitsbrowser:false */
-/*global maps_url:false */
-/*global keksi: false */
 /*global Image:false */
 /*global Events:false */
 /*global Event:false */
@@ -35,6 +30,7 @@ var rg2 = ( function() {
     'use strict';
     var canvas = $("#rg2-map-canvas")[0];
     var ctx = canvas.getContext('2d');
+    var dictionary;
     var map;
     var mapLoadingText;
     var events;
@@ -61,11 +57,11 @@ var rg2 = ( function() {
     var requestedHash;
     var requestedEventID;
     var managing;
-
+    
     // jQuery cache items
     var $rg2infopanel;
     var $rg2eventtitle;
-
+         
     var config = {
       DEFAULT_SCALE_FACTOR : 1.1,
       TAB_EVENTS : 0,
@@ -102,7 +98,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.8.0',
+      RG2VERSION: '0.8.3',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -124,6 +120,15 @@ var rg2 = ( function() {
     function init() {
       $("#rg2-container").hide();
       
+      // use English unless a dictionary was passed in  
+      if (typeof rg2Config.dictionary === 'undefined') {
+        dictionary = {};
+        dictionary.code = 'en';
+      } else {
+        dictionary = rg2Config.dictionary;
+      }
+      createLanguageDropdown();
+            
       // cache jQuery things we use a lot
       $rg2infopanel = $("#rg2-info-panel");
       $rg2eventtitle = $("#rg2-event-title");
@@ -192,14 +197,15 @@ var rg2 = ( function() {
       dragged = true;
       infoPanelMaximised = true;
 
-      $("#rg2-header-container").css("color", header_text_colour);
-      $("#rg2-header-container").css("background", header_colour);
+      $("#rg2-header-container").css("color", rg2Config.header_text_colour);
+      $("#rg2-header-container").css("background", rg2Config.header_colour);
       $("#rg2-about-dialog").hide();
       $("#rg2-splits-display").hide();
       $("#rg2-track-names").hide();
       $("#rg2-add-new-event").hide();
       
       $("#rg2-load-progress-bar").progressbar({value: false});
+      $("#rg2-load-progress-label").text("");
       $("#rg2-load-progress").hide();
 
       $("#btn-about").click(function() {
@@ -250,6 +256,97 @@ var rg2 = ( function() {
       });
       
       setConfigOptions();
+      
+      $("#rg2-option-controls").hide();
+      
+      $("#spn-map-intensity").spinner({
+        max : 100,
+        min : 0,
+        step: 10,
+        numberFormat: "n",
+        spin : function(event, ui) {
+          options.mapIntensity = ui.value;
+          redraw(false);
+        }
+      }).val(options.mapIntensity);
+      
+      $("#spn-route-intensity").spinner({
+        max : 100,
+        min : 0,
+        step: 10,
+        numberFormat: "n",
+        spin : function(event, ui) {
+          options.routeIntensity = ui.value;
+          redraw(false);
+        }
+      }).val(options.routeIntensity);
+
+      $("#spn-name-font-size").spinner({
+        max : 30,
+        min : 5,
+        step: 1,
+        numberFormat: "n",
+        spin : function(event, ui) {
+          options.replayFontSize = ui.value;
+          redraw(false);
+        }
+      }).val(options.replayFontSize);
+
+      $("#spn-course-width").spinner({
+        max : 10,
+        min : 1,
+        step: 0.5,
+        spin : function(event, ui) {
+          options.courseWidth = ui.value;
+          redraw(false);
+        }
+      }).val(options.courseWidth);
+
+      $("#spn-route-width").spinner({
+        max : 10,
+        min : 1,
+        step: 0.5,
+        spin : function(event, ui) {
+          options.routeWidth = ui.value;
+          redraw(false);
+        }
+      }).val(options.routeWidth);
+      
+      $("#spn-control-circle").spinner({
+        max : 30,
+        min : 5,
+        step: 1,
+        spin : function(event, ui) {
+          options.circleSize = ui.value;
+          redraw(false);
+        }
+      }).val(options.circleSize);
+      
+      $("#chk-show-three-seconds").prop('checked', options.showGPSSpeed).click(function() {
+        redraw(false);
+      });
+
+      $("#chk-show-GPS-speed").prop('checked', options.showGPSSpeed).click(function() {
+        redraw(false);
+      });
+      
+      $("#btn-options").click(function() {
+        displayOptionsDialog();
+      });
+      
+      $("#rg2-select-language").click(function(event) {
+        var newlang;
+        newlang = $("#rg2-select-language").val();
+        if (newlang !== dictionary.code) {
+          if (newlang === 'en') {
+            dictionary = {};
+            dictionary.code = 'en';
+            setNewLanguage();
+          } else {
+            getNewLanguage(newlang);
+          }
+        }
+      });
       
       $("#rg2-animation-controls").hide();
 
@@ -356,7 +453,7 @@ var rg2 = ( function() {
       });
 
       if (managing) {
-        manager = new Manager(keksi);
+        manager = new Manager(rg2Config.keksi);
         $("#rg2-animation-controls").hide();
         $("#rg2-create-tab").hide();
         $("#rg2-edit-tab").hide();
@@ -370,6 +467,7 @@ var rg2 = ( function() {
         $rg2infopanel.tabs("option", "active", config.TAB_LOGIN);
         mapLoadingText = "";
       } else {
+        // translated when displayed
         mapLoadingText = "Select an event";
       }
      
@@ -397,7 +495,9 @@ var rg2 = ( function() {
       $(document).bind("contextmenu", function(evt) {
         evt.preventDefault();
       });
-
+      
+      translateFixedText();
+      
       // load event details
       loadEventList();
 
@@ -413,7 +513,7 @@ var rg2 = ( function() {
             // best to keep this at default?
             options.circleSize = 20;
             if (options.mapIntensity === 0) {
-              rg2WarningDialog("Map is hidden", "Your saved settings have the map intensity set to 0% so the map will be invisible. You can adjust this on the configuration menu");
+              rg2WarningDialog("Warning", "Your saved settings have 0% map intensity so the map is invisible. You can adjust this on the configuration menu");
             }
           }
         }
@@ -421,87 +521,122 @@ var rg2 = ( function() {
         // storage not supported so just continue
         console.log('Local storage not supported');
       }
-      
-      $("#rg2-option-controls").hide();
-
-      $("#spn-map-intensity").spinner({
-        max : 100,
-        min : 0,
-        step: 10,
-        numberFormat: "n",
-        spin : function(event, ui) {
-          options.mapIntensity = ui.value;
-          redraw(false);
+    }
+    
+    // translation function
+    function t(str) {
+      if (dictionary.hasOwnProperty(str)) {
+        return dictionary[str];
+      } else {
+        return str;
+      }
+    }
+    
+    function translateFixedText() {
+      var temp;
+      $("#rg2-events-tab a").text(t('Events'));
+      $("#rg2-courses-tab a").text(t('Courses'));
+      $("#rg2-results-tab a").text(t('Results'));
+      $("#rg2-draw-tab a").text(t('Draw'));
+      $("#rg2-hide-info-panel-icon").prop("title", t("Hide info panel"));
+      $('#btn-about').prop('title', t('Help'));
+      $('#btn-options').prop('title', t('Options'));
+      $('#btn-zoom-out').prop('title', t('Zoom out'));
+      $('#btn-zoom-in').prop('title', t('Zoom in'));
+      $('#btn-reset').prop('title', t('Reset'));
+      $('#btn-show-splits').prop('title', t('Splits'));
+      temp = $('#btn-toggle-controls').prop('title');
+      $('#btn-toggle-controls').prop('title', t(temp));
+      temp = $('#btn-toggle-names').prop('title');
+      $('#btn-toggle-names').prop('title', t(temp));
+      $('#rg2-splits-table').prop('title', t('Splits table'));
+      $('#btn-slower').prop('title', t('Slower'));
+      $('#btn-faster').prop('title', t('Faster'));
+      temp = $('#btn-start-stop').prop('title');
+      $('#btn-start-stop').prop('title', t(temp));
+      $('#btn-real-time').prop('title', t('Real time'));
+      $('#btn-mass-start').prop('title', t('Mass start'));
+      $('label[for=rg2-control-select]').prop('textContent', t('Start at'));
+      $('label[for=btn-full-tails]').prop('textContent', t('Full tails'));
+      $('label[for=spn-tail-length]').prop('textContent', t('Length'));
+      $('.rg2-options-dialog .ui-dialog-title').text(t('Configuration options'));
+      $('label[for=rg2-select-language]').prop('textContent', t('Language'));
+      $('label[for=spn-map-intensity]').prop('textContent', t('Map intensity %'));
+      $('label[for=spn-route-intensity]').prop('textContent', t('Route intensity %'));
+      $('label[for=spn-route-width]').prop('textContent', t('Route width'));
+      $('label[for=spn-name-font-size]').prop('textContent', t('Replay label font size'));
+      $('label[for=spn-course-width]').prop('textContent', t('Course overprint width'));
+      $('label[for=spn-control-circle]').prop('textContent', t('Control circle size'));
+      $('label[for=chk-show-three-seconds]').prop('textContent', t('Show +3 time loss for GPS routes'));
+      $('label[for=chk-show-GPS-speed]').prop('textContent', t('Show GPS speed colours'));
+      $('#btn-undo').button('option', 'label', t('Undo'));
+      $('#btn-undo-gps-adjust').button('option', 'label', t('Undo'));
+      $('#btn-save-route').button('option', 'label', t('Save'));
+      $('#btn-reset-drawing').button('option', 'label', t('Reset'));
+      $('#btn-three-seconds').button('option', 'label', t('+3 sec'));
+      $('#btn-save-gps-route').button('option', 'label', t('Save GPS route'));
+      $('#rg2-draw-title').text(t('Draw route'));
+      $('#rg2-load-gps-title').text(t('Load GPS file (GPX or TCX)'));
+      $('label[for=rg2-course-select]').prop('textContent', t('Select course'));
+      $('label[for=rg2-name-select]').prop('textContent', t('Select name'));
+      $('label[for=btn-move-all]').prop('textContent', t('Move track and map together (or right click-drag)'));
+    }
+    
+    function createLanguageDropdown() {
+      $("#rg2-select-language").empty();
+      var dropdown = document.getElementById("rg2-select-language");
+      var i;
+      var opt;
+      opt = document.createElement("option");
+      opt.value = "en";
+      opt.text = "en: English";
+      if (dictionary.code === "en") {
+        opt.selected = true;
+      }
+      dropdown.options.add(opt);
+      for (i in rg2Config.languages) {
+        opt = document.createElement("option");
+        opt.value = i;
+        opt.text = i + ": " + rg2Config.languages[i];
+        if (dictionary.code === i) {
+          opt.selected = true;
         }
-      }).val(options.mapIntensity);
-      
-      $("#spn-route-intensity").spinner({
-        max : 100,
-        min : 0,
-        step: 10,
-        numberFormat: "n",
-        spin : function(event, ui) {
-          options.routeIntensity = ui.value;
-          redraw(false);
-        }
-      }).val(options.routeIntensity);
-
-      $("#spn-name-font-size").spinner({
-        max : 30,
-        min : 5,
-        step: 1,
-        numberFormat: "n",
-        spin : function(event, ui) {
-          options.replayFontSize = ui.value;
-          redraw(false);
-        }
-      }).val(options.replayFontSize);
-
-      $("#spn-course-width").spinner({
-        max : 10,
-        min : 1,
-        step: 0.5,
-        spin : function(event, ui) {
-          options.courseWidth = ui.value;
-          redraw(false);
-        }
-      }).val(options.courseWidth);
-
-      $("#spn-route-width").spinner({
-        max : 10,
-        min : 1,
-        step: 0.5,
-        spin : function(event, ui) {
-          options.routeWidth = ui.value;
-          redraw(false);
-        }
-      }).val(options.routeWidth);
-      
-      $("#spn-control-circle").spinner({
-        max : 30,
-        min : 5,
-        step: 1,
-        spin : function(event, ui) {
-          options.circleSize = ui.value;
-          redraw(false);
-        }
-      }).val(options.circleSize);
-      
-      $("#chk-show-three-seconds").prop('checked', options.showGPSSpeed).click(function() {
-        redraw(false);
-      });
-
-      $("#chk-show-GPS-speed").prop('checked', options.showGPSSpeed).click(function() {
-        redraw(false);
-      });
-      
-      $("#btn-options").click(function() {
-        displayOptionsDialog();
+        dropdown.options.add(opt);
+      }
+    }
+    
+    function getNewLanguage(lang) {
+      $.getJSON(rg2Config.json_url, {
+        id: lang,
+        type: 'lang',
+        cache : false
+      }).done(function(json) {
+        dictionary = json.data;
+        setNewLanguage();
+      }).fail(function(jqxhr, textStatus, error) {
+        var err = textStatus + ", " + error;
+        console.log("Language request failed: " + err);
       });
     }
     
+    function setNewLanguage() {
+      createEventMenu();
+      var eventid = events.getActiveEventID();
+      if (eventid !== null) {
+        courses.removeAllFromDisplay();
+        results.removeAllTracksFromDisplay();
+        animation.resetAnimation();
+        drawing.initialiseDrawing(events.hasResults(eventid));
+        createCourseMenu();
+        createResultMenu();
+      }
+      translateFixedText();
+      $rg2infopanel.tabs( "refresh" );
+      redraw(false);
+    }
+    
     function loadEventList() {
-      $.getJSON(json_url, {
+      $.getJSON(rg2Config.json_url, {
         type : "events",
         cache : false
       }).done(function(json) {
@@ -511,6 +646,14 @@ var rg2 = ( function() {
           events.addEvent(new Event(this));
         });
         createEventMenu();
+        // load requested event if set
+        // input is kartat ID so need to find internal ID first
+        if (requestedEventID) {
+          var eventID = events.getEventIDForKartatID(requestedEventID);
+          if (eventID !== undefined) {
+            loadEvent(eventID);
+          }
+        }
         if (managing) {
           manager.eventListLoaded();
         }
@@ -626,7 +769,7 @@ var rg2 = ( function() {
         ctx.font = '30pt Arial';
         ctx.textAlign = 'center';
         ctx.fillStyle = config.BLACK;
-        ctx.fillText(mapLoadingText, canvas.width / 2, canvas.height / 2);
+        ctx.fillText(t(mapLoadingText), canvas.width / 2, canvas.height / 2);
       }
 
     }
@@ -635,7 +778,7 @@ var rg2 = ( function() {
       $("#rg2-event-stats").empty().html(getEventStats());
       $("#rg2-about-dialog").dialog({
         width : Math.min(1000, (canvas.width * 0.8)),
-        height : Math.min(1000, (canvas.height * 0.9)),
+        maxHeight : Math.min(1000, (canvas.height * 0.9)),
         title: "RG2 Version " + config.RG2VERSION,
         resizable: false,
         buttons : {
@@ -648,8 +791,9 @@ var rg2 = ( function() {
 
     function displayOptionsDialog() {
       $("#rg2-option-controls").dialog({
-        //modal : true,
         minWidth : 400,
+        title: t("Configuration options"),
+        dialogClass: "rg2-options-dialog",
         close: function( event, ui ) {
           saveConfigOptions();
         }
@@ -672,15 +816,15 @@ var rg2 = ( function() {
     function resizeInfoDisplay() {
       if (infoPanelMaximised) {
         infoPanelMaximised = false;
-        $("#rg2-resize-info").prop("title", "Show info panel");
+        $("#rg2-resize-info").prop("title", t("Show info panel"));
         $("#rg2-hide-info-panel-control").css("left", "0px");
-        $("#rg2-hide-info-panel-icon").removeClass("fa-chevron-left").addClass("fa-chevron-right").prop("title", "Show info panel");
+        $("#rg2-hide-info-panel-icon").removeClass("fa-chevron-left").addClass("fa-chevron-right").prop("title", t("Show info panel"));
         $rg2infopanel.hide();
       } else {
         infoPanelMaximised = true;
-        $("#rg2-resize-info").prop("title", "Hide info panel");
+        $("#rg2-resize-info").prop("title", t("Hide info panel"));
         $("#rg2-hide-info-panel-control").css("left", "366px");
-        $("#rg2-hide-info-panel-icon").removeClass("fa-chevron-right").addClass("fa-chevron-left").prop("title", "Hide info panel");
+        $("#rg2-hide-info-panel-icon").removeClass("fa-chevron-right").addClass("fa-chevron-left").prop("title", t("Hide info panel"));
         $rg2infopanel.show();
       }
       // move map around if necesssary
@@ -848,11 +992,12 @@ var rg2 = ( function() {
       }
       coursearray = courses.getCoursesForEvent();
       resultsinfo = results.getResultsInfo();
-      stats = "<h3>Event statistics</h3>";
-      stats += "<p><strong>Courses:</strong> " + coursearray.length + " <strong>Results:</strong> " + resultsinfo.results;
-      stats += "<strong> Drawn routes:</strong> " + resultsinfo.drawnroutes + " <strong>GPS routes:</strong> " + resultsinfo.gpsroutes + " (" + resultsinfo.percent + "%)</p>";
-      stats += "<p><strong>Total time:</strong> " + resultsinfo.time + "</p>";
-      stats += "<p><strong>Comments:</strong></p>";
+      stats = "<h3>" + t("Event statistics") + "</h3>";
+      stats += "<p><strong>" + t("Courses") + ":</strong> " + coursearray.length + " <strong>" + t("Results") + ":</strong> " + resultsinfo.results;
+      stats += "<strong> " + t("Drawn routes") + ":</strong> " + resultsinfo.drawnroutes + " <strong>" + t("GPS routes");
+      stats += ":</strong> " + resultsinfo.gpsroutes + " (" + resultsinfo.percent + "%)</p>";
+      stats += "<p><strong>" + t("Total time") + ":</strong> " + resultsinfo.time + "</p>";
+      stats += "<p><strong>" + t("Comments") + ":</strong></p>";
       stats += results.getComments();
       return stats;
     }
@@ -865,14 +1010,6 @@ var rg2 = ( function() {
           loadEvent(ui.item[0].id);
         }
       });
-      // load requested event if set
-      // input is kartat ID so need to find internal ID first
-      if (requestedEventID) {
-        var eventID = events.getEventIDForKartatID(requestedEventID);
-        if (eventID !== undefined) {
-          loadEvent(eventID);
-        }
-      }
     }
 
     function loadEvent(eventid) {
@@ -880,7 +1017,7 @@ var rg2 = ( function() {
       $('#rg2-event-list > li').removeClass('rg2-active-event').filter('#' + eventid).addClass('rg2-active-event');
       // show we are waiting
       $('body').css('cursor', 'wait');
-      $("#rg2-load-progress-label").text("Loading courses");
+      $("#rg2-load-progress-label").text(t("Loading courses"));
       $("#rg2-load-progress").show();
       courses.deleteAllCourses();
       controls.deleteAllControls();
@@ -888,17 +1025,17 @@ var rg2 = ( function() {
       results.deleteAllResults();
       events.setActiveEventID(eventid);
       drawing.initialiseDrawing(events.hasResults(eventid));
-      loadNewMap(maps_url + events.getActiveMapID() + '.jpg');
+      loadNewMap(rg2Config.maps_url + events.getActiveMapID() + '.jpg');
       redraw(false);
       setTitleBar();
 
       // get courses for event
-      $.getJSON(json_url, {
+      $.getJSON(rg2Config.json_url, {
         id : events.getKartatEventID(),
         type : "courses",
         cache : false
       }).done(function(json) {
-        $("#rg2-load-progress-label").text("Saving courses");
+        $("#rg2-load-progress-label").text(t("Saving courses"));
         console.log("Courses: " + json.data.length);
         $.each(json.data, function() {
           courses.addCourse(new Course(this, events.isScoreEvent()));
@@ -936,19 +1073,20 @@ var rg2 = ( function() {
     }
 
     function loadNewMap(mapFile) {
-      mapLoadingText = "Map loading...";
+      // translated when displayed
+      mapLoadingText = "Loading map";
       map.src = mapFile;
     }
 
     function getResults() {
-      $("#rg2-load-progress-label").text("Loading results");
-      $.getJSON(json_url, {
+      $("#rg2-load-progress-label").text(t("Loading results"));
+      $.getJSON(rg2Config.json_url, {
         id : events.getKartatEventID(),
         type : "results",
         cache : false
       }).done(function(json) {
         console.log("Results: " + json.data.length);
-        $("#rg2-load-progress-label").text("Saving results");
+        $("#rg2-load-progress-label").text(t("Saving results"));
         var isScoreEvent = events.isScoreEvent();
         results.addResults(json.data, isScoreEvent);
         courses.setResultsCount();
@@ -968,13 +1106,13 @@ var rg2 = ( function() {
     }
 
     function getGPSTracks() {
-      $("#rg2-load-progress-label").text("Loading routes");
-      $.getJSON(json_url, {
+      $("#rg2-load-progress-label").text(t("Loading routes"));
+      $.getJSON(rg2Config.json_url, {
         id : events.getKartatEventID(),
         type : "tracks",
         cache : false
       }).done(function(json) {
-        $("#rg2-load-progress-label").text("Saving routes");
+        $("#rg2-load-progress-label").text(t("Saving routes"));
         console.log("Tracks: " + json.data.length);
         results.addTracks(json.data);
         createCourseMenu();
@@ -996,14 +1134,15 @@ var rg2 = ( function() {
           }
           $rg2infopanel.tabs("refresh");
           $("#btn-show-splits").show();
-          if ((enable_splitsbrowser) && (events.hasResults())) {
+          if ((rg2Config.enable_splitsbrowser) && (events.hasResults())) {
             $("#rg2-splitsbrowser").off().click(function() {
-              window.open(json_url + "?type=splitsbrowser&id=" + events.getKartatEventID());
+              window.open(rg2Config.json_url + "?type=splitsbrowser&id=" + events.getKartatEventID());
             }).show();
           } else {
             $("#rg2-splitsbrowser").off().hide();
           }
         }
+        $("#rg2-load-progress-label").text("");
         $("#rg2-load-progress").hide();
         redraw(false);
       }).fail(function(jqxhr, textStatus, error) {
@@ -1326,6 +1465,7 @@ var rg2 = ( function() {
         
     return {
       // functions and variables available elsewhere
+      t: t,
       init : init,
       config : config,
       options: options,
@@ -1382,6 +1522,7 @@ $(document).ready(rg2.init);
 /*global clearInterval:false */
 /*global setInterval:false */
 /*global Runner:false */
+/*global t:false */
 /*global getLatLonDistance:false */
 /*global getDistanceBetweenPoints:false */
  function Animation() {
@@ -1415,7 +1556,7 @@ Animation.prototype = {
 		this.timer = null;
 		this.updateAnimationDetails();
 		$("#btn-start-stop").removeClass("fa-pause").addClass("fa-play");
-		$("#btn-start-stop").prop("title", "Run");
+		$("#btn-start-stop").prop("title", rg2.t("Run"));
 	},
 	
 	// @@param courseresults: array of results to be removed
@@ -1570,11 +1711,11 @@ Animation.prototype = {
 		if (this.timer === null) {
 			this.startAnimation();
 			$("#btn-start-stop").removeClass("fa-play").addClass("fa-pause");
-			$("#btn-start-stop").prop("title", "Pause");
+			$("#btn-start-stop").prop("title", rg2.t("Pause"));
 		} else {
 			this.stopAnimation();
 			$("#btn-start-stop").removeClass("fa-pause").addClass("fa-play");
-			$("#btn-start-stop").prop("title", "Run");
+			$("#btn-start-stop").prop("title", rg2.t("Run"));
 		}
 	},
 
@@ -1707,7 +1848,7 @@ Animation.prototype = {
       this.displayNames = true;
 			title = "Show initials";
 		}
-    $("#btn-toggle-names").prop("title", title);
+    $("#btn-toggle-names").prop("title", rg2.t(title));
 	},
 
 	runAnimation : function(fromTimer) {
@@ -1859,6 +2000,7 @@ Animation.prototype = {
 	}
 };
 /*global rg2:false */
+/*global t:false */
 function Controls() {
 	this.controls = [];
 	this.displayControls = false;
@@ -2036,10 +2178,10 @@ Controls.prototype = {
 	toggleControlDisplay : function() {
 		if (this.displayControls) {
 			$("#btn-toggle-controls").removeClass("fa-ban").addClass("fa-circle-o");
-			$("#btn-toggle-controls").prop("title", "Show all controls map");
+			$("#btn-toggle-controls").prop("title", rg2.t("Show controls"));
 		} else {
 			$("#btn-toggle-controls").removeClass("fa-circle-o").addClass("fa-ban");
-			$("#btn-toggle-controls").prop("title", "Hide all controls map");
+			$("#btn-toggle-controls").prop("title", rg2.t("Hide controls"));
 		}
 		this.displayControls = !this.displayControls;
 	},
@@ -2132,7 +2274,7 @@ Courses.prototype = {
 		var dropdown = document.getElementById("rg2-course-select");
 		var opt = document.createElement("option");
 		opt.value = null;
-		opt.text = "Select course";
+		opt.text = rg2.t("Select course");
 		dropdown.options.add(opt);
 
 		for (i = 0; i < this.courses.length; i += 1) {
@@ -2269,7 +2411,8 @@ Courses.prototype = {
   
 	formatCoursesAsTable : function() {
 		var res = 0;
-		var html = "<table class='coursemenutable'><tr><th>Course</th><th>Show</th><th>Runners</th><th>Tracks</th><th>Show</th></tr>";
+		var html = "<table class='coursemenutable'><tr><th>" + rg2.t("Course") + "</th><th>" + rg2.t("Show");
+		html += "</th><th>" + rg2.t("Runners") + "</th><th>" + rg2.t("Routes") + "</th><th>" + rg2.t("Show") + "</th></tr>";
 		for (var i = 0; i < this.courses.length; i += 1) {
 			if (this.courses[i] !== undefined) {
 				html += "<tr><td>" + this.courses[i].name + "</td>";
@@ -2286,7 +2429,7 @@ Courses.prototype = {
 			}
 		}
 		// add bottom row for all courses checkboxes
-		html += "<tr class='allitemsrow'><td>All</td>";
+		html += "<tr class='allitemsrow'><td>" + rg2.t("All") + "</td>";
 		html += "<td><input class='allcourses' id=" + i + " type=checkbox name=course></input></td>";
 		html += "<td>" + res + "</td>";
 		if (this.totaltracks > 0) {
@@ -2389,12 +2532,12 @@ Course.prototype = {
 	}
 };
 /*global rg2:false */
+/*global rg2Config:false */
 /*global GPSTrack:false */
 /*global getAngle:false */
 /*global formatSecsAsMMSS:false */
 /*global getSecsFromMMSS:false */
 /*global rg2WarningDialog:false */
-/*global json_url:false */
 /*global getDistanceBetweenPoints:false */
 // handle drawing of a new route
 function Draw() {
@@ -2872,7 +3015,7 @@ Draw.prototype = {
   },
 
   postRoute : function() {
-    var $url = json_url + '?type=addroute&id=' + this.gpstrack.routeData.eventid;
+    var $url = rg2Config.json_url + '?type=addroute&id=' + this.gpstrack.routeData.eventid;
     // create JSON data
     var json = JSON.stringify(this.gpstrack.routeData);
     var self = this;
@@ -2895,11 +3038,11 @@ Draw.prototype = {
   },
 
   saveError : function(text) {
-    rg2WarningDialog(this.gpstrack.routeData.name, 'Your route was not saved. Please try again.' + text);
+    rg2WarningDialog(this.gpstrack.routeData.name, rg2.t('Your route was not saved. Please try again') + '. ' + text);
   },
 
   routeSaved : function(text) {
-    rg2WarningDialog(this.gpstrack.routeData.name, 'Your route has been saved.');
+    rg2WarningDialog(this.gpstrack.routeData.name, rg2.t('Your route has been saved') + '.');
     rg2.loadEvent(rg2.getActiveEventID());
   },
 
@@ -3412,9 +3555,9 @@ Events.prototype = {
 		var html = '';
 		var i;
 		for (i = this.events.length - 1; i >= 0; i -= 1) {
-			title = this.events[i].type + " event on " + this.events[i].date;
+			title = rg2.t(this.events[i].type) + ": " + this.events[i].date;
       if (this.events[i].georeferenced) {
-        title += ": Map is georeferenced";
+        title += ": " + rg2.t("Map is georeferenced");
       }
 
 			if (this.events[i].comment !== "") {
@@ -3456,19 +3599,19 @@ function Event(data) {
 	this.rawtype = data.type;
 	switch(data.type) {
 		case "I":
-			this.type = "International";
+			this.type = "International event";
 			break;
 		case "N":
-			this.type = "National";
+			this.type = "National event";
 			break;
 		case "R":
-			this.type = "Regional";
+			this.type = "Regional event";
 			break;
 		case "L":
-			this.type = "Local";
+			this.type = "Local event";
 			break;
 		case "T":
-			this.type = "Training";
+			this.type = "Training event";
 			break;
 		default:
 			this.type = "Unknown";
@@ -4400,7 +4543,7 @@ Results.prototype = {
 				} else {
           // add bottom row for all tracks checkboxes
           // <CAREFUL!> these lines need to be identical to those below
-          html += "<tr class='allitemsrow'><td>All</td><td></td>";
+          html += "<tr class='allitemsrow'><td>" + rg2.t("All") + "</td><td></td>";
           if (tracksForThisCourse > 0) {
             html += "<td><input class='allcoursetracks' id=" + oldCourseID + " type=checkbox name=track></input></td>";
           } else {
@@ -4413,7 +4556,8 @@ Results.prototype = {
 				tracksForThisCourse = 0;
 				html += "<h3>" + temp.coursename;
 				html += "<input class='showcourse' id=" + temp.courseid + " type=checkbox name=course title='Show course'></input></h3><div>";
-				html += "<table class='resulttable'><tr><th>Name</th><th>Time</th><th>Track</th><th>Replay</th></tr>";
+				html += "<table class='resulttable'><tr><th>" + rg2.t("Name") + "</th><th>" + rg2.t("Time") + "</th><th>" + rg2.t("Route");
+				html += "</th><th>" + rg2.t("Replay") + "</th></tr>";
 				oldCourseID = temp.courseid;
 			}
       if (temp.isScoreEvent) {
@@ -4437,11 +4581,11 @@ Results.prototype = {
 		}
 		
 		if (html === "") {
-			html = "<p>No results available.</p>";
+			html = "<p>" + rg2.t("No results available") + "</p>";
 		} else {
       // add bottom row for all tracks checkboxes
       // <CAREFUL!> these lines need to be identical to those above
-      html += "<tr class='allitemsrow'><td>All</td><td></td>";
+      html += "<tr class='allitemsrow'><td>" + rg2.t("All") + "</td><td></td>";
       if (tracksForThisCourse > 0) {
         html += "<td><input class='allcoursetracks' id=" + oldCourseID + " type=checkbox name=track></input></td>";
       } else {
@@ -4469,7 +4613,7 @@ Results.prototype = {
 		var dropdown = document.getElementById("rg2-name-select");
 		var opt = document.createElement("option");
 		opt.value = null;
-		opt.text = 'Select name';
+		opt.text = rg2.t('Select name');
 		dropdown.options.add(opt);
 		for (var i = 0; i < this.results.length; i += 1) {
 			if (this.results[i].courseid === courseid) {
@@ -4489,7 +4633,6 @@ function Result(data, isScoreEvent, scorecodes, scorex, scorey) {
 	this.isScoreEvent = isScoreEvent;
 	// GPS track ids are normal resultid + GPS_RESULT_OFFSET
 	if (this.resultid >= rg2.config.GPS_RESULT_OFFSET) {
-		//this.name = (data.name).replace("GPS ", "");
 		this.isGPSTrack = true;
 	} else {
 		//this.name = data.name;

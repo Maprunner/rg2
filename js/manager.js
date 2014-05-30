@@ -1,9 +1,6 @@
 /*global rg2:false */
+/*global rg2Config:false */
 /*global Controls:false */
-/*global json_url:false */
-/*global maps_url:false */
-/*global epsg_code:false */
-/*global epsg_params:false */
 /*global getAngle:false */
 /*global rg2WarningDialog:false */
 /*global FormData:false */
@@ -97,9 +94,9 @@ function Manager(keksi) {
   this.georefsystems.push(new Georef("Not georeferenced", this.DO_NOT_GEOREF, ""));
   this.georefsystems.push(new Georef("GB National Grid", "EPSG:27700", "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs"));
   this.georefsystems.push(new Georef("Google EPSG:900913", "EPSG:900913", "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs"));
-  if (typeof epsg_code !== 'undefined') {
-    this.georefsystems.push(new Georef(epsg_code, epsg_code.replace(" ", ""), epsg_params));
-    this.defaultGeorefVal = epsg_code.replace(" ", "");
+  if (typeof rg2Config.epsg_code !== 'undefined') {
+    this.georefsystems.push(new Georef(rg2Config.epsg_code, rg2Config.epsg_code.replace(" ", ""), rg2Config.epsg_params));
+    this.defaultGeorefVal = rg2Config.epsg_code.replace(" ", "");
   } else {
     this.defaultGeorefVal = "EPSG:27700";
   }
@@ -149,7 +146,7 @@ Manager.prototype = {
   },
   
   logIn : function() {
-    var url = json_url + '?type=login';
+    var url = rg2Config.json_url + '?type=login';
     var user = this.encodeUser();
     var json = JSON.stringify(user);
     var self = this;
@@ -202,7 +199,7 @@ Manager.prototype = {
       self.mapIndex = parseInt($("#rg2-map-selected").val(), 10);
       if (self.mapIndex !== self.INVALID_MAP_ID) {
         $("#rg2-manager-map-select").addClass('valid');
-        rg2.loadNewMap(maps_url + "/" + self.maps[self.mapIndex].mapid + '.jpg');
+        rg2.loadNewMap(rg2Config.maps_url + "/" + self.maps[self.mapIndex].mapid + '.jpg');
       } else {
         $("#rg2-manager-map-select").removeClass('valid');
         self.mapLoaded = false;
@@ -343,7 +340,7 @@ Manager.prototype = {
   getMaps: function() {
     var self = this;
     var i;
-  $.getJSON(json_url, {
+  $.getJSON(rg2Config.json_url, {
     type : "maps",
     cache : false
   }).done(function(json) {
@@ -584,7 +581,7 @@ Manager.prototype = {
     var x;
     var y;
     var id = $("#rg2-event-selected").val();
-    var $url = json_url + "?type=createevent";
+    var $url = rg2Config.json_url + "?type=createevent";
     var data = {};
     data.name = this.eventName;
     data.mapid = this.maps[this.mapIndex].mapid;
@@ -759,7 +756,7 @@ Manager.prototype = {
   doUpdateEvent : function() {
     $("#event-update-dialog").dialog("destroy");
     var id = $("#rg2-event-selected").val();
-    var $url = json_url + "?type=editevent&id=" + id;
+    var $url = rg2Config.json_url + "?type=editevent&id=" + id;
     var data = {};
     data.comments = $("#rg2-edit-event-comments").val();
     data.name = $("#rg2-event-name-edit").val();
@@ -822,7 +819,7 @@ Manager.prototype = {
     $("#course-delete-dialog").dialog("destroy");
     var id = $("#rg2-event-selected").val();
     var routeid = $("#rg2-route-selected").val();
-    var $url = json_url + "?type=deletecourse&id=" + id + "&routeid=" + routeid;
+    var $url = rg2Config.json_url + "?type=deletecourse&id=" + id + "&routeid=" + routeid;
     // TODO: add course delete functionality
     /*$.ajax({
       data:"",
@@ -868,7 +865,7 @@ Manager.prototype = {
     $("#route-delete-dialog").dialog("destroy");
     var id = $("#rg2-event-selected").val();
     var routeid = $("#rg2-route-selected").val();
-    var $url = json_url + "?type=deleteroute&id=" + id + "&routeid=" + routeid;
+    var $url = rg2Config.json_url + "?type=deleteroute&id=" + id + "&routeid=" + routeid;
     var user = this.encodeUser();
     var json = JSON.stringify(user);
     var self = this;
@@ -922,7 +919,7 @@ Manager.prototype = {
   doDeleteEvent : function() {
     $("#event-delete-dialog").dialog("destroy");
     var id = $("#rg2-event-selected").val();
-    var $url = json_url + "?type=deleteevent&id=" + id;
+    var $url = rg2Config.json_url + "?type=deleteevent&id=" + id;
     var user = this.encodeUser();
     var json = JSON.stringify(user);
     var self = this;
@@ -1920,7 +1917,7 @@ Manager.prototype = {
   doUploadMapFile : function(id) {
     $("#add-map-dialog").dialog("destroy");
     // first transfer map file to server
-    var url = json_url + "?type=uploadmapfile";
+    var url = rg2Config.json_url + "?type=uploadmapfile";
     var user = this.encodeUser();
     var self = this;
     var formData = new FormData();
@@ -1954,7 +1951,7 @@ Manager.prototype = {
   
   doAddMap : function() {
     // map file uploaded OK so add new details
-    var $url = json_url + "?type=addmap";
+    var $url = rg2Config.json_url + "?type=addmap";
     var data = {};
     data = this.newMap;
     var user = this.encodeUser();

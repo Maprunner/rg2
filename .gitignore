@@ -12,6 +12,7 @@ ftpsite
 test
 karma.conf.js
 js/coords.js
+lang/xx.js
 coords.html
 coverage
 #################

@@ -1,10 +1,10 @@
 /*global rg2:false */
+/*global rg2Config:false */
 /*global GPSTrack:false */
 /*global getAngle:false */
 /*global formatSecsAsMMSS:false */
 /*global getSecsFromMMSS:false */
 /*global rg2WarningDialog:false */
-/*global json_url:false */
 /*global getDistanceBetweenPoints:false */
 // handle drawing of a new route
 function Draw() {
@@ -482,7 +482,7 @@ Draw.prototype = {
   },
 
   postRoute : function() {
-    var $url = json_url + '?type=addroute&id=' + this.gpstrack.routeData.eventid;
+    var $url = rg2Config.json_url + '?type=addroute&id=' + this.gpstrack.routeData.eventid;
     // create JSON data
     var json = JSON.stringify(this.gpstrack.routeData);
     var self = this;
@@ -505,11 +505,11 @@ Draw.prototype = {
   },
 
   saveError : function(text) {
-    rg2WarningDialog(this.gpstrack.routeData.name, 'Your route was not saved. Please try again.' + text);
+    rg2WarningDialog(this.gpstrack.routeData.name, rg2.t('Your route was not saved. Please try again') + '. ' + text);
   },
 
   routeSaved : function(text) {
-    rg2WarningDialog(this.gpstrack.routeData.name, 'Your route has been saved.');
+    rg2WarningDialog(this.gpstrack.routeData.name, rg2.t('Your route has been saved') + '.');
     rg2.loadEvent(rg2.getActiveEventID());
   },
 

@@ -3,6 +3,7 @@
 /*global clearInterval:false */
 /*global setInterval:false */
 /*global Runner:false */
+/*global t:false */
 /*global getLatLonDistance:false */
 /*global getDistanceBetweenPoints:false */
  function Animation() {
@@ -36,7 +37,7 @@ Animation.prototype = {
 		this.timer = null;
 		this.updateAnimationDetails();
 		$("#btn-start-stop").removeClass("fa-pause").addClass("fa-play");
-		$("#btn-start-stop").prop("title", "Run");
+		$("#btn-start-stop").prop("title", rg2.t("Run"));
 	},
 	
 	// @@param courseresults: array of results to be removed
@@ -191,11 +192,11 @@ Animation.prototype = {
 		if (this.timer === null) {
 			this.startAnimation();
 			$("#btn-start-stop").removeClass("fa-play").addClass("fa-pause");
-			$("#btn-start-stop").prop("title", "Pause");
+			$("#btn-start-stop").prop("title", rg2.t("Pause"));
 		} else {
 			this.stopAnimation();
 			$("#btn-start-stop").removeClass("fa-pause").addClass("fa-play");
-			$("#btn-start-stop").prop("title", "Run");
+			$("#btn-start-stop").prop("title", rg2.t("Run"));
 		}
 	},
 
@@ -328,7 +329,7 @@ Animation.prototype = {
       this.displayNames = true;
 			title = "Show initials";
 		}
-    $("#btn-toggle-names").prop("title", title);
+    $("#btn-toggle-names").prop("title", rg2.t(title));
 	},
 
 	runAnimation : function(fromTimer) {
