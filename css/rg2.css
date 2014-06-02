@@ -205,6 +205,10 @@ html, body {
    position: relative;
 }
 
+#rg2-info-panel-tab-headers .ui-tabs-nav a {
+   padding: .5em .5em;
+}
+
 #rg2-info-panel-tab-body {
    overflow: auto; /* add scroll bars if needed */
    height: 95.5%
