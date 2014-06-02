@@ -1082,7 +1082,11 @@ function getResultsCSV($eventid) {
 	$results = file(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt");
   foreach ($results as $result) {
     $data = explode("|", $result);
-    if (intval($data[0]) < GPS_RESULT_OFFSET) {
+		// extract time
+		$t = str_replace('.:', ':', $data[7]);
+    $t = str_replace('::', ":", $t);
+		// Splitsbrowser doesn't cope well with 0 total time so don't send it
+    if ((intval($data[0]) < GPS_RESULT_OFFSET) && ($t !== '0:00:00')) {
       if ($first_line) {
       	$first_line = false;
 			} else {
@@ -1098,8 +1102,6 @@ function getResultsCSV($eventid) {
       // 9: start time
       $result_data .= convertSecondsToHHMMSS(intval($data[4])).";;";
       // 11: time
-      $t = str_replace('.:', ':', $data[7]);
-      $t = str_replace('::', ":", $t);
       $result_data .= $t.";;;;;;;";  
 			// 18: course
 			$result_data .= encode_rg_input($data[2]).";;;;;;;;;;;;;;;;;;;;";	
