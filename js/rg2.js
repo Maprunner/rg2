@@ -619,6 +619,7 @@ var rg2 = ( function() {
     }
     
     function setNewLanguage() {
+      $("#rg2-event-list").menu("destroy");
       createEventMenu();
       var eventid = events.getActiveEventID();
       if (eventid !== null) {
