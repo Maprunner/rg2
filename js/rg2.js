@@ -997,7 +997,7 @@ var rg2 = ( function() {
       var stats;
       var coursearray;
       var resultsinfo;
-      // check there os an event to report on
+      // check there is an event to report on
       if (events.getActiveEventID() === null) {
         return "";
       }
@@ -1008,6 +1008,7 @@ var rg2 = ( function() {
       stats += "<strong> " + t("Drawn routes") + ":</strong> " + resultsinfo.drawnroutes + " <strong>" + t("GPS routes");
       stats += ":</strong> " + resultsinfo.gpsroutes + " (" + resultsinfo.percent + "%)</p>";
       stats += "<p><strong>" + t("Total time") + ":</strong> " + resultsinfo.time + "</p>";
+      stats += "<p><strong>" + t("Map ") + ":</strong> ID " + events.getActiveMapID() + ", " + map.width + " x " + map.height + " pixels </p>";
       stats += "<p><strong>" + t("Comments") + ":</strong></p>";
       stats += results.getComments();
       return stats;
