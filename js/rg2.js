@@ -97,7 +97,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.8.3',
+      RG2VERSION: '0.8.4',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -112,6 +112,7 @@ var rg2 = ( function() {
       courseWidth: 3,
       routeWidth: 4,
       circleSize: 20,
+      snap: true,
       showThreeSeconds: false,
       showGPSSpeed: false
     };
@@ -320,6 +321,14 @@ var rg2 = ( function() {
           redraw(false);
         }
       }).val(options.circleSize);
+
+      $("#chk-snap-toggle").prop('checked', options.snap).click(function(event) {
+        if (event.target.checked) {
+          options.snap = true;
+        } else {
+          options.snap = false;
+        }
+      });
       
       $("#chk-show-three-seconds").prop('checked', options.showGPSSpeed).click(function() {
         redraw(false);
@@ -566,6 +575,7 @@ var rg2 = ( function() {
       $('label[for=spn-name-font-size]').prop('textContent', t('Replay label font size'));
       $('label[for=spn-course-width]').prop('textContent', t('Course overprint width'));
       $('label[for=spn-control-circle]').prop('textContent', t('Control circle size'));
+      $('label[for=chk-snap-toggle]').prop('textContent', t('Snap to control when drawing'));
       $('label[for=chk-show-three-seconds]').prop('textContent', t('Show +3 time loss for GPS routes'));
       $('label[for=chk-show-GPS-speed]').prop('textContent', t('Show GPS speed colours'));
       $('#btn-undo').button('option', 'label', t('Undo'));
@@ -803,6 +813,7 @@ var rg2 = ( function() {
     function saveConfigOptions() {
       try {
         if (('localStorage' in window) && (window.localStorage !== null)) {
+          options.snap = $("#chk-snap-toggle").prop('checked');
           options.showThreeSeconds = $("#chk-show-three-seconds").prop('checked');
           options.showGPSSpeed = $("#chk-show-GPS-speed").prop('checked');
           localStorage.setItem( 'rg2-options', JSON.stringify(options) );
@@ -1462,6 +1473,10 @@ var rg2 = ( function() {
     function updateScoreCourse(courseid, codes, x, y) {
       courses.updateScoreCourse(courseid, codes, x, y);
     }
+    
+    function getSnapToControl() {
+      return options.snap;
+    }
         
     return {
       // functions and variables available elsewhere
@@ -1510,7 +1525,8 @@ var rg2 = ( function() {
       getCoursesForEvent: getCoursesForEvent,
       getRoutesForEvent: getRoutesForEvent,
       getNextRouteColour: getNextRouteColour,
-      updateScoreCourse: updateScoreCourse
+      updateScoreCourse: updateScoreCourse,
+      getSnapToControl: getSnapToControl
     };
 
   }());
