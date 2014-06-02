@@ -1,9 +1,13 @@
 # Routegadget 2
 
 ## Latest news
-Version 0.8.0 was released on 24 May 2014 and has been installed on all routegadget.co.uk sites. This includes integration with the new javascript version of Splitsbrowser, as well as several user interface modifications and performance enhancements. You can now see event statistics (including all user comments) on the About dialog. This version may also have solved the drag/click problem when using a wireless mouse to draw routes, but since my mouse doesn't seem to have the problem I'm not sure yet.
+Version 0.8.4 was released on 2 June 2014 and has been installed on all routegadget.co.uk sites. This includes integration with the new javascript version of Splitsbrowser, as well as several user interface modifications and performance enhancements. You can now see event statistics (including all user comments) on the About dialog. 
+
+It also includes translation facilities. Select from the available languages (English and German at the moment) on the Configuation Options screen.
 
 ## User Guide and Introductory Videos
+
+[All RG2 videos.] (http://screencast-o-matic.com/channels/c2e22vhJZ)
 
 For a quick start try:
 
@@ -16,6 +20,8 @@ For a quick start try:
 4. Video: [Uploading a GPS route] (http://screencast-o-matic.com/u/VJsd/RG2-GPS-Upload)
 
 5. Video: [A quick introduction to RG2 manager functions] (http://screencast-o-matic.com/u/VJsd/RG2-Cassiobury-Manager-Demo)
+
+6. Video: [Georeferencing your map in RG2] (http://screencast-o-matic.com/u/VJsd/Georeferencing) 
 
 ## What is RouteGadget?
 Routegadget is a Web application for drawing and comparing orienteering routes. The original version was developed by Jarkko Ryyppö, and
@@ -30,7 +36,7 @@ Routegadget 2 allows you to view existing Routegadget information in any modern 
 It also adds a modern user interface as well as updated functionality for analysis.
 
 ##Installation
-To use Routegadget 2 you need to install it in an existing Routegadget installation. This will require ftp access to your server. If this makes no sense then the following information is not for you.
+To use Routegadget 2 you will require ftp access to your server. If this makes no sense then the following information is not for you.
 
 1. Download the [files] (https://github.com/Maprunner/rg2/archive/master.zip) and extract them. Note that this will extract them to a directory called rg-master, which needs to be renamed to rg2.
 
