@@ -248,18 +248,23 @@ function addNewEvent($data) {
       $oldid = intval($olddata[0]);
     }
     $newid = $oldid + 1;
-    $name = encode_rg_output($data->name);
-    $club = encode_rg_output($data->club);
-    $newevent = $newid."|".$data->mapid."|".$data->format."|".$name."|".$data->eventdate."|".$club."|".$data->level."|";
-    $newevent .= PHP_EOL;
-    $write["newid"] = $newid;
-    $status =fwrite($handle, $newevent);    
-    if (!$status) {
-      $write["status_msg"] = "Save error for kisat. ";
-    }
-    @fflush($handle);
-    @fclose($handle);
+	} else {
+		// create new kisat file
+		$newid = 1;
+		$handle = @fopen(KARTAT_DIRECTORY."kisat.txt", "w+");
+	}
+  $name = encode_rg_output($data->name);
+  $club = encode_rg_output($data->club);
+  $newevent = $newid."|".$data->mapid."|".$data->format."|".$name."|".$data->eventdate."|".$club."|".$data->level."|";
+  $newevent .= PHP_EOL;
+  $write["newid"] = $newid;
+  $status =fwrite($handle, $newevent);    
+  if (!$status) {
+    $write["status_msg"] = "Save error for kisat. ";
   }
+  @fflush($handle);
+  @fclose($handle);
+	
   // create new sarjat file: course names
   $courses = "";
   for ($i = 0; $i < count($data->courses); $i++) {
@@ -927,28 +932,31 @@ function addNewMap($data) {
       $oldid = intval($olddata[0]);
     }
     $newid = $oldid + 1;
-    $renameFile = rename(KARTAT_DIRECTORY."temp.jpg", KARTAT_DIRECTORY.$newid.".jpg");
-    if ($renameFile) {
-      $newmap = $newid."|".encode_rg_output($data->name);
-      if ($data->georeferenced) {
-        $newmap .= "|".$data->xpx[0]."|".$data->lon[0]."|".$data->ypx[0]."|".$data->lat[0];
-        $newmap .= "|".$data->xpx[1]."|".$data->lon[1]."|".$data->ypx[1]."|".$data->lat[1];
-        $newmap .= "|".$data->xpx[2]."|".$data->lon[2]."|".$data->ypx[2]."|".$data->lat[2];
-      }
-      $newmap .= PHP_EOL;
-      $write["newid"] = $newid;
-      $status =fwrite($handle, $newmap);    
-      if (!$status) {
-        $write["status_msg"] = "Save error for kartat. ";
-      }
-    } else {
-        $write["status_msg"] = "Error renaming map file. ";
+	} else {
+		// creat empty kartat file
+		$newid = 1;
+		$handle = @fopen(KARTAT_DIRECTORY."kartat.txt", "w+");
+	}
+  $renameFile = rename(KARTAT_DIRECTORY."temp.jpg", KARTAT_DIRECTORY.$newid.".jpg");
+  if ($renameFile) {
+    $newmap = $newid."|".encode_rg_output($data->name);
+    if ($data->georeferenced) {
+      $newmap .= "|".$data->xpx[0]."|".$data->lon[0]."|".$data->ypx[0]."|".$data->lat[0];
+      $newmap .= "|".$data->xpx[1]."|".$data->lon[1]."|".$data->ypx[1]."|".$data->lat[1];
+      $newmap .= "|".$data->xpx[2]."|".$data->lon[2]."|".$data->ypx[2]."|".$data->lat[2];
     }
-    @fflush($handle);
-    @fclose($handle);
+    $newmap .= PHP_EOL;
+    $write["newid"] = $newid;
+    $status =fwrite($handle, $newmap);    
+    if (!$status) {
+      $write["status_msg"] = "Save error for kartat. ";
+    }
+  } else {
+      $write["status_msg"] = "Error renaming map file. ";
   }
-
-
+  @fflush($handle);
+  @fclose($handle);
+  
   if ($write["status_msg"] == "") {
     $write["ok"] = TRUE;
     $write["status_msg"] = "Map added";
@@ -1082,7 +1090,11 @@ function getResultsCSV($eventid) {
 	$results = file(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt");
   foreach ($results as $result) {
     $data = explode("|", $result);
-    if (intval($data[0]) < GPS_RESULT_OFFSET) {
+		// extract time
+		$t = str_replace('.:', ':', $data[7]);
+    $t = str_replace('::', ":", $t);
+		// Splitsbrowser doesn't cope well with 0 total time so don't send it
+    if ((intval($data[0]) < GPS_RESULT_OFFSET) && ($t !== '0:00:00')) {
       if ($first_line) {
       	$first_line = false;
 			} else {
@@ -1098,8 +1110,6 @@ function getResultsCSV($eventid) {
       // 9: start time
       $result_data .= convertSecondsToHHMMSS(intval($data[4])).";;";
       // 11: time
-      $t = str_replace('.:', ':', $data[7]);
-      $t = str_replace('::', ":", $t);
       $result_data .= $t.";;;;;;;";  
 			// 18: course
 			$result_data .= encode_rg_input($data[2]).";;;;;;;;;;;;;;;;;;;;";	

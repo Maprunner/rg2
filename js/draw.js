@@ -10,7 +10,6 @@
 function Draw() {
   this.trackColor = '#ff0000';
   this.HANDLE_DOT_RADIUS = 7;
-  this.CLOSE_ENOUGH = 7;
   this.hasResults = false;
   this.initialiseDrawing();
 }
@@ -522,8 +521,14 @@ Draw.prototype = {
 
   // snapto: test if drawn route is close enough to control
   closeEnough : function(x, y) {
-    if (Math.abs(x - this.controlx[this.nextControl]) < this.CLOSE_ENOUGH) {
-      if (Math.abs(y - this.controly[this.nextControl]) < this.CLOSE_ENOUGH) {
+    var range;
+    if (rg2.getSnapToControl()) {
+      range = 7;
+    } else {
+      range = 2;
+    }
+    if (Math.abs(x - this.controlx[this.nextControl]) < range) {
+      if (Math.abs(y - this.controly[this.nextControl]) < range) {
         return true;
       }
     }

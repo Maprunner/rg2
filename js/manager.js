@@ -1554,8 +1554,9 @@ Manager.prototype = {
       if (fields[i].length >= FIRST_SPLIT_IDX) {
         result = {};
         result.chipid = fields[i][CHIP_IDX];
-        result.name = (fields[i][FIRST_NAME_IDX] + " " + fields[i][SURNAME_IDX]).trim();
-        result.dbid = fields[i][DB_IDX] + "__" + result.name;
+        // delete quotes from CSV file: output from MERCS
+        result.name = (fields[i][FIRST_NAME_IDX] + " " + fields[i][SURNAME_IDX]).trim().replace(/\"/g, '');
+        result.dbid = (fields[i][DB_IDX] + "__" + result.name).replace(/\"/g, '');
         result.starttime = getSecsFromHHMMSS(fields[i][START_TIME_IDX]);
         result.time = fields[i][TOTAL_TIME_IDX];
         result.club = fields[i][CLUB_IDX];

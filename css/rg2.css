@@ -197,11 +197,16 @@ html, body {
 	 width: 360px;
    position: absolute;
 	 z-index: 100;
+	 height: 99%;
 }
 
 #rg2-info-panel-tab-headers {
    overflow: hidden; 
    position: relative;
+}
+
+#rg2-info-panel-tab-headers .ui-tabs-nav a {
+   padding: .5em .5em;
 }
 
 #rg2-info-panel-tab-body {

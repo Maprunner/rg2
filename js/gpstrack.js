@@ -64,18 +64,18 @@ GPSTrack.prototype = {
       }
       try {
         xml = $.parseXML(evt.target.result);
-      } catch(err) {
-        rg2WarningDialog('GPS file problem', 'File is not valid XML. Please check you have selected the correct file.');
-        return;
-      }
-			if (fileType === "gpx") {
-        self.processGPX(xml);
-      } else {
-        if (fileType === "tcx") {
-          self.processTCX(xml);
+        if (fileType === "gpx") {
+          self.processGPX(xml);
+        } else {
+          if (fileType === "tcx") {
+            self.processTCX(xml);
+          }
         }
-			}
-			self.processGPSTrack();
+        self.processGPSTrack();
+      } catch(err) {
+          rg2WarningDialog('GPS file problem', 'File is not valid XML. Please check you have selected the correct file.');
+          return;
+      }
 			$("#rg2-load-gps-file").button('disable');
 		};
 
@@ -89,15 +89,13 @@ GPSTrack.prototype = {
     var trkpts;
     var i;
     var j;
-    var timestring;
     trksegs = xml.getElementsByTagName('trkseg');
     for ( i = 0; i < trksegs.length; i += 1) {
       trkpts = trksegs[i].getElementsByTagName('trkpt');
       for ( j = 0; j < trkpts.length; j += 1) {
         this.lat.push(trkpts[j].getAttribute('lat'));
         this.lon.push(trkpts[j].getAttribute('lon'));
-        timestring = trkpts[j].childNodes[3].textContent;
-        this.time.push(this.getSecsFromTrackpoint(timestring));
+        this.time.push(this.getSecsFromTrackpoint(trkpts[j].getElementsByTagName('time')[0].textContent));
       }
     }
   },
@@ -107,15 +105,15 @@ GPSTrack.prototype = {
     var trkpts;
     var i;
     var j;
-    var timestring;
+    var position;
     trksegs = xml.getElementsByTagName('Track');
     for ( i = 0; i < trksegs.length; i += 1) {
       trkpts = trksegs[i].getElementsByTagName('Trackpoint');
       for ( j = 0; j < trkpts.length; j += 1) {
-        this.lat.push(trkpts[j].childNodes[3].childNodes[1].textContent);
-        this.lon.push(trkpts[j].childNodes[3].childNodes[3].textContent);
-        timestring = trkpts[j].childNodes[1].textContent;
-        this.time.push(this.getSecsFromTrackpoint(timestring));
+        position = trkpts[j].getElementsByTagName('Position');
+        this.lat.push(position[0].getElementsByTagName('LatitudeDegrees')[0].textContent);
+        this.lon.push(position[0].getElementsByTagName('LongitudeDegrees')[0].textContent);
+        this.time.push(this.getSecsFromTrackpoint(trkpts[j].getElementsByTagName('Time')[0].textContent));
       }
     }
   },
