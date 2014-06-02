@@ -1,4 +1,4 @@
-// Version 0.8.3 2014-05-30T08:48:55;
+// Version 0.8.4 2014-06-02T17:37:19;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -98,7 +98,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.8.3',
+      RG2VERSION: '0.8.4',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -113,6 +113,7 @@ var rg2 = ( function() {
       courseWidth: 3,
       routeWidth: 4,
       circleSize: 20,
+      snap: true,
       showThreeSeconds: false,
       showGPSSpeed: false
     };
@@ -321,6 +322,14 @@ var rg2 = ( function() {
           redraw(false);
         }
       }).val(options.circleSize);
+
+      $("#chk-snap-toggle").prop('checked', options.snap).click(function(event) {
+        if (event.target.checked) {
+          options.snap = true;
+        } else {
+          options.snap = false;
+        }
+      });
       
       $("#chk-show-three-seconds").prop('checked', options.showGPSSpeed).click(function() {
         redraw(false);
@@ -567,6 +576,7 @@ var rg2 = ( function() {
       $('label[for=spn-name-font-size]').prop('textContent', t('Replay label font size'));
       $('label[for=spn-course-width]').prop('textContent', t('Course overprint width'));
       $('label[for=spn-control-circle]').prop('textContent', t('Control circle size'));
+      $('label[for=chk-snap-toggle]').prop('textContent', t('Snap to control when drawing'));
       $('label[for=chk-show-three-seconds]').prop('textContent', t('Show +3 time loss for GPS routes'));
       $('label[for=chk-show-GPS-speed]').prop('textContent', t('Show GPS speed colours'));
       $('#btn-undo').button('option', 'label', t('Undo'));
@@ -620,6 +630,7 @@ var rg2 = ( function() {
     }
     
     function setNewLanguage() {
+      $("#rg2-event-list").menu("destroy");
       createEventMenu();
       var eventid = events.getActiveEventID();
       if (eventid !== null) {
@@ -803,6 +814,7 @@ var rg2 = ( function() {
     function saveConfigOptions() {
       try {
         if (('localStorage' in window) && (window.localStorage !== null)) {
+          options.snap = $("#chk-snap-toggle").prop('checked');
           options.showThreeSeconds = $("#chk-show-three-seconds").prop('checked');
           options.showGPSSpeed = $("#chk-show-GPS-speed").prop('checked');
           localStorage.setItem( 'rg2-options', JSON.stringify(options) );
@@ -986,7 +998,7 @@ var rg2 = ( function() {
       var stats;
       var coursearray;
       var resultsinfo;
-      // check there os an event to report on
+      // check there is an event to report on
       if (events.getActiveEventID() === null) {
         return "";
       }
@@ -997,6 +1009,7 @@ var rg2 = ( function() {
       stats += "<strong> " + t("Drawn routes") + ":</strong> " + resultsinfo.drawnroutes + " <strong>" + t("GPS routes");
       stats += ":</strong> " + resultsinfo.gpsroutes + " (" + resultsinfo.percent + "%)</p>";
       stats += "<p><strong>" + t("Total time") + ":</strong> " + resultsinfo.time + "</p>";
+      stats += "<p><strong>" + t("Map ") + ":</strong> ID " + events.getActiveMapID() + ", " + map.width + " x " + map.height + " pixels </p>";
       stats += "<p><strong>" + t("Comments") + ":</strong></p>";
       stats += results.getComments();
       return stats;
@@ -1462,6 +1475,10 @@ var rg2 = ( function() {
     function updateScoreCourse(courseid, codes, x, y) {
       courses.updateScoreCourse(courseid, codes, x, y);
     }
+    
+    function getSnapToControl() {
+      return options.snap;
+    }
         
     return {
       // functions and variables available elsewhere
@@ -1510,7 +1527,8 @@ var rg2 = ( function() {
       getCoursesForEvent: getCoursesForEvent,
       getRoutesForEvent: getRoutesForEvent,
       getNextRouteColour: getNextRouteColour,
-      updateScoreCourse: updateScoreCourse
+      updateScoreCourse: updateScoreCourse,
+      getSnapToControl: getSnapToControl
     };
 
   }());
@@ -2543,7 +2561,6 @@ Course.prototype = {
 function Draw() {
   this.trackColor = '#ff0000';
   this.HANDLE_DOT_RADIUS = 7;
-  this.CLOSE_ENOUGH = 7;
   this.hasResults = false;
   this.initialiseDrawing();
 }
@@ -3055,8 +3072,14 @@ Draw.prototype = {
 
   // snapto: test if drawn route is close enough to control
   closeEnough : function(x, y) {
-    if (Math.abs(x - this.controlx[this.nextControl]) < this.CLOSE_ENOUGH) {
-      if (Math.abs(y - this.controly[this.nextControl]) < this.CLOSE_ENOUGH) {
+    var range;
+    if (rg2.getSnapToControl()) {
+      range = 7;
+    } else {
+      range = 2;
+    }
+    if (Math.abs(x - this.controlx[this.nextControl]) < range) {
+      if (Math.abs(y - this.controly[this.nextControl]) < range) {
         return true;
       }
     }
@@ -3691,18 +3714,18 @@ GPSTrack.prototype = {
       }
       try {
         xml = $.parseXML(evt.target.result);
-      } catch(err) {
-        rg2WarningDialog('GPS file problem', 'File is not valid XML. Please check you have selected the correct file.');
-        return;
-      }
-			if (fileType === "gpx") {
-        self.processGPX(xml);
-      } else {
-        if (fileType === "tcx") {
-          self.processTCX(xml);
+        if (fileType === "gpx") {
+          self.processGPX(xml);
+        } else {
+          if (fileType === "tcx") {
+            self.processTCX(xml);
+          }
         }
-			}
-			self.processGPSTrack();
+        self.processGPSTrack();
+      } catch(err) {
+          rg2WarningDialog('GPS file problem', 'File is not valid XML. Please check you have selected the correct file.');
+          return;
+      }
 			$("#rg2-load-gps-file").button('disable');
 		};
 
@@ -3716,15 +3739,13 @@ GPSTrack.prototype = {
     var trkpts;
     var i;
     var j;
-    var timestring;
     trksegs = xml.getElementsByTagName('trkseg');
     for ( i = 0; i < trksegs.length; i += 1) {
       trkpts = trksegs[i].getElementsByTagName('trkpt');
       for ( j = 0; j < trkpts.length; j += 1) {
         this.lat.push(trkpts[j].getAttribute('lat'));
         this.lon.push(trkpts[j].getAttribute('lon'));
-        timestring = trkpts[j].childNodes[3].textContent;
-        this.time.push(this.getSecsFromTrackpoint(timestring));
+        this.time.push(this.getSecsFromTrackpoint(trkpts[j].getElementsByTagName('time')[0].textContent));
       }
     }
   },
@@ -3734,15 +3755,15 @@ GPSTrack.prototype = {
     var trkpts;
     var i;
     var j;
-    var timestring;
+    var position;
     trksegs = xml.getElementsByTagName('Track');
     for ( i = 0; i < trksegs.length; i += 1) {
       trkpts = trksegs[i].getElementsByTagName('Trackpoint');
       for ( j = 0; j < trkpts.length; j += 1) {
-        this.lat.push(trkpts[j].childNodes[3].childNodes[1].textContent);
-        this.lon.push(trkpts[j].childNodes[3].childNodes[3].textContent);
-        timestring = trkpts[j].childNodes[1].textContent;
-        this.time.push(this.getSecsFromTrackpoint(timestring));
+        position = trkpts[j].getElementsByTagName('Position');
+        this.lat.push(position[0].getElementsByTagName('LatitudeDegrees')[0].textContent);
+        this.lon.push(position[0].getElementsByTagName('LongitudeDegrees')[0].textContent);
+        this.time.push(this.getSecsFromTrackpoint(trkpts[j].getElementsByTagName('Time')[0].textContent));
       }
     }
   },
