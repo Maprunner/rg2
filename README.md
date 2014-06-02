@@ -3,7 +3,7 @@
 ## Latest news
 Version 0.8.4 was released on 2 June 2014 and has been installed on all routegadget.co.uk sites. This includes integration with the new javascript version of Splitsbrowser, as well as several user interface modifications and performance enhancements. You can now see event statistics (including all user comments) on the About dialog. 
 
-It also includes translation facilities. Select from the available languages (English and German at the moment) on the Configuation Options screen.
+It also includes translation facilities. Select from the available languages (English and German at the moment) on the Configuration Options screen.
 
 ## User Guide and Introductory Videos
 
