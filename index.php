@@ -1,7 +1,10 @@
 <?php
-
-require_once( dirname(__FILE__) . '/rg2-config.php' );
-
+if (file_exists( dirname(__FILE__) . '/rg2-config.php')) {
+	require_once( dirname(__FILE__) . '/rg2-config.php' );
+} else {
+	echo "Routegadget 2: Configuration file " . dirname(__FILE__) . "/rg2-config.php not found.";
+  return;
+}
 // override allows testing of a local configuration such as c:/xampp/htdocs/rg2
 if (file_exists( dirname(__FILE__) . '/rg2-override-config.php')) {
 	$override = true;
