@@ -1,7 +1,10 @@
 <?php
-
-require_once( dirname(__FILE__) . '/rg2-config.php' );
-
+if (file_exists( dirname(__FILE__) . '/rg2-config.php')) {
+	require_once( dirname(__FILE__) . '/rg2-config.php' );
+} else {
+	echo "Routegadget 2: Configuration file " . dirname(__FILE__) . "/rg2-config.php not found.";
+  return;
+}
 // override allows testing of a local configuration such as c:/xampp/htdocs/rg2
 if (file_exists( dirname(__FILE__) . '/rg2-override-config.php')) {
 	$override = true;
@@ -215,11 +218,14 @@ $languages .= '},'.PHP_EOL;
           <div id="rg2-select-gps-file">
            <input type='file' accept='.gpx, .tcx' id='rg2-load-gps-file'>
           </div>
-       <input type=checkbox id="btn-move-all"><label for="btn-move-all"> Move track and map together (or right click-drag)</label>
+       <input type=checkbox id="btn-move-all"><label for="btn-move-all">Move track and map together (or right click-drag)</label>
        <ul>
-        <li>Left click to add/lock/unlock a handle<ul><li>Green: draggable</li><li>Red: locked</li></ul></li>
-        <li>Right click to delete a handle</li>
-        <li>Drag a handle to adjust track around locked point(s)</li>
+        <li><span id="draw-text-1">Left click to add/lock/unlock a handle></span>
+        	<ul><li><span id="draw-text-2">Green: draggable</span></li>
+        		<li><span id="draw-text-3">Red: locked</span></li></ul>
+        </li>
+        <li id="draw-text-4">Right click to delete a handle</li>
+        <li id="draw-text-5">Drag a handle to adjust track around locked point(s)</li>
        </ul>
        <button id="btn-undo-gps-adjust">Undo</button>
        <button class="pushright" id="btn-save-gps-route">Save GPS route</button> 

@@ -14,6 +14,7 @@
   
   define('KARTAT_DIRECTORY', $url);
   define ('LOCK_DIRECTORY', dirname(__FILE__)."/lock/saving/");
+  define ('CACHE_DIRECTORY', $url."cache/");
   define('GPS_RESULT_OFFSET', 50000);
   define('GPS_INTERVAL', 3);
   define('SCORE_EVENT_FORMAT', 3);
@@ -134,6 +135,8 @@ function handlePostRequest($type, $eventid) {
       switch ($type) {  
       case 'addroute':
         $write = addNewRoute($eventid, $data);
+	      @unlink(CACHE_DIRECTORY."results_".$eventid.".json");
+	      @unlink(CACHE_DIRECTORY."tracks_".$eventid.".json");
         break; 
 
       case 'addmap':
@@ -142,22 +145,33 @@ function handlePostRequest($type, $eventid) {
 
       case 'createevent':
         $write = addNewEvent($data);
+	      @unlink(CACHE_DIRECTORY."events.json");
         break;  
  
       case 'editevent':
         $write = editEvent($eventid, $data);
+        @unlink(CACHE_DIRECTORY."events.json");
         break; 
 
       case 'deleteevent':
         $write = deleteEvent($eventid);
+        @unlink(CACHE_DIRECTORY."events.json");
+	      @unlink(CACHE_DIRECTORY."results_".$eventid.".json");
+	      @unlink(CACHE_DIRECTORY."courses_".$eventid.".json");
+	      @unlink(CACHE_DIRECTORY."tracks_".$eventid.".json");
        break; 
 
       case 'deleteroute':
         $write = deleteRoute($eventid);
+	      @unlink(CACHE_DIRECTORY."results_".$eventid.".json");
+	      @unlink(CACHE_DIRECTORY."tracks_".$eventid.".json");
         break; 
         
       case 'deletecourse':
         $write = deleteCourse($eventid);
+	      @unlink(CACHE_DIRECTORY."results_".$eventid.".json");
+	      @unlink(CACHE_DIRECTORY."courses_".$eventid.".json");
+	      @unlink(CACHE_DIRECTORY."tracks_".$eventid.".json");
         break; 
       
       case 'login':
@@ -1009,19 +1023,39 @@ function handleGetRequest($type, $id) {
      
   switch ($type) {  
   case 'events':
-    $output = getAllEvents();
+	  if (file_exists(CACHE_DIRECTORY."events.json")) {
+	    $output = file_get_contents(CACHE_DIRECTORY."events.json");
+	  } else {
+      $output = getAllEvents();
+		  @file_put_contents(CACHE_DIRECTORY."events.json", $output);
+		}	
     break;    
   case 'courses':
-    $output = getCoursesForEvent($id);
+	  if (file_exists(CACHE_DIRECTORY."courses_".$id.".json")) {
+	    $output = file_get_contents(CACHE_DIRECTORY."courses_".$id.".json");
+	  } else {
+      $output = getCoursesForEvent($id);
+		  @file_put_contents(CACHE_DIRECTORY."courses_".$id.".json", $output);
+		}		
     break;  
   case 'results':
-    $output = getResultsForEvent($id);
+	  if (file_exists(CACHE_DIRECTORY."results_".$id.".json")) {
+	    $output = file_get_contents(CACHE_DIRECTORY."results_".$id.".json");
+	  } else {
+      $output = getResultsForEvent($id);
+		  @file_put_contents(CACHE_DIRECTORY."results_".$id.".json", $output);
+		}
     break;
   case 'maps':
     $output = getMaps();
     break;
   case 'tracks':
-    $output = getTracksForEvent($id);
+	  if (file_exists(CACHE_DIRECTORY."tracks_".$id.".json")) {
+	    $output = file_get_contents(CACHE_DIRECTORY."tracks_".$id.".json");
+	  } else {
+      $output = getTracksForEvent($id);
+		  @file_put_contents(CACHE_DIRECTORY."tracks_".$id.".json", $output);
+		}			
     break;
 	case 'lang':
 		$output = getLanguage($id);
@@ -1038,7 +1072,7 @@ function handleGetRequest($type, $id) {
   } else {
     // output JSON data
     header("Content-type: application/json"); 
-    echo "{\"data\":" .json_encode($output). "}";
+    echo "{\"data\":" .$output. "}";
 	}
 }
 
@@ -1080,7 +1114,7 @@ function getLanguage($lang) {
 			$dict[trim($temp[0])] = trim($temp[1]);			
 		}
   }
-	return $dict;
+	return json_encode($dict);
 }
 
 // formats results as needed for Splitsbrowser
@@ -1093,8 +1127,7 @@ function getResultsCSV($eventid) {
 		// extract time
 		$t = str_replace('.:', ':', $data[7]);
     $t = str_replace('::', ":", $t);
-		// Splitsbrowser doesn't cope well with 0 total time so don't send it
-    if ((intval($data[0]) < GPS_RESULT_OFFSET) && ($t !== '0:00:00')) {
+    if (intval($data[0]) < GPS_RESULT_OFFSET) {
       if ($first_line) {
       	$first_line = false;
 			} else {
@@ -1110,7 +1143,11 @@ function getResultsCSV($eventid) {
       // 9: start time
       $result_data .= convertSecondsToHHMMSS(intval($data[4])).";;";
       // 11: time
-      $result_data .= $t.";;;;;;;";  
+      if ($t == "0:00:00") {
+        $result_data .= "---;;;;;;;";      	
+      } else {
+        $result_data .= $t.";;;;;;;";
+			}  
 			// 18: course
 			$result_data .= encode_rg_input($data[2]).";;;;;;;;;;;;;;;;;;;;";	
       // 38: course number, 39: course
@@ -1129,12 +1166,21 @@ function getResultsCSV($eventid) {
       } else {
       	$finish_secs = intval($data[4]);
       }
-      $result_data .= convertSecondsToHHMMSS($finish_secs).";";
+			if ($finish_secs == 0) {
+			  // #155: send invalid rather than 0 times to Splitsbrowser
+				$result_data .= "---;";
+			} else {
+        $result_data .= convertSecondsToHHMMSS($finish_secs).";";
+			}    
       for ($i = 0; $i < $split_count; $i++) {
       	// 46: control 1 number, 47: control 1 split...
-        $result_data .= ($i + 1).";".convertSecondsToMMSS($splits[$i]).";";			
+			  // #155: send invalid rather than 0 times to Splitsbrowser
+      	if ($splits[$i] == 0) {
+					$result_data .= ($i + 1).";---;";
+				} else {
+      	  $result_data .= ($i + 1).";".convertSecondsToMMSS($splits[$i]).";";
+				}			
 			}
-
       $result_data .= "\\n'";  
     }
  	}
@@ -1227,7 +1273,7 @@ function getAllEvents() {
     fclose($handle);
   }
   usort($output, "sortEventsByDate");
-  return $output;
+  return json_encode($output);
 }
 
 function sortEventsByDate($a, $b) {
@@ -1268,7 +1314,7 @@ function getMaps() {
     }
     fclose($handle);
   }
-  return $output;
+  return json_encode($output);
 }
 
 function isScoreEvent($eventid) {
@@ -1288,7 +1334,7 @@ function isScoreEvent($eventid) {
 
 function getResultsForEvent($eventid) {
   $output = array();
-  $comments = 0;  
+	$comments = 0;  
   $text = array();
   // @ suppresses error report if file does not exist
   if (($handle = @fopen(KARTAT_DIRECTORY."kommentit_".$eventid.".txt", "r")) !== FALSE) {
@@ -1412,7 +1458,7 @@ function getResultsForEvent($eventid) {
     }
     fclose($handle);
   }
-  return $output;
+  return json_encode($output);
 }
 
 function getCoursesForEvent($eventid) {
@@ -1488,7 +1534,7 @@ function getCoursesForEvent($eventid) {
     }
     fclose($handle);
   }
-  return $output;
+  return json_encode($output);
 }
 
 function expandCoords($coords) {
@@ -1558,7 +1604,7 @@ function getTracksForEvent($eventid) {
     }
     fclose($handle);
   }
-  return $output;
+  return json_encode($output);
 }
 
 function rg2log($msg) {

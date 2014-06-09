@@ -458,6 +458,10 @@ image, canvas {
   margin-left: 3px;
 }
 
+#rg2-draw label {
+  margin-left: 3px;
+}
+
 .no-top-margin {
   margin-top: 0px;
   margin-bottom: 2px;

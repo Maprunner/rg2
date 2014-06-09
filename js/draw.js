@@ -161,8 +161,8 @@ Draw.prototype = {
     $("#btn-three-seconds").button("disable");
     $("#btn-reset-drawing").button("enable");
     $("#rg2-name-select").empty();
-    $("#rg2-new-comments").empty().val(rg2.config.DEFAULT_NEW_COMMENT);
-    $("#rg2-event-comments").empty().val(rg2.config.DEFAULT_EVENT_COMMENT);
+    $("#rg2-new-comments").empty().val(rg2.t(rg2.config.DEFAULT_NEW_COMMENT));
+    $("#rg2-event-comments").empty().val(rg2.t(rg2.config.DEFAULT_EVENT_COMMENT));
     $("#btn-move-all").prop('checked', false);
     $("#rg2-load-gps-file").button('disable');
     $("#rg2-name-entry").empty().val('');

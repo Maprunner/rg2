@@ -86,4 +86,9 @@ translation: 'name',
 'Saving results': 'Savng results',
 'Saving routes': 'Savng routes',
 'Map loaded': 'Map loadd',
-'Total time': Totl time
+'Total time': Totl time,
+'Left click to add/lock/unlock a handle': 'Left click to add/lock/unlock a hndle',
+'Green - draggable': 'Green - draggble',
+'Red - locked': 'Red - lcked',
+'Right click to delete a handle': 'Right click to delete a hndle',
+'Drag a handle to adjust track around locked point(s)': 'Drag a hndle to adjust track around locked point(s)' 

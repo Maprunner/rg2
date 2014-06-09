@@ -15,6 +15,7 @@ js/coords.js
 lang/xx.js
 coords.html
 coverage
+cache/*.json
 #################
 ## Eclipse
 #################
