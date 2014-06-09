@@ -71,6 +71,7 @@ var rg2 = ( function() {
       TAB_CREATE : 5,
       TAB_EDIT : 6,
       TAB_MAP : 7,
+      // translated when output so leave as English here
       DEFAULT_NEW_COMMENT : "Type your comment",
       DEFAULT_EVENT_COMMENT : "Comments (optional)",
       // added to resultid when saving a GPS track
@@ -250,7 +251,7 @@ var rg2 = ( function() {
       $('#rg2-new-comments').focus(function() {
         // Clear comment box if user focuses on it and it still contains default text
         var text = $("#rg2-new-comments").val();
-        if (text === config.DEFAULT_NEW_COMMENT) {
+        if (text === t(config.DEFAULT_NEW_COMMENT)) {
           $('#rg2-new-comments').val("");
         }
       });
@@ -585,6 +586,11 @@ var rg2 = ( function() {
       $('#btn-three-seconds').button('option', 'label', t('+3 sec'));
       $('#btn-save-gps-route').button('option', 'label', t('Save GPS route'));
       $('#rg2-draw-title').text(t('Draw route'));
+      $('#draw-text-1').text(t('Left click to add/lock/unlock a handle'));
+      $('#draw-text-2').text(t('Green: draggable'));
+      $('#draw-text-3').text(t('Red: locked'));
+      $('#draw-text-4').text(t('Right click to delete a handle'));
+      $('#draw-text-5').text(t('Drag a handle to adjust track around locked point(s)'));
       $('#rg2-load-gps-title').text(t('Load GPS file (GPX or TCX)'));
       $('label[for=rg2-course-select]').prop('textContent', t('Select course'));
       $('label[for=rg2-name-select]').prop('textContent', t('Select name'));

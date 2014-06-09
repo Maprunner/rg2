@@ -14,6 +14,7 @@
   
   define('KARTAT_DIRECTORY', $url);
   define ('LOCK_DIRECTORY', dirname(__FILE__)."/lock/saving/");
+  define ('CACHE_DIRECTORY', dirname(__FILE__)."/cache/");
   define('GPS_RESULT_OFFSET', 50000);
   define('GPS_INTERVAL', 3);
   define('SCORE_EVENT_FORMAT', 3);
@@ -134,6 +135,8 @@ function handlePostRequest($type, $eventid) {
       switch ($type) {  
       case 'addroute':
         $write = addNewRoute($eventid, $data);
+	      @unlink(CACHE_DIRECTORY."results_".$eventid.".json");
+	      @unlink(CACHE_DIRECTORY."tracks_".$eventid.".json");
         break; 
 
       case 'addmap':
@@ -142,22 +145,33 @@ function handlePostRequest($type, $eventid) {
 
       case 'createevent':
         $write = addNewEvent($data);
+	      @unlink(CACHE_DIRECTORY."events.json");
         break;  
  
       case 'editevent':
         $write = editEvent($eventid, $data);
+        @unlink(CACHE_DIRECTORY."events.json");
         break; 
 
       case 'deleteevent':
         $write = deleteEvent($eventid);
+        @unlink(CACHE_DIRECTORY."events.json");
+	      @unlink(CACHE_DIRECTORY."results_".$eventid.".json");
+	      @unlink(CACHE_DIRECTORY."courses_".$eventid.".json");
+	      @unlink(CACHE_DIRECTORY."tracks_".$eventid.".json");
        break; 
 
       case 'deleteroute':
         $write = deleteRoute($eventid);
+	      @unlink(CACHE_DIRECTORY."results_".$eventid.".json");
+	      @unlink(CACHE_DIRECTORY."tracks_".$eventid.".json");
         break; 
         
       case 'deletecourse':
         $write = deleteCourse($eventid);
+	      @unlink(CACHE_DIRECTORY."results_".$eventid.".json");
+	      @unlink(CACHE_DIRECTORY."courses_".$eventid.".json");
+	      @unlink(CACHE_DIRECTORY."tracks_".$eventid.".json");
         break; 
       
       case 'login':
@@ -1009,19 +1023,39 @@ function handleGetRequest($type, $id) {
      
   switch ($type) {  
   case 'events':
-    $output = getAllEvents();
+	  if (file_exists(CACHE_DIRECTORY."events.json")) {
+	    $output = file_get_contents(CACHE_DIRECTORY."events.json");
+	  } else {
+      $output = getAllEvents();
+		  @file_put_contents(CACHE_DIRECTORY."events.json", $output);
+		}	
     break;    
   case 'courses':
-    $output = getCoursesForEvent($id);
+	  if (file_exists(CACHE_DIRECTORY."courses_".$id.".json")) {
+	    $output = file_get_contents(CACHE_DIRECTORY."courses_".$id.".json");
+	  } else {
+      $output = getCoursesForEvent($id);
+		  @file_put_contents(CACHE_DIRECTORY."courses_".$id.".json", $output);
+		}		
     break;  
   case 'results':
-    $output = getResultsForEvent($id);
+	  if (file_exists(CACHE_DIRECTORY."results_".$id.".json")) {
+	    $output = file_get_contents(CACHE_DIRECTORY."results_".$id.".json");
+	  } else {
+      $output = getResultsForEvent($id);
+		  @file_put_contents(CACHE_DIRECTORY."results_".$id.".json", $output);
+		}
     break;
   case 'maps':
     $output = getMaps();
     break;
   case 'tracks':
-    $output = getTracksForEvent($id);
+	  if (file_exists(CACHE_DIRECTORY."tracks_".$id.".json")) {
+	    $output = file_get_contents(CACHE_DIRECTORY."tracks_".$id.".json");
+	  } else {
+      $output = getTracksForEvent($id);
+		  @file_put_contents(CACHE_DIRECTORY."tracks_".$id.".json", $output);
+		}			
     break;
 	case 'lang':
 		$output = getLanguage($id);
@@ -1038,7 +1072,7 @@ function handleGetRequest($type, $id) {
   } else {
     // output JSON data
     header("Content-type: application/json"); 
-    echo "{\"data\":" .json_encode($output). "}";
+    echo "{\"data\":" .$output. "}";
 	}
 }
 
@@ -1080,7 +1114,7 @@ function getLanguage($lang) {
 			$dict[trim($temp[0])] = trim($temp[1]);			
 		}
   }
-	return $dict;
+	return json_encode($dict);
 }
 
 // formats results as needed for Splitsbrowser
@@ -1227,7 +1261,7 @@ function getAllEvents() {
     fclose($handle);
   }
   usort($output, "sortEventsByDate");
-  return $output;
+  return json_encode($output);
 }
 
 function sortEventsByDate($a, $b) {
@@ -1268,7 +1302,7 @@ function getMaps() {
     }
     fclose($handle);
   }
-  return $output;
+  return json_encode($output);
 }
 
 function isScoreEvent($eventid) {
@@ -1288,7 +1322,7 @@ function isScoreEvent($eventid) {
 
 function getResultsForEvent($eventid) {
   $output = array();
-  $comments = 0;  
+	$comments = 0;  
   $text = array();
   // @ suppresses error report if file does not exist
   if (($handle = @fopen(KARTAT_DIRECTORY."kommentit_".$eventid.".txt", "r")) !== FALSE) {
@@ -1412,7 +1446,7 @@ function getResultsForEvent($eventid) {
     }
     fclose($handle);
   }
-  return $output;
+  return json_encode($output);
 }
 
 function getCoursesForEvent($eventid) {
@@ -1488,7 +1522,7 @@ function getCoursesForEvent($eventid) {
     }
     fclose($handle);
   }
-  return $output;
+  return json_encode($output);
 }
 
 function expandCoords($coords) {
@@ -1558,7 +1592,7 @@ function getTracksForEvent($eventid) {
     }
     fclose($handle);
   }
-  return $output;
+  return json_encode($output);
 }
 
 function rg2log($msg) {
