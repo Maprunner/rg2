@@ -14,7 +14,7 @@
   
   define('KARTAT_DIRECTORY', $url);
   define ('LOCK_DIRECTORY', dirname(__FILE__)."/lock/saving/");
-  define ('CACHE_DIRECTORY', dirname(__FILE__)."/cache/");
+  define ('CACHE_DIRECTORY', $url."cache/");
   define('GPS_RESULT_OFFSET', 50000);
   define('GPS_INTERVAL', 3);
   define('SCORE_EVENT_FORMAT', 3);
