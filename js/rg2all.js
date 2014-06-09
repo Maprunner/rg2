@@ -1,4 +1,4 @@
-// Version 0.8.4 2014-06-02T17:37:19;
+// Version 0.8.5 2014-06-09T18:47:13;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -72,6 +72,7 @@ var rg2 = ( function() {
       TAB_CREATE : 5,
       TAB_EDIT : 6,
       TAB_MAP : 7,
+      // translated when output so leave as English here
       DEFAULT_NEW_COMMENT : "Type your comment",
       DEFAULT_EVENT_COMMENT : "Comments (optional)",
       // added to resultid when saving a GPS track
@@ -98,7 +99,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.8.4',
+      RG2VERSION: '0.8.5',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -251,7 +252,7 @@ var rg2 = ( function() {
       $('#rg2-new-comments').focus(function() {
         // Clear comment box if user focuses on it and it still contains default text
         var text = $("#rg2-new-comments").val();
-        if (text === config.DEFAULT_NEW_COMMENT) {
+        if (text === t(config.DEFAULT_NEW_COMMENT)) {
           $('#rg2-new-comments').val("");
         }
       });
@@ -586,6 +587,11 @@ var rg2 = ( function() {
       $('#btn-three-seconds').button('option', 'label', t('+3 sec'));
       $('#btn-save-gps-route').button('option', 'label', t('Save GPS route'));
       $('#rg2-draw-title').text(t('Draw route'));
+      $('#draw-text-1').text(t('Left click to add/lock/unlock a handle'));
+      $('#draw-text-2').text(t('Green - draggable'));
+      $('#draw-text-3').text(t('Red - locked'));
+      $('#draw-text-4').text(t('Right click to delete a handle'));
+      $('#draw-text-5').text(t('Drag a handle to adjust track around locked point(s)'));
       $('#rg2-load-gps-title').text(t('Load GPS file (GPX or TCX)'));
       $('label[for=rg2-course-select]').prop('textContent', t('Select course'));
       $('label[for=rg2-name-select]').prop('textContent', t('Select name'));
@@ -2712,8 +2718,8 @@ Draw.prototype = {
     $("#btn-three-seconds").button("disable");
     $("#btn-reset-drawing").button("enable");
     $("#rg2-name-select").empty();
-    $("#rg2-new-comments").empty().val(rg2.config.DEFAULT_NEW_COMMENT);
-    $("#rg2-event-comments").empty().val(rg2.config.DEFAULT_EVENT_COMMENT);
+    $("#rg2-new-comments").empty().val(rg2.t(rg2.config.DEFAULT_NEW_COMMENT));
+    $("#rg2-event-comments").empty().val(rg2.t(rg2.config.DEFAULT_EVENT_COMMENT));
     $("#btn-move-all").prop('checked', false);
     $("#rg2-load-gps-file").button('disable');
     $("#rg2-name-entry").empty().val('');
