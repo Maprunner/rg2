@@ -587,8 +587,8 @@ var rg2 = ( function() {
       $('#btn-save-gps-route').button('option', 'label', t('Save GPS route'));
       $('#rg2-draw-title').text(t('Draw route'));
       $('#draw-text-1').text(t('Left click to add/lock/unlock a handle'));
-      $('#draw-text-2').text(t('Green: draggable'));
-      $('#draw-text-3').text(t('Red: locked'));
+      $('#draw-text-2').text(t('Green - draggable'));
+      $('#draw-text-3').text(t('Red - locked'));
       $('#draw-text-4').text(t('Right click to delete a handle'));
       $('#draw-text-5').text(t('Drag a handle to adjust track around locked point(s)'));
       $('#rg2-load-gps-title').text(t('Load GPS file (GPX or TCX)'));
