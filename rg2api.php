@@ -1127,8 +1127,7 @@ function getResultsCSV($eventid) {
 		// extract time
 		$t = str_replace('.:', ':', $data[7]);
     $t = str_replace('::', ":", $t);
-		// Splitsbrowser doesn't cope well with 0 total time so don't send it
-    if ((intval($data[0]) < GPS_RESULT_OFFSET) && ($t !== '0:00:00')) {
+    if (intval($data[0]) < GPS_RESULT_OFFSET) {
       if ($first_line) {
       	$first_line = false;
 			} else {
@@ -1144,7 +1143,11 @@ function getResultsCSV($eventid) {
       // 9: start time
       $result_data .= convertSecondsToHHMMSS(intval($data[4])).";;";
       // 11: time
-      $result_data .= $t.";;;;;;;";  
+      if ($t == "0:00:00") {
+        $result_data .= "---;;;;;;;";      	
+      } else {
+        $result_data .= $t.";;;;;;;";
+			}  
 			// 18: course
 			$result_data .= encode_rg_input($data[2]).";;;;;;;;;;;;;;;;;;;;";	
       // 38: course number, 39: course
@@ -1163,12 +1166,21 @@ function getResultsCSV($eventid) {
       } else {
       	$finish_secs = intval($data[4]);
       }
-      $result_data .= convertSecondsToHHMMSS($finish_secs).";";
+			if ($finish_secs == 0) {
+			  // #155: send invalid rather than 0 times to Splitsbrowser
+				$result_data .= "---;";
+			} else {
+        $result_data .= convertSecondsToHHMMSS($finish_secs).";";
+			}    
       for ($i = 0; $i < $split_count; $i++) {
       	// 46: control 1 number, 47: control 1 split...
-        $result_data .= ($i + 1).";".convertSecondsToMMSS($splits[$i]).";";			
+			  // #155: send invalid rather than 0 times to Splitsbrowser
+      	if ($splits[$i] == 0) {
+					$result_data .= ($i + 1).";---;";
+				} else {
+      	  $result_data .= ($i + 1).";".convertSecondsToMMSS($splits[$i]).";";
+				}			
 			}
-
       $result_data .= "\\n'";  
     }
  	}
