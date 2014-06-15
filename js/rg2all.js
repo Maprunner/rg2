@@ -1,4 +1,4 @@
-// Version 0.8.5 2014-06-09T18:47:13;
+// Version 0.8.5 2014-06-15T18:49:55;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -630,8 +630,7 @@ var rg2 = ( function() {
         dictionary = json.data;
         setNewLanguage();
       }).fail(function(jqxhr, textStatus, error) {
-        var err = textStatus + ", " + error;
-        console.log("Language request failed: " + err);
+        reportJSONFail("Language request failed: " + error);
       });
     }
     
@@ -650,6 +649,12 @@ var rg2 = ( function() {
       translateFixedText();
       $rg2infopanel.tabs( "refresh" );
       redraw(false);
+    }
+    
+    function reportJSONFail(errorText) {
+      $("#rg2-load-progress").hide();
+      $('body').css('cursor', 'auto');
+      rg2WarningDialog('Configuration error', errorText);
     }
     
     function loadEventList() {
@@ -675,8 +680,7 @@ var rg2 = ( function() {
           manager.eventListLoaded();
         }
       }).fail(function(jqxhr, textStatus, error) {
-        var err = textStatus + ", " + error;
-        console.log("Events request failed: " + err);
+        reportJSONFail("Events request failed: " + error);
       });
     }
  
@@ -1065,10 +1069,7 @@ var rg2 = ( function() {
         $("#btn-toggle-names").show();
         getResults();
       }).fail(function(jqxhr, textStatus, error) {
-        $('body').css('cursor', 'auto');
-        $("#rg2-load-progress").hide();
-        var err = textStatus + ", " + error;
-        console.log("Courses request failed: " + err);
+        reportJSONFail("Courses request failed for event " + events.getKartatEventID() + ": " + error);
       });
 
     }
@@ -1117,10 +1118,7 @@ var rg2 = ( function() {
         $("#rg2-result-list").accordion("refresh");
         getGPSTracks();
       }).fail(function(jqxhr, textStatus, error) {
-        $('body').css('cursor', 'auto');
-        var err = textStatus + ", " + error;
-        console.log("Results request failed: " + err);
-        $("#rg2-load-progress").hide();
+        reportJSONFail("Results request failed for event " + events.getKartatEventID() + ": " + error);
       });
     }
 
@@ -1165,10 +1163,7 @@ var rg2 = ( function() {
         $("#rg2-load-progress").hide();
         redraw(false);
       }).fail(function(jqxhr, textStatus, error) {
-        $('body').css('cursor', 'auto');
-        var err = textStatus + ", " + error;
-        console.log("Tracks request failed: " + err);
-        $("#rg2-load-progress").hide();
+        reportJSONFail("Routes request failed for event " + events.getKartatEventID() + ": " + error);
       });
     }
 
