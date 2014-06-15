@@ -1355,6 +1355,8 @@ function getResultsForEvent($eventid) {
     fclose($handle);
   }
   $codes = array();
+	// initialise empty to deal with corrupt results files that occur sometimes
+  $scoreref = array();
   if (isScoreEvent($eventid)) {  
     // read control locations visited: this includes start and finish
     if (($handle = @fopen(KARTAT_DIRECTORY."ratapisteet_".$eventid.".txt", "r")) !== FALSE) {
@@ -1417,7 +1419,8 @@ function getResultsForEvent($eventid) {
       $detail["starttime"] = intval($data[4]);
       $detail["databaseid"] = encode_rg_input($data[5]);
       $detail["scoreref"] = intval($data[6]);
-      if ($data[6] != "") {
+			// score event check should be redundant but see issue #159
+      if (($data[6] != "") && isScoreEvent($eventid)) {
         for ($i = 0; $i < count($scoreref); $i++) {
           // only send course details the first time they occur: makes response a lot smaller for big (Jukola!) relays
           if ($scoreref[$i] == $data[6]) {
