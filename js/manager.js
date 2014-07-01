@@ -1093,11 +1093,12 @@ Manager.prototype = {
             }
             temp = splitlist[l].getElementsByTagName('Time');
             if (temp.length > 0) {
-              timeFormat = temp[0].getAttribute('timeFormat');
-              if (timeFormat === 'HH:MM:SS') {
+              // previously read timeFormat but some files lied!
+              // allow for XML files that don't tell you what is going on
+              // count all colons in time string
+              if ((temp[0].textContent.match(/:/g)||[]).length > 1) {
                 result.splits += getSecsFromHHMMSS(temp[0].textContent);
               } else {
-                // assume MMM:SS for now
                 result.splits += getSecsFromMMSS(temp[0].textContent);
               }
               temp = splitlist[l].getElementsByTagName('ControlCode');

@@ -1412,8 +1412,15 @@ function getResultsForEvent($eventid) {
     $row = 0;
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
       $detail = array();
-      $detail["resultid"] = intval($data[0]);
-      $detail["courseid"] = intval($data[1]);
+			$resultid = intval($data[0]);
+			$courseid = intval($data[1]);
+			// protect against corrupt/invalid files
+			// skip this record and go to next line
+			if (($resultid < 1) || ($courseid < 1)) {
+				continue;	
+			}
+      $detail["resultid"] = $resultid;
+      $detail["courseid"] = $courseid;
       $detail["coursename"] = encode_rg_input($data[2]);
       $detail["name"] = encode_rg_input($data[3]);
       $detail["starttime"] = intval($data[4]);
@@ -1597,13 +1604,18 @@ function getTracksForEvent($eventid) {
   if (($handle = @fopen(KARTAT_DIRECTORY."merkinnat_".$eventid.".txt", "r")) !== FALSE) {
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
       $detail = array();
-      $detail["courseid"] = intval($data[0]);
-      $detail["resultid"] = intval($data[1]);
-      $detail["name"] = encode_rg_input($data[2]);
-      $detail["mystery"] = $data[3];
-      list($detail["gpsx"], $detail["gpsy"]) = expandCoords($data[4]);
-      $output[$row] = $detail;        
-      $row++;
+			$courseid = intval($data[0]);
+			$resultid = intval($data[1]);
+			// protect against corrupt/invalid files
+			if (($resultid > 0) && ($courseid > 0)) {
+      	$detail["courseid"] = $courseid;
+      	$detail["resultid"] = $resultid;
+      	$detail["name"] = encode_rg_input($data[2]);
+      	$detail["mystery"] = $data[3];
+      	list($detail["gpsx"], $detail["gpsy"]) = expandCoords($data[4]);
+      	$output[$row] = $detail;        
+      	$row++;
+			}
     }
     fclose($handle);
   }
