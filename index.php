@@ -202,9 +202,14 @@ $languages .= '},'.PHP_EOL;
            <select id="rg2-name-select"></select>
           </div>
           <div id="rg2-enter-name">
-           <label for='rg2-name'>Enter name: </label>
-           <p id = "rg2-name"><input id="rg2-name-entry" class="pushright" type="text"></p>
-           <p id = "rg2-time">Enter time (mm:ss): <input  id="rg2-time-entry" class="pushright" type="text"></p>
+           <div>
+           	 <label for='rg2-name'>Enter name: </label>
+             <span id = "rg2-name"><input id="rg2-name-entry" class="pushright" type="text"></span>
+           </div>
+           <div>
+           	 <label for='rg2-time'>Enter time (mm:ss): </label>
+             <span id = "rg2-time"><input  id="rg2-time-entry" class="pushright" type="text"></span>
+           </div>
           </div>
           <div>
            <textarea id="rg2-new-comments"></textarea>
