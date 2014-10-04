@@ -11,13 +11,14 @@
   } else {
     $url = "../kartat/";
   }
-  
-  define('KARTAT_DIRECTORY', $url);
+  // version replaced by Gruntfile as part of release 
+  define ('VERSION_NUMBER', 1);
+  define ('KARTAT_DIRECTORY', $url);
   define ('LOCK_DIRECTORY', dirname(__FILE__)."/lock/saving/");
   define ('CACHE_DIRECTORY', $url."cache/");
-  define('GPS_RESULT_OFFSET', 50000);
-  define('GPS_INTERVAL', 3);
-  define('SCORE_EVENT_FORMAT', 3);
+  define ('GPS_RESULT_OFFSET', 50000);
+  define ('GPS_INTERVAL', 3);
+  define ('SCORE_EVENT_FORMAT', 3);
   
   if (isset($_GET['type'])) {
     $type = $_GET['type'];
@@ -199,6 +200,7 @@ function handlePostRequest($type, $eventid) {
   $write["keksi"] = $keksi;
   
   header("Content-type: application/json"); 
+  $write["version"] = VERSION_NUMBER;
   echo json_encode($write);
 }
 

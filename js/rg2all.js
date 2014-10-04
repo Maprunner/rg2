@@ -1,4 +1,4 @@
-// Version 0.8.7 2014-07-01T07:07:13;
+// Version 0.8.8 2014-10-04T17:07:30;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -99,7 +99,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.8.7',
+      RG2VERSION: '0.8.8',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -4039,10 +4039,18 @@ function getSecsFromHHMMSS(time) {
 }
 
 // converts MM:SS to seconds
+// but may also get hh:mm:ss sometimes
+// so allow for both based on number of :
 function getSecsFromMMSS(time) {
   var secs = 0;
   var bits = time.split(":");
-  secs = (parseInt(bits[0], 10) * 60) + parseInt(bits[1], 10);
+  if (bits.length === 2) {
+    secs = (parseInt(bits[0], 10) * 60) + parseInt(bits[1], 10);
+  } else {
+    if (bits.length === 3) {
+      secs = (parseInt(bits[0], 10) * 3600) + (parseInt(bits[1], 10) * 60) + parseInt(bits[2], 10);
+    }
+  }
   if (isNaN(secs)) {
     return 0;
   } else {
