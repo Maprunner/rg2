@@ -109,10 +109,18 @@ function getSecsFromHHMMSS(time) {
 }
 
 // converts MM:SS to seconds
+// but may also get hh:mm:ss sometimes
+// so allow for both based on number of :
 function getSecsFromMMSS(time) {
   var secs = 0;
   var bits = time.split(":");
-  secs = (parseInt(bits[0], 10) * 60) + parseInt(bits[1], 10);
+  if (bits.length === 2) {
+    secs = (parseInt(bits[0], 10) * 60) + parseInt(bits[1], 10);
+  } else {
+    if (bits.length === 3) {
+      secs = (parseInt(bits[0], 10) * 3600) + (parseInt(bits[1], 10) * 60) + parseInt(bits[2], 10);
+    }
+  }
   if (isNaN(secs)) {
     return 0;
   } else {
