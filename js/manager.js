@@ -1230,9 +1230,9 @@ Manager.prototype = {
           temp = resultlist[k].getElementsByTagName('FinishTime');
           if (temp.length > 0) {
             temp2 = temp[0].textContent;
-            if (temp.length >= 19) {
+            if (temp2.length >= 19) {
               // format is yyyy-mm-ddThh:mm:ss and might have extra Z or +nn
-              time = getSecsFromHHMMSS(temp.substr(11,8));
+              time = getSecsFromHHMMSS(temp2.substr(11,8));
             } else {
               time = 0;
             }
