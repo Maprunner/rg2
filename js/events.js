@@ -135,7 +135,7 @@ Events.prototype = {
       if (this.events[i].georeferenced) {
         html += "<i class='fa fa-globe event-info-icon' id='info-" + i + "'>&nbsp</i>";
       }
-			html += this.events[i].name + "</a></li>";
+			html += this.events[i].date + ": " + this.events[i].name + "</a></li>";
 		}
 		return html;
 
