@@ -1,4 +1,4 @@
-// Version 0.8.8 2014-10-04T17:07:30;
+// Version 0.8.9 2014-10-09T20:31:18;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -99,7 +99,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.8.8',
+      RG2VERSION: '0.8.9',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -3594,7 +3594,7 @@ Events.prototype = {
       if (this.events[i].georeferenced) {
         html += "<i class='fa fa-globe event-info-icon' id='info-" + i + "'>&nbsp</i>";
       }
-			html += this.events[i].name + "</a></li>";
+			html += this.events[i].date + ": " + this.events[i].name + "</a></li>";
 		}
 		return html;
 
