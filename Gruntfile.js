@@ -350,7 +350,7 @@ module.exports = function(grunt) {
         cwd : 'rel/',
         expand : true,
         src : '**',
-        dest : 'ftpsite/mvoc/rg2/'
+        dest : 'ftpsite/moravian/rg2/'
       },
       mvoc : {
         cwd : 'rel/',
