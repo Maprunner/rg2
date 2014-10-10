@@ -1439,13 +1439,14 @@ var rg2 = ( function() {
       // don't get too carried away, although these would be strange map files
       scaleFactor = Math.min(scaleFactor, 5);
       scaleFactor = Math.max(scaleFactor, 0.5);
+      var circleSize = Math.round(options.circleSize * scaleFactor);
       // ratios based on IOF ISOM overprint specification
-      opt.controlRadius = options.circleSize * scaleFactor;
-      opt.finishInnerRadius = options.controlRadius * (5 / 6);
-      opt.finishOuterRadius = options.controlRadius * (7 / 6);
-      opt.startTriangleLength = options.controlRadius * (7 / 6);
+      opt.controlRadius = circleSize;
+      opt.finishInnerRadius = circleSize * (5 / 6);
+      opt.finishOuterRadius = circleSize * (7 / 6);
+      opt.startTriangleLength = circleSize * (7 / 6);
       opt.overprintWidth = options.courseWidth;
-      opt.font = options.controlRadius + 'pt Arial';
+      opt.font = circleSize + 'pt Arial';
       return opt;
     }
 
