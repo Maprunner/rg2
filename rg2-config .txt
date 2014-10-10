@@ -14,8 +14,8 @@
   define('SPLITSBROWSER_DIRECTORY', 'http://www.happyherts.routegadget.co.uk/splitsbrowser');
   
   // default language if not English: this is overridden if the query includes a language (e.g. ?lang=fi)
-  // requires a dictionary file xx.js in the lang directory
-  // Example define('START_LANGUAGE', 'fi');
+  // requires a dictionary file xx.txt in the lang directory
+  // define('START_LANGUAGE', 'fi');
   
   // Set encoding for input data default UTF-8
   define('RG_INPUT_ENCODING', 'UTF-8');
@@ -33,6 +33,7 @@
   define('HEADER_TEXT_COLOUR', '#ffffff');
 
   // text displayed at bottom of info dialog. Use '' to leave blank.
+  // text shown here is required for routegadget.co.uk sites but can be deleted otherwise
   define('ADDITIONAL_INFO_TEXT', 'Maps published on this web site that contain OS data by permission of Ordnance Survey® Licence Number 100046745.');
   
   // proj4 co-ordinate reference system for new maps
