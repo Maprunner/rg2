@@ -314,8 +314,8 @@ var rg2 = ( function() {
       }).val(options.routeWidth);
       
       $("#spn-control-circle").spinner({
-        max : 30,
-        min : 5,
+        max : 50,
+        min : 3,
         step: 1,
         spin : function(event, ui) {
           options.circleSize = ui.value;
@@ -1429,14 +1429,23 @@ var rg2 = ( function() {
 
     function getOverprintDetails() {
       var opt = {};
+      // attempt to scale overprint depending on map image size
+      // this avoids very small/large circles, or at least makes things a bit more sensible
+      var size = getMapSize();
+      // Empirically derived  so open to suggestions. This is based on a nominal 20px circle
+      // as default. The square root stops things getting too big too quickly.
+      // 1500px is a typical map image maximum size.
+      var scaleFactor = Math.pow(Math.min(size.height, size.width)/1500, 0.5);
+      // don't get too carried away, although these would be strange map files
+      scaleFactor = Math.min(scaleFactor, 5);
+      scaleFactor = Math.max(scaleFactor, 0.5);
       // ratios based on IOF ISOM overprint specification
-      opt.controlRadius = options.circleSize;
-      opt.finishInnerRadius = options.circleSize * (5 / 6);
-      opt.finishOuterRadius = options.circleSize * (7 / 6);
-      opt.startTriangleLength = options.circleSize * (7 / 6);
-      //opt.startTriangleHeight = opt.StartTriangleLength * (4 / 3);
+      opt.controlRadius = options.circleSize * scaleFactor;
+      opt.finishInnerRadius = options.controlRadius * (5 / 6);
+      opt.finishOuterRadius = options.controlRadius * (7 / 6);
+      opt.startTriangleLength = options.controlRadius * (7 / 6);
       opt.overprintWidth = options.courseWidth;
-      opt.font = options.circleSize + 'pt Arial';
+      opt.font = options.controlRadius + 'pt Arial';
       return opt;
     }
 
