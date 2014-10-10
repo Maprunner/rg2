@@ -1347,8 +1347,9 @@ function getResultsForEvent($eventid) {
            $text[$comments]["resultid"] = $data[1];
            // replace carriage return and line break codes
            $temp = encode_rg_input($data[4]);  
-           // RG1 uses #cr##nl# to allow saving to text file
+           // RG1 uses #cr##nl# and #nl# to allow saving to text file
            $temp = str_replace("#cr##nl#", "\n", $temp);  
+           $temp = str_replace("#nl#", "\n", $temp);  
            $text[$comments]["comments"] = $temp;
            $comments++;
         }
