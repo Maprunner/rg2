@@ -98,7 +98,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.8.8',
+      RG2VERSION: '0.9.0',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -1021,6 +1021,8 @@ var rg2 = ( function() {
       stats += "<p><strong>" + t("Map ") + ":</strong> ID " + events.getActiveMapID() + ", " + map.width + " x " + map.height + " pixels </p>";
       stats += "<p><strong>" + t("Comments") + ":</strong></p>";
       stats += results.getComments();
+      // #177 not pretty but gets round problems of double encoding
+      stats = stats.replace(/&amp;/g, '&');
       return stats;
     }
 
