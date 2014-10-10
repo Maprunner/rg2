@@ -1223,6 +1223,8 @@ var rg2 = ( function() {
     function createResultMenu() {
       //loads menu from populated result array
       var html = results.formatResultListAsAccordion();
+      // #177 not pretty but gets round problems of double encoding
+      html = html.replace(/&amp;/g, '&');
       $("#rg2-result-list").empty().append(html);
 
       $("#rg2-result-list").accordion("refresh");
