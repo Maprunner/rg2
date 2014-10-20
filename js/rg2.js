@@ -1049,7 +1049,7 @@ var rg2 = ( function() {
       results.deleteAllResults();
       events.setActiveEventID(eventid);
       drawing.initialiseDrawing(events.hasResults(eventid));
-      loadNewMap(rg2Config.maps_url + events.getActiveMapID() + '.jpg');
+      loadNewMap(rg2Config.maps_url + events.getMapFileName());
       redraw(false);
       setTitleBar();
 

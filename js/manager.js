@@ -38,7 +38,12 @@ function Map(data) {
     this.name = data.name;
     this.georeferenced = data.georeferenced;
     this.worldfile = new Worldfile(data.A, data.B, data.C, data.D, data.E, data.F);
-
+	if (data.mapfilename === undefined) {
+		this.mapfilename = this.mapid + '.' + 'jpg';
+	} else {
+		this.mapfilename = data.mapfilename;
+	}
+    
   } else {
     // new map to be added
     this.mapid = 0;
@@ -199,7 +204,7 @@ Manager.prototype = {
       self.mapIndex = parseInt($("#rg2-map-selected").val(), 10);
       if (self.mapIndex !== self.INVALID_MAP_ID) {
         $("#rg2-manager-map-select").addClass('valid');
-        rg2.loadNewMap(rg2Config.maps_url + "/" + self.maps[self.mapIndex].mapid + '.jpg');
+        rg2.loadNewMap(rg2Config.maps_url + "/" + self.maps[self.mapIndex].mapfilename);
       } else {
         $("#rg2-manager-map-select").removeClass('valid');
         self.mapLoaded = false;

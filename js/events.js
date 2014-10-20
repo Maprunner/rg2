@@ -31,6 +31,10 @@ Events.prototype = {
 		return this.events[this.activeEventID].mapid;
 	},
 
+	getMapFileName : function() {
+		return this.events[this.activeEventID].mapfilename;
+	},
+	
 	setActiveEventID : function(eventid) {
 		this.activeEventID = eventid;
 	},
@@ -149,6 +153,11 @@ function Event(data) {
 	this.name = data.name;
 	this.date = data.date;
 	this.club = data.club;
+	if (data.suffix === undefined) {
+		this.mapfilename = this.mapid + '.' + 'jpg';
+	} else {
+		this.mapfilename = this.mapid + '.' + data.suffix;
+	}
 	this.worldFile = [];
 	if ( typeof (data.A) === 'undefined') {
 		this.georeferenced = false;

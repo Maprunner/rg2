@@ -98,16 +98,18 @@ function uploadMapFile() {
     if (is_uploaded_file($_FILES[$filename]['tmp_name'])) {
       $file = $_FILES[$filename];
       if ($file['type'] == 'image/jpeg') {
-        if (move_uploaded_file($file['tmp_name'], KARTAT_DIRECTORY."temp.jpg")) {
+        if (move_uploaded_file($file['tmp_name'], KARTAT_DIRECTORY.'temp.jpg')) {
             $write["ok"] = TRUE;
             $write["status_msg"] = "Map uploaded.";
         }
       }
       if ($file['type'] == 'image/gif') {
         if ($image = imagecreatefromgif($file['tmp_name'])) {
-          if (imagejpeg($image, KARTAT_DIRECTORY."temp.jpg")) {
-            $write["ok"] = TRUE;
-            $write["status_msg"] = "Map uploaded.";
+          if (imagejpeg($image, KARTAT_DIRECTORY.'temp.jpg')) {
+            if (move_uploaded_file($file['tmp_name'], KARTAT_DIRECTORY.'temp.gif')) {
+              $write['ok'] = TRUE;
+              $write['status_msg'] = "Map uploaded.";
+            }
           }
         }
       }
@@ -948,13 +950,21 @@ function addNewMap($data) {
       $oldid = intval($olddata[0]);
     }
     $newid = $oldid + 1;
-	} else {
-		// creat empty kartat file
-		$newid = 1;
-		$handle = @fopen(KARTAT_DIRECTORY."kartat.txt", "w+");
-	}
-  $renameFile = rename(KARTAT_DIRECTORY."temp.jpg", KARTAT_DIRECTORY.$newid.".jpg");
-  if ($renameFile) {
+  } else {
+	// create empty kartat file
+	$newid = 1;
+	$handle = @fopen(KARTAT_DIRECTORY."kartat.txt", "w+");
+  }
+  // may not have a GIF
+  if (file_exists(KARTAT_DIRECTORY."temp.gif")) {
+    $renameGIF = rename(KARTAT_DIRECTORY."temp.gif", KARTAT_DIRECTORY.$newid.".gif");      
+  } else {
+    $renameGIF = TRUE;
+  }
+  // always need a JPG for original Routegadget to maintain backward compatibility 
+  $renameJPG = rename(KARTAT_DIRECTORY."temp.jpg", KARTAT_DIRECTORY.$newid.".jpg");
+  
+  if (($renameJPG && $renameGIF)) {
     $newmap = $newid."|".encode_rg_output($data->name);
     if ($data->georeferenced) {
       $newmap .= "|".$data->xpx[0]."|".$data->lon[0]."|".$data->ypx[0]."|".$data->lat[0];
@@ -1250,6 +1260,9 @@ function getAllEvents() {
       $detail = array();
       $detail["id"] = intval($data[0]);
       $detail["mapid"] = intval($data[1]);
+      if (file_exists(KARTAT_DIRECTORY.$detail["mapid"].'.gif')) {
+        $detail["suffix"] = 'gif';          
+      }
       for ($i = 0; $i < $referenced; $i++) {
         if ($detail["mapid"] == $maps[$i]["mapid"]) {
           $detail["A"] = $maps[$i]["A"];
@@ -1290,6 +1303,10 @@ function getMaps() {
       $detail = array();
       $detail["mapid"] = intval($data[0]);
       $detail["name"] = encode_rg_input($data[1]);
+      // defaults to jpg so only need to say if we have something else as well
+      if (file_exists(KARTAT_DIRECTORY.$detail['mapid'].'.gif')) {
+        $detail["mapfilename"] = $detail['mapid'].'.gif';
+      }
       $detail["georeferenced"] = FALSE;
       if (count($data) == 14) {
         list($A, $B, $C, $D, $E, $F) = generateWorldFile($data);
