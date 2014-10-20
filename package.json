@@ -16,10 +16,6 @@
     "load-grunt-tasks": "~0.2.1",
     "grunt-text-replace": "~0.3.10",
     "grunt-bumpup": "~0.5.0",
-    "grunt-sync": "0.0.5",
-    "karma-jasmine": "~0.1.5",
-    "karma": "~0.10.9",
-    "karma-coverage": "~0.2.0",
-    "karma-chrome-launcher": "~0.1.2"
+    "grunt-sync": "0.0.5"
   }
 }
