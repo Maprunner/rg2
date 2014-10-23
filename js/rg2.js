@@ -1109,7 +1109,10 @@ var rg2 = ( function() {
         console.log("Results: " + json.data.length);
         $("#rg2-load-progress-label").text(t("Saving results"));
         var isScoreEvent = events.isScoreEvent();
-        results.addResults(json.data, isScoreEvent);
+        // TODO remove temporary (?) fix to get round RG1 events with no courses defined: see #179
+        if (courses.getNumberOfCourses() > 0 ) {
+          results.addResults(json.data, isScoreEvent);
+        }
         courses.setResultsCount();
         if (isScoreEvent) {
           controls.deleteAllControls();
@@ -1132,7 +1135,10 @@ var rg2 = ( function() {
       }).done(function(json) {
         $("#rg2-load-progress-label").text(t("Saving routes"));
         console.log("Tracks: " + json.data.length);
-        results.addTracks(json.data);
+        // TODO remove temporary (?) fix to get round RG1 events with no courses defined: see #179        
+        if (courses.getNumberOfCourses() > 0 ) {
+          results.addTracks(json.data);
+        }
         createCourseMenu();
         createResultMenu();
         animation.updateAnimationDetails();
