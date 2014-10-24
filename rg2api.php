@@ -966,11 +966,17 @@ function addNewMap($data) {
   
   if (($renameJPG && $renameGIF)) {
     $newmap = $newid."|".encode_rg_output($data->name);
-    if ($data->georeferenced) {
+    if ($data->worldfile->valid) {
       $newmap .= "|".$data->xpx[0]."|".$data->lon[0]."|".$data->ypx[0]."|".$data->lat[0];
       $newmap .= "|".$data->xpx[1]."|".$data->lon[1]."|".$data->ypx[1]."|".$data->lat[1];
       $newmap .= "|".$data->xpx[2]."|".$data->lon[2]."|".$data->ypx[2]."|".$data->lat[2];
     }
+    if ($data->localworldfile->valid) {
+      // save local worldfile for use in aligning georeferenced courses
+      $wf =$data->localworldfile->A.",".$data->localworldfile->B.",".$data->localworldfile->C.",".$data->localworldfile->D.",".$data->localworldfile->E.",".$data->localworldfile->F.PHP_EOL; 
+      @file_put_contents(KARTAT_DIRECTORY."worldfile_".$newid.".txt", $wf);
+    }
+
     $newmap .= PHP_EOL;
     $write["newid"] = $newid;
     $status =fwrite($handle, $newmap);    
@@ -1316,6 +1322,14 @@ function getMaps() {
         $detail["D"] = $D;
         $detail["E"] = $E;
         $detail["F"] = $F;
+        list($localA, $localB, $localC, $localD, $localE, $localF) = generateLocalWorldFile($data);
+        $detail["localA"] = $localA;
+        $detail["localB"] = $localB;
+        $detail["localC"] = $localC;
+        $detail["localD"] = $localD;
+        $detail["localE"] = $localE;
+        $detail["localF"] = $localF;
+
         // make sure it worked OK
         if (($E != 0) && ($F != 0)) {
           $detail["georeferenced"] = TRUE;
@@ -1327,6 +1341,12 @@ function getMaps() {
         $detail["D"] = 0;
         $detail["E"] = 0;
         $detail["F"] = 0;
+        $detail["localA"] = 0;
+        $detail["localB"] = 0;
+        $detail["localC"] = 0;
+        $detail["localD"] = 0;
+        $detail["localE"] = 0;
+        $detail["localF"] = 0;
       }
       $output[$row] = $detail;        
       $row++;
@@ -1659,6 +1679,21 @@ function generateCookie() {
   //TODO add error check
   file_put_contents($manager_url."keksi.txt", $keksi);
   return $keksi;  
+}
+
+function generateLocalWorldFile($data) {
+  // looks for local worldfile
+  $file = KARTAT_DIRECTORY."worldfile_".intval($data[0]).".txt";
+  $temp = array();
+  if (file_exists($file)) {
+    $wf = trim(file_get_contents($file));
+    $temp = explode(",", $wf);
+  }
+  if (sizeof($temp) == 6) {
+    return array($temp[0], $temp[1], $temp[2], $temp[3], $temp[4], $temp[5]);
+  } else {
+    return array(0, 0, 0, 0, 0, 0);
+  }
 }
 
 function generateWorldFile($data) {
