@@ -1240,7 +1240,7 @@ function getAllEvents() {
   $output = array();
   $referenced = 0;
   $maps = array();
-  if (($handle = fopen(KARTAT_DIRECTORY."kartat.txt", "r")) !== FALSE) {
+  if (($handle = @fopen(KARTAT_DIRECTORY."kartat.txt", "r")) !== FALSE) {
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
       if (count($data) == 14) {
         list($A, $B, $C, $D, $E, $F) = generateWorldFile($data);
@@ -1261,7 +1261,7 @@ function getAllEvents() {
   }
 
   $row = 0;
-  if (($handle = fopen(KARTAT_DIRECTORY."kisat.txt", "r")) !== FALSE) {
+  if (($handle = @fopen(KARTAT_DIRECTORY."kisat.txt", "r")) !== FALSE) {
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
       $detail = array();
       $detail["id"] = intval($data[0]);
@@ -1304,7 +1304,7 @@ function sortEventsByDate($a, $b) {
 function getMaps() {
   $output = array();
   $row = 0;
-  if (($handle = fopen(KARTAT_DIRECTORY."kartat.txt", "r")) !== FALSE) {
+  if (($handle = @fopen(KARTAT_DIRECTORY."kartat.txt", "r")) !== FALSE) {
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
       $detail = array();
       $detail["mapid"] = intval($data[0]);
