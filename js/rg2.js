@@ -98,7 +98,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.9.0',
+      RG2VERSION: '0.9.1',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -1049,7 +1049,7 @@ var rg2 = ( function() {
       results.deleteAllResults();
       events.setActiveEventID(eventid);
       drawing.initialiseDrawing(events.hasResults(eventid));
-      loadNewMap(rg2Config.maps_url + events.getActiveMapID() + '.jpg');
+      loadNewMap(rg2Config.maps_url + events.getMapFileName());
       redraw(false);
       setTitleBar();
 
@@ -1109,7 +1109,10 @@ var rg2 = ( function() {
         console.log("Results: " + json.data.length);
         $("#rg2-load-progress-label").text(t("Saving results"));
         var isScoreEvent = events.isScoreEvent();
-        results.addResults(json.data, isScoreEvent);
+        // TODO remove temporary (?) fix to get round RG1 events with no courses defined: see #179
+        if (courses.getNumberOfCourses() > 0 ) {
+          results.addResults(json.data, isScoreEvent);
+        }
         courses.setResultsCount();
         if (isScoreEvent) {
           controls.deleteAllControls();
@@ -1132,7 +1135,10 @@ var rg2 = ( function() {
       }).done(function(json) {
         $("#rg2-load-progress-label").text(t("Saving routes"));
         console.log("Tracks: " + json.data.length);
-        results.addTracks(json.data);
+        // TODO remove temporary (?) fix to get round RG1 events with no courses defined: see #179        
+        if (courses.getNumberOfCourses() > 0 ) {
+          results.addTracks(json.data);
+        }
         createCourseMenu();
         createResultMenu();
         animation.updateAnimationDetails();

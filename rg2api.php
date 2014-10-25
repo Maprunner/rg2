@@ -98,16 +98,18 @@ function uploadMapFile() {
     if (is_uploaded_file($_FILES[$filename]['tmp_name'])) {
       $file = $_FILES[$filename];
       if ($file['type'] == 'image/jpeg') {
-        if (move_uploaded_file($file['tmp_name'], KARTAT_DIRECTORY."temp.jpg")) {
+        if (move_uploaded_file($file['tmp_name'], KARTAT_DIRECTORY.'temp.jpg')) {
             $write["ok"] = TRUE;
             $write["status_msg"] = "Map uploaded.";
         }
       }
       if ($file['type'] == 'image/gif') {
         if ($image = imagecreatefromgif($file['tmp_name'])) {
-          if (imagejpeg($image, KARTAT_DIRECTORY."temp.jpg")) {
-            $write["ok"] = TRUE;
-            $write["status_msg"] = "Map uploaded.";
+          if (imagejpeg($image, KARTAT_DIRECTORY.'temp.jpg')) {
+            if (move_uploaded_file($file['tmp_name'], KARTAT_DIRECTORY.'temp.gif')) {
+              $write['ok'] = TRUE;
+              $write['status_msg'] = "Map uploaded.";
+            }
           }
         }
       }
@@ -948,19 +950,33 @@ function addNewMap($data) {
       $oldid = intval($olddata[0]);
     }
     $newid = $oldid + 1;
-	} else {
-		// creat empty kartat file
-		$newid = 1;
-		$handle = @fopen(KARTAT_DIRECTORY."kartat.txt", "w+");
-	}
-  $renameFile = rename(KARTAT_DIRECTORY."temp.jpg", KARTAT_DIRECTORY.$newid.".jpg");
-  if ($renameFile) {
+  } else {
+	// create empty kartat file
+	$newid = 1;
+	$handle = @fopen(KARTAT_DIRECTORY."kartat.txt", "w+");
+  }
+  // may not have a GIF
+  if (file_exists(KARTAT_DIRECTORY."temp.gif")) {
+    $renameGIF = rename(KARTAT_DIRECTORY."temp.gif", KARTAT_DIRECTORY.$newid.".gif");      
+  } else {
+    $renameGIF = TRUE;
+  }
+  // always need a JPG for original Routegadget to maintain backward compatibility 
+  $renameJPG = rename(KARTAT_DIRECTORY."temp.jpg", KARTAT_DIRECTORY.$newid.".jpg");
+  
+  if (($renameJPG && $renameGIF)) {
     $newmap = $newid."|".encode_rg_output($data->name);
-    if ($data->georeferenced) {
+    if ($data->worldfile->valid) {
       $newmap .= "|".$data->xpx[0]."|".$data->lon[0]."|".$data->ypx[0]."|".$data->lat[0];
       $newmap .= "|".$data->xpx[1]."|".$data->lon[1]."|".$data->ypx[1]."|".$data->lat[1];
       $newmap .= "|".$data->xpx[2]."|".$data->lon[2]."|".$data->ypx[2]."|".$data->lat[2];
     }
+    if ($data->localworldfile->valid) {
+      // save local worldfile for use in aligning georeferenced courses
+      $wf =$data->localworldfile->A.",".$data->localworldfile->B.",".$data->localworldfile->C.",".$data->localworldfile->D.",".$data->localworldfile->E.",".$data->localworldfile->F.PHP_EOL; 
+      @file_put_contents(KARTAT_DIRECTORY."worldfile_".$newid.".txt", $wf);
+    }
+
     $newmap .= PHP_EOL;
     $write["newid"] = $newid;
     $status =fwrite($handle, $newmap);    
@@ -1224,7 +1240,7 @@ function getAllEvents() {
   $output = array();
   $referenced = 0;
   $maps = array();
-  if (($handle = fopen(KARTAT_DIRECTORY."kartat.txt", "r")) !== FALSE) {
+  if (($handle = @fopen(KARTAT_DIRECTORY."kartat.txt", "r")) !== FALSE) {
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
       if (count($data) == 14) {
         list($A, $B, $C, $D, $E, $F) = generateWorldFile($data);
@@ -1245,11 +1261,14 @@ function getAllEvents() {
   }
 
   $row = 0;
-  if (($handle = fopen(KARTAT_DIRECTORY."kisat.txt", "r")) !== FALSE) {
+  if (($handle = @fopen(KARTAT_DIRECTORY."kisat.txt", "r")) !== FALSE) {
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
       $detail = array();
       $detail["id"] = intval($data[0]);
       $detail["mapid"] = intval($data[1]);
+      if (file_exists(KARTAT_DIRECTORY.$detail["mapid"].'.gif')) {
+        $detail["suffix"] = 'gif';          
+      }
       for ($i = 0; $i < $referenced; $i++) {
         if ($detail["mapid"] == $maps[$i]["mapid"]) {
           $detail["A"] = $maps[$i]["A"];
@@ -1285,11 +1304,15 @@ function sortEventsByDate($a, $b) {
 function getMaps() {
   $output = array();
   $row = 0;
-  if (($handle = fopen(KARTAT_DIRECTORY."kartat.txt", "r")) !== FALSE) {
+  if (($handle = @fopen(KARTAT_DIRECTORY."kartat.txt", "r")) !== FALSE) {
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
       $detail = array();
       $detail["mapid"] = intval($data[0]);
       $detail["name"] = encode_rg_input($data[1]);
+      // defaults to jpg so only need to say if we have something else as well
+      if (file_exists(KARTAT_DIRECTORY.$detail['mapid'].'.gif')) {
+        $detail["mapfilename"] = $detail['mapid'].'.gif';
+      }
       $detail["georeferenced"] = FALSE;
       if (count($data) == 14) {
         list($A, $B, $C, $D, $E, $F) = generateWorldFile($data);
@@ -1299,6 +1322,14 @@ function getMaps() {
         $detail["D"] = $D;
         $detail["E"] = $E;
         $detail["F"] = $F;
+        list($localA, $localB, $localC, $localD, $localE, $localF) = generateLocalWorldFile($data);
+        $detail["localA"] = $localA;
+        $detail["localB"] = $localB;
+        $detail["localC"] = $localC;
+        $detail["localD"] = $localD;
+        $detail["localE"] = $localE;
+        $detail["localF"] = $localF;
+
         // make sure it worked OK
         if (($E != 0) && ($F != 0)) {
           $detail["georeferenced"] = TRUE;
@@ -1310,6 +1341,12 @@ function getMaps() {
         $detail["D"] = 0;
         $detail["E"] = 0;
         $detail["F"] = 0;
+        $detail["localA"] = 0;
+        $detail["localB"] = 0;
+        $detail["localC"] = 0;
+        $detail["localD"] = 0;
+        $detail["localE"] = 0;
+        $detail["localF"] = 0;
       }
       $output[$row] = $detail;        
       $row++;
@@ -1642,6 +1679,21 @@ function generateCookie() {
   //TODO add error check
   file_put_contents($manager_url."keksi.txt", $keksi);
   return $keksi;  
+}
+
+function generateLocalWorldFile($data) {
+  // looks for local worldfile
+  $file = KARTAT_DIRECTORY."worldfile_".intval($data[0]).".txt";
+  $temp = array();
+  if (file_exists($file)) {
+    $wf = trim(file_get_contents($file));
+    $temp = explode(",", $wf);
+  }
+  if (sizeof($temp) == 6) {
+    return array($temp[0], $temp[1], $temp[2], $temp[3], $temp[4], $temp[5]);
+  } else {
+    return array(0, 0, 0, 0, 0, 0);
+  }
 }
 
 function generateWorldFile($data) {
