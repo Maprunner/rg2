@@ -1,9 +1,10 @@
 # Routegadget 2
 
 ## Latest news
-Version 0.9.0 was released on 10 October 2014 and has been installed on all routegadget.co.uk sites. No major changes but a few minor enhancements and bug corrections.
+Version 0.9.1 was released on 25 October 2014 and has been installed on all routegadget.co.uk sites. The two main changes are improvements in manager functionality.
 
-Norwegian and German translations are now included. Select from the available languages on the Configuration Options screen.
+* If you upload the map file as a GIF then this is kept, rather than being converted to a JPG file. This should allow much smaller map image files to be used. A JPG file is also stored for compatibility with RG1.
+* Georeferencing information is now saved for each map. Georeferenced course files should now be aligned correctly each time you use the map, rather than just at the time you upload it.
 
 ## User Guide and Introductory Videos
 
