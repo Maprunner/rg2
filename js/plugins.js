@@ -112,6 +112,9 @@ function getSecsFromHHMMSS(time) {
 // but may also get hh:mm:ss sometimes
 // so allow for both based on number of :
 function getSecsFromMMSS(time) {
+  if (!time) {
+		return 0;
+  }
   var secs = 0;
   var bits = time.split(":");
   if (bits.length === 2) {
