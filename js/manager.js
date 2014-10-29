@@ -1,14 +1,8 @@
 /*global rg2:false */
 /*global rg2Config:false */
 /*global Controls:false */
-/*global getAngle:false */
-/*global rg2WarningDialog:false */
 /*global FormData:false */
 /*global Proj4js:false */
-/*global getLatLonDistance:false */
-/*global getSecsFromHHMMSS: false */
-/*global getSecsFromMMSS: false */
-/*global formatSecsAsMMSS: false */
 function User(keksi) {
 	this.x = "";
 	this.y = keksi;
@@ -317,7 +311,7 @@ Manager.prototype = {
 				$('#rg2-new-course-name').val('Course');
 				$('#rg2-draw-courses').show();
 			} else {
-				rg2WarningDialog("No map selected", "Please load a map before drawing courses");
+				rg2.showWarningDialog("No map selected", "Please load a map before drawing courses");
 			}
 		});
 
@@ -581,7 +575,7 @@ Manager.prototype = {
 	confirmCreateEvent : function() {
 		var valid = this.validateData();
 		if (valid !== 'OK') {
-			rg2WarningDialog("Data missing", valid + " Please enter all necessary information before creating the event.");
+			rg2.showWarningDialog("Data missing", valid + " Please enter all necessary information before creating the event.");
 			return;
 		}
 		var msg = "<div id='event-create-dialog'>Are you sure you want to create this event?</div>";
@@ -667,9 +661,9 @@ Manager.prototype = {
 				// save new cookie
 				self.user.y = data.keksi;
 				if (data.ok) {
-					rg2WarningDialog("Event created", self.eventName + " has been added with id " + data.newid + ".");
+					rg2.showWarningDialog("Event created", self.eventName + " has been added with id " + data.newid + ".");
 				} else {
-					rg2WarningDialog("Save failed", data.status_msg + ". Failed to create event. Please try again.");
+					rg2.showWarningDialog("Save failed", data.status_msg + ". Failed to create event. Please try again.");
 				}
 			},
 			error : function(jqXHR, textStatus, errorThrown) {
@@ -811,9 +805,9 @@ Manager.prototype = {
 				// save new cookie
 				self.user.y = data.keksi;
 				if (data.ok) {
-					rg2WarningDialog("Event updated", "Event " + id + " has been updated.");
+					rg2.showWarningDialog("Event updated", "Event " + id + " has been updated.");
 				} else {
-					rg2WarningDialog("Update failed", data.status_msg + ". Event update failed. Please try again.");
+					rg2.showWarningDialog("Update failed", data.status_msg + ". Event update failed. Please try again.");
 				}
 			},
 			error : function(jqXHR, textStatus, errorThrown) {
@@ -900,9 +894,9 @@ Manager.prototype = {
 				var msg;
 				self.user.y = data.keksi;
 				if (data.ok) {
-					rg2WarningDialog("Route deleted", "Route " + routeid + " has been deleted.");
+					rg2.showWarningDialog("Route deleted", "Route " + routeid + " has been deleted.");
 				} else {
-					rg2WarningDialog("Delete failed", data.status_msg + ". Delete failed. Please try again.");
+					rg2.showWarningDialog("Delete failed", data.status_msg + ". Delete failed. Please try again.");
 				}
 			},
 			error : function(jqXHR, textStatus, errorThrown) {
@@ -954,12 +948,12 @@ Manager.prototype = {
 				// save new cookie
 				self.user.y = data.keksi;
 				if (data.ok) {
-					rg2WarningDialog("Event deleted", "Event " + id + " has been deleted.");
+					rg2.showWarningDialog("Event deleted", "Event " + id + " has been deleted.");
 					rg2.loadEventList();
 					self.setEvent();
 					$("#rg2-event-selected").empty();
 				} else {
-					rg2WarningDialog("Delete failed", data.status_msg + ". Event delete failed. Please try again.");
+					rg2.showWarningDialog("Delete failed", data.status_msg + ". Event delete failed. Please try again.");
 				}
 			},
 			error : function(jqXHR, textStatus, errorThrown) {
@@ -1001,7 +995,7 @@ Manager.prototype = {
 				break;
 			default:
 				// shouldn't ever get here but...
-				rg2WarningDialog("File type error", "Results file type is not recognised. Please select a valid file.");
+				rg2.showWarningDialog("File type error", "Results file type is not recognised. Please select a valid file.");
 				return;
 			}
 			// extract courses from results
@@ -1014,7 +1008,7 @@ Manager.prototype = {
 			this.resultsFileFormat = format;
 			reader.readAsText(evt.target.files[0]);
 		} else {
-			rg2WarningDialog("File type error", "Results file type is not recognised. Please select a valid file.");
+			rg2.showWarningDialog("File type error", "Results file type is not recognised. Please select a valid file.");
 		}
 	},
 
@@ -1040,7 +1034,7 @@ Manager.prototype = {
 				}
 			}
 		} catch (err) {
-			rg2WarningDialog("XML file error", "File is not a valid XML results file.");
+			rg2.showWarningDialog("XML file error", "File is not a valid XML results file.");
 			return;
 		}
 
@@ -1052,7 +1046,7 @@ Manager.prototype = {
 			this.processIOFV3XMLResults(xml);
 			break;
 		default:
-			rg2WarningDialog("XML file error", 'Invalid IOF file format. Version ' + version + ' not supported.');
+			rg2.showWarningDialog("XML file error", 'Invalid IOF file format. Version ' + version + ' not supported.');
 		}
 	},
 
@@ -1098,7 +1092,7 @@ Manager.prototype = {
 						temp = resultlist[k].getElementsByTagName('StartTime');
 						if (temp.length > 0) {
 							time = temp[0].getElementsByTagName('Clock')[0].textContent;
-							result.starttime = getSecsFromHHMMSS(time);
+							result.starttime = rg2.getSecsFromHHMMSS(time);
 						} else {
 							result.starttime = 0;
 						}
@@ -1116,9 +1110,9 @@ Manager.prototype = {
 								// allow for XML files that don't tell you what is going on
 								// count all colons in time string
 								if ((temp[0].textContent.match(/:/g) || []).length > 1) {
-									result.splits += getSecsFromHHMMSS(temp[0].textContent);
+									result.splits += rg2.getSecsFromHHMMSS(temp[0].textContent);
 								} else {
-									result.splits += getSecsFromMMSS(temp[0].textContent);
+									result.splits += rg2.getSecsFromMMSS(temp[0].textContent);
 								}
 								temp = splitlist[l].getElementsByTagName('ControlCode');
 								if (temp.length > 0) {
@@ -1136,7 +1130,7 @@ Manager.prototype = {
 						temp = resultlist[k].getElementsByTagName('FinishTime');
 						if (temp.length > 0) {
 							time = temp[0].getElementsByTagName('Clock')[0].textContent;
-							result.splits += getSecsFromHHMMSS(time) - result.starttime;
+							result.splits += rg2.getSecsFromHHMMSS(time) - result.starttime;
 						} else {
 							result.splits += 0;
 						}
@@ -1146,7 +1140,7 @@ Manager.prototype = {
 
 			}
 		} catch(err) {
-			rg2WarningDialog("XML parse error", "Error processing XML file. Error is : " + err.message);
+			rg2.showWarningDialog("XML parse error", "Error processing XML file. Error is : " + err.message);
 			return;
 		}
 
@@ -1205,7 +1199,7 @@ Manager.prototype = {
 						// this one is in seconds and might even have tenths...
 						temp = resultlist[k].getElementsByTagName('Time');
 						if (temp.length > 0) {
-							result.time = formatSecsAsMMSS(parseInt(temp[0].textContent, 10));
+							result.time = rg2.formatSecsAsMMSS(parseInt(temp[0].textContent, 10));
 						} else {
 							result.time = 0;
 						}
@@ -1214,7 +1208,7 @@ Manager.prototype = {
 							temp2 = temp[0].textContent;
 							if (temp2.length >= 19) {
 								// format is yyyy-mm-ddThh:mm:ss and might have extra Z or +nn
-								result.starttime = getSecsFromHHMMSS(temp2.substr(11, 8));
+								result.starttime = rg2.getSecsFromHHMMSS(temp2.substr(11, 8));
 							} else {
 								result.starttime = 0;
 							}
@@ -1250,7 +1244,7 @@ Manager.prototype = {
 							temp2 = temp[0].textContent;
 							if (temp2.length >= 19) {
 								// format is yyyy-mm-ddThh:mm:ss and might have extra Z or +nn
-								time = getSecsFromHHMMSS(temp2.substr(11, 8));
+								time = rg2.getSecsFromHHMMSS(temp2.substr(11, 8));
 							} else {
 								time = 0;
 							}
@@ -1264,7 +1258,7 @@ Manager.prototype = {
 
 			}
 		} catch(err) {
-			rg2WarningDialog("XML parse error", "Error processing XML file. Error is : " + err.message);
+			rg2.showWarningDialog("XML parse error", "Error processing XML file. Error is : " + err.message);
 			return;
 		}
 
@@ -1276,13 +1270,13 @@ Manager.prototype = {
 		reader.onerror = function(evt) {
 			switch(evt.target.error.code) {
 			case evt.target.error.NOT_FOUND_ERR:
-				rg2WarningDialog('File not found', 'The selected file could not be found.');
+				rg2.showWarningDialog('File not found', 'The selected file could not be found.');
 				break;
 			case evt.target.error.NOT_READABLE_ERR:
-				rg2WarningDialog('File not readable', 'The selected file could not be read.');
+				rg2.showWarningDialog('File not readable', 'The selected file could not be read.');
 				break;
 			default:
-				rg2WarningDialog('File error.', 'The selected file could not be read.');
+				rg2.showWarningDialog('File error.', 'The selected file could not be read.');
 			}
 		};
 		var self = this;
@@ -1325,7 +1319,7 @@ Manager.prototype = {
 				}
 			}
 		} catch (err) {
-			rg2WarningDialog("XML file error", "File is not a valid XML event file.");
+			rg2.showWarningDialog("XML file error", "File is not a valid XML event file.");
 			return;
 		}
 
@@ -1337,7 +1331,7 @@ Manager.prototype = {
 			this.processIOFV3XML(xml);
 			break;
 		default:
-			rg2WarningDialog("XML file error", 'Invalid IOF file format. Version ' + version + ' not supported.');
+			rg2.showWarningDialog("XML file error", 'Invalid IOF file format. Version ' + version + ' not supported.');
 		}
 	},
 
@@ -1555,7 +1549,7 @@ Manager.prototype = {
 				// delete quotes from CSV file: output from MERCS
 				result.name = (fields[i][FIRST_NAME_IDX] + " " + fields[i][SURNAME_IDX]).trim().replace(/\"/g, '');
 				result.dbid = (fields[i][DB_IDX] + "__" + result.name).replace(/\"/g, '');
-				result.starttime = getSecsFromHHMMSS(fields[i][START_TIME_IDX]);
+				result.starttime = rg2.getSecsFromHHMMSS(fields[i][START_TIME_IDX]);
 				result.time = fields[i][TOTAL_TIME_IDX];
 				result.club = fields[i][CLUB_IDX];
 				// if club name not set then it may be in city field instead
@@ -1573,13 +1567,13 @@ Manager.prototype = {
 						result.splits += ";";
 					}
 					result.codes[j] = fields[i][nextcode];
-					result.splits += getSecsFromMMSS(fields[i][nextsplit]);
+					result.splits += rg2.getSecsFromMMSS(fields[i][nextsplit]);
 					nextsplit += SPLIT_IDX_STEP;
 					nextcode += CODE_IDX_STEP;
 				}
 				// add finish split
 				result.splits += ";";
-				result.splits += getSecsFromMMSS(result.time);
+				result.splits += rg2.getSecsFromMMSS(result.time);
 				this.results.push(result);
 			}
 		}
@@ -1598,7 +1592,7 @@ Manager.prototype = {
 			this.mapFile = evt.target.files[0];
 			reader.readAsDataURL(evt.target.files[0]);
 		} else {
-			rg2WarningDialog("File type error", evt.target.files[0].name + " is not recognised. Only .jpg and .gif files are supported at present.");
+			rg2.showWarningDialog("File type error", evt.target.files[0].name + " is not recognised. Only .jpg and .gif files are supported at present.");
 		}
 	},
 
@@ -1940,7 +1934,7 @@ Manager.prototype = {
 				if (data.ok) {
 					self.doAddMap();
 				} else {
-					rg2WarningDialog("Save failed", data.status_msg + ". Failed to save map. Please try again.");
+					rg2.showWarningDialog("Save failed", data.status_msg + ". Failed to save map. Please try again.");
 				}
 			},
 			error : function(jqXHR, textStatus, errorThrown) {
@@ -1969,11 +1963,11 @@ Manager.prototype = {
 				// save new cookie
 				self.user.y = data.keksi;
 				if (data.ok) {
-					rg2WarningDialog("Map added", self.newMap.name + " has been added with id " + data.newid + ".");
+					rg2.showWarningDialog("Map added", self.newMap.name + " has been added with id " + data.newid + ".");
 					// update map dropdown
 					self.getMaps();
 				} else {
-					rg2WarningDialog("Save failed", data.status_msg + ". Failed to save map. Please try again.");
+					rg2.showWarningDialog("Save failed", data.status_msg + ". Failed to save map. Please try again.");
 				}
 			},
 			error : function(jqXHR, textStatus, errorThrown) {
@@ -1990,7 +1984,7 @@ Manager.prototype = {
 		try {
 			reader.readAsText(evt.target.files[0]);
 		} catch(err) {
-			rg2WarningDialog("File read error", "Failed to open selected world file.");
+			rg2.showWarningDialog("File read error", "Failed to open selected world file.");
 			return;
 		}
 
@@ -2092,12 +2086,12 @@ Manager.prototype = {
 				//console.log(p[i].x, p[i].y);
 			}
 
-			var hypot = getLatLonDistance(p[0].y, p[0].x, p[2].y, p[2].x);
-			var adj = getLatLonDistance(p[0].y, p[0].x, p[0].y, p[2].x);
+			var hypot = rg2.getLatLonDistance(p[0].y, p[0].x, p[2].y, p[2].x);
+			var adj = rg2.getLatLonDistance(p[0].y, p[0].x, p[0].y, p[2].x);
 			var angle1 = Math.acos(adj / hypot);
 
-			var hypot2 = getLatLonDistance(p[2].y, p[2].x, p[1].y, p[1].x);
-			var adj2 = getLatLonDistance(p[2].y, p[2].x, p[1].y, p[2].x);
+			var hypot2 = rg2.getLatLonDistance(p[2].y, p[2].x, p[1].y, p[1].x);
+			var adj2 = rg2.getLatLonDistance(p[2].y, p[2].x, p[1].y, p[2].x);
 			var angle2 = Math.acos(adj2 / hypot2);
 
 			var angle = (angle1 + angle2) / 2;

@@ -1,11 +1,8 @@
 /*global rg2:false */
-/*global formatSecsAsMMSS:false */
 /*global clearInterval:false */
 /*global setInterval:false */
 /*global Runner:false */
 /*global t:false */
-/*global getLatLonDistance:false */
-/*global getDistanceBetweenPoints:false */
  function Animation() {
 	'use strict';
 	this.runners = [];
@@ -122,13 +119,13 @@ Animation.prototype = {
 
     if (rg2.mapIsGeoreferenced()) {
       size = rg2.getMapSize();
-      pixels = getDistanceBetweenPoints(0, 0, size.width, size.height);
+      pixels = rg2.getDistanceBetweenPoints(0, 0, size.width, size.height);
       w = rg2.getWorldFile();
       lon1 = w.C;
       lat1 = w.F;
       lon2 = (w.A * size.width) + (w.B * size.height) + w.C;
       lat2 = (w.D * size.width) + (w.E * size.height) + w.F;
-      metres = getLatLonDistance(lat1, lon1, lat2, lon2);
+      metres = rg2.getLatLonDistance(lat1, lon1, lat2, lon2);
       metresPerPixel = metres / pixels;
       units = "metres";
     } else {
@@ -158,13 +155,13 @@ Animation.prototype = {
 			prevControlSecs = 0;
 			html += "<tr class='splitsname-row'><td>" + run.coursename + "</td><td>" + run.name + "</td>";
 			for ( j = 1; j < run.splits.length; j += 1) {
-				html += "<td>" + formatSecsAsMMSS(run.splits[j]) + "</td>";
+				html += "<td>" + rg2.formatSecsAsMMSS(run.splits[j]) + "</td>";
 				legSplit[j] = run.splits[j] - prevControlSecs;
 				prevControlSecs = run.splits[j];
 			}
 			html += "</tr><tr class='splitstime-row'><td></td><td></td>";
 			for ( j = 1; j < run.splits.length; j += 1) {
-				html += "<td>" + formatSecsAsMMSS(legSplit[j]) + "</td>";
+				html += "<td>" + rg2.formatSecsAsMMSS(legSplit[j]) + "</td>";
 			}
 			html += "</tr><tr class='splitsdistance-row'><td></td><td>" + Math.round(metresPerPixel * run.cumulativeTrackDistance[run.cumulativeTrackDistance.length - 1]) + " " + units + "</td>";
 			for ( j = 1; j < run.splits.length; j += 1) {

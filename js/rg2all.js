@@ -1,4 +1,4 @@
-// Version 0.9.1 2014-10-25T09:22:43;
+// Version 0.9.2 2014-10-29T09:25:11;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -14,16 +14,13 @@
 /*global Event:false */
 /*global Courses:false */
 /*global Controls:false */
-/*global Colours:false */
 /*global Results:false */
 /*global Animation:false */
 /*global Draw:false */
 /*global Manager:false */
 /*global Runner:false */
 /*global Course:false */
-/*global trackTransforms:false */
 /*global getDistanceBetweenPoints:false */
-/*global rg2WarningDialog:false */
 /*global setTimeout:false */
 /*global localStorage:false */
 var rg2 = ( function() {
@@ -99,7 +96,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.9.1',
+      RG2VERSION: '0.9.2',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -118,6 +115,28 @@ var rg2 = ( function() {
       showThreeSeconds: false,
       showGPSSpeed: false
     };
+
+		Number.prototype.toRad = function() {
+			return this * Math.PI / 180;
+		};
+
+		function Colours() {
+		// used to generate track colours: add extra colours as necessary
+		this.colours = ["#ff0000", "#ff8000",  "#ff00ff", "#ff0080", "#008080", "#008000", "#00ff00", "#0080ff", "#0000ff", "#8000ff", "#00ffff", "#808080"];
+		this.colourIndex = 0;
+		}
+
+		Colours.prototype = {
+			Constructor : Colours,
+
+			getNextColour : function() {
+				this.colourIndex += 1;
+				if (this.colourIndex === this.colours.length) {
+					this.colourIndex = 0;
+				}
+				return this.colours[this.colourIndex];
+			}
+		};
 
     function init() {
       $("#rg2-container").hide();
@@ -523,7 +542,7 @@ var rg2 = ( function() {
             // best to keep this at default?
             options.circleSize = 20;
             if (options.mapIntensity === 0) {
-              rg2WarningDialog("Warning", "Your saved settings have 0% map intensity so the map is invisible. You can adjust this on the configuration menu");
+              rg2.showWarningDialog("Warning", "Your saved settings have 0% map intensity so the map is invisible. You can adjust this on the configuration menu");
             }
           }
         }
@@ -654,7 +673,7 @@ var rg2 = ( function() {
     function reportJSONFail(errorText) {
       $("#rg2-load-progress").hide();
       $('body').css('cursor', 'auto');
-      rg2WarningDialog('Configuration error', errorText);
+      rg2.showWarningDialog('Configuration error', errorText);
     }
     
     function loadEventList() {
@@ -1004,6 +1023,83 @@ var rg2 = ( function() {
       redraw(false);
     };
     
+    // Adds ctx.getTransform() - returns an SVGMatrix
+		// Adds ctx.transformedPoint(x,y) - returns an SVGPoint
+		function trackTransforms(ctx) {
+			var svg = document.createElementNS("http://www.w3.org/2000/svg", 'svg');
+				var xform = svg.createSVGMatrix();
+				ctx.getTransform = function() {
+				return xform;
+			};
+
+			var savedTransforms = [];
+			var save = ctx.save;
+			ctx.save = function() {
+				savedTransforms.push(xform.translate(0, 0));
+				return save.call(ctx);
+			};
+			var restore = ctx.restore;
+			ctx.restore = function() {
+				xform = savedTransforms.pop();
+				return restore.call(ctx);
+			};
+			var scale = ctx.scale;
+			ctx.scale = function(sx, sy) {
+				xform = xform.scaleNonUniform(sx, sy);
+				return scale.call(ctx, sx, sy);
+			};
+			var rotate = ctx.rotate;
+			ctx.rotate = function(radians) {
+				xform = xform.rotate(radians * 180 / Math.PI);
+				return rotate.call(ctx, radians);
+			};
+			var translate = ctx.translate;
+			ctx.translate = function(dx, dy) {
+				xform = xform.translate(dx, dy);
+				return translate.call(ctx, dx, dy);
+			};
+			var transform = ctx.transform;
+			ctx.transform = function(a, b, c, d, e, f) {
+			var m2 = svg.createSVGMatrix();
+				m2.a = a;
+				m2.b = b;
+				m2.c = c;
+				m2.d = d;
+				m2.e = e;
+				m2.f = f;
+				xform = xform.multiply(m2);
+			return transform.call(ctx, a, b, c, d, e, f);
+			};
+			var setTransform = ctx.setTransform;
+			ctx.setTransform = function(a, b, c, d, e, f) {
+				xform.a = a;
+				xform.b = b;
+				xform.c = c;
+				xform.d = d;
+				xform.e = e;
+				xform.f = f;
+				return setTransform.call(ctx, a, b, c, d, e, f);
+			};
+			var pt = svg.createSVGPoint();
+			ctx.transformedPoint = function(x, y) {
+				pt.x = x;
+				pt.y = y;
+				return pt.matrixTransform(xform.inverse());
+			};
+		}
+		
+		function showWarningDialog(title, text) {
+			var msg = '<div>' + text + '</div>';
+			$(msg).dialog({
+			title : title
+			});
+		}
+		
+		function getDistanceBetweenPoints(x1, y1, x2, y2) {
+			// Pythagoras
+			return Math.sqrt(Math.pow((x1 - x2), 2) + Math.pow((y1 - y2), 2));
+		}
+    
     function getEventStats() {
       var stats;
       var coursearray;
@@ -1228,6 +1324,78 @@ var rg2 = ( function() {
         redraw(false);
       });
     }
+       
+		function getAngle(x1, y1, x2, y2) {
+			var angle = Math.atan2((y2 - y1), (x2 - x1));
+			if (angle < 0) {
+				angle = angle + (2 * Math.PI);
+			}
+			return angle;
+		}
+			
+		function getLatLonDistance(lat1, lon1, lat2, lon2) {
+			// Haversine formula (http://www.codecodex.com/wiki/Calculate_distance_between_two_points_on_a_globe)
+			var x = lat2 - lat1;
+			var dLat = x.toRad();
+			var y = lon2 - lon1;
+			var dLon = y.toRad();
+			var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos((lat1).toRad()) * Math.cos((lat2.toRad())) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+			var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+			// multiply by IUUG earth mean radius (http://en.wikipedia.org/wiki/Earth_radius) in metres
+			return 6371009 * c;
+		}
+
+		// converts MM:SS to seconds
+		// but may also get hh:mm:ss sometimes
+		// so allow for both based on number of :
+		function getSecsFromMMSS(time) {
+			if (!time) {
+				return 0;
+			}
+			var secs = 0;
+			var bits = time.split(":");
+			if (bits.length === 2) {
+				secs = (parseInt(bits[0], 10) * 60) + parseInt(bits[1], 10);
+			} else {
+				if (bits.length === 3) {
+					secs = (parseInt(bits[0], 10) * 3600) + (parseInt(bits[1], 10) * 60) + parseInt(bits[2], 10);
+				}
+			}
+			if (isNaN(secs)) {
+				return 0;
+			} else {
+				return secs;
+			}
+		}
+
+		function getSecsFromHHMMSS(time) {
+			if (!time) {
+				return 0;
+			}
+			var secs = 0;
+			var bits = time.split(":");
+			secs = (parseInt(bits[0], 10) * 3600) + (parseInt(bits[1], 10) * 60) + parseInt(bits[2], 10);
+			if (isNaN(secs)) {
+				return 0;
+			} else {
+				return secs;
+			}
+		}
+		
+		// converts seconds to MM:SS
+		function formatSecsAsMMSS(secs) {
+			var formattedtime;
+			var minutes = Math.floor(secs / 60);
+			formattedtime = minutes;
+			var seconds = secs - (minutes * 60);
+			if (seconds < 10) {
+				formattedtime += ":0" + seconds;
+			} else {
+				formattedtime += ":" + seconds;
+			}
+			return formattedtime;
+		}
 
     function createResultMenu() {
       //loads menu from populated result array
@@ -1549,7 +1717,14 @@ var rg2 = ( function() {
       getRoutesForEvent: getRoutesForEvent,
       getNextRouteColour: getNextRouteColour,
       updateScoreCourse: updateScoreCourse,
-      getSnapToControl: getSnapToControl
+      getSnapToControl: getSnapToControl,
+      getAngle: getAngle,
+      showWarningDialog: showWarningDialog,
+      getDistanceBetweenPoints: getDistanceBetweenPoints,
+      getSecsFromMMSS: getSecsFromMMSS,
+      getSecsFromHHMMSS: getSecsFromHHMMSS,
+      formatSecsAsMMSS: formatSecsAsMMSS,
+      getLatLonDistance: getLatLonDistance
     };
 
   }());
@@ -1557,13 +1732,10 @@ var rg2 = ( function() {
 $(document).ready(rg2.init);
 
 /*global rg2:false */
-/*global formatSecsAsMMSS:false */
 /*global clearInterval:false */
 /*global setInterval:false */
 /*global Runner:false */
 /*global t:false */
-/*global getLatLonDistance:false */
-/*global getDistanceBetweenPoints:false */
  function Animation() {
 	'use strict';
 	this.runners = [];
@@ -1680,13 +1852,13 @@ Animation.prototype = {
 
     if (rg2.mapIsGeoreferenced()) {
       size = rg2.getMapSize();
-      pixels = getDistanceBetweenPoints(0, 0, size.width, size.height);
+      pixels = rg2.getDistanceBetweenPoints(0, 0, size.width, size.height);
       w = rg2.getWorldFile();
       lon1 = w.C;
       lat1 = w.F;
       lon2 = (w.A * size.width) + (w.B * size.height) + w.C;
       lat2 = (w.D * size.width) + (w.E * size.height) + w.F;
-      metres = getLatLonDistance(lat1, lon1, lat2, lon2);
+      metres = rg2.getLatLonDistance(lat1, lon1, lat2, lon2);
       metresPerPixel = metres / pixels;
       units = "metres";
     } else {
@@ -1716,13 +1888,13 @@ Animation.prototype = {
 			prevControlSecs = 0;
 			html += "<tr class='splitsname-row'><td>" + run.coursename + "</td><td>" + run.name + "</td>";
 			for ( j = 1; j < run.splits.length; j += 1) {
-				html += "<td>" + formatSecsAsMMSS(run.splits[j]) + "</td>";
+				html += "<td>" + rg2.formatSecsAsMMSS(run.splits[j]) + "</td>";
 				legSplit[j] = run.splits[j] - prevControlSecs;
 				prevControlSecs = run.splits[j];
 			}
 			html += "</tr><tr class='splitstime-row'><td></td><td></td>";
 			for ( j = 1; j < run.splits.length; j += 1) {
-				html += "<td>" + formatSecsAsMMSS(legSplit[j]) + "</td>";
+				html += "<td>" + rg2.formatSecsAsMMSS(legSplit[j]) + "</td>";
 			}
 			html += "</tr><tr class='splitsdistance-row'><td></td><td>" + Math.round(metresPerPixel * run.cumulativeTrackDistance[run.cumulativeTrackDistance.length - 1]) + " " + units + "</td>";
 			for ( j = 1; j < run.splits.length; j += 1) {
@@ -2240,7 +2412,6 @@ Control.prototype = {
 	Constructor : Control
 };
 /*global rg2:false */
-/*global getAngle:false */
 function Courses() {
 	// indexed by the provided courseid which omits 0 and hence a sparse array
 	// careful when iterating or getting length!
@@ -2523,13 +2694,13 @@ Course.prototype = {
 				// align score event start triangle upwards
 				angle = Math.PI * 3 / 2;
 			} else {
-				angle = getAngle(this.x[0], this.y[0], this.x[1], this.y[1]);
+				angle = rg2.getAngle(this.x[0], this.y[0], this.x[1], this.y[1]);
 			}
 			rg2.drawStart(this.x[0], this.y[0], "", angle, opt);
       // don't join up controls for score events
       if (!this.isScoreCourse) {
         for ( i = 0; i < (this.x.length - 1); i += 1) {
-          angle = getAngle(this.x[i], this.y[i], this.x[i + 1], this.y[i + 1]);
+          angle = rg2.getAngle(this.x[i], this.y[i], this.x[i + 1], this.y[i + 1]);
           if (i === 0) {
             c1x = this.x[i] + (opt.startTriangleLength * Math.cos(angle));
             c1y = this.y[i] + (opt.startTriangleLength * Math.sin(angle));
@@ -2573,11 +2744,6 @@ Course.prototype = {
 /*global rg2:false */
 /*global rg2Config:false */
 /*global GPSTrack:false */
-/*global getAngle:false */
-/*global formatSecsAsMMSS:false */
-/*global getSecsFromMMSS:false */
-/*global rg2WarningDialog:false */
-/*global getDistanceBetweenPoints:false */
 // handle drawing of a new route
 function Draw() {
   this.trackColor = '#ff0000';
@@ -2681,7 +2847,7 @@ Draw.prototype = {
       if ((trk.routeData.resultid !== null) && (trk.routeData.courseid !== null)) {
         this.addNewPoint(x, y);
       } else {
-        rg2WarningDialog('No course/name', 'Please select course, name and time before you start drawing a route or upload a file.');
+        rg2.showWarningDialog('No course/name', 'Please select course, name and time before you start drawing a route or upload a file.');
       }
     }
   },
@@ -2879,7 +3045,7 @@ Draw.prototype = {
     if (!isNaN(resultid)) {
       res = rg2.getFullResult(resultid);
       if (res.hasValidTrack) {
-        rg2WarningDialog("Route already drawn", "If you draw a new route it will overwrite the old route for this runner. GPS routes are saved separately and will not be overwritten.");
+        rg2.showWarningDialog("Route already drawn", "If you draw a new route it will overwrite the old route for this runner. GPS routes are saved separately and will not be overwritten.");
       }
       // remove old course from display just in case we missed it somewhere else
       if (this.gpstrack.routeData.resultid !== null) {
@@ -2927,7 +3093,7 @@ Draw.prototype = {
       this.gpstrack.routeData.resultid = 0;
       this.gpstrack.routeData.totaltime = time;
       this.gpstrack.routeData.startsecs = 0;
-      this.gpstrack.routeData.time[0] = getSecsFromMMSS(time);
+      this.gpstrack.routeData.time[0] = rg2.getSecsFromMMSS(time);
       this.startDrawing();
     }
   },
@@ -3013,7 +3179,7 @@ Draw.prototype = {
     var i;
     var l;
     var t = this.gpstrack.routeData.time[this.gpstrack.routeData.time.length - 1] - this.gpstrack.routeData.time[0];
-    this.gpstrack.routeData.totaltime = formatSecsAsMMSS(t);
+    this.gpstrack.routeData.totaltime = rg2.formatSecsAsMMSS(t);
     // GPS uses UTC: adjust to local time based on local user setting
     // only affects replay in real time
     var date = new Date();
@@ -3076,11 +3242,11 @@ Draw.prototype = {
   },
 
   saveError : function(text) {
-    rg2WarningDialog(this.gpstrack.routeData.name, rg2.t('Your route was not saved. Please try again') + '. ' + text);
+    rg2.showWarningDialog(this.gpstrack.routeData.name, rg2.t('Your route was not saved. Please try again') + '. ' + text);
   },
 
   routeSaved : function(text) {
-    rg2WarningDialog(this.gpstrack.routeData.name, rg2.t('Your route has been saved') + '.');
+    rg2.showWarningDialog(this.gpstrack.routeData.name, rg2.t('Your route has been saved') + '.');
     rg2.loadEvent(rg2.getActiveEventID());
   },
 
@@ -3156,11 +3322,11 @@ Draw.prototype = {
         if (this.pointsLocked === 1)  {
           handle = this.getLockedHandle();
           // scale and rotate track around single locked point
-          oldAngle = getAngle(x1, y1, handle.basex, handle.basey);
-          newAngle = getAngle(x2, y2, handle.basex, handle.basey);
+          oldAngle = rg2.getAngle(x1, y1, handle.basex, handle.basey);
+          newAngle = rg2.getAngle(x2, y2, handle.basex, handle.basey);
           angle = newAngle - oldAngle;
-          scale1 = getDistanceBetweenPoints(x1, y1, handle.basex, handle.basey);
-          scale2 = getDistanceBetweenPoints(x2, y2, handle.basex, handle.basey);
+          scale1 = rg2.getDistanceBetweenPoints(x1, y1, handle.basex, handle.basey);
+          scale2 = rg2.getDistanceBetweenPoints(x2, y2, handle.basex, handle.basey);
           scale = scale2/scale1;
           //console.log (x1, y1, x2, y2, handle.basex, handle.basey, scale, angle);
           for ( i = 0; i < len; i += 1) {
@@ -3213,11 +3379,11 @@ Draw.prototype = {
               toTime = trk.handles[1].time + 1;
             }
             // scale and rotate track around single locked point
-            scale1 = getDistanceBetweenPoints(x1, y1, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
-            scale2 = getDistanceBetweenPoints(x2, y2, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
+            scale1 = rg2.getDistanceBetweenPoints(x1, y1, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
+            scale2 = rg2.getDistanceBetweenPoints(x2, y2, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
             scale = scale2/scale1;
-            oldAngle = getAngle(x1, y1, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
-            newAngle = getAngle(x2, y2, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
+            oldAngle = rg2.getAngle(x1, y1, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
+            newAngle = rg2.getAngle(x2, y2, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
             angle = newAngle - oldAngle;
             //console.log (x1, y1, x2, y2, trk.handles[handle].basex, trk.handles[handle].basey, scale, angle, fromTime, toTime);
             for ( i = fromTime; i < toTime; i += 1) {
@@ -3244,7 +3410,7 @@ Draw.prototype = {
             lockedHandle2 = this.getNextLockedHandle(handle);
             toTime = trk.handles[lockedHandle2].time;
             //console.log("Point (", x1, ", ", y1, ") in middle of ", lockedHandle1, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey, " and ",lockedHandle2, trk.handles[lockedHandle2].basex, trk.handles[lockedHandle2].basey);
-            reverseAngle = getAngle(trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey, trk.handles[lockedHandle2].basex, trk.handles[lockedHandle2].basey);
+            reverseAngle = rg2.getAngle(trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey, trk.handles[lockedHandle2].basex, trk.handles[lockedHandle2].basey);
             angle = (2 * Math.PI) - reverseAngle;
             
             xb = x1 - trk.handles[lockedHandle1].basex;
@@ -3335,7 +3501,7 @@ Draw.prototype = {
     var i;
     var distance;
     for (i = 0; i < this.gpstrack.handles.length; i += 1) {
-      distance = getDistanceBetweenPoints(x, y, this.gpstrack.handles[i].basex, this.gpstrack.handles[i].basey);
+      distance = rg2.getDistanceBetweenPoints(x, y, this.gpstrack.handles[i].basex, this.gpstrack.handles[i].basey);
       if (distance <= this.HANDLE_DOT_RADIUS) {
         return i;
       }
@@ -3680,9 +3846,7 @@ Event.prototype = {
 };
 /*global rg2:false */
 /*global map:false */
-/*global getLatLonDistance:false */
 /*global RouteData:false */
-/*global rg2WarningDialog:false */
 function GPSTrack() {
 	this.lat = [];
 	this.lon = [];
@@ -3723,13 +3887,13 @@ GPSTrack.prototype = {
 		reader.onerror = function(evt) {
 			switch(evt.target.error.code) {
 				case evt.target.error.NOT_FOUND_ERR:
-          rg2WarningDialog('GPS file problem', 'File not found');
+          rg2.showWarningDialog('GPS file problem', 'File not found');
 					break;
 				case evt.target.error.NOT_READABLE_ERR:
-          rg2WarningDialog('GPS file problem', 'File not readable. Please check you have selected the correct file.');
+          rg2.showWarningDialog('GPS file problem', 'File not readable. Please check you have selected the correct file.');
 					break;
 				default:
-          rg2WarningDialog('GPS file problem', 'An error occurred. Please check you have selected the correct file.');
+          rg2.showWarningDialog('GPS file problem', 'An error occurred. Please check you have selected the correct file.');
 			}
 		};
 
@@ -3739,7 +3903,7 @@ GPSTrack.prototype = {
 			var xml;
 			var fileType = self.fileName.slice(-3).toLowerCase();
 			if ((fileType !== 'gpx') && (fileType !== 'tcx')) {
-        rg2WarningDialog('GPS file problem', 'File type not recognised. Please check you have selected the correct file.');
+        rg2.showWarningDialog('GPS file problem', 'File type not recognised. Please check you have selected the correct file.');
         return;
       }
       try {
@@ -3753,7 +3917,7 @@ GPSTrack.prototype = {
         }
         self.processGPSTrack();
       } catch(err) {
-          rg2WarningDialog('GPS file problem', 'File is not valid XML. Please check you have selected the correct file.');
+          rg2.showWarningDialog('GPS file problem', 'File is not valid XML. Please check you have selected the correct file.');
           return;
       }
 			$("#rg2-load-gps-file").button('disable');
@@ -3930,8 +4094,8 @@ GPSTrack.prototype = {
 		// scale GPS track to within bounding box of controls: a reasonable start
 		var scaleX = (maxControlX - minControlX) / (maxLon - minLon);
 		var scaleY = (maxControlY - minControlY) / (maxLat - minLat);
-		var lonCorrection = getLatLonDistance(minLat, maxLon, minLat, minLon) / (maxLon - minLon);
-		var latCorrection = getLatLonDistance(minLat, minLon, maxLat, minLon) / (maxLat - minLat);
+		var lonCorrection = rg2.getLatLonDistance(minLat, maxLon, minLat, minLon) / (maxLon - minLon);
+		var latCorrection = rg2.getLatLonDistance(minLat, minLon, maxLat, minLon) / (maxLat - minLat);
 
 		// don't want to skew track so scale needs to be equal in each direction
 		// so we need to account for differences between a degree of latitude and longitude
@@ -3957,14 +4121,6 @@ GPSTrack.prototype = {
 
 	}
 };
-/* exported getLatLonDistance */
-/* exported getDistanceBetweenPoints */
-/* exported getAngle */
-/* exported rg2WarningDialog */
-/* exported formatSecsAsMMSS */
-/* exported getSecsFromMMSS */
-/* exported getSecsFromHHMMSS */
-/* exported trackTransforms */
 // Avoid `console` errors in browsers that lack a console.
 ( function() {
     var method;
@@ -3984,178 +4140,7 @@ GPSTrack.prototype = {
       }
     }
   }());
-
-function Colours() {
-  // used to generate track colours: add extra colours as necessary
-  this.colours = ["#ff0000", "#ff8000",  "#ff00ff", "#ff0080", "#008080", "#008000", "#00ff00", "#0080ff", "#0000ff", "#8000ff", "#00ffff", "#808080"];
-  this.colourIndex = 0;
-}
-
-Colours.prototype = {
-  Constructor : Colours,
-
-  getNextColour : function() {
-    this.colourIndex += 1;
-    if (this.colourIndex === this.colours.length) {
-      this.colourIndex = 0;
-    }
-    return this.colours[this.colourIndex];
-  }
-};
-
-Number.prototype.toRad = function() {
-  return this * Math.PI / 180;
-};
-
-
-function rg2WarningDialog(title, text) {
-  var msg = '<div>' + text + '</div>';
-  $(msg).dialog({
-    title : title
-  });
-}
-
-function getLatLonDistance(lat1, lon1, lat2, lon2) {
-  // Haversine formula (http://www.codecodex.com/wiki/Calculate_distance_between_two_points_on_a_globe)
-  var x = lat2 - lat1;
-  var dLat = x.toRad();
-  var y = lon2 - lon1;
-  var dLon = y.toRad();
-  var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos((lat1).toRad()) * Math.cos((lat2.toRad())) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-  // multiply by IUUG earth mean radius (http://en.wikipedia.org/wiki/Earth_radius) in metres
-  return 6371009 * c;
-}
-
-function getAngle(x1, y1, x2, y2) {
-  var angle = Math.atan2((y2 - y1), (x2 - x1));
-  if (angle < 0) {
-    angle = angle + (2 * Math.PI);
-  }
-  return angle;
-}
-
-function getDistanceBetweenPoints(x1, y1, x2, y2) {
-  // Pythagoras
-  return Math.sqrt(Math.pow((x1 - x2), 2) + Math.pow((y1 - y2), 2));
-}
-
-// converts seconds to MM:SS
-function formatSecsAsMMSS(secs) {
-  var formattedtime;
-  var minutes = Math.floor(secs / 60);
-  formattedtime = minutes;
-  var seconds = secs - (minutes * 60);
-  if (seconds < 10) {
-    formattedtime += ":0" + seconds;
-  } else {
-    formattedtime += ":" + seconds;
-  }
-  return formattedtime;
-
-}
-
-function getSecsFromHHMMSS(time) {
-  var secs = 0;
-  var bits = time.split(":");
-  secs = (parseInt(bits[0], 10) * 3600) + (parseInt(bits[1], 10) * 60) + parseInt(bits[2], 10);
-  if (isNaN(secs)) {
-    return 0;
-  } else {
-    return secs;
-  }
-}
-
-// converts MM:SS to seconds
-// but may also get hh:mm:ss sometimes
-// so allow for both based on number of :
-function getSecsFromMMSS(time) {
-  var secs = 0;
-  var bits = time.split(":");
-  if (bits.length === 2) {
-    secs = (parseInt(bits[0], 10) * 60) + parseInt(bits[1], 10);
-  } else {
-    if (bits.length === 3) {
-      secs = (parseInt(bits[0], 10) * 3600) + (parseInt(bits[1], 10) * 60) + parseInt(bits[2], 10);
-    }
-  }
-  if (isNaN(secs)) {
-    return 0;
-  } else {
-    return secs;
-  }
-}
-
-// Adds ctx.getTransform() - returns an SVGMatrix
-// Adds ctx.transformedPoint(x,y) - returns an SVGPoint
-function trackTransforms(ctx) {
-  var svg = document.createElementNS("http://www.w3.org/2000/svg", 'svg');
-  var xform = svg.createSVGMatrix();
-  ctx.getTransform = function() {
-    return xform;
-  };
-
-  var savedTransforms = [];
-  var save = ctx.save;
-  ctx.save = function() {
-    savedTransforms.push(xform.translate(0, 0));
-    return save.call(ctx);
-  };
-  var restore = ctx.restore;
-  ctx.restore = function() {
-    xform = savedTransforms.pop();
-    return restore.call(ctx);
-  };
-  var scale = ctx.scale;
-  ctx.scale = function(sx, sy) {
-    xform = xform.scaleNonUniform(sx, sy);
-    return scale.call(ctx, sx, sy);
-  };
-  var rotate = ctx.rotate;
-  ctx.rotate = function(radians) {
-    xform = xform.rotate(radians * 180 / Math.PI);
-    return rotate.call(ctx, radians);
-  };
-  var translate = ctx.translate;
-  ctx.translate = function(dx, dy) {
-    xform = xform.translate(dx, dy);
-    return translate.call(ctx, dx, dy);
-  };
-  var transform = ctx.transform;
-  ctx.transform = function(a, b, c, d, e, f) {
-    var m2 = svg.createSVGMatrix();
-    m2.a = a;
-    m2.b = b;
-    m2.c = c;
-    m2.d = d;
-    m2.e = e;
-    m2.f = f;
-    xform = xform.multiply(m2);
-    return transform.call(ctx, a, b, c, d, e, f);
-  };
-  var setTransform = ctx.setTransform;
-  ctx.setTransform = function(a, b, c, d, e, f) {
-    xform.a = a;
-    xform.b = b;
-    xform.c = c;
-    xform.d = d;
-    xform.e = e;
-    xform.f = f;
-    return setTransform.call(ctx, a, b, c, d, e, f);
-  };
-  var pt = svg.createSVGPoint();
-  ctx.transformedPoint = function(x, y) {
-    pt.x = x;
-    pt.y = y;
-    return pt.matrixTransform(xform.inverse());
-  };
-}
-
 /*global rg2:false */
-/*global Colours:false */
-/*global getDistanceBetweenPoints:false */
-/*global getAngle:false */
 function Results() {
 	this.results = [];
 }
@@ -4847,10 +4832,10 @@ drawScoreCourse : function() {
       rg2.ctx.globalAlpha = rg2.config.FULL_INTENSITY;
       rg2.ctx.lineWidth = opt.overprintWidth;
       rg2.ctx.strokeStyle = rg2.config.PURPLE;
-      angle = getAngle(this.scorex[0], this.scorey[0], this.scorex[1], this.scorey[1]);
+      angle = rg2.getAngle(this.scorex[0], this.scorey[0], this.scorex[1], this.scorey[1]);
       rg2.drawStart(this.scorex[0], this.scorey[0], "", angle, opt);
       for ( i = 0; i < (this.scorex.length - 1); i += 1) {
-        angle = getAngle(this.scorex[i], this.scorey[i], this.scorex[i + 1], this.scorey[i + 1]);
+        angle = rg2.getAngle(this.scorex[i], this.scorey[i], this.scorex[i + 1], this.scorey[i + 1]);
         if (i === 0) {
           c1x = this.scorex[i] + (opt.startTriangleLength * Math.cos(angle));
           c1y = this.scorey[i] + (opt.startTriangleLength * Math.sin(angle));
@@ -4921,7 +4906,7 @@ drawScoreCourse : function() {
 			// calculate distance while we are looping through
 			x = this.trackx[i];
 			y = this.tracky[i];
-			dist += getDistanceBetweenPoints(x, y, oldx, oldy);
+			dist += rg2.getDistanceBetweenPoints(x, y, oldx, oldy);
 			this.cumulativeDistance[i] = Math.round(dist);
 			oldx = x;
 			oldy = y;
@@ -4975,7 +4960,7 @@ drawScoreCourse : function() {
 			this.xysecs[t] = 3 * t;
 			x = this.trackx[t];
 			y = this.tracky[t];
-			delta = getDistanceBetweenPoints(x, y, oldx, oldy);
+			delta = rg2.getDistanceBetweenPoints(x, y, oldx, oldy);
 			dist += delta;
 			sum = delta + oldDelta;
 			if (maxSpeed < sum) {

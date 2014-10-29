@@ -1,11 +1,6 @@
 /*global rg2:false */
 /*global rg2Config:false */
 /*global GPSTrack:false */
-/*global getAngle:false */
-/*global formatSecsAsMMSS:false */
-/*global getSecsFromMMSS:false */
-/*global rg2WarningDialog:false */
-/*global getDistanceBetweenPoints:false */
 // handle drawing of a new route
 function Draw() {
   this.trackColor = '#ff0000';
@@ -109,7 +104,7 @@ Draw.prototype = {
       if ((trk.routeData.resultid !== null) && (trk.routeData.courseid !== null)) {
         this.addNewPoint(x, y);
       } else {
-        rg2WarningDialog('No course/name', 'Please select course, name and time before you start drawing a route or upload a file.');
+        rg2.showWarningDialog('No course/name', 'Please select course, name and time before you start drawing a route or upload a file.');
       }
     }
   },
@@ -307,7 +302,7 @@ Draw.prototype = {
     if (!isNaN(resultid)) {
       res = rg2.getFullResult(resultid);
       if (res.hasValidTrack) {
-        rg2WarningDialog("Route already drawn", "If you draw a new route it will overwrite the old route for this runner. GPS routes are saved separately and will not be overwritten.");
+        rg2.showWarningDialog("Route already drawn", "If you draw a new route it will overwrite the old route for this runner. GPS routes are saved separately and will not be overwritten.");
       }
       // remove old course from display just in case we missed it somewhere else
       if (this.gpstrack.routeData.resultid !== null) {
@@ -355,7 +350,7 @@ Draw.prototype = {
       this.gpstrack.routeData.resultid = 0;
       this.gpstrack.routeData.totaltime = time;
       this.gpstrack.routeData.startsecs = 0;
-      this.gpstrack.routeData.time[0] = getSecsFromMMSS(time);
+      this.gpstrack.routeData.time[0] = rg2.getSecsFromMMSS(time);
       this.startDrawing();
     }
   },
@@ -441,7 +436,7 @@ Draw.prototype = {
     var i;
     var l;
     var t = this.gpstrack.routeData.time[this.gpstrack.routeData.time.length - 1] - this.gpstrack.routeData.time[0];
-    this.gpstrack.routeData.totaltime = formatSecsAsMMSS(t);
+    this.gpstrack.routeData.totaltime = rg2.formatSecsAsMMSS(t);
     // GPS uses UTC: adjust to local time based on local user setting
     // only affects replay in real time
     var date = new Date();
@@ -504,11 +499,11 @@ Draw.prototype = {
   },
 
   saveError : function(text) {
-    rg2WarningDialog(this.gpstrack.routeData.name, rg2.t('Your route was not saved. Please try again') + '. ' + text);
+    rg2.showWarningDialog(this.gpstrack.routeData.name, rg2.t('Your route was not saved. Please try again') + '. ' + text);
   },
 
   routeSaved : function(text) {
-    rg2WarningDialog(this.gpstrack.routeData.name, rg2.t('Your route has been saved') + '.');
+    rg2.showWarningDialog(this.gpstrack.routeData.name, rg2.t('Your route has been saved') + '.');
     rg2.loadEvent(rg2.getActiveEventID());
   },
 
@@ -584,11 +579,11 @@ Draw.prototype = {
         if (this.pointsLocked === 1)  {
           handle = this.getLockedHandle();
           // scale and rotate track around single locked point
-          oldAngle = getAngle(x1, y1, handle.basex, handle.basey);
-          newAngle = getAngle(x2, y2, handle.basex, handle.basey);
+          oldAngle = rg2.getAngle(x1, y1, handle.basex, handle.basey);
+          newAngle = rg2.getAngle(x2, y2, handle.basex, handle.basey);
           angle = newAngle - oldAngle;
-          scale1 = getDistanceBetweenPoints(x1, y1, handle.basex, handle.basey);
-          scale2 = getDistanceBetweenPoints(x2, y2, handle.basex, handle.basey);
+          scale1 = rg2.getDistanceBetweenPoints(x1, y1, handle.basex, handle.basey);
+          scale2 = rg2.getDistanceBetweenPoints(x2, y2, handle.basex, handle.basey);
           scale = scale2/scale1;
           //console.log (x1, y1, x2, y2, handle.basex, handle.basey, scale, angle);
           for ( i = 0; i < len; i += 1) {
@@ -641,11 +636,11 @@ Draw.prototype = {
               toTime = trk.handles[1].time + 1;
             }
             // scale and rotate track around single locked point
-            scale1 = getDistanceBetweenPoints(x1, y1, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
-            scale2 = getDistanceBetweenPoints(x2, y2, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
+            scale1 = rg2.getDistanceBetweenPoints(x1, y1, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
+            scale2 = rg2.getDistanceBetweenPoints(x2, y2, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
             scale = scale2/scale1;
-            oldAngle = getAngle(x1, y1, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
-            newAngle = getAngle(x2, y2, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
+            oldAngle = rg2.getAngle(x1, y1, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
+            newAngle = rg2.getAngle(x2, y2, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
             angle = newAngle - oldAngle;
             //console.log (x1, y1, x2, y2, trk.handles[handle].basex, trk.handles[handle].basey, scale, angle, fromTime, toTime);
             for ( i = fromTime; i < toTime; i += 1) {
@@ -672,7 +667,7 @@ Draw.prototype = {
             lockedHandle2 = this.getNextLockedHandle(handle);
             toTime = trk.handles[lockedHandle2].time;
             //console.log("Point (", x1, ", ", y1, ") in middle of ", lockedHandle1, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey, " and ",lockedHandle2, trk.handles[lockedHandle2].basex, trk.handles[lockedHandle2].basey);
-            reverseAngle = getAngle(trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey, trk.handles[lockedHandle2].basex, trk.handles[lockedHandle2].basey);
+            reverseAngle = rg2.getAngle(trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey, trk.handles[lockedHandle2].basex, trk.handles[lockedHandle2].basey);
             angle = (2 * Math.PI) - reverseAngle;
             
             xb = x1 - trk.handles[lockedHandle1].basex;
@@ -763,7 +758,7 @@ Draw.prototype = {
     var i;
     var distance;
     for (i = 0; i < this.gpstrack.handles.length; i += 1) {
-      distance = getDistanceBetweenPoints(x, y, this.gpstrack.handles[i].basex, this.gpstrack.handles[i].basey);
+      distance = rg2.getDistanceBetweenPoints(x, y, this.gpstrack.handles[i].basex, this.gpstrack.handles[i].basey);
       if (distance <= this.HANDLE_DOT_RADIUS) {
         return i;
       }

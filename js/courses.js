@@ -1,5 +1,4 @@
 /*global rg2:false */
-/*global getAngle:false */
 function Courses() {
 	// indexed by the provided courseid which omits 0 and hence a sparse array
 	// careful when iterating or getting length!
@@ -282,13 +281,13 @@ Course.prototype = {
 				// align score event start triangle upwards
 				angle = Math.PI * 3 / 2;
 			} else {
-				angle = getAngle(this.x[0], this.y[0], this.x[1], this.y[1]);
+				angle = rg2.getAngle(this.x[0], this.y[0], this.x[1], this.y[1]);
 			}
 			rg2.drawStart(this.x[0], this.y[0], "", angle, opt);
       // don't join up controls for score events
       if (!this.isScoreCourse) {
         for ( i = 0; i < (this.x.length - 1); i += 1) {
-          angle = getAngle(this.x[i], this.y[i], this.x[i + 1], this.y[i + 1]);
+          angle = rg2.getAngle(this.x[i], this.y[i], this.x[i + 1], this.y[i + 1]);
           if (i === 0) {
             c1x = this.x[i] + (opt.startTriangleLength * Math.cos(angle));
             c1y = this.y[i] + (opt.startTriangleLength * Math.sin(angle));
