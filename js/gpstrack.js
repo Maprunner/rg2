@@ -1,8 +1,6 @@
 /*global rg2:false */
 /*global map:false */
-/*global getLatLonDistance:false */
 /*global RouteData:false */
-/*global rg2WarningDialog:false */
 function GPSTrack() {
 	this.lat = [];
 	this.lon = [];
@@ -43,13 +41,13 @@ GPSTrack.prototype = {
 		reader.onerror = function(evt) {
 			switch(evt.target.error.code) {
 				case evt.target.error.NOT_FOUND_ERR:
-          rg2WarningDialog('GPS file problem', 'File not found');
+          rg2.showWarningDialog('GPS file problem', 'File not found');
 					break;
 				case evt.target.error.NOT_READABLE_ERR:
-          rg2WarningDialog('GPS file problem', 'File not readable. Please check you have selected the correct file.');
+          rg2.showWarningDialog('GPS file problem', 'File not readable. Please check you have selected the correct file.');
 					break;
 				default:
-          rg2WarningDialog('GPS file problem', 'An error occurred. Please check you have selected the correct file.');
+          rg2.showWarningDialog('GPS file problem', 'An error occurred. Please check you have selected the correct file.');
 			}
 		};
 
@@ -59,7 +57,7 @@ GPSTrack.prototype = {
 			var xml;
 			var fileType = self.fileName.slice(-3).toLowerCase();
 			if ((fileType !== 'gpx') && (fileType !== 'tcx')) {
-        rg2WarningDialog('GPS file problem', 'File type not recognised. Please check you have selected the correct file.');
+        rg2.showWarningDialog('GPS file problem', 'File type not recognised. Please check you have selected the correct file.');
         return;
       }
       try {
@@ -73,7 +71,7 @@ GPSTrack.prototype = {
         }
         self.processGPSTrack();
       } catch(err) {
-          rg2WarningDialog('GPS file problem', 'File is not valid XML. Please check you have selected the correct file.');
+          rg2.showWarningDialog('GPS file problem', 'File is not valid XML. Please check you have selected the correct file.');
           return;
       }
 			$("#rg2-load-gps-file").button('disable');
@@ -250,8 +248,8 @@ GPSTrack.prototype = {
 		// scale GPS track to within bounding box of controls: a reasonable start
 		var scaleX = (maxControlX - minControlX) / (maxLon - minLon);
 		var scaleY = (maxControlY - minControlY) / (maxLat - minLat);
-		var lonCorrection = getLatLonDistance(minLat, maxLon, minLat, minLon) / (maxLon - minLon);
-		var latCorrection = getLatLonDistance(minLat, minLon, maxLat, minLon) / (maxLat - minLat);
+		var lonCorrection = rg2.getLatLonDistance(minLat, maxLon, minLat, minLon) / (maxLon - minLon);
+		var latCorrection = rg2.getLatLonDistance(minLat, minLon, maxLat, minLon) / (maxLat - minLat);
 
 		// don't want to skew track so scale needs to be equal in each direction
 		// so we need to account for differences between a degree of latitude and longitude

@@ -1,7 +1,4 @@
 /*global rg2:false */
-/*global Colours:false */
-/*global getDistanceBetweenPoints:false */
-/*global getAngle:false */
 function Results() {
 	this.results = [];
 }
@@ -693,10 +690,10 @@ drawScoreCourse : function() {
       rg2.ctx.globalAlpha = rg2.config.FULL_INTENSITY;
       rg2.ctx.lineWidth = opt.overprintWidth;
       rg2.ctx.strokeStyle = rg2.config.PURPLE;
-      angle = getAngle(this.scorex[0], this.scorey[0], this.scorex[1], this.scorey[1]);
+      angle = rg2.getAngle(this.scorex[0], this.scorey[0], this.scorex[1], this.scorey[1]);
       rg2.drawStart(this.scorex[0], this.scorey[0], "", angle, opt);
       for ( i = 0; i < (this.scorex.length - 1); i += 1) {
-        angle = getAngle(this.scorex[i], this.scorey[i], this.scorex[i + 1], this.scorey[i + 1]);
+        angle = rg2.getAngle(this.scorex[i], this.scorey[i], this.scorex[i + 1], this.scorey[i + 1]);
         if (i === 0) {
           c1x = this.scorex[i] + (opt.startTriangleLength * Math.cos(angle));
           c1y = this.scorey[i] + (opt.startTriangleLength * Math.sin(angle));
@@ -767,7 +764,7 @@ drawScoreCourse : function() {
 			// calculate distance while we are looping through
 			x = this.trackx[i];
 			y = this.tracky[i];
-			dist += getDistanceBetweenPoints(x, y, oldx, oldy);
+			dist += rg2.getDistanceBetweenPoints(x, y, oldx, oldy);
 			this.cumulativeDistance[i] = Math.round(dist);
 			oldx = x;
 			oldy = y;
@@ -821,7 +818,7 @@ drawScoreCourse : function() {
 			this.xysecs[t] = 3 * t;
 			x = this.trackx[t];
 			y = this.tracky[t];
-			delta = getDistanceBetweenPoints(x, y, oldx, oldy);
+			delta = rg2.getDistanceBetweenPoints(x, y, oldx, oldy);
 			dist += delta;
 			sum = delta + oldDelta;
 			if (maxSpeed < sum) {
