@@ -121,6 +121,10 @@ This is a list of known RG2 installations.
  * [West Cumbria OC] (http://www.wcoc.routegadget.co.uk/rg2)
  * [Wimborne Orienteers] (http://www.wim.routegadget.co.uk/rg2)
 
+## Australia
+
+* [GaringalOrienteers, Sydney] (http://garingal.com.au/gadget2014/rg2)
+
 ### Norway
 
 * [STMBK Orientering, Trondheim] (http://orientering.stbik.no/rg2)
