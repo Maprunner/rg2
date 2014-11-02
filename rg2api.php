@@ -376,10 +376,10 @@ function addNewEvent($data) {
       $oldx = $b->x[0];
       $oldy = $b->y[0];
       // loop from first to last control
-      for ($j = 0; $j < $a->controls; $j++) {       
+      for ($j = 0; $j < sizeof($a->codes); $j++) {       
         $x = $b->x[0];
         $y = $b->y[0];
-        for ($k = 0; $i < count($b->codes); $k++) {
+        for ($k = 0; $k < count($b->codes); $k++) {
           if ($a->codes[$j] == $b->codes[$k]) {
             $x = $b->x[$k];
             $y = $b->y[$k];

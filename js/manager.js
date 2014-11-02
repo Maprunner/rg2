@@ -1566,8 +1566,10 @@ Manager.prototype = {
 					if (j > 0) {
 						result.splits += ";";
 					}
-					result.codes[j] = fields[i][nextcode];
-					result.splits += rg2.getSecsFromMMSS(fields[i][nextsplit]);
+					if (fields[i][nextcode]) {
+						result.codes[j] = fields[i][nextcode];
+						result.splits += rg2.getSecsFromMMSS(fields[i][nextsplit]);
+					}
 					nextsplit += SPLIT_IDX_STEP;
 					nextcode += CODE_IDX_STEP;
 				}
