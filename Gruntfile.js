@@ -1,6 +1,6 @@
 module.exports = function(grunt) {
   var jsFileList = ['js/rg2.js', 'js/animation.js', 'js/controls.js', 'js/courses.js', 'js/draw.js', 'js/events.js', 'js/gpstrack.js',
-   'js/plugins.js', 'js/results.js', 'js/runner.js'];
+   'js/plugins.js', 'js/results.js', 'js/runner.js', 'js/lib/he.js'];
    
   var jsManagerSrc = ['js/manager.js'];
 

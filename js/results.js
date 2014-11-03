@@ -1,4 +1,5 @@
 /*global rg2:false */
+/* global he:false */
 function Results() {
 	this.results = [];
 }
@@ -543,14 +544,14 @@ function Result(data, isScoreEvent, scorecodes, scorex, scorey) {
 		//this.name = data.name;
 		this.isGPSTrack = false;
 	}
-	this.name = data.name;
+	this.name = he.decode(data.name);
 	this.initials = this.getInitials(this.name);
 	this.starttime = data.starttime;
 	this.time = data.time;
 	// get round iconv problem in API for now
 	if (data.comments !== null) {
-		// escape single quotes so that tooltips show correctly
-		this.comments = data.comments.replace("'", "&apos;");
+		// unescape special characeters to get sensible text
+		this.comments = he.decode(data.comments);
 	} else {
 		this.comments = "";
 	}

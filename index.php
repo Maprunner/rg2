@@ -276,11 +276,12 @@ epsg_params: "<?php echo EPSG_PARAMS; ?>",
 <script src='<?php echo $source_url . "/js/animation.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/runner.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/plugins.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/lib/he.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/rg2.js"; ?>'></script><?php } else { ?>
 <script src='<?php echo $source_url . "/js/rg2all.min.js"; ?>'></script><?php } ?>  
 <?php if ($manager) { ?><?php if ($debug) { ?>
 <script src='<?php echo $source_url . "/js/manager.js"; ?>'></script><?php } else {?>
-<script src='<?php echo $source_url . "/js/rg2manager.min.js"; ?>'></script><?php } ?>      
+<script src='<?php echo $source_url . "/js/rg2manager.min.js"; ?>'></script><?php } ?>
 <script src='<?php echo $source_url . "/js/lib/proj4js-compressed.js"; ?>'></script><?php } ?>
 </body>
 </html>
