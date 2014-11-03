@@ -134,7 +134,7 @@ function handlePostRequest($type, $eventid) {
       $loggedIn = TRUE;
     }
     if ($loggedIn) {
-      //rg2log($type);
+      rg2log($type);
       switch ($type) {  
       case 'addroute':
         $write = addNewRoute($eventid, $data);
@@ -1038,7 +1038,7 @@ function unlockDatabase() {
 
 function handleGetRequest($type, $id) {
   $output = array();
-     
+  rg2log("Type ".$type."|ID ".$id);     
   switch ($type) {  
   case 'events':
 	  if (file_exists(CACHE_DIRECTORY."events.json")) {
