@@ -240,7 +240,7 @@ Results.prototype = {
         info.results += 1;
         // beware invalid splits for incomplete runs
         if (res.time) {
-        	info.secs += res.splits[res.splits.length - 1];
+          info.secs += res.splits[res.splits.length - 1];
         }
       }
       if (res.hasValidTrack) {
