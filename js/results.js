@@ -238,7 +238,10 @@ Results.prototype = {
       res = this.results[i];
       if (res.resultid < rg2.config.GPS_RESULT_OFFSET) {
         info.results += 1;
-        info.secs += res.splits[res.splits.length - 1];
+        // beware invalid splits for incomplete runs
+        if (res.time) {
+        	info.secs += res.splits[res.splits.length - 1];
+        }
       }
       if (res.hasValidTrack) {
         if (res.resultid < rg2.config.GPS_RESULT_OFFSET) {
