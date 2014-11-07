@@ -1143,8 +1143,7 @@ function getResultsCSV($eventid) {
   foreach ($results as $result) {
     $data = explode("|", $result);
 		// extract time
-		$t = str_replace('.:', ':', $data[7]);
-    $t = str_replace('::', ":", $t);
+		$t = tidyTime($data[7]);
     if (intval($data[0]) < GPS_RESULT_OFFSET) {
       if ($first_line) {
       	$first_line = false;
@@ -1480,10 +1479,7 @@ function getResultsForEvent($eventid) {
           }
         }          
       }
-      // remove ".:" and "::" which RG1 can generate when adding results
-      $t = str_replace('.:', ':', $data[7]);
-      $t = str_replace('::', ":", $t);
-      $detail["time"] = $t;
+      $detail["time"] = tidyTime($data[7]);;
       // trim trailing ; which create null fields when expanded
       $temp = rtrim($data[8], ";");
       // split array at ; and force to integers
@@ -1660,6 +1656,23 @@ function getTracksForEvent($eventid) {
     fclose($handle);
   }
   return json_encode($output);
+}
+
+function tidyTime($in) {
+  // takes what should be a time as mm:ss or hh:mm:ss and tidies it up
+  // remove ".:" and "::" which RG1 can generate when adding results
+  $t = str_replace('.:', ':', $in);
+  $t = str_replace('::', ":", $t);
+  // remove leading 0:
+  if (substr($t, 0, 2) === '0:') {
+    $t = substr($t, 2);
+  }
+  // correct seconds for missing leading 0 which RG1 can generate from Emit
+  $secs = substr($t, -2);
+  if (substr($secs, 0, 1) ===  ':') {
+    $t = substr_replace($t, '0', -1, 0); 
+  }
+  return $t;
 }
 
 function rg2log($msg) {
