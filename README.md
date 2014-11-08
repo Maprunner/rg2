@@ -1,7 +1,7 @@
 # Routegadget 2
 
 ## Latest news
-Version 0.9.1 was released on 25 October 2014 and has been installed on all routegadget.co.uk sites. The two main changes are improvements in manager functionality.
+Version 0.9.3 was released on 8th November 2014 and has been installed on all routegadget.co.uk sites. This was mainly a number of minor enhancements following use for WMOC 2014 in Brazil. Recent important changes:
 
 * If you upload the map file as a GIF then this is kept, rather than being converted to a JPG file. This should allow much smaller map image files to be used. A JPG file is also stored for compatibility with RG1.
 * Georeferencing information is now saved for each map. Georeferenced course files should now be aligned correctly each time you use the map, rather than just at the time you upload it.
@@ -124,6 +124,10 @@ This is a list of known RG2 installations.
 ## Australia
 
 * [GaringalOrienteers, Sydney] (http://garingal.com.au/gadget2014/rg2)
+
+## Brazil
+
+* [World Masters Orienteering Championshios 2014] (http://www.wmoc.routegadget.co.uk/rg2)
 
 ### Norway
 
