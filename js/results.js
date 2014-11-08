@@ -1,4 +1,5 @@
 /*global rg2:false */
+/* global he:false */
 function Results() {
 	this.results = [];
 }
@@ -238,7 +239,10 @@ Results.prototype = {
       res = this.results[i];
       if (res.resultid < rg2.config.GPS_RESULT_OFFSET) {
         info.results += 1;
-        info.secs += res.splits[res.splits.length - 1];
+        // beware invalid splits for incomplete runs
+        if (res.time) {
+          info.secs += res.splits[res.splits.length - 1];
+        }
       }
       if (res.hasValidTrack) {
         if (res.resultid < rg2.config.GPS_RESULT_OFFSET) {
@@ -540,14 +544,14 @@ function Result(data, isScoreEvent, scorecodes, scorex, scorey) {
 		//this.name = data.name;
 		this.isGPSTrack = false;
 	}
-	this.name = data.name;
+	this.name = he.decode(data.name);
 	this.initials = this.getInitials(this.name);
 	this.starttime = data.starttime;
 	this.time = data.time;
 	// get round iconv problem in API for now
 	if (data.comments !== null) {
-		// escape single quotes so that tooltips show correctly
-		this.comments = data.comments.replace("'", "&apos;");
+		// unescape special characeters to get sensible text
+		this.comments = he.decode(data.comments);
 	} else {
 		this.comments = "";
 	}

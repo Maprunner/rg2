@@ -134,7 +134,7 @@ function handlePostRequest($type, $eventid) {
       $loggedIn = TRUE;
     }
     if ($loggedIn) {
-      //rg2log($type);
+      rg2log($type);
       switch ($type) {  
       case 'addroute':
         $write = addNewRoute($eventid, $data);
@@ -376,10 +376,10 @@ function addNewEvent($data) {
       $oldx = $b->x[0];
       $oldy = $b->y[0];
       // loop from first to last control
-      for ($j = 0; $j < $a->controls; $j++) {       
+      for ($j = 0; $j < sizeof($a->codes); $j++) {       
         $x = $b->x[0];
         $y = $b->y[0];
-        for ($k = 0; $i < count($b->codes); $k++) {
+        for ($k = 0; $k < count($b->codes); $k++) {
           if ($a->codes[$j] == $b->codes[$k]) {
             $x = $b->x[$k];
             $y = $b->y[$k];
@@ -1005,9 +1005,19 @@ function lockDatabase() {
     // lock directory version based on http://docstore.mik.ua/oreilly/webprog/pcook/ch18_25.htm
     // but note mkdir returns TRUE if directory already exists!
     $locked = FALSE;
+    
+    // tidy up from possible locking errors
+    if (is_dir(LOCK_DIRECTORY)) {
+      // if lock directory is more than a few seconds old it wasn't deleted properly, so we'll delete it ourselves
+      // not sure exactly how time changes work, but we can live with a possible twice
+      // a year problem since locking is probably almost never needed
+      if ((time() - filemtime(LOCK_DIRECTORY)) > 15) {
+        unlockDatabase();
+      }
+    }
     if (is_dir(LOCK_DIRECTORY)) {
       // locked already by someone else
-      rg2log("Directory exists");
+      rg2log("Directory exists ".date("D M j G:i:s T Y", filemtime(LOCK_DIRECTORY)));
     } else {
       // try to lock it ourselves
      //rg2log("Trying to lock");
@@ -1038,7 +1048,7 @@ function unlockDatabase() {
 
 function handleGetRequest($type, $id) {
   $output = array();
-     
+  rg2log("Type ".$type."|ID ".$id);     
   switch ($type) {  
   case 'events':
 	  if (file_exists(CACHE_DIRECTORY."events.json")) {
@@ -1143,8 +1153,7 @@ function getResultsCSV($eventid) {
   foreach ($results as $result) {
     $data = explode("|", $result);
 		// extract time
-		$t = str_replace('.:', ':', $data[7]);
-    $t = str_replace('::', ":", $t);
+		$t = tidyTime($data[7]);
     if (intval($data[0]) < GPS_RESULT_OFFSET) {
       if ($first_line) {
       	$first_line = false;
@@ -1480,10 +1489,7 @@ function getResultsForEvent($eventid) {
           }
         }          
       }
-      // remove ".:" and "::" which RG1 can generate when adding results
-      $t = str_replace('.:', ':', $data[7]);
-      $t = str_replace('::', ":", $t);
-      $detail["time"] = $t;
+      $detail["time"] = tidyTime($data[7]);;
       // trim trailing ; which create null fields when expanded
       $temp = rtrim($data[8], ";");
       // split array at ; and force to integers
@@ -1660,6 +1666,23 @@ function getTracksForEvent($eventid) {
     fclose($handle);
   }
   return json_encode($output);
+}
+
+function tidyTime($in) {
+  // takes what should be a time as mm:ss or hh:mm:ss and tidies it up
+  // remove ".:" and "::" which RG1 can generate when adding results
+  $t = str_replace('.:', ':', $in);
+  $t = str_replace('::', ":", $t);
+  // remove leading 0:
+  if (substr($t, 0, 2) === '0:') {
+    $t = substr($t, 2);
+  }
+  // correct seconds for missing leading 0 which RG1 can generate from Emit
+  $secs = substr($t, -2);
+  if (substr($secs, 0, 1) ===  ':') {
+    $t = substr_replace($t, '0', -1, 0); 
+  }
+  return $t;
 }
 
 function rg2log($msg) {

@@ -1484,7 +1484,11 @@ Manager.prototype = {
 		for ( i = 0; i < nodelist.length; i += 1) {
 			code = nodelist[i].getElementsByTagName(type)[0].textContent;
 			geopos = nodelist[i].getElementsByTagName("ControlPosition");
-			if (geopos.length > 0) {
+			// subtle bug and a half #190
+			// if you have an IOF XML V2 file which has georeferenced controls AND
+			// the map file itself isn't georeferenced
+			// then you need to use X, Y and not the georeferenced co-ordinates
+			if ((geopos.length > 0) && (this.localworldfile.valid)) {
 				x = parseFloat(geopos[0].getAttribute('x'));
 				y = parseFloat(geopos[0].getAttribute('y'));
 				isGeoref = true;
@@ -1566,8 +1570,10 @@ Manager.prototype = {
 					if (j > 0) {
 						result.splits += ";";
 					}
-					result.codes[j] = fields[i][nextcode];
-					result.splits += rg2.getSecsFromMMSS(fields[i][nextsplit]);
+					if (fields[i][nextcode]) {
+						result.codes[j] = fields[i][nextcode];
+						result.splits += rg2.getSecsFromMMSS(fields[i][nextsplit]);
+					}
 					nextsplit += SPLIT_IDX_STEP;
 					nextcode += CODE_IDX_STEP;
 				}
