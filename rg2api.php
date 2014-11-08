@@ -1005,9 +1005,19 @@ function lockDatabase() {
     // lock directory version based on http://docstore.mik.ua/oreilly/webprog/pcook/ch18_25.htm
     // but note mkdir returns TRUE if directory already exists!
     $locked = FALSE;
+    
+    // tidy up from possible locking errors
+    if (is_dir(LOCK_DIRECTORY)) {
+      // if lock directory is more than a few seconds old it wasn't deleted properly, so we'll delete it ourselves
+      // not sure exactly how time changes work, but we can live with a possible twice
+      // a year problem since locking is probably almost never needed
+      if ((time() - filemtime(LOCK_DIRECTORY)) > 15) {
+        unlockDatabase();
+      }
+    }
     if (is_dir(LOCK_DIRECTORY)) {
       // locked already by someone else
-      rg2log("Directory exists");
+      rg2log("Directory exists ".date("D M j G:i:s T Y", filemtime(LOCK_DIRECTORY)));
     } else {
       // try to lock it ourselves
      //rg2log("Trying to lock");
