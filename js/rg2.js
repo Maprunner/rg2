@@ -1381,6 +1381,20 @@ var rg2 = ( function() {
 				return secs;
 			}
 		}
+
+		function getSecsFromHHMM(time) {
+			if (!time) {
+				return 0;
+			}
+			var secs = 0;
+			var bits = time.split(":");
+			secs = (parseInt(bits[0], 10) * 3600) + (parseInt(bits[1], 10) * 60);
+			if (isNaN(secs)) {
+				return 0;
+			} else {
+				return secs;
+			}
+		}
 		
 		// converts seconds to MM:SS
 		function formatSecsAsMMSS(secs) {
@@ -1722,6 +1736,7 @@ var rg2 = ( function() {
       getDistanceBetweenPoints: getDistanceBetweenPoints,
       getSecsFromMMSS: getSecsFromMMSS,
       getSecsFromHHMMSS: getSecsFromHHMMSS,
+      getSecsFromHHMM: getSecsFromHHMM,
       formatSecsAsMMSS: formatSecsAsMMSS,
       getLatLonDistance: getLatLonDistance
     };
