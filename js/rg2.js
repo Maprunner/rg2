@@ -248,15 +248,15 @@ var rg2 = ( function() {
         animation.setReplayType(config.REAL_TIME_REPLAY);
       });
 
-      $("#rg2-control-select").prop('disabled', true).click(function(event) {
+      $("#rg2-control-select").prop('disabled', true).change(function(event) {
         animation.setStartControl($("#rg2-control-select").val());
       });
 
-      $("#rg2-name-select").prop('disabled', true).click(function(event) {
+      $("#rg2-name-select").prop('disabled', true).change(function(event) {
         drawing.setName(parseInt($("#rg2-name-select").val(), 10));
       });
 
-      $("#rg2-course-select").click(function(event) {
+      $("#rg2-course-select").change(function(event) {
         drawing.setCourse(parseInt($("#rg2-course-select").val(), 10));
       });
 

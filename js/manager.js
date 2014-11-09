@@ -215,7 +215,7 @@ Manager.prototype = {
 		this.getMaps();
 
 		this.createEventLevelDropdown("rg2-event-level");
-		$("#rg2-event-level").click(function(event) {
+		$("#rg2-event-level").change(function(event) {
 			self.eventLevel = $("#rg2-event-level").val();
 			if (self.eventLevel !== 'X') {
 				$("#rg2-select-event-level").addClass('valid');
@@ -224,7 +224,7 @@ Manager.prototype = {
 			}
 		});
 
-		$("#rg2-map-selected").click(function(event) {
+		$("#rg2-map-selected").change(function(event) {
 			self.mapIndex = parseInt($("#rg2-map-selected").val(), 10);
 			if (self.mapIndex !== self.INVALID_MAP_ID) {
 				$("#rg2-manager-map-select").addClass('valid');
@@ -319,11 +319,11 @@ Manager.prototype = {
 			self.setCourseName(evt);
 		});
 
-		$("#rg2-manager-event-select").click(function(event) {
+		$("#rg2-manager-event-select").change(function(event) {
 			self.setEvent(parseInt($("#rg2-event-selected").val(), 10));
 		});
 
-		$("#rg2-georef-type").click(function(event) {
+		$("#rg2-georef-type").change(function(event) {
 			self.setGeoref($("#rg2-georef-selected").val());
 		});
 
