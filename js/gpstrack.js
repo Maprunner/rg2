@@ -103,15 +103,20 @@ GPSTrack.prototype = {
     var trkpts;
     var i;
     var j;
+    var len;
     var position;
     trksegs = xml.getElementsByTagName('Track');
     for ( i = 0; i < trksegs.length; i += 1) {
       trkpts = trksegs[i].getElementsByTagName('Trackpoint');
-      for ( j = 0; j < trkpts.length; j += 1) {
-        position = trkpts[j].getElementsByTagName('Position');
-        this.lat.push(position[0].getElementsByTagName('LatitudeDegrees')[0].textContent);
-        this.lon.push(position[0].getElementsByTagName('LongitudeDegrees')[0].textContent);
-        this.time.push(this.getSecsFromTrackpoint(trkpts[j].getElementsByTagName('Time')[0].textContent));
+      len = trkpts.length;
+      for ( j = 0; j < len; j += 1) {
+        // allow for <trackpoint> with no position: see #199
+        if (trkpts[j].getElementsByTagName('Position').length > 0) {
+          position = trkpts[j].getElementsByTagName('Position');
+          this.lat.push(position[0].getElementsByTagName('LatitudeDegrees')[0].textContent);
+          this.lon.push(position[0].getElementsByTagName('LongitudeDegrees')[0].textContent);
+          this.time.push(this.getSecsFromTrackpoint(trkpts[j].getElementsByTagName('Time')[0].textContent));
+       }
       }
     }
   },
