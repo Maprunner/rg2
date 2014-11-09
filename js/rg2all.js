@@ -1,4 +1,4 @@
-// Version 0.9.3 2014-11-08T17:45:39;
+// Version 0.9.4 2014-11-09T19:07:24;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -96,7 +96,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.9.3',
+      RG2VERSION: '0.9.4',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -249,15 +249,15 @@ var rg2 = ( function() {
         animation.setReplayType(config.REAL_TIME_REPLAY);
       });
 
-      $("#rg2-control-select").prop('disabled', true).click(function(event) {
+      $("#rg2-control-select").prop('disabled', true).change(function(event) {
         animation.setStartControl($("#rg2-control-select").val());
       });
 
-      $("#rg2-name-select").prop('disabled', true).click(function(event) {
+      $("#rg2-name-select").prop('disabled', true).change(function(event) {
         drawing.setName(parseInt($("#rg2-name-select").val(), 10));
       });
 
-      $("#rg2-course-select").click(function(event) {
+      $("#rg2-course-select").change(function(event) {
         drawing.setCourse(parseInt($("#rg2-course-select").val(), 10));
       });
 
@@ -1382,6 +1382,20 @@ var rg2 = ( function() {
 				return secs;
 			}
 		}
+
+		function getSecsFromHHMM(time) {
+			if (!time) {
+				return 0;
+			}
+			var secs = 0;
+			var bits = time.split(":");
+			secs = (parseInt(bits[0], 10) * 3600) + (parseInt(bits[1], 10) * 60);
+			if (isNaN(secs)) {
+				return 0;
+			} else {
+				return secs;
+			}
+		}
 		
 		// converts seconds to MM:SS
 		function formatSecsAsMMSS(secs) {
@@ -1723,6 +1737,7 @@ var rg2 = ( function() {
       getDistanceBetweenPoints: getDistanceBetweenPoints,
       getSecsFromMMSS: getSecsFromMMSS,
       getSecsFromHHMMSS: getSecsFromHHMMSS,
+      getSecsFromHHMM: getSecsFromHHMM,
       formatSecsAsMMSS: formatSecsAsMMSS,
       getLatLonDistance: getLatLonDistance
     };
@@ -3949,15 +3964,20 @@ GPSTrack.prototype = {
     var trkpts;
     var i;
     var j;
+    var len;
     var position;
     trksegs = xml.getElementsByTagName('Track');
     for ( i = 0; i < trksegs.length; i += 1) {
       trkpts = trksegs[i].getElementsByTagName('Trackpoint');
-      for ( j = 0; j < trkpts.length; j += 1) {
-        position = trkpts[j].getElementsByTagName('Position');
-        this.lat.push(position[0].getElementsByTagName('LatitudeDegrees')[0].textContent);
-        this.lon.push(position[0].getElementsByTagName('LongitudeDegrees')[0].textContent);
-        this.time.push(this.getSecsFromTrackpoint(trkpts[j].getElementsByTagName('Time')[0].textContent));
+      len = trkpts.length;
+      for ( j = 0; j < len; j += 1) {
+        // allow for <trackpoint> with no position: see #199
+        if (trkpts[j].getElementsByTagName('Position').length > 0) {
+          position = trkpts[j].getElementsByTagName('Position');
+          this.lat.push(position[0].getElementsByTagName('LatitudeDegrees')[0].textContent);
+          this.lon.push(position[0].getElementsByTagName('LongitudeDegrees')[0].textContent);
+          this.time.push(this.getSecsFromTrackpoint(trkpts[j].getElementsByTagName('Time')[0].textContent));
+       }
       }
     }
   },
