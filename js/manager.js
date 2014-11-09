@@ -215,7 +215,7 @@ Manager.prototype = {
 		this.getMaps();
 
 		this.createEventLevelDropdown("rg2-event-level");
-		$("#rg2-event-level").click(function(event) {
+		$("#rg2-event-level").change(function(event) {
 			self.eventLevel = $("#rg2-event-level").val();
 			if (self.eventLevel !== 'X') {
 				$("#rg2-select-event-level").addClass('valid');
@@ -224,7 +224,7 @@ Manager.prototype = {
 			}
 		});
 
-		$("#rg2-map-selected").click(function(event) {
+		$("#rg2-map-selected").change(function(event) {
 			self.mapIndex = parseInt($("#rg2-map-selected").val(), 10);
 			if (self.mapIndex !== self.INVALID_MAP_ID) {
 				$("#rg2-manager-map-select").addClass('valid');
@@ -319,11 +319,11 @@ Manager.prototype = {
 			self.setCourseName(evt);
 		});
 
-		$("#rg2-manager-event-select").click(function(event) {
+		$("#rg2-manager-event-select").change(function(event) {
 			self.setEvent(parseInt($("#rg2-event-selected").val(), 10));
 		});
 
-		$("#rg2-georef-type").click(function(event) {
+		$("#rg2-georef-type").change(function(event) {
 			self.setGeoref($("#rg2-georef-selected").val());
 		});
 
@@ -983,10 +983,7 @@ Manager.prototype = {
 			self.results.length = 0;
 			switch (self.resultsFileFormat) {
 			case 'CSV':
-				var csv = evt.target.result;
-				var rows = evt.target.result.split(/[\r\n|\n]+/);
-				// only one format at present
-				self.processSICSVResults(rows);
+				self.processResultsCSV(evt);
 				$("#rg2-select-results-file").addClass('valid');
 				break;
 			case 'XML':
@@ -1011,6 +1008,29 @@ Manager.prototype = {
 			rg2.showWarningDialog("File type error", "Results file type is not recognised. Please select a valid file.");
 		}
 	},
+
+  processResultsCSV : function(evt) {
+		var csv = evt.target.result;
+		var rows = evt.target.result.split(/[\r\n|\n]+/);
+
+		// try and work out what the separator is
+		var commas = rows[0].split(',').length - 1;
+		var semicolons = rows[0].split(';').length - 1;
+
+		var separator;
+		if (commas > semicolons) {
+			separator = ',';
+		} else {
+			separator = ";";
+		}
+
+		// Spklasse has two items on first row, SI CSV has a lot more...
+		if (rows[0].split(separator).length === 2) {
+			this.processSpklasseCSVResults(rows, separator);
+		} else {
+			this.processSICSVResults(rows, separator);
+		}
+  },
 
 	processResultsXML : function(evt) {
 		var xml;
@@ -1064,6 +1084,7 @@ Manager.prototype = {
 		var time;
 		var timeFormat;
 		var temp;
+		var status;
 		try {
 			classlist = xml.getElementsByTagName('ClassResult');
 			for ( i = 0; i < classlist.length; i += 1) {
@@ -1080,6 +1101,12 @@ Manager.prototype = {
 					result.club = personlist[j].getElementsByTagName('ShortName')[0].textContent;
 					resultlist = personlist[j].getElementsByTagName('Result');
 					for ( k = 0; k < resultlist.length; k += 1) {
+						temp = resultlist[k].getElementsByTagName('CompetitorStatus');
+						if (temp.length > 0) {
+							status = temp[0].getAttribute("value");
+						} else {
+							status = '';
+						}
 						temp = resultlist[k].getElementsByTagName('CCardId');
 						if (temp.length > 0) {
 							result.chipid = temp[0].textContent;
@@ -1135,7 +1162,11 @@ Manager.prototype = {
 							result.splits += 0;
 						}
 					}
-					this.results.push(result);
+					if (status === 'DidNotStart') {
+						break;
+					} else {
+						this.results.push(result);
+					}
 				}
 
 			}
@@ -1502,8 +1533,77 @@ Manager.prototype = {
 		return isGeoref;
 	},
 
-	// rows: array of raw lines from SI results csv file
-	processSICSVResults : function(rows) {
+	// rows: array of raw lines from Spklasse results csv file
+	processSpklasseCSVResults : function(rows, separator) {
+		// fields in course row
+		var COURSE_IDX = 0;
+		var NUM_CONTROLS_IDX = 1;
+		
+		// fields in result row
+		var FIRST_NAME_IDX = 0;
+		var SURNAME_IDX = 1;
+		var CLUB_IDX = 2;
+		var START_TIME_IDX = 3;
+		var FIRST_SPLIT_IDX = 4;
+
+		var course;
+		var controls;
+		var i;
+		var j;
+		var fields = [];
+		var result;
+		var len;
+		var totaltime;
+
+		try {
+		course = '';
+		controls = 0;
+		
+		// read through all rows
+		for ( i = 0; i < rows.length; i += 1) {
+			fields = rows[i].split(separator);
+			// discard blank lines
+			if (fields.length === 0) {
+				continue;
+			}
+			// check for new course
+			if (fields.length === 2) {
+				course = fields[COURSE_IDX];
+				controls = parseInt(fields[NUM_CONTROLS_IDX], 10);
+				continue;
+			}
+			// assume everything else is a result
+			result = {};
+			result.chipid = 0;
+			result.name = (fields[FIRST_NAME_IDX] + " " + fields[SURNAME_IDX] + " " + fields[CLUB_IDX]).trim();
+			result.dbid = (result.chipid + "__" + result.name);
+			result.starttime = rg2.getSecsFromHHMM(fields[START_TIME_IDX]);
+			result.club = fields[CLUB_IDX];
+			result.course = course;
+			result.controls = controls;
+			result.splits = '';
+			result.codes = [];
+			len = fields.length - FIRST_SPLIT_IDX;
+			totaltime = 0;
+			for ( j = 0; j < len; j += 1) {
+				if (j > 0) {
+					result.splits += ";";
+				}
+				result.codes[j] = 'X';
+				totaltime += rg2.getSecsFromMMSS(fields[j + FIRST_SPLIT_IDX]);
+				result.splits += totaltime;
+			}
+			result.time = rg2.formatSecsAsMMSS(totaltime);
+			this.results.push(result);
+		}
+				
+		} catch (err) {
+			rg2.showWarningDialog("Spklasse csv file contains invalid information");
+		}
+	},
+
+// rows: array of raw lines from SI results csv file
+	processSICSVResults : function(rows, separator) {
 		var CHIP_IDX = 1;
 		var DB_IDX = 2;
 		var SURNAME_IDX = 3;
@@ -1514,8 +1614,6 @@ Manager.prototype = {
 		var CITY_IDX = 15;
 		var CLASS_IDX = 18;
 		var COURSE_IDX = 39;
-		var DISTANCE_IDX = 40;
-		var CLIMB_IDX = 41;
 		var NUM_CONTROLS_IDX = 42;
 		var START_PUNCH_IDX = 44;
 		var FIRST_SPLIT_IDX = 47;
@@ -1530,16 +1628,7 @@ Manager.prototype = {
 		var nextsplit;
 		var nextcode;
 		var temp;
-		// try and work out what the separator is
-		var commas = rows[0].split(',').length - 1;
-		var semicolons = rows[0].split(';').length - 1;
 
-		var separator;
-		if (commas > semicolons) {
-			separator = ',';
-		} else {
-			separator = ";";
-		}
 		// extract all fields in all rows
 		for ( i = 0; i < rows.length; i += 1) {
 			fields[i] = rows[i].split(separator);
@@ -1584,6 +1673,7 @@ Manager.prototype = {
 			}
 		}
 	},
+
 
 	readMapFile : function(evt) {
 		var reader = new FileReader();
