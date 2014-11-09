@@ -1064,6 +1064,7 @@ Manager.prototype = {
 		var time;
 		var timeFormat;
 		var temp;
+		var status;
 		try {
 			classlist = xml.getElementsByTagName('ClassResult');
 			for ( i = 0; i < classlist.length; i += 1) {
@@ -1080,6 +1081,12 @@ Manager.prototype = {
 					result.club = personlist[j].getElementsByTagName('ShortName')[0].textContent;
 					resultlist = personlist[j].getElementsByTagName('Result');
 					for ( k = 0; k < resultlist.length; k += 1) {
+						temp = resultlist[k].getElementsByTagName('CompetitorStatus');
+						if (temp.length > 0) {
+							status = temp[0].getAttribute("value");
+						} else {
+							status = '';
+						}
 						temp = resultlist[k].getElementsByTagName('CCardId');
 						if (temp.length > 0) {
 							result.chipid = temp[0].textContent;
@@ -1135,7 +1142,11 @@ Manager.prototype = {
 							result.splits += 0;
 						}
 					}
-					this.results.push(result);
+					if (status === 'DidNotStart') {
+						break;
+					} else {
+						this.results.push(result);
+					}
 				}
 
 			}
