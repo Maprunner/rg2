@@ -473,7 +473,7 @@ Results.prototype = {
       }
       
 			if (temp.comments !== "") {
-				html += "<tr><td><a href='#' title='" + temp.comments + "'>" + namehtml + "</a></td><td>" + temp.time + "</td>";
+				html += '<tr><td><a href="#" title="' + temp.comments + '">' + namehtml + "</a></td><td>" + temp.time + "</td>";
 			} else {
 				html += "<tr><td>" + namehtml + "</td><td>" + temp.time + "</td>";
 			}
