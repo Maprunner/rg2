@@ -144,8 +144,8 @@ $languages .= '},'.PHP_EOL;
     <link rel="shortcut icon" href="img/favicon.ico"/>
     <link rel="stylesheet" href='<?php echo $source_url ."/css/normalize.min.css'>"; ?>  
     <link rel="stylesheet" href='<?php echo $source_url ."/css/rg2.css'>"; ?>
-    <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/themes/<?php echo $ui_theme; ?>/jquery-ui.min.css">
-    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
+    <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/themes/<?php echo $ui_theme; ?>/jquery-ui.min.css">
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.css">
   </head>
   <body>
     <!--[if lt IE 7]>
@@ -242,8 +242,8 @@ $languages .= '},'.PHP_EOL;
       <?php include 'html/options.html'; ?>
       <?php include 'html/misc.html'; ?>
     </div>
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
-<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
 <script type="text/javascript">
 var rg2Config = {
 json_url: "<?php echo $json_url; ?>",

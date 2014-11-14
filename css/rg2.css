@@ -218,6 +218,10 @@ html, body {
   list-style-image: none;
 }
 
+#rg2-event-list .ui-menu-item a {
+  text-decoration: none;
+}
+
 .rg2-active-event {
    border: 1px solid darkgray;
    background: rgba(204, 204, 204, 0.75);
