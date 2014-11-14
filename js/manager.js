@@ -1386,7 +1386,10 @@ Manager.prototype = {
 			controllist = nodelist[i].getElementsByTagName('CourseControl');
 			for ( j = 0; j < controllist.length; j += 1) {
 				tmp = controllist[j].getElementsByTagName('ControlCode')[0].textContent;
-				codes.push(tmp.trim());
+				// if control code doesn't exist it was a crossing point so we don't need it
+				if (this.validControlCode(tmp)) {
+					codes.push(tmp.trim());
+				}
 			}
 			tmp = nodelist[i].getElementsByTagName('FinishPointCode')[0].textContent;
 			codes.push(tmp.trim());
@@ -1399,6 +1402,18 @@ Manager.prototype = {
 			this.courses.push(course);
 		}
 		$("#rg2-select-course-file").addClass('valid');
+	},
+
+	// check if a given control code is in the list of known controls
+	validControlCode : function(code) {
+		var i;
+		var controls = this.newcontrols.controls;
+		for (i = 0; i < controls.length; i += 1) {
+			if (controls[i].code === code) {
+				return true;
+			}
+		}
+		return false;
 	},
 
 	extractV3Courses : function(nodelist) {
