@@ -95,7 +95,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.9.4',
+      RG2VERSION: '0.9.5',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -1276,12 +1276,17 @@ var rg2 = ( function() {
 
       // checkbox on course tab to show a course
       $(".courselist").click(function(event) {
+        var id = parseInt(event.currentTarget.id, 10);
         if (event.target.checked) {
-          courses.putOnDisplay(parseInt(event.currentTarget.id, 10));
+          courses.putOnDisplay(id);
+          // check box on results tab
+          $(".showcourse").filter("#" + id).prop('checked', true);
         } else {
-          courses.removeFromDisplay(parseInt(event.currentTarget.id, 10));
+          courses.removeFromDisplay(id);
           // make sure the all checkbox is not checked
           $(".allcourses").prop('checked', false);
+          // uncheck box on results tab
+          $(".showcourse").filter("#" + id).prop('checked', false);
         }
         redraw(false);
       });
@@ -1291,9 +1296,13 @@ var rg2 = ( function() {
           courses.putAllOnDisplay();
           // select all the individual checkboxes for each course
           $(".courselist").prop('checked', true);
+          // check all boxes on results tab
+          $(".showcourse").prop('checked', true);
         } else {
           courses.removeAllFromDisplay();
           $(".courselist").prop('checked', false);
+          // uncheck all boxes on results tab
+          $(".showcourse").prop('checked', false);
         }
         redraw(false);
       });
@@ -1425,10 +1434,17 @@ var rg2 = ( function() {
       $(".showcourse").click(function(event) {
         //Prevent opening accordion when check box is clicked
         event.stopPropagation();
+        var id = event.target.id;
         if (event.target.checked) {
-          courses.putOnDisplay(event.target.id);
+          courses.putOnDisplay(id);
+           // check box on courses tab
+          $(".courselist").filter("#" + id).prop('checked', true);
         } else {
-          courses.removeFromDisplay(event.target.id);
+          courses.removeFromDisplay(id);
+           // uncheck box on courses tab
+          $(".courselist").filter("#" + id).prop('checked', false);
+          // make sure the all checkbox is not checked
+          $(".allcourses").prop('checked', false);
         }
         redraw(false);
       });

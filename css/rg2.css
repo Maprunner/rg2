@@ -471,6 +471,10 @@ image, canvas {
   padding-right: 5px;
 }
 
+#rg2-manage-create div, #rg2-manage-map div, #rg2-manage-edit div {
+  margin-top: 5px;
+}
+
 .manage-file-input {
   margin-top: 4px;
   margin-bottom: 4px;
