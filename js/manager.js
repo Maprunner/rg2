@@ -1434,7 +1434,10 @@ Manager.prototype = {
 			controllist = nodelist[i].getElementsByTagName('CourseControl');
 			for ( j = 0; j < controllist.length; j += 1) {
 				tmp = controllist[j].getElementsByTagName('Control')[0].textContent;
-				codes.push(tmp.trim());
+				// if control code doesn't exist it was a crossing point so we don't need it
+				if (this.validControlCode(tmp)) {
+					codes.push(tmp.trim());
+				}
 			}
 
 			course.codes = codes;
@@ -1478,7 +1481,10 @@ Manager.prototype = {
 					x = mappos[0].getAttribute('x');
 					y = mappos[0].getAttribute('y');
 				}
-				this.newcontrols.addControl(code.trim(), x, y);
+				// don't want to save crossing points
+				if (nodelist[i].getAttribute('type') !== 'CrossingPoint') {
+					this.newcontrols.addControl(code.trim(), x, y);
+				}
 			}
 		}
 		// extract all courses
