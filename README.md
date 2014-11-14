@@ -1,9 +1,10 @@
 # Routegadget 2
 
 ## Latest news
-Version 0.9.4 was released on 9th November 2014 and has been installed on all routegadget.co.uk sites. This was mainly a number of minor enhancements following use for WMOC 2014 in Brazil. Recent important changes:
+Version 0.9.6 was released on 14th November 2014 and has been installed on all routegadget.co.uk sites. Recent important changes:
 
-* Problems with dropdown selection menus not working properly (especially on Chrome on Android or OS X) should have been fixed.
+* The RG2 manager will now ignore crossing points in course files. This means you do no need to generate a separate course file with crossingpoints removed.
+* Problems with dropdown selection menus not working properly (especially on Chrome on Android or OS X) are now fixed.
 * If you upload the map file as a GIF then this is kept, rather than being converted to a JPG file. This should allow much smaller map image files to be used. A JPG file is also stored for compatibility with RG1.
 * Georeferencing information is now saved for each map. Georeferenced course files should now be aligned correctly each time you use the map, rather than just at the time you upload it.
 
