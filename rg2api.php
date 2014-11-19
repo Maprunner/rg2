@@ -1635,7 +1635,8 @@ function getTracksForEvent($eventid) {
 			$courseid = intval($data[0]);
 			$resultid = intval($data[1]);
 			// protect against corrupt/invalid files
-			if (($resultid > 0) && ($courseid > 0)) {
+			// GPS tracks are better in the results then here so don't bother sending
+			if (($resultid > 0) && ($resultid < GPS_RESULT_OFFSET) && ($courseid > 0)) {
       	$detail["courseid"] = $courseid;
       	$detail["resultid"] = $resultid;
       	$detail["name"] = encode_rg_input($data[2]);
