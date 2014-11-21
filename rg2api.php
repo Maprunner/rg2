@@ -1029,6 +1029,7 @@ function unlockDatabase() {
 }
 
 function handleGetRequest($type, $id) {
+  validateCache($id);
   $output = array();
   rg2log("Type ".$type."|ID ".$id);     
   switch ($type) {  
@@ -1084,6 +1085,51 @@ function handleGetRequest($type, $id) {
     header("Content-type: application/json"); 
     echo "{\"data\":" .$output. "}";
 	}
+}
+
+function validateCache($id) {
+  // check nothing has happened that could invalidate the cache if it exists
+  // RG2 should tidy up for itself but
+  // 1) delete cache if this is a new version of the API just in case
+  // 2) delete cache if associated txt files have changed: probably someone using RG1
+  if (!file_exists(KARTAT_DIRECTORY.'/cache')) {
+    //rg2log("No cache directory");
+    return;
+  }
+  
+  $apitimestamp = filemtime(__FILE__);
+  //rg2log("API file mod date ".$apitimestamp);
+  $cachedirtimestamp = filemtime(CACHE_DIRECTORY.'.');  
+  //rg2log("Cache dir mod date ".$cachedirtimestamp);
+  if ($apitimestamp >= $cachedirtimestamp) {
+    rg2log("Flush cache: API script file has been updated");
+    @array_map('unlink', glob(CACHE_DIRECTORY."*.json"));
+    return;
+  }
+  // catches events added via RG1 manager, which has been seen to happen
+  // delete everything just to be sure
+  if (is_file(KARTAT_DIRECTORY.'kisat.txt')) {
+    if (filemtime(KARTAT_DIRECTORY.'kisat.txt') >= $cachedirtimestamp) {
+        rg2log("Flush cache: kisat.txt file has been updated");
+        @array_map('unlink', glob(CACHE_DIRECTORY."*.json"));
+        return;      
+    }
+  }
+  
+  // catches routes added via RG1 to an event with RG2 installed which is conceivable but very unlikely
+  // base decision on kilpailijat only which seems reasonable enough
+  if ((is_file(CACHE_DIRECTORY.'results_'.$id.'.json')) && is_file(KARTAT_DIRECTORY.'kilpailijat_'.$id.'.txt')) {
+    if (filemtime(KARTAT_DIRECTORY.'kilpailijat_'.$id.'.txt') >= filemtime(CACHE_DIRECTORY.'results_'.$id.'.json')) {
+        rg2log("Flush cache for event id ".$id);
+        @unlink(CACHE_DIRECTORY."results_".$id.".json");
+        @unlink(CACHE_DIRECTORY."courses_".$id.".json");
+        @unlink(CACHE_DIRECTORY."tracks_".$id.".json");
+        @unlink(CACHE_DIRECTORY."events.json");
+        return;      
+    }
+  }
+    
+  //rg2log("Cache OK");
 }
 
 function getSplitsbrowser($eventid) {
