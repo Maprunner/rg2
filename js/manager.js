@@ -561,12 +561,12 @@ Manager.prototype = {
 		}
 		if (this.courses.length === 0) {
 			if (!this.drawingCourses) {
-				return 'No course information.';
+				return 'No course information. Check your course XML file.';
 			}
 		}
 		if (this.results.length === 0) {
 			if (this.format !== this.FORMAT_NO_RESULTS) {
-				return 'No results information.';
+				return 'No results information. Check your results file.';
 			}
 		}
 		return 'OK';

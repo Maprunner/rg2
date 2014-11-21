@@ -351,6 +351,7 @@ Draw.prototype = {
       this.gpstrack.routeData.totaltime = time;
       this.gpstrack.routeData.startsecs = 0;
       this.gpstrack.routeData.time[0] = rg2.getSecsFromMMSS(time);
+      this.gpstrack.routeData.totalsecs = rg2.getSecsFromMMSS(time);
       this.startDrawing();
     }
   },

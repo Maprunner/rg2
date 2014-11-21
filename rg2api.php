@@ -301,8 +301,8 @@ function addNewEvent($data) {
   }
 
   // create new ratapisteet file: control locations
-  if ($format == SCORE_EVENT_FORMAT) {
-    // score event so save variants
+  if (($format == SCORE_EVENT_FORMAT) && (count($data->results) > 0)) {
+    // score event with results so save variants
     for ($i = 0; $i < count($data->variants); $i++) {
       $controls = $data->variants[$i]->id."|";
       for ($j = 0; $j < count($data->variants[$i]->x); $j++) {
@@ -312,7 +312,7 @@ function addNewEvent($data) {
       file_put_contents(KARTAT_DIRECTORY."ratapisteet_".$newid.".txt", $controls, FILE_APPEND);
     }     
   } else {
-      // normal event so save courses
+      // normal event or score event without results so save courses
       for ($i = 0; $i < count($data->courses); $i++) {
       $controls = $data->courses[$i]->courseid."|";
       for ($j = 0; $j < count($data->courses[$i]->x); $j++) {
@@ -325,7 +325,7 @@ function addNewEvent($data) {
 
   // create new hajontakanta file: control sequences for course variants
   // originally for score/relay only, but may be usable for butterflies in future
-  if ($format == SCORE_EVENT_FORMAT) {
+  if (($format == SCORE_EVENT_FORMAT) && (count($data->results > 0))) {
     // score event so save variants
     for ($i = 0; $i < count($data->variants); $i++) {
       $controls = $data->variants[$i]->id."|".$data->variants[$i]->name."|";
@@ -340,7 +340,7 @@ function addNewEvent($data) {
       file_put_contents(KARTAT_DIRECTORY."hajontakanta_".$newid.".txt", $controls, FILE_APPEND);
     }
   } else {
-    // normal event so save courses
+    // normal event or score event without results so save courses
     for ($i = 0; $i < count($data->courses); $i++) {
       $controls = $data->courses[$i]->courseid."|".$data->courses[$i]->name."|";
       // data includes start and finish which we don't want
@@ -357,7 +357,7 @@ function addNewEvent($data) {
 
   // create new radat file: course drawing: RG2 uses this for score event control locations
   $course = "";
-  if ($format == SCORE_EVENT_FORMAT) {  
+  if (($format == SCORE_EVENT_FORMAT) && (count($data->results > 0))) { 
     // score event: one row per variant    
     for ($i = 0; $i < count($data->variants); $i++) {
       $a = $data->variants[$i];
@@ -393,7 +393,7 @@ function addNewEvent($data) {
     }
 
   } else {
-    // normal event: one row per course
+    // normal event or score event without results so save courses: one row per course
     for ($i = 0; $i < count($data->courses); $i++) {
       $a = $data->courses[$i];
       $finish = count($a->x) - 1;
@@ -832,7 +832,7 @@ function addNewRoute($eventid, $data) {
   $newtrackdata = $data->courseid."|".$id."|".$name."|null|".$track."|".$controls.PHP_EOL;
 
   $newresultdata = "";
-  if (($newresult == TRUE) || ($id >= GPS_RESULT_OFFSET)) {
+  if ($newresult == TRUE) {
     // New result or GPS record so need to add result record as well
     // GPS track saved here as a point every three seconds
     // input can in theory have any time between points
@@ -860,8 +860,12 @@ function addNewRoute($eventid, $data) {
       }            
     }
   
-    $newresultdata = $id."|".$data->courseid."|".encode_rg_output($data->coursename)."|".$name;
-    $newresultdata .= "|".$data->startsecs."|||".$data->totaltime."||".$track.PHP_EOL;
+    $newresultdata = $id."|".$data->courseid."|".encode_rg_output($data->coursename)."|".$name;  
+    if ($id >= GPS_RESULT_OFFSET) {
+      $newresultdata .= "|".$data->startsecs."|||".$data->totaltime."||".$track.PHP_EOL;
+    } else {
+      $newresultdata .= "|".$data->startsecs."|||".$data->totaltime."|".$data->totalsecs.";|".PHP_EOL;      
+    }
   }
 
   $write["status_msg"] = "";

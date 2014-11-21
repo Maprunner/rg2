@@ -565,7 +565,6 @@ function Result(data, isScoreEvent, scorecodes, scorex, scorey) {
 	// insert a 0 split at the start to make life much easier elsewhere
 	this.splits.splice(0, 0, 0);
 
-	// TODO sort this out
 	if (data.variant !== "") {
 		// save control locations for score course result
 		this.scorex = scorex;
