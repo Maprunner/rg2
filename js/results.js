@@ -184,7 +184,6 @@ Results.prototype = {
       }
     }
 
-
   },
   
 
@@ -327,6 +326,16 @@ Results.prototype = {
 			this.results[i].putTrackOnDisplay();
 		}
 		this.updateTrackNames();
+	},
+
+  getTracksOnDisplay : function() {
+		var tracks = [];
+		for (var i = 0; i < this.results.length; i += 1) {
+			if (this.results[i].displayTrack) {
+				tracks.push(i);
+			}
+		}
+		return tracks;
 	},
 
 	getDisplayedTrackNames : function() {

@@ -51,7 +51,6 @@ var rg2 = ( function() {
     var pinchEnd0;
     var pinchEnd1;
     var requestedHash;
-    var requestedEventID;
     var managing;
     
     // jQuery cache items
@@ -95,7 +94,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.9.6',
+      RG2VERSION: '0.9.7',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -136,6 +135,111 @@ var rg2 = ( function() {
 				return this.colours[this.colourIndex];
 			}
 		};
+		
+		function RequestedHash() {
+			this.id = 0;
+			this.courses = [];
+			this.routes = [];
+		}
+		
+		RequestedHash.prototype = {
+			Constructor : RequestedHash,
+
+			parseHash : function(hash) {
+			try {
+				var fields;
+				var i;
+				var a;
+				// input looks like #id&course=a,b,c&result=x,y,z
+				fields = hash.split('&');
+				for (i= 0; i < fields.length; i += 1) {
+					fields[i] = fields[i].toLowerCase();
+					if (fields[i].search('#') !== -1) {
+						this.id = parseInt(fields[i].replace("#", ""), 10);
+					}
+					if (fields[i].search('course=') !== -1) {
+						this.courses = fields[i].replace("course=", "").split(',');
+					}
+					if (fields[i].search('route=') !== -1) {
+						this.routes = fields[i].replace("route=", "").split(',');
+					}
+				}
+				// convert to integers
+				this.courses = this.courses.map(Number);
+				this.routes = this.routes.map(Number);
+				
+      } catch (e) {
+				this.id = 0;
+				this.courses.length = 0;
+				this.routes.length = 0;
+      }
+			},
+			
+			getRoutes : function() {
+				return this.routes;
+			},
+			
+			getCourses : function() {
+				return this.courses;
+			},
+
+			getID : function() {
+				return this.id;
+			},
+
+			getTab : function() {
+				if (this.routes.length > 0) {
+					return config.TAB_RESULTS;
+				}
+				return config.TAB_COURSES;
+			},
+			
+			setCourses : function () {
+				this.courses = courses.getCoursesOnDisplay();
+				window.history.pushState('', '', this.getHash());
+			},
+
+			setRoutes : function () {
+				this.routes = results.getTracksOnDisplay();
+				window.history.pushState('', '', this.getHash());
+			},
+			
+			setNewEvent : function (id) {
+				this.id = id;
+				this.courses.length = 0;
+				this.routes.length = 0;
+				window.history.pushState('', '', this.getHash());
+			},
+			
+			getHash : function () {
+				var hash;
+				var i;
+				if (this.id === 0) {
+					return '#0';
+				} else {
+					hash = '#' + this.id;
+				}
+				if (this.courses.length > 0) {
+					hash += '&course=';
+					for (i = 0; i < this.courses.length; i += 1) {
+						if (i > 0) {
+							hash += ',';
+						}
+						hash += this.courses[i];
+					}
+				}
+				if (this.routes.length > 0) {
+					hash += '&route=';
+					for (i = 0; i < this.routes.length; i += 1) {
+						if (i > 0) {
+							hash += ',';
+						}
+						hash += this.routes[i];
+					}
+				}
+				return hash;
+			}
+		};
 
     function init() {
       $("#rg2-container").hide();
@@ -161,10 +265,10 @@ var rg2 = ( function() {
         managing = false;
       }
 
+      requestedHash = new RequestedHash();
       // check if a specific event has been requested
-      requestedHash = window.location.hash;
-      if ((requestedHash) && (!managing)) {
-        requestedEventID = parseInt(requestedHash.replace("#", ""), 10);
+      if ((window.location.hash) && (!managing)) {
+				requestedHash.parseHash(window.location.hash);
       }
 
       $("#btn-save-route").button().button("disable");
@@ -688,8 +792,8 @@ var rg2 = ( function() {
         createEventMenu();
         // load requested event if set
         // input is kartat ID so need to find internal ID first
-        if (requestedEventID) {
-          var eventID = events.getEventIDForKartatID(requestedEventID);
+        if (requestedHash.getID()) {
+          var eventID = events.getEventIDForKartatID(requestedHash.getID());
           if (eventID !== undefined) {
             loadEvent(eventID);
           }
@@ -1128,6 +1232,7 @@ var rg2 = ( function() {
       $("#rg2-event-list").append(html).menu({
         select : function(event, ui) {
           loadEvent(ui.item[0].id);
+					requestedHash.setNewEvent(events.getKartatEventID());
         }
       });
     }
@@ -1148,7 +1253,6 @@ var rg2 = ( function() {
       loadNewMap(rg2Config.maps_url + events.getMapFileName());
       redraw(false);
       setTitleBar();
-
       // get courses for event
       $.getJSON(rg2Config.json_url, {
         id : events.getKartatEventID(),
@@ -1250,7 +1354,7 @@ var rg2 = ( function() {
           // don't change tab if we have come from DRAW since it means
           // we have just reloaded following a save
           if (active !== config.TAB_DRAW) {
-            $rg2infopanel.tabs("option", "active", config.TAB_COURSES);
+            $rg2infopanel.tabs("option", "active", requestedHash.getTab());
           }
           $rg2infopanel.tabs("refresh");
           $("#btn-show-splits").show();
@@ -1261,9 +1365,24 @@ var rg2 = ( function() {
           } else {
             $("#rg2-splitsbrowser").off().hide();
           }
+					// set up screen as requested in hash
+					var i;
+					var event = $.Event('click');
+					event.target = {};
+					event.target.checked = true;
+					var routes = requestedHash.getRoutes();
+					for (i = 0; i < routes.length; i += 1) {
+						event.target.id = routes[i];
+						$(".showtrack").filter("#" + routes[i]).trigger(event).prop('checked', true);
+					}
+					var crs = requestedHash.getCourses();
+					for (i = 0; i < crs.length; i += 1) {
+						event.target.id = crs[i];
+						$(".showcourse").filter("#" + crs[i]).trigger(event).prop('checked', true);
+					}
         }
-        $("#rg2-load-progress-label").text("");
-        $("#rg2-load-progress").hide();
+				$("#rg2-load-progress-label").text("");
+				$("#rg2-load-progress").hide();
         redraw(false);
       }).fail(function(jqxhr, textStatus, error) {
         reportJSONFail("Routes request failed for event " + events.getKartatEventID() + ": " + error);
@@ -1288,6 +1407,7 @@ var rg2 = ( function() {
           // uncheck box on results tab
           $(".showcourse").filter("#" + id).prop('checked', false);
         }
+        requestedHash.setCourses();
         redraw(false);
       });
       // checkbox on course tab to show all courses
@@ -1304,6 +1424,7 @@ var rg2 = ( function() {
           // uncheck all boxes on results tab
           $(".showcourse").prop('checked', false);
         }
+        requestedHash.setCourses();
         redraw(false);
       });
       // checkbox on course tab to show tracks for one course
@@ -1316,6 +1437,7 @@ var rg2 = ( function() {
           // make sure the all checkbox is not checked
           $(".alltracks").prop('checked', false);
         }
+        requestedHash.setRoutes();
         redraw(false);
       });
       // checkbox on course tab to show all tracks
@@ -1329,6 +1451,7 @@ var rg2 = ( function() {
           // deselect all the individual checkboxes for each course
           $(".tracklist").prop('checked', false);
         }
+        requestedHash.setRoutes();
         redraw(false);
       });
     }
@@ -1446,6 +1569,7 @@ var rg2 = ( function() {
           // make sure the all checkbox is not checked
           $(".allcourses").prop('checked', false);
         }
+        requestedHash.setCourses();
         redraw(false);
       });
       // checkbox to show an individual score course
@@ -1460,6 +1584,7 @@ var rg2 = ( function() {
         } else {
           results.removeOneTrackFromDisplay(event.target.id);
         }
+        requestedHash.setRoutes();
         redraw(false);
       });
       // checkbox to animate a result
@@ -1492,7 +1617,7 @@ var rg2 = ( function() {
         } else {
           $(selector).prop('checked', false);
         }
-        
+        requestedHash.setRoutes();
         redraw(false);
       });
       

@@ -153,6 +153,18 @@ Courses.prototype = {
 		return this.courses[courseid].display;
 	},
 
+	getCoursesOnDisplay : function() {
+		var courses = [];
+		for (var i = 0; i < this.courses.length; i += 1) {
+			if (this.courses[i] !== undefined) {
+				if (this.courses[i].display) {
+					courses.push(i);
+				}
+			}
+		}
+		return courses;
+	},
+
 	toggleDisplay : function(courseid) {
 		this.courses[courseid].toggleDisplay();
 	},
