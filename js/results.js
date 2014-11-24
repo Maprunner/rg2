@@ -13,7 +13,7 @@ Results.prototype = {
 		var result;
 		var id;
 		var baseresult;
-		var scoreref;
+		var variant;
 		var codes;
 		var scorex;
 		var scorey;
@@ -23,22 +23,22 @@ Results.prototype = {
       codes = [];
       scorex = [];
       scorey = [];
-      // details are only sent the first time a scoreref occurs (to reduce file size quite a lot in some cases)
+      // details are only sent the first time a variant occurs (to reduce file size quite a lot in some cases)
       // so need to extract them for use later
       for (i = 0; i < l; i += 1) {
-        scoreref = data[i].scoreref;
-        if (typeof codes[scoreref] === 'undefined') {
-          codes[scoreref] = data[i].scorecodes;
-          scorex[scoreref] = data[i].scorex;
-          scorey[scoreref] = data[i].scorey;
+        variant = data[i].variant;
+        if (typeof codes[variant] === 'undefined') {
+          codes[variant] = data[i].scorecodes;
+          scorex[variant] = data[i].scorex;
+          scorey[variant] = data[i].scorey;
         }
       }
     }
     // save each result
 		for (i = 0; i < l; i += 1) {
 			if (isScoreEvent) {
-        scoreref = data[i].scoreref;
-        result = new Result(data[i], isScoreEvent, codes[scoreref], scorex[scoreref], scorey[scoreref]);
+        variant = data[i].variant;
+        result = new Result(data[i], isScoreEvent, codes[variant], scorex[variant], scorey[variant]);
 			} else {
         result = new Result(data[i], isScoreEvent);
 			}
@@ -184,7 +184,6 @@ Results.prototype = {
       }
     }
 
-
   },
   
 
@@ -327,6 +326,16 @@ Results.prototype = {
 			this.results[i].putTrackOnDisplay();
 		}
 		this.updateTrackNames();
+	},
+
+  getTracksOnDisplay : function() {
+		var tracks = [];
+		for (var i = 0; i < this.results.length; i += 1) {
+			if (this.results[i].displayTrack) {
+				tracks.push(i);
+			}
+		}
+		return tracks;
 	},
 
 	getDisplayedTrackNames : function() {
@@ -565,7 +574,7 @@ function Result(data, isScoreEvent, scorecodes, scorex, scorey) {
 	// insert a 0 split at the start to make life much easier elsewhere
 	this.splits.splice(0, 0, 0);
 
-	if (data.scoreref !== "") {
+	if (data.variant !== "") {
 		// save control locations for score course result
 		this.scorex = scorex;
 		this.scorey = scorey;
@@ -692,8 +701,6 @@ drawScoreCourse : function() {
       var i;
       var opt = rg2.getOverprintDetails();
       rg2.ctx.globalAlpha = rg2.config.FULL_INTENSITY;
-      rg2.ctx.lineWidth = opt.overprintWidth;
-      rg2.ctx.strokeStyle = rg2.config.PURPLE;
       angle = rg2.getAngle(this.scorex[0], this.scorey[0], this.scorex[1], this.scorey[1]);
       rg2.drawStart(this.scorex[0], this.scorey[0], "", angle, opt);
       for ( i = 0; i < (this.scorex.length - 1); i += 1) {
@@ -719,7 +726,7 @@ drawScoreCourse : function() {
         rg2.ctx.stroke();
       }
       for (i = 1; i < (this.scorex.length - 1); i += 1) {
-        rg2.drawSingleControl(this.scorex[i], this.scorey[i], i, opt);
+        rg2.drawSingleControl(this.scorex[i], this.scorey[i], i, Math.PI * 0.25, opt);
       }
       rg2.drawFinish(this.scorex[this.scorex.length - 1], this.scorey[this.scorey.length - 1], "", opt);
     }

@@ -104,6 +104,7 @@ function Manager(keksi) {
 	this.drawingCourses = false;
 	this.drawnCourse = {};
 	this.results = [];
+	this.variants = [];
 	this.resultCourses = [];
 	this.mapWidth = 0;
 	this.mapHeight = 0;
@@ -560,12 +561,12 @@ Manager.prototype = {
 		}
 		if (this.courses.length === 0) {
 			if (!this.drawingCourses) {
-				return 'No course information.';
+				return 'No course information. Check your course XML file.';
 			}
 		}
 		if (this.results.length === 0) {
 			if (this.format !== this.FORMAT_NO_RESULTS) {
-				return 'No results information.';
+				return 'No results information. Check your results file.';
 			}
 		}
 		return 'OK';
@@ -629,21 +630,8 @@ Manager.prototype = {
 		this.mapResultsToCourses();
 		this.renumberResults();
 		if (data.format === this.FORMAT_SCORE_EVENT) {
-			// copy in controls
-			codes = [];
-			x = [];
-			y = [];
-			for ( i = 0; i < this.newcontrols.controls.length; i += 1) {
-				codes.push(this.newcontrols.controls[i].code);
-				x.push(Math.round(this.newcontrols.controls[i].x));
-				y.push(Math.round(this.newcontrols.controls[i].y));
-
-			}
-			for ( i = 0; i < this.courses.length; i += 1) {
-				this.courses[i].x = x;
-				this.courses[i].y = y;
-				this.courses[i].codes = codes;
-			}
+			this.extractVariants();
+			data.variants = this.variants.slice(0);
 		}
 		data.courses = this.courses.slice(0);
 		data.results = this.results.slice(0);
@@ -683,6 +671,8 @@ Manager.prototype = {
 			id = this.getCourseIDForResult(this.results[i].course);
 			if (id !== this.DO_NOT_SAVE_COURSE) {
 				this.results[i].courseid = id;
+				// set null here: overwritten later in extractVariants if this is a variant
+				this.results[i].variantid = '';
 				newResults.push(this.results[i]);
 			}
 		}
@@ -713,6 +703,81 @@ Manager.prototype = {
 			}
 		}
 		this.courses = newCourses;
+	},
+	
+	extractVariants : function() {
+		// called when saving score/relay courses
+		// creates all course variants once courseid has been set
+		var i;
+		var j;
+		var codes;
+		var course;
+		this.variants.length = 0;
+		for ( i = 0; i < this.results.length; i += 1) {
+			// codes here are just controls so need to add start and finish
+			codes = this.results[i].codes;
+			// courseid - 1 gives courses array index given how we created the array
+			for (j = 0; j < this.courses.length; j += 1) {
+				if (this.courses[j].courseid === this.results[i].courseid) {
+					course = this.courses[j];
+					break;
+				}
+			}
+			// add start code at start
+			codes.unshift(course.codes[0]);
+			// add finish code at end
+			codes.push(course.codes[course.codes.length - 1]);
+			
+			this.results[i].variantid = this.getVariantID(this.results[i].codes, this.results[i].courseid);
+		}
+	},
+	
+	getVariantID : function(codes, courseid) {
+		// checks if a variant array of codes already exists
+		// adds it if it doesn't
+		// returns variantid
+		var i;
+		var j;
+		var c;
+		var x = [];
+		var y = [];
+		var v = {};
+		var match;
+		var id = 0;
+		for (i = 0; i < this.variants.length; i += 1) {
+			if (this.variants[i].codes.length !== codes.length) {
+				continue;
+			}
+			match = true;
+			for (j = 0; j < codes.length; j += 1) {
+				if (this.variants[i].codes[j] !== codes[j]) {
+					match = false;
+					break;
+				}
+			}
+			if (match) {
+				id = i + 1;
+				break;
+			}
+		}
+		if (id === 0) {
+			// didn't find a match so add a new variant
+			id = this.variants.length + 1;
+			v.codes = codes;
+			for (i = 0; i < codes.length; i += 1) {
+				c = this.getControlXY(codes[i]);
+				x.push(c.x);
+				y.push(c.y);
+			}
+			v.x = x;
+			v.y = y;
+			v.id = id;
+			v.courseid = courseid;
+			v.name = 'Variant ' + id;
+			this.variants.push(v);
+		}
+		
+		return id;
 	},
 
 	getCourseIDForResult : function(course) {
@@ -752,8 +817,7 @@ Manager.prototype = {
 				return c;
 			}
 		}
-		return c;
-	},
+		return c;	},
 
 	confirmUpdateEvent : function() {
 		var msg = "<div id='event-update-dialog'>Are you sure you want to update this event?</div>";

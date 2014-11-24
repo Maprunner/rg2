@@ -1,4 +1,4 @@
-// Version 0.9.6 2014-11-14T20:56:56;
+// Version 0.9.7 2014-11-24T12:27:43;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -52,7 +52,6 @@ var rg2 = ( function() {
     var pinchEnd0;
     var pinchEnd1;
     var requestedHash;
-    var requestedEventID;
     var managing;
     
     // jQuery cache items
@@ -96,7 +95,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.9.6',
+      RG2VERSION: '0.9.7',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -137,6 +136,111 @@ var rg2 = ( function() {
 				return this.colours[this.colourIndex];
 			}
 		};
+		
+		function RequestedHash() {
+			this.id = 0;
+			this.courses = [];
+			this.routes = [];
+		}
+		
+		RequestedHash.prototype = {
+			Constructor : RequestedHash,
+
+			parseHash : function(hash) {
+			try {
+				var fields;
+				var i;
+				var a;
+				// input looks like #id&course=a,b,c&result=x,y,z
+				fields = hash.split('&');
+				for (i= 0; i < fields.length; i += 1) {
+					fields[i] = fields[i].toLowerCase();
+					if (fields[i].search('#') !== -1) {
+						this.id = parseInt(fields[i].replace("#", ""), 10);
+					}
+					if (fields[i].search('course=') !== -1) {
+						this.courses = fields[i].replace("course=", "").split(',');
+					}
+					if (fields[i].search('route=') !== -1) {
+						this.routes = fields[i].replace("route=", "").split(',');
+					}
+				}
+				// convert to integers
+				this.courses = this.courses.map(Number);
+				this.routes = this.routes.map(Number);
+				
+      } catch (e) {
+				this.id = 0;
+				this.courses.length = 0;
+				this.routes.length = 0;
+      }
+			},
+			
+			getRoutes : function() {
+				return this.routes;
+			},
+			
+			getCourses : function() {
+				return this.courses;
+			},
+
+			getID : function() {
+				return this.id;
+			},
+
+			getTab : function() {
+				if (this.routes.length > 0) {
+					return config.TAB_RESULTS;
+				}
+				return config.TAB_COURSES;
+			},
+			
+			setCourses : function () {
+				this.courses = courses.getCoursesOnDisplay();
+				window.history.pushState('', '', this.getHash());
+			},
+
+			setRoutes : function () {
+				this.routes = results.getTracksOnDisplay();
+				window.history.pushState('', '', this.getHash());
+			},
+			
+			setNewEvent : function (id) {
+				this.id = id;
+				this.courses.length = 0;
+				this.routes.length = 0;
+				window.history.pushState('', '', this.getHash());
+			},
+			
+			getHash : function () {
+				var hash;
+				var i;
+				if (this.id === 0) {
+					return '#0';
+				} else {
+					hash = '#' + this.id;
+				}
+				if (this.courses.length > 0) {
+					hash += '&course=';
+					for (i = 0; i < this.courses.length; i += 1) {
+						if (i > 0) {
+							hash += ',';
+						}
+						hash += this.courses[i];
+					}
+				}
+				if (this.routes.length > 0) {
+					hash += '&route=';
+					for (i = 0; i < this.routes.length; i += 1) {
+						if (i > 0) {
+							hash += ',';
+						}
+						hash += this.routes[i];
+					}
+				}
+				return hash;
+			}
+		};
 
     function init() {
       $("#rg2-container").hide();
@@ -162,10 +266,10 @@ var rg2 = ( function() {
         managing = false;
       }
 
+      requestedHash = new RequestedHash();
       // check if a specific event has been requested
-      requestedHash = window.location.hash;
-      if ((requestedHash) && (!managing)) {
-        requestedEventID = parseInt(requestedHash.replace("#", ""), 10);
+      if ((window.location.hash) && (!managing)) {
+				requestedHash.parseHash(window.location.hash);
       }
 
       $("#btn-save-route").button().button("disable");
@@ -689,8 +793,8 @@ var rg2 = ( function() {
         createEventMenu();
         // load requested event if set
         // input is kartat ID so need to find internal ID first
-        if (requestedEventID) {
-          var eventID = events.getEventIDForKartatID(requestedEventID);
+        if (requestedHash.getID()) {
+          var eventID = events.getEventIDForKartatID(requestedHash.getID());
           if (eventID !== undefined) {
             loadEvent(eventID);
           }
@@ -1129,6 +1233,7 @@ var rg2 = ( function() {
       $("#rg2-event-list").append(html).menu({
         select : function(event, ui) {
           loadEvent(ui.item[0].id);
+					requestedHash.setNewEvent(events.getKartatEventID());
         }
       });
     }
@@ -1149,7 +1254,6 @@ var rg2 = ( function() {
       loadNewMap(rg2Config.maps_url + events.getMapFileName());
       redraw(false);
       setTitleBar();
-
       // get courses for event
       $.getJSON(rg2Config.json_url, {
         id : events.getKartatEventID(),
@@ -1251,7 +1355,7 @@ var rg2 = ( function() {
           // don't change tab if we have come from DRAW since it means
           // we have just reloaded following a save
           if (active !== config.TAB_DRAW) {
-            $rg2infopanel.tabs("option", "active", config.TAB_COURSES);
+            $rg2infopanel.tabs("option", "active", requestedHash.getTab());
           }
           $rg2infopanel.tabs("refresh");
           $("#btn-show-splits").show();
@@ -1262,9 +1366,24 @@ var rg2 = ( function() {
           } else {
             $("#rg2-splitsbrowser").off().hide();
           }
+					// set up screen as requested in hash
+					var i;
+					var event = $.Event('click');
+					event.target = {};
+					event.target.checked = true;
+					var routes = requestedHash.getRoutes();
+					for (i = 0; i < routes.length; i += 1) {
+						event.target.id = routes[i];
+						$(".showtrack").filter("#" + routes[i]).trigger(event).prop('checked', true);
+					}
+					var crs = requestedHash.getCourses();
+					for (i = 0; i < crs.length; i += 1) {
+						event.target.id = crs[i];
+						$(".showcourse").filter("#" + crs[i]).trigger(event).prop('checked', true);
+					}
         }
-        $("#rg2-load-progress-label").text("");
-        $("#rg2-load-progress").hide();
+				$("#rg2-load-progress-label").text("");
+				$("#rg2-load-progress").hide();
         redraw(false);
       }).fail(function(jqxhr, textStatus, error) {
         reportJSONFail("Routes request failed for event " + events.getKartatEventID() + ": " + error);
@@ -1289,6 +1408,7 @@ var rg2 = ( function() {
           // uncheck box on results tab
           $(".showcourse").filter("#" + id).prop('checked', false);
         }
+        requestedHash.setCourses();
         redraw(false);
       });
       // checkbox on course tab to show all courses
@@ -1305,6 +1425,7 @@ var rg2 = ( function() {
           // uncheck all boxes on results tab
           $(".showcourse").prop('checked', false);
         }
+        requestedHash.setCourses();
         redraw(false);
       });
       // checkbox on course tab to show tracks for one course
@@ -1317,6 +1438,7 @@ var rg2 = ( function() {
           // make sure the all checkbox is not checked
           $(".alltracks").prop('checked', false);
         }
+        requestedHash.setRoutes();
         redraw(false);
       });
       // checkbox on course tab to show all tracks
@@ -1330,6 +1452,7 @@ var rg2 = ( function() {
           // deselect all the individual checkboxes for each course
           $(".tracklist").prop('checked', false);
         }
+        requestedHash.setRoutes();
         redraw(false);
       });
     }
@@ -1447,6 +1570,7 @@ var rg2 = ( function() {
           // make sure the all checkbox is not checked
           $(".allcourses").prop('checked', false);
         }
+        requestedHash.setCourses();
         redraw(false);
       });
       // checkbox to show an individual score course
@@ -1461,6 +1585,7 @@ var rg2 = ( function() {
         } else {
           results.removeOneTrackFromDisplay(event.target.id);
         }
+        requestedHash.setRoutes();
         redraw(false);
       });
       // checkbox to animate a result
@@ -1493,7 +1618,7 @@ var rg2 = ( function() {
         } else {
           $(selector).prop('checked', false);
         }
-        
+        requestedHash.setRoutes();
         redraw(false);
       });
       
@@ -1541,8 +1666,8 @@ var rg2 = ( function() {
       return controls.drawStart(x, y, text, angle, opt);
     }
 
-    function drawSingleControl(x, y, i, opt) {
-      return controls.drawSingleControl(x, y, i, opt);
+    function drawSingleControl(x, y, i, angle, opt) {
+      return controls.drawSingleControl(x, y, i, angle, opt);
     }
 
     function drawFinish(x, y, text, opt) {
@@ -2275,23 +2400,19 @@ Controls.prototype = {
 			var i;
 			var l;
 			var opt = rg2.getOverprintDetails();
-			rg2.ctx.lineWidth = opt.overprintWidth;
-			rg2.ctx.strokeStyle = rg2.config.PURPLE;
-			rg2.ctx.font = '20pt Arial';
-			rg2.ctx.fillStyle = rg2.config.PURPLE;
-			rg2.ctx.globalAlpha = 1.0;
+			//rg2.ctx.globalAlpha = 1.0;
 			l = this.controls.length;
 			for (i = 0; i < l; i += 1) {
 				// Assume things starting with 'F' or 'M' are Finish or Mal
-				if ((this.controls[i].code.indexOf('F') === 0) ||(this.controls[i].code.indexOf('M') === 0)) {
+				if ((this.controls[i].code.indexOf('F') === 0) || (this.controls[i].code.indexOf('M') === 0)) {
 					this.drawFinish(this.controls[i].x, this.controls[i].y, this.controls[i].code, opt);
 				} else {
 					// Assume things starting with 'S' are a Start
 					if (this.controls[i].code.indexOf('S') === 0) {
-						this.drawStart(this.controls[i].x, this.controls[i].y, this.controls[i].code, (6 * Math.PI / 4), opt);
+						this.drawStart(this.controls[i].x, this.controls[i].y, this.controls[i].code, (1.5 * Math.PI), opt);
 					} else {
 						// Else it's a normal control
-						this.drawSingleControl(this.controls[i].x, this.controls[i].y, this.controls[i].code, opt);
+						this.drawSingleControl(this.controls[i].x, this.controls[i].y, this.controls[i].code, Math.PI * 0.25, opt);
 						if (drawDot) {
               rg2.ctx.fillRect(this.controls[i].x - 1, this.controls[i].y - 1, 3, 3);
 						}
@@ -2301,7 +2422,10 @@ Controls.prototype = {
 			}
 		}
 	},
-	drawSingleControl : function(x, y, code, opt) {
+	drawSingleControl : function(x, y, code, angle, opt) {
+		var metrics;
+		var xoffset;
+		var yoffset;
 		//Draw the white halo around the controls
 		rg2.ctx.beginPath();
 		rg2.ctx.strokeStyle = "white";
@@ -2310,14 +2434,30 @@ Controls.prototype = {
 		rg2.ctx.stroke();
 		//Draw the white halo around the control code
 		rg2.ctx.beginPath();
-		rg2.ctx.textAlign = "left";
+		rg2.ctx.textAlign = "center";
 		rg2.ctx.font = opt.font;
 		rg2.ctx.strokeStyle = "white";
 		rg2.ctx.miterLimit = 2;
 		rg2.ctx.lineJoin = "circle";
 		rg2.ctx.lineWidth = 1.5;
-    // text offset looks OK with these values: no real science involved
-		rg2.ctx.strokeText(code, x + (opt.controlRadius * 1.25), y + opt.controlRadius);
+		rg2.ctx.textBaseline = "middle";
+		metrics = rg2.ctx.measureText(code);
+		// offset to left if left of centre, to right if right of centre
+		if (angle < Math.PI) {
+			xoffset = metrics.width / 2;
+		} else {
+			xoffset = -1 * metrics.width /2;
+		}
+		// control radius is also the control code text height
+		// offset up if above half way, down if below half way
+		if ((angle >= (Math.PI / 2)) && (angle <= (Math.PI * 1.5))) {
+			yoffset = -1 * opt.controlRadius / 2;
+		} else {
+			yoffset = opt.controlRadius /2;
+		}
+		// empirically looks OK with this scale
+		var scale = 1.3;
+		rg2.ctx.strokeText(code, x + (opt.controlRadius * scale * Math.sin(angle)) + xoffset, y + (opt.controlRadius * scale * Math.cos(angle)) + yoffset);
 		//Draw the purple control
 		rg2.ctx.beginPath();
 		rg2.ctx.font = opt.font;
@@ -2325,10 +2465,10 @@ Controls.prototype = {
 		rg2.ctx.strokeStyle = rg2.config.PURPLE;
 		rg2.ctx.lineWidth = opt.overprintWidth;
 		rg2.ctx.arc(x, y, opt.controlRadius, 0, 2 * Math.PI, false);
-		// text offset looks OK with these values: no real science involved
-		rg2.ctx.fillText(code, x + (opt.controlRadius * 1.25), y + opt.controlRadius);
+		rg2.ctx.fillText(code, x + (opt.controlRadius * scale * Math.sin(angle)) + xoffset, y + (opt.controlRadius * scale * Math.cos(angle)) + yoffset);
 		rg2.ctx.stroke();
 	},
+	
 	drawFinish : function(x, y, code, opt) {
 		//Draw the white halo around the finish control
 		rg2.ctx.strokeStyle = "white";
@@ -2597,6 +2737,18 @@ Courses.prototype = {
 		return this.courses[courseid].display;
 	},
 
+	getCoursesOnDisplay : function() {
+		var courses = [];
+		for (var i = 0; i < this.courses.length; i += 1) {
+			if (this.courses[i] !== undefined) {
+				if (this.courses[i].display) {
+					courses.push(i);
+				}
+			}
+		}
+		return courses;
+	},
+
 	toggleDisplay : function(courseid) {
 		this.courses[courseid].toggleDisplay();
 	},
@@ -2639,17 +2791,16 @@ Courses.prototype = {
       }
     }
   },
-   
-   
-  setResultsCount : function() {
-    var i;
-    for (i = 0; i < this.courses.length; i += 1) {
-      if (this.courses[i] !== undefined) {
-        this.courses[i].resultcount = rg2.countResultsByCourseID(i);
-      }
-    }
-  },
-  
+
+	setResultsCount : function() {
+		var i;
+		for (i = 0; i < this.courses.length; i += 1) {
+			if (this.courses[i] !== undefined) {
+				this.courses[i].resultcount = rg2.countResultsByCourseID(i);
+			}
+		}
+	},
+
 	formatCoursesAsTable : function() {
 		var res = 0;
 		var html = "<table class='coursemenutable'><tr><th>" + rg2.t("Course") + "</th><th>" + rg2.t("Show");
@@ -2684,6 +2835,14 @@ Courses.prototype = {
 };
 
 function Course(data, isScoreCourse) {
+	var i;
+	var angle;
+	var c1x;
+	var c1y;
+	var c2x;
+	var c2y;
+	var c3x;
+	var c3y;
 	this.name = data.name;
 	this.trackcount = 0;
 	this.display = false;
@@ -2692,7 +2851,35 @@ function Course(data, isScoreCourse) {
 	this.x = data.xpos;
 	this.y = data.ypos;
 	this.isScoreCourse = isScoreCourse;
+	// save angle to next control to simplify later calculations
+	this.angle = [];
+	// save angle to show control code text
+	this.textAngle = [];
+	for ( i = 0; i < (this.x.length - 1); i += 1) {
+		if (this.isScoreCourse) {
+			// align score event start triangle and controls upwards
+			this.angle[i] = Math.PI * 1.5;
+			this.textAngle[i] = Math.PI * 0.25;
+		} else {
+			// angle of line to next control
+			this.angle[i] = rg2.getAngle(this.x[i], this.y[i], this.x[i + 1], this.y[i + 1]);
+			// create bisector of angle to position number
+			c1x = Math.sin(this.angle[i - 1]);
+			c1y = Math.cos(this.angle[i - 1]);
+			c2x = Math.sin(this.angle[i]) + c1x;
+			c2y = Math.cos(this.angle[i]) + c1y;
+			c3x = c2x / 2;
+			c3y = c2y / 2;
+			this.textAngle[i] = rg2.getAngle(c3x, c3y, c1x, c1y);
+		}
+	}
+	
+	// not worried about angle for finish
+	this.angle[this.x.length - 1] = 0;
+	this.textAngle[this.x.length - 1] = 0;
+	
 	this.resultcount = 0;
+	
 }
 
 Course.prototype = {
@@ -2719,19 +2906,16 @@ Course.prototype = {
 			var i;
 			var opt = rg2.getOverprintDetails();
 			rg2.ctx.globalAlpha = intensity;
-			rg2.ctx.lineWidth = opt.overprintWidth;
-			rg2.ctx.strokeStyle = rg2.config.PURPLE;
 			if (this.isScoreCourse) {
-				// align score event start triangle upwards
-				angle = Math.PI * 3 / 2;
+				angle = Math.PI * 0.25;
 			} else {
-				angle = rg2.getAngle(this.x[0], this.y[0], this.x[1], this.y[1]);
+				angle = this.angle[0];
 			}
-			rg2.drawStart(this.x[0], this.y[0], "", angle, opt);
+			rg2.drawStart(this.x[0], this.y[0], "", this.angle[0], opt);
       // don't join up controls for score events
       if (!this.isScoreCourse) {
         for ( i = 0; i < (this.x.length - 1); i += 1) {
-          angle = rg2.getAngle(this.x[i], this.y[i], this.x[i + 1], this.y[i + 1]);
+          angle = this.angle[i];
           if (i === 0) {
             c1x = this.x[i] + (opt.startTriangleLength * Math.cos(angle));
             c1y = this.y[i] + (opt.startTriangleLength * Math.sin(angle));
@@ -2759,15 +2943,15 @@ Course.prototype = {
           if ((this.codes[i].indexOf('F') === 0) ||(this.codes[i].indexOf('M') === 0)) {
             rg2.drawFinish(this.x[i], this.y[i], "", opt);
           } else {
-            rg2.drawSingleControl(this.x[i], this.y[i], this.codes[i], opt);
+            rg2.drawSingleControl(this.x[i], this.y[i], this.codes[i], this.textAngle[i], opt);
           }
-        }
+			}
 
 			} else {
-        for (i = 1; i < (this.x.length - 1); i += 1) {
-          rg2.drawSingleControl(this.x[i], this.y[i], i, opt);
-        }
-        rg2.drawFinish(this.x[this.x.length - 1], this.y[this.y.length - 1], "", opt);
+				for (i = 1; i < (this.x.length - 1); i += 1) {
+					rg2.drawSingleControl(this.x[i], this.y[i], i, this.textAngle[i], opt);
+				}
+				rg2.drawFinish(this.x[this.x.length - 1], this.y[this.y.length - 1], "", opt);
 			}
 		}
 	}
@@ -3125,6 +3309,7 @@ Draw.prototype = {
       this.gpstrack.routeData.totaltime = time;
       this.gpstrack.routeData.startsecs = 0;
       this.gpstrack.routeData.time[0] = rg2.getSecsFromMMSS(time);
+      this.gpstrack.routeData.totalsecs = rg2.getSecsFromMMSS(time);
       this.startDrawing();
     }
   },
@@ -4191,7 +4376,7 @@ Results.prototype = {
 		var result;
 		var id;
 		var baseresult;
-		var scoreref;
+		var variant;
 		var codes;
 		var scorex;
 		var scorey;
@@ -4201,22 +4386,22 @@ Results.prototype = {
       codes = [];
       scorex = [];
       scorey = [];
-      // details are only sent the first time a scoreref occurs (to reduce file size quite a lot in some cases)
+      // details are only sent the first time a variant occurs (to reduce file size quite a lot in some cases)
       // so need to extract them for use later
       for (i = 0; i < l; i += 1) {
-        scoreref = data[i].scoreref;
-        if (typeof codes[scoreref] === 'undefined') {
-          codes[scoreref] = data[i].scorecodes;
-          scorex[scoreref] = data[i].scorex;
-          scorey[scoreref] = data[i].scorey;
+        variant = data[i].variant;
+        if (typeof codes[variant] === 'undefined') {
+          codes[variant] = data[i].scorecodes;
+          scorex[variant] = data[i].scorex;
+          scorey[variant] = data[i].scorey;
         }
       }
     }
     // save each result
 		for (i = 0; i < l; i += 1) {
 			if (isScoreEvent) {
-        scoreref = data[i].scoreref;
-        result = new Result(data[i], isScoreEvent, codes[scoreref], scorex[scoreref], scorey[scoreref]);
+        variant = data[i].variant;
+        result = new Result(data[i], isScoreEvent, codes[variant], scorex[variant], scorey[variant]);
 			} else {
         result = new Result(data[i], isScoreEvent);
 			}
@@ -4362,7 +4547,6 @@ Results.prototype = {
       }
     }
 
-
   },
   
 
@@ -4505,6 +4689,16 @@ Results.prototype = {
 			this.results[i].putTrackOnDisplay();
 		}
 		this.updateTrackNames();
+	},
+
+  getTracksOnDisplay : function() {
+		var tracks = [];
+		for (var i = 0; i < this.results.length; i += 1) {
+			if (this.results[i].displayTrack) {
+				tracks.push(i);
+			}
+		}
+		return tracks;
 	},
 
 	getDisplayedTrackNames : function() {
@@ -4743,7 +4937,7 @@ function Result(data, isScoreEvent, scorecodes, scorex, scorey) {
 	// insert a 0 split at the start to make life much easier elsewhere
 	this.splits.splice(0, 0, 0);
 
-	if (data.scoreref !== "") {
+	if (data.variant !== "") {
 		// save control locations for score course result
 		this.scorex = scorex;
 		this.scorey = scorey;
@@ -4870,8 +5064,6 @@ drawScoreCourse : function() {
       var i;
       var opt = rg2.getOverprintDetails();
       rg2.ctx.globalAlpha = rg2.config.FULL_INTENSITY;
-      rg2.ctx.lineWidth = opt.overprintWidth;
-      rg2.ctx.strokeStyle = rg2.config.PURPLE;
       angle = rg2.getAngle(this.scorex[0], this.scorey[0], this.scorex[1], this.scorey[1]);
       rg2.drawStart(this.scorex[0], this.scorey[0], "", angle, opt);
       for ( i = 0; i < (this.scorex.length - 1); i += 1) {
@@ -4897,7 +5089,7 @@ drawScoreCourse : function() {
         rg2.ctx.stroke();
       }
       for (i = 1; i < (this.scorex.length - 1); i += 1) {
-        rg2.drawSingleControl(this.scorex[i], this.scorey[i], i, opt);
+        rg2.drawSingleControl(this.scorex[i], this.scorey[i], i, Math.PI * 0.25, opt);
       }
       rg2.drawFinish(this.scorex[this.scorex.length - 1], this.scorey[this.scorey.length - 1], "", opt);
     }
