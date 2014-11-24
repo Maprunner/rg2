@@ -1325,6 +1325,8 @@ function getAllEvents() {
       // Issue #11: found a stray &#39; in a SUFFOC file
       $name = encode_rg_input($data[3]);
       $detail["name"] = str_replace("&#39;", "'", $name);
+      // and stray &amp;#39; in a CHIG file
+      $detail["name"] = str_replace("&amp;#39;", "'", $name);
       $detail["date"] = $data[4];
       $detail["club"] = encode_rg_input($data[5]);
       $detail["type"] = $data[6];
