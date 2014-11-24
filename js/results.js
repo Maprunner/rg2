@@ -701,8 +701,6 @@ drawScoreCourse : function() {
       var i;
       var opt = rg2.getOverprintDetails();
       rg2.ctx.globalAlpha = rg2.config.FULL_INTENSITY;
-      rg2.ctx.lineWidth = opt.overprintWidth;
-      rg2.ctx.strokeStyle = rg2.config.PURPLE;
       angle = rg2.getAngle(this.scorex[0], this.scorey[0], this.scorex[1], this.scorey[1]);
       rg2.drawStart(this.scorex[0], this.scorey[0], "", angle, opt);
       for ( i = 0; i < (this.scorex.length - 1); i += 1) {
@@ -728,7 +726,7 @@ drawScoreCourse : function() {
         rg2.ctx.stroke();
       }
       for (i = 1; i < (this.scorex.length - 1); i += 1) {
-        rg2.drawSingleControl(this.scorex[i], this.scorey[i], i, opt);
+        rg2.drawSingleControl(this.scorex[i], this.scorey[i], i, Math.PI * 0.25, opt);
       }
       rg2.drawFinish(this.scorex[this.scorex.length - 1], this.scorey[this.scorey.length - 1], "", opt);
     }

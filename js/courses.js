@@ -207,17 +207,16 @@ Courses.prototype = {
       }
     }
   },
-   
-   
-  setResultsCount : function() {
-    var i;
-    for (i = 0; i < this.courses.length; i += 1) {
-      if (this.courses[i] !== undefined) {
-        this.courses[i].resultcount = rg2.countResultsByCourseID(i);
-      }
-    }
-  },
-  
+
+	setResultsCount : function() {
+		var i;
+		for (i = 0; i < this.courses.length; i += 1) {
+			if (this.courses[i] !== undefined) {
+				this.courses[i].resultcount = rg2.countResultsByCourseID(i);
+			}
+		}
+	},
+
 	formatCoursesAsTable : function() {
 		var res = 0;
 		var html = "<table class='coursemenutable'><tr><th>" + rg2.t("Course") + "</th><th>" + rg2.t("Show");
@@ -252,6 +251,14 @@ Courses.prototype = {
 };
 
 function Course(data, isScoreCourse) {
+	var i;
+	var angle;
+	var c1x;
+	var c1y;
+	var c2x;
+	var c2y;
+	var c3x;
+	var c3y;
 	this.name = data.name;
 	this.trackcount = 0;
 	this.display = false;
@@ -260,7 +267,35 @@ function Course(data, isScoreCourse) {
 	this.x = data.xpos;
 	this.y = data.ypos;
 	this.isScoreCourse = isScoreCourse;
+	// save angle to next control to simplify later calculations
+	this.angle = [];
+	// save angle to show control code text
+	this.textAngle = [];
+	for ( i = 0; i < (this.x.length - 1); i += 1) {
+		if (this.isScoreCourse) {
+			// align score event start triangle and controls upwards
+			this.angle[i] = Math.PI * 1.5;
+			this.textAngle[i] = Math.PI * 0.25;
+		} else {
+			// angle of line to next control
+			this.angle[i] = rg2.getAngle(this.x[i], this.y[i], this.x[i + 1], this.y[i + 1]);
+			// create bisector of angle to position number
+			c1x = Math.sin(this.angle[i - 1]);
+			c1y = Math.cos(this.angle[i - 1]);
+			c2x = Math.sin(this.angle[i]) + c1x;
+			c2y = Math.cos(this.angle[i]) + c1y;
+			c3x = c2x / 2;
+			c3y = c2y / 2;
+			this.textAngle[i] = rg2.getAngle(c3x, c3y, c1x, c1y);
+		}
+	}
+	
+	// not worried about angle for finish
+	this.angle[this.x.length - 1] = 0;
+	this.textAngle[this.x.length - 1] = 0;
+	
 	this.resultcount = 0;
+	
 }
 
 Course.prototype = {
@@ -287,19 +322,16 @@ Course.prototype = {
 			var i;
 			var opt = rg2.getOverprintDetails();
 			rg2.ctx.globalAlpha = intensity;
-			rg2.ctx.lineWidth = opt.overprintWidth;
-			rg2.ctx.strokeStyle = rg2.config.PURPLE;
 			if (this.isScoreCourse) {
-				// align score event start triangle upwards
-				angle = Math.PI * 3 / 2;
+				angle = Math.PI * 0.25;
 			} else {
-				angle = rg2.getAngle(this.x[0], this.y[0], this.x[1], this.y[1]);
+				angle = this.angle[0];
 			}
-			rg2.drawStart(this.x[0], this.y[0], "", angle, opt);
+			rg2.drawStart(this.x[0], this.y[0], "", this.angle[0], opt);
       // don't join up controls for score events
       if (!this.isScoreCourse) {
         for ( i = 0; i < (this.x.length - 1); i += 1) {
-          angle = rg2.getAngle(this.x[i], this.y[i], this.x[i + 1], this.y[i + 1]);
+          angle = this.angle[i];
           if (i === 0) {
             c1x = this.x[i] + (opt.startTriangleLength * Math.cos(angle));
             c1y = this.y[i] + (opt.startTriangleLength * Math.sin(angle));
@@ -327,15 +359,15 @@ Course.prototype = {
           if ((this.codes[i].indexOf('F') === 0) ||(this.codes[i].indexOf('M') === 0)) {
             rg2.drawFinish(this.x[i], this.y[i], "", opt);
           } else {
-            rg2.drawSingleControl(this.x[i], this.y[i], this.codes[i], opt);
+            rg2.drawSingleControl(this.x[i], this.y[i], this.codes[i], this.textAngle[i], opt);
           }
-        }
+			}
 
 			} else {
-        for (i = 1; i < (this.x.length - 1); i += 1) {
-          rg2.drawSingleControl(this.x[i], this.y[i], i, opt);
-        }
-        rg2.drawFinish(this.x[this.x.length - 1], this.y[this.y.length - 1], "", opt);
+				for (i = 1; i < (this.x.length - 1); i += 1) {
+					rg2.drawSingleControl(this.x[i], this.y[i], i, this.textAngle[i], opt);
+				}
+				rg2.drawFinish(this.x[this.x.length - 1], this.y[this.y.length - 1], "", opt);
 			}
 		}
 	}

@@ -1665,8 +1665,8 @@ var rg2 = ( function() {
       return controls.drawStart(x, y, text, angle, opt);
     }
 
-    function drawSingleControl(x, y, i, opt) {
-      return controls.drawSingleControl(x, y, i, opt);
+    function drawSingleControl(x, y, i, angle, opt) {
+      return controls.drawSingleControl(x, y, i, angle, opt);
     }
 
     function drawFinish(x, y, text, opt) {
