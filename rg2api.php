@@ -832,7 +832,7 @@ function addNewRoute($eventid, $data) {
   $newtrackdata = $data->courseid."|".$id."|".$name."|null|".$track."|".$controls.PHP_EOL;
 
   $newresultdata = "";
-  if ($newresult == TRUE) {
+  if (($newresult == TRUE) || ($id >= GPS_RESULT_OFFSET)) {
     // New result or GPS record so need to add result record as well
     // GPS track saved here as a point every three seconds
     // input can in theory have any time between points
