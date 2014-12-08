@@ -291,10 +291,7 @@ var rg2 = ( function() {
 
       $("#rg2-result-list").accordion({
         collapsible : true,
-        heightStyle : "content",
-        select : function(event, ui) {
-          console.log("Result index selected: " + ui.item[0].id);
-        }
+        heightStyle : "content"
       });
 
       $("#rg2-clock").text("00:00:00");
@@ -549,6 +546,7 @@ var rg2 = ( function() {
         .append(animation.getSplitsTable())
         .dialog({
           width : 'auto',
+          dialogClass: "rg2-splits-table",
           buttons : {
             Ok : function() {
               $(this).dialog('close');
@@ -923,6 +921,7 @@ var rg2 = ( function() {
         width : Math.min(1000, (canvas.width * 0.8)),
         maxHeight : Math.min(1000, (canvas.height * 0.9)),
         title: "RG2 Version " + config.RG2VERSION,
+        dialogClass: "rg2-about-dialog",
         resizable: false,
         buttons : {
           Ok : function() {
@@ -1192,10 +1191,15 @@ var rg2 = ( function() {
 		}
 		
 		function showWarningDialog(title, text) {
-			var msg = '<div>' + text + '</div>';
+			var msg = '<div id=rg2-warning-dialog>' + text + '</div>';
+			var self = this;
 			$(msg).dialog({
-			title : title
-			});
+				title : title,
+				dialogClass : "rg2-warning-dialog",
+ 				close: function( event, ui ) {
+    			$('#rg2-warning-dialog').dialog('destroy').remove();
+    		}
+   		});
 		}
 		
 		function getDistanceBetweenPoints(x1, y1, x2, y2) {
@@ -1709,10 +1713,6 @@ var rg2 = ( function() {
       results.createNameDropdown(courseid);
     }
 
-    function getRunnerName(resultid) {
-      return results.getRunnerName(resultid);
-    }
-
     function resultIDExists(resultid) {
       return results.resultIDExists(resultid);
     }
@@ -1849,7 +1849,6 @@ var rg2 = ( function() {
       getTimeForID : getTimeForID,
       getSplitsForID : getSplitsForID,
       resultIDExists : resultIDExists,
-      getRunnerName : getRunnerName,
       putOnDisplay : putOnDisplay,
       putScoreCourseOnDisplay: putScoreCourseOnDisplay,
       removeFromDisplay : removeFromDisplay,

@@ -43,14 +43,6 @@ Courses.prototype = {
 		this.totaltracks += 1;
 	},
 
-	gettrackcountCount : function(courseid) {
-		return this.courses[courseid].trackcount;
-	},
-
-	getTotalTracksCount : function() {
-		return this.totaltracks;
-	},
-
 	addCourse : function(courseObject) {
 		this.courses[courseObject.courseid] = courseObject;
 		this.numberofcourses += 1;
@@ -149,10 +141,6 @@ Courses.prototype = {
 
 	},
 
-	isOnDisplay : function(courseid) {
-		return this.courses[courseid].display;
-	},
-
 	getCoursesOnDisplay : function() {
 		var courses = [];
 		for (var i = 0; i < this.courses.length; i += 1) {
@@ -163,10 +151,6 @@ Courses.prototype = {
 			}
 		}
 		return courses;
-	},
-
-	toggleDisplay : function(courseid) {
-		this.courses[courseid].toggleDisplay();
 	},
 
 	getNumberOfCourses : function() {
@@ -303,13 +287,6 @@ Course.prototype = {
 
 	incrementTracksCount : function() {
 		this.trackcount += 1;
-	},
-	getCourseID : function() {
-		return this.courseid;
-	},
-
-	toggleDisplay : function() {
-		this.display = !this.display;
 	},
 
 	drawCourse : function(intensity) {

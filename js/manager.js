@@ -140,10 +140,7 @@ function Manager(keksi) {
 		if ((self.user.name.length > 4) && (self.user.pwd.length > 4)) {
 			self.logIn();
 		} else {
-			var msg = "<div>Please enter user name and password of at least five characters.</div>";
-			$(msg).dialog({
-				title : "Login failed"
-			});
+			rg2.showWarningDialog("Login failed", "Please enter user name and password of at least five characters");
 		}
 		// prevent form submission
 		return false;
@@ -192,18 +189,12 @@ Manager.prototype = {
 				if (data.ok) {
 					self.enableEventEdit();
 				} else {
-					var msg = "<div>" + data.status_msg + ". Login failed. Please try again.</div>";
-					$(msg).dialog({
-						title : "Login failed"
-					});
+					rg2.showWarningDialog("Login failed", "Login failed. Please try again.");
 				}
 			},
 			error : function(jqXHR, textStatus, errorThrown) {
 				console.log(errorThrown);
-				var msg = "<div>User name or password incorrect. Please try again.</div>";
-				$(msg).dialog({
-					title : "Login failed"
-				});
+				rg2.showWarningDialog("Login failed", "User name or password incorrect. Please try again.");
 			}
 		});
 		return false;
@@ -584,7 +575,7 @@ Manager.prototype = {
 		$(msg).dialog({
 			title : "Confirm event creation",
 			modal : true,
-			dialogClass : "no-close",
+			dialogClass : "no-close rg2-confirm-create-event-dialog",
 			closeOnEscape : false,
 			buttons : [{
 				text : "Cancel",
@@ -651,7 +642,7 @@ Manager.prototype = {
 				if (data.ok) {
 					rg2.showWarningDialog("Event created", self.eventName + " has been added with id " + data.newid + ".");
 				} else {
-					rg2.showWarningDialog("Save failed", data.status_msg + ". Failed to create event. Please try again.");
+					rg2.showWarningDialog("Save failed", data.status_msg + " Failed to create event. Please try again.");
 				}
 			},
 			error : function(jqXHR, textStatus, errorThrown) {
@@ -825,7 +816,7 @@ Manager.prototype = {
 		$(msg).dialog({
 			title : "Confirm event update",
 			modal : true,
-			dialogClass : "no-close",
+			dialogClass : "no-close rg2-confirm-update-dialog",
 			closeOnEscape : false,
 			buttons : [{
 				text : "Cancel",
@@ -886,7 +877,7 @@ Manager.prototype = {
 		$(msg).dialog({
 			title : "Confirm course delete",
 			modal : true,
-			dialogClass : "no-close",
+			dialogClass : "no-close rg2-confirm-course-delete-dialog",
 			closeOnEscape : false,
 			buttons : [{
 				text : "Cancel",
@@ -920,7 +911,7 @@ Manager.prototype = {
 		$(msg).dialog({
 			title : "Confirm route delete",
 			modal : true,
-			dialogClass : "no-close",
+			dialogClass : "no-close rg2-confirm-route-delete-dialog",
 			closeOnEscape : false,
 			buttons : [{
 				text : "Cancel",
@@ -976,7 +967,7 @@ Manager.prototype = {
 		$(msg).dialog({
 			title : "Confirm event delete",
 			modal : true,
-			dialogClass : "no-close",
+			dialogClass : "no-close rg2-confirm-delete-event-dialog",
 			closeOnEscape : false,
 			buttons : [{
 				text : "Cancel",
@@ -1811,15 +1802,11 @@ Manager.prototype = {
 				// check we are somewhere on the map
 				if ((maxX < 0) || (minX > this.mapWidth) || (minY > this.mapHeight) || (maxY < 0)) {
 					// warn and fit to track
-					var msg = "<div id='GPS-problem-dialog'>Your course file does not match the map co-ordinates. Please check you have selected the correct file.</div>";
-					$(msg).dialog({
-						title : "Course file problem"
-					});
+					rg2.showWarningDialog("Course file problem", "Your course file does not match the map co-ordinates. Please check you have selected the correct file.");
 				} else {
 					georefOK = true;
 				}
 			}
-
 			if (georefOK) {
 				// lock background to prevent accidentally moving the aligned controls
 				// user can always unlock and adjust
@@ -2070,7 +2057,7 @@ Manager.prototype = {
 		$(msg).dialog({
 			title : "Confirm new map",
 			modal : true,
-			dialogClass : "no-close",
+			dialogClass : "no-close rg2-confirm-add-map-dialog",
 			closeOnEscape : false,
 			buttons : [{
 				text : "Cancel",

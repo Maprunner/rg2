@@ -265,10 +265,6 @@ Results.prototype = {
     return info;
   },
 
-	getCourseID : function(resultid) {
-		return this.results[resultid].courseid;
-	},
-
 	getFullResult : function(resultid) {
 		return this.results[resultid];
 	},
@@ -420,10 +416,6 @@ Results.prototype = {
 
 	deleteAllResults : function() {
 		this.results.length = 0;
-	},
-
-	getRunnerName : function(runner) {
-		return this.results[runner].name;
 	},
 
 	sortByCourseIDThenResultID : function(a, b) {
@@ -878,20 +870,6 @@ drawScoreCourse : function() {
     }
   },
 
-	getCourseName : function() {
-		if (this.coursename !== "") {
-			return this.coursename;
-		} else {
-			return "GPS tracks";
-		}
-	},
-	getRunnerName : function() {
-		return this.name;
-	},
-	getTime : function() {
-		return this.time;
-	},
-	
   getInitials : function (name) {
     // converts name to initials
     // remove white space at each end
