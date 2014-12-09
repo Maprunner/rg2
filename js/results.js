@@ -251,8 +251,9 @@ Results.prototype = {
         }
       }
     }
+    info.totalroutes = info.drawnroutes + info.gpsroutes;
     if (info.results > 0) {
-      info.percent = (100 * (info.drawnroutes + info.gpsroutes) / info.results).toFixed(1);
+      info.percent = (100 * info.totalroutes / info.results).toFixed(1);
     } else {
       info.percent = 0;
     }

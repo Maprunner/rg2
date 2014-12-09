@@ -1192,14 +1192,16 @@ var rg2 = ( function() {
 		
 		function showWarningDialog(title, text) {
 			var msg = '<div id=rg2-warning-dialog>' + text + '</div>';
+			// see http://stackoverflow.com/questions/12057427/jshint-possible-strict-violation-when-using-bind
+			/*jshint validthis:true */
 			var self = this;
 			$(msg).dialog({
 				title : title,
 				dialogClass : "rg2-warning-dialog",
- 				close: function( event, ui ) {
-    			$('#rg2-warning-dialog').dialog('destroy').remove();
-    		}
-   		});
+					close: function( event, ui ) {
+					$('#rg2-warning-dialog').dialog('destroy').remove();
+				}
+			});
 		}
 		
 		function getDistanceBetweenPoints(x1, y1, x2, y2) {
@@ -1211,20 +1213,33 @@ var rg2 = ( function() {
       var stats;
       var coursearray;
       var resultsinfo;
+      var runnercomments;
+      var eventinfo;
+      var id;
+      id = events.getActiveEventID();
       // check there is an event to report on
-      if (events.getActiveEventID() === null) {
+      if (id === null) {
         return "";
+      } else {
+        id = events.getKartatEventID();
+        eventinfo = events.getEventInfo(parseInt(id, 10));
       }
       coursearray = courses.getCoursesForEvent();
       resultsinfo = results.getResultsInfo();
-      stats = "<h3>" + t("Event statistics") + "</h3>";
-      stats += "<p><strong>" + t("Courses") + ":</strong> " + coursearray.length + " <strong>" + t("Results") + ":</strong> " + resultsinfo.results;
-      stats += "<strong> " + t("Drawn routes") + ":</strong> " + resultsinfo.drawnroutes + " <strong>" + t("GPS routes");
-      stats += ":</strong> " + resultsinfo.gpsroutes + " (" + resultsinfo.percent + "%)</p>";
+      runnercomments = results.getComments();
+      stats = "<h3>" + t("Event statistics") + ": " + eventinfo.name + "</h3>";
+      if (eventinfo.comment) {
+        stats += "<p>" + eventinfo.comment + "</p>";
+      }
+      stats += "<p><strong>" + t("Courses") + ":</strong> " + coursearray.length + "</p><p> <strong>" + t("Results") + ":</strong> " + resultsinfo.results + "</p>";
+      stats += "<p><strong>" + t("Routes") + ":</strong> " + resultsinfo.totalroutes + " (" +  resultsinfo.percent + "%)</p>";
+      stats += "<p><strong>" + t("Drawn routes") + ":</strong> " + resultsinfo.drawnroutes + "</p>";
+      stats += "<p><strong>" + t("GPS routes") + ":</strong> " + resultsinfo.gpsroutes + "</p>";
       stats += "<p><strong>" + t("Total time") + ":</strong> " + resultsinfo.time + "</p>";
       stats += "<p><strong>" + t("Map ") + ":</strong> ID " + events.getActiveMapID() + ", " + map.width + " x " + map.height + " pixels </p>";
-      stats += "<p><strong>" + t("Comments") + ":</strong></p>";
-      stats += results.getComments();
+      if (runnercomments) {
+        stats += "<p><strong>" + t("Comments") + ":</strong></p>" + runnercomments ;
+      }
       // #177 not pretty but gets round problems of double encoding
       stats = stats.replace(/&amp;/g, '&');
       return stats;

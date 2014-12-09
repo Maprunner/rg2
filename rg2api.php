@@ -1305,6 +1305,7 @@ function getAllEvents() {
   if (($handle = @fopen(KARTAT_DIRECTORY."kisat.txt", "r")) !== FALSE) {
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
       $detail = array();
+      $fields = count($data);
       $detail["id"] = intval($data[0]);
       $detail["mapid"] = intval($data[1]);
       if (file_exists(KARTAT_DIRECTORY.$detail["mapid"].'.gif')) {
@@ -1328,10 +1329,24 @@ function getAllEvents() {
       // and stray &amp;#39; in a CHIG file
       $detail["name"] = str_replace("&amp;#39;", "'", $name);
       $detail["date"] = $data[4];
-      $detail["club"] = encode_rg_input($data[5]);
-      $detail["type"] = $data[6];
-      $detail["comment"] = encode_rg_input($data[7]);
-      $output[$row] = $detail;        
+      if ($fields > 5) {
+        $detail["club"] = encode_rg_input($data[5]);
+      } else {
+        $detail["club"] = "";
+      }
+      if ($fields > 6) {
+        $detail["type"] = $data[6];
+      } else {
+        $detail["type"] = "X";
+      }
+      if ($fields > 7) {
+        // allow for RG1 comment formatting
+        $temp = str_replace("<br>", "\n", $data[7]);
+        $detail["comment"] = encode_rg_input($temp);
+      } else {
+        $detail["comment"] = "";
+      }
+      $output[$row] = $detail;
       $row++;
     }
     fclose($handle);
@@ -1428,8 +1443,9 @@ function getResultsForEvent($eventid) {
            // replace carriage return and line break codes
            $temp = encode_rg_input($data[4]);  
            // RG1 uses #cr##nl# and #nl# to allow saving to text file
-           $temp = str_replace("#cr##nl#", "\n", $temp);  
-           $temp = str_replace("#nl#", "\n", $temp);  
+           $temp = str_replace("#cr##nl#", "\n", $temp);
+           $temp = str_replace("#nl#", "\n", $temp);
+           $temp = str_replace("<br>", "\n", $temp);
            $text[$comments]["comments"] = $temp;
            $comments++;
         }
