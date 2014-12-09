@@ -1435,19 +1435,17 @@ Manager.prototype = {
 			codes = [];
 			x = [];
 			y = [];
-			course.name = nodelist[i].getElementsByTagName('CourseName')[0].textContent;
-			tmp = nodelist[i].getElementsByTagName('StartPointCode')[0].textContent;
-			codes.push(tmp.trim());
+			course.name = nodelist[i].getElementsByTagName('CourseName')[0].textContent.trim();
+			codes.push(nodelist[i].getElementsByTagName('StartPointCode')[0].textContent.trim());
 			controllist = nodelist[i].getElementsByTagName('CourseControl');
 			for ( j = 0; j < controllist.length; j += 1) {
-				tmp = controllist[j].getElementsByTagName('ControlCode')[0].textContent;
+				tmp = controllist[j].getElementsByTagName('ControlCode')[0].textContent.trim();
 				// if control code doesn't exist it was a crossing point so we don't need it
 				if (this.validControlCode(tmp)) {
-					codes.push(tmp.trim());
+					codes.push(tmp);
 				}
 			}
-			tmp = nodelist[i].getElementsByTagName('FinishPointCode')[0].textContent;
-			codes.push(tmp.trim());
+			codes.push(nodelist[i].getElementsByTagName('FinishPointCode')[0].textContent.trim());
 
 			course.codes = codes;
 			// 0 for now: set when result mapping is known
