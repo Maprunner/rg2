@@ -1,4 +1,4 @@
-// Version 0.9.7.1 2014-11-25T19:11:51;
+// Version 0.9.8 2014-12-09T20:51:21;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -95,7 +95,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.9.7.1',
+      RG2VERSION: '0.9.8',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -292,10 +292,7 @@ var rg2 = ( function() {
 
       $("#rg2-result-list").accordion({
         collapsible : true,
-        heightStyle : "content",
-        select : function(event, ui) {
-          console.log("Result index selected: " + ui.item[0].id);
-        }
+        heightStyle : "content"
       });
 
       $("#rg2-clock").text("00:00:00");
@@ -550,6 +547,7 @@ var rg2 = ( function() {
         .append(animation.getSplitsTable())
         .dialog({
           width : 'auto',
+          dialogClass: "rg2-splits-table",
           buttons : {
             Ok : function() {
               $(this).dialog('close');
@@ -924,6 +922,7 @@ var rg2 = ( function() {
         width : Math.min(1000, (canvas.width * 0.8)),
         maxHeight : Math.min(1000, (canvas.height * 0.9)),
         title: "RG2 Version " + config.RG2VERSION,
+        dialogClass: "rg2-about-dialog",
         resizable: false,
         buttons : {
           Ok : function() {
@@ -1193,9 +1192,16 @@ var rg2 = ( function() {
 		}
 		
 		function showWarningDialog(title, text) {
-			var msg = '<div>' + text + '</div>';
+			var msg = '<div id=rg2-warning-dialog>' + text + '</div>';
+			// see http://stackoverflow.com/questions/12057427/jshint-possible-strict-violation-when-using-bind
+			/*jshint validthis:true */
+			var self = this;
 			$(msg).dialog({
-			title : title
+				title : title,
+				dialogClass : "rg2-warning-dialog",
+					close: function( event, ui ) {
+					$('#rg2-warning-dialog').dialog('destroy').remove();
+				}
 			});
 		}
 		
@@ -1208,20 +1214,33 @@ var rg2 = ( function() {
       var stats;
       var coursearray;
       var resultsinfo;
+      var runnercomments;
+      var eventinfo;
+      var id;
+      id = events.getActiveEventID();
       // check there is an event to report on
-      if (events.getActiveEventID() === null) {
+      if (id === null) {
         return "";
+      } else {
+        id = events.getKartatEventID();
+        eventinfo = events.getEventInfo(parseInt(id, 10));
       }
       coursearray = courses.getCoursesForEvent();
       resultsinfo = results.getResultsInfo();
-      stats = "<h3>" + t("Event statistics") + "</h3>";
-      stats += "<p><strong>" + t("Courses") + ":</strong> " + coursearray.length + " <strong>" + t("Results") + ":</strong> " + resultsinfo.results;
-      stats += "<strong> " + t("Drawn routes") + ":</strong> " + resultsinfo.drawnroutes + " <strong>" + t("GPS routes");
-      stats += ":</strong> " + resultsinfo.gpsroutes + " (" + resultsinfo.percent + "%)</p>";
+      runnercomments = results.getComments();
+      stats = "<h3>" + t("Event statistics") + ": " + eventinfo.name + "</h3>";
+      if (eventinfo.comment) {
+        stats += "<p>" + eventinfo.comment + "</p>";
+      }
+      stats += "<p><strong>" + t("Courses") + ":</strong> " + coursearray.length + "</p><p> <strong>" + t("Results") + ":</strong> " + resultsinfo.results + "</p>";
+      stats += "<p><strong>" + t("Routes") + ":</strong> " + resultsinfo.totalroutes + " (" +  resultsinfo.percent + "%)</p>";
+      stats += "<p><strong>" + t("Drawn routes") + ":</strong> " + resultsinfo.drawnroutes + "</p>";
+      stats += "<p><strong>" + t("GPS routes") + ":</strong> " + resultsinfo.gpsroutes + "</p>";
       stats += "<p><strong>" + t("Total time") + ":</strong> " + resultsinfo.time + "</p>";
       stats += "<p><strong>" + t("Map ") + ":</strong> ID " + events.getActiveMapID() + ", " + map.width + " x " + map.height + " pixels </p>";
-      stats += "<p><strong>" + t("Comments") + ":</strong></p>";
-      stats += results.getComments();
+      if (runnercomments) {
+        stats += "<p><strong>" + t("Comments") + ":</strong></p>" + runnercomments ;
+      }
       // #177 not pretty but gets round problems of double encoding
       stats = stats.replace(/&amp;/g, '&');
       return stats;
@@ -1710,10 +1729,6 @@ var rg2 = ( function() {
       results.createNameDropdown(courseid);
     }
 
-    function getRunnerName(resultid) {
-      return results.getRunnerName(resultid);
-    }
-
     function resultIDExists(resultid) {
       return results.resultIDExists(resultid);
     }
@@ -1850,7 +1865,6 @@ var rg2 = ( function() {
       getTimeForID : getTimeForID,
       getSplitsForID : getSplitsForID,
       resultIDExists : resultIDExists,
-      getRunnerName : getRunnerName,
       putOnDisplay : putOnDisplay,
       putScoreCourseOnDisplay: putScoreCourseOnDisplay,
       removeFromDisplay : removeFromDisplay,
@@ -2627,14 +2641,6 @@ Courses.prototype = {
 		this.totaltracks += 1;
 	},
 
-	gettrackcountCount : function(courseid) {
-		return this.courses[courseid].trackcount;
-	},
-
-	getTotalTracksCount : function() {
-		return this.totaltracks;
-	},
-
 	addCourse : function(courseObject) {
 		this.courses[courseObject.courseid] = courseObject;
 		this.numberofcourses += 1;
@@ -2733,10 +2739,6 @@ Courses.prototype = {
 
 	},
 
-	isOnDisplay : function(courseid) {
-		return this.courses[courseid].display;
-	},
-
 	getCoursesOnDisplay : function() {
 		var courses = [];
 		for (var i = 0; i < this.courses.length; i += 1) {
@@ -2747,10 +2749,6 @@ Courses.prototype = {
 			}
 		}
 		return courses;
-	},
-
-	toggleDisplay : function(courseid) {
-		this.courses[courseid].toggleDisplay();
 	},
 
 	getNumberOfCourses : function() {
@@ -2887,13 +2885,6 @@ Course.prototype = {
 
 	incrementTracksCount : function() {
 		this.trackcount += 1;
-	},
-	getCourseID : function() {
-		return this.courseid;
-	},
-
-	toggleDisplay : function() {
-		this.display = !this.display;
 	},
 
 	drawCourse : function(intensity) {
@@ -3173,12 +3164,12 @@ Draw.prototype = {
 
   confirmCourseChange : function() {
 
-    var msg = "<div id='course-change-dialog'>The route you have started to draw will be discarded. Are you sure you want to change the course?</div>";
+    var msg = "<div id='rg2-course-change-dialog'>The route you have started to draw will be discarded. Are you sure you want to change the course?</div>";
     var me = this;
     $(msg).dialog({
       title : "Confirm course change",
       modal : true,
-      dialogClass : "no-close",
+      dialogClass : "no-close rg2-confirm-change-course",
       closeOnEscape : false,
       buttons : [{
         text : "Change course",
@@ -3195,12 +3186,12 @@ Draw.prototype = {
   },
 
   resetDrawing : function() {
-    var msg = "<div id='drawing-reset-dialog'>All information you have entered will be removed. Are you sure you want to reset?</div>";
+    var msg = "<div id='rg2-drawing-reset-dialog'>All information you have entered will be removed. Are you sure you want to reset?</div>";
     var me = this;
     $(msg).dialog({
       title : "Confirm reset",
       modal : true,
-      dialogClass : "no-close",
+      dialogClass : "no-close rg2-confirm-drawing-reset",
       closeOnEscape : false,
       buttons : [{
         text : "Reset",
@@ -3218,7 +3209,7 @@ Draw.prototype = {
   },
 
   doChangeCourse : function() {
-    $('#course-change-dialog').dialog("destroy");
+    $('#rg2-course-change-dialog').dialog("destroy");
     rg2.removeFromDisplay(this.gpstrack.routeData.courseid);
     if (this.gpstrack.routeData.resultid !== null) {
       rg2.putScoreCourseOnDisplay(this.gpstrack.routeData.resultid, false);
@@ -3231,17 +3222,17 @@ Draw.prototype = {
     // reset course dropdown
     $("#rg2-course-select").val(this.gpstrack.routeData.courseid);
     this.pendingCourseid = null;
-    $('#course-change-dialog').dialog("destroy");
+    $('#rg2-course-change-dialog').dialog("destroy");
   },
 
   doDrawingReset : function() {
-    $('#drawing-reset-dialog').dialog("destroy");
+    $('#rg2-drawing-reset-dialog').dialog("destroy");
     this.pendingCourseid = null;
     this.initialiseDrawing();
   },
 
   doCancelDrawingReset : function() {
-    $('#drawing-reset-dialog').dialog("destroy");
+    $('#rg2-drawing-reset-dialog').dialog("destroy");
   },
 
   showCourseInProgress : function() {
@@ -3960,14 +3951,6 @@ Events.prototype = {
     }
 	},
 
-  isValidEventID : function (eventid) {
-    if ((this.events.length >= eventid) && (eventid > 0)) {
-        return true;
-    } else {
-      return false;
-    }
-  },
-
 	mapIsGeoreferenced : function() {
 		if (this.activeEventID === null) {
       return false;
@@ -4105,9 +4088,6 @@ GPSTrack.prototype = {
 				case evt.target.error.NOT_FOUND_ERR:
           rg2.showWarningDialog('GPS file problem', 'File not found');
 					break;
-				case evt.target.error.NOT_READABLE_ERR:
-          rg2.showWarningDialog('GPS file problem', 'File not readable. Please check you have selected the correct file.');
-					break;
 				default:
           rg2.showWarningDialog('GPS file problem', 'An error occurred. Please check you have selected the correct file.');
 			}
@@ -4127,9 +4107,7 @@ GPSTrack.prototype = {
         if (fileType === "gpx") {
           self.processGPX(xml);
         } else {
-          if (fileType === "tcx") {
-            self.processTCX(xml);
-          }
+          self.processTCX(xml);
         }
         self.processGPSTrack();
       } catch(err) {
@@ -4224,10 +4202,7 @@ GPSTrack.prototype = {
 			var mapSize = rg2.getMapSize();
 			if ((maxX < 0) || (minX > mapSize.width) || (minY > mapSize.height) || (maxY < 0)) {
 				// warn and fit to track
-				var msg = "<div id='GPS-problem-dialog'>Your GPS file does not match the map co-ordinates. Please check you have selected the correct file.</div>";
-				$(msg).dialog({
-					title : "GPS file problem"
-				});
+        rg2.showWarningDialog('GPS file problem', 'Your GPS file does not match the map co-ordinates. Please check you have selected the correct file.');
 				this.fitTrackInsideCourse();
 
 			} else {
@@ -4614,8 +4589,9 @@ Results.prototype = {
         }
       }
     }
+    info.totalroutes = info.drawnroutes + info.gpsroutes;
     if (info.results > 0) {
-      info.percent = (100 * (info.drawnroutes + info.gpsroutes) / info.results).toFixed(1);
+      info.percent = (100 * info.totalroutes / info.results).toFixed(1);
     } else {
       info.percent = 0;
     }
@@ -4627,10 +4603,6 @@ Results.prototype = {
     info.time += temp - (60 * Math.floor(temp / 60)) + " seconds ";
     return info;
   },
-
-	getCourseID : function(resultid) {
-		return this.results[resultid].courseid;
-	},
 
 	getFullResult : function(resultid) {
 		return this.results[resultid];
@@ -4783,10 +4755,6 @@ Results.prototype = {
 
 	deleteAllResults : function() {
 		this.results.length = 0;
-	},
-
-	getRunnerName : function(runner) {
-		return this.results[runner].name;
 	},
 
 	sortByCourseIDThenResultID : function(a, b) {
@@ -5241,20 +5209,6 @@ drawScoreCourse : function() {
     }
   },
 
-	getCourseName : function() {
-		if (this.coursename !== "") {
-			return this.coursename;
-		} else {
-			return "GPS tracks";
-		}
-	},
-	getRunnerName : function() {
-		return this.name;
-	},
-	getTime : function() {
-		return this.time;
-	},
-	
   getInitials : function (name) {
     // converts name to initials
     // remove white space at each end

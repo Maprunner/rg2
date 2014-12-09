@@ -215,12 +215,12 @@ Draw.prototype = {
 
   confirmCourseChange : function() {
 
-    var msg = "<div id='course-change-dialog'>The route you have started to draw will be discarded. Are you sure you want to change the course?</div>";
+    var msg = "<div id='rg2-course-change-dialog'>The route you have started to draw will be discarded. Are you sure you want to change the course?</div>";
     var me = this;
     $(msg).dialog({
       title : "Confirm course change",
       modal : true,
-      dialogClass : "no-close",
+      dialogClass : "no-close rg2-confirm-change-course",
       closeOnEscape : false,
       buttons : [{
         text : "Change course",
@@ -237,12 +237,12 @@ Draw.prototype = {
   },
 
   resetDrawing : function() {
-    var msg = "<div id='drawing-reset-dialog'>All information you have entered will be removed. Are you sure you want to reset?</div>";
+    var msg = "<div id='rg2-drawing-reset-dialog'>All information you have entered will be removed. Are you sure you want to reset?</div>";
     var me = this;
     $(msg).dialog({
       title : "Confirm reset",
       modal : true,
-      dialogClass : "no-close",
+      dialogClass : "no-close rg2-confirm-drawing-reset",
       closeOnEscape : false,
       buttons : [{
         text : "Reset",
@@ -260,7 +260,7 @@ Draw.prototype = {
   },
 
   doChangeCourse : function() {
-    $('#course-change-dialog').dialog("destroy");
+    $('#rg2-course-change-dialog').dialog("destroy");
     rg2.removeFromDisplay(this.gpstrack.routeData.courseid);
     if (this.gpstrack.routeData.resultid !== null) {
       rg2.putScoreCourseOnDisplay(this.gpstrack.routeData.resultid, false);
@@ -273,17 +273,17 @@ Draw.prototype = {
     // reset course dropdown
     $("#rg2-course-select").val(this.gpstrack.routeData.courseid);
     this.pendingCourseid = null;
-    $('#course-change-dialog').dialog("destroy");
+    $('#rg2-course-change-dialog').dialog("destroy");
   },
 
   doDrawingReset : function() {
-    $('#drawing-reset-dialog').dialog("destroy");
+    $('#rg2-drawing-reset-dialog').dialog("destroy");
     this.pendingCourseid = null;
     this.initialiseDrawing();
   },
 
   doCancelDrawingReset : function() {
-    $('#drawing-reset-dialog').dialog("destroy");
+    $('#rg2-drawing-reset-dialog').dialog("destroy");
   },
 
   showCourseInProgress : function() {

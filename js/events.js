@@ -99,14 +99,6 @@ Events.prototype = {
     }
 	},
 
-  isValidEventID : function (eventid) {
-    if ((this.events.length >= eventid) && (eventid > 0)) {
-        return true;
-    } else {
-      return false;
-    }
-  },
-
 	mapIsGeoreferenced : function() {
 		if (this.activeEventID === null) {
       return false;

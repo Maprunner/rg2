@@ -94,7 +94,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.9.7.1',
+      RG2VERSION: '0.9.8',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -291,10 +291,7 @@ var rg2 = ( function() {
 
       $("#rg2-result-list").accordion({
         collapsible : true,
-        heightStyle : "content",
-        select : function(event, ui) {
-          console.log("Result index selected: " + ui.item[0].id);
-        }
+        heightStyle : "content"
       });
 
       $("#rg2-clock").text("00:00:00");
@@ -549,6 +546,7 @@ var rg2 = ( function() {
         .append(animation.getSplitsTable())
         .dialog({
           width : 'auto',
+          dialogClass: "rg2-splits-table",
           buttons : {
             Ok : function() {
               $(this).dialog('close');
@@ -923,6 +921,7 @@ var rg2 = ( function() {
         width : Math.min(1000, (canvas.width * 0.8)),
         maxHeight : Math.min(1000, (canvas.height * 0.9)),
         title: "RG2 Version " + config.RG2VERSION,
+        dialogClass: "rg2-about-dialog",
         resizable: false,
         buttons : {
           Ok : function() {
@@ -1192,9 +1191,16 @@ var rg2 = ( function() {
 		}
 		
 		function showWarningDialog(title, text) {
-			var msg = '<div>' + text + '</div>';
+			var msg = '<div id=rg2-warning-dialog>' + text + '</div>';
+			// see http://stackoverflow.com/questions/12057427/jshint-possible-strict-violation-when-using-bind
+			/*jshint validthis:true */
+			var self = this;
 			$(msg).dialog({
-			title : title
+				title : title,
+				dialogClass : "rg2-warning-dialog",
+					close: function( event, ui ) {
+					$('#rg2-warning-dialog').dialog('destroy').remove();
+				}
 			});
 		}
 		
@@ -1207,20 +1213,33 @@ var rg2 = ( function() {
       var stats;
       var coursearray;
       var resultsinfo;
+      var runnercomments;
+      var eventinfo;
+      var id;
+      id = events.getActiveEventID();
       // check there is an event to report on
-      if (events.getActiveEventID() === null) {
+      if (id === null) {
         return "";
+      } else {
+        id = events.getKartatEventID();
+        eventinfo = events.getEventInfo(parseInt(id, 10));
       }
       coursearray = courses.getCoursesForEvent();
       resultsinfo = results.getResultsInfo();
-      stats = "<h3>" + t("Event statistics") + "</h3>";
-      stats += "<p><strong>" + t("Courses") + ":</strong> " + coursearray.length + " <strong>" + t("Results") + ":</strong> " + resultsinfo.results;
-      stats += "<strong> " + t("Drawn routes") + ":</strong> " + resultsinfo.drawnroutes + " <strong>" + t("GPS routes");
-      stats += ":</strong> " + resultsinfo.gpsroutes + " (" + resultsinfo.percent + "%)</p>";
+      runnercomments = results.getComments();
+      stats = "<h3>" + t("Event statistics") + ": " + eventinfo.name + "</h3>";
+      if (eventinfo.comment) {
+        stats += "<p>" + eventinfo.comment + "</p>";
+      }
+      stats += "<p><strong>" + t("Courses") + ":</strong> " + coursearray.length + "</p><p> <strong>" + t("Results") + ":</strong> " + resultsinfo.results + "</p>";
+      stats += "<p><strong>" + t("Routes") + ":</strong> " + resultsinfo.totalroutes + " (" +  resultsinfo.percent + "%)</p>";
+      stats += "<p><strong>" + t("Drawn routes") + ":</strong> " + resultsinfo.drawnroutes + "</p>";
+      stats += "<p><strong>" + t("GPS routes") + ":</strong> " + resultsinfo.gpsroutes + "</p>";
       stats += "<p><strong>" + t("Total time") + ":</strong> " + resultsinfo.time + "</p>";
       stats += "<p><strong>" + t("Map ") + ":</strong> ID " + events.getActiveMapID() + ", " + map.width + " x " + map.height + " pixels </p>";
-      stats += "<p><strong>" + t("Comments") + ":</strong></p>";
-      stats += results.getComments();
+      if (runnercomments) {
+        stats += "<p><strong>" + t("Comments") + ":</strong></p>" + runnercomments ;
+      }
       // #177 not pretty but gets round problems of double encoding
       stats = stats.replace(/&amp;/g, '&');
       return stats;
@@ -1709,10 +1728,6 @@ var rg2 = ( function() {
       results.createNameDropdown(courseid);
     }
 
-    function getRunnerName(resultid) {
-      return results.getRunnerName(resultid);
-    }
-
     function resultIDExists(resultid) {
       return results.resultIDExists(resultid);
     }
@@ -1849,7 +1864,6 @@ var rg2 = ( function() {
       getTimeForID : getTimeForID,
       getSplitsForID : getSplitsForID,
       resultIDExists : resultIDExists,
-      getRunnerName : getRunnerName,
       putOnDisplay : putOnDisplay,
       putScoreCourseOnDisplay: putScoreCourseOnDisplay,
       removeFromDisplay : removeFromDisplay,

@@ -251,8 +251,9 @@ Results.prototype = {
         }
       }
     }
+    info.totalroutes = info.drawnroutes + info.gpsroutes;
     if (info.results > 0) {
-      info.percent = (100 * (info.drawnroutes + info.gpsroutes) / info.results).toFixed(1);
+      info.percent = (100 * info.totalroutes / info.results).toFixed(1);
     } else {
       info.percent = 0;
     }
@@ -264,10 +265,6 @@ Results.prototype = {
     info.time += temp - (60 * Math.floor(temp / 60)) + " seconds ";
     return info;
   },
-
-	getCourseID : function(resultid) {
-		return this.results[resultid].courseid;
-	},
 
 	getFullResult : function(resultid) {
 		return this.results[resultid];
@@ -420,10 +417,6 @@ Results.prototype = {
 
 	deleteAllResults : function() {
 		this.results.length = 0;
-	},
-
-	getRunnerName : function(runner) {
-		return this.results[runner].name;
 	},
 
 	sortByCourseIDThenResultID : function(a, b) {
@@ -878,20 +871,6 @@ drawScoreCourse : function() {
     }
   },
 
-	getCourseName : function() {
-		if (this.coursename !== "") {
-			return this.coursename;
-		} else {
-			return "GPS tracks";
-		}
-	},
-	getRunnerName : function() {
-		return this.name;
-	},
-	getTime : function() {
-		return this.time;
-	},
-	
   getInitials : function (name) {
     // converts name to initials
     // remove white space at each end

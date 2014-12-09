@@ -43,9 +43,6 @@ GPSTrack.prototype = {
 				case evt.target.error.NOT_FOUND_ERR:
           rg2.showWarningDialog('GPS file problem', 'File not found');
 					break;
-				case evt.target.error.NOT_READABLE_ERR:
-          rg2.showWarningDialog('GPS file problem', 'File not readable. Please check you have selected the correct file.');
-					break;
 				default:
           rg2.showWarningDialog('GPS file problem', 'An error occurred. Please check you have selected the correct file.');
 			}
@@ -65,9 +62,7 @@ GPSTrack.prototype = {
         if (fileType === "gpx") {
           self.processGPX(xml);
         } else {
-          if (fileType === "tcx") {
-            self.processTCX(xml);
-          }
+          self.processTCX(xml);
         }
         self.processGPSTrack();
       } catch(err) {
@@ -162,10 +157,7 @@ GPSTrack.prototype = {
 			var mapSize = rg2.getMapSize();
 			if ((maxX < 0) || (minX > mapSize.width) || (minY > mapSize.height) || (maxY < 0)) {
 				// warn and fit to track
-				var msg = "<div id='GPS-problem-dialog'>Your GPS file does not match the map co-ordinates. Please check you have selected the correct file.</div>";
-				$(msg).dialog({
-					title : "GPS file problem"
-				});
+        rg2.showWarningDialog('GPS file problem', 'Your GPS file does not match the map co-ordinates. Please check you have selected the correct file.');
 				this.fitTrackInsideCourse();
 
 			} else {
