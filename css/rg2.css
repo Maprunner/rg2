@@ -5,7 +5,7 @@
 html, body {
 	width: 100%;
   height: 100%;
-  margin: 0px;
+  margin: 0;
   border: 0;
   display: block;
   font: 16px/26px Helvetica, Helvetica Neue, Arial;
@@ -46,7 +46,7 @@ html, body {
     vertical-align: middle;
     height: 36px;
 	  width: 240px;
-    right: 0px;
+    right: 0;
 	  border: 4px solid darkgray;
   	z-index: 100;
     line-height: 36px;
@@ -67,7 +67,7 @@ html, body {
 }
 
 .row-4 {
-    bottom: 0px;
+    bottom: 0;
     color: black;   
 }
 
@@ -103,7 +103,7 @@ html, body {
 
 #rg2-about {
    position: absolute;	
-   right: 0px;
+   right: 0;
    padding-right: 20px;
 }
 
@@ -224,6 +224,9 @@ html, body {
 
 .rg2-active-event {
    border: 1px solid darkgray;
+   /* rgb background is for old browsers */
+   background: rgb(204, 204, 204);
+   /* rgba for new browsers */
    background: rgba(204, 204, 204, 0.75);
 }
    
@@ -246,6 +249,7 @@ html, body {
 
 #rg2-load-progress {
    border: 1px solid darkgray;
+   background: rgb(204, 204, 204);
    background: rgba(204, 204, 204, 1.0);
    padding : 2px;
    position: absolute;
@@ -260,6 +264,7 @@ html, body {
 
 #rg2-track-names, #rg2-animation-names {
    border: 1px solid darkgray;
+   background: rgb(204, 204, 204);
    background: rgba(204, 204, 204, 0.75);
    padding : 2px;
    position: absolute;
@@ -443,13 +448,13 @@ display: none;
  * prevent selection of objects on the canvas
  */
 image, canvas {
-    user-select: none;
-    -ms-user-select: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -webkit-touch-callout: none;
-    -webkit-user-drag: none;
+  -ms-user-select: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
+  user-select: none;
 }
 
 .manage-input {
@@ -467,7 +472,7 @@ image, canvas {
 }
 
 .no-top-margin {
-  margin-top: 0px;
+  margin-top: 0;
   margin-bottom: 2px;
 }
 
