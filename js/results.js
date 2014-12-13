@@ -464,8 +464,7 @@ Results.prototype = {
 				tracksForThisCourse = 0;
 				html += "<h3>" + temp.coursename;
 				html += "<input class='showcourse' id=" + temp.courseid + " type=checkbox name=course title='Show course'></input></h3><div>";
-				html += "<table class='resulttable'><tr><th>" + rg2.t("Name") + "</th><th>" + rg2.t("Time") + "</th><th>" + rg2.t("Route");
-				html += "</th><th>" + rg2.t("Replay") + "</th></tr>";
+				html += "<table class='resulttable'><tr><th>" + rg2.t("Name") + "</th><th>" + rg2.t("Time") + "</th><th><i class='fa fa-pencil'></i></th><th><i class='fa fa-play'></i></th></tr>";
 				oldCourseID = temp.courseid;
 			}
       if (temp.isScoreEvent) {

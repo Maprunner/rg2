@@ -222,12 +222,12 @@ html, body {
   text-decoration: none;
 }
 
+#rg2-event-list li:nth-child(odd) {
+  background: #eee;
+}
+
 .rg2-active-event {
-   border: 1px solid darkgray;
-   /* rgb background is for old browsers */
-   background: rgb(204, 204, 204);
-   /* rgba for new browsers */
-   background: rgba(204, 204, 204, 0.75);
+   border: 2px solid black;
 }
    
 #rg2-hide-info-panel-control {
@@ -321,13 +321,16 @@ table.resulttable th {
 	padding-left: 10px;
 	padding-right: 5px;
 	text-align: left;
-	width: 70%;
+	width: 80%;
 }
 
 table.resulttable td + td,
 table.resulttable th + th {
 	text-align: right;
-	width: 15%;
+}
+
+table.resulttable tbody tr:nth-child(odd) {
+  background: #eee;
 }
 
 #rg2-result-list .ui-accordion,
