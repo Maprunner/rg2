@@ -24,15 +24,17 @@ For a quick start try:
 
 4. Video: [Uploading a GPS route] (http://screencast-o-matic.com/u/VJsd/RG2-GPS-Upload)
 
-5. Video: [Georeferencing your map in RG2] (http://screencast-o-matic.com/u/VJsd/Georeferencing) 
-
 ## Manager Guide and Video
 
 * [Manager guide] (https://github.com/Maprunner/rg2/wiki/Manager-details)
     * [Installation] (https://github.com/Maprunner/rg2/wiki/Installation)
     * [Splitsbrowser integration] (https://github.com/Maprunner/rg2/wiki/Splitsbrowser integration)
     * [Language configuration] (https://github.com/Maprunner/rg2/wiki/Language-configuration)
+    * [Georeferencing] (https://github.com/Maprunner/rg2/wiki/Georeferencing-maps)
+
 * Video: [A quick introduction to RG2 manager functions] (http://screencast-o-matic.com/u/VJsd/RG2-Cassiobury-Manager-Demo)
+
+* Video: [Georeferencing your map in RG2] (http://screencast-o-matic.com/u/VJsd/Georeferencing) 
 
 ## What is RouteGadget?
 Routegadget is a Web application for drawing and comparing orienteering routes. The original version was developed by Jarkko Ryyppö, and it is now used by orienteering clubs around the world.
