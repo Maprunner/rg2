@@ -449,22 +449,12 @@ Results.prototype = {
 				if (firstCourse) {
 					firstCourse = false;
 				} else {
-          // add bottom row for all tracks checkboxes
-          // <CAREFUL!> these lines need to be identical to those below
-          html += "<tr class='allitemsrow'><td>" + rg2.t("All") + "</td><td></td>";
-          if (tracksForThisCourse > 0) {
-            html += "<td><input class='allcoursetracks' id=" + oldCourseID + " type=checkbox name=track></input></td>";
-          } else {
-            html += "<td></td>";
-          }
-          html += "<td><input class='allcoursereplay' id=" + oldCourseID + " type=checkbox name=replay></input></td></tr>";
-          // </CAREFUL!>
-					html += "</table></div>";
+					html += this.getBottomRow(tracksForThisCourse, oldCourseID) + "</table></div>";
 				}
 				tracksForThisCourse = 0;
 				html += "<h3>" + temp.coursename;
 				html += "<input class='showcourse' id=" + temp.courseid + " type=checkbox name=course title='Show course'></input></h3><div>";
-				html += "<table class='resulttable'><tr><th>" + rg2.t("Name") + "</th><th>" + rg2.t("Time") + "</th><th><i class='fa fa-pencil'></i></th><th><i class='fa fa-play'></i></th></tr>";
+				html += "<table class='resulttable'><tr><th></th><th>" + rg2.t("Name") + "</th><th>" + rg2.t("Time") + "</th><th><i class='fa fa-pencil'></i></th><th><i class='fa fa-play'></i></th></tr>";
 				oldCourseID = temp.courseid;
 			}
       if (temp.isScoreEvent) {
@@ -472,11 +462,11 @@ Results.prototype = {
       } else {
         namehtml = "<div>" + temp.name + "</div>";
       }
-      
+			html += '<tr><td>' + temp.position + '</td>';
 			if (temp.comments !== "") {
-				html += '<tr><td><a href="#" title="' + temp.comments + '">' + namehtml + "</a></td><td>" + temp.time + "</td>";
+				html += '<td><a href="#" title="' + temp.comments + '">' + namehtml + "</a></td><td>" + temp.time + "</td>";
 			} else {
-				html += "<tr><td>" + namehtml + "</td><td>" + temp.time + "</td>";
+				html += "<td>" + namehtml + "</td><td>" + temp.time + "</td>";
 			}
 			if (temp.hasValidTrack) {
         tracksForThisCourse += 1;
@@ -490,19 +480,22 @@ Results.prototype = {
 		if (html === "") {
 			html = "<p>" + rg2.t("No results available") + "</p>";
 		} else {
-      // add bottom row for all tracks checkboxes
-      // <CAREFUL!> these lines need to be identical to those above
-      html += "<tr class='allitemsrow'><td>" + rg2.t("All") + "</td><td></td>";
-      if (tracksForThisCourse > 0) {
-        html += "<td><input class='allcoursetracks' id=" + oldCourseID + " type=checkbox name=track></input></td>";
-      } else {
-        html += "<td></td>";
-      }
-      html += "<td><input class='allcoursereplay' id=" + oldCourseID + " type=checkbox name=replay></input></td></tr>";
-      // </CAREFUL!>
-      html += "</table></div></div>";
+			html += this.getBottomRow(tracksForThisCourse, oldCourseID) + "</table></div></div>";
 		}
 		return html;
+	},
+	
+	getBottomRow : function(tracks, oldCourseID) {
+    // create bottom row for all tracks checkboxes
+    var html;
+    html = "<tr class='allitemsrow'><td></td><td>" + rg2.t("All") + "</td><td></td>";
+    if (tracks > 0) {
+      html += "<td><input class='allcoursetracks' id=" + oldCourseID + " type=checkbox name=track></input></td>";
+    } else {
+      html += "<td></td>";
+    }
+    html += "<td><input class='allcoursereplay' id=" + oldCourseID + " type=checkbox name=replay></input></td></tr>";
+    return html;
 	},
 
   getComments : function() {
@@ -549,6 +542,8 @@ function Result(data, isScoreEvent, scorecodes, scorex, scorey) {
 	this.initials = this.getInitials(this.name);
 	this.starttime = data.starttime;
 	this.time = data.time;
+	this.position = data.position;
+	this.status = data.status;
 	// get round iconv problem in API for now
 	if (data.comments !== null) {
 		// unescape special characeters to get sensible text
