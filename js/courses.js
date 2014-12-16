@@ -203,8 +203,8 @@ Courses.prototype = {
 
 	formatCoursesAsTable : function() {
 		var res = 0;
-		var html = "<table class='coursemenutable'><tr><th>" + rg2.t("Course") + "</th><th>" + rg2.t("Show");
-		html += "</th><th>" + rg2.t("Runners") + "</th><th>" + rg2.t("Routes") + "</th><th>" + rg2.t("Show") + "</th></tr>";
+		var html = "<table class='coursemenutable'><tr><th>" + rg2.t("Course") + "</th><th><i class='fa fa-eye'></i></th>";
+		html += "<th>" + rg2.t("Runners") + "</th><th>" + rg2.t("Routes") + "</th><th><i class='fa fa-eye'></i></th></tr>";
 		for (var i = 0; i < this.courses.length; i += 1) {
 			if (this.courses[i] !== undefined) {
 				html += "<tr><td>" + this.courses[i].name + "</td>";

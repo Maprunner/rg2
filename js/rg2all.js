@@ -1,4 +1,4 @@
-// Version 0.9.8 2014-12-09T20:51:21;
+// Version 0.9.9 2014-12-16T20:14:50;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -95,7 +95,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.9.8',
+      RG2VERSION: '0.9.9',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -2801,8 +2801,8 @@ Courses.prototype = {
 
 	formatCoursesAsTable : function() {
 		var res = 0;
-		var html = "<table class='coursemenutable'><tr><th>" + rg2.t("Course") + "</th><th>" + rg2.t("Show");
-		html += "</th><th>" + rg2.t("Runners") + "</th><th>" + rg2.t("Routes") + "</th><th>" + rg2.t("Show") + "</th></tr>";
+		var html = "<table class='coursemenutable'><tr><th>" + rg2.t("Course") + "</th><th><i class='fa fa-eye'></i></th>";
+		html += "<th>" + rg2.t("Runners") + "</th><th>" + rg2.t("Routes") + "</th><th><i class='fa fa-eye'></i></th></tr>";
 		for (var i = 0; i < this.courses.length; i += 1) {
 			if (this.courses[i] !== undefined) {
 				html += "<tr><td>" + this.courses[i].name + "</td>";
@@ -4787,23 +4787,12 @@ Results.prototype = {
 				if (firstCourse) {
 					firstCourse = false;
 				} else {
-          // add bottom row for all tracks checkboxes
-          // <CAREFUL!> these lines need to be identical to those below
-          html += "<tr class='allitemsrow'><td>" + rg2.t("All") + "</td><td></td>";
-          if (tracksForThisCourse > 0) {
-            html += "<td><input class='allcoursetracks' id=" + oldCourseID + " type=checkbox name=track></input></td>";
-          } else {
-            html += "<td></td>";
-          }
-          html += "<td><input class='allcoursereplay' id=" + oldCourseID + " type=checkbox name=replay></input></td></tr>";
-          // </CAREFUL!>
-					html += "</table></div>";
+					html += this.getBottomRow(tracksForThisCourse, oldCourseID) + "</table></div>";
 				}
 				tracksForThisCourse = 0;
 				html += "<h3>" + temp.coursename;
 				html += "<input class='showcourse' id=" + temp.courseid + " type=checkbox name=course title='Show course'></input></h3><div>";
-				html += "<table class='resulttable'><tr><th>" + rg2.t("Name") + "</th><th>" + rg2.t("Time") + "</th><th>" + rg2.t("Route");
-				html += "</th><th>" + rg2.t("Replay") + "</th></tr>";
+				html += "<table class='resulttable'><tr><th></th><th>" + rg2.t("Name") + "</th><th>" + rg2.t("Time") + "</th><th><i class='fa fa-pencil'></i></th><th><i class='fa fa-play'></i></th></tr>";
 				oldCourseID = temp.courseid;
 			}
       if (temp.isScoreEvent) {
@@ -4811,11 +4800,11 @@ Results.prototype = {
       } else {
         namehtml = "<div>" + temp.name + "</div>";
       }
-      
+			html += '<tr><td>' + temp.position + '</td>';
 			if (temp.comments !== "") {
-				html += '<tr><td><a href="#" title="' + temp.comments + '">' + namehtml + "</a></td><td>" + temp.time + "</td>";
+				html += '<td><a href="#" title="' + temp.comments + '">' + namehtml + "</a></td><td>" + temp.time + "</td>";
 			} else {
-				html += "<tr><td>" + namehtml + "</td><td>" + temp.time + "</td>";
+				html += "<td>" + namehtml + "</td><td>" + temp.time + "</td>";
 			}
 			if (temp.hasValidTrack) {
         tracksForThisCourse += 1;
@@ -4829,19 +4818,22 @@ Results.prototype = {
 		if (html === "") {
 			html = "<p>" + rg2.t("No results available") + "</p>";
 		} else {
-      // add bottom row for all tracks checkboxes
-      // <CAREFUL!> these lines need to be identical to those above
-      html += "<tr class='allitemsrow'><td>" + rg2.t("All") + "</td><td></td>";
-      if (tracksForThisCourse > 0) {
-        html += "<td><input class='allcoursetracks' id=" + oldCourseID + " type=checkbox name=track></input></td>";
-      } else {
-        html += "<td></td>";
-      }
-      html += "<td><input class='allcoursereplay' id=" + oldCourseID + " type=checkbox name=replay></input></td></tr>";
-      // </CAREFUL!>
-      html += "</table></div></div>";
+			html += this.getBottomRow(tracksForThisCourse, oldCourseID) + "</table></div></div>";
 		}
 		return html;
+	},
+	
+	getBottomRow : function(tracks, oldCourseID) {
+    // create bottom row for all tracks checkboxes
+    var html;
+    html = "<tr class='allitemsrow'><td></td><td>" + rg2.t("All") + "</td><td></td>";
+    if (tracks > 0) {
+      html += "<td><input class='allcoursetracks' id=" + oldCourseID + " type=checkbox name=track></input></td>";
+    } else {
+      html += "<td></td>";
+    }
+    html += "<td><input class='allcoursereplay' id=" + oldCourseID + " type=checkbox name=replay></input></td></tr>";
+    return html;
 	},
 
   getComments : function() {
@@ -4888,6 +4880,8 @@ function Result(data, isScoreEvent, scorecodes, scorex, scorey) {
 	this.initials = this.getInitials(this.name);
 	this.starttime = data.starttime;
 	this.time = data.time;
+	this.position = data.position;
+	this.status = data.status;
 	// get round iconv problem in API for now
 	if (data.comments !== null) {
 		// unescape special characeters to get sensible text

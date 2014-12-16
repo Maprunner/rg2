@@ -432,9 +432,22 @@ function addNewEvent($data) {
   // create new kilpailijat file: results
   for ($i = 0; $i < count($data->results); $i++) {
     $a = $data->results[$i];
-    $result = ($i + 1)."|".$a->courseid."|".encode_rg_output($a->course)."|".encode_rg_output(trim($a->name))."|";
-    $result .= $a->starttime."|".encode_rg_output($a->dbid)."|".$a->variantid."|".$a->time."|".$a->splits.PHP_EOL;
-    file_put_contents(KARTAT_DIRECTORY."kilpailijat_".$newid.".txt", $result, FILE_APPEND);    
+    // save position and status if we got them
+    if (isset($a->position)) {
+      $position = $a->position;
+    } else {
+      $position = '';
+    }
+    if (isset($a->status)) {
+      $status = abbreviateStatus($a->status);
+    } else {
+      $status = '';
+    }
+    $result = ($i + 1)."|".$a->courseid."|".encode_rg_output($a->course)."|".encode_rg_output(trim($a->name))."|".$a->starttime."|";
+    // abusing dbid to save status and position
+    $result .= encode_rg_output($a->dbid)."_#".$position."#".$status;
+    $result .= "|".$a->variantid."|".$a->time."|".$a->splits.PHP_EOL;
+    file_put_contents(KARTAT_DIRECTORY."kilpailijat_".$newid.".txt", $result, FILE_APPEND);
   }
   
   if ($write["status_msg"] == "") {
@@ -446,6 +459,34 @@ function addNewEvent($data) {
   
   return $write;
 
+}
+
+function abbreviateStatus($text) {
+  // mappings for ResultStatus in IOF XML V3 and V2.0.3
+  switch ($text) {  
+    case 'OK':
+      return 'OK';
+    case 'MissingPunch':
+      return 'mp';
+    case 'MisPunch':
+      return 'mp';
+    case 'Disqualified':
+      return 'dsq';
+    case 'DidNotFinish':
+      return 'dnf';
+    case 'OverTime':
+      return 'ot';
+    case 'SportingWithdrawal':
+      return 'swd';
+    case 'SportingWithdr':
+      return 'swd';
+    case 'NotCompeting':
+      return 'nc';
+    case 'DidNotStart':
+      return 'dns';
+    default:
+      return $text;
+  }
 }
 
 function getAngle($x1, $y1, $x2, $y2) {
@@ -1141,15 +1182,15 @@ function getSplitsbrowser($eventid) {
 		$eventname = getEventName($eventid);
 		$page = str_replace('<EVENT_NAME>', $eventname, $page);
 		if (isset($_GET['debug'])) {
-		  $page = str_replace('DEBUG_CLOSE', "", $page);			
-		  $page = str_replace('DEBUG', "", $page);			
-		  $page = str_replace('MINIFIED_CLOSE', "--", $page);			
-		  $page = str_replace('MINIFIED', "!--", $page);	
+		  $page = str_replace('DEBUG_CLOSE', "", $page);
+		  $page = str_replace('DEBUG', "", $page);
+		  $page = str_replace('MINIFIED_CLOSE', "--", $page);
+		  $page = str_replace('MINIFIED', "!--", $page);
 		} else {
-		  $page = str_replace('DEBUG_CLOSE', "--", $page);			
-		  $page = str_replace('DEBUG', "!--", $page);			
-		  $page = str_replace('MINIFIED_CLOSE', "", $page);			
-		  $page = str_replace('MINIFIED', "", $page);			
+		  $page = str_replace('DEBUG_CLOSE', "--", $page);
+		  $page = str_replace('DEBUG', "!--", $page);
+		  $page = str_replace('MINIFIED_CLOSE', "", $page);
+		  $page = str_replace('MINIFIED', "", $page);
 		}
 		$page = str_replace('<SPLITSBROWSER_DIRECTORY>', SPLITSBROWSER_DIRECTORY, $page);
 		$result_data = getResultsCSV($eventid);
@@ -1171,7 +1212,7 @@ function getLanguage($lang) {
       $temp = explode(":", trim($line));
 			// remove trailing comma
 			$temp[1] = rtrim($temp[1], ',');
-			$dict[trim($temp[0])] = trim($temp[1]);			
+			$dict[trim($temp[0])] = trim($temp[1]);
 		}
   }
 	return json_encode($dict);
@@ -1203,12 +1244,12 @@ function getResultsCSV($eventid) {
       $result_data .= convertSecondsToHHMMSS(intval($data[4])).";;";
       // 11: time
       if ($t == "0:00:00") {
-        $result_data .= "---;;;;;;;";      	
+        $result_data .= "---;;;;;;;";
       } else {
         $result_data .= $t.";;;;;;;";
 			}  
 			// 18: course
-			$result_data .= encode_rg_input($data[2]).";;;;;;;;;;;;;;;;;;;;";	
+			$result_data .= encode_rg_input($data[2]).";;;;;;;;;;;;;;;;;;;;";
       // 38: course number, 39: course
 			$result_data .= intval($data[1]).";".$data[2].";;;";
       // trim trailing ; which create null fields when expanded
@@ -1524,6 +1565,18 @@ function getResultsForEvent($eventid) {
       $detail["name"] = encode_rg_input($data[3]);
       $detail["starttime"] = intval($data[4]);
       $detail["databaseid"] = encode_rg_input($data[5]);
+      $detail["position"] = '';
+      $detail["status"] = '';
+      // look for RG2 extra fields in dbid
+      $pos = strpos($detail["databaseid"], "_#");
+      if ($pos) {
+        $extras = explode("#", substr($detail["databaseid"], $pos + 2));
+        if (count($extras) == 2) {
+          $detail["position"] = $extras[0];
+          $detail["status"] = $extras[1];
+        }
+      }
+      
       $detail["variant"] = intval($data[6]);
 			// score event check should be redundant but see issue #159
       if (($data[6] != "") && isScoreEvent($eventid)) {

@@ -688,6 +688,9 @@ Manager.prototype = {
 				// handle case where we have courses but no results
 				if (this.resultCourses.length > 0) {
 					this.resultCourses[id].courseid = courseid;
+					// use results file course names
+					this.courses[i].course = this.resultCourses[id].course;
+					this.courses[i].name = this.resultCourses[id].course;
 				}
 				newCourses.push(this.courses[i]);
 				courseid += 1;
@@ -1139,7 +1142,6 @@ Manager.prototype = {
 		var time;
 		var timeFormat;
 		var temp;
-		var status;
 		try {
 			classlist = xml.getElementsByTagName('ClassResult');
 			for ( i = 0; i < classlist.length; i += 1) {
@@ -1151,16 +1153,26 @@ Manager.prototype = {
 					result.name = personlist[j].getElementsByTagName('Given')[0].textContent + " " + personlist[j].getElementsByTagName('Family')[0].textContent;
 					temp = personlist[j].getElementsByTagName('PersonId')[0].textContent;
 					// remove new lines from empty <PersonId> tags
-					temp.replace(/[\n\r]/g, '');
-					result.dbid = temp.trim() + "__" + result.name;
+					temp = temp.replace(/[\n\r]/g, '').trim();
+					if (temp) {
+						result.dbid = temp;
+					} else {
+						result.dbid = result.name;
+					}
 					result.club = personlist[j].getElementsByTagName('ShortName')[0].textContent;
 					resultlist = personlist[j].getElementsByTagName('Result');
 					for ( k = 0; k < resultlist.length; k += 1) {
 						temp = resultlist[k].getElementsByTagName('CompetitorStatus');
 						if (temp.length > 0) {
-							status = temp[0].getAttribute("value");
+							result.status = temp[0].getAttribute("value");
 						} else {
-							status = '';
+							result.status = '';
+						}
+						temp = resultlist[k].getElementsByTagName('ResultPosition');
+						if (temp.length > 0) {
+							result.position = parseInt(temp[0].textContent, 10);
+						} else {
+							result.position = '';
 						}
 						temp = resultlist[k].getElementsByTagName('CCardId');
 						if (temp.length > 0) {
@@ -1217,7 +1229,7 @@ Manager.prototype = {
 							result.splits += 0;
 						}
 					}
-					if (status === 'DidNotStart') {
+					if (result.status === 'DidNotStart') {
 						break;
 					} else {
 						this.results.push(result);
@@ -1280,6 +1292,18 @@ Manager.prototype = {
 							result.chipid = temp[0].textContent;
 						} else {
 							result.chipid = 0;
+						}
+						temp = resultlist[k].getElementsByTagName('Position');
+						if (temp.length > 0) {
+							result.position = temp[0].textContent;
+						} else {
+							result.position = '';
+						}
+						temp = resultlist[k].getElementsByTagName('Status');
+						if (temp.length > 0) {
+							result.status = temp[0].textContent;
+						} else {
+							result.status = '';
 						}
 						// assuming first <Time> is the total time...
 						// this one is in seconds and might even have tenths...
@@ -1682,13 +1706,16 @@ Manager.prototype = {
 		var DB_IDX = 2;
 		var SURNAME_IDX = 3;
 		var FIRST_NAME_IDX = 4;
+		var NC_IDX = 8;
 		var START_TIME_IDX = 9;
 		var TOTAL_TIME_IDX = 11;
+		var CLASSIFIER_IDX = 12;
 		var CLUB_IDX = 15;
 		var CITY_IDX = 15;
 		var CLASS_IDX = 18;
 		var COURSE_IDX = 39;
 		var NUM_CONTROLS_IDX = 42;
+		var POSITION_IDX = 43;
 		var START_PUNCH_IDX = 44;
 		var FIRST_SPLIT_IDX = 47;
 		var SPLIT_IDX_STEP = 2;
@@ -1702,7 +1729,7 @@ Manager.prototype = {
 		var nextsplit;
 		var nextcode;
 		var temp;
-
+    
 		// extract all fields in all rows
 		for ( i = 0; i < rows.length; i += 1) {
 			fields[i] = rows[i].split(separator);
@@ -1718,6 +1745,8 @@ Manager.prototype = {
 				result.dbid = (fields[i][DB_IDX] + "__" + result.name).replace(/\"/g, '');
 				result.starttime = rg2.getSecsFromHHMMSS(fields[i][START_TIME_IDX]);
 				result.time = fields[i][TOTAL_TIME_IDX];
+				result.position = parseInt(fields[i][POSITION_IDX], 10);
+				result.status = this.getSICSVStatus(fields[i][NC_IDX], fields[i][CLASSIFIER_IDX]);
 				result.club = fields[i][CLUB_IDX];
 				// if club name not set then it may be in city field instead
 				if (!result.club) {
@@ -1748,6 +1777,18 @@ Manager.prototype = {
 		}
 	},
 
+	getSICSVStatus : function(nc, classifier) {
+		if ((nc === '0') || (nc === '') || (nc === 'N')) {
+			if ((classifier === '') || (classifier === '0')) {
+				return 'ok';
+			} else {
+				return 'nok';
+			}
+			
+		} else {
+			return 'nc';
+		}
+	},
 
 	readMapFile : function(evt) {
 		var reader = new FileReader();

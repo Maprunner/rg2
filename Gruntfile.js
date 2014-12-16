@@ -1,6 +1,8 @@
 module.exports = function(grunt) {
   var jsFileList = ['js/rg2.js', 'js/animation.js', 'js/controls.js', 'js/courses.js', 'js/draw.js', 'js/events.js', 'js/gpstrack.js',
    'js/plugins.js', 'js/results.js', 'js/runner.js', 'js/lib/he.js'];
+
+  var cssFileList = ['css/rg2.css'];
   
   // don't jsHint he.js
   var jsHintList = ['js/rg2.js', 'js/animation.js', 'js/controls.js', 'js/courses.js', 'js/draw.js', 'js/events.js', 'js/gpstrack.js',
@@ -65,6 +67,20 @@ module.exports = function(grunt) {
       all : {
         src : jsHintList
       }
+    },
+    
+    csslint: {
+      options: {
+      	// 2 means treat as an error
+        'import': 2,
+        // false means ignore rule
+        // TODO: rewrite CSS to allow these to be removed, but for now it works
+        'ids': false,
+        'box-model': false,
+        'duplicate-background-images': false,
+        'outline-none': false
+      },
+      src: cssFileList
     },
 
     uglify : {
@@ -672,7 +688,7 @@ module.exports = function(grunt) {
   grunt.registerTask('bump-minor', ['bumpup:minor']);
   grunt.registerTask('bump-major', ['bumpup:major']);
 
-  grunt.registerTask('build', ['newer:jshint:all', 'newer:concat:js', 'newer:uglify', 'build-manager' ]);
+  grunt.registerTask('build', ['csslint', 'newer:jshint:all', 'newer:concat:js', 'newer:uglify', 'build-manager' ]);
   
   grunt.registerTask('build-manager', ['newer:jshint:manager', 'newer:uglify:manager' ]);
 
