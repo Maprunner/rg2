@@ -688,6 +688,9 @@ Manager.prototype = {
 				// handle case where we have courses but no results
 				if (this.resultCourses.length > 0) {
 					this.resultCourses[id].courseid = courseid;
+					// use results file course names
+					this.courses[i].course = this.resultCourses[id].course;
+					this.courses[i].name = this.resultCourses[id].course;
 				}
 				newCourses.push(this.courses[i]);
 				courseid += 1;
@@ -1150,7 +1153,7 @@ Manager.prototype = {
 					result.name = personlist[j].getElementsByTagName('Given')[0].textContent + " " + personlist[j].getElementsByTagName('Family')[0].textContent;
 					temp = personlist[j].getElementsByTagName('PersonId')[0].textContent;
 					// remove new lines from empty <PersonId> tags
-					temp.replace(/[\n\r]/g, '').trim();
+					temp = temp.replace(/[\n\r]/g, '').trim();
 					if (temp) {
 						result.dbid = temp;
 					} else {
