@@ -1150,8 +1150,12 @@ Manager.prototype = {
 					result.name = personlist[j].getElementsByTagName('Given')[0].textContent + " " + personlist[j].getElementsByTagName('Family')[0].textContent;
 					temp = personlist[j].getElementsByTagName('PersonId')[0].textContent;
 					// remove new lines from empty <PersonId> tags
-					temp.replace(/[\n\r]/g, '');
-					result.dbid = temp.trim() + "__" + result.name;
+					temp.replace(/[\n\r]/g, '').trim();
+					if (temp) {
+						result.dbid = temp;
+					} else {
+						result.dbid = result.name;
+					}
 					result.club = personlist[j].getElementsByTagName('ShortName')[0].textContent;
 					resultlist = personlist[j].getElementsByTagName('Result');
 					for ( k = 0; k < resultlist.length; k += 1) {

@@ -432,18 +432,20 @@ function addNewEvent($data) {
   // create new kilpailijat file: results
   for ($i = 0; $i < count($data->results); $i++) {
     $a = $data->results[$i];
+    // save position and status if we got them
     if (isset($a->position)) {
       $position = $a->position;
     } else {
       $position = '';
     }
     if (isset($a->status)) {
-      $status = $a->status;
+      $status = abbreviateStatus($a->status);
     } else {
       $status = '';
     }
-    $result = ($i + 1)."|".$a->courseid."|".encode_rg_output($a->course)."|".encode_rg_output(trim($a->name))."|";
-    $result .= $a->starttime."|".encode_rg_output($a->dbid)."_#".$position."#".$status;
+    $result = ($i + 1)."|".$a->courseid."|".encode_rg_output($a->course)."|".encode_rg_output(trim($a->name))."|".$a->starttime."|";
+    // abusing dbid to save status and position
+    $result .= encode_rg_output($a->dbid)."_#".$position."#".$status;
     $result .= "|".$a->variantid."|".$a->time."|".$a->splits.PHP_EOL;
     file_put_contents(KARTAT_DIRECTORY."kilpailijat_".$newid.".txt", $result, FILE_APPEND);
   }
@@ -457,6 +459,34 @@ function addNewEvent($data) {
   
   return $write;
 
+}
+
+function abbreviateStatus($text) {
+  // mappings for ResultStatus in IOF XML V3 and V2.0.3
+  switch ($text) {  
+    case 'OK':
+      return 'OK';
+    case 'MissingPunch':
+      return 'mp';
+    case 'MisPunch':
+      return 'mp';
+    case 'Disqualified':
+      return 'dsq';
+    case 'DidNotFinish':
+      return 'dnf';
+    case 'OverTime':
+      return 'ot';
+    case 'SportingWithdrawal':
+      return 'swd';
+    case 'SportingWithdr':
+      return 'swd';
+    case 'NotCompeting':
+      return 'nc';
+    case 'DidNotStart':
+      return 'dns';
+    default:
+      return $text;
+  }
 }
 
 function getAngle($x1, $y1, $x2, $y2) {
