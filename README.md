@@ -1,14 +1,11 @@
 # Routegadget 2
 
 ## Latest news
-Version 0.9.8 was released on 9th December 2014 and has been installed on all routegadget.co.uk sites. Recent important changes:
+Version 0.9.9 was released on 16th December 2014 and has been installed on all routegadget.co.uk sites. Recent important changes:
 
-* A problem when importing course files in IOF XML 2.0.3 format from OCAD has been corrected.
+* Results now include positions if you create the event using the RG2 manager.
 * You can now save links to display a particular course or route. The address in the address bar now includes the event number as well as a list of all courses and routes on display. You can copy this link and use it to link directly to your own route.
-* The RG2 manager will now ignore crossing points in course files. This means you do no need to generate a separate course file with crossingpoints removed.
 * Problems with dropdown selection menus not working properly (especially on Chrome on Android or OS X) are now fixed.
-* If you upload the map file as a GIF then this is kept, rather than being converted to a JPG file. This should allow much smaller map image files to be used. A JPG file is also stored for compatibility with RG1.
-* Georeferencing information is now saved for each map. Georeferenced course files should now be aligned correctly each time you use the map, rather than just at the time you upload it.
 
 ## User Guide and Introductory Videos
 
