@@ -327,10 +327,6 @@ Manager.prototype = {
 			self.confirmUpdateEvent();
 		}).button("disable");
 
-		$("#btn-delete-course").button().click(function() {
-			self.confirmDeleteCourse();
-		}).button("disable");
-
 		$("#btn-delete-route").button().click(function() {
 			self.confirmDeleteRoute();
 		}).button("disable");
@@ -646,7 +642,7 @@ Manager.prototype = {
 				}
 			},
 			error : function(jqXHR, textStatus, errorThrown) {
-				console.log(textStatus);
+				rg2.showWarningDialog("Save failed", " Failed to create event.");
 			}
 		});
 	},
@@ -869,43 +865,9 @@ Manager.prototype = {
 				}
 			},
 			error : function(jqXHR, textStatus, errorThrown) {
-				console.log(textStatus);
+					rg2.showWarningDialog("Update failed", textStatus + ". Event update failed.");
 			}
 		});
-	},
-
-	confirmDeleteCourse : function() {
-		var msg = "<div id='course-delete-dialog'>This course will be permanently deleted. Are you sure?</div>";
-		var me = this;
-		$(msg).dialog({
-			title : "Confirm course delete",
-			modal : true,
-			dialogClass : "no-close rg2-confirm-course-delete-dialog",
-			closeOnEscape : false,
-			buttons : [{
-				text : "Cancel",
-				click : function() {
-					me.doCancelDeleteCourse();
-				}
-			}, {
-				text : "Delete course",
-				click : function() {
-					me.doDeleteCourse();
-				}
-			}]
-		});
-	},
-
-	doCancelDeleteCourse : function() {
-		$("#course-delete-dialog").dialog("destroy");
-	},
-
-	doDeleteCourse : function() {
-		$("#course-delete-dialog").dialog("destroy");
-		var id = $("#rg2-event-selected").val();
-		var routeid = $("#rg2-route-selected").val();
-		var $url = rg2Config.json_url + "?type=deletecourse&id=" + id + "&routeid=" + routeid;
-		// TODO: add course delete functionality
 	},
 
 	confirmDeleteRoute : function() {
@@ -958,7 +920,7 @@ Manager.prototype = {
 				}
 			},
 			error : function(jqXHR, textStatus, errorThrown) {
-				console.log(textStatus);
+				rg2.showWarningDialog("Delete failed", textStatus + ". Delete failed.");
 			}
 		});
 	},
@@ -1015,7 +977,7 @@ Manager.prototype = {
 				}
 			},
 			error : function(jqXHR, textStatus, errorThrown) {
-				console.log(textStatus);
+				rg2.showWarningDialog("Delete failed", textStatus + ". Delete failed.");
 			}
 		});
 	},
@@ -1028,15 +990,13 @@ Manager.prototype = {
 		reader.onerror = function(evt) {
 			switch(evt.target.error.code) {
 			case evt.target.error.NOT_FOUND_ERR:
-				alert('File not found');
-				break;
-			case evt.target.error.NOT_READABLE_ERR:
-				alert('File not readable');
+				rg2.showWarningDialog("File not found", "Results file not found. Please select another file.");
 				break;
 			default:
-				alert('An error occurred reading the file.');
+				rg2.showWarningDialog("File not found", "Results file error. Please select another file.");
 			}
 		};
+		
 		reader.onload = function(evt) {
 			self.results.length = 0;
 			switch (self.resultsFileFormat) {
@@ -1159,7 +1119,12 @@ Manager.prototype = {
 					} else {
 						result.dbid = result.name;
 					}
-					result.club = personlist[j].getElementsByTagName('ShortName')[0].textContent;
+					temp = personlist[j].getElementsByTagName('ShortName');
+					if (temp.length > 0) {
+						result.club = temp[0].textContent.trim();
+					} else {
+						result.club = '';
+					}
 					resultlist = personlist[j].getElementsByTagName('Result');
 					for ( k = 0; k < resultlist.length; k += 1) {
 						temp = resultlist[k].getElementsByTagName('CompetitorStatus');
@@ -1181,8 +1146,12 @@ Manager.prototype = {
 							result.chipid = 0;
 						}
 						// assuming first <Time> is the total time...
-						temp = resultlist[k].getElementsByTagName('Time')[0].textContent;
-						result.time = temp.replace(/[\n\r]/g, '');
+						temp = resultlist[k].getElementsByTagName('Time');
+						if (temp.length > 0) {
+							result.time = temp[0].textContent.replace(/[\n\r]/g, '');
+						} else {
+							result.time = 0;
+						}
 						temp = resultlist[k].getElementsByTagName('StartTime');
 						if (temp.length > 0) {
 							time = temp[0].getElementsByTagName('Clock')[0].textContent;
@@ -1287,7 +1256,7 @@ Manager.prototype = {
 					}
 					resultlist = personlist[j].getElementsByTagName('Result');
 					for ( k = 0; k < resultlist.length; k += 1) {
-						temp = resultlist[k].getElementsByTagName('CCardId');
+						temp = resultlist[k].getElementsByTagName('ControlCard');
 						if (temp.length > 0) {
 							result.chipid = temp[0].textContent;
 						} else {
@@ -1381,9 +1350,6 @@ Manager.prototype = {
 			switch(evt.target.error.code) {
 			case evt.target.error.NOT_FOUND_ERR:
 				rg2.showWarningDialog('File not found', 'The selected file could not be found.');
-				break;
-			case evt.target.error.NOT_READABLE_ERR:
-				rg2.showWarningDialog('File not readable', 'The selected file could not be read.');
 				break;
 			default:
 				rg2.showWarningDialog('File error.', 'The selected file could not be read.');
@@ -2198,13 +2164,10 @@ Manager.prototype = {
 		reader.onerror = function(evt) {
 			switch(evt.target.error.code) {
 			case evt.target.error.NOT_FOUND_ERR:
-				console.log('File not found');
-				break;
-			case evt.target.error.NOT_READABLE_ERR:
-				console.log('File not readable');
+				rg2.showWarningDialog("File not found", "Failed to open selected world file.");
 				break;
 			default:
-				console.log('An error occurred reading the file.');
+				rg2.showWarningDialog("File error", "Failed to open selected world file.");
 			}
 		};
 
