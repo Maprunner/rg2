@@ -1237,6 +1237,36 @@ function getLanguage($lang) {
 function getResultsCSV($eventid) {
   $result_data = "\n'Headers;\\n' + \n";
 	$first_line = true;
+  $coursecount = 0;
+  $courses = array();
+  $controls = array();
+  // read control codes for each course: use hajontakanta if it exists
+  if (($handle = @fopen(KARTAT_DIRECTORY."hajontakanta_".$eventid.".txt", "r")) !== FALSE) {
+    while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
+     $courses[$coursecount] = $data[0];
+     $codes =  explode("_", $data[2]);
+     $controls[$coursecount] = $codes;
+     $coursecount++;
+    }
+    fclose($handle);
+  }
+  // try sarjojenkoodit if we didn't find anything
+  if ($coursecount == 0) {
+    if (($handle = @fopen(KARTAT_DIRECTORY."sarjojenkoodit_".$eventid.".txt", "r")) !== FALSE) {
+      while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
+       $courses[$coursecount] = $data[0];
+       $codes = array();
+       // ignore start and finish: just need control codes
+       for ($j = 2; $j < (count($data) - 1); $j++) {
+          $codes[$j - 2] = $data[$j];
+       }  
+       $controls[$coursecount] = $codes;
+       $coursecount++;
+      }
+      fclose($handle);
+    }
+  }
+  
 	$results = file(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt");
   foreach ($results as $result) {
     $data = explode("|", $result);
@@ -1263,9 +1293,22 @@ function getResultsCSV($eventid) {
       } else {
         $result_data .= $t.";;;;;;;";
 			}  
-			// 18: course
+			// 18: course name
 			$result_data .= encode_rg_input($data[2]).";;;;;;;;;;;;;;;;;;;;";
-      // 38: course number, 39: course
+      // find codes for this course
+      if ($data[6] !== '') {
+        $variant = $data[6];
+      } else {
+        $variant = $data[1];
+      }
+      $courseindex = -1;
+      for ($i = 0; $i < $coursecount; $i++) {
+        if ($courses[$i] == $variant) {
+          $courseindex = $i;
+          break;
+        }
+      }
+      // 38: course number, 39: course name
 			$result_data .= intval($data[1]).";".$data[2].";;;";
       // trim trailing ; which create null fields when expanded
       $temp = rtrim($data[8], ";");
@@ -1286,15 +1329,26 @@ function getResultsCSV($eventid) {
 				$result_data .= "---;";
 			} else {
         $result_data .= convertSecondsToHHMMSS($finish_secs).";";
-			}    
+      }
+      $controlcount = count($controls[$courseindex]);
       for ($i = 0; $i < $split_count; $i++) {
-      	// 46: control 1 number, 47: control 1 split...
-			  // #155: send invalid rather than 0 times to Splitsbrowser
+      	// 46: control 1 number
+      	if ($courseindex > -1) {
+      	  if ($i < $controlcount) {
+      	    $result_data .= $controls[$courseindex][$i].";";
+          } else {
+            $result_data .= "XXX;";
+          }
+      	} else {
+      	  $result_data .= ($i + 1).";";
+      	}
+        // 47: control 1 split
+        // #155: send invalid rather than 0 times to Splitsbrowser
       	if ($splits[$i] == 0) {
-					$result_data .= ($i + 1).";---;";
+					$result_data .= "---;";
 				} else {
-      	  $result_data .= ($i + 1).";".convertSecondsToMMSS($splits[$i]).";";
-				}			
+      	  $result_data .= convertSecondsToMMSS($splits[$i]).";";
+				}
 			}
       $result_data .= "\\n'";  
     }
