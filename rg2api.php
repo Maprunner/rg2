@@ -730,7 +730,7 @@ function deleteCourse($eventid) {
     $write["status_msg"] = "Course deleted.";
     rg2log("Course deleted|".$eventid."|".$courseid);
   } else {
-    $write["ok"] = FALSE;    
+    $write["ok"] = FALSE;
   }
   
   return($write);
@@ -738,6 +738,20 @@ function deleteCourse($eventid) {
 
 function deleteRoute($eventid) {
   $write["status_msg"] = "";
+  
+  // find event format
+  $format = 0;
+  $filename = KARTAT_DIRECTORY."kisat.txt";
+  $oldfile = file($filename);
+  foreach ($oldfile as $row) {
+    $data = explode("|", $row);
+    if ($data[0] == $eventid) {
+      $format = $data[2];
+      // exit loop now we have found what we want
+      break;
+    }
+  } 
+ 
   if (isset($_GET['routeid'])) {
     $routeid = $_GET['routeid'];
     // delete comments
@@ -755,12 +769,13 @@ function deleteRoute($eventid) {
     }
     $status = file_put_contents($filename, $updatedfile);
     
-    if (!$status) {
+    if ($status === FALSE) {
       $write["status_msg"] .= "Save error for kommentit. ";
     }
 
-    // delete GPS details in result record
-    if ($routeid >= GPS_RESULT_OFFSET) {
+    // delete result if this event started with no results (format 2)
+    // delete GPS details since these are always added as a new result
+    if (($routeid >= GPS_RESULT_OFFSET) || ($format == 2)) {
       $filename = KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt";
       $oldfile = file($filename);
       $updatedfile = array();
@@ -768,14 +783,14 @@ function deleteRoute($eventid) {
         $data = explode("|", $row);
         $deleted = FALSE;
         if ($data[0] == $routeid) {
-          $deleted = TRUE;                    
+          $deleted = TRUE;
         } else {
           $updatedfile[] = $row;
         }
       }
       $status = file_put_contents($filename, $updatedfile);
     
-      if (!$status) {
+      if ($status === FALSE) {
         $write["status_msg"] .= "Save error for kilpailijat. ";
       }
 
@@ -794,9 +809,9 @@ function deleteRoute($eventid) {
         $updatedfile[] = $row;
       }
     }
-    $status = file_put_contents($filename, $updatedfile);   
+    $status = file_put_contents($filename, $updatedfile);
   
-    if (!$status) {
+    if ($status === FALSE) {
       $write["status_msg"] .= " Save error for merkinnat. ";
     }
     if (!$deleted) {
