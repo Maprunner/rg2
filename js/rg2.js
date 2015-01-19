@@ -19,7 +19,6 @@
 /*global Manager:false */
 /*global Runner:false */
 /*global Course:false */
-/*global getDistanceBetweenPoints:false */
 /*global setTimeout:false */
 /*global localStorage:false */
 var rg2 = ( function() {

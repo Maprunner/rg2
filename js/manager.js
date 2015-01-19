@@ -391,7 +391,6 @@ Manager.prototype = {
 			$("#btn-delete-event").button("disable");
 			$("#btn-update-event").button("disable");
 			$("#btn-delete-route").button("disable");
-			$("#btn-delete-course").button("disable");
 			$("#rg2-event-name-edit").val("");
 			$("#rg2-club-name-edit").val("");
 			$("#rg2-event-date-edit").val("");
@@ -421,7 +420,6 @@ Manager.prototype = {
 		$("#btn-delete-event").button("enable");
 		$("#btn-update-event").button("enable");
 		$("#btn-delete-route").button("enable");
-		$("#btn-delete-course").button("enable");
 		this.createCourseDeleteDropdown(event.id);
 		this.createRouteDeleteDropdown(event.id);
 	},
