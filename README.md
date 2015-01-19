@@ -1,11 +1,12 @@
 # Routegadget 2
 
 ## Latest news
-Version 0.9.9 was released on 16th December 2014 and has been installed on all routegadget.co.uk sites. Recent important changes:
+Version 1.0.0 was released on 19th January 2015 and has been installed on all routegadget.co.uk sites. The version number makes it sound important, but it just came naturally after 0.9.9, so this really isn't a big update. The main changes are:
 
-* Results now include positions if you create the event using the RG2 manager.
-* You can now save links to display a particular course or route. The address in the address bar now includes the event number as well as a list of all courses and routes on display. You can copy this link and use it to link directly to your own route.
-* Problems with dropdown selection menus not working properly (especially on Chrome on Android or OS X) are now fixed.
+* Control codes now sent to Splitsbrowser so that the "race graph" functionality works better.
+* Replay updated for events which are created with defined courses but no results.
+
+I would recommend using the RG2 manager to set up events rather than the original Routegadget Java version. This will give you some extra functionality (such as positions in the results), and it is also a lot easier to get the controls aligned.
 
 ## User Guide and Introductory Videos
 
