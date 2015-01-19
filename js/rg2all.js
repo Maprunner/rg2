@@ -1,4 +1,4 @@
-// Version 0.9.9 2014-12-16T20:14:50;
+// Version 1.0.0 2015-01-19T18:28:55;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -20,7 +20,6 @@
 /*global Manager:false */
 /*global Runner:false */
 /*global Course:false */
-/*global getDistanceBetweenPoints:false */
 /*global setTimeout:false */
 /*global localStorage:false */
 var rg2 = ( function() {
@@ -95,7 +94,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.9.9',
+      RG2VERSION: '1.0.0',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -4733,6 +4732,8 @@ Results.prototype = {
 		var i;
 		var j;
 		var l;
+		var eventid = rg2.getKartatEventID();
+		var eventinfo = rg2.getEventInfo(parseInt(eventid, 10));
 		// for each track
 		l = tracks.length;
 		for (i = 0; i < l; i += 1) {
@@ -4743,7 +4744,7 @@ Results.prototype = {
 				// loop through all results and add it against the correct id
 				while (j < this.results.length) {
 					if (resultIndex == this.results[j].resultid) {
-						this.results[j].addTrack(tracks[i]);
+						this.results[j].addTrack(tracks[i], eventinfo.format);
 						break;
 					}
 					j += 1;
@@ -4954,14 +4955,18 @@ Result.prototype = {
 		}
 	},
 	
-	addTrack: function(data) {
+	addTrack: function(data, format) {
     this.trackx = data.gpsx;
     this.tracky = data.gpsy;
     var trackOK;
     if (this.isGPSTrack) {
       trackOK = this.expandGPSTrack();
     } else {
-      trackOK = this.expandNormalTrack();
+      if (format === rg2.config.EVENT_WITHOUT_RESULTS) {
+        trackOK = this.expandTrackWithNoSplits();
+      } else {
+        trackOK = this.expandNormalTrack();
+      }
     }
     if (trackOK) {
       rg2.incrementTracksCount(this.courseid);
@@ -5133,6 +5138,93 @@ drawScoreCourse : function() {
 		if (this.isScoreEvent) {
 			this.hasValidTrack = true;
 		}
+		return this.hasValidTrack;
+	},
+
+	expandTrackWithNoSplits : function() {
+    // based on ExpandNormalTrack, but deals with event format 2: no results
+    // this means we have a course and a finish time but no split times
+    this.xysecs.length = 0;
+    this.cumulativeDistance.length = 0;
+
+		// only have finish time, which is in [1] at present
+		var totaltime= this.splits[1];
+		var currenttime = 0;
+		this.xysecs[0] = 0;
+		this.cumulativeDistance[0] = 0;
+		
+		// get course details: can't be a score course since they aren't supported for format 2
+		var course = {};
+		course.x = rg2.getCourseDetails(this.courseid).x;
+		course.y = rg2.getCourseDetails(this.courseid).y;
+		
+
+		var nextcontrol = 1;
+		var nextx = course.x[nextcontrol];
+		var nexty = course.y[nextcontrol];
+		var dist = 0;
+		var totaldist = 0;
+		var oldx = this.trackx[0];
+		var oldy = this.tracky[0];
+		var i;
+		var j;
+		var l;
+		var x = 0;
+		var y = 0;
+		var deltat = 0;
+		var deltadist = 0;
+		var olddist = 0;
+		var oldt = 0;
+		var previouscontrolindex = 0;
+		// read through track to find total distance
+		l = this.trackx.length;
+		for ( i = 1; i < l; i += 1) {
+			x = this.trackx[i];
+			y = this.tracky[i];
+			totaldist += rg2.getDistanceBetweenPoints(x, y, oldx, oldy);
+			oldx = x;
+			oldy = y;
+		}
+
+		// read through again to generate splits
+		x = 0;
+		y = 0;
+		oldx = this.trackx[0];
+		oldy = this.tracky[0];
+		for ( i = 1; i < l; i += 1) {
+			x = this.trackx[i];
+			y = this.tracky[i];
+			dist += rg2.getDistanceBetweenPoints(x, y, oldx, oldy);
+			this.cumulativeDistance[i] = Math.round(dist);
+			oldx = x;
+			oldy = y;
+			// track ends at control
+			if ((nextx == x) && (nexty == y)) {
+				currenttime = parseInt((dist / totaldist) * totaltime, 10);
+				this.xysecs[i] = currenttime;
+				this.splits[nextcontrol] = currenttime;
+				// go back and add interpolated time at each point based on cumulative distance
+				// this assumes uniform speed...
+				oldt = this.xysecs[previouscontrolindex];
+				deltat = this.xysecs[i] - oldt;
+				olddist = this.cumulativeDistance[previouscontrolindex];
+				deltadist = this.cumulativeDistance[i] - olddist;
+				for (j = previouscontrolindex; j <= i; j += 1) {
+					this.xysecs[j] = oldt + Math.round(((this.cumulativeDistance[j] - olddist) * deltat / deltadist));
+				}
+				previouscontrolindex = i;
+				nextcontrol += 1;
+				if (nextcontrol === course.x.length) {
+					// we have found all the controls
+					this.hasValidTrack = true;
+					break;
+				} else {
+					nextx = course.x[nextcontrol];
+					nexty = course.y[nextcontrol];
+				}
+			}
+		}
+
 		return this.hasValidTrack;
 	},
 
