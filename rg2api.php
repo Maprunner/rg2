@@ -730,7 +730,7 @@ function deleteCourse($eventid) {
     $write["status_msg"] = "Course deleted.";
     rg2log("Course deleted|".$eventid."|".$courseid);
   } else {
-    $write["ok"] = FALSE;    
+    $write["ok"] = FALSE;
   }
   
   return($write);
@@ -738,6 +738,20 @@ function deleteCourse($eventid) {
 
 function deleteRoute($eventid) {
   $write["status_msg"] = "";
+  
+  // find event format
+  $format = 0;
+  $filename = KARTAT_DIRECTORY."kisat.txt";
+  $oldfile = file($filename);
+  foreach ($oldfile as $row) {
+    $data = explode("|", $row);
+    if ($data[0] == $eventid) {
+      $format = $data[2];
+      // exit loop now we have found what we want
+      break;
+    }
+  } 
+ 
   if (isset($_GET['routeid'])) {
     $routeid = $_GET['routeid'];
     // delete comments
@@ -755,12 +769,13 @@ function deleteRoute($eventid) {
     }
     $status = file_put_contents($filename, $updatedfile);
     
-    if (!$status) {
+    if ($status === FALSE) {
       $write["status_msg"] .= "Save error for kommentit. ";
     }
 
-    // delete GPS details in result record
-    if ($routeid >= GPS_RESULT_OFFSET) {
+    // delete result if this event started with no results (format 2)
+    // delete GPS details since these are always added as a new result
+    if (($routeid >= GPS_RESULT_OFFSET) || ($format == 2)) {
       $filename = KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt";
       $oldfile = file($filename);
       $updatedfile = array();
@@ -768,14 +783,14 @@ function deleteRoute($eventid) {
         $data = explode("|", $row);
         $deleted = FALSE;
         if ($data[0] == $routeid) {
-          $deleted = TRUE;                    
+          $deleted = TRUE;
         } else {
           $updatedfile[] = $row;
         }
       }
       $status = file_put_contents($filename, $updatedfile);
     
-      if (!$status) {
+      if ($status === FALSE) {
         $write["status_msg"] .= "Save error for kilpailijat. ";
       }
 
@@ -794,9 +809,9 @@ function deleteRoute($eventid) {
         $updatedfile[] = $row;
       }
     }
-    $status = file_put_contents($filename, $updatedfile);   
+    $status = file_put_contents($filename, $updatedfile);
   
-    if (!$status) {
+    if ($status === FALSE) {
       $write["status_msg"] .= " Save error for merkinnat. ";
     }
     if (!$deleted) {
@@ -1222,6 +1237,36 @@ function getLanguage($lang) {
 function getResultsCSV($eventid) {
   $result_data = "\n'Headers;\\n' + \n";
 	$first_line = true;
+  $coursecount = 0;
+  $courses = array();
+  $controls = array();
+  // read control codes for each course: use hajontakanta if it exists
+  if (($handle = @fopen(KARTAT_DIRECTORY."hajontakanta_".$eventid.".txt", "r")) !== FALSE) {
+    while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
+     $courses[$coursecount] = $data[0];
+     $codes =  explode("_", $data[2]);
+     $controls[$coursecount] = $codes;
+     $coursecount++;
+    }
+    fclose($handle);
+  }
+  // try sarjojenkoodit if we didn't find anything
+  if ($coursecount == 0) {
+    if (($handle = @fopen(KARTAT_DIRECTORY."sarjojenkoodit_".$eventid.".txt", "r")) !== FALSE) {
+      while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
+       $courses[$coursecount] = $data[0];
+       $codes = array();
+       // ignore start and finish: just need control codes
+       for ($j = 2; $j < (count($data) - 1); $j++) {
+          $codes[$j - 2] = $data[$j];
+       }  
+       $controls[$coursecount] = $codes;
+       $coursecount++;
+      }
+      fclose($handle);
+    }
+  }
+  
 	$results = file(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt");
   foreach ($results as $result) {
     $data = explode("|", $result);
@@ -1248,9 +1293,22 @@ function getResultsCSV($eventid) {
       } else {
         $result_data .= $t.";;;;;;;";
 			}  
-			// 18: course
+			// 18: course name
 			$result_data .= encode_rg_input($data[2]).";;;;;;;;;;;;;;;;;;;;";
-      // 38: course number, 39: course
+      // find codes for this course
+      if ($data[6] !== '') {
+        $variant = $data[6];
+      } else {
+        $variant = $data[1];
+      }
+      $courseindex = -1;
+      for ($i = 0; $i < $coursecount; $i++) {
+        if ($courses[$i] == $variant) {
+          $courseindex = $i;
+          break;
+        }
+      }
+      // 38: course number, 39: course name
 			$result_data .= intval($data[1]).";".$data[2].";;;";
       // trim trailing ; which create null fields when expanded
       $temp = rtrim($data[8], ";");
@@ -1271,15 +1329,26 @@ function getResultsCSV($eventid) {
 				$result_data .= "---;";
 			} else {
         $result_data .= convertSecondsToHHMMSS($finish_secs).";";
-			}    
+      }
+      $controlcount = count($controls[$courseindex]);
       for ($i = 0; $i < $split_count; $i++) {
-      	// 46: control 1 number, 47: control 1 split...
-			  // #155: send invalid rather than 0 times to Splitsbrowser
+      	// 46: control 1 number
+      	if ($courseindex > -1) {
+      	  if ($i < $controlcount) {
+      	    $result_data .= $controls[$courseindex][$i].";";
+          } else {
+            $result_data .= "XXX;";
+          }
+      	} else {
+      	  $result_data .= ($i + 1).";";
+      	}
+        // 47: control 1 split
+        // #155: send invalid rather than 0 times to Splitsbrowser
       	if ($splits[$i] == 0) {
-					$result_data .= ($i + 1).";---;";
+					$result_data .= "---;";
 				} else {
-      	  $result_data .= ($i + 1).";".convertSecondsToMMSS($splits[$i]).";";
-				}			
+      	  $result_data .= convertSecondsToMMSS($splits[$i]).";";
+				}
 			}
       $result_data .= "\\n'";  
     }

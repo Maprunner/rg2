@@ -19,7 +19,6 @@
 /*global Manager:false */
 /*global Runner:false */
 /*global Course:false */
-/*global getDistanceBetweenPoints:false */
 /*global setTimeout:false */
 /*global localStorage:false */
 var rg2 = ( function() {
@@ -94,7 +93,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '0.9.9',
+      RG2VERSION: '1.0.0',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
