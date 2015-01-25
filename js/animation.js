@@ -163,9 +163,18 @@ Animation.prototype = {
 			for ( j = 1; j < run.splits.length; j += 1) {
 				html += "<td>" + rg2.formatSecsAsMMSS(legSplit[j]) + "</td>";
 			}
-			html += "</tr><tr class='splitsdistance-row'><td></td><td>" + Math.round(metresPerPixel * run.cumulativeTrackDistance[run.cumulativeTrackDistance.length - 1]) + " " + units + "</td>";
+			if (isNaN(run.cumulativeTrackDistance[run.cumulativeTrackDistance.length - 1])) {
+				html += "</tr><tr class='splitsdistance-row'><td></td><td>--</td>";
+			} else {
+				html += "</tr><tr class='splitsdistance-row'><td></td><td>" + Math.round(metresPerPixel * run.cumulativeTrackDistance[run.cumulativeTrackDistance.length - 1]) + " " + units + "</td>";
+			}
 			for ( j = 1; j < run.splits.length; j += 1) {
-				html += "<td>" + Math.round(metresPerPixel * run.legTrackDistance[j]) + "</td>";
+				if (isNaN(run.legTrackDistance[j])) {
+					// handle various problems with missing splits
+					html += "<td>--</td>";
+				} else {
+					html += "<td>" + Math.round(metresPerPixel * run.legTrackDistance[j]) + "</td>";
+				}
 			}
 
 		}
