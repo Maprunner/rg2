@@ -115,6 +115,7 @@ function Manager(keksi) {
 	this.handleY = null;
 	this.maps = [];
 	this.localworldfile = new Worldfile(0, 0, 0, 0, 0, 0);
+	this.worldfile = new Worldfile(0, 0, 0, 0, 0, 0);
 	this.HANDLE_DOT_RADIUS = 10;
 	this.handleColor = '#ff0000';
 	$("#btn-login").button();
@@ -1411,7 +1412,7 @@ Manager.prototype = {
 		var info;
 		
 		if (this.courses.length) {
-			var info = "<table><thead><tr><th>Course</th><th>Name</th><th>Controls</th></tr></thead><tbody>";
+			info = "<table><thead><tr><th>Course</th><th>Name</th><th>Controls</th></tr></thead><tbody>";
 			var i;
 			for ( i = 0; i < this.courses.length; i += 1) {
 				info += "<tr><td>" + (i + 1) + "</td><td>" + this.courses[i].name + "</td><td>" + (this.courses[i].codes.length - 2) + "</td></tr>";
@@ -1428,7 +1429,7 @@ Manager.prototype = {
 		var info;
 		
 		if (this.results.length) {
-			var info = "<table><thead><tr><th>Course</th><th>Winner</th><th>Time</th><th>Runners</th></tr></thead><tbody>";
+			info = "<table><thead><tr><th>Course</th><th>Winner</th><th>Time</th><th>Runners</th></tr></thead><tbody>";
 			var i;
 			var runners = 0;
 			var oldcourse = null;
@@ -1456,7 +1457,9 @@ Manager.prototype = {
 		var version;
 		var i;
 		var nodelist;
+		var creator;
 		version = "";
+		creator = "";
 		try {
 			xml = $.parseXML(evt.target.result);
 
@@ -1470,6 +1473,7 @@ Manager.prototype = {
 				nodelist = xml.getElementsByTagName('CourseData');
 				if (nodelist.length > 0) {
 					version = nodelist[0].getAttribute('iofVersion');
+					creator = nodelist[0].getAttribute('creatr');
 				}
 			}
 		} catch (err) {
@@ -1482,7 +1486,7 @@ Manager.prototype = {
 			this.processIOFV2XML(xml);
 			break;
 		case "3.0":
-			this.processIOFV3XML(xml);
+			this.processIOFV3XML(xml, creator);
 			break;
 		default:
 			rg2.showWarningDialog("XML file error", 'Invalid IOF file format. Version ' + version + ' not supported.');
@@ -1571,7 +1575,7 @@ Manager.prototype = {
 		$("#rg2-select-course-file").addClass('valid');
 	},
 
-	processIOFV3XML : function(xml) {
+	processIOFV3XML : function(xml, creator) {
 		// extract all controls
 		var nodelist;
 		var i;
@@ -1579,7 +1583,15 @@ Manager.prototype = {
 		var mappos;
 		var x;
 		var y;
-
+		var condes;
+		condes = false;
+		// handle files from Condes which use original worldfile rather than WGS-84 as expected by IOF scheme
+		if (creator) {
+			if (creator.indexOf('Condes') > -1) {
+				condes = true;
+			}
+		}
+		
 		nodelist = xml.getElementsByTagName('Control');
 
 		var latlng;
@@ -1593,8 +1605,16 @@ Manager.prototype = {
 				if ((this.localworldfile.valid) && (latlng.length > 0)) {
 					lat = latlng[0].getAttribute('lat');
 					lng = latlng[0].getAttribute('lng');
-					x = this.localworldfile.getX(lng, lat);
-					y = this.localworldfile.getY(lng, lat);
+					// handle Condes-specific georeferencing
+					if (condes) {
+						// use original map worldfile
+						x = this.localworldfile.getX(lng, lat);
+						y = this.localworldfile.getY(lng, lat);
+					} else {
+						// use WGS-84 worldfile as expected (?) by IOF V3 schema
+						x = this.worldfile.getX(lng, lat);
+						y = this.worldfile.getY(lng, lat);
+					}
 					this.coursesGeoreferenced = true;
 				} else {
 					// only works if all controls have lat/lon or none do: surely a safe assumption...
@@ -1916,6 +1936,7 @@ Manager.prototype = {
 		this.mapLoaded = true;
 		if (this.mapIndex !== this.INVALID_MAP_ID) {
 			this.localworldfile = this.maps[this.mapIndex].localworldfile;
+			this.worldfile = this.maps[this.mapIndex].worldfile;
 		}
 		var size = rg2.getMapSize();
 		this.mapWidth = size.width;
@@ -1941,6 +1962,18 @@ Manager.prototype = {
 		var i;
 		var georefOK = false;
 		if ((this.mapLoaded) && (this.newcontrols.controls.length > 0)) {
+			// get max extent of controls
+			// find bounding box for track
+			var minX = this.newcontrols.controls[0].x;
+			var maxX = this.newcontrols.controls[0].x;
+			var minY = this.newcontrols.controls[0].y;
+			var maxY = this.newcontrols.controls[0].y;
+			for ( i = 1; i < this.newcontrols.controls.length; i += 1) {
+				maxX = Math.max(maxX, this.newcontrols.controls[i].x);
+				maxY = Math.max(maxY, this.newcontrols.controls[i].y);
+				minX = Math.min(minX, this.newcontrols.controls[i].x);
+				minY = Math.min(minY, this.newcontrols.controls[i].y);
+			}
 			if (this.coursesGeoreferenced) {
 				// check we are somewhere on the map
 				if ((maxX < 0) || (minX > this.mapWidth) || (minY > this.mapHeight) || (maxY < 0)) {
@@ -1956,19 +1989,6 @@ Manager.prototype = {
 				this.backgroundLocked = true;
 				$('#btn-move-map-and-controls').prop('checked', true);
 			} else {
-				// get max extent of controls
-				// find bounding box for track
-				var minX = this.newcontrols.controls[0].x;
-				var maxX = this.newcontrols.controls[0].x;
-				var minY = this.newcontrols.controls[0].y;
-				var maxY = this.newcontrols.controls[0].y;
-
-				for ( i = 1; i < this.newcontrols.controls.length; i += 1) {
-					maxX = Math.max(maxX, this.newcontrols.controls[i].x);
-					maxY = Math.max(maxY, this.newcontrols.controls[i].y);
-					minX = Math.min(minX, this.newcontrols.controls[i].x);
-					minY = Math.min(minY, this.newcontrols.controls[i].y);
-				}
 				// fit within the map since this is probably needed anyway
 				var scale = 0.8;
 				var xRange = (maxX - minX);
