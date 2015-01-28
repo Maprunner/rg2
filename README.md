@@ -64,6 +64,7 @@ This is a list of known RG2 installations.
  * [Cornwall OC (Kerno)] (http://www.kerno.routegadget.co.uk/rg2)
  * [Dark &amp; White Events] (http://www.darkandwhite.routegadget.co.uk/rg2)
  * [Deeside OC] (http://www.dee.routegadget.co.uk/rg2)
+ * [Derwent Valley Orienteers] (http://www.derwentvalleyorienteers.org.uk/results/rg2)
  * [Devon OC] (http://www.devonoc.routegadget.co.uk/rg2)
  * [EckO - Loch Eck Orienteers] (http://www.ecko.routegadget.co.uk/rg2)
  * [EBOR] (http://www.ebor.routegadget.co.uk/rg2)
