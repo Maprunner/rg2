@@ -1330,7 +1330,12 @@ function getResultsCSV($eventid) {
 			} else {
         $result_data .= convertSecondsToHHMMSS($finish_secs).";";
       }
-      $controlcount = count($controls[$courseindex]);
+      if ($courseindex > -1) {
+        $controlcount = count($controls[$courseindex]);
+      } else {
+        $controlcount = 0;
+      }
+
       for ($i = 0; $i < $split_count; $i++) {
       	// 46: control 1 number
       	if ($courseindex > -1) {
