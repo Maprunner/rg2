@@ -1,4 +1,4 @@
-// Version 1.0.0 2015-01-19T18:28:55;
+// Version 1.0.1 2015-01-29T16:44:30;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -94,7 +94,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '1.0.0',
+      RG2VERSION: '1.0.1',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -2065,9 +2065,18 @@ Animation.prototype = {
 			for ( j = 1; j < run.splits.length; j += 1) {
 				html += "<td>" + rg2.formatSecsAsMMSS(legSplit[j]) + "</td>";
 			}
-			html += "</tr><tr class='splitsdistance-row'><td></td><td>" + Math.round(metresPerPixel * run.cumulativeTrackDistance[run.cumulativeTrackDistance.length - 1]) + " " + units + "</td>";
+			if (isNaN(run.cumulativeTrackDistance[run.cumulativeTrackDistance.length - 1])) {
+				html += "</tr><tr class='splitsdistance-row'><td></td><td>--</td>";
+			} else {
+				html += "</tr><tr class='splitsdistance-row'><td></td><td>" + Math.round(metresPerPixel * run.cumulativeTrackDistance[run.cumulativeTrackDistance.length - 1]) + " " + units + "</td>";
+			}
 			for ( j = 1; j < run.splits.length; j += 1) {
-				html += "<td>" + Math.round(metresPerPixel * run.legTrackDistance[j]) + "</td>";
+				if (isNaN(run.legTrackDistance[j])) {
+					// handle various problems with missing splits
+					html += "<td>--</td>";
+				} else {
+					html += "<td>" + Math.round(metresPerPixel * run.legTrackDistance[j]) + "</td>";
+				}
 			}
 
 		}
