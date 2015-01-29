@@ -1060,7 +1060,11 @@ Manager.prototype = {
 		version = "";
 		try {
 			xml = $.parseXML(evt.target.result);
-
+			nodelist = xml.getElementsByTagName('ResultList');
+			if (nodelist.length === 0) {
+				rg2.showWarningDialog("XML file error", "File is not a valid XML results file. ResultList element missing.");
+				return;
+			}
 			// test for IOF Version 2
 			nodelist = xml.getElementsByTagName('IOFVersion');
 			if (nodelist.length > 0) {
@@ -1377,35 +1381,41 @@ Manager.prototype = {
 	},
 	
 	displayCourseInfo : function() {
-    $("#rg2-manage-courses").empty().html(this.getCourseInfoAsHTML());
-    $("#rg2-manage-courses").dialog({
-      title: "Course details",
-      dialogClass: "rg2-course-info-dialog",
-      resizable: true,
-      width: 'auto',
-      maxHeight: (window.innerHeight * 0.9),
-      buttons : {
-        Ok : function() {
-          $(this).dialog("close");
+		var info = this.getCourseInfoAsHTML();
+		if (info) {
+      $("#rg2-manage-courses").empty().html(info);
+      $("#rg2-manage-courses").dialog({
+        title: "Course details",
+        dialogClass: "rg2-course-info-dialog",
+        resizable: true,
+        width: 'auto',
+        maxHeight: (window.innerHeight * 0.9),
+        buttons : {
+          Ok : function() {
+            $(this).dialog("close");
+          }
         }
-      }
-    });
+      });
+    }
   },
 
 	displayResultInfo : function() {
-    $("#rg2-manage-results").empty().html(this.getResultInfoAsHTML());
-    $("#rg2-manage-results").dialog({
-      title: "Result details",
-      dialogClass: "rg2-result-info-dialog",
-      resizable: true,
-      width: 'auto',
-      maxHeight: (window.innerHeight * 0.9),
-      buttons : {
-        Ok : function() {
-          $(this).dialog("close");
+		var info = this.getResultInfoAsHTML();
+    $("#rg2-manage-results").empty().html(info);
+    if (info) {
+      $("#rg2-manage-results").dialog({
+        title: "Result details",
+        dialogClass: "rg2-result-info-dialog",
+        resizable: true,
+        width: 'auto',
+        maxHeight: (window.innerHeight * 0.9),
+        buttons : {
+          Ok : function() {
+            $(this).dialog("close");
+          }
         }
-      }
-    });
+      });
+    }
   },
 
   getCourseInfoAsHTML : function () {
@@ -1419,7 +1429,7 @@ Manager.prototype = {
 			}
 			info += "</tbody></table>";
 		} else {
-			info = "<div>No courses found</div>";
+			info = "";
 		}
 		
 		return info;
@@ -1446,7 +1456,7 @@ Manager.prototype = {
 			}
 			info += "<td>" + runners + "</td></tr></tbody></table>";
 		} else {
-			info = "<div>No results found</div>";
+			info = "";
 		}
 		
 		return info;
@@ -1462,7 +1472,12 @@ Manager.prototype = {
 		creator = "";
 		try {
 			xml = $.parseXML(evt.target.result);
-
+			nodelist = xml.getElementsByTagName('CourseData');
+			if (nodelist.length === 0) {
+				rg2.showWarningDialog("XML file error", "File is not a valid XML course file. CourseData element missing.");
+				return;
+			}
+				
 			// test for IOF Version 2
 			nodelist = xml.getElementsByTagName('IOFVersion');
 			if (nodelist.length > 0) {
@@ -1473,14 +1488,14 @@ Manager.prototype = {
 				nodelist = xml.getElementsByTagName('CourseData');
 				if (nodelist.length > 0) {
 					version = nodelist[0].getAttribute('iofVersion');
-					creator = nodelist[0].getAttribute('creatr');
+					creator = nodelist[0].getAttribute('creator');
 				}
 			}
 		} catch (err) {
-			rg2.showWarningDialog("XML file error", "File is not a valid XML event file.");
+			rg2.showWarningDialog("XML file error", "File is not a valid XML course file.");
 			return;
 		}
-
+		
 		switch (version) {
 		case "2.0.3":
 			this.processIOFV2XML(xml);
