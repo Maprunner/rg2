@@ -115,6 +115,7 @@ function Manager(keksi) {
 	this.handleY = null;
 	this.maps = [];
 	this.localworldfile = new Worldfile(0, 0, 0, 0, 0, 0);
+	this.worldfile = new Worldfile(0, 0, 0, 0, 0, 0);
 	this.HANDLE_DOT_RADIUS = 10;
 	this.handleColor = '#ff0000';
 	$("#btn-login").button();
@@ -130,6 +131,8 @@ function Manager(keksi) {
 	} else {
 		this.defaultGeorefVal = "EPSG:27700";
 	}
+	$("rg2-manager-courses").hide();
+	$("rg2-manager-results").hide();
 
 	var self = this;
 
@@ -1013,6 +1016,7 @@ Manager.prototype = {
 			}
 			// extract courses from results
 			self.getCoursesFromResults();
+			self.displayResultInfo();
 			self.displayCourseAllocations();
 		};
 		var format = evt.target.files[0].name.substr(-3, 3);
@@ -1056,7 +1060,11 @@ Manager.prototype = {
 		version = "";
 		try {
 			xml = $.parseXML(evt.target.result);
-
+			nodelist = xml.getElementsByTagName('ResultList');
+			if (nodelist.length === 0) {
+				rg2.showWarningDialog("XML file error", "File is not a valid XML results file. ResultList element missing.");
+				return;
+			}
 			// test for IOF Version 2
 			nodelist = xml.getElementsByTagName('IOFVersion');
 			if (nodelist.length > 0) {
@@ -1363,6 +1371,7 @@ Manager.prototype = {
 			self.handleY = null;
 			self.newcontrols.deleteAllControls();
 			self.processCoursesXML(evt);
+			self.displayCourseInfo();
 			self.displayCourseAllocations();
 			self.fitControlsToMap();
 			rg2.redraw(false);
@@ -1370,16 +1379,105 @@ Manager.prototype = {
 
 		reader.readAsText(evt.target.files[0]);
 	},
+	
+	displayCourseInfo : function() {
+		var info = this.getCourseInfoAsHTML();
+		if (info) {
+      $("#rg2-manage-courses").empty().html(info);
+      $("#rg2-manage-courses").dialog({
+        title: "Course details",
+        dialogClass: "rg2-course-info-dialog",
+        resizable: true,
+        width: 'auto',
+        maxHeight: (window.innerHeight * 0.9),
+        buttons : {
+          Ok : function() {
+            $(this).dialog("close");
+          }
+        }
+      });
+    }
+  },
+
+	displayResultInfo : function() {
+		var info = this.getResultInfoAsHTML();
+    $("#rg2-manage-results").empty().html(info);
+    if (info) {
+      $("#rg2-manage-results").dialog({
+        title: "Result details",
+        dialogClass: "rg2-result-info-dialog",
+        resizable: true,
+        width: 'auto',
+        maxHeight: (window.innerHeight * 0.9),
+        buttons : {
+          Ok : function() {
+            $(this).dialog("close");
+          }
+        }
+      });
+    }
+  },
+
+  getCourseInfoAsHTML : function () {
+		var info;
+		
+		if (this.courses.length) {
+			info = "<table><thead><tr><th>Course</th><th>Name</th><th>Controls</th></tr></thead><tbody>";
+			var i;
+			for ( i = 0; i < this.courses.length; i += 1) {
+				info += "<tr><td>" + (i + 1) + "</td><td>" + this.courses[i].name + "</td><td>" + (this.courses[i].codes.length - 2) + "</td></tr>";
+			}
+			info += "</tbody></table>";
+		} else {
+			info = "";
+		}
+		
+		return info;
+  },
+    
+  getResultInfoAsHTML : function () {
+		var info;
+		
+		if (this.results.length) {
+			info = "<table><thead><tr><th>Course</th><th>Winner</th><th>Time</th><th>Runners</th></tr></thead><tbody>";
+			var i;
+			var runners = 0;
+			var oldcourse = null;
+			for ( i = 0; i < this.results.length; i += 1) {
+				if (this.results[i].course !== oldcourse) {
+					if (oldcourse !== null) {
+						info += "<td>" + runners + "</td></tr>";
+						runners = 0;
+					}
+					info += "<tr><td>" + this.results[i].course + "</td><td>" + this.results[i].name + "</td><td>" + this.results[i].time + "</td>";
+					oldcourse = this.results[i].course;
+				}
+				runners += 1;
+			}
+			info += "<td>" + runners + "</td></tr></tbody></table>";
+		} else {
+			info = "";
+		}
+		
+		return info;
+  },
 
 	processCoursesXML : function(evt) {
 		var xml;
 		var version;
 		var i;
 		var nodelist;
+		var creator;
 		version = "";
+		creator = "";
 		try {
 			xml = $.parseXML(evt.target.result);
-
+			nodelist = xml.getElementsByTagName('CourseData');
+			if (nodelist.length === 0) {
+				rg2.showWarningDialog("XML file error", "File is not a valid XML course file. CourseData element missing.");
+				return;
+			}
+				
 			// test for IOF Version 2
 			nodelist = xml.getElementsByTagName('IOFVersion');
 			if (nodelist.length > 0) {
@@ -1390,19 +1488,20 @@ Manager.prototype = {
 				nodelist = xml.getElementsByTagName('CourseData');
 				if (nodelist.length > 0) {
 					version = nodelist[0].getAttribute('iofVersion');
+					creator = nodelist[0].getAttribute('creator');
 				}
 			}
 		} catch (err) {
-			rg2.showWarningDialog("XML file error", "File is not a valid XML event file.");
+			rg2.showWarningDialog("XML file error", "File is not a valid XML course file.");
 			return;
 		}
-
+		
 		switch (version) {
 		case "2.0.3":
 			this.processIOFV2XML(xml);
 			break;
 		case "3.0":
-			this.processIOFV3XML(xml);
+			this.processIOFV3XML(xml, creator);
 			break;
 		default:
 			rg2.showWarningDialog("XML file error", 'Invalid IOF file format. Version ' + version + ' not supported.');
@@ -1491,7 +1590,7 @@ Manager.prototype = {
 		$("#rg2-select-course-file").addClass('valid');
 	},
 
-	processIOFV3XML : function(xml) {
+	processIOFV3XML : function(xml, creator) {
 		// extract all controls
 		var nodelist;
 		var i;
@@ -1499,7 +1598,15 @@ Manager.prototype = {
 		var mappos;
 		var x;
 		var y;
-
+		var condes;
+		condes = false;
+		// handle files from Condes which use original worldfile rather than WGS-84 as expected by IOF scheme
+		if (creator) {
+			if (creator.indexOf('Condes') > -1) {
+				condes = true;
+			}
+		}
+		
 		nodelist = xml.getElementsByTagName('Control');
 
 		var latlng;
@@ -1513,8 +1620,16 @@ Manager.prototype = {
 				if ((this.localworldfile.valid) && (latlng.length > 0)) {
 					lat = latlng[0].getAttribute('lat');
 					lng = latlng[0].getAttribute('lng');
-					x = this.localworldfile.getX(lng, lat);
-					y = this.localworldfile.getY(lng, lat);
+					// handle Condes-specific georeferencing
+					if (condes) {
+						// use original map worldfile
+						x = this.localworldfile.getX(lng, lat);
+						y = this.localworldfile.getY(lng, lat);
+					} else {
+						// use WGS-84 worldfile as expected (?) by IOF V3 schema
+						x = this.worldfile.getX(lng, lat);
+						y = this.worldfile.getY(lng, lat);
+					}
 					this.coursesGeoreferenced = true;
 				} else {
 					// only works if all controls have lat/lon or none do: surely a safe assumption...
@@ -1666,72 +1781,49 @@ Manager.prototype = {
 
 // rows: array of raw lines from SI results csv file
 	processSICSVResults : function(rows, separator) {
-		var CHIP_IDX = 1;
-		var DB_IDX = 2;
-		var SURNAME_IDX = 3;
-		var FIRST_NAME_IDX = 4;
-		var NC_IDX = 8;
-		var START_TIME_IDX = 9;
-		var TOTAL_TIME_IDX = 11;
-		var CLASSIFIER_IDX = 12;
-		var CLUB_IDX = 15;
-		var CITY_IDX = 15;
-		var CLASS_IDX = 18;
-		var COURSE_IDX = 39;
-		var NUM_CONTROLS_IDX = 42;
-		var POSITION_IDX = 43;
-		var START_PUNCH_IDX = 44;
-		var FIRST_SPLIT_IDX = 47;
-		var SPLIT_IDX_STEP = 2;
-		var FIRST_CODE_IDX = 46;
-		var CODE_IDX_STEP = 2;
-
 		var i;
 		var j;
-		var fields = {};
+		var fields;
 		var result;
 		var nextsplit;
 		var nextcode;
 		var temp;
     
-		// extract all fields in all rows
-		for ( i = 0; i < rows.length; i += 1) {
-			fields[i] = rows[i].split(separator);
-		}
+    var format = this.getCSVFormat(rows[0], separator);
 		// extract what we need: first row is headers so ignore
 		for ( i = 1; i < rows.length; i += 1) {
+			fields = rows[i].split(separator);
 			// need at least this many fields...
-			if (fields[i].length >= FIRST_SPLIT_IDX) {
+			if (fields.length >= format.FIRST_SPLIT_IDX) {
 				result = {};
-				result.chipid = fields[i][CHIP_IDX];
+				result.chipid = fields[format.CHIP_IDX];
 				// delete quotes from CSV file: output from MERCS
-				result.name = (fields[i][FIRST_NAME_IDX] + " " + fields[i][SURNAME_IDX]).trim().replace(/\"/g, '');
-				result.dbid = (fields[i][DB_IDX] + "__" + result.name).replace(/\"/g, '');
-				result.starttime = rg2.getSecsFromHHMMSS(fields[i][START_TIME_IDX]);
-				result.time = fields[i][TOTAL_TIME_IDX];
-				result.position = parseInt(fields[i][POSITION_IDX], 10);
-				result.status = this.getSICSVStatus(fields[i][NC_IDX], fields[i][CLASSIFIER_IDX]);
-				result.club = fields[i][CLUB_IDX];
-				// if club name not set then it may be in city field instead
-				if (!result.club) {
-					result.club = fields[i][CITY_IDX];
+				result.name = (fields[format.FIRST_NAME_IDX] + " " + fields[format.SURNAME_IDX]).trim().replace(/\"/g, '');
+				result.dbid = (fields[format.DB_IDX] + "__" + result.name).replace(/\"/g, '');
+				result.starttime = rg2.getSecsFromHHMMSS(fields[format.START_TIME_IDX]);
+				result.time = fields[format.TOTAL_TIME_IDX];
+				result.position = parseInt(fields[format.POSITION_IDX], 10);
+				if (isNaN(result.position)) {
+					result.position = '';
 				}
-				result.course = fields[i][COURSE_IDX];
-				result.controls = parseInt(fields[i][NUM_CONTROLS_IDX], 10);
-				nextsplit = FIRST_SPLIT_IDX;
-				nextcode = FIRST_CODE_IDX;
+				result.status = this.getSICSVStatus(fields[format.NC_IDX], fields[format.CLASSIFIER_IDX]);
+				result.club = fields[format.CLUB_IDX].trim().replace(/\"/g, '');
+				result.course = fields[format.COURSE_IDX];
+				result.controls = parseInt(fields[format.NUM_CONTROLS_IDX], 10);
+				nextsplit = format.FIRST_SPLIT_IDX;
+				nextcode = format.FIRST_CODE_IDX;
 				result.splits = "";
 				result.codes = [];
 				for ( j = 0; j < result.controls; j += 1) {
-					if (j > 0) {
-						result.splits += ";";
+					if (fields[nextcode]) {
+						if (j > 0) {
+							result.splits += ";";
+						}
+						result.codes[j] = fields[nextcode];
+						result.splits += rg2.getSecsFromMMSS(fields[nextsplit]);
 					}
-					if (fields[i][nextcode]) {
-						result.codes[j] = fields[i][nextcode];
-						result.splits += rg2.getSecsFromMMSS(fields[i][nextsplit]);
-					}
-					nextsplit += SPLIT_IDX_STEP;
-					nextcode += CODE_IDX_STEP;
+					nextsplit += format.STEP;
+					nextcode += format.STEP;
 				}
 				// add finish split
 				result.splits += ";";
@@ -1739,6 +1831,89 @@ Manager.prototype = {
 				this.results.push(result);
 			}
 		}
+	},
+	
+	getCSVFormat : function (headers, separator) {
+		// not a pretty function but it should allow some non-standard CSV formats to be processed
+		// such as OEScore output
+		var a = {};
+		var titles = ['SI card', 'Database Id', 'Surname', 'First name', 'nc', 'Start', 'Time', 'Classifier', 'City',
+									'Short', 'Course', 'Course controls', 'Pl', 'Start punch', 'Control1', 'Punch1', 'Control2'];
+		var idx = [];
+		var fields = headers.split(separator);
+		var i;
+		var j;
+		var found;
+	
+		for (i = 0; i < titles.length; i += 1) {
+			found = false;
+			for (j = 0; j < fields.length; j += 1) {
+				if (fields[j] === titles[i]) {
+					idx[i] = j;
+					found = true;
+					break;
+				}
+				// horrid hacks to handle semi-compliant files
+				if ('SI card' === titles[i]) {
+					if ('Chipno' === fields[j]) {
+						idx[i] = j;
+						found = true;
+						break;
+					}
+				}
+				if ('Pl' === titles[i]) {
+					if ('Place' === fields[j]) {
+						idx[i] = j;
+						found = true;
+						break;
+					}
+				}
+			}
+			if (!found) {
+				// stop if we didn't find what we needed
+				break;
+			}
+		}
+		
+		if (found) {
+			a.CHIP_IDX = idx[0];
+			a.DB_IDX = idx[1];
+			a.SURNAME_IDX = idx[2];
+			a.FIRST_NAME_IDX = idx[3];
+			a.NC_IDX = idx[4];
+			a.START_TIME_IDX = idx[5];
+			a.TOTAL_TIME_IDX = idx[6];
+			a.CLASSIFIER_IDX = idx[7];
+			a.CLUB_IDX = idx[8];
+			a.CLASS_IDX = idx[9];
+			a.COURSE_IDX = idx[10];
+			a.NUM_CONTROLS_IDX = idx[11];
+			a.POSITION_IDX = idx[12];
+			a.START_PUNCH_IDX = idx[13];
+			a.FIRST_CODE_IDX = idx[14];
+			a.FIRST_SPLIT_IDX = idx[15];
+			a.STEP = idx[16] - idx[14];
+		} else {
+			// default to BOF CSV format
+			a.CHIP_IDX = 1;
+			a.DB_IDX = 2;
+			a.SURNAME_IDX = 3;
+			a.FIRST_NAME_IDX = 4;
+			a.NC_IDX = 8;
+			a.START_TIME_IDX = 9;
+			a.TOTAL_TIME_IDX = 11;
+			a.CLASSIFIER_IDX = 12;
+			a.CLUB_IDX = 15;
+			a.CLASS_IDX = 18;
+			a.COURSE_IDX = 39;
+			a.NUM_CONTROLS_IDX = 42;
+			a.POSITION_IDX = 43;
+			a.START_PUNCH_IDX = 44;
+			a.FIRST_SPLIT_IDX = 47;
+			a.STEP = 2;
+			a.FIRST_CODE_IDX = 46;
+		}
+		return a;
 	},
 
 	getSICSVStatus : function(nc, classifier) {
@@ -1776,6 +1951,7 @@ Manager.prototype = {
 		this.mapLoaded = true;
 		if (this.mapIndex !== this.INVALID_MAP_ID) {
 			this.localworldfile = this.maps[this.mapIndex].localworldfile;
+			this.worldfile = this.maps[this.mapIndex].worldfile;
 		}
 		var size = rg2.getMapSize();
 		this.mapWidth = size.width;
@@ -1801,6 +1977,18 @@ Manager.prototype = {
 		var i;
 		var georefOK = false;
 		if ((this.mapLoaded) && (this.newcontrols.controls.length > 0)) {
+			// get max extent of controls
+			// find bounding box for track
+			var minX = this.newcontrols.controls[0].x;
+			var maxX = this.newcontrols.controls[0].x;
+			var minY = this.newcontrols.controls[0].y;
+			var maxY = this.newcontrols.controls[0].y;
+			for ( i = 1; i < this.newcontrols.controls.length; i += 1) {
+				maxX = Math.max(maxX, this.newcontrols.controls[i].x);
+				maxY = Math.max(maxY, this.newcontrols.controls[i].y);
+				minX = Math.min(minX, this.newcontrols.controls[i].x);
+				minY = Math.min(minY, this.newcontrols.controls[i].y);
+			}
 			if (this.coursesGeoreferenced) {
 				// check we are somewhere on the map
 				if ((maxX < 0) || (minX > this.mapWidth) || (minY > this.mapHeight) || (maxY < 0)) {
@@ -1816,19 +2004,6 @@ Manager.prototype = {
 				this.backgroundLocked = true;
 				$('#btn-move-map-and-controls').prop('checked', true);
 			} else {
-				// get max extent of controls
-				// find bounding box for track
-				var minX = this.newcontrols.controls[0].x;
-				var maxX = this.newcontrols.controls[0].x;
-				var minY = this.newcontrols.controls[0].y;
-				var maxY = this.newcontrols.controls[0].y;
-
-				for ( i = 1; i < this.newcontrols.controls.length; i += 1) {
-					maxX = Math.max(maxX, this.newcontrols.controls[i].x);
-					maxY = Math.max(maxY, this.newcontrols.controls[i].y);
-					minX = Math.min(minX, this.newcontrols.controls[i].x);
-					minY = Math.min(minY, this.newcontrols.controls[i].y);
-				}
 				// fit within the map since this is probably needed anyway
 				var scale = 0.8;
 				var xRange = (maxX - minX);
