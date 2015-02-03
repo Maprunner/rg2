@@ -140,6 +140,7 @@ function handlePostRequest($type, $eventid) {
         $write = addNewRoute($eventid, $data);
 	      @unlink(CACHE_DIRECTORY."results_".$eventid.".json");
 	      @unlink(CACHE_DIRECTORY."tracks_".$eventid.".json");
+        @unlink(CACHE_DIRECTORY."stats.json");
         break; 
 
       case 'addmap':
@@ -149,11 +150,13 @@ function handlePostRequest($type, $eventid) {
       case 'createevent':
         $write = addNewEvent($data);
 	      @unlink(CACHE_DIRECTORY."events.json");
+        @unlink(CACHE_DIRECTORY."stats.json");
         break;  
  
       case 'editevent':
         $write = editEvent($eventid, $data);
         @unlink(CACHE_DIRECTORY."events.json");
+        @unlink(CACHE_DIRECTORY."stats.json");
         break; 
 
       case 'deleteevent':
@@ -162,12 +165,14 @@ function handlePostRequest($type, $eventid) {
 	      @unlink(CACHE_DIRECTORY."results_".$eventid.".json");
 	      @unlink(CACHE_DIRECTORY."courses_".$eventid.".json");
 	      @unlink(CACHE_DIRECTORY."tracks_".$eventid.".json");
+        @unlink(CACHE_DIRECTORY."stats.json");
        break; 
 
       case 'deleteroute':
         $write = deleteRoute($eventid);
 	      @unlink(CACHE_DIRECTORY."results_".$eventid.".json");
 	      @unlink(CACHE_DIRECTORY."tracks_".$eventid.".json");
+        @unlink(CACHE_DIRECTORY."stats.json");
         break; 
         
       case 'deletecourse':
@@ -175,6 +180,7 @@ function handlePostRequest($type, $eventid) {
 	      @unlink(CACHE_DIRECTORY."results_".$eventid.".json");
 	      @unlink(CACHE_DIRECTORY."courses_".$eventid.".json");
 	      @unlink(CACHE_DIRECTORY."tracks_".$eventid.".json");
+        @unlink(CACHE_DIRECTORY."stats.json");
         break; 
       
       case 'login':
@@ -1097,9 +1103,19 @@ function handleGetRequest($type, $id) {
 	  if (file_exists(CACHE_DIRECTORY."events.json")) {
 	    $output = file_get_contents(CACHE_DIRECTORY."events.json");
 	  } else {
-      $output = getAllEvents();
+	    // FALSE = don't include stats in output
+      $output = getAllEvents(FALSE);
 		  @file_put_contents(CACHE_DIRECTORY."events.json", $output);
 		}	
+    break;    
+  case 'stats':
+    if (file_exists(CACHE_DIRECTORY."stats.json")) {
+      $output = file_get_contents(CACHE_DIRECTORY."stats.json");
+    } else {
+      // TRUE = do include stats in output
+      $output = getAllEvents(TRUE);
+      @file_put_contents(CACHE_DIRECTORY."stats.json", $output);
+    } 
     break;    
   case 'courses':
 	  if (file_exists(CACHE_DIRECTORY."courses_".$id.".json")) {
@@ -1392,7 +1408,7 @@ function getEventName($eventid) {
  	return $event_name;
 }
 
-function getAllEvents() {
+function getAllEvents($includeStats) {
   $output = array();
   $referenced = 0;
   $maps = array();
@@ -1461,6 +1477,38 @@ function getAllEvents() {
       } else {
         $detail["comment"] = "";
       }
+      
+      if ($includeStats) {
+        if (file_exists(KARTAT_DIRECTORY."kilpailijat_".$detail["id"].".txt")) {
+          $count = 0;
+          $results = file(KARTAT_DIRECTORY."kilpailijat_".$detail["id"].".txt");
+          // don't double-count GPS results
+          foreach ($results as $r) {
+            $d = explode("|", $r);
+            if (count($d) > 0) {
+              if ($d[0] < GPS_RESULT_OFFSET) {
+                $count++;
+              } else {
+                continue;
+              }
+            }
+          }
+          $detail["results"] = $count;
+        } else {
+          $detail["results"] = 0;
+        }
+        if (file_exists(KARTAT_DIRECTORY."sarjat_".$detail["id"].".txt")) {
+          $detail["courses"] = count(file(KARTAT_DIRECTORY."sarjat_".$detail["id"].".txt"));
+        } else {
+          $detail["courses"] = 0;
+        }
+        if (file_exists(KARTAT_DIRECTORY."kommentit_".$detail["id"].".txt")) {
+          $detail["routes"] = count(file(KARTAT_DIRECTORY."kommentit_".$detail["id"].".txt"));
+        } else {
+          $detail["routes"] = 0;
+        }
+      }
+
       $output[$row] = $detail;
       $row++;
     }
