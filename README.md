@@ -1,10 +1,7 @@
 # Routegadget 2
 
 ## Latest news
-Version 1.0.0 was released on 19th January 2015 and has been installed on all routegadget.co.uk sites. The version number makes it sound important, but it just came naturally after 0.9.9, so this really isn't a big update. The main changes are:
-
-* Control codes now sent to Splitsbrowser so that the "race graph" functionality works better.
-* Replay updated for events which are created with defined courses but no results.
+Version 1.0.2 was released on 3rd February 2015 and has been installed on all routegadget.co.uk sites. This now provides enhanced information for the [RG2 statistics database] (http://www.maprunner.co.uk/rg2-stats). If your site is showing up with 0s in some of the totals column then you need to upgrade to at least version 1.0.2. If you have an RG2 site that you would like added to the database then please let me know.
 
 I would recommend using the RG2 manager to set up events rather than the original Routegadget Java version. This will give you some extra functionality (such as positions in the results), and it is also a lot easier to get the controls aligned.
 
