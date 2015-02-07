@@ -1453,7 +1453,7 @@ function getAllEvents($includeStats) {
         }
       }
 
-      $detail["format"] = $data[2];
+      $detail["format"] = intval($data[2]);
       // Issue #11: found a stray &#39; in a SUFFOC file
       $name = encode_rg_input($data[3]);
       $detail["name"] = str_replace("&#39;", "'", $name);

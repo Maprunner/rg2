@@ -139,9 +139,9 @@ Events.prototype = {
 };
 
 function Event(data) {
-	this.kartatid = parseInt(data.id, 10);
+	this.kartatid = data.id;
 	this.mapid = data.mapid;
-	this.format = parseInt(data.format, 10);
+	this.format = data.format;
 	this.name = data.name;
 	this.date = data.date;
 	this.club = data.club;

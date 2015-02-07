@@ -396,7 +396,7 @@ Results.prototype = {
 		var j;
 		var l;
 		var eventid = rg2.getKartatEventID();
-		var eventinfo = rg2.getEventInfo(parseInt(eventid, 10));
+		var eventinfo = rg2.getEventInfo(eventid);
 		// for each track
 		l = tracks.length;
 		for (i = 0; i < l; i += 1) {
@@ -774,7 +774,7 @@ drawScoreCourse : function() {
 			oldy = y;
 			// track ends at control
 			if ((nextx == x) && (nexty == y)) {
-				this.xysecs[i] = parseInt(this.splits[nextcontrol], 10);
+				this.xysecs[i] = this.splits[nextcontrol];
 				// go back and add interpolated time at each point based on cumulative distance
 				// this assumes uniform speed...
 				oldt = this.xysecs[previouscontrolindex];
