@@ -3,7 +3,8 @@
   require_once( dirname(__FILE__) . '/rg2-config.php' );
   // override allows testing of a local configuration such as c:/xampp/htdocs/rg2
   if (file_exists(dirname(__FILE__) . '/rg2-override-config.php')) {
-     require_once ( dirname(__FILE__) . '/rg2-override-config.php');
+    require_once ( dirname(__FILE__) . '/rg2-override-config.php');
+    define ('DEBUG', true);
 	}
 	
   if (defined('OVERRIDE_KARTAT_DIRECTORY')) {
@@ -1212,7 +1213,7 @@ function getSplitsbrowser($eventid) {
 	  $page = file_get_contents("html/splitsbrowser.html");
 		$eventname = getEventName($eventid);
 		$page = str_replace('<EVENT_NAME>', $eventname, $page);
-		if (isset($_GET['debug'])) {
+		if (defined('DEBUG')) {
 		  $page = str_replace('DEBUG_CLOSE', "", $page);
 		  $page = str_replace('DEBUG', "", $page);
 		  $page = str_replace('MINIFIED_CLOSE', "--", $page);
