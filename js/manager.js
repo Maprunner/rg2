@@ -1116,7 +1116,9 @@ Manager.prototype = {
 				for ( j = 0; j < personlist.length; j += 1) {
 					result = {};
 					result.course = course;
-					result.name = personlist[j].getElementsByTagName('Given')[0].textContent + " " + personlist[j].getElementsByTagName('Family')[0].textContent;
+					temp = personlist[j].getElementsByTagName('Given')[0].textContent + " " + personlist[j].getElementsByTagName('Family')[0].textContent;
+					// remove new lines from empty <Given> and <Family> tags
+					result.name = temp.replace(/[\n\r]/g, '').trim();
 					temp = personlist[j].getElementsByTagName('PersonId')[0].textContent;
 					// remove new lines from empty <PersonId> tags
 					temp = temp.replace(/[\n\r]/g, '').trim();
@@ -1243,7 +1245,9 @@ Manager.prototype = {
 				for ( j = 0; j < personlist.length; j += 1) {
 					result = {};
 					result.course = course;
-					result.name = personlist[j].getElementsByTagName('Given')[0].textContent + " " + personlist[j].getElementsByTagName('Family')[0].textContent;
+					temp = personlist[j].getElementsByTagName('Given')[0].textContent + " " + personlist[j].getElementsByTagName('Family')[0].textContent;
+					// remove new lines from empty <Given> and <Family> tags
+					result.name = temp.replace(/[\n\r]/g, '').trim();
 					temp = personlist[j].getElementsByTagName('Id');
 					if (temp.length > 0) {
 						temp2 = temp[0].textContent;
