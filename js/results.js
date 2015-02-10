@@ -422,12 +422,15 @@ Results.prototype = {
 	},
 
 	sortByCourseIDThenResultID : function(a, b) {
+		// sorts GPS results to be immediately after the associated main id
 		if (a.courseid > b.courseid) {
 			return 1;
 		} else if (b.courseid > a.courseid) {
 			return -1;
-		} else {
+		} else if (a.rawid == b.rawid){
 			return a.resultid - b.resultid;
+		} else {
+			return a.rawid - b.rawid;
 		}
 	},
 
@@ -459,10 +462,15 @@ Results.prototype = {
 				html += "<table class='resulttable'><tr><th></th><th>" + rg2.t("Name") + "</th><th>" + rg2.t("Time") + "</th><th><i class='fa fa-pencil'></i></th><th><i class='fa fa-play'></i></th></tr>";
 				oldCourseID = temp.courseid;
 			}
+			if (temp.rawid === temp.resultid) {
+				namehtml = temp.name;
+			} else {
+				namehtml = "<i>" + temp.name + "</i>";
+			}
       if (temp.isScoreEvent) {
-        namehtml = "<div><input class='showscorecourse showscorecourse-" + i + "' id=" + i + " type=checkbox name=scorecourse></input> " + temp.name + "</div>";
+        namehtml = "<div><input class='showscorecourse showscorecourse-" + i + "' id=" + i + " type=checkbox name=scorecourse></input> " + namehtml + "</div>";
       } else {
-        namehtml = "<div>" + temp.name + "</div>";
+        namehtml = "<div>" + namehtml + "</div>";
       }
 			html += '<tr><td>' + temp.position + '</td>';
 			if (temp.comments !== "") {
@@ -532,6 +540,7 @@ Results.prototype = {
 function Result(data, isScoreEvent, scorecodes, scorex, scorey) {
 	// resultid is the kartat id value
 	this.resultid = data.resultid;
+	this.rawid = this.resultid%rg2.config.GPS_RESULT_OFFSET;
 	this.isScoreEvent = isScoreEvent;
 	// GPS track ids are normal resultid + GPS_RESULT_OFFSET
 	if (this.resultid >= rg2.config.GPS_RESULT_OFFSET) {
