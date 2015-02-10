@@ -624,6 +624,7 @@ Result.prototype = {
 	removeTrackFromDisplay : function() {
 		if (this.hasValidTrack) {
 			this.displayTrack = false;
+			this.trackColour = null;
 		}
 	},
 	

@@ -119,7 +119,9 @@ var rg2 = ( function() {
 
 		function Colours() {
 		// used to generate track colours: add extra colours as necessary
-		this.colours = ["#ff0000", "#ff8000",  "#ff00ff", "#ff0080", "#008080", "#008000", "#00ff00", "#0080ff", "#0000ff", "#8000ff", "#00ffff", "#808080"];
+		this.colours = ["#ff0000", "#ff8000",  "#ff00ff", "#ff0080", "#008080", "#008000", "#0080ff", "#0000ff", "#8000ff", "#808080"];
+		//this.colours = ["#ff0000", "#ff8000",  "#ff00ff", "#ff0080", "#008080", "#008000", "#00ff00", "#0080ff", "#0000ff", "#8000ff", "#00ffff", "#808080"];
+
 		this.colourIndex = 0;
 		}
 
@@ -127,10 +129,7 @@ var rg2 = ( function() {
 			Constructor : Colours,
 
 			getNextColour : function() {
-				this.colourIndex += 1;
-				if (this.colourIndex === this.colours.length) {
-					this.colourIndex = 0;
-				}
+				this.colourIndex = (this.colourIndex + 1) % this.colours.length;
 				return this.colours[this.colourIndex];
 			}
 		};
