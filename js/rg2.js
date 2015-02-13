@@ -1225,16 +1225,21 @@ var rg2 = ( function() {
       coursearray = courses.getCoursesForEvent();
       resultsinfo = results.getResultsInfo();
       runnercomments = results.getComments();
-      stats = "<h3>" + t("Event statistics") + ": " + eventinfo.name + "</h3>";
+      stats = "<h3>" + t("Event statistics") + ": " + eventinfo.name + ": " + eventinfo.date + "</h3>";
       if (eventinfo.comment) {
         stats += "<p>" + eventinfo.comment + "</p>";
       }
-      stats += "<p><strong>" + t("Courses") + ":</strong> " + coursearray.length + "</p><p> <strong>" + t("Results") + ":</strong> " + resultsinfo.results + "</p>";
-      stats += "<p><strong>" + t("Routes") + ":</strong> " + resultsinfo.totalroutes + " (" +  resultsinfo.percent + "%)</p>";
-      stats += "<p><strong>" + t("Drawn routes") + ":</strong> " + resultsinfo.drawnroutes + "</p>";
-      stats += "<p><strong>" + t("GPS routes") + ":</strong> " + resultsinfo.gpsroutes + "</p>";
-      stats += "<p><strong>" + t("Total time") + ":</strong> " + resultsinfo.time + "</p>";
-      stats += "<p><strong>" + t("Map ") + ":</strong> ID " + events.getActiveMapID() + ", " + map.width + " x " + map.height + " pixels </p>";
+      stats += "<p><strong>" + t("Courses") + ":</strong> " + coursearray.length + ". <strong>" + t("Results") + ":</strong> " + resultsinfo.results;
+      stats += ". <strong> " + t("Controls") + ":</strong> " + eventinfo.controls + ".</p>";
+      stats += "<p><strong>" + t("Routes") + ":</strong> " + resultsinfo.totalroutes + " (" +  resultsinfo.percent + "%). ";
+      stats += "<strong>" + t("Drawn routes") + ":</strong> " + resultsinfo.drawnroutes +  ". <strong>" + t("GPS routes") + ":</strong> " + resultsinfo.gpsroutes + ".</p>";
+      stats += "<p><strong>" + t("Total time") + ":</strong> " + resultsinfo.time + ".</p>";
+      stats += "<p><strong>" + t("Map ") + ":</strong> ID " + events.getActiveMapID() + ", " + map.width + " x " + map.height + " pixels";
+      if (eventinfo.georeferenced) {
+        stats += ". " + t("Map is georeferenced") + ".</p>";
+      } else {
+        stats += ".</p>";
+      }
       if (runnercomments) {
         stats += "<p><strong>" + t("Comments") + ":</strong></p>" + runnercomments ;
       }
@@ -1835,6 +1840,10 @@ var rg2 = ( function() {
     function getSnapToControl() {
       return options.snap;
     }
+    
+    function getControlCount() {
+      return controls.getControlCount();
+    }
         
     return {
       // functions and variables available elsewhere
@@ -1891,7 +1900,8 @@ var rg2 = ( function() {
       getSecsFromHHMMSS: getSecsFromHHMMSS,
       getSecsFromHHMM: getSecsFromHHMM,
       formatSecsAsMMSS: formatSecsAsMMSS,
-      getLatLonDistance: getLatLonDistance
+      getLatLonDistance: getLatLonDistance,
+      getControlCount: getControlCount
     };
 
   }());

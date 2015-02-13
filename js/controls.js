@@ -202,6 +202,10 @@ Controls.prototype = {
 	
 	displayAllControls: function() {
     this.displayControls = true;
+	},
+	
+	getControlCount: function() {
+		return this.controls.length;
 	}
 };
 

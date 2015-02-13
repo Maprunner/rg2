@@ -20,6 +20,7 @@ Events.prototype = {
     var realid = this.getEventIDForKartatID(id);
     var info = this.events[realid];
     info.id = realid;
+    info.controls = rg2.getControlCount();
     return info;
 	},
 	

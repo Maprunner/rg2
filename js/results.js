@@ -262,7 +262,7 @@ Results.prototype = {
     info.time += Math.floor(temp / 3600) + " hours ";
     temp = temp - (3600 * Math.floor(temp / 3600));
     info.time += Math.floor(temp / 60) + " minutes ";
-    info.time += temp - (60 * Math.floor(temp / 60)) + " seconds ";
+    info.time += temp - (60 * Math.floor(temp / 60)) + " seconds";
     return info;
   },
 
