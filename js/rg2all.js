@@ -1,4 +1,4 @@
-// Version 1.0.2 2015-02-03T19:38:14;
+// Version 1.0.3 2015-02-13T18:05:48;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -94,7 +94,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '1.0.2',
+      RG2VERSION: '1.0.3',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -120,7 +120,9 @@ var rg2 = ( function() {
 
 		function Colours() {
 		// used to generate track colours: add extra colours as necessary
-		this.colours = ["#ff0000", "#ff8000",  "#ff00ff", "#ff0080", "#008080", "#008000", "#00ff00", "#0080ff", "#0000ff", "#8000ff", "#00ffff", "#808080"];
+		this.colours = ["#ff0000", "#ff8000",  "#ff00ff", "#ff0080", "#008080", "#008000", "#0080ff", "#0000ff", "#8000ff", "#808080"];
+		//this.colours = ["#ff0000", "#ff8000",  "#ff00ff", "#ff0080", "#008080", "#008000", "#00ff00", "#0080ff", "#0000ff", "#8000ff", "#00ffff", "#808080"];
+
 		this.colourIndex = 0;
 		}
 
@@ -128,10 +130,7 @@ var rg2 = ( function() {
 			Constructor : Colours,
 
 			getNextColour : function() {
-				this.colourIndex += 1;
-				if (this.colourIndex === this.colours.length) {
-					this.colourIndex = 0;
-				}
+				this.colourIndex = (this.colourIndex + 1) % this.colours.length;
 				return this.colours[this.colourIndex];
 			}
 		};
@@ -747,7 +746,7 @@ var rg2 = ( function() {
         type: 'lang',
         cache : false
       }).done(function(json) {
-        dictionary = json.data;
+        dictionary = json.data.dict;
         setNewLanguage();
       }).fail(function(jqxhr, textStatus, error) {
         reportJSONFail("Language request failed: " + error);
@@ -782,9 +781,9 @@ var rg2 = ( function() {
         type : "events",
         cache : false
       }).done(function(json) {
-        console.log("Events: " + json.data.length);
+        console.log("Events: " + json.data.events.length);
         events.deleteAllEvents();
-        $.each(json.data, function() {
+        $.each(json.data.events, function() {
           events.addEvent(new Event(this));
         });
         createEventMenu();
@@ -1227,16 +1226,21 @@ var rg2 = ( function() {
       coursearray = courses.getCoursesForEvent();
       resultsinfo = results.getResultsInfo();
       runnercomments = results.getComments();
-      stats = "<h3>" + t("Event statistics") + ": " + eventinfo.name + "</h3>";
+      stats = "<h3>" + t("Event statistics") + ": " + eventinfo.name + ": " + eventinfo.date + "</h3>";
       if (eventinfo.comment) {
         stats += "<p>" + eventinfo.comment + "</p>";
       }
-      stats += "<p><strong>" + t("Courses") + ":</strong> " + coursearray.length + "</p><p> <strong>" + t("Results") + ":</strong> " + resultsinfo.results + "</p>";
-      stats += "<p><strong>" + t("Routes") + ":</strong> " + resultsinfo.totalroutes + " (" +  resultsinfo.percent + "%)</p>";
-      stats += "<p><strong>" + t("Drawn routes") + ":</strong> " + resultsinfo.drawnroutes + "</p>";
-      stats += "<p><strong>" + t("GPS routes") + ":</strong> " + resultsinfo.gpsroutes + "</p>";
-      stats += "<p><strong>" + t("Total time") + ":</strong> " + resultsinfo.time + "</p>";
-      stats += "<p><strong>" + t("Map ") + ":</strong> ID " + events.getActiveMapID() + ", " + map.width + " x " + map.height + " pixels </p>";
+      stats += "<p><strong>" + t("Courses") + ":</strong> " + coursearray.length + ". <strong>" + t("Results") + ":</strong> " + resultsinfo.results;
+      stats += ". <strong> " + t("Controls") + ":</strong> " + eventinfo.controls + ".</p>";
+      stats += "<p><strong>" + t("Routes") + ":</strong> " + resultsinfo.totalroutes + " (" +  resultsinfo.percent + "%). ";
+      stats += "<strong>" + t("Drawn routes") + ":</strong> " + resultsinfo.drawnroutes +  ". <strong>" + t("GPS routes") + ":</strong> " + resultsinfo.gpsroutes + ".</p>";
+      stats += "<p><strong>" + t("Total time") + ":</strong> " + resultsinfo.time + ".</p>";
+      stats += "<p><strong>" + t("Map ") + ":</strong> ID " + events.getActiveMapID() + ", " + map.width + " x " + map.height + " pixels";
+      if (eventinfo.georeferenced) {
+        stats += ". " + t("Map is georeferenced") + ".</p>";
+      } else {
+        stats += ".</p>";
+      }
       if (runnercomments) {
         stats += "<p><strong>" + t("Comments") + ":</strong></p>" + runnercomments ;
       }
@@ -1279,8 +1283,8 @@ var rg2 = ( function() {
         cache : false
       }).done(function(json) {
         $("#rg2-load-progress-label").text(t("Saving courses"));
-        console.log("Courses: " + json.data.length);
-        $.each(json.data, function() {
+        console.log("Courses: " + json.data.courses.length);
+        $.each(json.data.courses, function() {
           courses.addCourse(new Course(this, events.isScoreEvent()));
         });
         courses.updateCourseDropdown();
@@ -1325,12 +1329,12 @@ var rg2 = ( function() {
         type : "results",
         cache : false
       }).done(function(json) {
-        console.log("Results: " + json.data.length);
+        console.log("Results: " + json.data.results.length);
         $("#rg2-load-progress-label").text(t("Saving results"));
         var isScoreEvent = events.isScoreEvent();
         // TODO remove temporary (?) fix to get round RG1 events with no courses defined: see #179
         if (courses.getNumberOfCourses() > 0 ) {
-          results.addResults(json.data, isScoreEvent);
+          results.addResults(json.data.results, isScoreEvent);
         }
         courses.setResultsCount();
         if (isScoreEvent) {
@@ -1353,10 +1357,10 @@ var rg2 = ( function() {
         cache : false
       }).done(function(json) {
         $("#rg2-load-progress-label").text(t("Saving routes"));
-        console.log("Tracks: " + json.data.length);
+        console.log("Tracks: " + json.data.routes.length);
         // TODO remove temporary (?) fix to get round RG1 events with no courses defined: see #179        
         if (courses.getNumberOfCourses() > 0 ) {
-          results.addTracks(json.data);
+          results.addTracks(json.data.routes);
         }
         createCourseMenu();
         createResultMenu();
@@ -1837,6 +1841,10 @@ var rg2 = ( function() {
     function getSnapToControl() {
       return options.snap;
     }
+    
+    function getControlCount() {
+      return controls.getControlCount();
+    }
         
     return {
       // functions and variables available elsewhere
@@ -1893,7 +1901,8 @@ var rg2 = ( function() {
       getSecsFromHHMMSS: getSecsFromHHMMSS,
       getSecsFromHHMM: getSecsFromHHMM,
       formatSecsAsMMSS: formatSecsAsMMSS,
-      getLatLonDistance: getLatLonDistance
+      getLatLonDistance: getLatLonDistance,
+      getControlCount: getControlCount
     };
 
   }());
@@ -2592,6 +2601,10 @@ Controls.prototype = {
 	
 	displayAllControls: function() {
     this.displayControls = true;
+	},
+	
+	getControlCount: function() {
+		return this.controls.length;
 	}
 };
 
@@ -3880,6 +3893,7 @@ Events.prototype = {
     var realid = this.getEventIDForKartatID(id);
     var info = this.events[realid];
     info.id = realid;
+    info.controls = rg2.getControlCount();
     return info;
 	},
 	
@@ -3999,9 +4013,9 @@ Events.prototype = {
 };
 
 function Event(data) {
-	this.kartatid = parseInt(data.id, 10);
+	this.kartatid = data.id;
 	this.mapid = data.mapid;
-	this.format = parseInt(data.format, 10);
+	this.format = data.format;
 	this.name = data.name;
 	this.date = data.date;
 	this.club = data.club;
@@ -4608,7 +4622,7 @@ Results.prototype = {
     info.time += Math.floor(temp / 3600) + " hours ";
     temp = temp - (3600 * Math.floor(temp / 3600));
     info.time += Math.floor(temp / 60) + " minutes ";
-    info.time += temp - (60 * Math.floor(temp / 60)) + " seconds ";
+    info.time += temp - (60 * Math.floor(temp / 60)) + " seconds";
     return info;
   },
 
@@ -4742,7 +4756,7 @@ Results.prototype = {
 		var j;
 		var l;
 		var eventid = rg2.getKartatEventID();
-		var eventinfo = rg2.getEventInfo(parseInt(eventid, 10));
+		var eventinfo = rg2.getEventInfo(eventid);
 		// for each track
 		l = tracks.length;
 		for (i = 0; i < l; i += 1) {
@@ -4768,12 +4782,15 @@ Results.prototype = {
 	},
 
 	sortByCourseIDThenResultID : function(a, b) {
+		// sorts GPS results to be immediately after the associated main id
 		if (a.courseid > b.courseid) {
 			return 1;
 		} else if (b.courseid > a.courseid) {
 			return -1;
-		} else {
+		} else if (a.rawid == b.rawid){
 			return a.resultid - b.resultid;
+		} else {
+			return a.rawid - b.rawid;
 		}
 	},
 
@@ -4805,10 +4822,15 @@ Results.prototype = {
 				html += "<table class='resulttable'><tr><th></th><th>" + rg2.t("Name") + "</th><th>" + rg2.t("Time") + "</th><th><i class='fa fa-pencil'></i></th><th><i class='fa fa-play'></i></th></tr>";
 				oldCourseID = temp.courseid;
 			}
+			if (temp.rawid === temp.resultid) {
+				namehtml = temp.name;
+			} else {
+				namehtml = "<i>" + temp.name + "</i>";
+			}
       if (temp.isScoreEvent) {
-        namehtml = "<div><input class='showscorecourse showscorecourse-" + i + "' id=" + i + " type=checkbox name=scorecourse></input> " + temp.name + "</div>";
+        namehtml = "<div><input class='showscorecourse showscorecourse-" + i + "' id=" + i + " type=checkbox name=scorecourse></input> " + namehtml + "</div>";
       } else {
-        namehtml = "<div>" + temp.name + "</div>";
+        namehtml = "<div>" + namehtml + "</div>";
       }
 			html += '<tr><td>' + temp.position + '</td>';
 			if (temp.comments !== "") {
@@ -4878,6 +4900,7 @@ Results.prototype = {
 function Result(data, isScoreEvent, scorecodes, scorex, scorey) {
 	// resultid is the kartat id value
 	this.resultid = data.resultid;
+	this.rawid = this.resultid%rg2.config.GPS_RESULT_OFFSET;
 	this.isScoreEvent = isScoreEvent;
 	// GPS track ids are normal resultid + GPS_RESULT_OFFSET
 	if (this.resultid >= rg2.config.GPS_RESULT_OFFSET) {
@@ -4961,6 +4984,7 @@ Result.prototype = {
 	removeTrackFromDisplay : function() {
 		if (this.hasValidTrack) {
 			this.displayTrack = false;
+			this.trackColour = null;
 		}
 	},
 	
@@ -5120,7 +5144,7 @@ drawScoreCourse : function() {
 			oldy = y;
 			// track ends at control
 			if ((nextx == x) && (nexty == y)) {
-				this.xysecs[i] = parseInt(this.splits[nextcontrol], 10);
+				this.xysecs[i] = this.splits[nextcontrol];
 				// go back and add interpolated time at each point based on cumulative distance
 				// this assumes uniform speed...
 				oldt = this.xysecs[previouscontrolindex];
@@ -5171,6 +5195,11 @@ drawScoreCourse : function() {
 		var nextcontrol = 1;
 		var nextx = course.x[nextcontrol];
 		var nexty = course.y[nextcontrol];
+		var lastx = course.x[course.x.length - 1];
+		var lasty = course.y[course.y.length - 1];
+		// add finish location to track just in case...
+		this.trackx.push(lastx);
+		this.tracky.push(lasty);
 		var dist = 0;
 		var totaldist = 0;
 		var oldx = this.trackx[0];
@@ -5178,6 +5207,7 @@ drawScoreCourse : function() {
 		var i;
 		var j;
 		var l;
+		var moved;
 		var x = 0;
 		var y = 0;
 		var deltat = 0;
@@ -5198,17 +5228,22 @@ drawScoreCourse : function() {
 		// read through again to generate splits
 		x = 0;
 		y = 0;
+		moved = false;
 		oldx = this.trackx[0];
 		oldy = this.tracky[0];
 		for ( i = 1; i < l; i += 1) {
 			x = this.trackx[i];
 			y = this.tracky[i];
+			// cope with routes that have start and finish in same place, and where the first point in a route is a repeat of the start
+			if ((x !== this.trackx[0]) || (y !== this.tracky[0])) {
+				moved = true;
+			}
 			dist += rg2.getDistanceBetweenPoints(x, y, oldx, oldy);
 			this.cumulativeDistance[i] = Math.round(dist);
 			oldx = x;
 			oldy = y;
-			// track ends at control
-			if ((nextx == x) && (nexty == y)) {
+			// track ends at control, as long as we have moved away from the start
+			if ((nextx == x) && (nexty == y) && moved) {
 				currenttime = parseInt((dist / totaldist) * totaltime, 10);
 				this.xysecs[i] = currenttime;
 				this.splits[nextcontrol] = currenttime;
