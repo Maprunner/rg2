@@ -835,6 +835,11 @@ drawScoreCourse : function() {
 		var nextcontrol = 1;
 		var nextx = course.x[nextcontrol];
 		var nexty = course.y[nextcontrol];
+		var lastx = course.x[course.x.length - 1];
+		var lasty = course.y[course.y.length - 1];
+		// add finish location to track just in case...
+		this.trackx.push(lastx);
+		this.tracky.push(lasty);
 		var dist = 0;
 		var totaldist = 0;
 		var oldx = this.trackx[0];
@@ -842,6 +847,7 @@ drawScoreCourse : function() {
 		var i;
 		var j;
 		var l;
+		var moved;
 		var x = 0;
 		var y = 0;
 		var deltat = 0;
@@ -862,17 +868,22 @@ drawScoreCourse : function() {
 		// read through again to generate splits
 		x = 0;
 		y = 0;
+		moved = false;
 		oldx = this.trackx[0];
 		oldy = this.tracky[0];
 		for ( i = 1; i < l; i += 1) {
 			x = this.trackx[i];
 			y = this.tracky[i];
+			// cope with routes that have start and finish in same place, and where the first point in a route is a repeat of the start
+			if ((x !== this.trackx[0]) || (y !== this.tracky[0])) {
+				moved = true;
+			}
 			dist += rg2.getDistanceBetweenPoints(x, y, oldx, oldy);
 			this.cumulativeDistance[i] = Math.round(dist);
 			oldx = x;
 			oldy = y;
-			// track ends at control
-			if ((nextx == x) && (nexty == y)) {
+			// track ends at control, as long as we have moved away from the start
+			if ((nextx == x) && (nexty == y) && moved) {
 				currenttime = parseInt((dist / totaldist) * totaltime, 10);
 				this.xysecs[i] = currenttime;
 				this.splits[nextcontrol] = currenttime;
