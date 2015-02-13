@@ -3,7 +3,8 @@
   require_once( dirname(__FILE__) . '/rg2-config.php' );
   // override allows testing of a local configuration such as c:/xampp/htdocs/rg2
   if (file_exists(dirname(__FILE__) . '/rg2-override-config.php')) {
-     require_once ( dirname(__FILE__) . '/rg2-override-config.php');
+    require_once ( dirname(__FILE__) . '/rg2-override-config.php');
+    define ('DEBUG', true);
 	}
 	
   if (defined('OVERRIDE_KARTAT_DIRECTORY')) {
@@ -12,7 +13,7 @@
     $url = "../kartat/";
   }
   // version replaced by Gruntfile as part of release 
-  define ('VERSION_NUMBER', 1);
+  define ('RG2VERSION', '1.0.3');
   define ('KARTAT_DIRECTORY', $url);
   define ('LOCK_DIRECTORY', dirname(__FILE__)."/lock/saving/");
   define ('CACHE_DIRECTORY', $url."cache/");
@@ -186,7 +187,7 @@ function handlePostRequest($type, $eventid) {
       case 'login':
         // handled by default before we got here
         $write["ok"] = TRUE;
-        $write["status_msg"] = "Login successful";        
+        $write["status_msg"] = "Login successful";
         break;
       
       default:
@@ -208,12 +209,12 @@ function handlePostRequest($type, $eventid) {
   $write["keksi"] = $keksi;
   
   header("Content-type: application/json"); 
-  $write["version"] = VERSION_NUMBER;
+  $write["version"] = RG2VERSION;
   echo json_encode($write);
 }
 
 function logIn ($data) {
-  if (isset($data->x) && isset($data->y)) {  
+  if (isset($data->x) && isset($data->y)) {
     $userdetails = extractString($data->x);
     $cookie = $data->y;
   } else {
@@ -1188,7 +1189,7 @@ function validateCache($id) {
     if (filemtime(KARTAT_DIRECTORY.'kisat.txt') >= $cachedirtimestamp) {
         rg2log("Flush cache: kisat.txt file has been updated");
         @array_map('unlink', glob(CACHE_DIRECTORY."*.json"));
-        return;      
+        return;
     }
   }
   
@@ -1212,7 +1213,7 @@ function getSplitsbrowser($eventid) {
 	  $page = file_get_contents("html/splitsbrowser.html");
 		$eventname = getEventName($eventid);
 		$page = str_replace('<EVENT_NAME>', $eventname, $page);
-		if (isset($_GET['debug'])) {
+		if (defined('DEBUG')) {
 		  $page = str_replace('DEBUG_CLOSE', "", $page);
 		  $page = str_replace('DEBUG', "", $page);
 		  $page = str_replace('MINIFIED_CLOSE', "--", $page);
@@ -1246,7 +1247,7 @@ function getLanguage($lang) {
 			$dict[trim($temp[0])] = trim($temp[1]);
 		}
   }
-	return json_encode($dict);
+  return addVersion('dict', $dict);
 }
 
 // formats results as needed for Splitsbrowser
@@ -1424,7 +1425,7 @@ function getAllEvents($includeStats) {
           $maps[$referenced]["B"] = $B;
           $maps[$referenced]["E"] = $E;
           $maps[$referenced]["C"] = $C;
-          $maps[$referenced]["F"] = $F;       
+          $maps[$referenced]["F"] = $F;
           $referenced++;
         }
       }
@@ -1449,11 +1450,11 @@ function getAllEvents($includeStats) {
           $detail["C"] = $maps[$i]["C"];
           $detail["D"] = $maps[$i]["D"];
           $detail["E"] = $maps[$i]["E"];
-          $detail["F"] = $maps[$i]["F"];          
+          $detail["F"] = $maps[$i]["F"];
         }
       }
 
-      $detail["format"] = $data[2];
+      $detail["format"] = intval($data[2]);
       // Issue #11: found a stray &#39; in a SUFFOC file
       $name = encode_rg_input($data[3]);
       $detail["name"] = str_replace("&#39;", "'", $name);
@@ -1515,7 +1516,13 @@ function getAllEvents($includeStats) {
     fclose($handle);
   }
   usort($output, "sortEventsByDate");
-  return json_encode($output);
+  return addVersion('events', $output);
+}
+
+function addVersion($name, $data) {
+  $a[$name] = $data;
+  $a['API version'] = RG2VERSION;
+  return json_encode($a);
 }
 
 function sortEventsByDate($a, $b) {
@@ -1569,12 +1576,12 @@ function getMaps() {
         $detail["localE"] = 0;
         $detail["localF"] = 0;
       }
-      $output[$row] = $detail;        
+      $output[$row] = $detail;
       $row++;
     }
     fclose($handle);
-  }
-  return json_encode($output);
+    }
+  return addVersion('maps', $output);
 }
 
 function isScoreEvent($eventid) {
@@ -1627,7 +1634,7 @@ function getResultsForEvent($eventid) {
         $x = array();
         $y = array();
 				$tempcodes = array();
-        // field is N separated and then comma separated  
+        // field is N separated and then comma separated
         $pairs = explode("N", $data[1]);
         for ($j = 0; $j < count($pairs); $j++) {
           $xy = explode(";", $pairs[$j]);
@@ -1706,7 +1713,7 @@ function getResultsForEvent($eventid) {
           // only send course details the first time they occur: makes response a lot smaller for big (Jukola!) relays
           if ($variant[$i] == $data[6]) {
             if (!$sentalready[$i]) {
-              $detail["scorex"] = $xpos[$i];  
+              $detail["scorex"] = $xpos[$i];
               $detail["scorey"] = $ypos[$i];
               $detail["scorecodes"] = $codes[$i];
               $sentalready[$i] = true;
@@ -1731,15 +1738,15 @@ function getResultsForEvent($eventid) {
       $detail["comments"] = "";
       for ($i = 0; $i < $comments; $i++) {
         if ($detail["resultid"] == $text[$i]["resultid"]) {
-          $detail["comments"] = $text[$i]["comments"];      
+          $detail["comments"] = $text[$i]["comments"];
         }
       }  
-      $output[$row] = $detail;        
+      $output[$row] = $detail;
       $row++;
     }
     fclose($handle);
   }
-  return json_encode($output);
+  return addVersion('results', $output);
 }
 
 function getCoursesForEvent($eventid) {
@@ -1775,7 +1782,7 @@ function getCoursesForEvent($eventid) {
       $x = array();
       $y = array();
       $dummycodes = array();
-      // field is N separated and then semicolon separated  
+      // field is N separated and then semicolon separated
       $pairs = explode("N", $data[1]);
       for ($j = 0; $j < count($pairs); $j++) {
         $xy = explode(";", $pairs[$j]);
@@ -1810,12 +1817,12 @@ function getCoursesForEvent($eventid) {
       }
       $detail["xpos"] = $xpos[$row];
       $detail["ypos"] = $ypos[$row];
-      $output[$row] = $detail;        
+      $output[$row] = $detail;
       $row++;
     }
     fclose($handle);
   }
-  return json_encode($output);
+  return addVersion('courses', $output);
 }
 
 function expandCoords($coords) {
@@ -1837,7 +1844,7 @@ function expandCoords($coords) {
       $pos = strpos(',', $temp[1]);
       if ($pos) {
         // remove leading - by starting at 1
-        $y[] = substr($temp[1], 1, $pos - 2);        
+        $y[] = substr($temp[1], 1, $pos - 2);
       } else {
         $y[] = substr($temp[1], 1);
       }
@@ -1885,13 +1892,13 @@ function getTracksForEvent($eventid) {
       	$detail["name"] = encode_rg_input($data[2]);
       	$detail["mystery"] = $data[3];
       	list($detail["gpsx"], $detail["gpsy"]) = expandCoords($data[4]);
-      	$output[$row] = $detail;        
+      	$output[$row] = $detail;
       	$row++;
 			}
     }
     fclose($handle);
   }
-  return json_encode($output);
+  return addVersion('routes', $output);
 }
 
 function tidyTime($in) {
@@ -1906,7 +1913,7 @@ function tidyTime($in) {
   // correct seconds for missing leading 0 which RG1 can generate from Emit. e.g 25:9 becomes 25:09
   $secs = substr($t, -2);
   if (substr($secs, 0, 1) ===  ':') {
-    $t = substr_replace($t, '0', -1, 0); 
+    $t = substr_replace($t, '0', -1, 0);
   }
   return $t;
 }

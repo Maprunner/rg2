@@ -5,6 +5,7 @@ if (file_exists( dirname(__FILE__) . '/rg2-config.php')) {
 	echo "Routegadget 2: Configuration file " . dirname(__FILE__) . "/rg2-config.php not found.";
   return;
 }
+
 // override allows testing of a local configuration such as c:/xampp/htdocs/rg2
 if (file_exists( dirname(__FILE__) . '/rg2-override-config.php')) {
 	$override = true;
@@ -146,6 +147,7 @@ $languages .= '},'.PHP_EOL;
     <link rel="stylesheet" href='<?php echo $source_url ."/css/rg2.css'>"; ?>
     <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/themes/<?php echo $ui_theme; ?>/jquery-ui.min.css">
     <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css">
+    <!-- ('RG2VERSION', '1.0.3') -->
   </head>
   <body>
     <!--[if lt IE 7]>

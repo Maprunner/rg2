@@ -667,15 +667,22 @@ module.exports = function(grunt) {
           to : '<%= ftp.club %>'
         }]
       },
-      version : {
+      jsversion : {
         src : 'js/rg2.js',
         overwrite : true,
         replacements : [{
           from : /RG2VERSION.*\'/,
           to : "RG2VERSION: '<%= pkg.version %>'"
         }]
+      },
+      phpversion : {
+        src : ['rg2api.php', 'index.php'],
+        overwrite : true,
+        replacements : [{
+          from : /\(\'RG2VERSION\'.*\)/,
+          to : "('RG2VERSION', '<%= pkg.version %>')"
+        }]
       }
-
     }
   });
 
@@ -684,37 +691,13 @@ module.exports = function(grunt) {
 
   grunt.registerTask('default', ['build']);
 
+  // increment minor version number: do anything else by editting package.json by hand
   grunt.registerTask('bump', ['bumpup']);
-  grunt.registerTask('bump-minor', ['bumpup:minor']);
-  grunt.registerTask('bump-major', ['bumpup:major']);
 
   grunt.registerTask('build', ['csslint', 'newer:jshint:all', 'newer:concat:js', 'newer:uglify', 'build-manager' ]);
   
   grunt.registerTask('build-manager', ['newer:jshint:manager', 'newer:uglify:manager' ]);
 
-  grunt.registerTask('deploy', ['replace:version', 'build', 'sync:rel']);
-
-  //old example task: one-off to generate config files
-  grunt.registerTask('config', 'Generate config files', function() {
-
-    // clubs that didn't have a config already
-    var clubs = ['aire', 'baoc', 'bko', 'boc', 'bok', 'border', 'chig', 'claro', 'clyde', 'cuoc', 'cvfr', 'darkandwhite', 'devonoc', 'ebor', 'ecko', 'elo', 'esoc', 'euoc', 'gmoa', 'gramp', 'guildford', 'happyherts', 'havoc', 'hoc', 'interlopers', 'jk', 'kerno', 'kfo', 'lamm', 'log', 'lok', 'lvo', 'mdoc', 'mvoc', 'nato', 'ngoc', 'noroc', 'nwo', 'od', 'ouoc', 'pfo', 'pow', 'quantock', 'rafo', 'sa', 'sarum', 'scottish6days', 'seloc', 'smbo', 'smoc', 'sn', 'soc', 'solway', 'sportident', 'stag', 'start', 'swoc', 'syo', 'tay', 'test', 'thistle', 'tinto', 'tvoc', 'walton', 'wcoc', 'wim', 'wsco', 'wsoe', 'wsx'];
-
-    var i;
-    var obj = '';
-    for ( i = 0; i < clubs.length; i += 1) {
-      obj += clubs[i] + ": {\n";
-      obj += "src: ['rel/rg2-config-template.php'],\n";
-      obj += "dest: 'ftpsite/" + clubs[i] + "/rg2/rg2-config.php',\n";
-      obj += "replacements: [{ \n";
-      obj += "from: '<club>',\n";
-      obj += "to: '" + clubs[i] + "'\n";
-      obj += "}]\n";
-      obj += "},\n";
-    }
-
-    grunt.file.write('config.js', obj);
-
-  });
+  grunt.registerTask('deploy', ['replace:jsversion', 'replace:phpversion', 'build', 'sync:rel']);
 
 };

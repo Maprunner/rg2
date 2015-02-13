@@ -262,7 +262,7 @@ Results.prototype = {
     info.time += Math.floor(temp / 3600) + " hours ";
     temp = temp - (3600 * Math.floor(temp / 3600));
     info.time += Math.floor(temp / 60) + " minutes ";
-    info.time += temp - (60 * Math.floor(temp / 60)) + " seconds ";
+    info.time += temp - (60 * Math.floor(temp / 60)) + " seconds";
     return info;
   },
 
@@ -396,7 +396,7 @@ Results.prototype = {
 		var j;
 		var l;
 		var eventid = rg2.getKartatEventID();
-		var eventinfo = rg2.getEventInfo(parseInt(eventid, 10));
+		var eventinfo = rg2.getEventInfo(eventid);
 		// for each track
 		l = tracks.length;
 		for (i = 0; i < l; i += 1) {
@@ -422,12 +422,15 @@ Results.prototype = {
 	},
 
 	sortByCourseIDThenResultID : function(a, b) {
+		// sorts GPS results to be immediately after the associated main id
 		if (a.courseid > b.courseid) {
 			return 1;
 		} else if (b.courseid > a.courseid) {
 			return -1;
-		} else {
+		} else if (a.rawid == b.rawid){
 			return a.resultid - b.resultid;
+		} else {
+			return a.rawid - b.rawid;
 		}
 	},
 
@@ -459,10 +462,15 @@ Results.prototype = {
 				html += "<table class='resulttable'><tr><th></th><th>" + rg2.t("Name") + "</th><th>" + rg2.t("Time") + "</th><th><i class='fa fa-pencil'></i></th><th><i class='fa fa-play'></i></th></tr>";
 				oldCourseID = temp.courseid;
 			}
+			if (temp.rawid === temp.resultid) {
+				namehtml = temp.name;
+			} else {
+				namehtml = "<i>" + temp.name + "</i>";
+			}
       if (temp.isScoreEvent) {
-        namehtml = "<div><input class='showscorecourse showscorecourse-" + i + "' id=" + i + " type=checkbox name=scorecourse></input> " + temp.name + "</div>";
+        namehtml = "<div><input class='showscorecourse showscorecourse-" + i + "' id=" + i + " type=checkbox name=scorecourse></input> " + namehtml + "</div>";
       } else {
-        namehtml = "<div>" + temp.name + "</div>";
+        namehtml = "<div>" + namehtml + "</div>";
       }
 			html += '<tr><td>' + temp.position + '</td>';
 			if (temp.comments !== "") {
@@ -532,6 +540,7 @@ Results.prototype = {
 function Result(data, isScoreEvent, scorecodes, scorex, scorey) {
 	// resultid is the kartat id value
 	this.resultid = data.resultid;
+	this.rawid = this.resultid%rg2.config.GPS_RESULT_OFFSET;
 	this.isScoreEvent = isScoreEvent;
 	// GPS track ids are normal resultid + GPS_RESULT_OFFSET
 	if (this.resultid >= rg2.config.GPS_RESULT_OFFSET) {
@@ -615,6 +624,7 @@ Result.prototype = {
 	removeTrackFromDisplay : function() {
 		if (this.hasValidTrack) {
 			this.displayTrack = false;
+			this.trackColour = null;
 		}
 	},
 	
@@ -774,7 +784,7 @@ drawScoreCourse : function() {
 			oldy = y;
 			// track ends at control
 			if ((nextx == x) && (nexty == y)) {
-				this.xysecs[i] = parseInt(this.splits[nextcontrol], 10);
+				this.xysecs[i] = this.splits[nextcontrol];
 				// go back and add interpolated time at each point based on cumulative distance
 				// this assumes uniform speed...
 				oldt = this.xysecs[previouscontrolindex];
@@ -825,6 +835,11 @@ drawScoreCourse : function() {
 		var nextcontrol = 1;
 		var nextx = course.x[nextcontrol];
 		var nexty = course.y[nextcontrol];
+		var lastx = course.x[course.x.length - 1];
+		var lasty = course.y[course.y.length - 1];
+		// add finish location to track just in case...
+		this.trackx.push(lastx);
+		this.tracky.push(lasty);
 		var dist = 0;
 		var totaldist = 0;
 		var oldx = this.trackx[0];
@@ -832,6 +847,7 @@ drawScoreCourse : function() {
 		var i;
 		var j;
 		var l;
+		var moved;
 		var x = 0;
 		var y = 0;
 		var deltat = 0;
@@ -852,17 +868,22 @@ drawScoreCourse : function() {
 		// read through again to generate splits
 		x = 0;
 		y = 0;
+		moved = false;
 		oldx = this.trackx[0];
 		oldy = this.tracky[0];
 		for ( i = 1; i < l; i += 1) {
 			x = this.trackx[i];
 			y = this.tracky[i];
+			// cope with routes that have start and finish in same place, and where the first point in a route is a repeat of the start
+			if ((x !== this.trackx[0]) || (y !== this.tracky[0])) {
+				moved = true;
+			}
 			dist += rg2.getDistanceBetweenPoints(x, y, oldx, oldy);
 			this.cumulativeDistance[i] = Math.round(dist);
 			oldx = x;
 			oldy = y;
-			// track ends at control
-			if ((nextx == x) && (nexty == y)) {
+			// track ends at control, as long as we have moved away from the start
+			if ((nextx == x) && (nexty == y) && moved) {
 				currenttime = parseInt((dist / totaldist) * totaltime, 10);
 				this.xysecs[i] = currenttime;
 				this.splits[nextcontrol] = currenttime;

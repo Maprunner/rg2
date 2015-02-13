@@ -93,7 +93,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '1.0.2',
+      RG2VERSION: '1.0.3',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -119,7 +119,9 @@ var rg2 = ( function() {
 
 		function Colours() {
 		// used to generate track colours: add extra colours as necessary
-		this.colours = ["#ff0000", "#ff8000",  "#ff00ff", "#ff0080", "#008080", "#008000", "#00ff00", "#0080ff", "#0000ff", "#8000ff", "#00ffff", "#808080"];
+		this.colours = ["#ff0000", "#ff8000",  "#ff00ff", "#ff0080", "#008080", "#008000", "#0080ff", "#0000ff", "#8000ff", "#808080"];
+		//this.colours = ["#ff0000", "#ff8000",  "#ff00ff", "#ff0080", "#008080", "#008000", "#00ff00", "#0080ff", "#0000ff", "#8000ff", "#00ffff", "#808080"];
+
 		this.colourIndex = 0;
 		}
 
@@ -127,10 +129,7 @@ var rg2 = ( function() {
 			Constructor : Colours,
 
 			getNextColour : function() {
-				this.colourIndex += 1;
-				if (this.colourIndex === this.colours.length) {
-					this.colourIndex = 0;
-				}
+				this.colourIndex = (this.colourIndex + 1) % this.colours.length;
 				return this.colours[this.colourIndex];
 			}
 		};
@@ -746,7 +745,7 @@ var rg2 = ( function() {
         type: 'lang',
         cache : false
       }).done(function(json) {
-        dictionary = json.data;
+        dictionary = json.data.dict;
         setNewLanguage();
       }).fail(function(jqxhr, textStatus, error) {
         reportJSONFail("Language request failed: " + error);
@@ -781,9 +780,9 @@ var rg2 = ( function() {
         type : "events",
         cache : false
       }).done(function(json) {
-        console.log("Events: " + json.data.length);
+        console.log("Events: " + json.data.events.length);
         events.deleteAllEvents();
-        $.each(json.data, function() {
+        $.each(json.data.events, function() {
           events.addEvent(new Event(this));
         });
         createEventMenu();
@@ -1226,16 +1225,21 @@ var rg2 = ( function() {
       coursearray = courses.getCoursesForEvent();
       resultsinfo = results.getResultsInfo();
       runnercomments = results.getComments();
-      stats = "<h3>" + t("Event statistics") + ": " + eventinfo.name + "</h3>";
+      stats = "<h3>" + t("Event statistics") + ": " + eventinfo.name + ": " + eventinfo.date + "</h3>";
       if (eventinfo.comment) {
         stats += "<p>" + eventinfo.comment + "</p>";
       }
-      stats += "<p><strong>" + t("Courses") + ":</strong> " + coursearray.length + "</p><p> <strong>" + t("Results") + ":</strong> " + resultsinfo.results + "</p>";
-      stats += "<p><strong>" + t("Routes") + ":</strong> " + resultsinfo.totalroutes + " (" +  resultsinfo.percent + "%)</p>";
-      stats += "<p><strong>" + t("Drawn routes") + ":</strong> " + resultsinfo.drawnroutes + "</p>";
-      stats += "<p><strong>" + t("GPS routes") + ":</strong> " + resultsinfo.gpsroutes + "</p>";
-      stats += "<p><strong>" + t("Total time") + ":</strong> " + resultsinfo.time + "</p>";
-      stats += "<p><strong>" + t("Map ") + ":</strong> ID " + events.getActiveMapID() + ", " + map.width + " x " + map.height + " pixels </p>";
+      stats += "<p><strong>" + t("Courses") + ":</strong> " + coursearray.length + ". <strong>" + t("Results") + ":</strong> " + resultsinfo.results;
+      stats += ". <strong> " + t("Controls") + ":</strong> " + eventinfo.controls + ".</p>";
+      stats += "<p><strong>" + t("Routes") + ":</strong> " + resultsinfo.totalroutes + " (" +  resultsinfo.percent + "%). ";
+      stats += "<strong>" + t("Drawn routes") + ":</strong> " + resultsinfo.drawnroutes +  ". <strong>" + t("GPS routes") + ":</strong> " + resultsinfo.gpsroutes + ".</p>";
+      stats += "<p><strong>" + t("Total time") + ":</strong> " + resultsinfo.time + ".</p>";
+      stats += "<p><strong>" + t("Map ") + ":</strong> ID " + events.getActiveMapID() + ", " + map.width + " x " + map.height + " pixels";
+      if (eventinfo.georeferenced) {
+        stats += ". " + t("Map is georeferenced") + ".</p>";
+      } else {
+        stats += ".</p>";
+      }
       if (runnercomments) {
         stats += "<p><strong>" + t("Comments") + ":</strong></p>" + runnercomments ;
       }
@@ -1278,8 +1282,8 @@ var rg2 = ( function() {
         cache : false
       }).done(function(json) {
         $("#rg2-load-progress-label").text(t("Saving courses"));
-        console.log("Courses: " + json.data.length);
-        $.each(json.data, function() {
+        console.log("Courses: " + json.data.courses.length);
+        $.each(json.data.courses, function() {
           courses.addCourse(new Course(this, events.isScoreEvent()));
         });
         courses.updateCourseDropdown();
@@ -1324,12 +1328,12 @@ var rg2 = ( function() {
         type : "results",
         cache : false
       }).done(function(json) {
-        console.log("Results: " + json.data.length);
+        console.log("Results: " + json.data.results.length);
         $("#rg2-load-progress-label").text(t("Saving results"));
         var isScoreEvent = events.isScoreEvent();
         // TODO remove temporary (?) fix to get round RG1 events with no courses defined: see #179
         if (courses.getNumberOfCourses() > 0 ) {
-          results.addResults(json.data, isScoreEvent);
+          results.addResults(json.data.results, isScoreEvent);
         }
         courses.setResultsCount();
         if (isScoreEvent) {
@@ -1352,10 +1356,10 @@ var rg2 = ( function() {
         cache : false
       }).done(function(json) {
         $("#rg2-load-progress-label").text(t("Saving routes"));
-        console.log("Tracks: " + json.data.length);
+        console.log("Tracks: " + json.data.routes.length);
         // TODO remove temporary (?) fix to get round RG1 events with no courses defined: see #179        
         if (courses.getNumberOfCourses() > 0 ) {
-          results.addTracks(json.data);
+          results.addTracks(json.data.routes);
         }
         createCourseMenu();
         createResultMenu();
@@ -1836,6 +1840,10 @@ var rg2 = ( function() {
     function getSnapToControl() {
       return options.snap;
     }
+    
+    function getControlCount() {
+      return controls.getControlCount();
+    }
         
     return {
       // functions and variables available elsewhere
@@ -1892,7 +1900,8 @@ var rg2 = ( function() {
       getSecsFromHHMMSS: getSecsFromHHMMSS,
       getSecsFromHHMM: getSecsFromHHMM,
       formatSecsAsMMSS: formatSecsAsMMSS,
-      getLatLonDistance: getLatLonDistance
+      getLatLonDistance: getLatLonDistance,
+      getControlCount: getControlCount
     };
 
   }());
