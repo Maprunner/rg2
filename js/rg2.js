@@ -93,7 +93,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '1.0.2',
+      RG2VERSION: '1.0.3',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -745,7 +745,7 @@ var rg2 = ( function() {
         type: 'lang',
         cache : false
       }).done(function(json) {
-        dictionary = json.data;
+        dictionary = json.data.dict;
         setNewLanguage();
       }).fail(function(jqxhr, textStatus, error) {
         reportJSONFail("Language request failed: " + error);
@@ -780,9 +780,9 @@ var rg2 = ( function() {
         type : "events",
         cache : false
       }).done(function(json) {
-        console.log("Events: " + json.data.length);
+        console.log("Events: " + json.data.events.length);
         events.deleteAllEvents();
-        $.each(json.data, function() {
+        $.each(json.data.events, function() {
           events.addEvent(new Event(this));
         });
         createEventMenu();
@@ -1282,8 +1282,8 @@ var rg2 = ( function() {
         cache : false
       }).done(function(json) {
         $("#rg2-load-progress-label").text(t("Saving courses"));
-        console.log("Courses: " + json.data.length);
-        $.each(json.data, function() {
+        console.log("Courses: " + json.data.courses.length);
+        $.each(json.data.courses, function() {
           courses.addCourse(new Course(this, events.isScoreEvent()));
         });
         courses.updateCourseDropdown();
@@ -1328,12 +1328,12 @@ var rg2 = ( function() {
         type : "results",
         cache : false
       }).done(function(json) {
-        console.log("Results: " + json.data.length);
+        console.log("Results: " + json.data.results.length);
         $("#rg2-load-progress-label").text(t("Saving results"));
         var isScoreEvent = events.isScoreEvent();
         // TODO remove temporary (?) fix to get round RG1 events with no courses defined: see #179
         if (courses.getNumberOfCourses() > 0 ) {
-          results.addResults(json.data, isScoreEvent);
+          results.addResults(json.data.results, isScoreEvent);
         }
         courses.setResultsCount();
         if (isScoreEvent) {
@@ -1356,10 +1356,10 @@ var rg2 = ( function() {
         cache : false
       }).done(function(json) {
         $("#rg2-load-progress-label").text(t("Saving routes"));
-        console.log("Tracks: " + json.data.length);
+        console.log("Tracks: " + json.data.routes.length);
         // TODO remove temporary (?) fix to get round RG1 events with no courses defined: see #179        
         if (courses.getNumberOfCourses() > 0 ) {
-          results.addTracks(json.data);
+          results.addTracks(json.data.routes);
         }
         createCourseMenu();
         createResultMenu();

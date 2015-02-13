@@ -365,9 +365,9 @@ Manager.prototype = {
 			cache : false
 		}).done(function(json) {
 			self.maps.length = 0;
-			console.log("Maps: " + json.data.length);
-			for ( i = 0; i < json.data.length; i += 1) {
-				self.maps.push(new Map(json.data[i]));
+			console.log("Maps: " + json.data.maps.length);
+			for ( i = 0; i < json.data.maps.length; i += 1) {
+				self.maps.push(new Map(json.data.maps[i]));
 			}
 			self.createMapDropdown();
 			$("#btn-toggle-controls").show();
