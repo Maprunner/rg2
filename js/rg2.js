@@ -147,7 +147,6 @@ var rg2 = ( function() {
 			try {
 				var fields;
 				var i;
-				var a;
 				// input looks like #id&course=a,b,c&result=x,y,z
 				fields = hash.split('&');
 				for (i= 0; i < fields.length; i += 1) {
@@ -282,7 +281,7 @@ var rg2 = ( function() {
         disabled : [config.TAB_COURSES, config.TAB_RESULTS, config.TAB_DRAW],
         active : config.TAB_EVENTS,
         heightStyle : "content",
-        activate : function(event, ui) {
+        activate : function() {
           tabActivated();
         }
       });
@@ -339,30 +338,30 @@ var rg2 = ( function() {
         resizeInfoDisplay();
       });
 
-      $("#btn-mass-start").click(function(event) {
+      $("#btn-mass-start").click(function() {
         animation.setReplayType(config.MASS_START_REPLAY);
       });
 
-      $("#btn-real-time").click(function(event) {
+      $("#btn-real-time").click(function() {
         animation.setReplayType(config.REAL_TIME_REPLAY);
       });
 
-      $("#rg2-control-select").prop('disabled', true).change(function(event) {
+      $("#rg2-control-select").prop('disabled', true).change(function() {
         animation.setStartControl($("#rg2-control-select").val());
       });
 
-      $("#rg2-name-select").prop('disabled', true).change(function(event) {
+      $("#rg2-name-select").prop('disabled', true).change(function() {
         drawing.setName(parseInt($("#rg2-name-select").val(), 10));
       });
 
-      $("#rg2-course-select").change(function(event) {
+      $("#rg2-course-select").change(function() {
         drawing.setCourse(parseInt($("#rg2-course-select").val(), 10));
       });
 
-      $("#rg2-enter-name").click(function(event) {
+      $("#rg2-enter-name").click(function() {
         drawing.setNameAndTime();
       })
-      .keyup(function(event) {
+      .keyup(function() {
         drawing.setNameAndTime();
       });
 
@@ -461,7 +460,7 @@ var rg2 = ( function() {
         displayOptionsDialog();
       });
       
-      $("#rg2-select-language").click(function(event) {
+      $("#rg2-select-language").click(function() {
         var newlang;
         newlang = $("#rg2-select-language").val();
         if (newlang !== dictionary.code) {
@@ -721,6 +720,7 @@ var rg2 = ( function() {
       var dropdown = document.getElementById("rg2-select-language");
       var i;
       var opt;
+      var languages;
       opt = document.createElement("option");
       opt.value = "en";
       opt.text = "en: English";
@@ -728,7 +728,8 @@ var rg2 = ( function() {
         opt.selected = true;
       }
       dropdown.options.add(opt);
-      for (i in rg2Config.languages) {
+      languages = rg2Config.languages;
+      for (i in languages) {
         opt = document.createElement("option");
         opt.value = i;
         opt.text = i + ": " + rg2Config.languages[i];
@@ -934,7 +935,7 @@ var rg2 = ( function() {
         minWidth : 400,
         title: t("Configuration options"),
         dialogClass: "rg2-options-dialog",
-        close: function( event, ui ) {
+        close: function() {
           saveConfigOptions();
         }
       });
@@ -1089,10 +1090,10 @@ var rg2 = ( function() {
         // simple debounce so that very small drags are treated as clicks instead
         if ((Math.abs(pt.x - dragStart.x) + Math.abs(pt.y - dragStart.y)) > 5) {
           if (drawing.gpsFileLoaded()) {
-            drawing.adjustTrack(Math.round(dragStart.x), Math.round(dragStart.y), Math.round(pt.x), Math.round(pt.y), whichButton ,evt.shiftKey, evt.ctrlKey);
+            drawing.adjustTrack(Math.round(dragStart.x), Math.round(dragStart.y), Math.round(pt.x), Math.round(pt.y), whichButton);
           } else {
             if ($rg2infopanel.tabs("option", "active") === config.TAB_CREATE) {
-              manager.adjustControls(Math.round(dragStart.x), Math.round(dragStart.y), Math.round(pt.x), Math.round(pt.y), whichButton, evt.shiftKey, evt.ctrlKey);
+              manager.adjustControls(Math.round(dragStart.x), Math.round(dragStart.y), Math.round(pt.x), Math.round(pt.y), whichButton);
             } else {
               ctx.translate(pt.x - dragStart.x, pt.y - dragStart.y);
             }
@@ -1190,13 +1191,10 @@ var rg2 = ( function() {
 		
 		function showWarningDialog(title, text) {
 			var msg = '<div id=rg2-warning-dialog>' + text + '</div>';
-			// see http://stackoverflow.com/questions/12057427/jshint-possible-strict-violation-when-using-bind
-			/*jshint validthis:true */
-			var self = this;
 			$(msg).dialog({
 				title : title,
 				dialogClass : "rg2-warning-dialog",
-					close: function( event, ui ) {
+					close: function() {
 					$('#rg2-warning-dialog').dialog('destroy').remove();
 				}
 			});
@@ -1822,7 +1820,7 @@ var rg2 = ( function() {
       return events.getEventInfo(id);
     }
     
-    function getCoursesForEvent(id) {
+    function getCoursesForEvent() {
       return courses.getCoursesForEvent();
     }
 

@@ -1,4 +1,4 @@
-// Version 1.0.3 2015-02-14T14:12:33;
+// Version 1.0.3 2015-02-14T16:39:19;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -148,7 +148,6 @@ var rg2 = ( function() {
 			try {
 				var fields;
 				var i;
-				var a;
 				// input looks like #id&course=a,b,c&result=x,y,z
 				fields = hash.split('&');
 				for (i= 0; i < fields.length; i += 1) {
@@ -283,7 +282,7 @@ var rg2 = ( function() {
         disabled : [config.TAB_COURSES, config.TAB_RESULTS, config.TAB_DRAW],
         active : config.TAB_EVENTS,
         heightStyle : "content",
-        activate : function(event, ui) {
+        activate : function() {
           tabActivated();
         }
       });
@@ -340,30 +339,30 @@ var rg2 = ( function() {
         resizeInfoDisplay();
       });
 
-      $("#btn-mass-start").click(function(event) {
+      $("#btn-mass-start").click(function() {
         animation.setReplayType(config.MASS_START_REPLAY);
       });
 
-      $("#btn-real-time").click(function(event) {
+      $("#btn-real-time").click(function() {
         animation.setReplayType(config.REAL_TIME_REPLAY);
       });
 
-      $("#rg2-control-select").prop('disabled', true).change(function(event) {
+      $("#rg2-control-select").prop('disabled', true).change(function() {
         animation.setStartControl($("#rg2-control-select").val());
       });
 
-      $("#rg2-name-select").prop('disabled', true).change(function(event) {
+      $("#rg2-name-select").prop('disabled', true).change(function() {
         drawing.setName(parseInt($("#rg2-name-select").val(), 10));
       });
 
-      $("#rg2-course-select").change(function(event) {
+      $("#rg2-course-select").change(function() {
         drawing.setCourse(parseInt($("#rg2-course-select").val(), 10));
       });
 
-      $("#rg2-enter-name").click(function(event) {
+      $("#rg2-enter-name").click(function() {
         drawing.setNameAndTime();
       })
-      .keyup(function(event) {
+      .keyup(function() {
         drawing.setNameAndTime();
       });
 
@@ -462,7 +461,7 @@ var rg2 = ( function() {
         displayOptionsDialog();
       });
       
-      $("#rg2-select-language").click(function(event) {
+      $("#rg2-select-language").click(function() {
         var newlang;
         newlang = $("#rg2-select-language").val();
         if (newlang !== dictionary.code) {
@@ -722,6 +721,7 @@ var rg2 = ( function() {
       var dropdown = document.getElementById("rg2-select-language");
       var i;
       var opt;
+      var languages;
       opt = document.createElement("option");
       opt.value = "en";
       opt.text = "en: English";
@@ -729,7 +729,8 @@ var rg2 = ( function() {
         opt.selected = true;
       }
       dropdown.options.add(opt);
-      for (i in rg2Config.languages) {
+      languages = rg2Config.languages;
+      for (i in languages) {
         opt = document.createElement("option");
         opt.value = i;
         opt.text = i + ": " + rg2Config.languages[i];
@@ -935,7 +936,7 @@ var rg2 = ( function() {
         minWidth : 400,
         title: t("Configuration options"),
         dialogClass: "rg2-options-dialog",
-        close: function( event, ui ) {
+        close: function() {
           saveConfigOptions();
         }
       });
@@ -1090,10 +1091,10 @@ var rg2 = ( function() {
         // simple debounce so that very small drags are treated as clicks instead
         if ((Math.abs(pt.x - dragStart.x) + Math.abs(pt.y - dragStart.y)) > 5) {
           if (drawing.gpsFileLoaded()) {
-            drawing.adjustTrack(Math.round(dragStart.x), Math.round(dragStart.y), Math.round(pt.x), Math.round(pt.y), whichButton ,evt.shiftKey, evt.ctrlKey);
+            drawing.adjustTrack(Math.round(dragStart.x), Math.round(dragStart.y), Math.round(pt.x), Math.round(pt.y), whichButton);
           } else {
             if ($rg2infopanel.tabs("option", "active") === config.TAB_CREATE) {
-              manager.adjustControls(Math.round(dragStart.x), Math.round(dragStart.y), Math.round(pt.x), Math.round(pt.y), whichButton, evt.shiftKey, evt.ctrlKey);
+              manager.adjustControls(Math.round(dragStart.x), Math.round(dragStart.y), Math.round(pt.x), Math.round(pt.y), whichButton);
             } else {
               ctx.translate(pt.x - dragStart.x, pt.y - dragStart.y);
             }
@@ -1191,9 +1192,6 @@ var rg2 = ( function() {
 		
 		function showWarningDialog(title, text) {
 			var msg = '<div id=rg2-warning-dialog>' + text + '</div>';
-			// see http://stackoverflow.com/questions/12057427/jshint-possible-strict-violation-when-using-bind
-			/*jshint validthis:true */
-			var self = this;
 			$(msg).dialog({
 				title : title,
 				dialogClass : "rg2-warning-dialog",
@@ -2094,7 +2092,7 @@ Animation.prototype = {
 
 	removeRunner : function(runnerid, updateDetails) {
 		for (var i = 0; i < this.runners.length; i += 1) {
-			if (this.runners[i].runnerid == runnerid) {
+			if (this.runners[i].runnerid === runnerid) {
 				// delete 1 runner at position i
 				this.runners.splice(i, 1);
 			}
@@ -2854,7 +2852,6 @@ Courses.prototype = {
 
 function Course(data, isScoreCourse) {
 	var i;
-	var angle;
 	var c1x;
 	var c1y;
 	var c2x;
@@ -3295,9 +3292,8 @@ Draw.prototype = {
     }
   },
   
-  setNameAndTime :function(event) {
+  setNameAndTime :function() {
     // callback for an entered name when no results available
-    var t;
     var time;
     var name = $("#rg2-name-entry").val();
     if (name) {
@@ -3455,7 +3451,7 @@ Draw.prototype = {
       type : 'POST',
       url : $url,
       dataType : 'json',
-      success : function(data, textStatus, jqXHR) {
+      success : function(data) {
         if (data.ok) {
           self.routeSaved(data.status_msg);
         } else {
@@ -3472,7 +3468,7 @@ Draw.prototype = {
     rg2.showWarningDialog(this.gpstrack.routeData.name, rg2.t('Your route was not saved. Please try again') + '. ' + text);
   },
 
-  routeSaved : function(text) {
+  routeSaved : function() {
     rg2.showWarningDialog(this.gpstrack.routeData.name, rg2.t('Your route has been saved') + '.');
     rg2.loadEvent(rg2.getActiveEventID());
   },
@@ -3504,16 +3500,13 @@ Draw.prototype = {
     return (this.pointsLocked > 0);
   },
 
-  adjustTrack : function(x1, y1, x2, y2, button, shiftKeyPressed, ctrlKeyPressed) {
+  adjustTrack : function(x1, y1, x2, y2, button) {
 // called whilst dragging a GPS track
 // TODO: not the greatest function in the world and a candidate for refactoring big-time
 // but it works which is a huge step forward
     var i;
     var trk;
     var len;
-    var lockBefore;
-    var lockAfter;
-    var dragIndex;
     var handle;
     var x;
     var y;
@@ -4065,7 +4058,6 @@ Event.prototype = {
 	Constructor : Event
 };
 /*global rg2:false */
-/*global map:false */
 /*global RouteData:false */
 function GPSTrack() {
 	this.lat = [];
@@ -4666,7 +4658,7 @@ Results.prototype = {
 	// add all tracks for one course
 	putTracksOnDisplay : function(courseid) {
 		for (var i = 0; i < this.results.length; i += 1) {
-			if (this.results[i].courseid == courseid) {
+			if (this.results[i].courseid === courseid) {
 				this.results[i].putTrackOnDisplay();
 			}
 		}
@@ -4741,7 +4733,7 @@ Results.prototype = {
 
 	removeTracksFromDisplay : function(courseid) {
 		for (var i = 0; i < this.results.length; i += 1) {
-			if (this.results[i].courseid == courseid) {
+			if (this.results[i].courseid === courseid) {
 				this.results[i].removeTrackFromDisplay();
 			}
 		}
@@ -4765,7 +4757,7 @@ Results.prototype = {
 			if (resultIndex < rg2.config.GPS_RESULT_OFFSET) {
 				// loop through all results and add it against the correct id
 				while (j < this.results.length) {
-					if (resultIndex == this.results[j].resultid) {
+					if (resultIndex === this.results[j].resultid) {
 						this.results[j].addTrack(tracks[i], eventinfo.format);
 						break;
 					}
@@ -4786,7 +4778,7 @@ Results.prototype = {
 			return 1;
 		} else if (b.courseid > a.courseid) {
 			return -1;
-		} else if (a.rawid == b.rawid){
+		} else if (a.rawid === b.rawid){
 			return a.resultid - b.resultid;
 		} else {
 			return a.rawid - b.rawid;
@@ -4808,7 +4800,7 @@ Results.prototype = {
     l = this.results.length;
 		for (i = 0; i < l; i += 1) {
 			temp = this.results[i];
-			if (temp.courseid != oldCourseID) {
+			if (temp.courseid !== oldCourseID) {
 				// found a new course so add header
 				if (firstCourse) {
 					firstCourse = false;
@@ -5142,7 +5134,7 @@ drawScoreCourse : function() {
 			oldx = x;
 			oldy = y;
 			// track ends at control
-			if ((nextx == x) && (nexty == y)) {
+			if ((nextx === x) && (nexty === y)) {
 				this.xysecs[i] = this.splits[nextcontrol];
 				// go back and add interpolated time at each point based on cumulative distance
 				// this assumes uniform speed...
@@ -5242,7 +5234,7 @@ drawScoreCourse : function() {
 			oldx = x;
 			oldy = y;
 			// track ends at control, as long as we have moved away from the start
-			if ((nextx == x) && (nexty == y) && moved) {
+			if ((nextx === x) && (nexty === y) && moved) {
 				currenttime = parseInt((dist / totaldist) * totaltime, 10);
 				this.xysecs[i] = currenttime;
 				this.splits[nextcontrol] = currenttime;

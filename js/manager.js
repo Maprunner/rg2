@@ -136,7 +136,7 @@ function Manager(keksi) {
 
 	var self = this;
 
-	$("#rg2-manager-login-form").submit(function(event) {
+	$("#rg2-manager-login-form").submit(function() {
 		self.user.name = $("#rg2-user-name").val();
 		self.user.pwd = $("#rg2-password").val();
 		// check we have user name and password
@@ -186,7 +186,7 @@ Manager.prototype = {
 			data : json,
 			url : url,
 			cache : false,
-			success : function(data, textStatus, jqXHR) {
+			success : function(data) {
 				// save new cookie
 				self.user.y = data.keksi;
 				if (data.ok) {
@@ -210,7 +210,7 @@ Manager.prototype = {
 		this.getMaps();
 
 		this.createEventLevelDropdown("rg2-event-level");
-		$("#rg2-event-level").change(function(event) {
+		$("#rg2-event-level").change(function() {
 			self.eventLevel = $("#rg2-event-level").val();
 			if (self.eventLevel !== 'X') {
 				$("#rg2-select-event-level").addClass('valid');
@@ -256,16 +256,16 @@ Manager.prototype = {
 			dateFormat : 'yy-mm-dd'
 		});
 
-		$("#rg2-event-name").on("change", function(evt) {
-			self.setEventName(evt);
+		$("#rg2-event-name").on("change", function() {
+			self.setEventName();
 		});
 
-		$("#rg2-map-name").on("change", function(evt) {
-			self.setMapName(evt);
+		$("#rg2-map-name").on("change", function() {
+			self.setMapName();
 		});
 
-		$("#rg2-club-name").on("change", function(evt) {
-			self.setClub(evt);
+		$("#rg2-club-name").on("change", function() {
+			self.setClub();
 		});
 
 		$("#rg2-load-map-file").button().change(function(evt) {
@@ -294,7 +294,7 @@ Manager.prototype = {
 
 		$('#rg2-draw-courses').hide();
 
-		$("#btn-draw-courses").button().click(function(evt) {
+		$("#btn-draw-courses").button().click(function() {
 			if (self.mapLoaded) {
 				self.drawingCourses = true;
 				self.courses.length = 0;
@@ -310,15 +310,15 @@ Manager.prototype = {
 			}
 		});
 
-		$("#rg2-new-course-name").on("change", function(evt) {
-			self.setCourseName(evt);
+		$("#rg2-new-course-name").on("change", function() {
+			self.setCourseName();
 		});
 
-		$("#rg2-manager-event-select").change(function(event) {
+		$("#rg2-manager-event-select").change(function() {
 			self.setEvent(parseInt($("#rg2-event-selected").val(), 10));
 		});
 
-		$("#rg2-georef-type").change(function(event) {
+		$("#rg2-georef-type").change(function() {
 			self.setGeoref($("#rg2-georef-selected").val());
 		});
 
@@ -427,7 +427,7 @@ Manager.prototype = {
 		this.createRouteDeleteDropdown(event.id);
 	},
 
-	createMapDropdown : function(id) {
+	createMapDropdown : function() {
 		$("#rg2-map-selected").empty();
 		var dropdown = document.getElementById("rg2-map-selected");
 		var i;
@@ -445,7 +445,7 @@ Manager.prototype = {
 		}
 	},
 
-	createGeorefDropdown : function(id) {
+	createGeorefDropdown : function() {
 		$("#rg2-georef-selected").empty();
 		var dropdown = document.getElementById("rg2-georef-selected");
 		var opt;
@@ -594,11 +594,6 @@ Manager.prototype = {
 
 	doCreateEvent : function() {
 		$("#event-create-dialog").dialog("destroy");
-		var i;
-		var codes;
-		var x;
-		var y;
-		var id = $("#rg2-event-selected").val();
 		var $url = rg2Config.json_url + "?type=createevent";
 		var data = {};
 		data.name = this.eventName;
@@ -633,7 +628,7 @@ Manager.prototype = {
 			type : "POST",
 			url : $url,
 			dataType : "json",
-			success : function(data, textStatus, jqXHR) {
+			success : function(data) {
 				// save new cookie
 				self.user.y = data.keksi;
 				if (data.ok) {
@@ -642,7 +637,7 @@ Manager.prototype = {
 					rg2.showWarningDialog("Save failed", data.status_msg + " Failed to create event. Please try again.");
 				}
 			},
-			error : function(jqXHR, textStatus, errorThrown) {
+			error : function() {
 				rg2.showWarningDialog("Save failed", " Failed to create event.");
 			}
 		});
@@ -856,7 +851,7 @@ Manager.prototype = {
 			type : "POST",
 			url : $url,
 			dataType : "json",
-			success : function(data, textStatus, jqXHR) {
+			success : function(data) {
 				// save new cookie
 				self.user.y = data.keksi;
 				if (data.ok) {
@@ -865,7 +860,7 @@ Manager.prototype = {
 					rg2.showWarningDialog("Update failed", data.status_msg + ". Event update failed. Please try again.");
 				}
 			},
-			error : function(jqXHR, textStatus, errorThrown) {
+			error : function(jqXHR, textStatus) {
 					rg2.showWarningDialog("Update failed", textStatus + ". Event update failed.");
 			}
 		});
@@ -959,13 +954,12 @@ Manager.prototype = {
 		var user = this.encodeUser();
 		var json = JSON.stringify(user);
 		var self = this;
-		var msg;
 		$.ajax({
 			data : json,
 			type : "POST",
 			url : $url,
 			dataType : "json",
-			success : function(data, textStatus, jqXHR) {
+			success : function(data) {
 				// save new cookie
 				self.user.y = data.keksi;
 				if (data.ok) {
@@ -977,7 +971,7 @@ Manager.prototype = {
 					rg2.showWarningDialog("Delete failed", data.status_msg + ". Event delete failed. Please try again.");
 				}
 			},
-			error : function(jqXHR, textStatus, errorThrown) {
+			error : function(jqXHR, textStatus) {
 				rg2.showWarningDialog("Delete failed", textStatus + ". Delete failed.");
 			}
 		});
@@ -1030,7 +1024,6 @@ Manager.prototype = {
 	},
 
   processResultsCSV : function(evt) {
-		var csv = evt.target.result;
 		var rows = evt.target.result.split(/[\r\n|\n]+/);
 
 		// try and work out what the separator is
@@ -1055,7 +1048,6 @@ Manager.prototype = {
 	processResultsXML : function(evt) {
 		var xml;
 		var version;
-		var i;
 		var nodelist;
 		version = "";
 		try {
@@ -1106,7 +1098,6 @@ Manager.prototype = {
 		var result;
 		var course;
 		var time;
-		var timeFormat;
 		var temp;
 		try {
 			classlist = xml.getElementsByTagName('ClassResult');
@@ -1235,7 +1226,6 @@ Manager.prototype = {
 		var time;
 		var temp;
 		var temp2;
-		var runnerCount;
 		try {
 			classlist = xml.getElementsByTagName('ClassResult');
 			for ( i = 0; i < classlist.length; i += 1) {
@@ -1469,7 +1459,6 @@ Manager.prototype = {
 	processCoursesXML : function(evt) {
 		var xml;
 		var version;
-		var i;
 		var nodelist;
 		var creator;
 		version = "";
@@ -1791,8 +1780,6 @@ Manager.prototype = {
 		var result;
 		var nextsplit;
 		var nextcode;
-		var temp;
-    
     var format = this.getCSVFormat(rows[0], separator);
 		// extract what we need: first row is headers so ignore
 		for ( i = 1; i < rows.length; i += 1) {
@@ -2026,7 +2013,7 @@ Manager.prototype = {
 		}
 	},
 
-	setClub : function(evt) {
+	setClub : function() {
 		this.club = $("#rg2-club-name").val();
 		if (this.club) {
 			$("#rg2-select-club-name").addClass('valid');
@@ -2035,7 +2022,7 @@ Manager.prototype = {
 		}
 	},
 
-	setEventName : function(evt) {
+	setEventName : function() {
 		this.eventName = $("#rg2-event-name").val();
 		if (this.eventName) {
 			$("#rg2-select-event-name").addClass('valid');
@@ -2044,14 +2031,14 @@ Manager.prototype = {
 		}
 	},
 
-	setCourseName : function(evt) {
+	setCourseName : function() {
 		var course = $("#rg2-new-course-name").val();
 		if (course) {
 			this.drawnCourse.name = course;
 		}
 	},
 
-	setMapName : function(evt) {
+	setMapName : function() {
 		this.newMap.name = $("#rg2-map-name").val();
 		if (this.newMap.name) {
 			$("#rg2-select-map-name").addClass('valid');
@@ -2140,7 +2127,7 @@ Manager.prototype = {
 	},
 
 	// based on adjustTrack from draw.js
-	adjustControls : function(x1, y1, x2, y2, button, shiftKeyPressed, ctrlKeyPressed) {
+	adjustControls : function(x1, y1, x2, y2, button) {
 		var i;
 		var x;
 		var y;
@@ -2259,7 +2246,7 @@ Manager.prototype = {
 		$("#add-map-dialog").dialog("destroy");
 	},
 
-	doUploadMapFile : function(id) {
+	doUploadMapFile : function() {
 		$("#add-map-dialog").dialog("destroy");
 		// first transfer map file to server
 		var url = rg2Config.json_url + "?type=uploadmapfile";
@@ -2278,7 +2265,7 @@ Manager.prototype = {
 			processData : false,
 			contentType : false,
 			dataType : "json",
-			success : function(data, textStatus, jqXHR) {
+			success : function(data) {
 				// save new cookie
 				self.user.y = data.keksi;
 				if (data.ok) {
@@ -2287,7 +2274,7 @@ Manager.prototype = {
 					rg2.showWarningDialog("Save failed", data.status_msg + ". Failed to save map. Please try again.");
 				}
 			},
-			error : function(jqXHR, textStatus, errorThrown) {
+			error : function(jqXHR, textStatus) {
 				console.log(textStatus);
 			}
 		});
@@ -2309,7 +2296,7 @@ Manager.prototype = {
 			type : "POST",
 			url : $url,
 			dataType : "json",
-			success : function(data, textStatus, jqXHR) {
+			success : function(data) {
 				// save new cookie
 				self.user.y = data.keksi;
 				if (data.ok) {
@@ -2320,7 +2307,7 @@ Manager.prototype = {
 					rg2.showWarningDialog("Save failed", data.status_msg + ". Failed to save map. Please try again.");
 				}
 			},
-			error : function(jqXHR, textStatus, errorThrown) {
+			error : function(jqXHR, textStatus) {
 				console.log(textStatus);
 			}
 		});
@@ -2364,6 +2351,7 @@ Manager.prototype = {
 		// takes in a World file for the map image and translates it to WGS84 (GPS)
 		try {
 			var size = rg2.getMapSize();
+			var i;
 			this.mapWidth = size.width;
 			this.mapHeight = size.height;
 			if ((!this.localworldfile.valid) || (this.mapWidth === 0) || (type === this.DO_NOT_GEOREF)) {
@@ -2416,10 +2404,9 @@ Manager.prototype = {
 			this.newMap.lat.length = 0;
 			this.newMap.lon.length = 0;
 			// translate source to WGS84 (as in GPS file)
-			var i;
 			var p = [];
 			var pt;
-			for ( i = 0; i < 3; i += 1) {
+			for (i = 0; i < 3; i += 1) {
 				pt = {};
 				pt.x = parseInt(xsrc[i] + 0.5, 10);
 				pt.y = parseInt(ysrc[i] + 0.5, 10);
