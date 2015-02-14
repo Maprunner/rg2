@@ -1,7 +1,7 @@
 # Routegadget 2
 
 ## Latest news
-Version 1.0.2 was released on 3rd February 2015 and has been installed on all routegadget.co.uk sites. This now provides enhanced information for the [RG2 statistics database] (http://www.maprunner.co.uk/rg2-stats). If your site is showing up with 0s in some of the totals column then you need to upgrade to at least version 1.0.2. If you have an RG2 site that you would like added to the database then please let me know.
+Version 1.0.3 was released on 13th February 2015 and has been installed on all routegadget.co.uk sites. This now provides enhanced information for the [RG2 statistics database] (http://www.maprunner.co.uk/rg2-stats). If your site is showing up with 0s in some of the totals column then you need to upgrade to at least version 1.0.2. If you have an RG2 site that you would like added to the database then please let me know.
 
 I would recommend using the RG2 manager to set up events rather than the original Routegadget Java version. This will give you some extra functionality (such as positions in the results), and it is also a lot easier to get the controls aligned.
 
@@ -40,7 +40,7 @@ Routegadget 2 allows you to view existing Routegadget information in any modern 
 
 ## RG2 Installations
 
-This is a list of known RG2 installations.
+This is a list of known RG2 installations. You might find it easier to access via the [RG2 statistics database] (http://www.maprunner.co.uk/rg2-stats).
 
 ### Great Britain
 
@@ -69,6 +69,7 @@ This is a list of known RG2 installations.
  * [East Pennine OC] (http://www.epoc.routegadget.co.uk/rg2)
  * [Edinburgh Southern OC] (http://www.esoc.routegadget.co.uk/rg2)
  * [Edinburgh University OC] (http://www.euoc.routegadget.co.uk/rg2)
+ * [Forth Valley Orienteers] (http://routegadget.fvo.org.uk/rg2)
  * [Guildford Orienteers] (http://www.go.routegadget.co.uk/rg2)
  * [Grampian Orienteers] (http://www.gramp.routegadget.co.uk/rg2)
  * [Happy Herts] (http://www.happyherts.routegadget.co.uk/rg2)
@@ -92,6 +93,7 @@ This is a list of known RG2 installations.
  * [North Gloucestershire OC] (http://www.ngoc.routegadget.co.uk/rg2)
  * [Norfolk OC] (http://www.noroc.routegadget.co.uk/rg2)
  * [North Wilts O] (http://www.nwo.routegadget.co.uk/rg2)
+ * [Nottingham OC](http://www.noc-uk.org/gadget/rg2)
  * [Octavian Droobers] (http://www.od.routegadget.co.uk/rg2)
  * [OMM - Mountain Marathon] (http://www.omm.routegadget.co.uk/rg2)
  * [Oxford University OC] (http://www.ouoc.routegadget.co.uk/rg2)
@@ -122,6 +124,7 @@ This is a list of known RG2 installations.
  * [Wessex OC] (http://www.wsx.routegadget.co.uk/rg2)
  * [West Cumbria OC] (http://www.wcoc.routegadget.co.uk/rg2)
  * [Wimborne Orienteers] (http://www.wim.routegadget.co.uk/rg2)
+ * [Wrekin Orienteers] (http://www.wrekin.routegadget.co.uk/rg2)
 
 ## Australia
 
