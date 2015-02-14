@@ -1,4 +1,4 @@
-// Version 1.0.3 2015-02-13T18:05:48;
+// Version 1.0.3 2015-02-14T14:12:33;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -1913,7 +1913,6 @@ $(document).ready(rg2.init);
 /*global clearInterval:false */
 /*global setInterval:false */
 /*global Runner:false */
-/*global t:false */
  function Animation() {
 	'use strict';
 	this.runners = [];
