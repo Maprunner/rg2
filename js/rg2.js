@@ -1451,9 +1451,9 @@ var rg2 = ( function() {
       $(".tracklist").click(function(event) {
         var courseid = event.target.id;
         if (event.target.checked) {
-          results.putTracksOnDisplay(courseid);
+          results.putTracksOnDisplay(parseInt(courseid, 10));
         } else {
-          results.removeTracksFromDisplay(courseid);
+          results.removeTracksFromDisplay(parseInt(courseid, 10));
           // make sure the all checkbox is not checked
           $(".alltracks").prop('checked', false);
         }
