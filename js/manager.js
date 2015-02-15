@@ -149,9 +149,8 @@ function Manager(keksi) {
 		return false;
 	});
 
-	$("#rg2-new-event-details-form").submit(function(event) {
+	$("#rg2-new-event-details-form").submit(function() {
 		console.log("Form submitted");
-
 	});
 }
 
@@ -905,9 +904,8 @@ Manager.prototype = {
 			type : "POST",
 			url : $url,
 			dataType : "json",
-			success : function(data, textStatus, jqXHR) {
+			success : function(data) {
 				// save new cookie
-				var msg;
 				self.user.y = data.keksi;
 				if (data.ok) {
 					rg2.showWarningDialog("Route deleted", "Route " + routeid + " has been deleted.");
@@ -915,7 +913,7 @@ Manager.prototype = {
 					rg2.showWarningDialog("Delete failed", data.status_msg + ". Delete failed. Please try again.");
 				}
 			},
-			error : function(jqXHR, textStatus, errorThrown) {
+			error : function(jqXHR, textStatus) {
 				rg2.showWarningDialog("Delete failed", textStatus + ". Delete failed.");
 			}
 		});

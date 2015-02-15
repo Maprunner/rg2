@@ -26,7 +26,6 @@ function Runner(resultid) {
     course.codes = res.scorecodes;
 	} else {
     course = rg2.getCourseDetails(res.courseid);
-
 	}
   
   this.coursename = course.name;
@@ -37,99 +36,22 @@ function Runner(resultid) {
 	// x,y are indexed by time in seconds
 	this.legTrackDistance = [];
 	this.cumulativeTrackDistance = [];
-	var cumulativeDistance = [];
-	this.x[0] = course.x[0];
-	this.y[0] = course.y[0];
-	var timeatprevcontrol = 0;
-	var timeatcontrol = 0;
-	var timeatxy = 0;
-	var timeatprevxy = 0;
-	var tox;
-	var toy;
-	var fromx = course.x[0];
-	var fromy = course.y[0];
-	var fromdist;
-	var diffx;
-	var diffy;
-	var difft;
-	var diffdist;
+	this.cumulativeDistance = [];
 	var control;
-	var t;
-	var xy;
-	var dist;
 	var lastPointIndex;
 	var ind;
-
+	this.cumulativeDistance[0] = 0;
 	if (res.hasValidTrack) {
-		// x,y are indexed by time in seconds
-		this.x[0] = res.trackx[0];
-		this.y[0] = res.tracky[0];
-		cumulativeDistance[0] = 0;
-		fromx = res.trackx[0];
-		fromy = res.tracky[0];
-		fromdist = 0;
-		dist = 0;
-		// for each point on track
-		for ( xy = 1; xy < res.xysecs.length; xy += 1) {
-			tox = res.trackx[xy];
-			toy = res.tracky[xy];
-			diffx = tox - fromx;
-			diffy = toy - fromy;
-			dist = dist + Math.sqrt(((tox - fromx) * (tox - fromx)) + ((toy - fromy) * (toy - fromy)));
-			diffdist = dist - fromdist;
-			timeatxy = res.xysecs[xy];
-			difft = timeatxy - timeatprevxy;
-			for ( t = timeatprevxy + 1; t < timeatxy; t += 1) {
-				this.x[t] = Math.round(fromx + ((t - timeatprevxy) * diffx / difft));
-				this.y[t] = Math.round(fromy + ((t - timeatprevxy) * diffy / difft));
-				cumulativeDistance[t] = Math.round(fromdist + ((t - timeatprevxy) * diffdist / difft));
-			}
-			this.x[timeatxy] = tox;
-			this.y[timeatxy] = toy;
-			cumulativeDistance[timeatxy] = dist;
-			fromx = tox;
-			fromy = toy;
-			fromdist = dist;
-			timeatprevxy = timeatxy;
-		}
+		this.expandTrack(res.trackx, res.tracky, res.xysecs);
 	} else {
 		// no track so use straight line between controls
-		// for each control (0 was Start)
-		this.x[0] = course.x[0];
-		this.y[0] = course.y[0];
-		cumulativeDistance[0] = 0;
-		fromx = course.x[0];
-		fromy = course.y[0];
-		fromdist = 0;
-		dist = 0;
-		for ( control = 1; control < course.codes.length; control += 1) {
-			tox = course.x[control];
-			toy = course.y[control];
-			diffx = tox - fromx;
-			diffy = toy - fromy;
-			dist = dist + Math.sqrt(((tox - fromx) * (tox - fromx)) + ((toy - fromy) * (toy - fromy)));
-			diffdist = dist - fromdist;
-			timeatcontrol = res.splits[control];
-			difft = timeatcontrol - timeatprevcontrol;
-			for ( t = timeatprevcontrol + 1; t < timeatcontrol; t += 1) {
-				this.x[t] = Math.round(fromx + ((t - timeatprevcontrol) * diffx / difft));
-				this.y[t] = Math.round(fromy + ((t - timeatprevcontrol) * diffy / difft));
-				cumulativeDistance[t] = Math.round(fromdist + ((t - timeatprevxy) * diffdist / difft));
-			}
-			this.x[timeatcontrol] = tox;
-			this.y[timeatcontrol] = toy;
-			cumulativeDistance[timeatcontrol] = dist;
-			fromx = tox;
-			fromy = toy;
-			fromdist = dist;
-			timeatprevcontrol = timeatcontrol;
-		}
+		this.expandTrack(course.x, course.y, res.splits);
 	}
 
 	// add track distances for each leg
 	this.legTrackDistance[0] = 0;
 	this.cumulativeTrackDistance[0] = 0;
-  lastPointIndex = cumulativeDistance.length - 1;
+  lastPointIndex = this.cumulativeDistance.length - 1;
 	if (typeof (course.codes) !== 'undefined') {
     if (res.splits !== rg2.config.SPLITS_NOT_FOUND) {
       for ( control = 1; control < course.codes.length; control += 1) {
@@ -139,16 +61,64 @@ function Runner(resultid) {
         } else {
           ind = lastPointIndex;
         }
-        this.cumulativeTrackDistance[control] = Math.round(cumulativeDistance[ind]);
+        this.cumulativeTrackDistance[control] = Math.round(this.cumulativeDistance[ind]);
         this.legTrackDistance[control] = this.cumulativeTrackDistance[control] - this.cumulativeTrackDistance[control - 1];
       }
     } else {
       // allows for tracks at events with no results so no splits: just use start and finish
-      this.legTrackDistance[1] = Math.round(cumulativeDistance[lastPointIndex]);
-      this.cumulativeTrackDistance[1] = Math.round(cumulativeDistance[lastPointIndex]);
+      this.legTrackDistance[1] = Math.round(this.cumulativeDistance[lastPointIndex]);
+      this.cumulativeTrackDistance[1] = Math.round(this.cumulativeDistance[lastPointIndex]);
 		}
 	}
 
 	res = 0;
 	course = 0;
 }
+
+Runner.prototype = {
+	Constructor : Runner,
+
+	expandTrack : function(itemsx, itemsy, itemstime) {
+		// gets passed arrays of x, y and time
+		// iterate over item which will be xy or controls
+		var item;
+		var timeatprevitem = 0;
+		var timeatitem = 0;
+		var diffx;
+		var diffy;
+		var difft;
+		var t;
+		var diffdist;
+		var tox;
+		var toy;
+		var fromx = itemsx[0];
+		var fromy = itemsy[0];
+		var fromdist = 0;
+		var dist = 0;
+		this.x[0] = itemsx[0];
+		this.y[0] = itemsy[0];
+		for (item = 1; item < itemstime.length; item += 1) {
+			tox = itemsx[item];
+			toy = itemsy[item];
+			diffx = tox - fromx;
+			diffy = toy - fromy;
+			dist = dist + Math.sqrt(((tox - fromx) * (tox - fromx)) + ((toy - fromy) * (toy - fromy)));
+			diffdist = dist - fromdist;
+			timeatitem = itemstime[item];
+			difft = timeatitem - timeatprevitem;
+			for ( t = timeatprevitem + 1; t < timeatitem; t += 1) {
+				this.x[t] = Math.round(fromx + ((t - timeatprevitem) * diffx / difft));
+				this.y[t] = Math.round(fromy + ((t - timeatprevitem) * diffy / difft));
+				this.cumulativeDistance[t] = Math.round(fromdist + ((t - timeatprevitem) * diffdist / difft));
+			}
+			this.x[timeatitem] = tox;
+			this.y[timeatitem] = toy;
+			this.cumulativeDistance[timeatitem] = dist;
+			fromx = tox;
+			fromy = toy;
+			fromdist = dist;
+			timeatprevitem = timeatitem;
+		}
+	}
+
+};

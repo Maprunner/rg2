@@ -728,15 +728,16 @@ var rg2 = ( function() {
         opt.selected = true;
       }
       dropdown.options.add(opt);
-      languages = rg2Config.languages;
-      for (i in languages) {
-        opt = document.createElement("option");
-        opt.value = i;
-        opt.text = i + ": " + rg2Config.languages[i];
-        if (dictionary.code === i) {
-          opt.selected = true;
+      for (i in rg2Config.languages) {
+        if (rg2Config.languages.hasOwnProperty(i)) {
+          opt = document.createElement("option");
+          opt.value = i;
+          opt.text = i + ": " + rg2Config.languages[i];
+          if (dictionary.code === i) {
+            opt.selected = true;
+          }
+          dropdown.options.add(opt);
         }
-        dropdown.options.add(opt);
       }
     }
     
@@ -1083,7 +1084,7 @@ var rg2 = ( function() {
       //console.log ("InputDown " + lastX + " " + lastY + " " + dragStart.x + " " + dragStart.y);
     };
     
-    var handleInputMove = function(evt) {
+    var handleInputMove = function() {
       if (dragStart) {
         var pt = ctx.transformedPoint(lastX, lastY);
         //console.log ("Mousemove after" + pt.x + ": " + pt.y);
