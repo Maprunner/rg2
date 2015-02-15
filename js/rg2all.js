@@ -1,4 +1,4 @@
-// Version 1.0.3 2015-02-14T16:39:19;
+// Version 1.0.4 2015-02-15T10:05:29;
 /*
 * Routegadget 2
 * https://github.com/Maprunner/rg2
@@ -94,7 +94,7 @@ var rg2 = ( function() {
       EVENT_WITHOUT_RESULTS : 2,
       SCORE_EVENT : 3,
       // version gets set automatically by grunt file during build process
-      RG2VERSION: '1.0.3',
+      RG2VERSION: '1.0.4',
       TIME_NOT_FOUND : 9999,
       SPLITS_NOT_FOUND : 9999,
       // values for evt.which 
@@ -1195,7 +1195,7 @@ var rg2 = ( function() {
 			$(msg).dialog({
 				title : title,
 				dialogClass : "rg2-warning-dialog",
-					close: function( event, ui ) {
+					close: function() {
 					$('#rg2-warning-dialog').dialog('destroy').remove();
 				}
 			});
@@ -1452,9 +1452,9 @@ var rg2 = ( function() {
       $(".tracklist").click(function(event) {
         var courseid = event.target.id;
         if (event.target.checked) {
-          results.putTracksOnDisplay(courseid);
+          results.putTracksOnDisplay(parseInt(courseid, 10));
         } else {
-          results.removeTracksFromDisplay(courseid);
+          results.removeTracksFromDisplay(parseInt(courseid, 10));
           // make sure the all checkbox is not checked
           $(".alltracks").prop('checked', false);
         }
@@ -1821,7 +1821,7 @@ var rg2 = ( function() {
       return events.getEventInfo(id);
     }
     
-    function getCoursesForEvent(id) {
+    function getCoursesForEvent() {
       return courses.getCoursesForEvent();
     }
 
