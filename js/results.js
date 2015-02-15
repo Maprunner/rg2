@@ -307,7 +307,7 @@ Results.prototype = {
 	// add all tracks for one course
 	putTracksOnDisplay : function(courseid) {
 		for (var i = 0; i < this.results.length; i += 1) {
-			if (this.results[i].courseid == courseid) {
+			if (this.results[i].courseid === courseid) {
 				this.results[i].putTrackOnDisplay();
 			}
 		}
@@ -382,7 +382,7 @@ Results.prototype = {
 
 	removeTracksFromDisplay : function(courseid) {
 		for (var i = 0; i < this.results.length; i += 1) {
-			if (this.results[i].courseid == courseid) {
+			if (this.results[i].courseid === courseid) {
 				this.results[i].removeTrackFromDisplay();
 			}
 		}
@@ -406,7 +406,7 @@ Results.prototype = {
 			if (resultIndex < rg2.config.GPS_RESULT_OFFSET) {
 				// loop through all results and add it against the correct id
 				while (j < this.results.length) {
-					if (resultIndex == this.results[j].resultid) {
+					if (resultIndex === this.results[j].resultid) {
 						this.results[j].addTrack(tracks[i], eventinfo.format);
 						break;
 					}
@@ -427,7 +427,7 @@ Results.prototype = {
 			return 1;
 		} else if (b.courseid > a.courseid) {
 			return -1;
-		} else if (a.rawid == b.rawid){
+		} else if (a.rawid === b.rawid){
 			return a.resultid - b.resultid;
 		} else {
 			return a.rawid - b.rawid;
@@ -449,7 +449,7 @@ Results.prototype = {
     l = this.results.length;
 		for (i = 0; i < l; i += 1) {
 			temp = this.results[i];
-			if (temp.courseid != oldCourseID) {
+			if (temp.courseid !== oldCourseID) {
 				// found a new course so add header
 				if (firstCourse) {
 					firstCourse = false;
@@ -783,7 +783,7 @@ drawScoreCourse : function() {
 			oldx = x;
 			oldy = y;
 			// track ends at control
-			if ((nextx == x) && (nexty == y)) {
+			if ((nextx === x) && (nexty === y)) {
 				this.xysecs[i] = this.splits[nextcontrol];
 				// go back and add interpolated time at each point based on cumulative distance
 				// this assumes uniform speed...
@@ -883,7 +883,7 @@ drawScoreCourse : function() {
 			oldx = x;
 			oldy = y;
 			// track ends at control, as long as we have moved away from the start
-			if ((nextx == x) && (nexty == y) && moved) {
+			if ((nextx === x) && (nexty === y) && moved) {
 				currenttime = parseInt((dist / totaldist) * totaltime, 10);
 				this.xysecs[i] = currenttime;
 				this.splits[nextcontrol] = currenttime;

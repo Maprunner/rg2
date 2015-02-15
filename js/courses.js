@@ -236,7 +236,6 @@ Courses.prototype = {
 
 function Course(data, isScoreCourse) {
 	var i;
-	var angle;
 	var c1x;
 	var c1y;
 	var c2x;

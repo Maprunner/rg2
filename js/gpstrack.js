@@ -1,5 +1,4 @@
 /*global rg2:false */
-/*global map:false */
 /*global RouteData:false */
 function GPSTrack() {
 	this.lat = [];

@@ -326,9 +326,8 @@ Draw.prototype = {
     }
   },
   
-  setNameAndTime :function(event) {
+  setNameAndTime :function() {
     // callback for an entered name when no results available
-    var t;
     var time;
     var name = $("#rg2-name-entry").val();
     if (name) {
@@ -486,7 +485,7 @@ Draw.prototype = {
       type : 'POST',
       url : $url,
       dataType : 'json',
-      success : function(data, textStatus, jqXHR) {
+      success : function(data) {
         if (data.ok) {
           self.routeSaved(data.status_msg);
         } else {
@@ -503,7 +502,7 @@ Draw.prototype = {
     rg2.showWarningDialog(this.gpstrack.routeData.name, rg2.t('Your route was not saved. Please try again') + '. ' + text);
   },
 
-  routeSaved : function(text) {
+  routeSaved : function() {
     rg2.showWarningDialog(this.gpstrack.routeData.name, rg2.t('Your route has been saved') + '.');
     rg2.loadEvent(rg2.getActiveEventID());
   },
@@ -535,16 +534,13 @@ Draw.prototype = {
     return (this.pointsLocked > 0);
   },
 
-  adjustTrack : function(x1, y1, x2, y2, button, shiftKeyPressed, ctrlKeyPressed) {
+  adjustTrack : function(x1, y1, x2, y2, button) {
 // called whilst dragging a GPS track
 // TODO: not the greatest function in the world and a candidate for refactoring big-time
 // but it works which is a huge step forward
     var i;
     var trk;
     var len;
-    var lockBefore;
-    var lockAfter;
-    var dragIndex;
     var handle;
     var x;
     var y;

@@ -2,7 +2,6 @@
 /*global clearInterval:false */
 /*global setInterval:false */
 /*global Runner:false */
-/*global t:false */
  function Animation() {
 	'use strict';
 	this.runners = [];
@@ -184,7 +183,7 @@ Animation.prototype = {
 
 	removeRunner : function(runnerid, updateDetails) {
 		for (var i = 0; i < this.runners.length; i += 1) {
-			if (this.runners[i].runnerid == runnerid) {
+			if (this.runners[i].runnerid === runnerid) {
 				// delete 1 runner at position i
 				this.runners.splice(i, 1);
 			}

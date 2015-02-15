@@ -13,7 +13,7 @@
     $url = "../kartat/";
   }
   // version replaced by Gruntfile as part of release 
-  define ('RG2VERSION', '1.0.3');
+  define ('RG2VERSION', '1.0.4');
   define ('KARTAT_DIRECTORY', $url);
   define ('LOCK_DIRECTORY', dirname(__FILE__)."/lock/saving/");
   define ('CACHE_DIRECTORY', $url."cache/");
@@ -895,7 +895,7 @@ function addNewRoute($eventid, $data) {
   $newtrackdata = $data->courseid."|".$id."|".$name."|null|".$track."|".$controls.PHP_EOL;
 
   $newresultdata = "";
-  if (($newresult == TRUE) || ($id >= GPS_RESULT_OFFSET)) {
+  if (($newresult === TRUE) || ($id >= GPS_RESULT_OFFSET)) {
     // New result or GPS record so need to add result record as well
     // GPS track saved here as a point every three seconds
     // input can in theory have any time between points
@@ -966,7 +966,7 @@ function addNewRoute($eventid, $data) {
     $write["status_msg"] .= " Save error for merkinnat. ";
   }
 
-  if (($newresult == TRUE) || ($id >= GPS_RESULT_OFFSET)) {
+  if (($newresult === TRUE) || ($id >= GPS_RESULT_OFFSET)) {
     if (($handle = @fopen(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt", "a")) !== FALSE) {
       $status =fwrite($handle, $newresultdata);   
       if (!$status) {
@@ -1152,7 +1152,8 @@ function handleGetRequest($type, $id) {
     $output = getSplitsbrowser($id);
     break;
   default:
-    die("Request not recognised: ".$type);
+    echo "Request not recognised: ".$type."\n";
+    $output = json_encode("Request not recognised.");
     break;
   }
   if ($type == 'splitsbrowser') {
@@ -2007,5 +2008,3 @@ function getLatLonDistance($lat1, $lon1, $lat2, $lon2) {
   // multiply by IUUG earth mean radius (http://en.wikipedia.org/wiki/Earth_radius) in metres
   return 6371009 * $c;
 }
-
-?>
