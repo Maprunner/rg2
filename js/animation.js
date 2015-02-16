@@ -102,30 +102,14 @@ Animation.prototype = {
 		var j;
 		var run;
 		var metresPerPixel;
-		var size;
-		var pixels;
-		var metres;
 		var units;
-		var w;
-		var lat1;
-		var lat2;
-		var lon1;
-		var lon2;
 		
 		if (this.runners.length < 1) {
 			return "<p>Select runners on Results tab.</p>";
 		}
 
     if (rg2.mapIsGeoreferenced()) {
-      size = rg2.getMapSize();
-      pixels = rg2.getDistanceBetweenPoints(0, 0, size.width, size.height);
-      w = rg2.getWorldFile();
-      lon1 = w.C;
-      lat1 = w.F;
-      lon2 = (w.A * size.width) + (w.B * size.height) + w.C;
-      lat2 = (w.D * size.width) + (w.E * size.height) + w.F;
-      metres = rg2.getLatLonDistance(lat1, lon1, lat2, lon2);
-      metresPerPixel = metres / pixels;
+      metresPerPixel = rg2.getMetresPerPixel();
       units = "metres";
     } else {
       metresPerPixel = 1;

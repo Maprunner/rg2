@@ -141,6 +141,11 @@ Draw.prototype = {
     this.isScoreCourse = false;
     this.gpstrack.initialiseGPS();
     this.hasResults = rg2.eventHasResults();
+    this.initialiseUI();
+    rg2.redraw(false);
+  },
+  
+  initialiseUI : function() {
     if (this.hasResults) {
       $("#rg2-select-name").show();
       $("#rg2-enter-name").hide();
@@ -164,7 +169,6 @@ Draw.prototype = {
     $("#rg2-time-entry").empty().val('');
     $("#rg2-name").removeClass('valid');
     $("#rg2-time").removeClass('valid');
-    rg2.redraw(false);
   },
 
   setCourse : function(courseid) {
@@ -542,28 +546,8 @@ Draw.prototype = {
     var trk;
     var len;
     var handle;
-    var x;
-    var y;
-    var a;
-    var xb;
-    var yb;
-    var xs;
-    var ys;
-    var dx;
-    var dy;
-    var scale1;
-    var scale2;
-    var scale;
-    var oldAngle;
-    var newAngle;
-    var angle;
-    var reverseAngle;
     var earliest;
     var latest;
-    var lockedHandle1;
-    var lockedHandle2;
-    var fromTime;
-    var toTime;
     var backgroundLocked;
     //console.log("adjustTrack ", x1, y1, x2, y2);
     backgroundLocked = $('#btn-move-all').prop('checked');
@@ -573,31 +557,8 @@ Draw.prototype = {
       trk = this.gpstrack;
       len = trk.baseX.length;
       if (this.pointsLocked > 0) {
-        if (this.pointsLocked === 1)  {
-          handle = this.getLockedHandle();
-          // scale and rotate track around single locked point
-          oldAngle = rg2.getAngle(x1, y1, handle.basex, handle.basey);
-          newAngle = rg2.getAngle(x2, y2, handle.basex, handle.basey);
-          angle = newAngle - oldAngle;
-          scale1 = rg2.getDistanceBetweenPoints(x1, y1, handle.basex, handle.basey);
-          scale2 = rg2.getDistanceBetweenPoints(x2, y2, handle.basex, handle.basey);
-          scale = scale2/scale1;
-          //console.log (x1, y1, x2, y2, handle.basex, handle.basey, scale, angle);
-          for ( i = 0; i < len; i += 1) {
-            x = trk.baseX[i] - handle.basex;
-            y = trk.baseY[i] - handle.basey;
-            trk.routeData.x[i] = (((Math.cos(angle) * x) - (Math.sin(angle) * y)) * scale) + handle.basex;
-            trk.routeData.y[i] = (((Math.sin(angle) * x) + (Math.cos(angle) * y)) * scale) + handle.basey;
-          }
-          for (i = 0; i < trk.handles.length; i += 1) {
-            if (!trk.handles[i].locked) {
-              x = trk.handles[i].basex - handle.basex;
-              y = trk.handles[i].basey - handle.basey;
-              trk.handles[i].x = (((Math.cos(angle) * x) - (Math.sin(angle) * y)) * scale) + handle.basex;
-              trk.handles[i].y = (((Math.sin(angle) * x) + (Math.cos(angle) * y)) * scale) + handle.basey;
-            }
-          }
-          
+        if (this.pointsLocked === 1) {
+          this.rotateAroundLockedPoint(trk, x1, y1, x2, y2);
         } else {
           // check if start of drag is on a handle
           handle = this.getHandleClicked(x1, y1);
@@ -622,128 +583,194 @@ Draw.prototype = {
           
           if ((trk.handles[earliest].time > trk.handles[handle].time) || (trk.handles[latest].time < trk.handles[handle].time)) {
             // case 3 and 4: floating end point
-            if (trk.handles[earliest].time > trk.handles[handle].time) {
-              lockedHandle1 = earliest;
-              fromTime = 0;
-              toTime = trk.handles[earliest].time;
-            } else {
-              lockedHandle1 = latest;
-              fromTime = trk.handles[latest].time + 1;
-              // second entry is always the last point in the route
-              toTime = trk.handles[1].time + 1;
-            }
-            // scale and rotate track around single locked point
-            scale1 = rg2.getDistanceBetweenPoints(x1, y1, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
-            scale2 = rg2.getDistanceBetweenPoints(x2, y2, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
-            scale = scale2/scale1;
-            oldAngle = rg2.getAngle(x1, y1, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
-            newAngle = rg2.getAngle(x2, y2, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
-            angle = newAngle - oldAngle;
-            //console.log (x1, y1, x2, y2, trk.handles[handle].basex, trk.handles[handle].basey, scale, angle, fromTime, toTime);
-            for ( i = fromTime; i < toTime; i += 1) {
-              x = trk.baseX[i] - trk.handles[lockedHandle1].basex;
-              y = trk.baseY[i] - trk.handles[lockedHandle1].basey;
-              trk.routeData.x[i] = (((Math.cos(angle) * x) - (Math.sin(angle) * y)) * scale) + trk.handles[lockedHandle1].basex;
-              trk.routeData.y[i] = (((Math.sin(angle) * x) + (Math.cos(angle) * y)) * scale) + trk.handles[lockedHandle1].basey;
-            }
-            for (i = 0; i < trk.handles.length; i += 1) {
-              if ((!trk.handles[i].locked) && (trk.handles[i].time >= fromTime) && (trk.handles[i].time <= toTime)) {
-                x = trk.handles[i].basex - trk.handles[lockedHandle1].basex;
-                y = trk.handles[i].basey - trk.handles[lockedHandle1].basey;
-                trk.handles[i].x = (((Math.cos(angle) * x) - (Math.sin(angle) * y)) * scale) + trk.handles[lockedHandle1].basex;
-                trk.handles[i].y = (((Math.sin(angle) * x) + (Math.cos(angle) * y)) * scale) + trk.handles[lockedHandle1].basey;
-              }
-            }
+            this.scaleRotateAroundLockedPoint(trk, x1, y1, x2, y2, earliest, latest, handle);
           } else {
             // case 5: shear/scale around two locked points 
-            // all based on putting handle1 at (0, 0), rotating handle 2 to be on x-axis and then shearing on x-axis and scaling on y-axis.
-            // there must be a better way...
-            
-            lockedHandle1 = this.getPreviousLockedHandle(handle);
-            fromTime = trk.handles[lockedHandle1].time;
-            lockedHandle2 = this.getNextLockedHandle(handle);
-            toTime = trk.handles[lockedHandle2].time;
-            //console.log("Point (", x1, ", ", y1, ") in middle of ", lockedHandle1, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey, " and ",lockedHandle2, trk.handles[lockedHandle2].basex, trk.handles[lockedHandle2].basey);
-            reverseAngle = rg2.getAngle(trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey, trk.handles[lockedHandle2].basex, trk.handles[lockedHandle2].basey);
-            angle = (2 * Math.PI) - reverseAngle;
-            
-            xb = x1 - trk.handles[lockedHandle1].basex;
-            yb = y1 - trk.handles[lockedHandle1].basey;
-            x1 = (Math.cos(angle) * xb) - (Math.sin(angle) * yb);
-            y1 = (Math.sin(angle) * xb) + (Math.cos(angle) * yb);
-                      
-            xb = x2 - trk.handles[lockedHandle1].basex;
-            yb = y2 - trk.handles[lockedHandle1].basey;
-            x2 = (Math.cos(angle) * xb) - (Math.sin(angle) * yb);
-            y2 = (Math.sin(angle) * xb) + (Math.cos(angle) * yb);
-                        
-            xb = trk.handles[lockedHandle2].basex - trk.handles[lockedHandle1].basex;
-            yb = trk.handles[lockedHandle2].basey - trk.handles[lockedHandle1].basey;
-            x = (Math.cos(angle) * xb) - (Math.sin(angle) * yb);
-            y = (Math.sin(angle) * xb) + (Math.cos(angle) * yb);
-
-            // calculate scaling factors
-            a = (x2 - x1) /y1;
-            scale = y2 / y1;
-            
-            if (!isFinite(a) || !isFinite(scale)) {
-              // TODO: this will cause trouble when y1 is 0 (or even just very small) but I've never managed to get it to happen
-              // you need to click exactly on a line through the two locked handles: just do nothing for now
-              console.log("y1 became 0: scale factors invalid", a, scale);
-              return;
-            }
-            // recalculate all points between locked handles          
-            for ( i = fromTime + 1; i < toTime; i += 1) {
-              // translate to put locked point at origin
-              xb = trk.baseX[i] - trk.handles[lockedHandle1].basex;
-              yb = trk.baseY[i] - trk.handles[lockedHandle1].basey;
-              // rotate to give locked points as x-axis
-              x = (Math.cos(angle) * xb) - (Math.sin(angle) * yb);
-              y = (Math.sin(angle) * xb) + (Math.cos(angle) * yb);
-              
-              // shear/stretch
-              xs = x + (y * a);
-              ys = y * scale;
-              
-              // rotate and translate back
-              trk.routeData.x[i] = (Math.cos(reverseAngle) * xs) - (Math.sin(reverseAngle) * ys) + trk.handles[lockedHandle1].basex;
-              trk.routeData.y[i] = (Math.sin(reverseAngle) * xs) + (Math.cos(reverseAngle) * ys) + trk.handles[lockedHandle1].basey;
-
-            }
-            // recalculate all handles between locked handles
-            for (i = 0; i < trk.handles.length; i += 1) {
-              if ((!trk.handles[i].locked) && (trk.handles[i].time >= fromTime) && (trk.handles[i].time <= toTime)) {
-                xb = trk.handles[i].basex - trk.handles[lockedHandle1].basex;
-                yb = trk.handles[i].basey - trk.handles[lockedHandle1].basey;
-                
-                // rotate to give locked points as x-axis
-                x = (Math.cos(angle) * xb) - (Math.sin(angle) * yb);
-                y = (Math.sin(angle) * xb) + (Math.cos(angle) * yb);
-              
-                // shear/stretch
-                xs = x + (y * a);
-                ys = y * scale;
-                             
-                trk.handles[i].x = ((Math.cos(reverseAngle) * xs) - (Math.sin(reverseAngle) * ys)) + trk.handles[lockedHandle1].basex;
-                trk.handles[i].y = ((Math.sin(reverseAngle) * xs) + (Math.cos(reverseAngle) * ys)) + trk.handles[lockedHandle1].basey;
-              }
-            }
+            this.shearScaleAroundLockedPoints(trk, x1, y1, x2, y2, handle);
           }
-          
         }
       } else {
         // nothing locked so drag track
-        dx = x2 - x1;
-        dy = y2 - y1;
-        for ( i = 0; i < len; i += 1) {
-          trk.routeData.x[i] = trk.baseX[i] + dx;
-          trk.routeData.y[i] = trk.baseY[i] + dy;
-        }
-        for (i = 0; i < trk.handles.length; i += 1) {
-          trk.handles[i].x = trk.handles[i].basex + dx;
-          trk.handles[i].y = trk.handles[i].basey + dy;
-        }
+        this.dragTrack(trk, (x2 - x1), (y2 - y1));
       }
+    }
+  },
+  
+  shearScaleAroundLockedPoints : function (trk, x1, y1, x2, y2, handle) {
+    // case 5: shear/scale around two locked points 
+    // all based on putting handle1 at (0, 0), rotating handle 2 to be on x-axis and then shearing on x-axis and scaling on y-axis.
+    // there must be a better way...
+    var i;
+    var lockedHandle1;
+    var lockedHandle2;
+    var fromTime;
+    var toTime;
+    var scale;
+    var angle;
+    var reverseAngle;
+    var a;
+    var xb;
+    var yb;
+    var xs;
+    var ys;
+    var x;
+    var y;
+    lockedHandle1 = this.getPreviousLockedHandle(handle);
+    fromTime = trk.handles[lockedHandle1].time;
+    lockedHandle2 = this.getNextLockedHandle(handle);
+    toTime = trk.handles[lockedHandle2].time;
+    //console.log("Point (", x1, ", ", y1, ") in middle of ", lockedHandle1, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey, " and ",lockedHandle2, trk.handles[lockedHandle2].basex, trk.handles[lockedHandle2].basey);
+    reverseAngle = rg2.getAngle(trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey, trk.handles[lockedHandle2].basex, trk.handles[lockedHandle2].basey);
+    angle = (2 * Math.PI) - reverseAngle;
+    xb = x1 - trk.handles[lockedHandle1].basex;
+    yb = y1 - trk.handles[lockedHandle1].basey;
+    x1 = (Math.cos(angle) * xb) - (Math.sin(angle) * yb);
+    y1 = (Math.sin(angle) * xb) + (Math.cos(angle) * yb);
+                      
+    xb = x2 - trk.handles[lockedHandle1].basex;
+    yb = y2 - trk.handles[lockedHandle1].basey;
+    x2 = (Math.cos(angle) * xb) - (Math.sin(angle) * yb);
+    y2 = (Math.sin(angle) * xb) + (Math.cos(angle) * yb);
+                        
+    xb = trk.handles[lockedHandle2].basex - trk.handles[lockedHandle1].basex;
+    yb = trk.handles[lockedHandle2].basey - trk.handles[lockedHandle1].basey;
+    x = (Math.cos(angle) * xb) - (Math.sin(angle) * yb);
+    y = (Math.sin(angle) * xb) + (Math.cos(angle) * yb);
+
+    // calculate scaling factors
+    a = (x2 - x1) /y1;
+    scale = y2 / y1;
+            
+    if (!isFinite(a) || !isFinite(scale)) {
+      // TODO: this will cause trouble when y1 is 0 (or even just very small) but I've never managed to get it to happen
+      // you need to click exactly on a line through the two locked handles: just do nothing for now
+      console.log("y1 became 0: scale factors invalid", a, scale);
+      return;
+    }
+    // recalculate all points between locked handles
+    for ( i = fromTime + 1; i < toTime; i += 1) {
+      // translate to put locked point at origin
+      xb = trk.baseX[i] - trk.handles[lockedHandle1].basex;
+      yb = trk.baseY[i] - trk.handles[lockedHandle1].basey;
+      // rotate to give locked points as x-axis
+      x = (Math.cos(angle) * xb) - (Math.sin(angle) * yb);
+      y = (Math.sin(angle) * xb) + (Math.cos(angle) * yb);
+      
+      // shear/stretch
+      xs = x + (y * a);
+      ys = y * scale;
+      // rotate and translate back
+      trk.routeData.x[i] = (Math.cos(reverseAngle) * xs) - (Math.sin(reverseAngle) * ys) + trk.handles[lockedHandle1].basex;
+      trk.routeData.y[i] = (Math.sin(reverseAngle) * xs) + (Math.cos(reverseAngle) * ys) + trk.handles[lockedHandle1].basey;
+    }
+    // recalculate all handles between locked handles
+    for (i = 0; i < trk.handles.length; i += 1) {
+      if ((!trk.handles[i].locked) && (trk.handles[i].time >= fromTime) && (trk.handles[i].time <= toTime)) {
+        xb = trk.handles[i].basex - trk.handles[lockedHandle1].basex;
+        yb = trk.handles[i].basey - trk.handles[lockedHandle1].basey;
+        // rotate to give locked points as x-axis
+        x = (Math.cos(angle) * xb) - (Math.sin(angle) * yb);
+        y = (Math.sin(angle) * xb) + (Math.cos(angle) * yb);
+        // shear/stretch
+        xs = x + (y * a);
+        ys = y * scale;
+        trk.handles[i].x = ((Math.cos(reverseAngle) * xs) - (Math.sin(reverseAngle) * ys)) + trk.handles[lockedHandle1].basex;
+        trk.handles[i].y = ((Math.sin(reverseAngle) * xs) + (Math.cos(reverseAngle) * ys)) + trk.handles[lockedHandle1].basey;
+      }
+    }
+  },
+
+  scaleRotateAroundLockedPoint : function(trk, x1, y1, x2, y2, earliest, latest, handle) {
+    var i;
+    var lockedHandle1;
+    var fromTime;
+    var toTime;
+    var scale1;
+    var scale2;
+    var scale;
+    var oldAngle;
+    var newAngle;
+    var angle;
+    var x;
+    var y;
+    if (trk.handles[earliest].time > trk.handles[handle].time) {
+      lockedHandle1 = earliest;
+      fromTime = 0;
+      toTime = trk.handles[earliest].time;
+    } else {
+      lockedHandle1 = latest;
+      fromTime = trk.handles[latest].time + 1;
+      // second entry is always the last point in the route
+      toTime = trk.handles[1].time + 1;
+    }
+    // scale and rotate track around single locked point
+    scale1 = rg2.getDistanceBetweenPoints(x1, y1, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
+    scale2 = rg2.getDistanceBetweenPoints(x2, y2, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
+    scale = scale2/scale1;
+    oldAngle = rg2.getAngle(x1, y1, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
+    newAngle = rg2.getAngle(x2, y2, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
+    angle = newAngle - oldAngle;
+    //console.log (x1, y1, x2, y2, trk.handles[handle].basex, trk.handles[handle].basey, scale, angle, fromTime, toTime);
+    for ( i = fromTime; i < toTime; i += 1) {
+      x = trk.baseX[i] - trk.handles[lockedHandle1].basex;
+      y = trk.baseY[i] - trk.handles[lockedHandle1].basey;
+      trk.routeData.x[i] = (((Math.cos(angle) * x) - (Math.sin(angle) * y)) * scale) + trk.handles[lockedHandle1].basex;
+      trk.routeData.y[i] = (((Math.sin(angle) * x) + (Math.cos(angle) * y)) * scale) + trk.handles[lockedHandle1].basey;
+    }
+    for (i = 0; i < trk.handles.length; i += 1) {
+      if ((!trk.handles[i].locked) && (trk.handles[i].time >= fromTime) && (trk.handles[i].time <= toTime)) {
+        x = trk.handles[i].basex - trk.handles[lockedHandle1].basex;
+        y = trk.handles[i].basey - trk.handles[lockedHandle1].basey;
+        trk.handles[i].x = (((Math.cos(angle) * x) - (Math.sin(angle) * y)) * scale) + trk.handles[lockedHandle1].basex;
+        trk.handles[i].y = (((Math.sin(angle) * x) + (Math.cos(angle) * y)) * scale) + trk.handles[lockedHandle1].basey;
+      }
+    }
+  },
+  
+  rotateAroundLockedPoint : function(trk, x1, y1, x2, y2) {
+    var scale1;
+    var scale2;
+    var scale;
+    var oldAngle;
+    var newAngle;
+    var angle;
+    var x;
+    var y;
+    var i;
+    var handle = this.getLockedHandle();
+    // scale and rotate track around single locked point
+    oldAngle = rg2.getAngle(x1, y1, handle.basex, handle.basey);
+    newAngle = rg2.getAngle(x2, y2, handle.basex, handle.basey);
+    angle = newAngle - oldAngle;
+    scale1 = rg2.getDistanceBetweenPoints(x1, y1, handle.basex, handle.basey);
+    scale2 = rg2.getDistanceBetweenPoints(x2, y2, handle.basex, handle.basey);
+    scale = scale2/scale1;
+    //console.log (x1, y1, x2, y2, handle.basex, handle.basey, scale, angle);
+    for ( i = 0; i < trk.baseX.length; i += 1) {
+      x = trk.baseX[i] - handle.basex;
+      y = trk.baseY[i] - handle.basey;
+      trk.routeData.x[i] = (((Math.cos(angle) * x) - (Math.sin(angle) * y)) * scale) + handle.basex;
+      trk.routeData.y[i] = (((Math.sin(angle) * x) + (Math.cos(angle) * y)) * scale) + handle.basey;
+    }
+    for (i = 0; i < trk.handles.length; i += 1) {
+      if (!trk.handles[i].locked) {
+        x = trk.handles[i].basex - handle.basex;
+        y = trk.handles[i].basey - handle.basey;
+        trk.handles[i].x = (((Math.cos(angle) * x) - (Math.sin(angle) * y)) * scale) + handle.basex;
+        trk.handles[i].y = (((Math.sin(angle) * x) + (Math.cos(angle) * y)) * scale) + handle.basey;
+      }
+    }
+  },
+  
+  dragTrack : function (trk, dx, dy) {
+    var i;
+    for ( i = 0; i < trk.baseX.length; i += 1) {
+      trk.routeData.x[i] = trk.baseX[i] + dx;
+      trk.routeData.y[i] = trk.baseY[i] + dy;
+    }
+    for (i = 0; i < trk.handles.length; i += 1) {
+      trk.handles[i].x = trk.handles[i].basex + dx;
+      trk.handles[i].y = trk.handles[i].basey + dy;
     }
   },
   

@@ -108,6 +108,29 @@ Events.prototype = {
 		}
 	},
 
+	getMetresPerPixel : function() {
+		var lat1;
+		var lat2;
+		var lon1;
+		var lon2;
+		var size;
+		var pixels;
+		var w;
+		if (this.activeEventID === null) {
+      // 1 is as harmless as anything else in this serror situation
+      return 1;
+    } else {
+      size = rg2.getMapSize();
+      pixels = rg2.getDistanceBetweenPoints(0, 0, size.width, size.height);
+      w = this.events[this.activeEventID].worldFile;
+      lon1 = w.C;
+      lat1 = w.F;
+      lon2 = (w.A * size.width) + (w.B * size.height) + w.C;
+      lat2 = (w.D * size.width) + (w.E * size.height) + w.F;
+      return (rg2.getLatLonDistance(lat1, lon1, lat2, lon2)) / pixels;
+		}
+	},
+
 	getWorldFile : function() {
 		return this.events[this.activeEventID].worldFile;
 	},
@@ -146,23 +169,6 @@ function Event(data) {
 	this.name = data.name;
 	this.date = data.date;
 	this.club = data.club;
-	if (data.suffix === undefined) {
-		this.mapfilename = this.mapid + '.' + 'jpg';
-	} else {
-		this.mapfilename = this.mapid + '.' + data.suffix;
-	}
-	this.worldFile = [];
-	if ( typeof (data.A) === 'undefined') {
-		this.georeferenced = false;
-	} else {
-		this.georeferenced = true;
-		this.worldFile.A = data.A;
-		this.worldFile.B = data.B;
-		this.worldFile.C = data.C;
-		this.worldFile.D = data.D;
-		this.worldFile.E = data.E;
-		this.worldFile.F = data.F;
-	}
 	this.rawtype = data.type;
 	switch(data.type) {
 		case "I":
@@ -186,9 +192,29 @@ function Event(data) {
 	}
 	this.comment = data.comment;
 	this.courses = 0;
-
+  this.setMapDetails(data);
 }
 
 Event.prototype = {
-	Constructor : Event
+	Constructor : Event,
+	
+	setMapDetails : function (data) {
+		if (data.suffix === undefined) {
+			this.mapfilename = this.mapid + '.' + 'jpg';
+		} else {
+			this.mapfilename = this.mapid + '.' + data.suffix;
+		}
+		this.worldFile = [];
+		if ( typeof (data.A) === 'undefined') {
+			this.georeferenced = false;
+		} else {
+			this.georeferenced = true;
+			this.worldFile.A = data.A;
+			this.worldFile.B = data.B;
+			this.worldFile.C = data.C;
+			this.worldFile.D = data.D;
+			this.worldFile.E = data.E;
+			this.worldFile.F = data.F;
+		}
+	}
 };
