@@ -207,6 +207,7 @@ Manager.prototype = {
 		var self = this;
 
 		this.getMaps();
+		this.setButtons();
 
 		this.createEventLevelDropdown("rg2-event-level");
 		$("#rg2-event-level").change(function() {
@@ -267,6 +268,19 @@ Manager.prototype = {
 			self.setClub();
 		});
 
+		$("#rg2-new-course-name").on("change", function() {
+			self.setCourseName();
+		});
+
+		$("#rg2-manager-event-select").change(function() {
+			self.setEvent(parseInt($("#rg2-event-selected").val(), 10));
+		});
+
+		$("#rg2-georef-type").change(function() {
+			self.setGeoref($("#rg2-georef-selected").val());
+		});
+
+
 		$("#rg2-load-map-file").button().change(function(evt) {
 			self.readMapFile(evt);
 		});
@@ -282,78 +296,63 @@ Manager.prototype = {
 		$("#rg2-load-course-file").button().change(function(evt) {
 			self.readCourses(evt);
 		});
+		
+		this.setUIVisibility();
+		$('#rg2-info-panel').tabs('option', 'active', rg2.config.TAB_CREATE);
+	},
 
-		$("#btn-move-map-and-controls").click(function(evt) {
-			self.toggleMoveAll(evt.target.checked);
-		});
-
-		$("#btn-no-results").click(function(evt) {
-			self.toggleResultsRequired(evt.target.checked);
-		});
-
+	setUIVisibility : function() {
 		$('#rg2-draw-courses').hide();
-
-		$("#btn-draw-courses").button().click(function() {
-			if (self.mapLoaded) {
-				self.drawingCourses = true;
-				self.courses.length = 0;
-				self.newcontrols.deleteAllControls();
-				self.drawnCourse.name = 'Course';
-				self.drawnCourse.x = [];
-				self.drawnCourse.y = [];
-				self.drawnCourse.codes = [];
-				$('#rg2-new-course-name').val('Course');
-				$('#rg2-draw-courses').show();
-			} else {
-				rg2.showWarningDialog("No map selected", "Please load a map before drawing courses");
-			}
-		});
-
-		$("#rg2-new-course-name").on("change", function() {
-			self.setCourseName();
-		});
-
-		$("#rg2-manager-event-select").change(function() {
-			self.setEvent(parseInt($("#rg2-event-selected").val(), 10));
-		});
-
-		$("#rg2-georef-type").change(function() {
-			self.setGeoref($("#rg2-georef-selected").val());
-		});
-
-		$("#btn-create-event").button().click(function() {
-			self.confirmCreateEvent();
-		}).button("enable");
-
-		$("#btn-update-event").button().click(function() {
-			self.confirmUpdateEvent();
-		}).button("disable");
-
-		$("#btn-delete-route").button().click(function() {
-			self.confirmDeleteRoute();
-		}).button("disable");
-
-		$("#btn-delete-event").button().click(function() {
-			self.confirmDeleteEvent();
-		}).button("disable");
-
-		$("#btn-add-map").button().click(function() {
-			self.confirmAddMap();
-		}).button("disable");
-
-		// TODO: hide course delete function for now: not fully implemented yet, and may not be needed...
-		$("#rg2-temp-hide-course-delete").hide();
-
-		// TODO hide results grouping for now: may never implement
-		$("#rg2-results-grouping").hide();
-
 		$("#rg2-manage-create").show();
 		$("#rg2-create-tab").show();
 		$("#rg2-edit-tab").show();
 		$("#rg2-map-tab").show();
 		$("#rg2-manage-login").hide();
 		$("#rg2-login-tab").hide();
-		$('#rg2-info-panel').tabs('option', 'active', rg2.config.TAB_CREATE);
+		// TODO: hide course delete function for now: not fully implemented yet, and may not be needed...
+		$("#rg2-temp-hide-course-delete").hide();
+		// TODO hide results grouping for now: may never implement
+		$("#rg2-results-grouping").hide();
+	},
+
+	setButtons : function() {
+		var self = this;
+		$("#btn-create-event").button().click(function() {
+			self.confirmCreateEvent();
+		}).button("enable");
+		$("#btn-update-event").button().click(function() {
+			self.confirmUpdateEvent();
+		}).button("disable");
+		$("#btn-delete-route").button().click(function() {
+			self.confirmDeleteRoute();
+		}).button("disable");
+		$("#btn-delete-event").button().click(function() {
+			self.confirmDeleteEvent();
+		}).button("disable");
+		$("#btn-add-map").button().click(function() {
+			self.confirmAddMap();
+		}).button("disable");
+		$("#btn-draw-courses").button().click(function() {
+		if (self.mapLoaded) {
+			self.drawingCourses = true;
+			self.courses.length = 0;
+			self.newcontrols.deleteAllControls();
+			self.drawnCourse.name = 'Course';
+			self.drawnCourse.x = [];
+			self.drawnCourse.y = [];
+			self.drawnCourse.codes = [];
+			$('#rg2-new-course-name').val('Course');
+			$('#rg2-draw-courses').show();
+		} else {
+			rg2.showWarningDialog("No map selected", "Please load a map before drawing courses");
+		}
+	});
+	$("#btn-move-map-and-controls").click(function(evt) {
+		self.toggleMoveAll(evt.target.checked);
+	});
+	$("#btn-no-results").click(function(evt) {
+		self.toggleResultsRequired(evt.target.checked);
+	});
 	},
 
 	getMaps : function() {
@@ -1123,85 +1122,13 @@ Manager.prototype = {
 						result.club = '';
 					}
 					resultlist = personlist[j].getElementsByTagName('Result');
-					for ( k = 0; k < resultlist.length; k += 1) {
-						temp = resultlist[k].getElementsByTagName('CompetitorStatus');
-						if (temp.length > 0) {
-							result.status = temp[0].getAttribute("value");
-						} else {
-							result.status = '';
-						}
-						temp = resultlist[k].getElementsByTagName('ResultPosition');
-						if (temp.length > 0) {
-							result.position = parseInt(temp[0].textContent, 10);
-						} else {
-							result.position = '';
-						}
-						temp = resultlist[k].getElementsByTagName('CCardId');
-						if (temp.length > 0) {
-							result.chipid = temp[0].textContent;
-						} else {
-							result.chipid = 0;
-						}
-						// assuming first <Time> is the total time...
-						temp = resultlist[k].getElementsByTagName('Time');
-						if (temp.length > 0) {
-							result.time = temp[0].textContent.replace(/[\n\r]/g, '');
-						} else {
-							result.time = 0;
-						}
-						temp = resultlist[k].getElementsByTagName('StartTime');
-						if (temp.length > 0) {
-							time = temp[0].getElementsByTagName('Clock')[0].textContent;
-							result.starttime = rg2.getSecsFromHHMMSS(time);
-						} else {
-							result.starttime = 0;
-						}
-						result.splits = "";
-						result.codes = [];
-						splitlist = resultlist[k].getElementsByTagName('SplitTime');
-						result.controls = splitlist.length;
-						for ( l = 0; l < splitlist.length; l += 1) {
-							if (l > 0) {
-								result.splits += ";";
-							}
-							temp = splitlist[l].getElementsByTagName('Time');
-							if (temp.length > 0) {
-								// previously read timeFormat but some files lied!
-								// allow for XML files that don't tell you what is going on
-								// count all colons in time string
-								if ((temp[0].textContent.match(/:/g) || []).length > 1) {
-									result.splits += rg2.getSecsFromHHMMSS(temp[0].textContent);
-								} else {
-									result.splits += rg2.getSecsFromMMSS(temp[0].textContent);
-								}
-								temp = splitlist[l].getElementsByTagName('ControlCode');
-								if (temp.length > 0) {
-									result.codes[l] = temp[0].textContent;
-								} else {
-									result.codes[l] = "";
-								}
-							} else {
-								result.splits += 0;
-								result.codes[l] = "";
-							}
-						}
-						// add finish split
-						result.splits += ";";
-						temp = resultlist[k].getElementsByTagName('FinishTime');
-						if (temp.length > 0) {
-							time = temp[0].getElementsByTagName('Clock')[0].textContent;
-							result.splits += rg2.getSecsFromHHMMSS(time) - result.starttime;
-						} else {
-							result.splits += 0;
-						}
-					}
+					this.extractIOFV2XMLResults(resultlist, result);
 					if (result.status === 'DidNotStart') {
 						break;
 					} else {
 						this.results.push(result);
 					}
 				}
-
 			}
 		} catch(err) {
 			rg2.showWarningDialog("XML parse error", "Error processing XML file. Error is : " + err.message);
@@ -1209,7 +1136,92 @@ Manager.prototype = {
 		}
 
 	},
+	
+	extractIOFV2XMLResults : function(resultlist, result) {
+		var k;
+		var temp;
+		var time;
+		var splitlist;
+		for ( k = 0; k < resultlist.length; k += 1) {
+			temp = resultlist[k].getElementsByTagName('CompetitorStatus');
+			if (temp.length > 0) {
+				result.status = temp[0].getAttribute("value");
+			} else {
+				result.status = '';
+			}
+			temp = resultlist[k].getElementsByTagName('ResultPosition');
+			if (temp.length > 0) {
+				result.position = parseInt(temp[0].textContent, 10);
+			} else {
+				result.position = '';
+			}
+			temp = resultlist[k].getElementsByTagName('CCardId');
+			if (temp.length > 0) {
+				result.chipid = temp[0].textContent;
+			} else {
+				result.chipid = 0;
+			}
+			// assuming first <Time> is the total time...
+			temp = resultlist[k].getElementsByTagName('Time');
+			if (temp.length > 0) {
+				result.time = temp[0].textContent.replace(/[\n\r]/g, '');
+			} else {
+				result.time = 0;
+			}
+			temp = resultlist[k].getElementsByTagName('StartTime');
+			if (temp.length > 0) {
+				time = temp[0].getElementsByTagName('Clock')[0].textContent;
+				result.starttime = rg2.getSecsFromHHMMSS(time);
+			} else {
+				result.starttime = 0;
+			}
+			result.splits = "";
+			result.codes = [];
+			splitlist = resultlist[k].getElementsByTagName('SplitTime');
+			result.controls = splitlist.length;
+      this.extractIOFV2XMLSplits(splitlist, result);
+			temp = resultlist[k].getElementsByTagName('FinishTime');
+			if (temp.length > 0) {
+				time = temp[0].getElementsByTagName('Clock')[0].textContent;
+				result.splits += rg2.getSecsFromHHMMSS(time) - result.starttime;
+			} else {
+				result.splits += 0;
+			}
+		}
+	},
 
+	extractIOFV2XMLSplits : function(splitlist, result) {
+		var l;
+		var temp;
+		for ( l = 0; l < splitlist.length; l += 1) {
+			if (l > 0) {
+				result.splits += ";";
+			}
+			temp = splitlist[l].getElementsByTagName('Time');
+			if (temp.length > 0) {
+				// previously read timeFormat but some files lied!
+				// allow for XML files that don't tell you what is going on
+				// count all colons in time string
+				if ((temp[0].textContent.match(/:/g) || []).length > 1) {
+					result.splits += rg2.getSecsFromHHMMSS(temp[0].textContent);
+				} else {
+					result.splits += rg2.getSecsFromMMSS(temp[0].textContent);
+				}
+				temp = splitlist[l].getElementsByTagName('ControlCode');
+				if (temp.length > 0) {
+					result.codes[l] = temp[0].textContent;
+				} else {
+					result.codes[l] = "";
+				}
+			} else {
+				result.splits += 0;
+				result.codes[l] = "";
+			}
+		}
+		// add finish split
+		result.splits += ";";
+	},
+	
 	processIOFV3XMLResults : function(xml) {
 		var classlist;
 		var personlist;
@@ -1253,83 +1265,7 @@ Manager.prototype = {
 						result.club = "";
 					}
 					resultlist = personlist[j].getElementsByTagName('Result');
-					for ( k = 0; k < resultlist.length; k += 1) {
-						temp = resultlist[k].getElementsByTagName('ControlCard');
-						if (temp.length > 0) {
-							result.chipid = temp[0].textContent;
-						} else {
-							result.chipid = 0;
-						}
-						temp = resultlist[k].getElementsByTagName('Position');
-						if (temp.length > 0) {
-							result.position = temp[0].textContent;
-						} else {
-							result.position = '';
-						}
-						temp = resultlist[k].getElementsByTagName('Status');
-						if (temp.length > 0) {
-							result.status = temp[0].textContent;
-						} else {
-							result.status = '';
-						}
-						// assuming first <Time> is the total time...
-						// this one is in seconds and might even have tenths...
-						temp = resultlist[k].getElementsByTagName('Time');
-						if (temp.length > 0) {
-							result.time = rg2.formatSecsAsMMSS(parseInt(temp[0].textContent, 10));
-						} else {
-							result.time = 0;
-						}
-						temp = resultlist[k].getElementsByTagName('StartTime');
-						if (temp.length > 0) {
-							temp2 = temp[0].textContent;
-							if (temp2.length >= 19) {
-								// format is yyyy-mm-ddThh:mm:ss and might have extra Z or +nn
-								result.starttime = rg2.getSecsFromHHMMSS(temp2.substr(11, 8));
-							} else {
-								result.starttime = 0;
-							}
-						} else {
-							result.starttime = 0;
-						}
-						result.splits = "";
-						result.codes = [];
-						splitlist = resultlist[k].getElementsByTagName('SplitTime');
-						result.controls = splitlist.length;
-						for ( l = 0; l < splitlist.length; l += 1) {
-							if (l > 0) {
-								result.splits += ";";
-							}
-							temp = splitlist[l].getElementsByTagName('Time');
-							if (temp.length > 0) {
-								result.splits += temp[0].textContent;
-							} else {
-								result.splits += 0;
-							}
-							temp = splitlist[l].getElementsByTagName('ControlCode');
-							if (temp.length > 0) {
-								result.codes[l] = temp[0].textContent;
-							} else {
-								result.codes[l] += 'X' + l;
-							}
-
-						}
-						// add finish split
-						result.splits += ";";
-						temp = resultlist[k].getElementsByTagName('FinishTime');
-						if (temp.length > 0) {
-							temp2 = temp[0].textContent;
-							if (temp2.length >= 19) {
-								// format is yyyy-mm-ddThh:mm:ss and might have extra Z or +nn
-								time = rg2.getSecsFromHHMMSS(temp2.substr(11, 8));
-							} else {
-								time = 0;
-							}
-						} else {
-							time = 0;
-						}
-						result.splits += time - result.starttime;
-					}
+					this.extractIOFV3XMLResults(resultlist, result);
 					this.results.push(result);
 				}
 
@@ -1339,6 +1275,97 @@ Manager.prototype = {
 			return;
 		}
 
+	},
+
+	extractIOFV3XMLResults : function(resultlist, result) {
+		var k;
+		var temp;
+		var temp2;
+		var time;
+		var splitlist;
+		for ( k = 0; k < resultlist.length; k += 1) {
+			temp = resultlist[k].getElementsByTagName('ControlCard');
+			if (temp.length > 0) {
+				result.chipid = temp[0].textContent;
+			} else {
+				result.chipid = 0;
+			}
+			temp = resultlist[k].getElementsByTagName('Position');
+			if (temp.length > 0) {
+				result.position = temp[0].textContent;
+			} else {
+				result.position = '';
+			}
+			temp = resultlist[k].getElementsByTagName('Status');
+			if (temp.length > 0) {
+				result.status = temp[0].textContent;
+			} else {
+				result.status = '';
+			}
+			// assuming first <Time> is the total time...
+			// this one is in seconds and might even have tenths...
+			temp = resultlist[k].getElementsByTagName('Time');
+			if (temp.length > 0) {
+				result.time = rg2.formatSecsAsMMSS(parseInt(temp[0].textContent, 10));
+			} else {
+				result.time = 0;
+			}
+			temp = resultlist[k].getElementsByTagName('StartTime');
+			if (temp.length > 0) {
+				temp2 = temp[0].textContent;
+				if (temp2.length >= 19) {
+					// format is yyyy-mm-ddThh:mm:ss and might have extra Z or +nn
+					result.starttime = rg2.getSecsFromHHMMSS(temp2.substr(11, 8));
+				} else {
+					result.starttime = 0;
+				}
+			} else {
+				result.starttime = 0;
+			}
+			result.splits = "";
+			result.codes = [];
+			splitlist = resultlist[k].getElementsByTagName('SplitTime');
+			result.controls = splitlist.length;
+			this.extractIOFV3XMLSplits(splitlist, result);
+			
+			temp = resultlist[k].getElementsByTagName('FinishTime');
+			if (temp.length > 0) {
+				temp2 = temp[0].textContent;
+				if (temp2.length >= 19) {
+					// format is yyyy-mm-ddThh:mm:ss and might have extra Z or +nn
+					time = rg2.getSecsFromHHMMSS(temp2.substr(11, 8));
+				} else {
+					time = 0;
+				}
+			} else {
+				time = 0;
+			}
+			result.splits += time - result.starttime;
+		}
+	},
+	
+	extractIOFV3XMLSplits : function(splitlist, result) {
+		var l;
+		var temp;
+		for ( l = 0; l < splitlist.length; l += 1) {
+			if (l > 0) {
+				result.splits += ";";
+			}
+			temp = splitlist[l].getElementsByTagName('Time');
+			if (temp.length > 0) {
+				result.splits += temp[0].textContent;
+			} else {
+				result.splits += 0;
+			}
+			temp = splitlist[l].getElementsByTagName('ControlCode');
+			if (temp.length > 0) {
+				result.codes[l] = temp[0].textContent;
+			} else {
+				result.codes[l] += 'X' + l;
+			}
+		}
+		// add finish split
+		result.splits += ";";
 	},
 
 	readCourses : function(evt) {
@@ -1597,9 +1624,7 @@ Manager.prototype = {
 				condes = true;
 			}
 		}
-		
 		nodelist = xml.getElementsByTagName('Control');
-
 		var latlng;
 		var lat;
 		var lng;
@@ -2003,11 +2028,17 @@ Manager.prototype = {
 					this.newcontrols.controls[i].y = (this.mapHeight - ((this.newcontrols.controls[i].y - minY) * (this.mapHeight / yRange)) * scale) - (this.mapHeight * (1 - scale) * 0.5);
 				}
 			}
-			for ( i = 0; i < this.newcontrols.controls.length; i += 1) {
-				this.newcontrols.controls[i].oldX = this.newcontrols.controls[i].x;
-				this.newcontrols.controls[i].oldY = this.newcontrols.controls[i].y;
-			}
+			this.copyXYToOldXY();
 			this.newcontrols.displayAllControls();
+		}
+	},
+
+	copyXYToOldXY : function() {
+		// rebaseline control locations
+		var i;
+		for ( i = 0; i < this.newcontrols.controls.length; i += 1) {
+			this.newcontrols.controls[i].oldX = this.newcontrols.controls[i].x;
+			this.newcontrols.controls[i].oldY = this.newcontrols.controls[i].y;
 		}
 	},
 
@@ -2160,13 +2191,9 @@ Manager.prototype = {
 	},
 
 	dragEnded : function() {
-		var i;
 		if ((this.mapLoaded) && (this.newcontrols.controls.length > 0)) {
 			// rebaseline control locations
-			for ( i = 0; i < this.newcontrols.controls.length; i += 1) {
-				this.newcontrols.controls[i].oldX = this.newcontrols.controls[i].x;
-				this.newcontrols.controls[i].oldY = this.newcontrols.controls[i].y;
-			}
+			this.copyXYToOldXY();
 		}
 	},
 

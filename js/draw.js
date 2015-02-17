@@ -347,7 +347,7 @@ Draw.prototype = {
       $("#rg2-time").removeClass('valid');
       time = null;
     }
-    if ((name) && (time)) {
+    if (name && time) {
       time = time.replace(".", ":");
       this.gpstrack.routeData.name = name;
       this.gpstrack.routeData.resultid = 0;
@@ -391,6 +391,7 @@ Draw.prototype = {
   undoGPSAdjust : function() {
     // restore route from before last adjust operation
     var trk;
+    var i;
     trk = this.gpstrack;
     trk.baseX = trk.savedBaseX.slice(0);
     trk.baseY = trk.savedBaseY.slice(0);
@@ -399,7 +400,7 @@ Draw.prototype = {
     // can't use slice(0) for an array of objects so need to do deep copy in jQuery
     // see http://stackoverflow.com/questions/122102/most-efficient-way-to-clone-an-object
     trk.handles = $.extend(true, [], trk.savedHandles);
-    for (var i = 0; i < trk.handles.length; i += 1) {
+    for (i = 0; i < trk.handles.length; i += 1) {
         trk.handles[i].x = trk.handles[i].basex;
         trk.handles[i].y = trk.handles[i].basey;
       }
