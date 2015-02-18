@@ -560,7 +560,8 @@ Manager.prototype = {
 	},
 
 	confirmCreateEvent : function() {
-		var valid = this.validateData();
+		var valid;
+		valid = this.validateData();
 		if (valid !== 'OK') {
 			rg2.showWarningDialog("Data missing", valid + " Please enter all necessary information before creating the event.");
 			return;
@@ -804,9 +805,8 @@ Manager.prototype = {
 		return c;	},
 
 	confirmUpdateEvent : function() {
-		var msg = "<div id='event-update-dialog'>Are you sure you want to update this event?</div>";
 		var me = this;
-		$(msg).dialog({
+		$("<div id='event-update-dialog'>Are you sure you want to update this event?</div>").dialog({
 			title : "Confirm event update",
 			modal : true,
 			dialogClass : "no-close rg2-confirm-update-dialog",
@@ -865,9 +865,8 @@ Manager.prototype = {
 	},
 
 	confirmDeleteRoute : function() {
-		var msg = "<div id='route-delete-dialog'>This route will be permanently deleted. Are you sure?</div>";
 		var me = this;
-		$(msg).dialog({
+		$("<div id='route-delete-dialog'>This route will be permanently deleted. Are you sure?</div>").dialog({
 			title : "Confirm route delete",
 			modal : true,
 			dialogClass : "no-close rg2-confirm-route-delete-dialog",
@@ -919,10 +918,8 @@ Manager.prototype = {
 	},
 
 	confirmDeleteEvent : function() {
-
-		var msg = "<div id='event-delete-dialog'>This event will be deleted. Are you sure?</div>";
 		var me = this;
-		$(msg).dialog({
+		$("<div id='event-delete-dialog'>This event will be deleted. Are you sure?</div>").dialog({
 			title : "Confirm event delete",
 			modal : true,
 			dialogClass : "no-close rg2-confirm-delete-event-dialog",
@@ -978,17 +975,9 @@ Manager.prototype = {
 
 		var reader = new FileReader();
 		var self = this;
-
-		reader.onerror = function(evt) {
-			switch(evt.target.error.code) {
-			case evt.target.error.NOT_FOUND_ERR:
-				rg2.showWarningDialog("File not found", "Results file not found. Please select another file.");
-				break;
-			default:
-				rg2.showWarningDialog("File not found", "Results file error. Please select another file.");
-			}
+		reader.onerror = function() {
+			rg2.showWarningDialog('Results file error', 'The selected results file could not be read.');
 		};
-		
 		reader.onload = function(evt) {
 			self.results.length = 0;
 			switch (self.resultsFileFormat) {
@@ -1372,13 +1361,7 @@ Manager.prototype = {
 
 		var reader = new FileReader();
 		reader.onerror = function(evt) {
-			switch(evt.target.error.code) {
-			case evt.target.error.NOT_FOUND_ERR:
-				rg2.showWarningDialog('File not found', 'The selected file could not be found.');
-				break;
-			default:
-				rg2.showWarningDialog('File error.', 'The selected file could not be read.');
-			}
+			rg2.showWarningDialog('Course file error', 'The selected course file could not be read.');
 		};
 		var self = this;
 		reader.onload = function(evt) {
@@ -2349,17 +2332,9 @@ Manager.prototype = {
 			rg2.showWarningDialog("File read error", "Failed to open selected world file.");
 			return;
 		}
-
 		reader.onerror = function(evt) {
-			switch(evt.target.error.code) {
-			case evt.target.error.NOT_FOUND_ERR:
-				rg2.showWarningDialog("File not found", "Failed to open selected world file.");
-				break;
-			default:
-				rg2.showWarningDialog("File error", "Failed to open selected world file.");
-			}
+			rg2.showWarningDialog('World file error', 'The selected world file could not be read.');
 		};
-
 		reader.onload = function(evt) {
 			// see http://en.wikipedia.org/wiki/World_file
 			// read JGW world file

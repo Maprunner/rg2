@@ -706,28 +706,11 @@ drawScoreCourse : function() {
       rg2.ctx.globalAlpha = rg2.config.FULL_INTENSITY;
       angle = rg2.getAngle(this.scorex[0], this.scorey[0], this.scorex[1], this.scorey[1]);
       rg2.drawStart(this.scorex[0], this.scorey[0], "", angle, opt);
+      angle = [];
       for ( i = 0; i < (this.scorex.length - 1); i += 1) {
-        angle = rg2.getAngle(this.scorex[i], this.scorey[i], this.scorex[i + 1], this.scorey[i + 1]);
-        if (i === 0) {
-          c1x = this.scorex[i] + (opt.startTriangleLength * Math.cos(angle));
-          c1y = this.scorey[i] + (opt.startTriangleLength * Math.sin(angle));
-        } else {
-          c1x = this.scorex[i] + (opt.controlRadius * Math.cos(angle));
-          c1y = this.scorey[i] + (opt.controlRadius * Math.sin(angle));
-        }
-        //Assume the last control in the array is a finish
-        if (i === this.scorex.length - 2) {
-          c2x = this.scorex[i + 1] - (opt.finishOuterRadius * Math.cos(angle));
-          c2y = this.scorey[i + 1] - (opt.finishOuterRadius * Math.sin(angle));
-        } else {
-          c2x = this.scorex[i + 1] - (opt.controlRadius * Math.cos(angle));
-          c2y = this.scorey[i + 1] - (opt.controlRadius * Math.sin(angle));
-        }
-        rg2.ctx.beginPath();
-        rg2.ctx.moveTo(c1x, c1y);
-        rg2.ctx.lineTo(c2x, c2y);
-        rg2.ctx.stroke();
+        angle[i] = rg2.getAngle(this.scorex[i], this.scorey[i], this.scorex[i + 1], this.scorey[i + 1]);
       }
+      rg2.drawLinesBetweenControls(this.scorex, this.scorey, angle, this.courseid, opt);
       for (i = 1; i < (this.scorex.length - 1); i += 1) {
         rg2.drawSingleControl(this.scorex[i], this.scorey[i], i, Math.PI * 0.25, opt);
       }

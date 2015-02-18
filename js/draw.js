@@ -686,11 +686,7 @@ Draw.prototype = {
     var lockedHandle1;
     var fromTime;
     var toTime;
-    var scale1;
-    var scale2;
     var scale;
-    var oldAngle;
-    var newAngle;
     var angle;
     var x;
     var y;
@@ -705,12 +701,8 @@ Draw.prototype = {
       toTime = trk.handles[1].time + 1;
     }
     // scale and rotate track around single locked point
-    scale1 = rg2.getDistanceBetweenPoints(x1, y1, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
-    scale2 = rg2.getDistanceBetweenPoints(x2, y2, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
-    scale = scale2/scale1;
-    oldAngle = rg2.getAngle(x1, y1, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
-    newAngle = rg2.getAngle(x2, y2, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
-    angle = newAngle - oldAngle;
+    scale = rg2.getDistanceBetweenPoints(x2, y2, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey) / rg2.getDistanceBetweenPoints(x1, y1, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
+    angle = rg2.getAngle(x2, y2, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey) - rg2.getAngle(x1, y1, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
     //console.log (x1, y1, x2, y2, trk.handles[handle].basex, trk.handles[handle].basey, scale, angle, fromTime, toTime);
     for ( i = fromTime; i < toTime; i += 1) {
       x = trk.baseX[i] - trk.handles[lockedHandle1].basex;
@@ -729,23 +721,15 @@ Draw.prototype = {
   },
   
   rotateAroundLockedPoint : function(trk, x1, y1, x2, y2) {
-    var scale1;
-    var scale2;
     var scale;
-    var oldAngle;
-    var newAngle;
     var angle;
     var x;
     var y;
     var i;
     var handle = this.getLockedHandle();
     // scale and rotate track around single locked point
-    oldAngle = rg2.getAngle(x1, y1, handle.basex, handle.basey);
-    newAngle = rg2.getAngle(x2, y2, handle.basex, handle.basey);
-    angle = newAngle - oldAngle;
-    scale1 = rg2.getDistanceBetweenPoints(x1, y1, handle.basex, handle.basey);
-    scale2 = rg2.getDistanceBetweenPoints(x2, y2, handle.basex, handle.basey);
-    scale = scale2/scale1;
+    angle = rg2.getAngle(x2, y2, handle.basex, handle.basey) - rg2.getAngle(x1, y1, handle.basex, handle.basey);
+    scale = rg2.getDistanceBetweenPoints(x2, y2, handle.basex, handle.basey)/rg2.getDistanceBetweenPoints(x1, y1, handle.basex, handle.basey);
     //console.log (x1, y1, x2, y2, handle.basex, handle.basey, scale, angle);
     for ( i = 0; i < trk.baseX.length; i += 1) {
       x = trk.baseX[i] - handle.basex;

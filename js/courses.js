@@ -231,6 +231,10 @@ Courses.prototype = {
 		}
 		html += "</tr></table>";
 		return html;
+	},
+	
+	drawLinesBetweenControls : function(x, y, angle, courseid, opt) {
+		this.courses[courseid].drawLinesBetweenControls(x, y, angle, opt);
 	}
 };
 
@@ -297,7 +301,7 @@ Course.prototype = {
 			rg2.drawStart(this.x[0], this.y[0], "", this.angle[0], opt);
       // don't join up controls for score events
       if (!this.isScoreCourse) {
-				this.drawLinesBetweenControls(opt);
+				this.drawLinesBetweenControls(this.x, this.y, this.angle, opt);
 			}
 			if (this.isScoreCourse) {
         for (i = 1; i < (this.x.length); i += 1) {
@@ -316,30 +320,27 @@ Course.prototype = {
 			}
 		}
 	},
-
-	drawLinesBetweenControls : function(opt) {
-		var angle;
+	drawLinesBetweenControls : function(x, y, angle, opt) {
 		var c1x;
 		var c1y;
 		var c2x;
 		var c2y;
 		var i;
-    for ( i = 0; i < (this.x.length - 1); i += 1) {
-      angle = this.angle[i];
+    for ( i = 0; i < (x.length - 1); i += 1) {
       if (i === 0) {
-        c1x = this.x[i] + (opt.startTriangleLength * Math.cos(angle));
-        c1y = this.y[i] + (opt.startTriangleLength * Math.sin(angle));
+        c1x = x[i] + (opt.startTriangleLength * Math.cos(angle[i]));
+        c1y = y[i] + (opt.startTriangleLength * Math.sin(angle[i]));
       } else {
-        c1x = this.x[i] + (opt.controlRadius * Math.cos(angle));
-        c1y = this.y[i] + (opt.controlRadius * Math.sin(angle));
+        c1x = x[i] + (opt.controlRadius * Math.cos(angle[i]));
+        c1y = y[i] + (opt.controlRadius * Math.sin(angle[i]));
       }
       //Assume the last control in the array is a finish
       if (i === this.x.length - 2) {
-        c2x = this.x[i + 1] - (opt.finishOuterRadius * Math.cos(angle));
-        c2y = this.y[i + 1] - (opt.finishOuterRadius * Math.sin(angle));
+        c2x = x[i + 1] - (opt.finishOuterRadius * Math.cos(angle[i]));
+        c2y = y[i + 1] - (opt.finishOuterRadius * Math.sin(angle[i]));
       } else {
-        c2x = this.x[i + 1] - (opt.controlRadius * Math.cos(angle));
-        c2y = this.y[i + 1] - (opt.controlRadius * Math.sin(angle));
+        c2x = x[i + 1] - (opt.controlRadius * Math.cos(angle[i]));
+        c2y = y[i + 1] - (opt.controlRadius * Math.sin(angle[i]));
       }
 			rg2.ctx.beginPath();
 			rg2.ctx.moveTo(c1x, c1y);

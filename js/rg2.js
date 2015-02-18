@@ -1811,6 +1811,10 @@ var rg2 = ( function() {
     function getMetresPerPixel() {
       return events.getMetresPerPixel();
     }
+    
+    function drawLinesBetweenControls(x, y, angle, courseid, opt) {
+      courses.drawLinesBetweenControls(x, y, angle, courseid, opt);
+    }
         
     return {
       // functions and variables available elsewhere
@@ -1869,7 +1873,8 @@ var rg2 = ( function() {
       formatSecsAsMMSS: formatSecsAsMMSS,
       getLatLonDistance: getLatLonDistance,
       getControlCount: getControlCount,
-      getMetresPerPixel: getMetresPerPixel
+      getMetresPerPixel: getMetresPerPixel,
+      drawLinesBetweenControls: drawLinesBetweenControls
     };
 
   }());

@@ -37,16 +37,10 @@ GPSTrack.prototype = {
 		var reader = new FileReader();
     this.fileName = evt.target.files[0].name;
     
-		reader.onerror = function(evt) {
-			switch(evt.target.error.code) {
-				case evt.target.error.NOT_FOUND_ERR:
-          rg2.showWarningDialog('GPS file problem', 'File not found');
-					break;
-				default:
-          rg2.showWarningDialog('GPS file problem', 'An error occurred. Please check you have selected the correct file.');
-			}
+		reader.onerror = function() {
+			rg2.showWarningDialog('GPS file problem', 'Unable to open GPS file.');
 		};
-
+		
 		var self = this;
 
 		reader.onload = function(evt) {
@@ -128,30 +122,32 @@ GPSTrack.prototype = {
 	},
 
 	processGPSTrack : function() {
+		var minX;
+		var maxX;
+		var minY;
+		var maxY;
+		var i;
+		var w;
+		var AEDB;
+		var xCorrection;
+		var yCorrection;
 		if (rg2.mapIsGeoreferenced()) {
 			// translate lat/lon to x,y based on world file info: see http://en.wikipedia.org/wiki/World_file
-			var w = rg2.getWorldFile();
+			w = rg2.getWorldFile();
 			// simplify calculation a little
-			var AEDB = (w.A * w.E) - (w.D * w.B);
-			var xCorrection = (w.B * w.F) - (w.E * w.C);
-			var yCorrection = (w.D * w.C) - (w.A * w.F);
-			var i;
+			AEDB = (w.A * w.E) - (w.D * w.B);
+			xCorrection = (w.B * w.F) - (w.E * w.C);
+			yCorrection = (w.D * w.C) - (w.A * w.F);
 			for ( i = 0; i < this.lat.length; i += 1) {
 				this.routeData.x[i] = Math.round(((w.E * this.lon[i]) - (w.B * this.lat[i]) + xCorrection) / AEDB);
 				this.routeData.y[i] = Math.round(((-1 * w.D * this.lon[i]) + (w.A * this.lat[i]) + yCorrection) / AEDB);
 			}
 			// find bounding box for track
-			var minX = this.routeData.x[0];
-			var maxX = this.routeData.x[0];
-			var minY = this.routeData.y[0];
-			var maxY = this.routeData.y[0];
+			minX = Math.min.apply(Math, this.routeData.x);
+			maxX = Math.max.apply(Math, this.routeData.x);
+			minY = Math.min.apply(Math, this.routeData.y);
+			maxY = Math.max.apply(Math, this.routeData.y);
 
-			for ( i = 1; i < this.routeData.x.length; i += 1) {
-				maxX = Math.max(maxX, this.routeData.x[i]);
-				maxY = Math.max(maxY, this.routeData.y[i]);
-				minX = Math.min(minX, this.routeData.x[i]);
-				minY = Math.min(minY, this.routeData.y[i]);
-			}
 			// check we are somewhere on the map
 			var mapSize = rg2.getMapSize();
 			if ((maxX < 0) || (minX > mapSize.width) || (minY > mapSize.height) || (maxY < 0)) {
@@ -168,37 +164,39 @@ GPSTrack.prototype = {
 		}
 		this.baseX = this.routeData.x.slice(0);
 		this.baseY = this.routeData.y.slice(0);
-		// add handles at start and finish of route
-		var h0 = {};
-    var h1 = {};
-		h0.x = this.baseX[0];
-    h0.y = this.baseY[0];
-    h0.basex = h0.x;
-    h0.basey = h0.y;
-    h0.locked = false;
-    h0.time = 0;
-    this.handles.push(h0);
-    h1.x = this.baseX[this.baseX.length - 1];
-    h1.y = this.baseY[this.baseY.length - 1];
-    h1.basex = h1.x;
-    h1.basey = h1.y;
-    h1.locked = false;
-    h1.time = this.baseY.length - 1;
-    this.handles.push(h1);
+		this.addStartAndFinishHandles();
 		this.routeData.time = this.time;
 		this.fileLoaded = true;
 		$("#btn-save-gps-route").button("enable");
 		rg2.redraw(false);
 	},
+	
+	addStartAndFinishHandles : function() {
+		// add handles at start and finish of route
+		var h = {};
+		h.x = this.baseX[0];
+    h.y = this.baseY[0];
+    h.basex = h.x;
+    h.basey = h.y;
+    h.locked = false;
+    h.time = 0;
+    this.handles.push(h);
+    h.x = this.baseX[this.baseX.length - 1];
+    h.y = this.baseY[this.baseY.length - 1];
+    h.basex = h.x;
+    h.basey = h.y;
+    h.locked = false;
+    h.time = this.baseY.length - 1;
+    this.handles.push(h);
+	},
 
 	fitTrackInsideCourse : function() {
 		// fit track to within limits of course
 		// find bounding box for track
-		var maxLat = this.lat[0];
-		var maxLon = this.lon[0];
-		var minLat = this.lat[0];
-		var minLon = this.lon[0];
-
+		var maxLat;
+		var maxLon;
+		var minLat;
+		var minLon;
     var minControlX;
     var maxControlX;
     var minControlY;
@@ -206,11 +204,13 @@ GPSTrack.prototype = {
     var size;
 		var x;
 		var y;
+
+		maxLat = Math.max.apply(Math, this.lat);
+		maxLon = Math.max.apply(Math, this.lon);
+		minLat = Math.min.apply(Math, this.lat);
+		minLon = Math.min.apply(Math, this.lon);
+
 		for (var i = 1; i < this.lat.length; i += 1) {
-			maxLat = Math.max(maxLat, this.lat[i]);
-			maxLon = Math.max(maxLon, this.lon[i]);
-			minLat = Math.min(minLat, this.lat[i]);
-			minLon = Math.min(minLon, this.lon[i]);
 			x = this.lon[i] - this.lon[0];
 			y = this.lat[i] - this.lat[0];
 		}
@@ -218,17 +218,11 @@ GPSTrack.prototype = {
 		var controlx = rg2.getControlX();
 		var controly = rg2.getControlY();
 
-		// find bounding box for course
-    minControlX = controlx[0];
-		maxControlX = controlx[0];
-		minControlY = controly[0];
-		maxControlY = controly[0];
-		for ( i = 1; i < controlx.length; i += 1) {
-			maxControlX = Math.max(maxControlX, controlx[i]);
-			maxControlY = Math.max(maxControlY, controly[i]);
-			minControlX = Math.min(minControlX, controlx[i]);
-			minControlY = Math.min(minControlY, controly[i]);
-		}
+    minControlX = Math.min.apply(Math, controlx);
+		maxControlX = Math.max.apply(Math, controlx);
+		minControlY = Math.min.apply(Math, controly);
+		maxControlY = Math.max.apply(Math, controly);
+    
     // issue #60: allow for no controls or just a few in a small area
     // 100 is an arbitrary but sensible cut-off
     if (((maxControlY - minControlY) < 100) || ((maxControlX - minControlX) < 100)) {
