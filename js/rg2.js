@@ -21,7 +21,7 @@
 /*global Course:false */
 /*global setTimeout:false */
 /*global localStorage:false */
-var rg2 = ( function() {
+var rg2 = ( function(window, $) {
     'use strict';
     var canvas = $("#rg2-map-canvas")[0];
     var ctx = canvas.getContext('2d');
@@ -240,32 +240,22 @@ var rg2 = ( function() {
 
     function init() {
       $("#rg2-container").hide();
-     
       // cache jQuery things we use a lot
       $rg2infopanel = $("#rg2-info-panel");
       $rg2eventtitle = $("#rg2-event-title");
-      
       $.ajaxSetup({ cache: false });
-
       if ($('#rg2-manage-login').length !== 0) {
         managing = true;
       } else {
         managing = false;
       }
-
-      requestedHash = new RequestedHash();
-      // check if a specific event has been requested
-      if ((window.location.hash) && (!managing)) {
-				requestedHash.parseHash(window.location.hash);
-      }
-
       setLanguageOptions();
       setConfigOptions();
       initialiseButtons();
       initialiseSpinners();
       configureUI();
       translateFixedText();
-      
+
       map = new Image();
       events = new Events();
       courses = new Courses();
@@ -279,6 +269,34 @@ var rg2 = ( function() {
       dragged = true;
       infoPanelMaximised = true;
 
+      if (managing) {
+        setManagerOptions();
+        mapLoadingText = "";
+      } else {
+        // translated when displayed
+        mapLoadingText = "Select an event";
+      }
+      setUpCanvas();
+      // disable right click menu: may add our own later
+      $(document).bind("contextmenu", function(evt) {
+        evt.preventDefault();
+      });
+      startDisplayingInfo();
+    }
+    
+    function startDisplayingInfo() {
+      requestedHash = new RequestedHash();
+      // check if a specific event has been requested
+      if ((window.location.hash) && (!managing)) {
+        requestedHash.parseHash(window.location.hash);
+      }
+      // load event details
+      loadEventList();
+      // slight delay looks better than going straight in....
+      setTimeout(function() {$("#rg2-container").show();}, 500);
+    }
+    
+    function configureUI() {
       // disable tabs until we have loaded something
       $rg2infopanel.tabs({
         disabled : [config.TAB_COURSES, config.TAB_RESULTS, config.TAB_DRAW],
@@ -288,30 +306,6 @@ var rg2 = ( function() {
           tabActivated();
         }
       });
-
-      if (managing) {
-        setManagerOptions();
-        mapLoadingText = "";
-      } else {
-        // translated when displayed
-        mapLoadingText = "Select an event";
-      }
-     
-      setUpCanvas();
-
-      // disable right click menu: may add our own later
-      $(document).bind("contextmenu", function(evt) {
-        evt.preventDefault();
-      });
-      
-      // load event details
-      loadEventList();
-
-      // slight delay looks better than going straight in....
-      setTimeout(function() {$("#rg2-container").show();}, 500);
-    }
-    
-    function configureUI() {
       $("#rg2-result-list").accordion({
         collapsible : true,
         heightStyle : "content"
@@ -323,16 +317,21 @@ var rg2 = ( function() {
           animation.clockSliderMoved(ui.value);
         }
       });
-      $("#rg2-header-container").css("color", rg2Config.header_text_colour);
-      $("#rg2-header-container").css("background", rg2Config.header_colour);
+      $("#rg2-header-container").css("color", rg2Config.header_text_colour).css("background", rg2Config.header_colour);
       $("#rg2-about-dialog").hide();
       $("#rg2-splits-display").hide();
       $("#rg2-track-names").hide();
       $("#rg2-add-new-event").hide();
-      
       $("#rg2-load-progress-bar").progressbar({value: false});
       $("#rg2-load-progress-label").text("");
       $("#rg2-load-progress").hide();
+      $("#rg2-option-controls").hide();
+      $("#rg2-animation-controls").hide();
+      $("#rg2-splitsbrowser").hide();
+      setUIEventHandlers();
+    }
+    
+    function setUIEventHandlers() {
       $("#rg2-resize-info").click(function() {
         resizeInfoDisplay();
       });
@@ -360,7 +359,6 @@ var rg2 = ( function() {
           $('#rg2-new-comments').val("");
         }
       });
-      $("#rg2-option-controls").hide();
       $("#chk-snap-toggle").prop('checked', options.snap).click(function(event) {
         if (event.target.checked) {
           options.snap = true;
@@ -387,76 +385,49 @@ var rg2 = ( function() {
           }
         }
       });
-      $("#rg2-animation-controls").hide();
       $("#rg2-load-gps-file").change(function(evt) {
         drawing.uploadGPS(evt);
       });
-      $("#rg2-splitsbrowser").hide();
     }
     
     function initialiseButtons() {
-      $("#btn-save-route").button().button("disable");
-      $("#btn-save-gps-route").button().button("disable");
-      $("#btn-reset-drawing").button().button("disable");
-      $("#btn-undo").button().button("disable");
-      $("#btn-undo-gps-adjust").button().button("disable");
-      $("#rg2-load-gps-file").button().button("disable");
-      $("#btn-three-seconds").button().button("disable");
-      $("#btn-mass-start").addClass('active');
-      $("#btn-real-time").removeClass('active');
       $("#btn-about").click(function() {
         displayAboutDialog();
-      });
-      $("#btn-mass-start").click(function() {
-        animation.setReplayType(config.MASS_START_REPLAY);
-      });
-      $("#btn-real-time").click(function() {
-        animation.setReplayType(config.REAL_TIME_REPLAY);
-      });
-      $("#btn-options").click(function() {
-        displayOptionsDialog();
-      });
-      $("#btn-save-route").button().click(function() {
-        drawing.saveRoute();
-      });
-      $("#btn-save-gps-route").button().click(function() {
-        drawing.saveGPSRoute();
-      });
-      $("#btn-move-all").prop('checked', false);
-      $("#btn-undo").click(function() {
-        drawing.undoLastPoint();
-      });
-      $("#btn-undo-gps-adjust").click(function() {
-        drawing.undoGPSAdjust();
-      });
-      $("#btn-reset-drawing").click(function() {
-        drawing.resetDrawing();
-      });
-      $("#btn-three-seconds").click(function() {
-        drawing.waitThreeSeconds();
-      });
-      $("#btn-zoom-in").click(function() {
-        zoom(1);
-      });
-      $("#btn-reset").click(function() {
-        resetMapState();
-      });
-      $("#btn-zoom-out").click(function() {
-        zoom(-1);
-      });
-      $("#btn-start-stop").click(function() {
-        animation.toggleAnimation();
       });
       $("#btn-faster").click(function() {
         animation.goFaster();
       });
-      $("#btn-slower").click(function() {
-        animation.goSlower();
+      $("#btn-full-tails").prop('checked', false).click(function(event) {
+        if (event.target.checked) {
+          animation.setFullTails(true);
+          $("#spn-tail-length").spinner("disable");
+        } else {
+          animation.setFullTails(false);
+          $("#spn-tail-length").spinner("enable");
+        }
       });
-      $("#btn-toggle-names").click(function() {
-        animation.toggleNameDisplay();
-        redraw(false);
-      }).hide();
+      $("#btn-mass-start").addClass('active').click(function() {
+        animation.setReplayType(config.MASS_START_REPLAY);
+      });
+      $("#btn-move-all").prop('checked', false);
+      $("#btn-options").click(function() {
+        displayOptionsDialog();
+      });
+      $("#btn-real-time").removeClass('active').click(function() {
+        animation.setReplayType(config.REAL_TIME_REPLAY);
+      });
+      $("#btn-reset").click(function() {
+        resetMapState();
+      });
+      $("#btn-reset-drawing").button().button("disable").click(function() {
+        drawing.resetDrawing();
+      });
+      $("#btn-save-gps-route").button().button("disable").click(function() {
+        drawing.saveGPSRoute();
+      });
+      $("#btn-save-route").button().button("disable").click(function() {
+        drawing.saveRoute();
+      });
       $("#btn-show-splits").click(function() {
         $("#rg2-splits-table")
         .empty()
@@ -471,22 +442,57 @@ var rg2 = ( function() {
           }
         });
       }).hide();
+      $("#btn-slower").click(function() {
+        animation.goSlower();
+      });
+      $("#btn-start-stop").click(function() {
+        animation.toggleAnimation();
+      });
+      $("#btn-three-seconds").button().click(function() {
+        drawing.waitThreeSeconds();
+      }).button("disable");
       $("#btn-toggle-controls").click(function() {
         controls.toggleControlDisplay();
         redraw(false);
       }).hide();
-      $("#btn-full-tails").prop('checked', false).click(function(event) {
-        if (event.target.checked) {
-          animation.setFullTails(true);
-          $("#spn-tail-length").spinner("disable");
-        } else {
-          animation.setFullTails(false);
-          $("#spn-tail-length").spinner("enable");
-        }
+      $("#btn-toggle-names").click(function() {
+        animation.toggleNameDisplay();
+        redraw(false);
+      }).hide();
+      $("#btn-undo").button().button("disable").click(function() {
+        drawing.undoLastPoint();
       });
+      $("#btn-undo-gps-adjust").button().button("disable").click(function() {
+        drawing.undoGPSAdjust();
+      });
+      $("#btn-zoom-in").click(function() {
+        zoom(1);
+      });
+      $("#btn-zoom-out").click(function() {
+        zoom(-1);
+      });
+      $("#rg2-load-gps-file").button().button("disable");
     }
     
     function initialiseSpinners() {
+      $("#spn-control-circle").spinner({
+        max : 50,
+        min : 3,
+        step: 1,
+        spin : function(event, ui) {
+          options.circleSize = ui.value;
+          redraw(false);
+        }
+      }).val(options.circleSize);
+      $("#spn-course-width").spinner({
+        max : 10,
+        min : 1,
+        step: 0.5,
+        spin : function(event, ui) {
+          options.courseWidth = ui.value;
+          redraw(false);
+        }
+      }).val(options.courseWidth);
       $("#spn-map-intensity").spinner({
         max : 100,
         min : 0,
@@ -497,16 +503,6 @@ var rg2 = ( function() {
           redraw(false);
         }
       }).val(options.mapIntensity);
-            $("#spn-route-intensity").spinner({
-        max : 100,
-        min : 0,
-        step: 10,
-        numberFormat: "n",
-        spin : function(event, ui) {
-          options.routeIntensity = ui.value;
-          redraw(false);
-        }
-      }).val(options.routeIntensity);
       $("#spn-name-font-size").spinner({
         max : 30,
         min : 5,
@@ -517,15 +513,16 @@ var rg2 = ( function() {
           redraw(false);
         }
       }).val(options.replayFontSize);
-      $("#spn-course-width").spinner({
-        max : 10,
-        min : 1,
-        step: 0.5,
+      $("#spn-route-intensity").spinner({
+        max : 100,
+        min : 0,
+        step: 10,
+        numberFormat: "n",
         spin : function(event, ui) {
-          options.courseWidth = ui.value;
+          options.routeIntensity = ui.value;
           redraw(false);
         }
-      }).val(options.courseWidth);
+      }).val(options.routeIntensity);
       $("#spn-route-width").spinner({
         max : 10,
         min : 1,
@@ -535,15 +532,6 @@ var rg2 = ( function() {
           redraw(false);
         }
       }).val(options.routeWidth);
-      $("#spn-control-circle").spinner({
-        max : 50,
-        min : 3,
-        step: 1,
-        spin : function(event, ui) {
-          options.circleSize = ui.value;
-          redraw(false);
-        }
-      }).val(options.circleSize);
       // set default to 0 secs = no tails
       $("#spn-tail-length").spinner({
         max : 600,
@@ -590,12 +578,11 @@ var rg2 = ( function() {
       $("#rg2-edit-tab").hide();
       $("#rg2-map-tab").hide();
       $("#rg2-manage-login").show();
-      $rg2infopanel.tabs("disable", config.TAB_EVENTS);
       $("#rg2-draw-tab").hide();
       $("#rg2-results-tab").hide();
       $("#rg2-courses-tab").hide();
       $("#rg2-events-tab").hide();
-      $rg2infopanel.tabs("option", "active", config.TAB_LOGIN);
+      $rg2infopanel.tabs("disable", config.TAB_EVENTS).tabs("option", "active", config.TAB_LOGIN);
     }
     
     function setUpCanvas() {
@@ -1877,6 +1864,6 @@ var rg2 = ( function() {
       drawLinesBetweenControls: drawLinesBetweenControls
     };
 
-  }());
+  }(window, window.jQuery));
 
 $(document).ready(rg2.init);
