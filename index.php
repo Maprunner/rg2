@@ -246,6 +246,28 @@ $languages .= '},'.PHP_EOL;
     </div>
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
 <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
+<?php if ($debug) { ?>
+<script src='<?php echo $source_url . "/js/rg2.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/events.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/event.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/results.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/result.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/gpstrack.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/controls.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/control.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/courses.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/course.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/draw.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/animation.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/runner.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/map.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/plugins.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/lib/he.js"; ?>'></script><?php } else { ?>
+<script src='<?php echo $source_url . "/js/rg2all.min.js"; ?>'></script><?php } ?>  
+<?php if ($manager) { ?><?php if ($debug) { ?>
+<script src='<?php echo $source_url . "/js/manager.js"; ?>'></script><?php } else {?>
+<script src='<?php echo $source_url . "/js/rg2manager.min.js"; ?>'></script><?php } ?>
+<script src='<?php echo $source_url . "/js/lib/proj4js-compressed.js"; ?>'></script><?php } ?>
 <script type="text/javascript">
 var rg2Config = {
 json_url: "<?php echo $json_url; ?>",
@@ -267,23 +289,7 @@ epsg_params: "<?php echo EPSG_PARAMS; ?>",
 <?php echo $languages; ?>
 <?php echo $dictionary; ?>
 };
+<?php echo "$(document).ready(rg2.init);" ?>
 </script>
-<?php if ($debug) { ?>
-<script src='<?php echo $source_url . "/js/events.js"; ?>'></script>
-<script src='<?php echo $source_url . "/js/results.js"; ?>'></script>
-<script src='<?php echo $source_url . "/js/gpstrack.js"; ?>'></script>
-<script src='<?php echo $source_url . "/js/controls.js"; ?>'></script>
-<script src='<?php echo $source_url . "/js/courses.js"; ?>'></script>
-<script src='<?php echo $source_url . "/js/draw.js"; ?>'></script>
-<script src='<?php echo $source_url . "/js/animation.js"; ?>'></script>
-<script src='<?php echo $source_url . "/js/runner.js"; ?>'></script>
-<script src='<?php echo $source_url . "/js/plugins.js"; ?>'></script>
-<script src='<?php echo $source_url . "/js/lib/he.js"; ?>'></script>
-<script src='<?php echo $source_url . "/js/rg2.js"; ?>'></script><?php } else { ?>
-<script src='<?php echo $source_url . "/js/rg2all.min.js"; ?>'></script><?php } ?>  
-<?php if ($manager) { ?><?php if ($debug) { ?>
-<script src='<?php echo $source_url . "/js/manager.js"; ?>'></script><?php } else {?>
-<script src='<?php echo $source_url . "/js/rg2manager.min.js"; ?>'></script><?php } ?>
-<script src='<?php echo $source_url . "/js/lib/proj4js-compressed.js"; ?>'></script><?php } ?>
 </body>
 </html>

@@ -1,12 +1,12 @@
 module.exports = function(grunt) {
-  var jsFileList = ['js/rg2.js', 'js/animation.js', 'js/controls.js', 'js/courses.js', 'js/draw.js', 'js/events.js', 'js/gpstrack.js',
-   'js/plugins.js', 'js/results.js', 'js/runner.js', 'js/lib/he.js'];
+  var jsFileList = ['js/rg2.js', 'js/animation.js', 'js/controls.js', 'js/courses.js', 'js/draw.js', 'js/event.js', 'js/events.js', 'js/gpstrack.js',
+   'js/plugins.js', 'js/results.js', 'js/runner.js', 'js/lib/he.js', 'js/course.js', 'js/result.js', 'js/map.js'];
 
   var cssFileList = ['css/rg2.css'];
   
-  // don't jsHint he.js
-  var jsHintList = ['js/rg2.js', 'js/animation.js', 'js/controls.js', 'js/courses.js', 'js/draw.js', 'js/events.js', 'js/gpstrack.js',
-   'js/plugins.js', 'js/results.js', 'js/runner.js'];
+  // don't jsHint he.js, plugins.js
+  var jsHintList = ['js/rg2.js', 'js/animation.js', 'js/controls.js', 'js/courses.js', 'js/draw.js', 'js/event.js', 'js/events.js', 'js/gpstrack.js',
+   'js/results.js', 'js/runner.js', 'js/course.js', 'js/result.js', 'js/map.js'];
    
   var jsManagerSrc = ['js/manager.js'];
 
@@ -683,6 +683,30 @@ module.exports = function(grunt) {
           to : "('RG2VERSION', '<%= pkg.version %>')"
         }]
       }
+    },
+    
+    jslint: {
+      rg2: {
+        src: jsHintList,
+        exclude: [],
+        directives: {
+          indent: 2,
+          // allow browser variables (window...)
+          browser: true,
+          // don't require use strict
+          sloppy: true,
+          // allow vars on multiple lines
+          vars: true,
+          // allow TODO comments
+          todo: true,
+          // allow console and alert
+          devel: true,
+          predef: ['$', 'FileReader']
+        },
+        options: {
+          failOnError: false
+        }
+      }
     }
   });
 
@@ -694,7 +718,7 @@ module.exports = function(grunt) {
   // increment minor version number: do anything else by editting package.json by hand
   grunt.registerTask('bump', ['bumpup']);
 
-  grunt.registerTask('build', ['csslint', 'newer:jshint:all', 'newer:concat:js', 'newer:uglify', 'build-manager' ]);
+  grunt.registerTask('build', ['csslint', 'jslint:rg2', 'newer:jshint:all', 'newer:concat:js', 'newer:uglify', 'build-manager' ]);
   
   grunt.registerTask('build-manager', ['newer:jshint:manager', 'newer:uglify:manager' ]);
 
