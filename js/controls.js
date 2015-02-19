@@ -1,5 +1,4 @@
 /*global rg2:false */
-/*global t:false */
 (function () {
   function Controls() {
     this.controls = [];
@@ -11,8 +10,8 @@
     Constructor : Controls,
 
     addControl : function (code, x, y) {
-      var newCode = true;
-      var i;
+      var i, newCode;
+      newCode = true;
       for (i = 0; i < this.controls.length; i += 1) {
         if (this.controls[i].code === code) {
           newCode = false;
@@ -133,9 +132,10 @@
     },
     drawStart : function (startx, starty, code, angle, opt) {
       //Draw the white halo around the start triangle
-      var x = [];
-      var y = [];
-      var DEGREES_120 = (2 * Math.PI / 3);
+      var x, y, DEGREES_120;
+      x = [];
+      y = [];
+      DEGREES_120 = (2 * Math.PI / 3);
       angle = angle + (Math.PI / 2);
       rg2.ctx.lineCap = 'round';
       rg2.ctx.strokeStyle = "white";

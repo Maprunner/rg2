@@ -3,8 +3,7 @@
 // animated runner details
 (function () {
   function Runner(resultid) {
-    var res;
-    var course;
+    var res, course, control, lastPointIndex, ind;
     res = rg2.results.getFullResult(resultid);
     this.name = res.name;
     this.initials = res.initials;
@@ -37,9 +36,6 @@
     this.legTrackDistance = [];
     this.cumulativeTrackDistance = [];
     this.cumulativeDistance = [];
-    var control;
-    var lastPointIndex;
-    var ind;
     this.cumulativeDistance[0] = 0;
     if (res.hasValidTrack) {
       this.expandTrack(res.trackx, res.tracky, res.xysecs);
@@ -77,20 +73,13 @@
     expandTrack : function (itemsx, itemsy, itemstime) {
       // gets passed arrays of x, y and time
       // iterate over item which will be xy or controls
-      var item;
-      var timeatprevitem = 0;
-      var timeatitem = 0;
-      var diffx;
-      var diffy;
-      var difft;
-      var t;
-      var diffdist;
-      var tox;
-      var toy;
-      var fromx = itemsx[0];
-      var fromy = itemsy[0];
-      var fromdist = 0;
-      var dist = 0;
+      var item, diffx, diffy, difft, t, diffdist, tox, toy, dist, timeatprevitem, timeatitem, fromx, fromy, fromdist;
+      timeatprevitem = 0;
+      timeatitem = 0;
+      fromx = itemsx[0];
+      fromy = itemsy[0];
+      fromdist = 0;
+      dist = 0;
       this.x[0] = itemsx[0];
       this.y[0] = itemsy[0];
       for (item = 1; item < itemstime.length; item += 1) {

@@ -87,8 +87,8 @@
     },
 
     getAnimationNames : function () {
-      var html = "";
-      var i;
+      var i, html;
+      html = "";
       if (this.runners.length < 1) {
         return html;
       }
@@ -99,13 +99,7 @@
     },
 
     getSplitsTable : function () {
-      var html;
-      var i;
-      var j;
-      var run;
-      var metresPerPixel;
-      var units;
-
+      var html, i, j, run, metresPerPixel, units, maxControls, legSplit, prevControlSecs;
       if (this.runners.length < 1) {
         return "<p>Select runners on Results tab.</p>";
       }
@@ -117,10 +111,9 @@
         metresPerPixel = 1;
         units = "pixels";
       }
-
-      var maxControls = 0;
-      var legSplit = [];
-      var prevControlSecs = 0;
+      maxControls = 0;
+      legSplit = [];
+      prevControlSecs = 0;
       // find maximum number of controls to set size of table
       for (i = 0; i < this.runners.length; i += 1) {
         if (this.runners[i].splits.length > maxControls) {
@@ -140,13 +133,13 @@
         prevControlSecs = 0;
         html += "<tr class='splitsname-row'><td>" + run.coursename + "</td><td>" + run.name + "</td>";
         for (j = 1; j < run.splits.length; j += 1) {
-          html += "<td>" + rg2.formatSecsAsMMSS(run.splits[j]) + "</td>";
+          html += "<td>" + rg2.utils.formatSecsAsMMSS(run.splits[j]) + "</td>";
           legSplit[j] = run.splits[j] - prevControlSecs;
           prevControlSecs = run.splits[j];
         }
         html += "</tr><tr class='splitstime-row'><td></td><td></td>";
         for (j = 1; j < run.splits.length; j += 1) {
-          html += "<td>" + rg2.formatSecsAsMMSS(legSplit[j]) + "</td>";
+          html += "<td>" + rg2.utils.formatSecsAsMMSS(legSplit[j]) + "</td>";
         }
         if (isNaN(run.cumulativeTrackDistance[run.cumulativeTrackDistance.length - 1])) {
           html += "</tr><tr class='splitsdistance-row'><td></td><td>--</td>";
@@ -326,7 +319,7 @@
     },
 
     runAnimation : function (fromTimer) {
-      var text;
+      var text, opt, runner, timeOffset, i, t, tailStartTimeSecs;
       // only increment time if called from the timer and we haven't got to the end already
       if (this.realTime) {
         if (this.animationSecs < this.latestFinishSecs) {
@@ -341,15 +334,11 @@
           }
         }
       }
+      opt = rg2.getReplayDetails();
       $("#rg2-clock-slider").slider("value", this.animationSecs);
       $("#rg2-clock").text(this.formatSecsAsHHMMSS(this.animationSecs));
-      rg2.ctx.lineWidth = rg2.getRouteWidth();
+      rg2.ctx.lineWidth = opt.routeWidth;
       rg2.ctx.globalAlpha = 1.0;
-      var runner;
-      var timeOffset;
-      var i;
-      var t;
-      var tailStartTimeSecs;
       if (this.useFullTails) {
         tailStartTimeSecs = this.startSecs + 1;
       } else {
@@ -370,7 +359,7 @@
           }
         }
         rg2.ctx.strokeStyle = runner.colour;
-        rg2.ctx.globalAlpha = rg2.getRouteIntensity();
+        rg2.ctx.globalAlpha = opt.routeIntensity;
         rg2.ctx.beginPath();
         rg2.ctx.moveTo(runner.x[tailStartTimeSecs - timeOffset], runner.y[tailStartTimeSecs - timeOffset]);
 
@@ -393,7 +382,7 @@
         rg2.ctx.fill();
         if (this.displayNames) {
           rg2.ctx.fillStyle = "black";
-          rg2.ctx.font = rg2.getReplayFontSize() + 'pt Arial';
+          rg2.ctx.font = opt.replayFontSize + 'pt Arial';
           rg2.ctx.globalAlpha = rg2.config.FULL_INTENSITY;
           rg2.ctx.textAlign = "left";
           if (this.displayInitials) {
@@ -411,9 +400,8 @@
 
     // see if all runners have reached stop control and reset if they have
     checkForStopControl : function (currentTime) {
-      var allAtControl = true;
-      var i;
-      var legTime;
+      var i, legTime, allAtControl;
+      allAtControl = true;
       // work out if everybody has got to the next control
       for (i = 0; i < this.runners.length; i += 1) {
         legTime = this.runners[i].splits[this.massStartControl + 1] - this.runners[i].splits[this.massStartControl];
@@ -450,10 +438,8 @@
 
     // returns seconds as hh:mm:ss
     formatSecsAsHHMMSS : function (time) {
-      var hours = Math.floor(time / 3600);
-      var formattedtime;
-      var minutes;
-      var seconds;
+      var formattedtime, minutes, seconds, hours;
+      hours = Math.floor(time / 3600);
       if (hours < 10) {
         formattedtime = "0" + hours + ":";
       } else {

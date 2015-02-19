@@ -19,8 +19,9 @@
     },
 
     getEventInfo : function (id) {
-      var realid = this.getEventIDForKartatID(id);
-      var info = this.events[realid];
+      var realid, info;
+      realid = this.getEventIDForKartatID(id);
+      info = this.events[realid];
       info.id = realid;
       info.controls = rg2.controls.getControlCount();
       return info;
@@ -72,10 +73,9 @@
 
     createEventEditDropdown : function () {
       $("#rg2-event-selected").empty();
-      var dropdown = document.getElementById("rg2-event-selected");
-      var i;
-      var len;
-      var opt = document.createElement("option");
+      var i, len, opt, dropdown;
+      dropdown = document.getElementById("rg2-event-selected");
+      opt = document.createElement("option");
       opt.value = null;
       opt.text = 'No event selected';
       dropdown.options.add(opt);
@@ -107,25 +107,19 @@
     },
 
     getMetresPerPixel : function () {
-      var lat1;
-      var lat2;
-      var lon1;
-      var lon2;
-      var size;
-      var pixels;
-      var w;
+      var lat1, lat2, lon1, lon2, size, pixels, w;
       if (this.activeEventID === null) {
         // 1 is as harmless as anything else in this serror situation
         return 1;
       }
       size = rg2.getMapSize();
-      pixels = rg2.getDistanceBetweenPoints(0, 0, size.width, size.height);
+      pixels = rg2.utils.getDistanceBetweenPoints(0, 0, size.width, size.height);
       w = this.events[this.activeEventID].worldFile;
       lon1 = w.C;
       lat1 = w.F;
       lon2 = (w.A * size.width) + (w.B * size.height) + w.C;
       lat2 = (w.D * size.width) + (w.E * size.height) + w.F;
-      return (rg2.getLatLonDistance(lat1, lon1, lat2, lon2)) / pixels;
+      return (rg2.utils.getLatLonDistance(lat1, lon1, lat2, lon2)) / pixels;
     },
 
     getWorldFile : function () {
@@ -133,9 +127,8 @@
     },
 
     formatEventsAsMenu : function () {
-      var title;
-      var html = '';
-      var i;
+      var title, html, i;
+      html = '';
       for (i = this.events.length - 1; i >= 0; i -= 1) {
         title = rg2.t(this.events[i].type) + ": " + this.events[i].date;
         if (this.events[i].georeferenced) {

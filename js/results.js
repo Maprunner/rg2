@@ -8,16 +8,8 @@
     Constructor : Results,
 
     addResults : function (data, isScoreEvent) {
-      var i;
-      var j;
-      var result;
-      var id;
-      var baseresult;
-      var variant;
-      var codes;
-      var scorex;
-      var scorey;
-      var l = data.length;
+      var i, j, l, result, id, baseresult, variant, codes, scorex, scorey;
+      l = data.length;
       // extract score course details if necessary
       if (isScoreEvent) {
         codes = [];
@@ -70,8 +62,8 @@
 
     // lists all runners on a given course
     getAllRunnersForCourse : function (courseid) {
-      var i;
-      var runners = [];
+      var i, runners;
+      runners = [];
       for (i = 0; i < this.results.length; i += 1) {
         if (this.results[i].courseid === courseid) {
           runners.push(i);
@@ -83,16 +75,7 @@
     // read through results to get list of all controls on score courses
     // since there is no master list of controls!
     generateScoreCourses : function () {
-      var i;
-      var j;
-      var k;
-      var res;
-      var courses;
-      var codes;
-      var x;
-      var y;
-      var newControl;
-      var courseid;
+      var i, j, k, res, courses, codes, x, y, newControl, courseid;
       courses = [];
       codes = [];
       x = [];
@@ -135,11 +118,7 @@
     },
 
     generateLegPositions : function () {
-      var i;
-      var j;
-      var k;
-      var courses;
-      var controls;
+      var i, j, k, courses, controls, pos, p;
       courses = [];
       controls = [];
       for (i = 0; i < this.results.length; i += 1) {
@@ -150,8 +129,7 @@
         }
 
       }
-      var pos = [];
-      var p;
+      pos = [];
       for (i = 0; i < courses.length; i += 1) {
         //console.log("Generate positions for course " + courses[i]);
 
@@ -270,12 +248,10 @@
     },
 
     drawTracks : function () {
-      var i, showthreesecs, showGPSspeed;
-      // check if +3 to be displayed once here rather than every time through loop
-      showthreesecs = rg2.showThreeSeconds();
-      showGPSspeed = rg2.showGPSSpeed();
+      var i, opt;
+      opt = rg2.getReplayDetails();
       for (i = 0; i < this.results.length; i += 1) {
-        this.results[i].drawTrack(showthreesecs, showGPSspeed);
+        this.results[i].drawTrack(opt);
         this.results[i].drawScoreCourse();
       }
     },
@@ -397,12 +373,9 @@
 
     addTracks : function (tracks) {
       // this gets passed the json data array
-      var resultIndex;
-      var i;
-      var j;
-      var l;
-      var eventid = rg2.events.getKartatEventID();
-      var eventinfo = rg2.events.getEventInfo(eventid);
+      var resultIndex, i, j, l, eventid, eventinfo;
+      eventid = rg2.events.getKartatEventID();
+      eventinfo = rg2.events.getEventInfo(eventid);
       // for each track
       l = tracks.length;
       for (i = 0; i < l; i += 1) {
@@ -443,14 +416,12 @@
 
     formatResultListAsAccordion : function () {
       // puts all GPS results at bottom of relevant course results
-      var html = "";
-      var namehtml = "";
-      var temp;
-      var firstCourse = true;
-      var oldCourseID = 0;
-      var i;
-      var l;
-      var tracksForThisCourse = 0;
+      var html, namehtml, temp, firstCourse, oldCourseID, i, l, tracksForThisCourse;
+      html = "";
+      namehtml = "";
+      firstCourse = true;
+      oldCourseID = 0;
+      tracksForThisCourse = 0;
       this.results.sort(this.sortByCourseIDThenResultID);
       l = this.results.length;
       for (i = 0; i < l; i += 1) {
@@ -526,9 +497,9 @@
     },
 
     createNameDropdown : function (courseid) {
-      var i;
-      var dropdown = document.getElementById("rg2-name-select");
-      var opt = document.createElement("option");
+      var i, dropdown, opt;
+      dropdown = document.getElementById("rg2-name-select");
+      opt = document.createElement("option");
       $("#rg2-name-select").empty();
       opt.value = null;
       opt.text = rg2.t('Select name');

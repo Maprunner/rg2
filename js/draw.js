@@ -47,14 +47,11 @@
     },
 
     mouseUp : function (x, y, button) {
+      var i, trk, len, delta, h, handle, active;
       // called after a click at (x, y)
-      var active = $("#rg2-info-panel").tabs("option", "active");
-      var i;
-      var trk;
-      var len;
-      var delta = 3;
-      var h = {};
-      var handle;
+      active = $("#rg2-info-panel").tabs("option", "active");
+      h = {};
+      delta = 3;
       if (active !== rg2.config.TAB_DRAW) {
         return;
       }
@@ -105,15 +102,15 @@
         if ((trk.routeData.resultid !== null) && (trk.routeData.courseid !== null)) {
           this.addNewPoint(x, y);
         } else {
-          rg2.showWarningDialog('No course/name', 'Please select course, name and time before you start drawing a route or upload a file.');
+          rg2.utils.showWarningDialog('No course/name', 'Please select course, name and time before you start drawing a route or upload a file.');
         }
       }
     },
 
     dragEnded : function () {
+      var i, trk;
       if (this.gpstrack.fileLoaded) {
-        var i;
-        var trk = this.gpstrack;
+        trk = this.gpstrack;
         // rebaseline GPS track
         trk.savedBaseX = trk.baseX.slice(0);
         trk.savedBaseY = trk.baseY.slice(0);
@@ -219,9 +216,9 @@
     },
 
     confirmCourseChange : function () {
-
-      var msg = "<div id='rg2-course-change-dialog'>The route you have started to draw will be discarded. Are you sure you want to change the course?</div>";
-      var me = this;
+      var msg, me;
+      msg = "<div id='rg2-course-change-dialog'>The route you have started to draw will be discarded. Are you sure you want to change the course?</div>";
+      me = this;
       $(msg).dialog({
         title : "Confirm course change",
         modal : true,
@@ -242,8 +239,9 @@
     },
 
     resetDrawing : function () {
-      var msg = "<div id='rg2-drawing-reset-dialog'>All information you have entered will be removed. Are you sure you want to reset?</div>";
-      var me = this;
+      var msg, me;
+      msg = "<div id='rg2-drawing-reset-dialog'>All information you have entered will be removed. Are you sure you want to reset?</div>";
+      me = this;
       $(msg).dialog({
         title : "Confirm reset",
         modal : true,
@@ -307,7 +305,7 @@
       if (!isNaN(resultid)) {
         res = rg2.results.getFullResult(resultid);
         if (res.hasValidTrack) {
-          rg2.showWarningDialog("Route already drawn", "If you draw a new route it will overwrite the old route for this runner. GPS routes are saved separately and will not be overwritten.");
+          rg2.utils.showWarningDialog("Route already drawn", "If you draw a new route it will overwrite the old route for this runner. GPS routes are saved separately and will not be overwritten.");
         }
         // remove old course from display just in case we missed it somewhere else
         if (this.gpstrack.routeData.resultid !== null) {
@@ -333,8 +331,8 @@
 
     setNameAndTime : function () {
       // callback for an entered name when no results available
-      var time;
-      var name = $("#rg2-name-entry").val();
+      var time, name;
+      name = $("#rg2-name-entry").val();
       if (name) {
         $("#rg2-name").addClass('valid');
       } else {
@@ -354,8 +352,8 @@
         this.gpstrack.routeData.resultid = 0;
         this.gpstrack.routeData.totaltime = time;
         this.gpstrack.routeData.startsecs = 0;
-        this.gpstrack.routeData.time[0] = rg2.getSecsFromMMSS(time);
-        this.gpstrack.routeData.totalsecs = rg2.getSecsFromMMSS(time);
+        this.gpstrack.routeData.time[0] = rg2.utils.getSecsFromHHMMSS(time);
+        this.gpstrack.routeData.totalsecs = rg2.utils.getSecsFromHHMMSS(time);
         this.startDrawing();
       }
     },
@@ -391,8 +389,7 @@
 
     undoGPSAdjust : function () {
       // restore route from before last adjust operation
-      var trk;
-      var i;
+      var trk, i;
       trk = this.gpstrack;
       trk.baseX = trk.savedBaseX.slice(0);
       trk.baseY = trk.savedBaseY.slice(0);
@@ -439,15 +436,14 @@
     saveGPSRoute : function () {
       // called to save GPS file route
       // tidy up route details
-      var i;
-      var l;
-      var t = this.gpstrack.routeData.time[this.gpstrack.routeData.time.length - 1] - this.gpstrack.routeData.time[0];
-      this.gpstrack.routeData.totaltime = rg2.formatSecsAsMMSS(t);
+      var i, l, t, date, offset;
+      t = this.gpstrack.routeData.time[this.gpstrack.routeData.time.length - 1] - this.gpstrack.routeData.time[0];
+      this.gpstrack.routeData.totaltime = rg2.utils.formatSecsAsMMSS(t);
       // GPS uses UTC: adjust to local time based on local user setting
       // only affects replay in real time
-      var date = new Date();
+      date = new Date();
       // returns offset in minutes, so convert to seconds
-      var offset = date.getTimezoneOffset() * 60;
+      offset = date.getTimezoneOffset() * 60;
       this.gpstrack.routeData.startsecs = this.gpstrack.routeData.time[0] - offset;
 
       l = this.gpstrack.routeData.x.length;
@@ -482,10 +478,11 @@
     },
 
     postRoute : function () {
-      var $url = rg2Config.json_url + '?type=addroute&id=' + this.gpstrack.routeData.eventid;
+      var $url, json, self;
+      $url = rg2Config.json_url + '?type=addroute&id=' + this.gpstrack.routeData.eventid;
       // create JSON data
-      var json = JSON.stringify(this.gpstrack.routeData);
-      var self = this;
+      json = JSON.stringify(this.gpstrack.routeData);
+      self = this;
       $.ajax({
         data : json,
         type : 'POST',
@@ -506,12 +503,12 @@
     },
 
     saveError : function (text) {
-      rg2.showWarningDialog(this.gpstrack.routeData.name, rg2.t('Your route was not saved. Please try again') + '. ' + text);
+      rg2.utils.showWarningDialog(this.gpstrack.routeData.name, rg2.t('Your route was not saved. Please try again') + '. ' + text);
     },
 
     routeSaved : function () {
-      rg2.showWarningDialog(this.gpstrack.routeData.name, rg2.t('Your route has been saved') + '.');
-      rg2.loadEvent(rg2.getActiveEventID());
+      rg2.utils.showWarningDialog(this.gpstrack.routeData.name, rg2.t('Your route has been saved') + '.');
+      rg2.loadEvent(rg2.events.getActiveEventID());
     },
 
     waitThreeSeconds : function () {
@@ -596,27 +593,13 @@
       // case 5: shear/scale around two locked points
       // all based on putting handle1 at (0, 0), rotating handle 2 to be on x-axis and then shearing on x-axis and scaling on y-axis.
       // there must be a better way...
-      var i;
-      var lockedHandle1;
-      var lockedHandle2;
-      var fromTime;
-      var toTime;
-      var scale;
-      var angle;
-      var reverseAngle;
-      var a;
-      var xb;
-      var yb;
-      var xs;
-      var ys;
-      var x;
-      var y;
+      var i, lockedHandle1, lockedHandle2, fromTime, toTime, scale, angle, reverseAngle, a, xb, yb, xs, ys, x, y;
       lockedHandle1 = this.getPreviousLockedHandle(handle);
       fromTime = trk.handles[lockedHandle1].time;
       lockedHandle2 = this.getNextLockedHandle(handle);
       toTime = trk.handles[lockedHandle2].time;
       //console.log("Point (", x1, ", ", y1, ") in middle of ", lockedHandle1, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey, " and ",lockedHandle2, trk.handles[lockedHandle2].basex, trk.handles[lockedHandle2].basey);
-      reverseAngle = rg2.getAngle(trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey, trk.handles[lockedHandle2].basex, trk.handles[lockedHandle2].basey);
+      reverseAngle = rg2.utils.getAngle(trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey, trk.handles[lockedHandle2].basex, trk.handles[lockedHandle2].basey);
       angle = (2 * Math.PI) - reverseAngle;
       xb = x1 - trk.handles[lockedHandle1].basex;
       yb = y1 - trk.handles[lockedHandle1].basey;
@@ -677,14 +660,7 @@
     },
 
     scaleRotateAroundLockedPoint : function (trk, x1, y1, x2, y2, earliest, latest, handle) {
-      var i;
-      var lockedHandle1;
-      var fromTime;
-      var toTime;
-      var scale;
-      var angle;
-      var x;
-      var y;
+      var i, lockedHandle1, fromTime, toTime, scale, angle, x, y;
       if (trk.handles[earliest].time > trk.handles[handle].time) {
         lockedHandle1 = earliest;
         fromTime = 0;
@@ -696,8 +672,8 @@
         toTime = trk.handles[1].time + 1;
       }
       // scale and rotate track around single locked point
-      scale = rg2.getDistanceBetweenPoints(x2, y2, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey) / rg2.getDistanceBetweenPoints(x1, y1, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
-      angle = rg2.getAngle(x2, y2, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey) - rg2.getAngle(x1, y1, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
+      scale = rg2.utils.getDistanceBetweenPoints(x2, y2, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey) / rg2.utils.getDistanceBetweenPoints(x1, y1, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
+      angle = rg2.utils.getAngle(x2, y2, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey) - rg2.utils.getAngle(x1, y1, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
       //console.log (x1, y1, x2, y2, trk.handles[handle].basex, trk.handles[handle].basey, scale, angle, fromTime, toTime);
       for (i = fromTime; i < toTime; i += 1) {
         x = trk.baseX[i] - trk.handles[lockedHandle1].basex;
@@ -716,15 +692,11 @@
     },
 
     rotateAroundLockedPoint : function (trk, x1, y1, x2, y2) {
-      var scale;
-      var angle;
-      var x;
-      var y;
-      var i;
-      var handle = this.getLockedHandle();
+      var scale, angle, x, y, i, handle;
+      handle = this.getLockedHandle();
       // scale and rotate track around single locked point
-      angle = rg2.getAngle(x2, y2, handle.basex, handle.basey) - rg2.getAngle(x1, y1, handle.basex, handle.basey);
-      scale = rg2.getDistanceBetweenPoints(x2, y2, handle.basex, handle.basey) / rg2.getDistanceBetweenPoints(x1, y1, handle.basex, handle.basey);
+      angle = rg2.utils.getAngle(x2, y2, handle.basex, handle.basey) - rg2.utils.getAngle(x1, y1, handle.basex, handle.basey);
+      scale = rg2.utils.getDistanceBetweenPoints(x2, y2, handle.basex, handle.basey) / rg2.utils.getDistanceBetweenPoints(x1, y1, handle.basex, handle.basey);
       //console.log (x1, y1, x2, y2, handle.basex, handle.basey, scale, angle);
       for (i = 0; i < trk.baseX.length; i += 1) {
         x = trk.baseX[i] - handle.basex;
@@ -759,10 +731,9 @@
     // basex and basey are handle locations at the start of the drag which is what we are interested in
     getHandleClicked : function (x, y) {
       //console.log("Get handle clicked for " + x + ", " + y);
-      var i;
-      var distance;
+      var i, distance;
       for (i = 0; i < this.gpstrack.handles.length; i += 1) {
-        distance = rg2.getDistanceBetweenPoints(x, y, this.gpstrack.handles[i].basex, this.gpstrack.handles[i].basey);
+        distance = rg2.utils.getDistanceBetweenPoints(x, y, this.gpstrack.handles[i].basex, this.gpstrack.handles[i].basey);
         if (distance <= this.HANDLE_DOT_RADIUS) {
           return i;
         }
@@ -784,9 +755,8 @@
 
     // called to find earliest locked handle
     getEarliestLockedHandle : function () {
-      var i;
-      var earliest = 99999;
-      var handle;
+      var i, earliest, handle;
+      earliest = 99999;
       for (i = 0; i < this.gpstrack.handles.length; i += 1) {
         if (this.gpstrack.handles[i].locked) {
           if (this.gpstrack.handles[i].time < earliest) {
@@ -800,9 +770,8 @@
 
     // called to find latest locked handle
     getLatestLockedHandle : function () {
-      var i;
-      var latest = -1;
-      var handle;
+      var i, latest, handle;
+      latest = -1;
       for (i = 0; i < this.gpstrack.handles.length; i += 1) {
         if (this.gpstrack.handles[i].locked) {
           if (this.gpstrack.handles[i].time > latest) {
@@ -815,11 +784,10 @@
     },
 
     getPreviousLockedHandle : function (handle) {
-      var i;
+      var i, minDiff, time, previous;
       // max diff possible is last entry time
-      var minDiff = this.gpstrack.handles[1].time;
-      var time = this.gpstrack.handles[handle].time;
-      var previous;
+      minDiff = this.gpstrack.handles[1].time;
+      time = this.gpstrack.handles[handle].time;
       for (i = 0; i < this.gpstrack.handles.length; i += 1) {
         if (((time - this.gpstrack.handles[i].time) < minDiff) && (this.gpstrack.handles[i].time < time) && this.gpstrack.handles[i].locked) {
           minDiff = time - this.gpstrack.handles[i].time;
@@ -830,12 +798,10 @@
     },
 
     getNextLockedHandle : function (handle) {
-      var i;
-      var l;
+      var i, l, minDiff, time, next;
       // max diff possible is last entry time
-      var minDiff = this.gpstrack.handles[1].time;
-      var time = this.gpstrack.handles[handle].time;
-      var next;
+      minDiff = this.gpstrack.handles[1].time;
+      time = this.gpstrack.handles[handle].time;
       l = this.gpstrack.handles.length;
       for (i = 0; i < l; i += 1) {
         if (((this.gpstrack.handles[i].time - time) < minDiff) && (this.gpstrack.handles[i].time > time) && this.gpstrack.handles[i].locked) {
@@ -847,9 +813,8 @@
     },
 
     drawNewTrack : function () {
-      var i;
-      var l;
-      var opt = rg2.getOverprintDetails();
+      var i, l, opt;
+      opt = rg2.getOverprintDetails();
       rg2.ctx.lineWidth = opt.overprintWidth;
       rg2.ctx.strokeStyle = this.trackColor;
       rg2.ctx.fillStyle = this.trackColour;

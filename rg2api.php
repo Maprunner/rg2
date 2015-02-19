@@ -269,7 +269,7 @@ function addNewEvent($data) {
   if (($handle = @fopen(KARTAT_DIRECTORY."kisat.txt", "r+")) !== FALSE) {
     // read to end of file to find last entry
     $oldid = 0;
-    while (($olddata = fgetcsv($handle, 0, "|")) !== FALSE) {  
+    while (($olddata = fgetcsv($handle, 0, "|")) !== FALSE) {
       $oldid = intval($olddata[0]);
     }
     $newid = $oldid + 1;
@@ -280,10 +280,11 @@ function addNewEvent($data) {
 	}
   $name = encode_rg_output($data->name);
   $club = encode_rg_output($data->club);
-  $newevent = $newid."|".$data->mapid."|".$data->format."|".$name."|".$data->eventdate."|".$club."|".$data->level."|";
+  $comments = encode_rg_output($data->comments);
+  $newevent = $newid."|".$data->mapid."|".$data->format."|".$name."|".$data->eventdate."|".$club."|".$data->level."|".$comments;
   $newevent .= PHP_EOL;
   $write["newid"] = $newid;
-  $status =fwrite($handle, $newevent);    
+  $status =fwrite($handle, $newevent);
   if (!$status) {
     $write["status_msg"] = "Save error for kisat. ";
   }

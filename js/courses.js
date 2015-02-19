@@ -18,9 +18,8 @@
     },
 
     getCoursesForEvent : function () {
-      var courses = [];
-      var course;
-      var i;
+      var i, course, courses;
+      courses = [];
       for (i = 0; i < this.courses.length; i += 1) {
         if (this.courses[i] !== undefined) {
           course = {};
@@ -62,9 +61,9 @@
 
     updateCourseDropdown : function () {
       $("#rg2-course-select").empty();
-      var i;
-      var dropdown = document.getElementById("rg2-course-select");
-      var opt = document.createElement("option");
+      var i, dropdown, opt;
+      dropdown = document.getElementById("rg2-course-select");
+      opt = document.createElement("option");
       opt.value = null;
       opt.text = rg2.t("Select course");
       dropdown.options.add(opt);
@@ -77,13 +76,11 @@
           dropdown.options.add(opt);
         }
       }
-      //dropdown.options.add(opt);
     },
 
     updateControlDropdown : function () {
-      var dropdown = document.getElementById("rg2-control-select");
-      var opt;
-      var i;
+      var i, dropdown, opt;
+      dropdown = document.getElementById("rg2-control-select");
       $("#rg2-control-select").empty();
       for (i = 0; i < this.highestControlNumber; i += 1) {
         opt = document.createElement("option");
@@ -147,8 +144,8 @@
     },
 
     getCoursesOnDisplay : function () {
-      var courses = [];
-      var i;
+      var i, courses;
+      courses = [];
       for (i = 0; i < this.courses.length; i += 1) {
         if (this.courses[i] !== undefined) {
           if (this.courses[i].display) {
@@ -206,9 +203,9 @@
     },
 
     formatCoursesAsTable : function () {
-      var res = 0;
-      var i;
-      var html = "<table class='coursemenutable'><tr><th>" + rg2.t("Course") + "</th><th><i class='fa fa-eye'></i></th>";
+      var i, res, html;
+      res = 0;
+      html = "<table class='coursemenutable'><tr><th>" + rg2.t("Course") + "</th><th><i class='fa fa-eye'></i></th>";
       html += "<th>" + rg2.t("Runners") + "</th><th>" + rg2.t("Routes") + "</th><th><i class='fa fa-eye'></i></th></tr>";
       for (i = 0; i < this.courses.length; i += 1) {
         if (this.courses[i] !== undefined) {
@@ -216,25 +213,21 @@
           html += "<td><input class='courselist' id=" + i + " type=checkbox name=course></input></td>";
           html += "<td>" + this.courses[i].resultcount + "</td>";
           res += this.courses[i].resultcount;
-          html += "<td>" + this.courses[i].trackcount + "</td>";
+          html += "<td>" + this.courses[i].trackcount + "</td><td>";
           if (this.courses[i].trackcount > 0) {
-            html += "<td><input id=" + i + " class='tracklist' type=checkbox name=track></input></td>";
-          } else {
-            html += "<td></td>";
+            html += "<input id=" + i + " class='tracklist' type=checkbox name=track></input>";
           }
-          html += "</tr>";
+          html += "</td></tr>";
         }
       }
       // add bottom row for all courses checkboxes
       html += "<tr class='allitemsrow'><td>" + rg2.t("All") + "</td>";
       html += "<td><input class='allcourses' id=" + i + " type=checkbox name=course></input></td>";
-      html += "<td>" + res + "</td>";
+      html += "<td>" + res + "</td><td>" + this.totaltracks + "</td><td>";
       if (this.totaltracks > 0) {
-        html += "<td>" + this.totaltracks + "</td><td><input id=" + i + " class='alltracks' type=checkbox name=track></input></td>";
-      } else {
-        html += "<td>" + this.totaltracks + "</td><td></td>";
+        html += "<input id=" + i + " class='alltracks' type=checkbox name=track></input>";
       }
-      html += "</tr></table>";
+      html += "</td></tr></table>";
       return html;
     },
 

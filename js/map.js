@@ -1,5 +1,4 @@
 /*global rg2:false */
-/*global Proj4js:false */
 (function () {
 
   function Worldfile(a, b, c, d, e, f) {

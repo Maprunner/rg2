@@ -7,40 +7,19 @@
  * https://github.com/Maprunner/rg2/blob/master/LICENSE
  */
 /*global rg2Config:false */
-/*global $:false */
 /*global Image:false */
 /*global setTimeout:false */
 /*global localStorage:false */
 /*global loadEvent */
 var rg2 = (function (window, $) {
   'use strict';
-  var canvas = $("#rg2-map-canvas")[0];
-  var ctx = canvas.getContext('2d');
-  var dictionary;
-  var map;
-  var mapLoadingText;
-  var colours;
-  var infoPanelMaximised;
-  var scaleFactor;
-  var lastX;
-  var lastY;
-  var zoomSize;
-  var dragStart;
-  var dragged;
-  var whichButton;
-  var pinched;
-  var pinchStart0;
-  var pinchStart1;
-  var pinchEnd0;
-  var pinchEnd1;
-  var requestedHash;
-  var managing;
-
-  // jQuery cache items
-  var $rg2infopanel;
-  var $rg2eventtitle;
-
-  var config = {
+  var canvas, ctx, dictionary, map, mapLoadingText, infoPanelMaximised, scaleFactor, lastX, lastY, zoomSize,
+    dragStart, dragged, whichButton, pinched, pinchStart0, pinchStart1, pinchEnd0, pinchEnd1, managing, config, options,
+    $rg2infopanel, $rg2eventtitle, zoom, handleInputDown, handleInputMove, handleInputUp, handleTouchStart, handleTouchMove,
+    handleTouchEnd, handleScroll, handleMouseUp, handleMouseDown, handleMouseMove;
+  canvas = $("#rg2-map-canvas")[0];
+  ctx = canvas.getContext('2d');
+  config = {
     DEFAULT_SCALE_FACTOR : 1.1,
     TAB_EVENTS : 0,
     TAB_COURSES : 1,
@@ -84,7 +63,7 @@ var rg2 = (function (window, $) {
     RIGHT_CLICK : 3
   };
 
-  var options = {
+  options = {
     // initialised to default values: overwritten from storage later
     mapIntensity : 100,
     routeIntensity : 100,
@@ -95,132 +74,6 @@ var rg2 = (function (window, $) {
     snap : true,
     showThreeSeconds : false,
     showGPSSpeed : false
-  };
-
-  Number.prototype.toRad = function () {
-    return this * Math.PI / 180;
-  };
-
-  function Colours() {
-    // used to generate track colours: add extra colours as necessary
-    this.colours = ["#ff0000", "#ff8000", "#ff00ff", "#ff0080", "#008080", "#008000", "#0080ff", "#0000ff", "#8000ff", "#808080"];
-    //this.colours = ["#ff0000", "#ff8000",  "#ff00ff", "#ff0080", "#008080", "#008000", "#00ff00", "#0080ff", "#0000ff", "#8000ff", "#00ffff", "#808080"];
-
-    this.colourIndex = 0;
-  }
-
-
-  Colours.prototype = {
-    Constructor : Colours,
-
-    getNextColour : function () {
-      this.colourIndex = (this.colourIndex + 1) % this.colours.length;
-      return this.colours[this.colourIndex];
-    }
-  };
-
-  function RequestedHash() {
-    this.id = 0;
-    this.courses = [];
-    this.routes = [];
-  }
-
-
-  RequestedHash.prototype = {
-    Constructor : RequestedHash,
-
-    parseHash : function (hash) {
-      try {
-        var fields;
-        var i;
-        // input looks like #id&course=a,b,c&result=x,y,z
-        fields = hash.split('&');
-        for (i = 0; i < fields.length; i += 1) {
-          fields[i] = fields[i].toLowerCase();
-          if (fields[i].search('#') !== -1) {
-            this.id = parseInt(fields[i].replace("#", ""), 10);
-          }
-          if (fields[i].search('course=') !== -1) {
-            this.courses = fields[i].replace("course=", "").split(',');
-          }
-          if (fields[i].search('route=') !== -1) {
-            this.routes = fields[i].replace("route=", "").split(',');
-          }
-        }
-        // convert to integers
-        this.courses = this.courses.map(Number);
-        this.routes = this.routes.map(Number);
-
-      } catch (e) {
-        this.id = 0;
-        this.courses.length = 0;
-        this.routes.length = 0;
-      }
-    },
-
-    getRoutes : function () {
-      return this.routes;
-    },
-
-    getCourses : function () {
-      return this.courses;
-    },
-
-    getID : function () {
-      return this.id;
-    },
-
-    getTab : function () {
-      if (this.routes.length > 0) {
-        return config.TAB_RESULTS;
-      }
-      return config.TAB_COURSES;
-    },
-
-    setCourses : function () {
-      this.courses = rg2.courses.getCoursesOnDisplay();
-      window.history.pushState('', '', this.getHash());
-    },
-
-    setRoutes : function () {
-      this.routes = rg2.results.getTracksOnDisplay();
-      window.history.pushState('', '', this.getHash());
-    },
-
-    setNewEvent : function (id) {
-      this.id = id;
-      this.courses.length = 0;
-      this.routes.length = 0;
-      window.history.pushState('', '', this.getHash());
-    },
-
-    getHash : function () {
-      var hash;
-      var i;
-      if (this.id === 0) {
-        return '#0';
-      }
-      hash = '#' + this.id;
-      if (this.courses.length > 0) {
-        hash += '&course=';
-        for (i = 0; i < this.courses.length; i += 1) {
-          if (i > 0) {
-            hash += ',';
-          }
-          hash += this.courses[i];
-        }
-      }
-      if (this.routes.length > 0) {
-        hash += '&route=';
-        for (i = 0; i < this.routes.length; i += 1) {
-          if (i > 0) {
-            hash += ',';
-          }
-          hash += this.routes[i];
-        }
-      }
-      return hash;
-    }
   };
 
   // translation function
@@ -283,12 +136,7 @@ var rg2 = (function (window, $) {
   function reportJSONFail(errorText) {
     $("#rg2-load-progress").hide();
     $('body').css('cursor', 'auto');
-    rg2.showWarningDialog('Configuration error', errorText);
-  }
-
-  function getDistanceBetweenPoints(x1, y1, x2, y2) {
-    // Pythagoras
-    return Math.sqrt(Math.pow((x1 - x2), 2) + Math.pow((y1 - y2), 2));
+    rg2.utils.showWarningDialog('Configuration error', errorText);
   }
 
   function setTitleBar() {
@@ -327,7 +175,7 @@ var rg2 = (function (window, $) {
         // make sure the all checkbox is not checked
         $(".allcourses").prop('checked', false);
       }
-      requestedHash.setCourses();
+      rg2.requestedHash.setCourses();
       redraw(false);
     });
     // checkbox to show an individual score course
@@ -342,7 +190,7 @@ var rg2 = (function (window, $) {
       } else {
         rg2.results.removeOneTrackFromDisplay(event.target.id);
       }
-      requestedHash.setRoutes();
+      rg2.requestedHash.setRoutes();
       redraw(false);
     });
     // checkbox to animate a result
@@ -372,7 +220,7 @@ var rg2 = (function (window, $) {
       } else {
         $(selector).prop('checked', false);
       }
-      requestedHash.setRoutes();
+      rg2.requestedHash.setRoutes();
       redraw(false);
     });
     // checkbox to animate all results for course
@@ -415,7 +263,7 @@ var rg2 = (function (window, $) {
       select : function (event, ui) {
         /*jslint unparam:true*/
         loadEvent(ui.item[0].id);
-        requestedHash.setNewEvent(rg2.events.getKartatEventID());
+        rg2.requestedHash.setNewEvent(rg2.events.getKartatEventID());
       }
     });
   }
@@ -438,7 +286,7 @@ var rg2 = (function (window, $) {
         // uncheck box on results tab
         $(".showcourse").filter("#" + id).prop('checked', false);
       }
-      requestedHash.setCourses();
+      rg2.requestedHash.setCourses();
       redraw(false);
     });
     // checkbox on course tab to show all courses
@@ -455,7 +303,7 @@ var rg2 = (function (window, $) {
         // uncheck all boxes on results tab
         $(".showcourse").prop('checked', false);
       }
-      requestedHash.setCourses();
+      rg2.requestedHash.setCourses();
       redraw(false);
     });
     // checkbox on course tab to show tracks for one course
@@ -468,7 +316,7 @@ var rg2 = (function (window, $) {
         // make sure the all checkbox is not checked
         $(".alltracks").prop('checked', false);
       }
-      requestedHash.setRoutes();
+      rg2.requestedHash.setRoutes();
       redraw(false);
     });
     // checkbox on course tab to show all tracks
@@ -482,7 +330,7 @@ var rg2 = (function (window, $) {
         // deselect all the individual checkboxes for each course
         $(".tracklist").prop('checked', false);
       }
-      requestedHash.setRoutes();
+      rg2.requestedHash.setRoutes();
       redraw(false);
     });
   }
@@ -612,8 +460,8 @@ var rg2 = (function (window, $) {
 
   function resetMapState() {
     // place map in centre of canvas and scale it down to fit
-    var mapscale;
-    var heightscale = canvas.height / map.height;
+    var mapscale, heightscale;
+    heightscale = canvas.height / map.height;
     lastX = canvas.width / 2;
     lastY = canvas.height / 2;
     zoomSize = 1;
@@ -637,10 +485,10 @@ var rg2 = (function (window, $) {
     redraw(false);
   }
 
-  var zoom = function (zoomDirection) {
-    var pt;
-    var factor = Math.pow(scaleFactor, zoomDirection);
-    var tempZoom = zoomSize * factor;
+  zoom = function (zoomDirection) {
+    var pt, factor, tempZoom;
+    factor = Math.pow(scaleFactor, zoomDirection);
+    tempZoom = zoomSize * factor;
     // limit zoom to avoid things disappearing
     // chosen values seem reasonable after some quick tests
     if ((tempZoom < 50) && (tempZoom > 0.05)) {
@@ -687,8 +535,8 @@ var rg2 = (function (window, $) {
       createEventMenu();
       // load requested event if set
       // input is kartat ID so need to find internal ID first
-      if (requestedHash.getID()) {
-        eventID = rg2.events.getEventIDForKartatID(requestedHash.getID());
+      if (rg2.requestedHash.getID()) {
+        eventID = rg2.events.getEventIDForKartatID(rg2.requestedHash.getID());
         if (eventID !== undefined) {
           loadEvent(eventID);
         }
@@ -703,10 +551,9 @@ var rg2 = (function (window, $) {
   }
 
   function startDisplayingInfo() {
-    requestedHash = new RequestedHash();
     // check if a specific event has been requested
     if ((window.location.hash) && (!managing)) {
-      requestedHash.parseHash(window.location.hash);
+      rg2.requestedHash.parseHash(window.location.hash);
     }
     // load event details
     loadEventList();
@@ -752,7 +599,7 @@ var rg2 = (function (window, $) {
         options.snap = false;
       }
     });
-    $("#chk-show-three-seconds").prop('checked', options.showGPSSpeed).click(function () {
+    $("#chk-show-three-seconds").prop('checked', options.showThreeSeconds).click(function () {
       redraw(false);
     });
     $("#chk-show-GPS-speed").prop('checked', options.showGPSSpeed).click(function () {
@@ -1067,7 +914,7 @@ var rg2 = (function (window, $) {
           // best to keep this at default?
           options.circleSize = 20;
           if (options.mapIntensity === 0) {
-            rg2.showWarningDialog("Warning", "Your saved settings have 0% map intensity so the map is invisible. You can adjust this on the configuration menu");
+            rg2.utils.showWarningDialog("Warning", "Your saved settings have 0% map intensity so the map is invisible. You can adjust this on the configuration menu");
           }
         }
       }
@@ -1112,7 +959,7 @@ var rg2 = (function (window, $) {
     resetMapState();
   }
 
-  var handleInputDown = function (evt) {
+  handleInputDown = function (evt) {
     dragStart = ctx.transformedPoint(lastX, lastY);
     dragged = false;
     // need to cache this here since IE and FF don't set it for mousemove events
@@ -1120,7 +967,7 @@ var rg2 = (function (window, $) {
     //console.log ("InputDown " + lastX + " " + lastY + " " + dragStart.x + " " + dragStart.y);
   };
 
-  var handleInputMove = function () {
+  handleInputMove = function () {
     var pt;
     if (dragStart) {
       pt = ctx.transformedPoint(lastX, lastY);
@@ -1142,7 +989,7 @@ var rg2 = (function (window, $) {
     }
   };
 
-  var handleInputUp = function (evt) {
+  handleInputUp = function (evt) {
     var active = $rg2infopanel.tabs("option", "active");
     if (!dragged) {
       if (active === config.TAB_CREATE) {
@@ -1164,7 +1011,7 @@ var rg2 = (function (window, $) {
 
   // homegrown touch handling: seems no worse than adding some other library in
   // pinch zoom is primitive but works
-  var handleTouchStart = function (evt) {
+  handleTouchStart = function (evt) {
     evt.preventDefault();
     if (evt.touches.length > 1) {
       pinchStart0 = ctx.transformedPoint(evt.touches[0].pageX, evt.touches[0].pageY);
@@ -1176,9 +1023,8 @@ var rg2 = (function (window, $) {
     handleInputDown(evt);
   };
 
-  var handleTouchMove = function (evt) {
-    var oldDistance;
-    var newDistance;
+  handleTouchMove = function (evt) {
+    var oldDistance, newDistance;
     if (evt.touches.length > 1) {
       if (!pinched) {
         // second touch seen during move
@@ -1192,8 +1038,8 @@ var rg2 = (function (window, $) {
     if (pinched && (evt.touches.length > 1)) {
       pinchEnd0 = ctx.transformedPoint(evt.touches[0].pageX, evt.touches[0].pageY);
       pinchEnd1 = ctx.transformedPoint(evt.touches[1].pageX, evt.touches[1].pageY);
-      oldDistance = getDistanceBetweenPoints(pinchStart0.x, pinchStart0.y, pinchStart1.x, pinchStart1.y);
-      newDistance = getDistanceBetweenPoints(pinchEnd0.x, pinchEnd0.y, pinchEnd1.x, pinchEnd1.y);
+      oldDistance = rg2.utils.getDistanceBetweenPoints(pinchStart0.x, pinchStart0.y, pinchStart1.x, pinchStart1.y);
+      newDistance = rg2.utils.getDistanceBetweenPoints(pinchEnd0.x, pinchEnd0.y, pinchEnd1.x, pinchEnd1.y);
       if ((oldDistance / newDistance) > 1.1) {
         zoom(-1);
         pinchStart0 = pinchEnd0;
@@ -1210,12 +1056,12 @@ var rg2 = (function (window, $) {
     }
   };
 
-  var handleTouchEnd = function (evt) {
+  handleTouchEnd = function (evt) {
     handleInputUp(evt);
     pinched = false;
   };
 
-  var handleScroll = function (evt) {
+  handleScroll = function (evt) {
     var delta = evt.wheelDelta ? evt.wheelDelta / 40 : evt.detail ? -evt.detail : 0;
     if (delta) {
       zoom(delta);
@@ -1224,7 +1070,7 @@ var rg2 = (function (window, $) {
     return evt.preventDefault() && false;
   };
 
-  var handleMouseDown = function (evt) {
+  handleMouseDown = function (evt) {
     lastX = evt.offsetX || (evt.layerX - canvas.offsetLeft);
     lastY = evt.offsetY || (evt.layerY - canvas.offsetTop);
     handleInputDown(evt);
@@ -1232,7 +1078,7 @@ var rg2 = (function (window, $) {
     return evt.preventDefault() && false;
   };
 
-  var handleMouseMove = function (evt) {
+  handleMouseMove = function (evt) {
     lastX = evt.offsetX || (evt.layerX - canvas.offsetLeft);
     lastY = evt.offsetY || (evt.layerY - canvas.offsetTop);
     handleInputMove(evt);
@@ -1240,7 +1086,7 @@ var rg2 = (function (window, $) {
     return evt.preventDefault() && false;
   };
 
-  var handleMouseUp = function (evt) {
+  handleMouseUp = function (evt) {
     handleInputUp(evt);
     evt.stopPropagation();
     return evt.preventDefault() && false;
@@ -1331,17 +1177,6 @@ var rg2 = (function (window, $) {
     }, false);
   }
 
-  function showWarningDialog(title, text) {
-    var msg = '<div id=rg2-warning-dialog>' + text + '</div>';
-    $(msg).dialog({
-      title : title,
-      dialogClass : "rg2-warning-dialog",
-      close : function () {
-        $('#rg2-warning-dialog').dialog('destroy').remove();
-      }
-    });
-  }
-
   function getGPSTracks() {
     $("#rg2-load-progress-label").text(t("Loading routes"));
     $.getJSON(rg2Config.json_url, {
@@ -1371,7 +1206,7 @@ var rg2 = (function (window, $) {
         // don't change tab if we have come from DRAW since it means
         // we have just reloaded following a save
         if (active !== config.TAB_DRAW) {
-          $rg2infopanel.tabs("option", "active", requestedHash.getTab());
+          $rg2infopanel.tabs("option", "active", rg2.requestedHash.getTab());
         }
         $rg2infopanel.tabs("refresh");
         $("#btn-show-splits").show();
@@ -1386,12 +1221,12 @@ var rg2 = (function (window, $) {
         event = $.Event('click');
         event.target = {};
         event.target.checked = true;
-        routes = requestedHash.getRoutes();
+        routes = rg2.requestedHash.getRoutes();
         for (i = 0; i < routes.length; i += 1) {
           event.target.id = routes[i];
           $(".showtrack").filter("#" + routes[i]).trigger(event).prop('checked', true);
         }
-        crs = requestedHash.getCourses();
+        crs = rg2.requestedHash.getCourses();
         for (i = 0; i < crs.length; i += 1) {
           event.target.id = crs[i];
           $(".showcourse").filter("#" + crs[i]).trigger(event).prop('checked', true);
@@ -1483,97 +1318,11 @@ var rg2 = (function (window, $) {
     getCourses();
   }
 
-  function getAngle(x1, y1, x2, y2) {
-    var angle = Math.atan2((y2 - y1), (x2 - x1));
-    if (angle < 0) {
-      angle = angle + (2 * Math.PI);
-    }
-    return angle;
-  }
-
-  function getLatLonDistance(lat1, lon1, lat2, lon2) {
-    // Haversine formula (http://www.codecodex.com/wiki/Calculate_distance_between_two_points_on_a_globe)
-    var dLat = (lat2 - lat1).toRad();
-    var dLon = (lon2 - lon1).toRad();
-    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1.toRad()) * Math.cos(lat2.toRad()) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    // multiply by IUUG earth mean radius (http://en.wikipedia.org/wiki/Earth_radius) in metres
-    return 6371009 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  }
-
-  // converts MM:SS to seconds
-  // but may also get hh:mm:ss sometimes
-  // so allow for both based on number of :
-  function getSecsFromMMSS(time) {
-    var bits, secs;
-    if (!time) {
-      return 0;
-    }
-    secs = 0;
-    bits = time.split(":");
-    if (bits.length === 2) {
-      secs = (parseInt(bits[0], 10) * 60) + parseInt(bits[1], 10);
-    } else {
-      if (bits.length === 3) {
-        secs = (parseInt(bits[0], 10) * 3600) + (parseInt(bits[1], 10) * 60) + parseInt(bits[2], 10);
-      }
-    }
-    if (isNaN(secs)) {
-      return 0;
-    }
-    return secs;
-  }
-
-  function getSecsFromHHMMSS(time) {
-    var bits, secs;
-    if (!time) {
-      return 0;
-    }
-    secs = 0;
-    bits = time.split(":");
-    secs = (parseInt(bits[0], 10) * 3600) + (parseInt(bits[1], 10) * 60) + parseInt(bits[2], 10);
-    if (isNaN(secs)) {
-      return 0;
-    }
-    return secs;
-  }
-
-  function getSecsFromHHMM(time) {
-    var bits, secs;
-    if (!time) {
-      return 0;
-    }
-    secs = 0;
-    bits = time.split(":");
-    secs = (parseInt(bits[0], 10) * 3600) + (parseInt(bits[1], 10) * 60);
-    if (isNaN(secs)) {
-      return 0;
-    }
-    return secs;
-  }
-
-  // converts seconds to MM:SS
-  function formatSecsAsMMSS(secs) {
-    var formattedtime, minutes, seconds;
-    minutes = Math.floor(secs / 60);
-    formattedtime = minutes;
-    seconds = secs - (minutes * 60);
-    if (seconds < 10) {
-      formattedtime += ":0" + seconds;
-    } else {
-      formattedtime += ":" + seconds;
-    }
-    return formattedtime;
-  }
-
   function getMapSize() {
     var size = {};
     size.height = map.height;
     size.width = map.width;
     return size;
-  }
-
-  function getRouteWidth() {
-    return options.routeWidth;
   }
 
   function getOverprintDetails() {
@@ -1600,25 +1349,20 @@ var rg2 = (function (window, $) {
     return opt;
   }
 
-  function getRouteIntensity() {
+  function getReplayDetails() {
+    var opt;
+    opt = {};
+    opt.routeWidth = options.routeWidth;
     // stored as %, but used as 0 to 1.
-    return (options.routeIntensity / 100);
-  }
-
-  function getReplayFontSize() {
-    return options.replayFontSize;
-  }
-
-  function showThreeSeconds() {
-    return $("#chk-show-three-seconds").prop('checked');
-  }
-
-  function showGPSSpeed() {
-    return $("#chk-show-GPS-speed").prop('checked');
+    opt.routeIntensity = options.routeIntensity / 100;
+    opt.replayFontSize = options.replayFontSize;
+    opt.showThreeSeconds = $("#chk-show-three-seconds").prop('checked');
+    opt.showGPSSpeed = $("#chk-show-GPS-speed").prop('checked');
+    return opt;
   }
 
   function getNextRouteColour() {
-    return colours.getNextColour();
+    return rg2.colours.getNextColour();
   }
 
   function getSnapToControl() {
@@ -1627,6 +1371,7 @@ var rg2 = (function (window, $) {
 
   function init() {
     $("#rg2-container").hide();
+    rg2.utils = new rg2.Utils();
     // cache jQuery things we use a lot
     $rg2infopanel = $("#rg2-info-panel");
     $rg2eventtitle = $("#rg2-event-title");
@@ -1648,11 +1393,12 @@ var rg2 = (function (window, $) {
     map = new Image();
     rg2.events = new rg2.Events();
     rg2.courses = new rg2.Courses();
-    colours = new Colours();
+    rg2.colours = new rg2.Colours();
     rg2.results = new rg2.Results();
     rg2.controls = new rg2.Controls();
     rg2.animation = new rg2.Animation();
     rg2.drawing = new rg2.Draw();
+    rg2.requestedHash = new rg2.RequestedHash();
     dragStart = null;
     // looks odd but this works for initialisation
     dragged = true;
@@ -1681,24 +1427,13 @@ var rg2 = (function (window, $) {
     options : options,
     redraw : redraw,
     getOverprintDetails : getOverprintDetails,
-    getRouteWidth : getRouteWidth,
-    getRouteIntensity : getRouteIntensity,
-    getReplayFontSize : getReplayFontSize,
+    getReplayDetails : getReplayDetails,
     ctx : ctx,
     getMapSize : getMapSize,
     loadNewMap : loadNewMap,
     loadEvent : loadEvent,
-    showThreeSeconds : showThreeSeconds,
-    showGPSSpeed : showGPSSpeed,
+    loadEventList: loadEventList,
     getNextRouteColour : getNextRouteColour,
-    getSnapToControl : getSnapToControl,
-    getAngle : getAngle,
-    showWarningDialog : showWarningDialog,
-    getDistanceBetweenPoints : getDistanceBetweenPoints,
-    getSecsFromMMSS : getSecsFromMMSS,
-    getSecsFromHHMMSS : getSecsFromHHMMSS,
-    getSecsFromHHMM : getSecsFromHHMM,
-    formatSecsAsMMSS : formatSecsAsMMSS,
-    getLatLonDistance : getLatLonDistance
+    getSnapToControl : getSnapToControl
   };
 }(window, window.jQuery));

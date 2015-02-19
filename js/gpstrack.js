@@ -1,5 +1,4 @@
 /*global rg2:false */
-/*global RouteData:false */
 (function () {
   function GPSTrack() {
     this.lat = [];
@@ -36,20 +35,18 @@
 
     uploadGPS : function (evt) {
       //console.log ("File" + evt.target.files[0].name);
-      var reader = new FileReader();
+      var reader, self, xml, fileType;
+      reader = new FileReader();
       this.fileName = evt.target.files[0].name;
 
       reader.onerror = function () {
-        rg2.showWarningDialog('GPS file problem', 'Unable to open GPS file.');
+        rg2.utils.showWarningDialog('GPS file problem', 'Unable to open GPS file.');
       };
-
-      var self = this;
-
+      self = this;
       reader.onload = function (evt) {
-        var xml;
-        var fileType = self.fileName.slice(-3).toLowerCase();
+        fileType = self.fileName.slice(-3).toLowerCase();
         if ((fileType !== 'gpx') && (fileType !== 'tcx')) {
-          rg2.showWarningDialog('GPS file problem', 'File type not recognised. Please check you have selected the correct file.');
+          rg2.utils.showWarningDialog('GPS file problem', 'File type not recognised. Please check you have selected the correct file.');
           return;
         }
         try {
@@ -61,7 +58,7 @@
           }
           self.processGPSTrack();
         } catch (err) {
-          rg2.showWarningDialog('GPS file problem', 'File is not valid XML. Please check you have selected the correct file.');
+          rg2.utils.showWarningDialog('GPS file problem', 'File is not valid XML. Please check you have selected the correct file.');
           return;
         }
         $("#rg2-load-gps-file").button('disable');
@@ -73,10 +70,7 @@
     },
 
     processGPX : function (xml) {
-      var trksegs;
-      var trkpts;
-      var i;
-      var j;
+      var trksegs, trkpts, i, j;
       trksegs = xml.getElementsByTagName('trkseg');
       for (i = 0; i < trksegs.length; i += 1) {
         trkpts = trksegs[i].getElementsByTagName('trkpt');
@@ -89,12 +83,7 @@
     },
 
     processTCX : function (xml) {
-      var trksegs;
-      var trkpts;
-      var i;
-      var j;
-      var len;
-      var position;
+      var trksegs, trkpts, i, j, len, position;
       trksegs = xml.getElementsByTagName('Track');
       for (i = 0; i < trksegs.length; i += 1) {
         trkpts = trksegs[i].getElementsByTagName('Trackpoint');
@@ -112,11 +101,12 @@
     },
 
     getSecsFromTrackpoint : function (timestring) {
+      var hrs, mins, secs;
       try {
         // input is 2013-12-03T12:34:56Z (or 56.000Z)
-        var hrs = parseInt(timestring.substr(11, 2), 10);
-        var mins = parseInt(timestring.substr(14, 2), 10);
-        var secs = parseInt(timestring.substr(17, 2), 10);
+        hrs = parseInt(timestring.substr(11, 2), 10);
+        mins = parseInt(timestring.substr(14, 2), 10);
+        secs = parseInt(timestring.substr(17, 2), 10);
         return (hrs * 3600) + (mins * 60) + secs;
       } catch (err) {
         return 0;
@@ -124,18 +114,10 @@
     },
 
     processGPSTrack : function () {
-      var minX;
-      var maxX;
-      var minY;
-      var maxY;
-      var i;
-      var w;
-      var AEDB;
-      var xCorrection;
-      var yCorrection;
+      var minX, maxX, minY, maxY, i, w, AEDB, xCorrection, yCorrection, mapSize;
       if (rg2.events.mapIsGeoreferenced()) {
         // translate lat/lon to x,y based on world file info: see http://en.wikipedia.org/wiki/World_file
-        w = rg2.getWorldFile();
+        w = rg2.events.getWorldFile();
         // simplify calculation a little
         AEDB = (w.A * w.E) - (w.D * w.B);
         xCorrection = (w.B * w.F) - (w.E * w.C);
@@ -151,10 +133,10 @@
         maxY = Math.max.apply(Math, this.routeData.y);
 
         // check we are somewhere on the map
-        var mapSize = rg2.getMapSize();
+        mapSize = rg2.getMapSize();
         if ((maxX < 0) || (minX > mapSize.width) || (minY > mapSize.height) || (maxY < 0)) {
           // warn and fit to track
-          rg2.showWarningDialog('GPS file problem', 'Your GPS file does not match the map co-ordinates. Please check you have selected the correct file.');
+          rg2.utils.showWarningDialog('GPS file problem', 'Your GPS file does not match the map co-ordinates. Please check you have selected the correct file.');
           this.fitTrackInsideCourse();
 
         } else {
@@ -223,8 +205,8 @@
       // scale GPS track to within bounding box of controls: a reasonable start
       scaleX = (maxControlX - minControlX) / (maxLon - minLon);
       scaleY = (maxControlY - minControlY) / (maxLat - minLat);
-      lonCorrection = rg2.getLatLonDistance(minLat, maxLon, minLat, minLon) / (maxLon - minLon);
-      latCorrection = rg2.getLatLonDistance(minLat, minLon, maxLat, minLon) / (maxLat - minLat);
+      lonCorrection = rg2.utils.getLatLonDistance(minLat, maxLon, minLat, minLon) / (maxLon - minLon);
+      latCorrection = rg2.utils.getLatLonDistance(minLat, minLon, maxLat, minLon) / (maxLat - minLat);
 
       // don't want to skew track so scale needs to be equal in each direction
       // so we need to account for differences between a degree of latitude and longitude

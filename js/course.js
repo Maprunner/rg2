@@ -25,13 +25,7 @@
     },
 
     setAngles : function () {
-      var i;
-      var c1x;
-      var c1y;
-      var c2x;
-      var c2y;
-      var c3x;
-      var c3y;
+      var i, c1x, c1y, c2x, c2y, c3x, c3y;
       for (i = 0; i < (this.x.length - 1); i += 1) {
         if (this.isScoreCourse) {
           // align score event start triangle and controls upwards
@@ -39,7 +33,7 @@
           this.textAngle[i] = Math.PI * 0.25;
         } else {
           // angle of line to next control
-          this.angle[i] = rg2.getAngle(this.x[i], this.y[i], this.x[i + 1], this.y[i + 1]);
+          this.angle[i] = rg2.utils.getAngle(this.x[i], this.y[i], this.x[i + 1], this.y[i + 1]);
           // create bisector of angle to position number
           c1x = Math.sin(this.angle[i - 1]);
           c1y = Math.cos(this.angle[i - 1]);
@@ -47,7 +41,7 @@
           c2y = Math.cos(this.angle[i]) + c1y;
           c3x = c2x / 2;
           c3y = c2y / 2;
-          this.textAngle[i] = rg2.getAngle(c3x, c3y, c1x, c1y);
+          this.textAngle[i] = rg2.utils.getAngle(c3x, c3y, c1x, c1y);
         }
       }
       // not worried about angle for finish
@@ -56,9 +50,9 @@
     },
 
     drawCourse : function (intensity) {
-      var i;
+      var i, opt;
       if (this.display) {
-        var opt = rg2.getOverprintDetails();
+        opt = rg2.getOverprintDetails();
         rg2.ctx.globalAlpha = intensity;
         rg2.controls.drawStart(this.x[0], this.y[0], "", this.angle[0], opt);
         // don't join up controls for score events
@@ -83,27 +77,23 @@
       }
     },
     drawLinesBetweenControls : function (x, y, angle, opt) {
-      var c1x;
-      var c1y;
-      var c2x;
-      var c2y;
-      var i;
+      var c1x, c1y, c2x, c2y, i, dist;
       for (i = 0; i < (x.length - 1); i += 1) {
         if (i === 0) {
-          c1x = x[i] + (opt.startTriangleLength * Math.cos(angle[i]));
-          c1y = y[i] + (opt.startTriangleLength * Math.sin(angle[i]));
+          dist = opt.startTriangleLength;
         } else {
-          c1x = x[i] + (opt.controlRadius * Math.cos(angle[i]));
-          c1y = y[i] + (opt.controlRadius * Math.sin(angle[i]));
+          dist = opt.controlRadius;
         }
+        c1x = x[i] + (dist * Math.cos(angle[i]));
+        c1y = y[i] + (dist * Math.sin(angle[i]));
         //Assume the last control in the array is a finish
         if (i === this.x.length - 2) {
-          c2x = x[i + 1] - (opt.finishOuterRadius * Math.cos(angle[i]));
-          c2y = y[i + 1] - (opt.finishOuterRadius * Math.sin(angle[i]));
+          dist = opt.finishOuterRadius;
         } else {
-          c2x = x[i + 1] - (opt.controlRadius * Math.cos(angle[i]));
-          c2y = y[i + 1] - (opt.controlRadius * Math.sin(angle[i]));
+          dist = opt.controlRadius;
         }
+        c2x = x[i + 1] - (dist * Math.cos(angle[i]));
+        c2y = y[i + 1] - (dist * Math.sin(angle[i]));
         rg2.ctx.beginPath();
         rg2.ctx.moveTo(c1x, c1y);
         rg2.ctx.lineTo(c2x, c2y);
