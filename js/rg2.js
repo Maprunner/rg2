@@ -11,6 +11,7 @@
 /*global setTimeout:false */
 /*global localStorage:false */
 /*global loadEvent */
+/*global console */
 var rg2 = (function (window, $) {
   'use strict';
   var canvas, ctx, dictionary, map, mapLoadingText, infoPanelMaximised, scaleFactor, lastX, lastY, zoomSize,
@@ -417,7 +418,7 @@ var rg2 = (function (window, $) {
 
   function setLanguageOptions() {
     // use English unless a dictionary was passed in
-    if (rg2Config.dictionary === undefined) {
+    if (rg2Config.dictionary.code === undefined) {
       dictionary = {};
       dictionary.code = 'en';
     } else {
@@ -500,7 +501,6 @@ var rg2 = (function (window, $) {
       ctx.save();
       redraw(false);
     }
-    //console.log("Zoom size " + zoomSize);
   };
 
   function resizeInfoDisplay() {
@@ -1361,10 +1361,6 @@ var rg2 = (function (window, $) {
     return opt;
   }
 
-  function getNextRouteColour() {
-    return rg2.colours.getNextColour();
-  }
-
   function getSnapToControl() {
     return options.snap;
   }
@@ -1433,7 +1429,6 @@ var rg2 = (function (window, $) {
     loadNewMap : loadNewMap,
     loadEvent : loadEvent,
     loadEventList: loadEventList,
-    getNextRouteColour : getNextRouteColour,
     getSnapToControl : getSnapToControl
   };
 }(window, window.jQuery));

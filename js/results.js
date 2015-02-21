@@ -39,10 +39,7 @@
       // don't get score course info for GPS tracks so find it from original result
       for (i = 0; i < this.results.length; i += 1) {
         if (this.results[i].resultid >= rg2.config.GPS_RESULT_OFFSET) {
-          id = this.results[i].resultid;
-          while (id >= rg2.config.GPS_RESULT_OFFSET) {
-            id -= rg2.config.GPS_RESULT_OFFSET;
-          }
+          id = this.results[i].rawid;
           for (j = 0; j < this.results.length; j += 1) {
             if (id === this.results[j].resultid) {
               baseresult = this.getFullResult(j);
@@ -381,19 +378,16 @@
       for (i = 0; i < l; i += 1) {
         resultIndex = tracks[i].resultid;
         j = 0;
-        // don't add GPS track since we got a better one in the original results
-        if (resultIndex < rg2.config.GPS_RESULT_OFFSET) {
-          // loop through all results and add it against the correct id
-          while (j < this.results.length) {
-            if (resultIndex === this.results[j].resultid) {
-              this.results[j].addTrack(tracks[i], eventinfo.format);
-              break;
-            }
-            j += 1;
+        // API filters out GPS results since we get a better track in the original results
+        // loop through all results and add it against the correct id
+        while (j < this.results.length) {
+          if (resultIndex === this.results[j].resultid) {
+            this.results[j].addTrack(tracks[i], eventinfo.format);
+            break;
           }
+          j += 1;
         }
       }
-
     },
 
     deleteAllResults : function () {
@@ -505,11 +499,14 @@
       opt.text = rg2.t('Select name');
       dropdown.options.add(opt);
       for (i = 0; i < this.results.length; i += 1) {
+        // only use original results, not GPS results
         if (this.results[i].courseid === courseid) {
-          opt = document.createElement("option");
-          opt.value = i;
-          opt.text = this.results[i].name;
-          dropdown.options.add(opt);
+          if (this.results[i].resultid < rg2.config.GPS_RESULT_OFFSET) {
+            opt = document.createElement("option");
+            opt.value = i;
+            opt.text = this.results[i].name;
+            dropdown.options.add(opt);
+          }
         }
       }
       dropdown.options.add(opt);

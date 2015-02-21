@@ -18,13 +18,8 @@
     this.time = data.time;
     this.position = data.position;
     this.status = data.status;
-    // get round iconv problem in API for now
-    if (data.comments !== null) {
-      // unescape special characters to get sensible text
-      this.comments = rg2.he.decode(data.comments);
-    } else {
-      this.comments = "";
-    }
+    // get round iconv problem in API for now: unescape special characters to get sensible text
+    this.comments = rg2.he.decode(data.comments);
     this.coursename = data.coursename;
     if (this.coursename === "") {
       this.coursename = data.courseid;
@@ -46,7 +41,7 @@
     this.hasValidTrack = false;
     this.displayTrack = false;
     this.displayScoreCourse = false;
-    this.trackColour = null;
+    this.trackColour = rg2.colours.getNextColour();
     // raw track data
     this.trackx = [];
     this.tracky = [];
@@ -76,9 +71,6 @@
 
     putTrackOnDisplay : function () {
       if (this.hasValidTrack) {
-        if (this.trackColour === null) {
-          this.trackColour = rg2.getNextRouteColour();
-        }
         this.displayTrack = true;
       }
     },
@@ -86,14 +78,13 @@
     removeTrackFromDisplay : function () {
       if (this.hasValidTrack) {
         this.displayTrack = false;
-        this.trackColour = null;
       }
     },
 
     addTrack : function (data, format) {
+      var trackOK;
       this.trackx = data.gpsx;
       this.tracky = data.gpsy;
-      var trackOK;
       if (this.isGPSTrack) {
         trackOK = this.expandGPSTrack();
       } else {
@@ -393,16 +384,12 @@
     getInitials : function (name) {
       var i, addNext, len, initials;
       // converts name to initials
-      // remove white space at each end
       if (name === null) {
         return "";
       }
       name.trim();
       len = name.length;
       initials = "";
-      if (len === 0) {
-        return "";
-      }
       addNext = true;
       for (i = 0; i < len; i += 1) {
         if (addNext) {
@@ -413,10 +400,8 @@
           addNext = true;
         }
       }
-
       return initials;
     }
   };
   rg2.Result = Result;
-
 }());

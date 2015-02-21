@@ -698,7 +698,7 @@ module.exports = function(grunt) {
           // allow TODO comments
           todo: true,
           // allow console and alert
-          devel: true,
+          //devel: true,
           predef: ['$', 'FileReader']
         },
         options: {
@@ -716,8 +716,6 @@ module.exports = function(grunt) {
           sloppy: true,
           // allow TODO comments
           todo: true,
-          // allow console and alert
-          devel: true,
           predef: ['$', 'FileReader']
         },
         options: {

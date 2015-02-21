@@ -2,6 +2,7 @@
 /*global rg2Config:false */
 /*global FormData:false */
 /*global Proj4js:false */
+/*global console:false */
 (function () {
   function User(keksi) {
     this.x = "";
@@ -125,9 +126,7 @@
             rg2.utils.showWarningDialog("Login failed", "Login failed. Please try again.");
           }
         },
-        error : function (jqXHR, textStatus, errorThrown) {
-          /*jslint unparam:true*/
-          console.log(errorThrown);
+        error : function () {
           rg2.utils.showWarningDialog("Login failed", "User name or password incorrect. Please try again.");
         }
       });
@@ -298,12 +297,8 @@
         }
         self.createMapDropdown();
         $("#btn-toggle-controls").show();
-      }).fail(function (jqxhr, textStatus, error) {
-        /*jslint unparam:true*/
-        var err;
-        $('body').css('cursor', 'auto');
-        err = textStatus + ", " + error;
-        console.log("Map request failed: " + err);
+      }).fail(function () {
+        rg2.utils.showWarningDialog("Map request failed", "Error getting map list.");
       });
     },
 
@@ -1955,6 +1950,7 @@
 
     // based on adjustTrack from draw.js
     adjustControls : function (x1, y1, x2, y2, button) {
+      // console.log(x1, y1, x2, y2, button);
       var i, x, y, dx, dy, scaleX, scaleY;
       if ((this.backgroundLocked) || (button === rg2.config.RIGHT_CLICK)) {
         // drag track and background
@@ -1992,6 +1988,7 @@
     },
 
     mouseUp : function (x, y) {
+      // console.log(x, y);
       if (this.drawingCourses) {
         this.addNewControl(x, y);
         return;

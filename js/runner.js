@@ -12,11 +12,7 @@
     this.starttime = res.starttime;
     this.splits = res.splits;
     this.legpos = res.legpos;
-    if (res.trackColour === null) {
-      this.colour = rg2.getNextRouteColour();
-    } else {
-      this.colour = res.trackColour;
-    }
+    this.colour = res.trackColour;
     // get course details
     if (res.isScoreEvent) {
       course = {};

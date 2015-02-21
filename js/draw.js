@@ -47,6 +47,7 @@
     },
 
     mouseUp : function (x, y, button) {
+      // console.log(x, y);
       var i, trk, len, delta, h, handle, active;
       // called after a click at (x, y)
       active = $("#rg2-info-panel").tabs("option", "active");
@@ -364,10 +365,6 @@
     },
 
     addNewPoint : function (x, y) {
-
-      // enable here for testing
-      //$("#btn-save-route").button("enable");
-
       if (this.closeEnough(x, y)) {
         this.gpstrack.routeData.x.push(this.controlx[this.nextControl]);
         this.gpstrack.routeData.y.push(this.controly[this.nextControl]);
@@ -428,7 +425,7 @@
       if (this.gpstrack.routeData.x.length > 1) {
         $("#btn-undo").button("enable");
       } else {
-        $("#btn-undo").button("enable");
+        $("#btn-undo").button("disable");
       }
       rg2.redraw(false);
     },
@@ -492,18 +489,13 @@
           if (data.ok) {
             self.routeSaved(data.status_msg);
           } else {
-            self.saveError(data.status_msg);
+            rg2.utils.showWarningDialog(this.gpstrack.routeData.name, rg2.t('Your route was not saved. Please try again'));
           }
         },
-        error : function (jqXHR, textStatus, errorThrown) {
-          // second and thord parameter not needed but stop jsHint complaining
-          self.saveError(errorThrown, jqXHR, textStatus);
+        error : function () {
+          rg2.utils.showWarningDialog(this.gpstrack.routeData.name, rg2.t('Your route was not saved. Please try again'));
         }
       });
-    },
-
-    saveError : function (text) {
-      rg2.utils.showWarningDialog(this.gpstrack.routeData.name, rg2.t('Your route was not saved. Please try again') + '. ' + text);
     },
 
     routeSaved : function () {
@@ -532,10 +524,6 @@
         }
       }
       return false;
-    },
-
-    trackLocked : function () {
-      return (this.pointsLocked > 0);
     },
 
     adjustTrack : function (x1, y1, x2, y2, button) {
@@ -623,7 +611,7 @@
       if (!isFinite(a) || !isFinite(scale)) {
         // TODO: this will cause trouble when y1 is 0 (or even just very small) but I've never managed to get it to happen
         // you need to click exactly on a line through the two locked handles: just do nothing for now
-        console.log("y1 became 0: scale factors invalid", a, scale);
+        // console.log("y1 became 0: scale factors invalid", a, scale);
         return;
       }
       // recalculate all points between locked handles

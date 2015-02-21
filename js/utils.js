@@ -127,27 +127,26 @@
     Constructor : RequestedHash,
 
     parseHash : function (hash) {
-      try {
-        var fields, i;
-        // input looks like #id&course=a,b,c&result=x,y,z
-        fields = hash.split('&');
-        for (i = 0; i < fields.length; i += 1) {
-          fields[i] = fields[i].toLowerCase();
-          if (fields[i].search('#') !== -1) {
-            this.id = parseInt(fields[i].replace("#", ""), 10);
-          }
-          if (fields[i].search('course=') !== -1) {
-            this.courses = fields[i].replace("course=", "").split(',');
-          }
-          if (fields[i].search('route=') !== -1) {
-            this.routes = fields[i].replace("route=", "").split(',');
-          }
+      var fields, i;
+      // input looks like #id&course=a,b,c&result=x,y,z
+      fields = hash.split('&');
+      for (i = 0; i < fields.length; i += 1) {
+        fields[i] = fields[i].toLowerCase();
+        if (fields[i].search('#') !== -1) {
+          this.id = parseInt(fields[i].replace("#", ""), 10);
         }
-        // convert to integers
-        this.courses = this.courses.map(Number);
-        this.routes = this.routes.map(Number);
+        if (fields[i].search('course=') !== -1) {
+          this.courses = fields[i].replace("course=", "").split(',');
+        }
+        if (fields[i].search('route=') !== -1) {
+          this.routes = fields[i].replace("route=", "").split(',');
+        }
+      }
+      // convert to integers: NaNs sort themselves out on display so don't check here
+      this.courses = this.courses.map(Number);
+      this.routes = this.routes.map(Number);
 
-      } catch (e) {
+      if (isNaN(this.id)) {
         this.id = 0;
         this.courses.length = 0;
         this.routes.length = 0;

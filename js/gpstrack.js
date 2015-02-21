@@ -101,16 +101,13 @@
     },
 
     getSecsFromTrackpoint : function (timestring) {
-      var hrs, mins, secs;
-      try {
-        // input is 2013-12-03T12:34:56Z (or 56.000Z)
-        hrs = parseInt(timestring.substr(11, 2), 10);
-        mins = parseInt(timestring.substr(14, 2), 10);
-        secs = parseInt(timestring.substr(17, 2), 10);
-        return (hrs * 3600) + (mins * 60) + secs;
-      } catch (err) {
+      var secs;
+      // input is 2013-12-03T12:34:56Z (or 56.000Z)
+      secs = (parseInt(timestring.substr(11, 2), 10) * 3600) + (parseInt(timestring.substr(14, 2), 10) * 60) + parseInt(timestring.substr(17, 2), 10);
+      if (isNaN(secs)) {
         return 0;
       }
+      return secs;
     },
 
     processGPSTrack : function () {
@@ -157,21 +154,23 @@
 
     addStartAndFinishHandles : function () {
       // add handles at start and finish of route
-      var h = {};
-      h.x = this.baseX[0];
-      h.y = this.baseY[0];
-      h.basex = h.x;
-      h.basey = h.y;
-      h.locked = false;
-      h.time = 0;
-      this.handles.push(h);
-      h.x = this.baseX[this.baseX.length - 1];
-      h.y = this.baseY[this.baseY.length - 1];
-      h.basex = h.x;
-      h.basey = h.y;
-      h.locked = false;
-      h.time = this.baseY.length - 1;
-      this.handles.push(h);
+      var h1, h2;
+      h1 = {};
+      h1.x = this.baseX[0];
+      h1.y = this.baseY[0];
+      h1.basex = h1.x;
+      h1.basey = h1.y;
+      h1.locked = false;
+      h1.time = 0;
+      this.handles.push(h1);
+      h2 = {};
+      h2.x = this.baseX[this.baseX.length - 1];
+      h2.y = this.baseY[this.baseY.length - 1];
+      h2.basex = h2.x;
+      h2.basey = h2.y;
+      h2.locked = false;
+      h2.time = this.baseY.length - 1;
+      this.handles.push(h2);
     },
 
     fitTrackInsideCourse : function () {
