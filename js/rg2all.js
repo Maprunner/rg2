@@ -1,4 +1,4 @@
-// Version 1.0.4 2015-02-19T19:20:36;
+// Version 1.1.0 2015-02-24T17:12:13;
 /*
  * Routegadget 2
  * https://github.com/Maprunner/rg2
@@ -12,6 +12,7 @@
 /*global setTimeout:false */
 /*global localStorage:false */
 /*global loadEvent */
+/*global console */
 var rg2 = (function (window, $) {
   'use strict';
   var canvas, ctx, dictionary, map, mapLoadingText, infoPanelMaximised, scaleFactor, lastX, lastY, zoomSize,
@@ -57,7 +58,7 @@ var rg2 = (function (window, $) {
     EVENT_WITHOUT_RESULTS : 2,
     SCORE_EVENT : 3,
     // version gets set automatically by grunt file during build process
-    RG2VERSION : '1.0.4',
+    RG2VERSION: '1.1.0',
     TIME_NOT_FOUND : 9999,
     SPLITS_NOT_FOUND : 9999,
     // values for evt.which
@@ -418,7 +419,7 @@ var rg2 = (function (window, $) {
 
   function setLanguageOptions() {
     // use English unless a dictionary was passed in
-    if (rg2Config.dictionary === undefined) {
+    if (rg2Config.dictionary.code === undefined) {
       dictionary = {};
       dictionary.code = 'en';
     } else {
@@ -501,7 +502,6 @@ var rg2 = (function (window, $) {
       ctx.save();
       redraw(false);
     }
-    //console.log("Zoom size " + zoomSize);
   };
 
   function resizeInfoDisplay() {
@@ -972,7 +972,7 @@ var rg2 = (function (window, $) {
     var pt;
     if (dragStart) {
       pt = ctx.transformedPoint(lastX, lastY);
-      //console.log ("Mousemove after" + pt.x + ": " + pt.y);
+      // console.log ("Mousemove after " + pt.x + ": " + pt.y);
       // simple debounce so that very small drags are treated as clicks instead
       if ((Math.abs(pt.x - dragStart.x) + Math.abs(pt.y - dragStart.y)) > 5) {
         if (rg2.drawing.gpsFileLoaded()) {
@@ -991,6 +991,7 @@ var rg2 = (function (window, $) {
   };
 
   handleInputUp = function (evt) {
+    // console.log("Input up " + dragged);
     var active = $rg2infopanel.tabs("option", "active");
     if (!dragged) {
       if (active === config.TAB_CREATE) {
@@ -1362,10 +1363,6 @@ var rg2 = (function (window, $) {
     return opt;
   }
 
-  function getNextRouteColour() {
-    return rg2.colours.getNextColour();
-  }
-
   function getSnapToControl() {
     return options.snap;
   }
@@ -1434,7 +1431,6 @@ var rg2 = (function (window, $) {
     loadNewMap : loadNewMap,
     loadEvent : loadEvent,
     loadEventList: loadEventList,
-    getNextRouteColour : getNextRouteColour,
     getSnapToControl : getSnapToControl
   };
 }(window, window.jQuery));
@@ -1557,9 +1553,7 @@ var rg2 = (function (window, $) {
       prevControlSecs = 0;
       // find maximum number of controls to set size of table
       for (i = 0; i < this.runners.length; i += 1) {
-        if (this.runners[i].splits.length > maxControls) {
-          maxControls = this.runners[i].splits.length;
-        }
+        maxControls = Math.max(maxControls, this.runners[i].splits.length);
       }
       // allow for start and finish
       maxControls -= 2;
@@ -2402,6 +2396,7 @@ var rg2 = (function (window, $) {
     },
 
     mouseUp : function (x, y, button) {
+      // console.log(x, y);
       var i, trk, len, delta, h, handle, active;
       // called after a click at (x, y)
       active = $("#rg2-info-panel").tabs("option", "active");
@@ -2719,10 +2714,6 @@ var rg2 = (function (window, $) {
     },
 
     addNewPoint : function (x, y) {
-
-      // enable here for testing
-      //$("#btn-save-route").button("enable");
-
       if (this.closeEnough(x, y)) {
         this.gpstrack.routeData.x.push(this.controlx[this.nextControl]);
         this.gpstrack.routeData.y.push(this.controly[this.nextControl]);
@@ -2734,11 +2725,7 @@ var rg2 = (function (window, $) {
         this.gpstrack.routeData.x.push(Math.round(x));
         this.gpstrack.routeData.y.push(Math.round(y));
       }
-      if (this.gpstrack.routeData.x.length > 1) {
-        $("#btn-undo").button("enable");
-      } else {
-        $("#btn-undo").button("disable");
-      }
+      $("#btn-undo").button("enable");
       rg2.redraw(false);
     },
 
@@ -2783,7 +2770,7 @@ var rg2 = (function (window, $) {
       if (this.gpstrack.routeData.x.length > 1) {
         $("#btn-undo").button("enable");
       } else {
-        $("#btn-undo").button("enable");
+        $("#btn-undo").button("disable");
       }
       rg2.redraw(false);
     },
@@ -2847,18 +2834,13 @@ var rg2 = (function (window, $) {
           if (data.ok) {
             self.routeSaved(data.status_msg);
           } else {
-            self.saveError(data.status_msg);
+            rg2.utils.showWarningDialog(this.gpstrack.routeData.name, rg2.t('Your route was not saved. Please try again'));
           }
         },
-        error : function (jqXHR, textStatus, errorThrown) {
-          // second and thord parameter not needed but stop jsHint complaining
-          self.saveError(errorThrown, jqXHR, textStatus);
+        error : function () {
+          rg2.utils.showWarningDialog(this.gpstrack.routeData.name, rg2.t('Your route was not saved. Please try again'));
         }
       });
-    },
-
-    saveError : function (text) {
-      rg2.utils.showWarningDialog(this.gpstrack.routeData.name, rg2.t('Your route was not saved. Please try again') + '. ' + text);
     },
 
     routeSaved : function () {
@@ -2887,10 +2869,6 @@ var rg2 = (function (window, $) {
         }
       }
       return false;
-    },
-
-    trackLocked : function () {
-      return (this.pointsLocked > 0);
     },
 
     adjustTrack : function (x1, y1, x2, y2, button) {
@@ -2978,7 +2956,7 @@ var rg2 = (function (window, $) {
       if (!isFinite(a) || !isFinite(scale)) {
         // TODO: this will cause trouble when y1 is 0 (or even just very small) but I've never managed to get it to happen
         // you need to click exactly on a line through the two locked handles: just do nothing for now
-        console.log("y1 became 0: scale factors invalid", a, scale);
+        // console.log("y1 became 0: scale factors invalid", a, scale);
         return;
       }
       // recalculate all points between locked handles
@@ -3296,7 +3274,6 @@ var rg2 = (function (window, $) {
     this.activeEventID = null;
   }
 
-
   Events.prototype = {
     Constructor : Events,
 
@@ -3362,10 +3339,8 @@ var rg2 = (function (window, $) {
       return "Routegadget 2";
     },
 
-    createEventEditDropdown : function () {
-      $("#rg2-event-selected").empty();
-      var i, len, opt, dropdown;
-      dropdown = document.getElementById("rg2-event-selected");
+    getEventEditDropdown : function (dropdown) {
+      var i, len, opt;
       opt = document.createElement("option");
       opt.value = null;
       opt.text = 'No event selected';
@@ -3377,6 +3352,7 @@ var rg2 = (function (window, $) {
         opt.text = this.events[i].kartatid + ": " + this.events[i].date + ": " + this.events[i].name;
         dropdown.options.add(opt);
       }
+      return dropdown;
     },
 
     isScoreEvent : function () {
@@ -3400,7 +3376,7 @@ var rg2 = (function (window, $) {
     getMetresPerPixel : function () {
       var lat1, lat2, lon1, lon2, size, pixels, w;
       if (this.activeEventID === null) {
-        // 1 is as harmless as anything else in this serror situation
+        // 1 is as harmless as anything else in this error situation
         return 1;
       }
       size = rg2.getMapSize();
@@ -3548,16 +3524,13 @@ var rg2 = (function (window, $) {
     },
 
     getSecsFromTrackpoint : function (timestring) {
-      var hrs, mins, secs;
-      try {
-        // input is 2013-12-03T12:34:56Z (or 56.000Z)
-        hrs = parseInt(timestring.substr(11, 2), 10);
-        mins = parseInt(timestring.substr(14, 2), 10);
-        secs = parseInt(timestring.substr(17, 2), 10);
-        return (hrs * 3600) + (mins * 60) + secs;
-      } catch (err) {
+      var secs;
+      // input is 2013-12-03T12:34:56Z (or 56.000Z)
+      secs = (parseInt(timestring.substr(11, 2), 10) * 3600) + (parseInt(timestring.substr(14, 2), 10) * 60) + parseInt(timestring.substr(17, 2), 10);
+      if (isNaN(secs)) {
         return 0;
       }
+      return secs;
     },
 
     processGPSTrack : function () {
@@ -3604,21 +3577,23 @@ var rg2 = (function (window, $) {
 
     addStartAndFinishHandles : function () {
       // add handles at start and finish of route
-      var h = {};
-      h.x = this.baseX[0];
-      h.y = this.baseY[0];
-      h.basex = h.x;
-      h.basey = h.y;
-      h.locked = false;
-      h.time = 0;
-      this.handles.push(h);
-      h.x = this.baseX[this.baseX.length - 1];
-      h.y = this.baseY[this.baseY.length - 1];
-      h.basex = h.x;
-      h.basey = h.y;
-      h.locked = false;
-      h.time = this.baseY.length - 1;
-      this.handles.push(h);
+      var h1, h2;
+      h1 = {};
+      h1.x = this.baseX[0];
+      h1.y = this.baseY[0];
+      h1.basex = h1.x;
+      h1.basey = h1.y;
+      h1.locked = false;
+      h1.time = 0;
+      this.handles.push(h1);
+      h2 = {};
+      h2.x = this.baseX[this.baseX.length - 1];
+      h2.y = this.baseY[this.baseY.length - 1];
+      h2.basex = h2.x;
+      h2.basey = h2.y;
+      h2.locked = false;
+      h2.time = this.baseY.length - 1;
+      this.handles.push(h2);
     },
 
     fitTrackInsideCourse : function () {
@@ -3740,10 +3715,7 @@ var rg2 = (function (window, $) {
       // don't get score course info for GPS tracks so find it from original result
       for (i = 0; i < this.results.length; i += 1) {
         if (this.results[i].resultid >= rg2.config.GPS_RESULT_OFFSET) {
-          id = this.results[i].resultid;
-          while (id >= rg2.config.GPS_RESULT_OFFSET) {
-            id -= rg2.config.GPS_RESULT_OFFSET;
-          }
+          id = this.results[i].rawid;
           for (j = 0; j < this.results.length; j += 1) {
             if (id === this.results[j].resultid) {
               baseresult = this.getFullResult(j);
@@ -4082,19 +4054,16 @@ var rg2 = (function (window, $) {
       for (i = 0; i < l; i += 1) {
         resultIndex = tracks[i].resultid;
         j = 0;
-        // don't add GPS track since we got a better one in the original results
-        if (resultIndex < rg2.config.GPS_RESULT_OFFSET) {
-          // loop through all results and add it against the correct id
-          while (j < this.results.length) {
-            if (resultIndex === this.results[j].resultid) {
-              this.results[j].addTrack(tracks[i], eventinfo.format);
-              break;
-            }
-            j += 1;
+        // API filters out GPS results since we get a better track in the original results
+        // loop through all results and add it against the correct id
+        while (j < this.results.length) {
+          if (resultIndex === this.results[j].resultid) {
+            this.results[j].addTrack(tracks[i], eventinfo.format);
+            break;
           }
+          j += 1;
         }
       }
-
     },
 
     deleteAllResults : function () {
@@ -4206,11 +4175,14 @@ var rg2 = (function (window, $) {
       opt.text = rg2.t('Select name');
       dropdown.options.add(opt);
       for (i = 0; i < this.results.length; i += 1) {
+        // only use original results, not GPS results
         if (this.results[i].courseid === courseid) {
-          opt = document.createElement("option");
-          opt.value = i;
-          opt.text = this.results[i].name;
-          dropdown.options.add(opt);
+          if (this.results[i].resultid < rg2.config.GPS_RESULT_OFFSET) {
+            opt = document.createElement("option");
+            opt.value = i;
+            opt.text = this.results[i].name;
+            dropdown.options.add(opt);
+          }
         }
       }
       dropdown.options.add(opt);
@@ -4235,11 +4207,7 @@ var rg2 = (function (window, $) {
     this.starttime = res.starttime;
     this.splits = res.splits;
     this.legpos = res.legpos;
-    if (res.trackColour === null) {
-      this.colour = rg2.getNextRouteColour();
-    } else {
-      this.colour = res.trackColour;
-    }
+    this.colour = res.trackColour;
     // get course details
     if (res.isScoreEvent) {
       course = {};
@@ -8498,13 +8466,8 @@ var rg2 = (function (window, $) {
     this.time = data.time;
     this.position = data.position;
     this.status = data.status;
-    // get round iconv problem in API for now
-    if (data.comments !== null) {
-      // unescape special characters to get sensible text
-      this.comments = rg2.he.decode(data.comments);
-    } else {
-      this.comments = "";
-    }
+    // get round iconv problem in API for now: unescape special characters to get sensible text
+    this.comments = rg2.he.decode(data.comments);
     this.coursename = data.coursename;
     if (this.coursename === "") {
       this.coursename = data.courseid;
@@ -8526,7 +8489,7 @@ var rg2 = (function (window, $) {
     this.hasValidTrack = false;
     this.displayTrack = false;
     this.displayScoreCourse = false;
-    this.trackColour = null;
+    this.trackColour = rg2.colours.getNextColour();
     // raw track data
     this.trackx = [];
     this.tracky = [];
@@ -8556,9 +8519,6 @@ var rg2 = (function (window, $) {
 
     putTrackOnDisplay : function () {
       if (this.hasValidTrack) {
-        if (this.trackColour === null) {
-          this.trackColour = rg2.getNextRouteColour();
-        }
         this.displayTrack = true;
       }
     },
@@ -8566,14 +8526,13 @@ var rg2 = (function (window, $) {
     removeTrackFromDisplay : function () {
       if (this.hasValidTrack) {
         this.displayTrack = false;
-        this.trackColour = null;
       }
     },
 
     addTrack : function (data, format) {
+      var trackOK;
       this.trackx = data.gpsx;
       this.tracky = data.gpsy;
-      var trackOK;
       if (this.isGPSTrack) {
         trackOK = this.expandGPSTrack();
       } else {
@@ -8873,16 +8832,12 @@ var rg2 = (function (window, $) {
     getInitials : function (name) {
       var i, addNext, len, initials;
       // converts name to initials
-      // remove white space at each end
       if (name === null) {
         return "";
       }
       name.trim();
       len = name.length;
       initials = "";
-      if (len === 0) {
-        return "";
-      }
       addNext = true;
       for (i = 0; i < len; i += 1) {
         if (addNext) {
@@ -8893,16 +8848,63 @@ var rg2 = (function (window, $) {
           addNext = true;
         }
       }
-
       return initials;
     }
   };
   rg2.Result = Result;
-
 }());
 
 /*global rg2:false */
+/*global rg2Config:false */
 (function () {
+  function Georef(description, name, params) {
+    this.description = description;
+    this.name = name;
+    this.params = params;
+  }
+
+  function Georefs() {
+    this.georefsystems = [];
+    this.georefsystems.push(new Georef("Not georeferenced", "none", ""));
+    this.georefsystems.push(new Georef("GB National Grid", "EPSG:27700", "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs"));
+    this.georefsystems.push(new Georef("Google EPSG:900913", "EPSG:900913", "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs"));
+    if (rg2Config.epsg_code !== undefined) {
+      this.georefsystems.push(new Georef(rg2Config.epsg_code, rg2Config.epsg_code.replace(" ", ""), rg2Config.epsg_params));
+      this.defaultGeorefVal = rg2Config.epsg_code.replace(" ", "");
+    } else {
+      this.defaultGeorefVal = "EPSG:27700";
+    }
+  }
+
+  Georefs.prototype = {
+    Constructor : Georefs,
+
+    getDefault : function () {
+      return this.defaultGeorefVal;
+    },
+
+    getDropdown : function (dropdown) {
+      var i, opt;
+      for (i = 0; i < this.georefsystems.length; i += 1) {
+        opt = document.createElement("option");
+        opt.value = this.georefsystems[i].name;
+        opt.text = this.georefsystems[i].description;
+        dropdown.options.add(opt);
+      }
+      return dropdown;
+    },
+
+    getParams : function (name) {
+      var i, params;
+      params = "";
+      for (i = 0; i < this.georefsystems.length; i += 1) {
+        if (this.georefsystems[i].name === name) {
+          return this.georefsystems[i].params;
+        }
+      }
+      return params;
+    }
+  };
 
   function Worldfile(a, b, c, d, e, f) {
     // see http://en.wikipedia.org/wiki/World_file
@@ -8926,9 +8928,7 @@ var rg2 = (function (window, $) {
     }
   }
 
-
   Worldfile.prototype = {
-
     Constructor : Worldfile,
 
     // use worldfile to generate X value
@@ -8942,19 +8942,13 @@ var rg2 = (function (window, $) {
     }
   };
 
-  function Georef(description, name, params) {
-    this.description = description;
-    this.name = name;
-    this.params = params;
-  }
-
   function Map(data) {
     if (data !== undefined) {
       // existing map from database
       this.mapid = data.mapid;
       this.name = data.name;
       // worldfile for GPS to map image conversion (for GPS files)
-      this.worldfile = new rg2.Worldfile(data.A, data.B, data.C, data.D, data.E, data.F);
+      this.worldfile = new Worldfile(data.A, data.B, data.C, data.D, data.E, data.F);
       // worldfile for local co-ords to map image conversion (for georeferenced courses)
       this.localworldfile = new Worldfile(data.localA, data.localB, data.localC, data.localD, data.localE, data.localF);
       if (data.mapfilename === undefined) {
@@ -8967,17 +8961,15 @@ var rg2 = (function (window, $) {
       // new map to be added
       this.mapid = 0;
       this.name = "";
-      this.worldfile = new rg2.Worldfile(0, 0, 0, 0, 0, 0);
-      this.localworldfile = new rg2.Worldfile(0, 0, 0, 0, 0, 0);
+      this.worldfile = new Worldfile(0, 0, 0, 0, 0, 0);
+      this.localworldfile = new Worldfile(0, 0, 0, 0, 0, 0);
     }
     this.xpx = [];
     this.ypx = [];
     this.lat = [];
     this.lon = [];
   }
-
-
-  rg2.Georef = Georef;
+  rg2.Georefs = Georefs;
   rg2.Worldfile = Worldfile;
   rg2.Map = Map;
 }());
@@ -9090,7 +9082,6 @@ var rg2 = (function (window, $) {
     this.colourIndex = 0;
   }
 
-
   Colours.prototype = {
     Constructor : Colours,
 
@@ -9099,6 +9090,13 @@ var rg2 = (function (window, $) {
       return this.colours[this.colourIndex];
     }
   };
+
+  function User(keksi) {
+    this.x = "";
+    this.y = keksi;
+    this.name = null;
+    this.pwd = null;
+  }
 
   function RequestedHash() {
     this.id = 0;
@@ -9111,27 +9109,26 @@ var rg2 = (function (window, $) {
     Constructor : RequestedHash,
 
     parseHash : function (hash) {
-      try {
-        var fields, i;
-        // input looks like #id&course=a,b,c&result=x,y,z
-        fields = hash.split('&');
-        for (i = 0; i < fields.length; i += 1) {
-          fields[i] = fields[i].toLowerCase();
-          if (fields[i].search('#') !== -1) {
-            this.id = parseInt(fields[i].replace("#", ""), 10);
-          }
-          if (fields[i].search('course=') !== -1) {
-            this.courses = fields[i].replace("course=", "").split(',');
-          }
-          if (fields[i].search('route=') !== -1) {
-            this.routes = fields[i].replace("route=", "").split(',');
-          }
+      var fields, i;
+      // input looks like #id&course=a,b,c&result=x,y,z
+      fields = hash.split('&');
+      for (i = 0; i < fields.length; i += 1) {
+        fields[i] = fields[i].toLowerCase();
+        if (fields[i].search('#') !== -1) {
+          this.id = parseInt(fields[i].replace("#", ""), 10);
         }
-        // convert to integers
-        this.courses = this.courses.map(Number);
-        this.routes = this.routes.map(Number);
+        if (fields[i].search('course=') !== -1) {
+          this.courses = fields[i].replace("course=", "").split(',');
+        }
+        if (fields[i].search('route=') !== -1) {
+          this.routes = fields[i].replace("route=", "").split(',');
+        }
+      }
+      // convert to integers: NaNs sort themselves out on display so don't check here
+      this.courses = this.courses.map(Number);
+      this.routes = this.routes.map(Number);
 
-      } catch (e) {
+      if (isNaN(this.id)) {
         this.id = 0;
         this.courses.length = 0;
         this.routes.length = 0;
@@ -9175,33 +9172,33 @@ var rg2 = (function (window, $) {
     },
 
     getHash : function () {
-      var hash, i;
+      var hash;
       if (this.id === 0) {
         return '#0';
       }
       hash = '#' + this.id;
-      if (this.courses.length > 0) {
-        hash += '&course=';
-        for (i = 0; i < this.courses.length; i += 1) {
-          if (i > 0) {
-            hash += ',';
-          }
-          hash += this.courses[i];
-        }
-      }
-      if (this.routes.length > 0) {
-        hash += '&route=';
-        for (i = 0; i < this.routes.length; i += 1) {
-          if (i > 0) {
-            hash += ',';
-          }
-          hash += this.routes[i];
-        }
-      }
+      hash += this.extractItems(this.courses, "&course=");
+      hash += this.extractItems(this.routes, "&route=");
       return hash;
+    },
+
+    extractItems : function (items, text) {
+      var i, extrahash;
+      extrahash = "";
+      if (items.length > 0) {
+        extrahash += text;
+        for (i = 0; i < items.length; i += 1) {
+          if (i > 0) {
+            extrahash += ',';
+          }
+          extrahash += items[i];
+        }
+      }
+      return extrahash;
     }
   };
   rg2.RequestedHash = RequestedHash;
   rg2.Utils = Utils;
   rg2.Colours = Colours;
+  rg2.User = User;
 }());

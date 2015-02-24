@@ -106,7 +106,6 @@
     this.colourIndex = 0;
   }
 
-
   Colours.prototype = {
     Constructor : Colours,
 
@@ -115,6 +114,13 @@
       return this.colours[this.colourIndex];
     }
   };
+
+  function User(keksi) {
+    this.x = "";
+    this.y = keksi;
+    this.name = null;
+    this.pwd = null;
+  }
 
   function RequestedHash() {
     this.id = 0;
@@ -190,33 +196,33 @@
     },
 
     getHash : function () {
-      var hash, i;
+      var hash;
       if (this.id === 0) {
         return '#0';
       }
       hash = '#' + this.id;
-      if (this.courses.length > 0) {
-        hash += '&course=';
-        for (i = 0; i < this.courses.length; i += 1) {
-          if (i > 0) {
-            hash += ',';
-          }
-          hash += this.courses[i];
-        }
-      }
-      if (this.routes.length > 0) {
-        hash += '&route=';
-        for (i = 0; i < this.routes.length; i += 1) {
-          if (i > 0) {
-            hash += ',';
-          }
-          hash += this.routes[i];
-        }
-      }
+      hash += this.extractItems(this.courses, "&course=");
+      hash += this.extractItems(this.routes, "&route=");
       return hash;
+    },
+
+    extractItems : function (items, text) {
+      var i, extrahash;
+      extrahash = "";
+      if (items.length > 0) {
+        extrahash += text;
+        for (i = 0; i < items.length; i += 1) {
+          if (i > 0) {
+            extrahash += ',';
+          }
+          extrahash += items[i];
+        }
+      }
+      return extrahash;
     }
   };
   rg2.RequestedHash = RequestedHash;
   rg2.Utils = Utils;
   rg2.Colours = Colours;
+  rg2.User = User;
 }());

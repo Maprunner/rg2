@@ -57,7 +57,7 @@ var rg2 = (function (window, $) {
     EVENT_WITHOUT_RESULTS : 2,
     SCORE_EVENT : 3,
     // version gets set automatically by grunt file during build process
-    RG2VERSION : '1.0.4',
+    RG2VERSION: '1.1.0',
     TIME_NOT_FOUND : 9999,
     SPLITS_NOT_FOUND : 9999,
     // values for evt.which
@@ -971,7 +971,7 @@ var rg2 = (function (window, $) {
     var pt;
     if (dragStart) {
       pt = ctx.transformedPoint(lastX, lastY);
-      //console.log ("Mousemove after" + pt.x + ": " + pt.y);
+      // console.log ("Mousemove after " + pt.x + ": " + pt.y);
       // simple debounce so that very small drags are treated as clicks instead
       if ((Math.abs(pt.x - dragStart.x) + Math.abs(pt.y - dragStart.y)) > 5) {
         if (rg2.drawing.gpsFileLoaded()) {
@@ -990,6 +990,7 @@ var rg2 = (function (window, $) {
   };
 
   handleInputUp = function (evt) {
+    // console.log("Input up " + dragged);
     var active = $rg2infopanel.tabs("option", "active");
     if (!dragged) {
       if (active === config.TAB_CREATE) {

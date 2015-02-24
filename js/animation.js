@@ -32,6 +32,8 @@
       this.runners.length = 0;
       clearInterval(this.timer);
       this.timer = null;
+      this.massStartControl = 0;
+      this.massStartByControl = false;
       this.updateAnimationDetails();
       $("#btn-start-stop").removeClass("fa-pause").addClass("fa-play");
       $("#btn-start-stop").prop("title", rg2.t("Run"));
@@ -116,9 +118,7 @@
       prevControlSecs = 0;
       // find maximum number of controls to set size of table
       for (i = 0; i < this.runners.length; i += 1) {
-        if (this.runners[i].splits.length > maxControls) {
-          maxControls = this.runners[i].splits.length;
-        }
+        maxControls = Math.max(maxControls, this.runners[i].splits.length);
       }
       // allow for start and finish
       maxControls -= 2;

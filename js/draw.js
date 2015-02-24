@@ -376,11 +376,7 @@
         this.gpstrack.routeData.x.push(Math.round(x));
         this.gpstrack.routeData.y.push(Math.round(y));
       }
-      if (this.gpstrack.routeData.x.length > 1) {
-        $("#btn-undo").button("enable");
-      } else {
-        $("#btn-undo").button("disable");
-      }
+      $("#btn-undo").button("enable");
       rg2.redraw(false);
     },
 

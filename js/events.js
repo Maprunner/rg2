@@ -5,7 +5,6 @@
     this.activeEventID = null;
   }
 
-
   Events.prototype = {
     Constructor : Events,
 
@@ -71,10 +70,8 @@
       return "Routegadget 2";
     },
 
-    createEventEditDropdown : function () {
-      $("#rg2-event-selected").empty();
-      var i, len, opt, dropdown;
-      dropdown = document.getElementById("rg2-event-selected");
+    getEventEditDropdown : function (dropdown) {
+      var i, len, opt;
       opt = document.createElement("option");
       opt.value = null;
       opt.text = 'No event selected';
@@ -86,6 +83,7 @@
         opt.text = this.events[i].kartatid + ": " + this.events[i].date + ": " + this.events[i].name;
         dropdown.options.add(opt);
       }
+      return dropdown;
     },
 
     isScoreEvent : function () {
@@ -109,7 +107,7 @@
     getMetresPerPixel : function () {
       var lat1, lat2, lon1, lon2, size, pixels, w;
       if (this.activeEventID === null) {
-        // 1 is as harmless as anything else in this serror situation
+        // 1 is as harmless as anything else in this error situation
         return 1;
       }
       size = rg2.getMapSize();

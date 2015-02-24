@@ -4,13 +4,6 @@
 /*global Proj4js:false */
 /*global console:false */
 (function () {
-  function User(keksi) {
-    this.x = "";
-    this.y = keksi;
-    this.name = null;
-    this.pwd = null;
-  }
-
   function Manager(keksi) {
     this.DO_NOT_SAVE_COURSE = 9999;
     this.INVALID_MAP_ID = 9999;
@@ -20,6 +13,7 @@
     this.loggedIn = false;
     this.user = new rg2.User(keksi);
     this.newMap = new rg2.Map();
+    this.georefsystems = new rg2.Georefs();
     this.eventName = null;
     this.eventDate = null;
     this.eventLevel = null;
@@ -48,46 +42,34 @@
     this.worldfile = new rg2.Worldfile(0, 0, 0, 0, 0, 0);
     this.HANDLE_DOT_RADIUS = 10;
     this.handleColor = '#ff0000';
-    $("#btn-login").button();
-
-    this.georefsystems = [];
-    this.DO_NOT_GEOREF = "none";
-    this.georefsystems.push(new rg2.Georef("Not georeferenced", this.DO_NOT_GEOREF, ""));
-    this.georefsystems.push(new rg2.Georef("GB National Grid", "EPSG:27700", "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs"));
-    this.georefsystems.push(new rg2.Georef("Google EPSG:900913", "EPSG:900913", "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs"));
-    if (rg2Config.epsg_code !== undefined) {
-      this.georefsystems.push(new rg2.Georef(rg2Config.epsg_code, rg2Config.epsg_code.replace(" ", ""), rg2Config.epsg_params));
-      this.defaultGeorefVal = rg2Config.epsg_code.replace(" ", "");
-    } else {
-      this.defaultGeorefVal = "EPSG:27700";
-    }
-    $("rg2-manager-courses").hide();
-    $("rg2-manager-results").hide();
-
-    var self = this;
-
-    $("#rg2-manager-login-form").submit(function () {
-      self.user.name = $("#rg2-user-name").val();
-      self.user.pwd = $("#rg2-password").val();
-      // check we have user name and password
-      if ((self.user.name.length > 4) && (self.user.pwd.length > 4)) {
-        self.logIn();
-      } else {
-        rg2.utils.showWarningDialog("Login failed", "Please enter user name and password of at least five characters");
-      }
-      // prevent form submission
-      return false;
-    });
-
-    $("#rg2-new-event-details-form").submit(function () {
-      console.log("Form submitted");
-    });
+    this.initialiseUI();
   }
-
 
   Manager.prototype = {
 
     Constructor : Manager,
+
+    initialiseUI : function () {
+      var self = this;
+      $("#btn-login").button();
+      $("rg2-manager-courses").hide();
+      $("rg2-manager-results").hide();
+      $("#rg2-manager-login-form").submit(function () {
+        self.user.name = $("#rg2-user-name").val();
+        self.user.pwd = $("#rg2-password").val();
+        // check we have user name and password
+        if ((self.user.name.length > 4) && (self.user.pwd.length > 4)) {
+          self.logIn();
+        } else {
+          rg2.utils.showWarningDialog("Login failed", "Please enter user name and password of at least five characters");
+        }
+        // prevent form submission
+        return false;
+      });
+      $("#rg2-new-event-details-form").submit(function () {
+        console.log("Form submitted");
+      });
+    },
 
     encodeUser : function () {
       var data = {};
@@ -135,10 +117,15 @@
 
     enableEventEdit : function () {
       var self = this;
+      this.setUIVisibility();
       this.loggedIn = true;
       this.getMaps();
       this.setButtons();
       this.createEventLevelDropdown("rg2-event-level");
+      this.createEventLevelDropdown("rg2-event-level-edit");
+      this.createGeorefDropdown();
+      this.createEventEditDropdown();
+
       $("#rg2-event-level").change(function () {
         self.eventLevel = $("#rg2-event-level").val();
         if (self.eventLevel !== 'X') {
@@ -161,8 +148,6 @@
         }
       });
 
-      rg2.events.createEventEditDropdown();
-
       $('#rg2-event-comments').focus(function () {
         // Clear comment box if user focuses on it and it still contains default text
         var text = $("#rg2-event-comments").val();
@@ -177,9 +162,6 @@
           self.setDate(date);
         }
       });
-
-      this.createEventLevelDropdown("rg2-event-level-edit");
-      this.createGeorefDropdown();
 
       $("#rg2-event-date-edit").datepicker({
         dateFormat : 'yy-mm-dd'
@@ -209,23 +191,6 @@
         self.setGeoref($("#rg2-georef-selected").val());
       });
 
-      $("#rg2-load-map-file").button().change(function (evt) {
-        self.readMapFile(evt);
-      });
-
-      $("#rg2-load-georef-file").button().change(function (evt) {
-        self.readGeorefFile(evt);
-      });
-
-      $("#rg2-load-results-file").button().change(function (evt) {
-        self.readResults(evt);
-      });
-
-      $("#rg2-load-course-file").button().change(function (evt) {
-        self.readCourses(evt);
-      });
-
-      this.setUIVisibility();
       $('#rg2-info-panel').tabs('option', 'active', rg2.config.TAB_CREATE);
     },
 
@@ -261,25 +226,25 @@
         self.confirmAddMap();
       }).button("disable");
       $("#btn-draw-courses").button().click(function () {
-        if (self.mapLoaded) {
-          self.drawingCourses = true;
-          self.courses.length = 0;
-          self.newcontrols.deleteAllControls();
-          self.drawnCourse.name = 'Course';
-          self.drawnCourse.x = [];
-          self.drawnCourse.y = [];
-          self.drawnCourse.codes = [];
-          $('#rg2-new-course-name').val('Course');
-          $('#rg2-draw-courses').show();
-        } else {
-          rg2.utils.showWarningDialog("No map selected", "Please load a map before drawing courses");
-        }
+        self.startDrawingCourses();
+      });
+      $("#rg2-load-georef-file").button().change(function (evt) {
+        self.readGeorefFile(evt);
+      });
+      $("#rg2-load-map-file").button().change(function (evt) {
+        self.readMapFile(evt);
+      });
+      $("#rg2-load-results-file").button().change(function (evt) {
+        self.readResults(evt);
       });
       $("#btn-move-map-and-controls").click(function (evt) {
         self.toggleMoveAll(evt.target.checked);
       });
       $("#btn-no-results").click(function (evt) {
         self.toggleResultsRequired(evt.target.checked);
+      });
+      $("#rg2-load-course-file").button().change(function (evt) {
+        self.readCourses(evt);
       });
     },
 
@@ -331,7 +296,7 @@
 
     eventListLoaded : function () {
       // called after event list has been updated
-      rg2.events.createEventEditDropdown();
+      this.createEventEditDropdown();
     },
 
     eventFinishedLoading : function () {
@@ -371,15 +336,17 @@
     },
 
     createGeorefDropdown : function () {
-      var dropdown, i, opt;
+      var dropdown;
       $("#rg2-georef-selected").empty();
       dropdown = document.getElementById("rg2-georef-selected");
-      for (i = 0; i < this.georefsystems.length; i += 1) {
-        opt = document.createElement("option");
-        opt.value = this.georefsystems[i].name;
-        opt.text = this.georefsystems[i].description;
-        dropdown.options.add(opt);
-      }
+      dropdown = this.georefsystems.getDropdown(dropdown);
+    },
+
+    createEventEditDropdown : function () {
+      var dropdown;
+      $("#rg2-event-selected").empty();
+      dropdown = document.getElementById("rg2-event-selected");
+      dropdown = rg2.events.getEventEditDropdown(dropdown);
     },
 
     createCourseDeleteDropdown : function (id) {
@@ -430,6 +397,22 @@
         }
       }
 
+    },
+
+    startDrawingCourses : function () {
+      if (this.mapLoaded) {
+        this.drawingCourses = true;
+        this.courses.length = 0;
+        this.newcontrols.deleteAllControls();
+        this.drawnCourse.name = 'Course';
+        this.drawnCourse.x = [];
+        this.drawnCourse.y = [];
+        this.drawnCourse.codes = [];
+        $('#rg2-new-course-name').val('Course');
+        $('#rg2-draw-courses').show();
+      } else {
+        rg2.utils.showWarningDialog("No map selected", "Please load a map before drawing courses");
+      }
     },
 
     displayCourseAllocations : function () {
@@ -1950,7 +1933,7 @@
 
     // based on adjustTrack from draw.js
     adjustControls : function (x1, y1, x2, y2, button) {
-      // console.log(x1, y1, x2, y2, button);
+      // console.log (x1, y1, x2, y2, this.handleX, this.handleY, button);
       var i, x, y, dx, dy, scaleX, scaleY;
       if ((this.backgroundLocked) || (button === rg2.config.RIGHT_CLICK)) {
         // drag track and background
@@ -1961,12 +1944,15 @@
           scaleX = (x2 - this.handleX) / (x1 - this.handleX);
           scaleY = (y2 - this.handleY) / (y1 - this.handleY);
           // don't rotate: we are assuming controls and map are already rotated the same
-          //console.log (x1, y1, x2, y2, this.handleX, this.handleY, scaleX, scaleY);
-          for (i = 0; i < this.newcontrols.controls.length; i += 1) {
-            x = this.newcontrols.controls[i].oldX - this.handleX;
-            y = this.newcontrols.controls[i].oldY - this.handleY;
-            this.newcontrols.controls[i].x = (x * scaleX) + this.handleX;
-            this.newcontrols.controls[i].y = (y * scaleY) + this.handleY;
+          // console.log (x1, y1, x2, y2, this.handleX, this.handleY, scaleX, scaleY);
+          if (isFinite(scaleX) && isFinite(scaleY)) {
+            // just ignore very small moves
+            for (i = 0; i < this.newcontrols.controls.length; i += 1) {
+              x = this.newcontrols.controls[i].oldX - this.handleX;
+              y = this.newcontrols.controls[i].oldY - this.handleY;
+              this.newcontrols.controls[i].x = (x * scaleX) + this.handleX;
+              this.newcontrols.controls[i].y = (y * scaleY) + this.handleY;
+            }
           }
         } else {
           // drag controls
@@ -1981,6 +1967,7 @@
     },
 
     dragEnded : function () {
+      // console.log("Drag ended");
       if ((this.mapLoaded) && (this.newcontrols.controls.length > 0)) {
         // rebaseline control locations
         this.copyXYToOldXY();
@@ -1988,7 +1975,7 @@
     },
 
     mouseUp : function (x, y) {
-      // console.log(x, y);
+      // console.log("Mouse up ",x, y);
       if (this.drawingCourses) {
         this.addNewControl(x, y);
         return;
@@ -2149,14 +2136,13 @@
       };
       reader.onload = function (evt) {
         // see http://en.wikipedia.org/wiki/World_file
-        // read JGW world file
         var txt, args;
         txt = evt.target.result;
         args = txt.split(/[\r\n]+/g);
         delete self.localworldfile;
         self.localworldfile = new rg2.Worldfile(args[0], args[2], args[4], args[1], args[3], args[5]);
-        $("#rg2-georef-selected").val(self.defaultGeorefVal);
-        self.convertWorldFile(self.defaultGeorefVal);
+        $("#rg2-georef-selected").val(self.georefsystems.getDefault());
+        self.convertWorldFile(self.georefsystems.getDefault());
       };
     },
 
@@ -2168,43 +2154,33 @@
         size = rg2.getMapSize();
         this.mapWidth = size.width;
         this.mapHeight = size.height;
-        if ((!this.localworldfile.valid) || (this.mapWidth === 0) || (type === this.DO_NOT_GEOREF)) {
+        if ((!this.localworldfile.valid) || (this.mapWidth === 0) || (type === "none")) {
           // no map or world file loaded or user selected do not georef
           this.clearGeorefs();
           return;
         }
 
-        // first entry is no georef so don't initialize it'
-        for (i = 1; i < this.georefsystems.length; i += 1) {
-          Proj4js.defs[this.georefsystems[i].name] = this.georefsystems[i].params;
-        }
+        Proj4js.defs[type] = this.georefsystems.getParams(type);
         source = new Proj4js.Proj(type);
 
-        // WGS84 as used by GPS
+        // WGS84 as used by GPS: included by default in Proj4js.defs
         dest = new Proj4js.Proj("EPSG:4326");
         xScale = this.localworldfile.A;
         ySkew = this.localworldfile.D;
         xSkew = this.localworldfile.B;
         yScale = this.localworldfile.E;
+        // x0, y0 is top left
+        // x1, y1 is bottom right
+        // x2, y2 is top right
+        xpx = [0, this.mapWidth, this.mapWidth];
+        ypx = [0, this.mapHeight, 0];
+
         xsrc = [];
         ysrc = [];
-        xpx = [];
-        ypx = [];
-        // x0, y0 is top left
         xsrc[0] = this.localworldfile.C;
         ysrc[0] = this.localworldfile.F;
-        xpx[0] = 0;
-        ypx[0] = 0;
-
-        // x1, y1 is bottom right
-        xpx[1] = this.mapWidth;
-        ypx[1] = this.mapHeight;
         xsrc[1] = (xScale * xpx[1]) + (xSkew * ypx[1]) + xsrc[0];
         ysrc[1] = (yScale * ypx[1]) + (ySkew * xpx[1]) + ysrc[0];
-
-        // x2, y2 is top right
-        xpx[2] = this.mapWidth;
-        ypx[2] = 0;
         xsrc[2] = (xScale * xpx[2]) + (xSkew * ypx[2]) + xsrc[0];
         ysrc[2] = (yScale * ypx[2]) + (ySkew * xpx[2]) + ysrc[0];
 
@@ -2259,7 +2235,5 @@
       $("#georef-F").empty().text("F: " + this.newMap.worldfile.F);
     }
   };
-
-  rg2.User = User;
   rg2.Manager = Manager;
 }());
