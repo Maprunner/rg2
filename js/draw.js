@@ -9,24 +9,6 @@
     this.initialiseDrawing();
   }
 
-  function RouteData() {
-    this.courseid = null;
-    this.coursename = null;
-    this.resultid = null;
-    this.isScoreCourse = false;
-    this.eventid = null;
-    this.name = null;
-    this.comments = null;
-    this.x = [];
-    this.y = [];
-    this.controlx = [];
-    this.controly = [];
-    this.time = [];
-    this.startsecs = 0;
-    this.totaltime = 0;
-  }
-
-
   Draw.prototype = {
     Constructor : Draw,
 
@@ -366,18 +348,21 @@
 
     addNewPoint : function (x, y) {
       if (this.closeEnough(x, y)) {
-        this.gpstrack.routeData.x.push(this.controlx[this.nextControl]);
-        this.gpstrack.routeData.y.push(this.controly[this.nextControl]);
+        this.addRouteDataPoint(this.controlx[this.nextControl], this.controly[this.nextControl]);
         this.nextControl += 1;
         if (this.nextControl === this.controlx.length) {
           $("#btn-save-route").button("enable");
         }
       } else {
-        this.gpstrack.routeData.x.push(Math.round(x));
-        this.gpstrack.routeData.y.push(Math.round(y));
+        this.addRouteDataPoint(Math.round(x), Math.round(y));
       }
       $("#btn-undo").button("enable");
       rg2.redraw(false);
+    },
+
+    addRouteDataPoint : function (x, y) {
+      this.gpstrack.routeData.x.push(x);
+      this.gpstrack.routeData.y.push(y);
     },
 
     undoGPSAdjust : function () {
@@ -501,8 +486,7 @@
 
     waitThreeSeconds : function () {
       // insert a new point in the same place as the last point
-      this.gpstrack.routeData.x.push(this.gpstrack.routeData.x[this.gpstrack.routeData.x.length - 1]);
-      this.gpstrack.routeData.y.push(this.gpstrack.routeData.y[this.gpstrack.routeData.y.length - 1]);
+      this.addRouteDataPoint(this.gpstrack.routeData.x[this.gpstrack.routeData.x.length - 1], this.gpstrack.routeData.y[this.gpstrack.routeData.y.length - 1]);
       rg2.redraw(false);
     },
 
@@ -577,7 +561,7 @@
       // case 5: shear/scale around two locked points
       // all based on putting handle1 at (0, 0), rotating handle 2 to be on x-axis and then shearing on x-axis and scaling on y-axis.
       // there must be a better way...
-      var i, lockedHandle1, lockedHandle2, fromTime, toTime, scale, angle, reverseAngle, a, xb, yb, xs, ys, x, y;
+      var i, lockedHandle1, lockedHandle2, fromTime, toTime, scale, angle, reverseAngle, a, x, y, pt;
       lockedHandle1 = this.getPreviousLockedHandle(handle);
       fromTime = trk.handles[lockedHandle1].time;
       lockedHandle2 = this.getNextLockedHandle(handle);
@@ -585,20 +569,18 @@
       //console.log("Point (", x1, ", ", y1, ") in middle of ", lockedHandle1, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey, " and ",lockedHandle2, trk.handles[lockedHandle2].basex, trk.handles[lockedHandle2].basey);
       reverseAngle = rg2.utils.getAngle(trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey, trk.handles[lockedHandle2].basex, trk.handles[lockedHandle2].basey);
       angle = (2 * Math.PI) - reverseAngle;
-      xb = x1 - trk.handles[lockedHandle1].basex;
-      yb = y1 - trk.handles[lockedHandle1].basey;
-      x1 = (Math.cos(angle) * xb) - (Math.sin(angle) * yb);
-      y1 = (Math.sin(angle) * xb) + (Math.cos(angle) * yb);
 
-      xb = x2 - trk.handles[lockedHandle1].basex;
-      yb = y2 - trk.handles[lockedHandle1].basey;
-      x2 = (Math.cos(angle) * xb) - (Math.sin(angle) * yb);
-      y2 = (Math.sin(angle) * xb) + (Math.cos(angle) * yb);
+      pt = rg2.utils.rotatePoint(x1 - trk.handles[lockedHandle1].basex, y1 - trk.handles[lockedHandle1].basey, angle);
+      x1 = pt.x;
+      y1 = pt.y;
 
-      xb = trk.handles[lockedHandle2].basex - trk.handles[lockedHandle1].basex;
-      yb = trk.handles[lockedHandle2].basey - trk.handles[lockedHandle1].basey;
-      x = (Math.cos(angle) * xb) - (Math.sin(angle) * yb);
-      y = (Math.sin(angle) * xb) + (Math.cos(angle) * yb);
+      pt = rg2.utils.rotatePoint(x2 - trk.handles[lockedHandle1].basex, y2 - trk.handles[lockedHandle1].basey, angle);
+      x2 = pt.x;
+      y2 = pt.y;
+
+      pt = rg2.utils.rotatePoint(trk.handles[lockedHandle2].basex - trk.handles[lockedHandle1].basex, trk.handles[lockedHandle2].basey - trk.handles[lockedHandle1].basey, angle);
+      x = pt.x;
+      y = pt.y;
 
       // calculate scaling factors
       a = (x2 - x1) / y1;
@@ -613,38 +595,34 @@
       // recalculate all points between locked handles
       for (i = fromTime + 1; i < toTime; i += 1) {
         // translate to put locked point at origin
-        xb = trk.baseX[i] - trk.handles[lockedHandle1].basex;
-        yb = trk.baseY[i] - trk.handles[lockedHandle1].basey;
         // rotate to give locked points as x-axis
-        x = (Math.cos(angle) * xb) - (Math.sin(angle) * yb);
-        y = (Math.sin(angle) * xb) + (Math.cos(angle) * yb);
+        pt = rg2.utils.rotatePoint(trk.baseX[i] - trk.handles[lockedHandle1].basex, trk.baseY[i] - trk.handles[lockedHandle1].basey, angle);
+        x = pt.x;
+        y = pt.y;
 
-        // shear/stretch
-        xs = x + (y * a);
-        ys = y * scale;
-        // rotate and translate back
-        trk.routeData.x[i] = (Math.cos(reverseAngle) * xs) - (Math.sin(reverseAngle) * ys) + trk.handles[lockedHandle1].basex;
-        trk.routeData.y[i] = (Math.sin(reverseAngle) * xs) + (Math.cos(reverseAngle) * ys) + trk.handles[lockedHandle1].basey;
+        // shear/stretch/rotate and translate back
+        pt = rg2.utils.rotatePoint(x + (y * a), y * scale, reverseAngle);
+        trk.routeData.x[i] = pt.x + trk.handles[lockedHandle1].basex;
+        trk.routeData.y[i] = pt.y + trk.handles[lockedHandle1].basey;
       }
       // recalculate all handles between locked handles
       for (i = 0; i < trk.handles.length; i += 1) {
         if ((!trk.handles[i].locked) && (trk.handles[i].time >= fromTime) && (trk.handles[i].time <= toTime)) {
-          xb = trk.handles[i].basex - trk.handles[lockedHandle1].basex;
-          yb = trk.handles[i].basey - trk.handles[lockedHandle1].basey;
           // rotate to give locked points as x-axis
-          x = (Math.cos(angle) * xb) - (Math.sin(angle) * yb);
-          y = (Math.sin(angle) * xb) + (Math.cos(angle) * yb);
+          pt = rg2.utils.rotatePoint(trk.handles[i].basex - trk.handles[lockedHandle1].basex, trk.handles[i].basey - trk.handles[lockedHandle1].basey, angle);
+          x = pt.x;
+          y = pt.y;
+
           // shear/stretch
-          xs = x + (y * a);
-          ys = y * scale;
-          trk.handles[i].x = ((Math.cos(reverseAngle) * xs) - (Math.sin(reverseAngle) * ys)) + trk.handles[lockedHandle1].basex;
-          trk.handles[i].y = ((Math.sin(reverseAngle) * xs) + (Math.cos(reverseAngle) * ys)) + trk.handles[lockedHandle1].basey;
+          pt = rg2.utils.rotatePoint(x + (y * a), y * scale, reverseAngle);
+          trk.handles[i].x = pt.x + trk.handles[lockedHandle1].basex;
+          trk.handles[i].y = pt.y + trk.handles[lockedHandle1].basey;
         }
       }
     },
 
     scaleRotateAroundLockedPoint : function (trk, x1, y1, x2, y2, earliest, latest, handle) {
-      var i, lockedHandle1, fromTime, toTime, scale, angle, x, y;
+      var i, lockedHandle1, fromTime, toTime, scale, angle, pt;
       if (trk.handles[earliest].time > trk.handles[handle].time) {
         lockedHandle1 = earliest;
         fromTime = 0;
@@ -660,40 +638,36 @@
       angle = rg2.utils.getAngle(x2, y2, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey) - rg2.utils.getAngle(x1, y1, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
       //console.log (x1, y1, x2, y2, trk.handles[handle].basex, trk.handles[handle].basey, scale, angle, fromTime, toTime);
       for (i = fromTime; i < toTime; i += 1) {
-        x = trk.baseX[i] - trk.handles[lockedHandle1].basex;
-        y = trk.baseY[i] - trk.handles[lockedHandle1].basey;
-        trk.routeData.x[i] = (((Math.cos(angle) * x) - (Math.sin(angle) * y)) * scale) + trk.handles[lockedHandle1].basex;
-        trk.routeData.y[i] = (((Math.sin(angle) * x) + (Math.cos(angle) * y)) * scale) + trk.handles[lockedHandle1].basey;
+        pt = rg2.utils.rotatePoint(trk.baseX[i] - trk.handles[lockedHandle1].basex, trk.baseY[i] - trk.handles[lockedHandle1].basey, angle);
+        trk.routeData.x[i] = (pt.x * scale) + trk.handles[lockedHandle1].basex;
+        trk.routeData.y[i] = (pt.y * scale) + trk.handles[lockedHandle1].basey;
       }
       for (i = 0; i < trk.handles.length; i += 1) {
         if ((!trk.handles[i].locked) && (trk.handles[i].time >= fromTime) && (trk.handles[i].time <= toTime)) {
-          x = trk.handles[i].basex - trk.handles[lockedHandle1].basex;
-          y = trk.handles[i].basey - trk.handles[lockedHandle1].basey;
-          trk.handles[i].x = (((Math.cos(angle) * x) - (Math.sin(angle) * y)) * scale) + trk.handles[lockedHandle1].basex;
-          trk.handles[i].y = (((Math.sin(angle) * x) + (Math.cos(angle) * y)) * scale) + trk.handles[lockedHandle1].basey;
+          pt = rg2.utils.rotatePoint(trk.handles[i].basex - trk.handles[lockedHandle1].basex, trk.handles[i].basey - trk.handles[lockedHandle1].basey, angle);
+          trk.handles[i].x = (pt.x * scale) + trk.handles[lockedHandle1].basex;
+          trk.handles[i].y = (pt.y * scale) + trk.handles[lockedHandle1].basey;
         }
       }
     },
 
     rotateAroundLockedPoint : function (trk, x1, y1, x2, y2) {
-      var scale, angle, x, y, i, handle;
+      var scale, angle, pt, i, handle;
       handle = this.getLockedHandle();
       // scale and rotate track around single locked point
       angle = rg2.utils.getAngle(x2, y2, handle.basex, handle.basey) - rg2.utils.getAngle(x1, y1, handle.basex, handle.basey);
       scale = rg2.utils.getDistanceBetweenPoints(x2, y2, handle.basex, handle.basey) / rg2.utils.getDistanceBetweenPoints(x1, y1, handle.basex, handle.basey);
       //console.log (x1, y1, x2, y2, handle.basex, handle.basey, scale, angle);
       for (i = 0; i < trk.baseX.length; i += 1) {
-        x = trk.baseX[i] - handle.basex;
-        y = trk.baseY[i] - handle.basey;
-        trk.routeData.x[i] = (((Math.cos(angle) * x) - (Math.sin(angle) * y)) * scale) + handle.basex;
-        trk.routeData.y[i] = (((Math.sin(angle) * x) + (Math.cos(angle) * y)) * scale) + handle.basey;
+        pt = rg2.utils.rotatePoint(trk.baseX[i] - handle.basex, trk.baseY[i] - handle.basey, angle);
+        trk.routeData.x[i] = (pt.x * scale) + handle.basex;
+        trk.routeData.y[i] = (pt.y * scale) + handle.basey;
       }
       for (i = 0; i < trk.handles.length; i += 1) {
         if (!trk.handles[i].locked) {
-          x = trk.handles[i].basex - handle.basex;
-          y = trk.handles[i].basey - handle.basey;
-          trk.handles[i].x = (((Math.cos(angle) * x) - (Math.sin(angle) * y)) * scale) + handle.basex;
-          trk.handles[i].y = (((Math.sin(angle) * x) + (Math.cos(angle) * y)) * scale) + handle.basey;
+          pt = rg2.utils.rotatePoint(trk.handles[i].basex - handle.basex, trk.handles[i].basey - handle.basey, angle);
+          trk.handles[i].x = (pt.x * scale) + handle.basex;
+          trk.handles[i].y = (pt.y * scale) + handle.basey;
         }
       }
     },
@@ -797,7 +771,7 @@
     },
 
     drawNewTrack : function () {
-      var i, l, opt;
+      var opt;
       opt = rg2.getOverprintDetails();
       rg2.ctx.lineWidth = opt.overprintWidth;
       rg2.ctx.strokeStyle = this.trackColor;
@@ -821,12 +795,13 @@
         // dot at centre of control circle
         rg2.ctx.fillRect(this.controlx[this.nextControl] - 1, this.controly[this.nextControl] - 1, 3, 3);
         rg2.ctx.stroke();
-        // dot at start of route
-        rg2.ctx.beginPath();
-        rg2.ctx.arc(this.gpstrack.routeData.x[0] + (rg2.config.RUNNER_DOT_RADIUS / 2), this.gpstrack.routeData.y[0], rg2.config.RUNNER_DOT_RADIUS, 0, 2 * Math.PI, false);
-        rg2.ctx.fill();
       }
-      // route itself
+      this.drawRoute();
+      this.drawHandles();
+    },
+
+    drawRoute : function () {
+      var i, l;
       if (this.gpstrack.routeData.x.length > 1) {
         rg2.ctx.beginPath();
         rg2.ctx.moveTo(this.gpstrack.routeData.x[0], this.gpstrack.routeData.y[0]);
@@ -837,7 +812,10 @@
         }
         rg2.ctx.stroke();
       }
-      // locked points
+    },
+
+    drawHandles : function () {
+      var i, l;
       l = this.gpstrack.handles.length;
       for (i = 0; i < l; i += 1) {
         if (this.gpstrack.handles[i].locked === true) {
@@ -854,5 +832,4 @@
     }
   };
   rg2.Draw = Draw;
-  rg2.RouteData = RouteData;
 }());

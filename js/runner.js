@@ -3,7 +3,7 @@
 // animated runner details
 (function () {
   function Runner(resultid) {
-    var res, course, control, lastPointIndex, ind;
+    var res, course;
     res = rg2.results.getFullResult(resultid);
     this.name = res.name;
     this.initials = res.initials;
@@ -33,39 +33,45 @@
     this.cumulativeTrackDistance = [];
     this.cumulativeDistance = [];
     this.cumulativeDistance[0] = 0;
+    this.legTrackDistance[0] = 0;
+    this.cumulativeTrackDistance[0] = 0;
     if (res.hasValidTrack) {
       this.expandTrack(res.trackx, res.tracky, res.xysecs);
     } else {
       // no track so use straight line between controls
       this.expandTrack(course.x, course.y, res.splits);
     }
-    // add track distances for each leg
-    this.legTrackDistance[0] = 0;
-    this.cumulativeTrackDistance[0] = 0;
-    lastPointIndex = this.cumulativeDistance.length - 1;
-    if (course.codes !== undefined) {
-      if (res.splits !== rg2.config.SPLITS_NOT_FOUND) {
-        for (control = 1; control < course.codes.length; control += 1) {
-          // avoid NaN values for GPS tracks that are shorter than the result time
-          if (res.splits[control] <= lastPointIndex) {
-            ind = res.splits[control];
-          } else {
-            ind = lastPointIndex;
-          }
-          this.cumulativeTrackDistance[control] = Math.round(this.cumulativeDistance[ind]);
-          this.legTrackDistance[control] = this.cumulativeTrackDistance[control] - this.cumulativeTrackDistance[control - 1];
-        }
-      } else {
-        // allows for tracks at events with no results so no splits: just use start and finish
-        this.legTrackDistance[1] = Math.round(this.cumulativeDistance[lastPointIndex]);
-        this.cumulativeTrackDistance[1] = Math.round(this.cumulativeDistance[lastPointIndex]);
-      }
-    }
+    this.addTrackDistances(course, res);
     res = 0;
     course = 0;
   }
   Runner.prototype = {
     Constructor : Runner,
+
+    addTrackDistances : function (course, res) {
+      // add track distances for each leg
+      var control, ind, lastPointIndex;
+      lastPointIndex = this.cumulativeDistance.length - 1;
+      if (course.codes !== undefined) {
+        if (res.splits !== rg2.config.SPLITS_NOT_FOUND) {
+          for (control = 1; control < course.codes.length; control += 1) {
+            // avoid NaN values for GPS tracks that are shorter than the result time
+            if (res.splits[control] <= lastPointIndex) {
+              ind = res.splits[control];
+            } else {
+              ind = lastPointIndex;
+            }
+            this.cumulativeTrackDistance[control] = Math.round(this.cumulativeDistance[ind]);
+            this.legTrackDistance[control] = this.cumulativeTrackDistance[control] - this.cumulativeTrackDistance[control - 1];
+          }
+        } else {
+          // allows for tracks at events with no results so no splits: just use start and finish
+          this.legTrackDistance[1] = Math.round(this.cumulativeDistance[lastPointIndex]);
+          this.cumulativeTrackDistance[1] = Math.round(this.cumulativeDistance[lastPointIndex]);
+        }
+      }
+    },
+
     expandTrack : function (itemsx, itemsy, itemstime) {
       // gets passed arrays of x, y and time
       // iterate over item which will be xy or controls
@@ -83,7 +89,7 @@
         toy = itemsy[item];
         diffx = tox - fromx;
         diffy = toy - fromy;
-        dist = dist + Math.sqrt(((tox - fromx) * (tox - fromx)) + ((toy - fromy) * (toy - fromy)));
+        dist = dist + rg2.utils.getDistanceBetweenPoints(tox, toy, fromx, fromy);
         diffdist = dist - fromdist;
         timeatitem = itemstime[item];
         difft = timeatitem - timeatprevitem;

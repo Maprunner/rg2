@@ -491,25 +491,18 @@
     },
 
     createNameDropdown : function (courseid) {
-      var i, dropdown, opt;
-      dropdown = document.getElementById("rg2-name-select");
-      opt = document.createElement("option");
+      var i, dropdown;
       $("#rg2-name-select").empty();
-      opt.value = null;
-      opt.text = rg2.t('Select name');
-      dropdown.options.add(opt);
+      dropdown = document.getElementById("rg2-name-select");
+      dropdown.options.add(rg2.utils.generateOption(null, rg2.t('Select name')));
       for (i = 0; i < this.results.length; i += 1) {
         // only use original results, not GPS results
         if (this.results[i].courseid === courseid) {
           if (this.results[i].resultid < rg2.config.GPS_RESULT_OFFSET) {
-            opt = document.createElement("option");
-            opt.value = i;
-            opt.text = this.results[i].name;
-            dropdown.options.add(opt);
+            dropdown.options.add(rg2.utils.generateOption(i, this.results[i].name));
           }
         }
       }
-      dropdown.options.add(opt);
     }
   };
 

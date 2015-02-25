@@ -79,7 +79,7 @@
         $("#rg2-animation-controls").hide();
       }
       this.calculateAnimationRange();
-      $("#rg2-clock").text(this.formatSecsAsHHMMSS(this.animationSecs));
+      $("#rg2-clock").text(rg2.utils.formatSecsAsHHMMSS(this.animationSecs));
     },
 
     // slider callback
@@ -176,12 +176,10 @@
     toggleAnimation : function () {
       if (this.timer === null) {
         this.startAnimation();
-        $("#btn-start-stop").removeClass("fa-play").addClass("fa-pause");
-        $("#btn-start-stop").prop("title", rg2.t("Pause"));
+        $("#btn-start-stop").removeClass("fa-play").addClass("fa-pause").prop("title", rg2.t("Pause"));
       } else {
         this.stopAnimation();
-        $("#btn-start-stop").removeClass("fa-pause").addClass("fa-play");
-        $("#btn-start-stop").prop("title", rg2.t("Run"));
+        $("#btn-start-stop").removeClass("fa-pause").addClass("fa-play").prop("title", rg2.t("Run"));
       }
     },
 
@@ -297,7 +295,7 @@
         $("#rg2-clock-slider").slider("option", "min", 0);
       }
       $("#rg2-clock-slider").slider("value", this.animationSecs);
-      $("#rg2-clock").text(this.formatSecsAsHHMMSS(this.animationSecs));
+      $("#rg2-clock").text(rg2.utils.formatSecsAsHHMMSS(this.animationSecs));
     },
 
     toggleNameDisplay : function () {
@@ -336,7 +334,7 @@
       }
       opt = rg2.getReplayDetails();
       $("#rg2-clock-slider").slider("value", this.animationSecs);
-      $("#rg2-clock").text(this.formatSecsAsHHMMSS(this.animationSecs));
+      $("#rg2-clock").text(rg2.utils.formatSecsAsHHMMSS(this.animationSecs));
       rg2.ctx.lineWidth = opt.routeWidth;
       rg2.ctx.globalAlpha = 1.0;
       if (this.useFullTails) {
@@ -434,31 +432,6 @@
 
     goFaster : function () {
       this.deltaSecs += 1;
-    },
-
-    // returns seconds as hh:mm:ss
-    formatSecsAsHHMMSS : function (time) {
-      var formattedtime, minutes, seconds, hours;
-      hours = Math.floor(time / 3600);
-      if (hours < 10) {
-        formattedtime = "0" + hours + ":";
-      } else {
-        formattedtime = hours + ":";
-      }
-      time = time - (hours * 3600);
-      minutes = Math.floor(time / 60);
-      if (minutes < 10) {
-        formattedtime += "0" + minutes;
-      } else {
-        formattedtime += minutes;
-      }
-      seconds = time - (minutes * 60);
-      if (seconds < 10) {
-        formattedtime += ":0" + seconds;
-      } else {
-        formattedtime += ":" + seconds;
-      }
-      return formattedtime;
     }
   };
   rg2.Animation = Animation;

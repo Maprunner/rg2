@@ -28,12 +28,9 @@
     },
 
     getDropdown : function (dropdown) {
-      var i, opt;
+      var i;
       for (i = 0; i < this.georefsystems.length; i += 1) {
-        opt = document.createElement("option");
-        opt.value = this.georefsystems[i].name;
-        opt.text = this.georefsystems[i].description;
-        dropdown.options.add(opt);
+        dropdown.options.add(rg2.utils.generateOption(this.georefsystems[i].name, this.georefsystems[i].description));
       }
       return dropdown;
     },

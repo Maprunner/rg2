@@ -71,17 +71,10 @@
     },
 
     getEventEditDropdown : function (dropdown) {
-      var i, len, opt;
-      opt = document.createElement("option");
-      opt.value = null;
-      opt.text = 'No event selected';
-      dropdown.options.add(opt);
-      len = this.events.length - 1;
-      for (i = len; i > -1; i -= 1) {
-        opt = document.createElement("option");
-        opt.value = this.events[i].kartatid;
-        opt.text = this.events[i].kartatid + ": " + this.events[i].date + ": " + this.events[i].name;
-        dropdown.options.add(opt);
+      var i;
+      dropdown.options.add(rg2.utils.generateOption(null, 'No event selected'));
+      for (i = (this.events.length - 1); i > -1; i -= 1) {
+        dropdown.options.add(rg2.utils.generateOption(this.events[i].kartatid, this.events[i].kartatid + ": " + this.events[i].date + ": " + this.events[i].name));
       }
       return dropdown;
     },

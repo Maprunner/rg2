@@ -10,6 +10,14 @@
 
     Constructor : Utils,
 
+    rotatePoint : function (x, y, angle) {
+      // rotation matrix: see http://en.wikipedia.org/wiki/Rotation_matrix
+      var pt = {};
+      pt.x = (Math.cos(angle) * x) - (Math.sin(angle) * y);
+      pt.y = (Math.sin(angle) * x) + (Math.cos(angle) * y);
+      return pt;
+    },
+
     getDistanceBetweenPoints : function (x1, y1, x2, y2) {
       // Pythagoras
       return Math.sqrt(Math.pow((x1 - x2), 2) + Math.pow((y1 - y2), 2));
@@ -82,6 +90,21 @@
       return formattedtime;
     },
 
+
+    // returns seconds as hh:mm:ss
+    formatSecsAsHHMMSS : function (time) {
+      var formattedtime, hours;
+      hours = Math.floor(time / 3600);
+      if (hours < 10) {
+        formattedtime = "0" + hours + ":";
+      } else {
+        formattedtime = hours + ":";
+      }
+      time = time - (hours * 3600);
+      formattedtime += this.formatSecsAsMMSS(time);
+      return formattedtime;
+    },
+
     showWarningDialog : function (title, text) {
       var msg = '<div id=rg2-warning-dialog>' + text + '</div>';
       $(msg).dialog({
@@ -91,6 +114,17 @@
           $('#rg2-warning-dialog').dialog('destroy').remove();
         }
       });
+    },
+
+    generateOption : function (value, text, selected) {
+      var opt;
+      opt = document.createElement("option");
+      opt.value = value;
+      opt.text = text;
+      if (selected) {
+        opt.selected = true;
+      }
+      return opt;
     }
   };
 
@@ -120,6 +154,23 @@
     this.y = keksi;
     this.name = null;
     this.pwd = null;
+  }
+
+  function RouteData() {
+    this.courseid = null;
+    this.coursename = null;
+    this.resultid = null;
+    this.isScoreCourse = false;
+    this.eventid = null;
+    this.name = null;
+    this.comments = null;
+    this.x = [];
+    this.y = [];
+    this.controlx = [];
+    this.controly = [];
+    this.time = [];
+    this.startsecs = 0;
+    this.totaltime = 0;
   }
 
   function RequestedHash() {
@@ -221,6 +272,7 @@
       return extrahash;
     }
   };
+  rg2.RouteData = RouteData;
   rg2.RequestedHash = RequestedHash;
   rg2.Utils = Utils;
   rg2.Colours = Colours;

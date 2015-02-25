@@ -319,19 +319,12 @@
     },
 
     createMapDropdown : function () {
-      var dropdown, i, opt, len;
+      var dropdown, i;
       $("#rg2-map-selected").empty();
       dropdown = document.getElementById("rg2-map-selected");
-      opt = document.createElement("option");
-      opt.value = this.INVALID_MAP_ID;
-      opt.text = "Select map";
-      dropdown.options.add(opt);
-      len = this.maps.length - 1;
-      for (i = len; i > -1; i -= 1) {
-        opt = document.createElement("option");
-        opt.value = i;
-        opt.text = this.maps[i].mapid + ": " + this.maps[i].name;
-        dropdown.options.add(opt);
+      dropdown.options.add(rg2.utils.generateOption(this.INVALID_MAP_ID, 'Select map'));
+      for (i = (this.maps.length - 1); i > -1; i -= 1) {
+        dropdown.options.add(rg2.utils.generateOption(i, this.maps[i].mapid + ": " + this.maps[i].name));
       }
     },
 
@@ -350,28 +343,22 @@
     },
 
     createCourseDeleteDropdown : function (id) {
-      var dropdown, i, opt, courses;
+      var dropdown, i, courses;
       $("#rg2-course-selected").empty();
       dropdown = document.getElementById("rg2-course-selected");
       courses = rg2.courses.getCoursesForEvent(id);
       for (i = 0; i < courses.length; i += 1) {
-        opt = document.createElement("option");
-        opt.value = courses[i].id;
-        opt.text = courses[i].name;
-        dropdown.options.add(opt);
+        dropdown.options.add(rg2.utils.generateOption(courses[i].id, courses[i].name));
       }
     },
 
     createRouteDeleteDropdown : function (id) {
-      var dropdown, routes, i, opt;
+      var dropdown, routes, i;
       $("#rg2-route-selected").empty();
       dropdown = document.getElementById("rg2-route-selected");
       routes = rg2.results.getRoutesForEvent(id);
       for (i = 0; i < routes.length; i += 1) {
-        opt = document.createElement("option");
-        opt.value = routes[i].resultid;
-        opt.text = routes[i].resultid + ": " + routes[i].name + " on " + routes[i].coursename;
-        dropdown.options.add(opt);
+        dropdown.options.add(rg2.utils.generateOption(routes[i].resultid, routes[i].resultid + ": " + routes[i].name + " on " + routes[i].coursename));
       }
     },
 
@@ -1865,16 +1852,13 @@
     },
 
     createEventLevelDropdown : function (id) {
-      var dropdown, types, abbrev, opt, i;
+      var dropdown, types, abbrev, i;
       $("#" + id).empty();
       dropdown = document.getElementById(id);
       types = ["Select level", "Training", "Local", "Regional", "National", "International"];
       abbrev = ["X", "T", "L", "R", "N", "I"];
       for (i = 0; i < types.length; i += 1) {
-        opt = document.createElement("option");
-        opt.value = abbrev[i];
-        opt.text = types[i];
-        dropdown.options.add(opt);
+        dropdown.options.add(rg2.utils.generateOption(abbrev[i], types[i]));
       }
 
     },

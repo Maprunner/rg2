@@ -393,25 +393,15 @@ var rg2 = (function (window, $) {
   }
 
   function createLanguageDropdown() {
-    var i, opt, dropdown;
-    dropdown = document.getElementById("rg2-select-language");
+    var i, selected, dropdown;
     $("#rg2-select-language").empty();
-    opt = document.createElement("option");
-    opt.value = "en";
-    opt.text = "en: English";
-    if (dictionary.code === "en") {
-      opt.selected = true;
-    }
-    dropdown.options.add(opt);
+    dropdown = document.getElementById("rg2-select-language");
+    selected = (dictionary.code === "en");
+    dropdown.options.add(rg2.utils.generateOption('en', 'en: English', selected));
     for (i in rg2Config.languages) {
       if (rg2Config.languages.hasOwnProperty(i)) {
-        opt = document.createElement("option");
-        opt.value = i;
-        opt.text = i + ": " + rg2Config.languages[i];
-        if (dictionary.code === i) {
-          opt.selected = true;
-        }
-        dropdown.options.add(opt);
+        selected = (dictionary.code === i);
+        dropdown.options.add(rg2.utils.generateOption(i, i + ": " + rg2Config.languages[i], selected));
       }
     }
   }
