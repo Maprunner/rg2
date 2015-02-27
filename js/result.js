@@ -5,13 +5,6 @@
     this.resultid = data.resultid;
     this.rawid = this.resultid % rg2.config.GPS_RESULT_OFFSET;
     this.isScoreEvent = isScoreEvent;
-    // GPS track ids are normal resultid + GPS_RESULT_OFFSET
-    if (this.resultid >= rg2.config.GPS_RESULT_OFFSET) {
-      this.isGPSTrack = true;
-    } else {
-      //this.name = data.name;
-      this.isGPSTrack = false;
-    }
     this.name = rg2.he.decode(data.name);
     this.initials = this.getInitials(this.name);
     this.starttime = data.starttime;
@@ -28,46 +21,51 @@
     this.splits = data.splits;
     // insert a 0 split at the start to make life much easier elsewhere
     this.splits.splice(0, 0, 0);
-
     if (data.variant !== "") {
       // save control locations for score course result
       this.scorex = scorex;
       this.scorey = scorey;
       this.scorecodes = scorecodes;
     }
-    // calculated cumulative distance in pixels
-    this.cumulativeDistance = [];
-    // set true if track includes all expected controls in correct order or is a GPS track
-    this.hasValidTrack = false;
-    this.displayTrack = false;
-    this.displayScoreCourse = false;
-    this.trackColour = rg2.colours.getNextColour();
-    // raw track data
-    this.trackx = [];
-    this.tracky = [];
-    this.speedColour = [];
-    // interpolated times
-    this.xysecs = [];
-    if (this.isGPSTrack) {
-      // don't get time or splits so need to copy them in from original result
-      this.time = rg2.results.getTimeForID(this.rawid);
-      // allow for events with no results where there won't be a non-GPS result
-      if (this.time === rg2.config.TIME_NOT_FOUND) {
-        this.time = data.time;
-      }
-      this.splits = rg2.results.getSplitsForID(this.rawid);
-
-    }
-    this.legpos = [];
-    if (data.gpsx.length > 0) {
-      this.addTrack(data);
-    }
-
+    this.initialiseTrack(data);
   }
 
 
   Result.prototype = {
     Constructor : Result,
+
+    initialiseTrack : function (data) {
+      this.cumulativeDistance = [];
+      this.legpos = [];
+      // set true if track includes all expected controls in correct order or is a GPS track
+      this.hasValidTrack = false;
+      this.displayTrack = false;
+      this.displayScoreCourse = false;
+      this.trackColour = rg2.colours.getNextColour();
+      // raw track data
+      this.trackx = [];
+      this.tracky = [];
+      this.speedColour = [];
+      // interpolated times
+      this.xysecs = [];
+      // GPS track ids are normal resultid + GPS_RESULT_OFFSET
+      if (this.resultid >= rg2.config.GPS_RESULT_OFFSET) {
+        this.isGPSTrack = true;
+        // don't get time or splits so need to copy them in from original result
+        this.time = rg2.results.getTimeForID(this.rawid);
+        // allow for events with no results where there won't be a non-GPS result
+        if (this.time === rg2.config.TIME_NOT_FOUND) {
+          this.time = data.time;
+        }
+        this.splits = rg2.results.getSplitsForID(this.rawid);
+      } else {
+        //this.name = data.name;
+        this.isGPSTrack = false;
+      }
+      if (data.gpsx.length > 0) {
+        this.addTrack(data);
+      }
+    },
 
     putTrackOnDisplay : function () {
       if (this.hasValidTrack) {
@@ -144,7 +142,7 @@
 
     drawScoreCourse : function () {
       // draws a score course for an individual runner to show where they went
-      // based on drawCourse in courses.js
+      // based on drawCourse in course.js
       // could refactor in future...
       // > 1 since we need at least a start and finish to draw something
       var angle, i, opt;
@@ -166,15 +164,13 @@
     },
 
     expandNormalTrack : function () {
-      var course, nextcontrol, nextx, nexty, dist, oldx, oldy, i, l, x, y, previouscontrolindex;
+      var course;
       // allow for getting two tracks for same result: should have been filtered in API...
       this.xysecs.length = 0;
       this.cumulativeDistance.length = 0;
-
       // add times and distances at each position
       this.xysecs[0] = 0;
       this.cumulativeDistance[0] = 0;
-
       // get course details
       course = {};
       // each person has their own defined score course
@@ -185,7 +181,17 @@
         course.x = rg2.courses.getCourseDetails(this.courseid).x;
         course.y = rg2.courses.getCourseDetails(this.courseid).y;
       }
-      // read through list of controls and copy in split times
+      this.calculateTrackTimes(course);
+      // treat all score tracks as valid for now
+      // may need a complete rethink on score course handling later
+      if (this.isScoreEvent) {
+        this.hasValidTrack = true;
+      }
+      return this.hasValidTrack;
+    },
+
+    calculateTrackTimes: function (course) {
+      var nextcontrol, nextx, nexty, dist, oldx, oldy, i, x, y, previouscontrolindex;
       nextcontrol = 1;
       nextx = course.x[nextcontrol];
       nexty = course.y[nextcontrol];
@@ -195,10 +201,10 @@
       x = 0;
       y = 0;
       previouscontrolindex = 0;
+      // read through list of controls and copy in split times
       // we are assuming the track starts at the start which is index 0...
       // look at each track point and see if it matches the next control location
-      l = this.trackx.length;
-      for (i = 1; i < l; i += 1) {
+      for (i = 1; i < this.trackx.length; i += 1) {
         // calculate distance while we are looping through
         x = this.trackx[i];
         y = this.tracky[i];
@@ -221,18 +227,12 @@
           nexty = course.y[nextcontrol];
         }
       }
-      // treat all score tracks as valid for now
-      // may need a complete rethink on score course handling later
-      if (this.isScoreEvent) {
-        this.hasValidTrack = true;
-      }
-      return this.hasValidTrack;
     },
 
     expandTrackWithNoSplits : function () {
       // based on ExpandNormalTrack, but deals with event format 2: no results
       // this means we have a course and a finish time but no split times
-      var totaltime, currenttime, course, nextcontrol, nextx, nexty, lastx, lasty, i, len, x, y, moved, previouscontrolindex, dist, totaldist, oldx, oldy;
+      var totaltime, currenttime, course, nextcontrol, nextx, nexty, lastx, lasty, i, x, y, moved, previouscontrolindex, dist, totaldist, oldx, oldy;
       this.xysecs.length = 0;
       this.cumulativeDistance.length = 0;
 
@@ -255,29 +255,15 @@
       this.trackx.push(lastx);
       this.tracky.push(lasty);
       dist = 0;
-      totaldist = 0;
-      oldx = this.trackx[0];
-      oldy = this.tracky[0];
-      x = 0;
-      y = 0;
       previouscontrolindex = 0;
-      // read through track to find total distance
-      len = this.trackx.length;
-      for (i = 1; i < len; i += 1) {
-        x = this.trackx[i];
-        y = this.tracky[i];
-        totaldist += rg2.utils.getDistanceBetweenPoints(x, y, oldx, oldy);
-        oldx = x;
-        oldy = y;
-      }
-
-      // read through again to generate splits
+      totaldist = this.calculateTotalTrackLength();
+      // read through track to generate splits
       x = 0;
       y = 0;
       moved = false;
       oldx = this.trackx[0];
       oldy = this.tracky[0];
-      for (i = 1; i < len; i += 1) {
+      for (i = 1; i < this.trackx.length; i += 1) {
         x = this.trackx[i];
         y = this.tracky[i];
         // cope with routes that have start and finish in same place, and where the first point in a route is a repeat of the start
@@ -306,6 +292,20 @@
         }
       }
       return this.hasValidTrack;
+    },
+
+    getTotalTrackLength : function () {
+      // read through track to find total distance
+      var i, oldx, oldy, totaldist;
+      totaldist = 0;
+      oldx = this.trackx[0];
+      oldy = this.tracky[0];
+      for (i = 1; i < this.trackx.length; i += 1) {
+        totaldist += rg2.utils.getDistanceBetweenPoints(this.trackx[i], this.tracky[i], oldx, oldy);
+        oldx = this.trackx[i];
+        oldy = this.tracky[i];
+      }
+      return totaldist;
     },
 
     addInterpolatedTimes : function (startindex, endindex) {
