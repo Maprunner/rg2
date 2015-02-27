@@ -179,7 +179,6 @@
     this.routes = [];
   }
 
-
   RequestedHash.prototype = {
     Constructor : RequestedHash,
 

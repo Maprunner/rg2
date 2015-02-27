@@ -6,7 +6,7 @@
     this.time = [];
     this.baseX = [];
     this.baseY = [];
-    this.handles = [];
+    this.handles = new rg2.Handles();
     this.savedBaseX = [];
     this.savedBaseY = [];
     this.savedHandles = [];
@@ -26,7 +26,7 @@
       this.time.length = 0;
       this.baseX.length = 0;
       this.baseY.length = 0;
-      this.handles.length = 0;
+      this.handles.deleteAllHandles();
       this.savedBaseX.length = 0;
       this.savedBaseY.length = 0;
       this.savedHandles.length = 0;
@@ -153,24 +153,9 @@
     },
 
     addStartAndFinishHandles : function () {
-      // add handles at start and finish of route
-      var h1, h2;
-      h1 = {};
-      h1.x = this.baseX[0];
-      h1.y = this.baseY[0];
-      h1.basex = h1.x;
-      h1.basey = h1.y;
-      h1.locked = false;
-      h1.time = 0;
-      this.handles.push(h1);
-      h2 = {};
-      h2.x = this.baseX[this.baseX.length - 1];
-      h2.y = this.baseY[this.baseY.length - 1];
-      h2.basex = h2.x;
-      h2.basey = h2.y;
-      h2.locked = false;
-      h2.time = this.baseY.length - 1;
-      this.handles.push(h2);
+      // add handles at start and finish of route: will always be index 0 and 1
+      this.handles.addHandle(this.baseX[0], this.baseY[0], 0);
+      this.handles.addHandle(this.baseX[this.baseX.length - 1], this.baseY[this.baseY.length - 1], this.baseY.length - 1);
     },
 
     fitTrackInsideCourse : function () {

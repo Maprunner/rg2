@@ -263,6 +263,7 @@ $languages .= '},'.PHP_EOL;
 <script src='<?php echo $source_url . "/js/map.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/utils.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/plugins.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/handles.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/lib/he.js"; ?>'></script><?php } else { ?>
 <script src='<?php echo $source_url . "/js/rg2all.min.js"; ?>'></script><?php } ?>  
 <?php if ($manager) { ?><?php if ($debug) { ?>

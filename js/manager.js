@@ -40,7 +40,6 @@
     this.maps = [];
     this.localworldfile = new rg2.Worldfile(0, 0, 0, 0, 0, 0);
     this.worldfile = new rg2.Worldfile(0, 0, 0, 0, 0, 0);
-    this.HANDLE_DOT_RADIUS = 10;
     this.handleColor = '#ff0000';
     this.initialiseUI();
   }
@@ -1906,10 +1905,10 @@
           rg2.ctx.globalAlpha = 1.0;
 
           rg2.ctx.beginPath();
-          rg2.ctx.arc(this.handleX, this.handleY, this.HANDLE_DOT_RADIUS, 0, 2 * Math.PI, false);
+          rg2.ctx.arc(this.handleX, this.handleY, rg2.config.HANDLE_DOT_RADIUS, 0, 2 * Math.PI, false);
           rg2.ctx.fill();
           rg2.ctx.beginPath();
-          rg2.ctx.arc(this.handleX, this.handleY, 2 * this.HANDLE_DOT_RADIUS, 0, 2 * Math.PI, false);
+          rg2.ctx.arc(this.handleX, this.handleY, 2 * rg2.config.HANDLE_DOT_RADIUS, 0, 2 * Math.PI, false);
           rg2.ctx.stroke();
         }
       }

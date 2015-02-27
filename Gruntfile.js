@@ -1,12 +1,12 @@
 module.exports = function(grunt) {
   var jsFileList = ['js/rg2.js', 'js/animation.js', 'js/controls.js', 'js/courses.js', 'js/draw.js', 'js/event.js', 'js/events.js', 'js/gpstrack.js',
-   'js/plugins.js', 'js/results.js', 'js/runner.js', 'js/lib/he.js', 'js/course.js', 'js/result.js', 'js/map.js', 'js/utils.js'];
+   'js/plugins.js', 'js/results.js', 'js/runner.js', 'js/lib/he.js', 'js/course.js', 'js/result.js', 'js/map.js', 'js/utils.js', 'js/handles.js'];
 
   var cssFileList = ['css/rg2.css'];
   
   // don't jsHint he.js, plugins.js
   var jsHintList = ['js/rg2.js', 'js/animation.js', 'js/controls.js', 'js/courses.js', 'js/draw.js', 'js/event.js', 'js/events.js', 'js/gpstrack.js',
-   'js/results.js', 'js/runner.js', 'js/course.js', 'js/result.js', 'js/map.js', 'js/utils.js'];
+   'js/results.js', 'js/runner.js', 'js/course.js', 'js/result.js', 'js/map.js', 'js/utils.js', 'js/handles.js'];
    
   var jsManagerSrc = ['js/manager.js'];
 

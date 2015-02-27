@@ -49,6 +49,7 @@ var rg2 = (function (window, $) {
     WHITE : '#ffffff',
     BLACK : '#ffoooo',
     RUNNER_DOT_RADIUS : 6,
+    HANDLE_DOT_RADIUS : 7,
     // parameters for call to draw courses
     DIM : 0.75,
     FULL_INTENSITY : 1.0,
