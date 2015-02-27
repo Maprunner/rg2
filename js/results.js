@@ -8,7 +8,7 @@
     Constructor : Results,
 
     addResults : function (data, isScoreEvent) {
-      var i, j, l, result, id, baseresult, variant, codes, scorex, scorey;
+      var i, l, result, variant, codes, scorex, scorey;
       l = data.length;
       // extract score course details if necessary
       if (isScoreEvent) {
@@ -36,15 +36,16 @@
         }
         this.results.push(result);
       }
+      this.setScoreCourseInfo();
+      this.generateLegPositions();
+    },
+
+    setScoreCourseInfo : function () {
       // don't get score course info for GPS tracks so find it from original result
+      var i, baseresult;
       for (i = 0; i < this.results.length; i += 1) {
         if (this.results[i].resultid >= rg2.config.GPS_RESULT_OFFSET) {
-          id = this.results[i].rawid;
-          for (j = 0; j < this.results.length; j += 1) {
-            if (id === this.results[j].resultid) {
-              baseresult = this.getFullResult(j);
-            }
-          }
+          baseresult = this.getFullResult(this.results[i].rawid);
           if (baseresult !== undefined) {
             if (baseresult.scorex !== undefined) {
               this.results[i].scorex = baseresult.scorex;
@@ -54,7 +55,6 @@
           }
         }
       }
-      this.generateLegPositions();
     },
 
     // lists all runners on a given course
@@ -202,7 +202,7 @@
     },
 
     getResultsInfo : function () {
-      var i, info, res, temp;
+      var i, info, res;
       info = {};
       info.results = 0;
       info.drawnroutes = 0;
@@ -231,13 +231,19 @@
       } else {
         info.percent = 0;
       }
-      info.time = Math.floor(info.secs / 86400) + " days ";
-      temp = info.secs - (86400 * Math.floor(info.secs / 86400));
-      info.time += Math.floor(temp / 3600) + " hours ";
-      temp = temp - (3600 * Math.floor(temp / 3600));
-      info.time += Math.floor(temp / 60) + " minutes ";
-      info.time += temp - (60 * Math.floor(temp / 60)) + " seconds";
+      info.time = this.formatTotalRunningTime(info.secs);
       return info;
+    },
+
+    formatTotalRunningTime : function (secs) {
+      var time;
+      time = Math.floor(secs / 86400) + " days ";
+      secs = secs - (86400 * Math.floor(secs / 86400));
+      time += Math.floor(secs / 3600) + " hours ";
+      secs = secs - (3600 * Math.floor(secs / 3600));
+      time += Math.floor(secs / 60) + " minutes ";
+      time += secs - (60 * Math.floor(secs / 60)) + " seconds";
+      return time;
     },
 
     getFullResult : function (resultid) {
@@ -409,18 +415,19 @@
     },
 
     formatResultListAsAccordion : function () {
-      // puts all GPS results at bottom of relevant course results
-      var html, namehtml, temp, firstCourse, oldCourseID, i, l, tracksForThisCourse;
+      var html, namehtml, res, firstCourse, oldCourseID, i, tracksForThisCourse;
+      if (this.results.length === 0) {
+        return "<p>" + rg2.t("No results available") + "</p>";
+      }
       html = "";
       namehtml = "";
       firstCourse = true;
       oldCourseID = 0;
       tracksForThisCourse = 0;
       this.results.sort(this.sortByCourseIDThenResultID);
-      l = this.results.length;
-      for (i = 0; i < l; i += 1) {
-        temp = this.results[i];
-        if (temp.courseid !== oldCourseID) {
+      for (i = 0; i < this.results.length; i += 1) {
+        res = this.results[i];
+        if (res.courseid !== oldCourseID) {
           // found a new course so add header
           if (firstCourse) {
             firstCourse = false;
@@ -428,28 +435,25 @@
             html += this.getBottomRow(tracksForThisCourse, oldCourseID) + "</table></div>";
           }
           tracksForThisCourse = 0;
-          html += "<h3>" + temp.coursename;
-          html += "<input class='showcourse' id=" + temp.courseid + " type=checkbox name=course title='Show course'></input></h3><div>";
-          html += "<table class='resulttable'><tr><th></th><th>" + rg2.t("Name") + "</th><th>" + rg2.t("Time") + "</th><th><i class='fa fa-pencil'></i></th><th><i class='fa fa-play'></i></th></tr>";
-          oldCourseID = temp.courseid;
+          html += this.getCourseHeader(res);
+          oldCourseID = res.courseid;
         }
-        if (temp.rawid === temp.resultid) {
-          namehtml = temp.name;
+        if (res.rawid === res.resultid) {
+          namehtml = res.name;
         } else {
-          namehtml = "<i>" + temp.name + "</i>";
+          namehtml = "<i>" + res.name + "</i>";
         }
-        if (temp.isScoreEvent) {
-          namehtml = "<div><input class='showscorecourse showscorecourse-" + i + "' id=" + i + " type=checkbox name=scorecourse></input> " + namehtml + "</div>";
+        if (res.isScoreEvent) {
+          namehtml = "<input class='showscorecourse showscorecourse-" + i + "' id=" + i + " type=checkbox name=scorecourse></input> " + namehtml;
+        }
+        namehtml = "<div>" + namehtml + "</div>";
+        html += '<tr><td>' + res.position + '</td>';
+        if (res.comments !== "") {
+          html += '<td><a href="#" title="' + res.comments + '">' + namehtml + "</a></td><td>" + res.time + "</td>";
         } else {
-          namehtml = "<div>" + namehtml + "</div>";
+          html += "<td>" + namehtml + "</td><td>" + res.time + "</td>";
         }
-        html += '<tr><td>' + temp.position + '</td>';
-        if (temp.comments !== "") {
-          html += '<td><a href="#" title="' + temp.comments + '">' + namehtml + "</a></td><td>" + temp.time + "</td>";
-        } else {
-          html += "<td>" + namehtml + "</td><td>" + temp.time + "</td>";
-        }
-        if (temp.hasValidTrack) {
+        if (res.hasValidTrack) {
           tracksForThisCourse += 1;
           html += "<td><input class='showtrack showtrack-" + oldCourseID + "' id=" + i + " type=checkbox name=result></input></td>";
         } else {
@@ -457,12 +461,14 @@
         }
         html += "<td><input class='showreplay showreplay-" + oldCourseID + "' id=" + i + " type=checkbox name=replay></input></td></tr>";
       }
+      html += this.getBottomRow(tracksForThisCourse, oldCourseID) + "</table></div></div>";
+      return html;
+    },
 
-      if (html === "") {
-        html = "<p>" + rg2.t("No results available") + "</p>";
-      } else {
-        html += this.getBottomRow(tracksForThisCourse, oldCourseID) + "</table></div></div>";
-      }
+    getCourseHeader : function (result) {
+      var html;
+      html = "<h3>" + result.coursename + "<input class='showcourse' id=" + result.courseid + " type=checkbox name=course title='Show course'></input></h3><div>";
+      html += "<table class='resulttable'><tr><th></th><th>" + rg2.t("Name") + "</th><th>" + rg2.t("Time") + "</th><th><i class='fa fa-pencil'></i></th><th><i class='fa fa-play'></i></th></tr>";
       return html;
     },
 
