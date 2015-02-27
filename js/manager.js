@@ -233,7 +233,12 @@
       $("#rg2-load-map-file").button().change(function (evt) {
         self.readMapFile(evt);
       });
-      $("#rg2-load-results-file").button().change(function (evt) {
+      $("#rg2-load-results-file").button().click(function (evt) {
+        if (!self.mapLoaded) {
+          rg2.utils.showWarningDialog("No map loaded", "Please load a map file before adding results.");
+          evt.preventDefault();
+        }
+      }).change(function (evt) {
         self.readResults(evt);
       });
       $("#btn-move-map-and-controls").click(function (evt) {
@@ -242,7 +247,12 @@
       $("#btn-no-results").click(function (evt) {
         self.toggleResultsRequired(evt.target.checked);
       });
-      $("#rg2-load-course-file").button().change(function (evt) {
+      $("#rg2-load-course-file").button().click(function (evt) {
+        if (!self.mapLoaded) {
+          rg2.utils.showWarningDialog("No map loaded", "Please load a map file before adding courses.");
+          evt.preventDefault();
+        }
+      }).change(function (evt) {
         self.readCourses(evt);
       });
     },
@@ -869,25 +879,7 @@
         rg2.utils.showWarningDialog('Results file error', 'The selected results file could not be read.');
       };
       reader.onload = function (evt) {
-        self.results.length = 0;
-        switch (self.resultsFileFormat) {
-        case 'CSV':
-          self.processResultsCSV(evt);
-          $("#rg2-select-results-file").addClass('valid');
-          break;
-        case 'XML':
-          self.processResultsXML(evt);
-          $("#rg2-select-results-file").addClass('valid');
-          break;
-        default:
-          // shouldn't ever get here but...
-          rg2.utils.showWarningDialog("File type error", "Results file type is not recognised. Please select a valid file.");
-          return;
-        }
-        // extract courses from results
-        self.getCoursesFromResults();
-        self.displayResultInfo();
-        self.displayCourseAllocations();
+        self.processResultFile(evt);
       };
       format = evt.target.files[0].name.substr(-3, 3);
       format = format.toUpperCase();
@@ -899,311 +891,12 @@
       }
     },
 
-    processResultsCSV : function (evt) {
-      var rows, commas, semicolons, separator;
-      rows = evt.target.result.split(/[\r\n|\n]+/);
-      // try and work out what the separator is
-      commas = rows[0].split(',').length - 1;
-      semicolons = rows[0].split(';').length - 1;
-      if (commas > semicolons) {
-        separator = ',';
-      } else {
-        separator = ";";
-      }
-
-      // Spklasse has two items on first row, SI CSV has a lot more...
-      if (rows[0].split(separator).length === 2) {
-        this.processSpklasseCSVResults(rows, separator);
-      } else {
-        this.processSICSVResults(rows, separator);
-      }
-    },
-
-    processResultsXML : function (evt) {
-      var xml, version, nodelist;
-      version = "";
-      try {
-        xml = $.parseXML(evt.target.result);
-        nodelist = xml.getElementsByTagName('ResultList');
-        if (nodelist.length === 0) {
-          rg2.utils.showWarningDialog("XML file error", "File is not a valid XML results file. ResultList element missing.");
-          return;
-        }
-        // test for IOF Version 2
-        nodelist = xml.getElementsByTagName('IOFVersion');
-        if (nodelist.length > 0) {
-          version = nodelist[0].getAttribute('version');
-        }
-        if (version === "") {
-          // test for IOF Version 3
-          nodelist = xml.getElementsByTagName('ResultList');
-          if (nodelist.length > 0) {
-            version = nodelist[0].getAttribute('iofVersion');
-          }
-        }
-      } catch (err) {
-        rg2.utils.showWarningDialog("XML file error", "File is not a valid XML results file.");
-        return;
-      }
-
-      switch (version) {
-      case "2.0.3":
-        this.processIOFV2XMLResults(xml);
-        break;
-      case "3.0":
-        this.processIOFV3XMLResults(xml);
-        break;
-      default:
-        rg2.utils.showWarningDialog("XML file error", 'Invalid IOF file format. Version ' + version + ' not supported.');
-      }
-    },
-
-    processIOFV2XMLResults : function (xml) {
-      var classlist, personlist, resultlist, i, j, result, course, temp;
-      try {
-        classlist = xml.getElementsByTagName('ClassResult');
-        for (i = 0; i < classlist.length; i += 1) {
-          course = classlist[i].getElementsByTagName('ClassShortName')[0].textContent;
-          personlist = classlist[i].getElementsByTagName('PersonResult');
-          for (j = 0; j < personlist.length; j += 1) {
-            result = {};
-            result.course = course;
-            temp = personlist[j].getElementsByTagName('Given')[0].textContent + " " + personlist[j].getElementsByTagName('Family')[0].textContent;
-            // remove new lines from empty <Given> and <Family> tags
-            result.name = temp.replace(/[\n\r]/g, '').trim();
-            temp = personlist[j].getElementsByTagName('PersonId')[0].textContent;
-            // remove new lines from empty <PersonId> tags
-            temp = temp.replace(/[\n\r]/g, '').trim();
-            if (temp) {
-              result.dbid = temp;
-            } else {
-              result.dbid = result.name;
-            }
-            temp = personlist[j].getElementsByTagName('ShortName');
-            if (temp.length > 0) {
-              result.club = temp[0].textContent.trim();
-            } else {
-              result.club = '';
-            }
-            resultlist = personlist[j].getElementsByTagName('Result');
-            this.extractIOFV2XMLResults(resultlist, result);
-            if (result.status === 'DidNotStart') {
-              break;
-            }
-            this.results.push(result);
-          }
-        }
-      } catch (err) {
-        rg2.utils.showWarningDialog("XML parse error", "Error processing XML file. Error is : " + err.message);
-        return;
-      }
-
-    },
-
-    extractIOFV2XMLResults : function (resultlist, result) {
-      var k, temp, time, splitlist;
-      for (k = 0; k < resultlist.length; k += 1) {
-        temp = resultlist[k].getElementsByTagName('CompetitorStatus');
-        if (temp.length > 0) {
-          result.status = temp[0].getAttribute("value");
-        } else {
-          result.status = '';
-        }
-        temp = resultlist[k].getElementsByTagName('ResultPosition');
-        if (temp.length > 0) {
-          result.position = parseInt(temp[0].textContent, 10);
-        } else {
-          result.position = '';
-        }
-        temp = resultlist[k].getElementsByTagName('CCardId');
-        if (temp.length > 0) {
-          result.chipid = temp[0].textContent;
-        } else {
-          result.chipid = 0;
-        }
-        // assuming first <Time> is the total time...
-        temp = resultlist[k].getElementsByTagName('Time');
-        if (temp.length > 0) {
-          result.time = temp[0].textContent.replace(/[\n\r]/g, '');
-        } else {
-          result.time = 0;
-        }
-        temp = resultlist[k].getElementsByTagName('StartTime');
-        if (temp.length > 0) {
-          time = temp[0].getElementsByTagName('Clock')[0].textContent;
-          result.starttime = rg2.utils.getSecsFromHHMMSS(time);
-        } else {
-          result.starttime = 0;
-        }
-        result.splits = "";
-        result.codes = [];
-        splitlist = resultlist[k].getElementsByTagName('SplitTime');
-        result.controls = splitlist.length;
-        this.extractIOFV2XMLSplits(splitlist, result);
-        temp = resultlist[k].getElementsByTagName('FinishTime');
-        if (temp.length > 0) {
-          time = temp[0].getElementsByTagName('Clock')[0].textContent;
-          result.splits += rg2.utils.getSecsFromHHMMSS(time) - result.starttime;
-        } else {
-          result.splits += 0;
-        }
-      }
-    },
-
-    extractIOFV2XMLSplits : function (splitlist, result) {
-      var l, temp;
-      for (l = 0; l < splitlist.length; l += 1) {
-        if (l > 0) {
-          result.splits += ";";
-        }
-        temp = splitlist[l].getElementsByTagName('Time');
-        if (temp.length > 0) {
-          // previously read timeFormat but some files lied!
-          // allow for XML files that don't tell you what is going on
-          // getSecsFromHHMMSS copes with MM:SS as well
-          result.splits += rg2.utils.getSecsFromHHMMSS(temp[0].textContent);
-          temp = splitlist[l].getElementsByTagName('ControlCode');
-          if (temp.length > 0) {
-            result.codes[l] = temp[0].textContent;
-          } else {
-            result.codes[l] = "";
-          }
-        } else {
-          result.splits += 0;
-          result.codes[l] = "";
-        }
-      }
-      // add finish split
-      result.splits += ";";
-    },
-
-    processIOFV3XMLResults : function (xml) {
-      var classlist, personlist, resultlist, i, j, result, course, temp, temp2;
-      try {
-        classlist = xml.getElementsByTagName('ClassResult');
-        for (i = 0; i < classlist.length; i += 1) {
-          temp = classlist[i].getElementsByTagName('Class');
-          course = temp[0].getElementsByTagName('Name')[0].textContent;
-          personlist = classlist[i].getElementsByTagName('PersonResult');
-          for (j = 0; j < personlist.length; j += 1) {
-            result = {};
-            result.course = course;
-            temp = personlist[j].getElementsByTagName('Given')[0].textContent + " " + personlist[j].getElementsByTagName('Family')[0].textContent;
-            // remove new lines from empty <Given> and <Family> tags
-            result.name = temp.replace(/[\n\r]/g, '').trim();
-            temp = personlist[j].getElementsByTagName('Id');
-            if (temp.length > 0) {
-              temp2 = temp[0].textContent;
-              // remove new lines from empty <Id> tags
-              temp2.replace(/[\n\r]/g, '');
-              result.dbid = temp2.trim() + "__" + result.name;
-            } else {
-              // no id defined so just use count of runners
-              result.dbid = this.results.length + "__" + result.name;
-            }
-            temp = personlist[j].getElementsByTagName('Organisation');
-            if (temp.length > 0) {
-              result.club = temp[0].getElementsByTagName('Name')[0].textContent;
-            } else {
-              result.club = "";
-            }
-            resultlist = personlist[j].getElementsByTagName('Result');
-            this.extractIOFV3XMLResults(resultlist, result);
-            this.results.push(result);
-          }
-
-        }
-      } catch (err) {
-        rg2.utils.showWarningDialog("XML parse error", "Error processing XML file. Error is : " + err.message);
-        return;
-      }
-
-    },
-
-    extractIOFV3XMLResults : function (resultlist, result) {
-      var k, temp, temp2, time, splitlist;
-      for (k = 0; k < resultlist.length; k += 1) {
-        temp = resultlist[k].getElementsByTagName('ControlCard');
-        if (temp.length > 0) {
-          result.chipid = temp[0].textContent;
-        } else {
-          result.chipid = 0;
-        }
-        temp = resultlist[k].getElementsByTagName('Position');
-        if (temp.length > 0) {
-          result.position = temp[0].textContent;
-        } else {
-          result.position = '';
-        }
-        temp = resultlist[k].getElementsByTagName('Status');
-        if (temp.length > 0) {
-          result.status = temp[0].textContent;
-        } else {
-          result.status = '';
-        }
-        // assuming first <Time> is the total time...
-        // this one is in seconds and might even have tenths...
-        temp = resultlist[k].getElementsByTagName('Time');
-        if (temp.length > 0) {
-          result.time = rg2.utils.formatSecsAsMMSS(parseInt(temp[0].textContent, 10));
-        } else {
-          result.time = 0;
-        }
-        temp = resultlist[k].getElementsByTagName('StartTime');
-        if (temp.length > 0) {
-          temp2 = temp[0].textContent;
-          if (temp2.length >= 19) {
-            // format is yyyy-mm-ddThh:mm:ss and might have extra Z or +nn
-            result.starttime = rg2.utils.getSecsFromHHMMSS(temp2.substr(11, 8));
-          } else {
-            result.starttime = 0;
-          }
-        } else {
-          result.starttime = 0;
-        }
-        result.splits = "";
-        result.codes = [];
-        splitlist = resultlist[k].getElementsByTagName('SplitTime');
-        result.controls = splitlist.length;
-        this.extractIOFV3XMLSplits(splitlist, result);
-
-        temp = resultlist[k].getElementsByTagName('FinishTime');
-        if (temp.length > 0) {
-          temp2 = temp[0].textContent;
-          if (temp2.length >= 19) {
-            // format is yyyy-mm-ddThh:mm:ss and might have extra Z or +nn
-            time = rg2.utils.getSecsFromHHMMSS(temp2.substr(11, 8));
-          } else {
-            time = 0;
-          }
-        } else {
-          time = 0;
-        }
-        result.splits += time - result.starttime;
-      }
-    },
-
-    extractIOFV3XMLSplits : function (splitlist, result) {
-      var l, temp;
-      for (l = 0; l < splitlist.length; l += 1) {
-        if (l > 0) {
-          result.splits += ";";
-        }
-        temp = splitlist[l].getElementsByTagName('Time');
-        if (temp.length > 0) {
-          result.splits += temp[0].textContent;
-        } else {
-          result.splits += 0;
-        }
-        temp = splitlist[l].getElementsByTagName('ControlCode');
-        if (temp.length > 0) {
-          result.codes[l] = temp[0].textContent;
-        } else {
-          result.codes[l] += 'X' + l;
-        }
-      }
-      // add finish split
-      result.splits += ";";
+    processResultFile : function (evt) {
+      this.results = new rg2.ResultParser(evt, this.resultsFileFormat);
+      // extract courses from results
+      this.getCoursesFromResults();
+      this.displayResultInfo();
+      this.displayCourseAllocations();
     },
 
     readCourses : function (evt) {
@@ -1214,21 +907,26 @@
       };
       self = this;
       reader.onload = function (evt) {
-        self.courses.length = 0;
-        self.coursesGeoreferenced = false;
-        self.backgroundLocked = false;
-        $('#btn-move-map-and-controls').prop('checked', false);
-        self.handleX = null;
-        self.handleY = null;
-        self.newcontrols.deleteAllControls();
-        self.processCoursesXML(evt);
-        self.displayCourseInfo();
-        self.displayCourseAllocations();
-        self.fitControlsToMap();
-        rg2.redraw(false);
+        self.processCourseFile(evt);
       };
-
       reader.readAsText(evt.target.files[0]);
+    },
+
+    processCourseFile : function (evt) {
+      var parsedCourses;
+      this.coursesGeoreferenced = false;
+      this.backgroundLocked = false;
+      $('#btn-move-map-and-controls').prop('checked', false);
+      this.handleX = null;
+      this.handleY = null;
+      this.newcontrols.deleteAllControls();
+      parsedCourses = new rg2.CourseParser(evt, this.worldfile, this.localworldfile);
+      this.courses = parsedCourses.courses;
+      this.newcontrols = parsedCourses.newcontrols;
+      this.displayCourseInfo();
+      this.displayCourseAllocations();
+      this.fitControlsToMap();
+      rg2.redraw(false);
     },
 
     displayCourseInfo : function () {
@@ -1309,216 +1007,6 @@
       return info;
     },
 
-    processCoursesXML : function (evt) {
-      var xml, version, nodelist, creator;
-      version = "";
-      creator = "";
-      try {
-        xml = $.parseXML(evt.target.result);
-        nodelist = xml.getElementsByTagName('CourseData');
-        if (nodelist.length === 0) {
-          rg2.utils.showWarningDialog("XML file error", "File is not a valid XML course file. CourseData element missing.");
-          return;
-        }
-
-        // test for IOF Version 2
-        nodelist = xml.getElementsByTagName('IOFVersion');
-        if (nodelist.length > 0) {
-          version = nodelist[0].getAttribute('version');
-        }
-        if (version === "") {
-          // test for IOF Version 3
-          nodelist = xml.getElementsByTagName('CourseData');
-          if (nodelist.length > 0) {
-            version = nodelist[0].getAttribute('iofVersion');
-            creator = nodelist[0].getAttribute('creator');
-          }
-        }
-      } catch (err) {
-        rg2.utils.showWarningDialog("XML file error", "File is not a valid XML course file.");
-        return;
-      }
-
-      switch (version) {
-      case "2.0.3":
-        this.processIOFV2XML(xml);
-        break;
-      case "3.0":
-        this.processIOFV3XML(xml, creator);
-        break;
-      default:
-        rg2.utils.showWarningDialog("XML file error", 'Invalid IOF file format. Version ' + version + ' not supported.');
-      }
-    },
-
-    extractV2Courses : function (nodelist) {
-      var i, j, course, codes, x, y, controllist, tmp;
-      for (i = 0; i < nodelist.length; i += 1) {
-        course = {};
-        codes = [];
-        x = [];
-        y = [];
-        course.name = nodelist[i].getElementsByTagName('CourseName')[0].textContent.trim();
-        codes.push(nodelist[i].getElementsByTagName('StartPointCode')[0].textContent.trim());
-        controllist = nodelist[i].getElementsByTagName('CourseControl');
-        for (j = 0; j < controllist.length; j += 1) {
-          tmp = controllist[j].getElementsByTagName('ControlCode')[0].textContent.trim();
-          // if control code doesn't exist it was a crossing point so we don't need it
-          if (this.validControlCode(tmp)) {
-            codes.push(tmp);
-          }
-        }
-        codes.push(nodelist[i].getElementsByTagName('FinishPointCode')[0].textContent.trim());
-
-        course.codes = codes;
-        // 0 for now: set when result mapping is known
-        course.courseid = 0;
-        course.x = x;
-        course.y = y;
-        this.courses.push(course);
-      }
-      $("#rg2-select-course-file").addClass('valid');
-    },
-
-    // check if a given control code is in the list of known controls
-    validControlCode : function (code) {
-      var i, controls;
-      controls = this.newcontrols.controls;
-      for (i = 0; i < controls.length; i += 1) {
-        if (controls[i].code === code) {
-          return true;
-        }
-      }
-      return false;
-    },
-
-    extractV3Courses : function (nodelist) {
-      var i, j, course, codes, x, y, controllist, tmp;
-      for (i = 0; i < nodelist.length; i += 1) {
-        course = {};
-        codes = [];
-        x = [];
-        y = [];
-        course.name = nodelist[i].getElementsByTagName('Name')[0].textContent;
-        controllist = nodelist[i].getElementsByTagName('CourseControl');
-        for (j = 0; j < controllist.length; j += 1) {
-          tmp = controllist[j].getElementsByTagName('Control')[0].textContent;
-          // if control code doesn't exist it was a crossing point so we don't need it
-          if (this.validControlCode(tmp)) {
-            codes.push(tmp.trim());
-          }
-        }
-
-        course.codes = codes;
-        // 0 for now: set when result mapping is known
-        course.courseid = 0;
-        course.x = x;
-        course.y = y;
-        this.courses.push(course);
-      }
-      $("#rg2-select-course-file").addClass('valid');
-    },
-
-    processIOFV3XML : function (xml, creator) {
-      // extract all controls
-      var nodelist, i, code, mappos, x, y, condes, latlng, lat, lng;
-      condes = false;
-      // handle files from Condes which use original worldfile rather than WGS-84 as expected by IOF scheme
-      if (creator) {
-        if (creator.indexOf('Condes') > -1) {
-          condes = true;
-        }
-      }
-      nodelist = xml.getElementsByTagName('Control');
-      // only need first-level Controls
-      for (i = 0; i < nodelist.length; i += 1) {
-        if (nodelist[i].parentNode.nodeName === 'RaceCourseData') {
-          code = nodelist[i].getElementsByTagName("Id")[0].textContent;
-          latlng = nodelist[i].getElementsByTagName("Position");
-          if ((this.localworldfile.valid) && (latlng.length > 0)) {
-            lat = latlng[0].getAttribute('lat');
-            lng = latlng[0].getAttribute('lng');
-            // handle Condes-specific georeferencing
-            if (condes) {
-              // use original map worldfile
-              x = this.localworldfile.getX(lng, lat);
-              y = this.localworldfile.getY(lng, lat);
-            } else {
-              // use WGS-84 worldfile as expected (?) by IOF V3 schema
-              x = this.worldfile.getX(lng, lat);
-              y = this.worldfile.getY(lng, lat);
-            }
-            this.coursesGeoreferenced = true;
-          } else {
-            // only works if all controls have lat/lon or none do: surely a safe assumption...
-            mappos = nodelist[i].getElementsByTagName("MapPosition");
-            x = mappos[0].getAttribute('x');
-            y = mappos[0].getAttribute('y');
-          }
-          // don't want to save crossing points
-          if (nodelist[i].getAttribute('type') !== 'CrossingPoint') {
-            this.newcontrols.addControl(code.trim(), x, y);
-          }
-        }
-      }
-      // extract all courses
-      nodelist = xml.getElementsByTagName('Course');
-      this.extractV3Courses(nodelist);
-    },
-
-    processIOFV2XML : function (xml) {
-      var nodelist, controlsGeoref, i, x, y;
-      // extract all start controls
-      nodelist = xml.getElementsByTagName('StartPoint');
-      this.extractV2Controls(nodelist, 'StartPointCode');
-      // extract all normal controls
-      nodelist = xml.getElementsByTagName('Control');
-      this.extractV2Controls(nodelist, 'ControlCode');
-      // extract all finish controls
-      nodelist = xml.getElementsByTagName('FinishPoint');
-      controlsGeoref = this.extractV2Controls(nodelist, 'FinishPointCode');
-
-      if (controlsGeoref) {
-        if (this.localworldfile.valid) {
-          for (i = 0; i < this.newcontrols.controls.length; i += 1) {
-            x = this.newcontrols.controls[i].x;
-            y = this.newcontrols.controls[i].y;
-            this.newcontrols.controls[i].x = this.localworldfile.getX(x, y);
-            this.newcontrols.controls[i].y = this.localworldfile.getY(x, y);
-          }
-          this.coursesGeoreferenced = true;
-        }
-      }
-      // extract all courses
-      nodelist = xml.getElementsByTagName('Course');
-      this.extractV2Courses(nodelist);
-    },
-
-    // returns true if controls are georeferenced
-    extractV2Controls : function (nodelist, type) {
-      var i, x, y, code, mappos, geopos, isGeoref;
-      isGeoref = false;
-      for (i = 0; i < nodelist.length; i += 1) {
-        code = nodelist[i].getElementsByTagName(type)[0].textContent;
-        geopos = nodelist[i].getElementsByTagName("ControlPosition");
-        // subtle bug and a half #190
-        // if you have an IOF XML V2 file which has georeferenced controls AND
-        // the map file itself isn't georeferenced
-        // then you need to use X, Y and not the georeferenced co-ordinates
-        if ((geopos.length > 0) && (this.localworldfile.valid)) {
-          x = parseFloat(geopos[0].getAttribute('x'));
-          y = parseFloat(geopos[0].getAttribute('y'));
-          isGeoref = true;
-        } else {
-          mappos = nodelist[i].getElementsByTagName("MapPosition");
-          x = mappos[0].getAttribute('x');
-          y = mappos[0].getAttribute('y');
-        }
-        this.newcontrols.addControl(code.trim(), x, y);
-      }
-      return isGeoref;
-    },
-
     // rows: array of raw lines from Spklasse results csv file
     processSpklasseCSVResults : function (rows, separator) {
       // fields in course row
@@ -1570,141 +1058,6 @@
       }
     },
 
-    // rows: array of raw lines from SI results csv file
-    processSICSVResults : function (rows, separator) {
-      var i, j, fields, nextsplit, nextcode, format, result;
-      format = this.getCSVFormat(rows[0], separator);
-      // extract what we need: first row is headers so ignore
-      for (i = 1; i < rows.length; i += 1) {
-        fields = rows[i].split(separator);
-        // need at least this many fields...
-        if (fields.length >= format.FIRST_SPLIT_IDX) {
-          result = {};
-          result.chipid = fields[format.CHIP_IDX];
-          // delete quotes from CSV file: output from MERCS
-          result.name = (fields[format.FIRST_NAME_IDX] + " " + fields[format.SURNAME_IDX]).trim().replace(/\"/g, '');
-          result.dbid = (fields[format.DB_IDX] + "__" + result.name).replace(/\"/g, '');
-          result.starttime = rg2.utils.getSecsFromHHMMSS(fields[format.START_TIME_IDX]);
-          result.time = fields[format.TOTAL_TIME_IDX];
-          result.position = parseInt(fields[format.POSITION_IDX], 10);
-          if (isNaN(result.position)) {
-            result.position = '';
-          }
-          result.status = this.getSICSVStatus(fields[format.NC_IDX], fields[format.CLASSIFIER_IDX]);
-          result.club = fields[format.CLUB_IDX].trim().replace(/\"/g, '');
-          result.course = fields[format.COURSE_IDX];
-          result.controls = parseInt(fields[format.NUM_CONTROLS_IDX], 10);
-          nextsplit = format.FIRST_SPLIT_IDX;
-          nextcode = format.FIRST_CODE_IDX;
-          result.splits = "";
-          result.codes = [];
-          for (j = 0; j < result.controls; j += 1) {
-            if (fields[nextcode]) {
-              if (j > 0) {
-                result.splits += ";";
-              }
-              result.codes[j] = fields[nextcode];
-              result.splits += rg2.utils.getSecsFromHHMMSS(fields[nextsplit]);
-            }
-            nextsplit += format.STEP;
-            nextcode += format.STEP;
-          }
-          // add finish split
-          result.splits += ";";
-          result.splits += rg2.utils.getSecsFromHHMMSS(result.time);
-          this.results.push(result);
-        }
-      }
-    },
-
-    getCSVFormat : function (headers, separator) {
-      // not a pretty function but it should allow some non-standard CSV formats to be processed
-      // such as OEScore output
-      var a, titles, idx, fields, i, j, found;
-      a = {};
-      titles = ['SI card', 'Database Id', 'Surname', 'First name', 'nc', 'Start', 'Time', 'Classifier', 'City', 'Short', 'Course', 'Course controls', 'Pl', 'Start punch', 'Control1', 'Punch1', 'Control2'];
-      idx = [];
-      fields = headers.split(separator);
-      for (i = 0; i < titles.length; i += 1) {
-        found = false;
-        for (j = 0; j < fields.length; j += 1) {
-          if (fields[j] === titles[i]) {
-            idx[i] = j;
-            found = true;
-            break;
-          }
-          // horrid hacks to handle semi-compliant files
-          if ('SI card' === titles[i]) {
-            if ('Chipno' === fields[j]) {
-              idx[i] = j;
-              found = true;
-              break;
-            }
-          }
-          if ('Pl' === titles[i]) {
-            if ('Place' === fields[j]) {
-              idx[i] = j;
-              found = true;
-              break;
-            }
-          }
-        }
-        if (!found) {
-          // stop if we didn't find what we needed
-          break;
-        }
-      }
-
-      if (found) {
-        a.CHIP_IDX = idx[0];
-        a.DB_IDX = idx[1];
-        a.SURNAME_IDX = idx[2];
-        a.FIRST_NAME_IDX = idx[3];
-        a.NC_IDX = idx[4];
-        a.START_TIME_IDX = idx[5];
-        a.TOTAL_TIME_IDX = idx[6];
-        a.CLASSIFIER_IDX = idx[7];
-        a.CLUB_IDX = idx[8];
-        a.CLASS_IDX = idx[9];
-        a.COURSE_IDX = idx[10];
-        a.NUM_CONTROLS_IDX = idx[11];
-        a.POSITION_IDX = idx[12];
-        a.START_PUNCH_IDX = idx[13];
-        a.FIRST_CODE_IDX = idx[14];
-        a.FIRST_SPLIT_IDX = idx[15];
-        a.STEP = idx[16] - idx[14];
-      } else {
-        // default to BOF CSV format
-        a.CHIP_IDX = 1;
-        a.DB_IDX = 2;
-        a.SURNAME_IDX = 3;
-        a.FIRST_NAME_IDX = 4;
-        a.NC_IDX = 8;
-        a.START_TIME_IDX = 9;
-        a.TOTAL_TIME_IDX = 11;
-        a.CLASSIFIER_IDX = 12;
-        a.CLUB_IDX = 15;
-        a.CLASS_IDX = 18;
-        a.COURSE_IDX = 39;
-        a.NUM_CONTROLS_IDX = 42;
-        a.POSITION_IDX = 43;
-        a.START_PUNCH_IDX = 44;
-        a.FIRST_SPLIT_IDX = 47;
-        a.STEP = 2;
-        a.FIRST_CODE_IDX = 46;
-      }
-      return a;
-    },
-
-    getSICSVStatus : function (nc, classifier) {
-      if ((nc === '0') || (nc === '') || (nc === 'N')) {
-        if ((classifier === '') || (classifier === '0')) {
-          return 'ok';
-        }
-        return 'nok';
-      }
-      return 'nc';
-    },
 
     readMapFile : function (evt) {
       var reader, self, format;
