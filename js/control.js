@@ -6,10 +6,9 @@
     this.y = y;
   }
 
-
   Control.prototype = {
     Constructor : Control
   };
 
   rg2.Control = Control;
-})(); 
+}());

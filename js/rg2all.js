@@ -1,4 +1,4 @@
-// Version 1.1.0 2015-02-24T17:12:13;
+// Version 1.1.1 2015-02-28T14:42:55;
 /*
  * Routegadget 2
  * https://github.com/Maprunner/rg2
@@ -58,7 +58,7 @@ var rg2 = (function (window, $) {
     EVENT_WITHOUT_RESULTS : 2,
     SCORE_EVENT : 3,
     // version gets set automatically by grunt file during build process
-    RG2VERSION: '1.1.0',
+    RG2VERSION: '1.1.1',
     TIME_NOT_FOUND : 9999,
     SPLITS_NOT_FOUND : 9999,
     // values for evt.which
@@ -1469,6 +1469,8 @@ var rg2 = (function (window, $) {
       this.runners.length = 0;
       clearInterval(this.timer);
       this.timer = null;
+      this.massStartControl = 0;
+      this.massStartByControl = false;
       this.updateAnimationDetails();
       $("#btn-start-stop").removeClass("fa-pause").addClass("fa-play");
       $("#btn-start-stop").prop("title", rg2.t("Run"));
@@ -1900,6 +1902,20 @@ var rg2 = (function (window, $) {
 }());
 /*global rg2:false */
 (function () {
+  function Control(code, x, y) {
+    this.code = code;
+    this.x = x;
+    this.y = y;
+  }
+
+  Control.prototype = {
+    Constructor : Control
+  };
+
+  rg2.Control = Control;
+}());
+/*global rg2:false */
+(function () {
   function Controls() {
     this.controls = [];
     this.displayControls = false;
@@ -2107,6 +2123,111 @@ var rg2 = (function (window, $) {
     }
   };
   rg2.Controls = Controls;
+}());
+/*global rg2:false */
+(function () {
+  function Course(data, isScoreCourse) {
+    this.name = data.name;
+    this.trackcount = 0;
+    this.display = false;
+    this.courseid = data.courseid;
+    this.codes = data.codes;
+    this.x = data.xpos;
+    this.y = data.ypos;
+    this.isScoreCourse = isScoreCourse;
+    this.resultcount = 0;
+    // save angle to next control to simplify later calculations
+    this.angle = [];
+    // save angle to show control code text
+    this.textAngle = [];
+    this.setAngles();
+  }
+
+  Course.prototype = {
+    Constructor : Course,
+
+    incrementTracksCount : function () {
+      this.trackcount += 1;
+    },
+
+    setAngles : function () {
+      var i, c1x, c1y, c2x, c2y, c3x, c3y;
+      for (i = 0; i < (this.x.length - 1); i += 1) {
+        if (this.isScoreCourse) {
+          // align score event start triangle and controls upwards
+          this.angle[i] = Math.PI * 1.5;
+          this.textAngle[i] = Math.PI * 0.25;
+        } else {
+          // angle of line to next control
+          this.angle[i] = rg2.utils.getAngle(this.x[i], this.y[i], this.x[i + 1], this.y[i + 1]);
+          // create bisector of angle to position number
+          c1x = Math.sin(this.angle[i - 1]);
+          c1y = Math.cos(this.angle[i - 1]);
+          c2x = Math.sin(this.angle[i]) + c1x;
+          c2y = Math.cos(this.angle[i]) + c1y;
+          c3x = c2x / 2;
+          c3y = c2y / 2;
+          this.textAngle[i] = rg2.utils.getAngle(c3x, c3y, c1x, c1y);
+        }
+      }
+      // not worried about angle for finish
+      this.angle[this.x.length - 1] = 0;
+      this.textAngle[this.x.length - 1] = 0;
+    },
+
+    drawCourse : function (intensity) {
+      var i, opt;
+      if (this.display) {
+        opt = rg2.getOverprintDetails();
+        rg2.ctx.globalAlpha = intensity;
+        rg2.controls.drawStart(this.x[0], this.y[0], "", this.angle[0], opt);
+        // don't join up controls for score events
+        if (!this.isScoreCourse) {
+          this.drawLinesBetweenControls(this.x, this.y, this.angle, opt);
+        }
+        if (this.isScoreCourse) {
+          for (i = 1; i < (this.x.length); i += 1) {
+            if ((this.codes[i].indexOf('F') === 0) || (this.codes[i].indexOf('M') === 0)) {
+              rg2.controls.drawFinish(this.x[i], this.y[i], "", opt);
+            } else {
+              rg2.controls.drawSingleControl(this.x[i], this.y[i], this.codes[i], this.textAngle[i], opt);
+            }
+          }
+
+        } else {
+          for (i = 1; i < (this.x.length - 1); i += 1) {
+            rg2.controls.drawSingleControl(this.x[i], this.y[i], i, this.textAngle[i], opt);
+          }
+          rg2.controls.drawFinish(this.x[this.x.length - 1], this.y[this.y.length - 1], "", opt);
+        }
+      }
+    },
+    drawLinesBetweenControls : function (x, y, angle, opt) {
+      var c1x, c1y, c2x, c2y, i, dist;
+      for (i = 0; i < (x.length - 1); i += 1) {
+        if (i === 0) {
+          dist = opt.startTriangleLength;
+        } else {
+          dist = opt.controlRadius;
+        }
+        c1x = x[i] + (dist * Math.cos(angle[i]));
+        c1y = y[i] + (dist * Math.sin(angle[i]));
+        //Assume the last control in the array is a finish
+        if (i === this.x.length - 2) {
+          dist = opt.finishOuterRadius;
+        } else {
+          dist = opt.controlRadius;
+        }
+        c2x = x[i + 1] - (dist * Math.cos(angle[i]));
+        c2y = y[i + 1] - (dist * Math.sin(angle[i]));
+        rg2.ctx.beginPath();
+        rg2.ctx.moveTo(c1x, c1y);
+        rg2.ctx.lineTo(c2x, c2y);
+        rg2.ctx.stroke();
+      }
+    }
+  };
+  rg2.Course = Course;
 }());
 /*global rg2:false */
 (function () {
@@ -3655,6 +3776,126 @@ var rg2 = (function (window, $) {
   };
   rg2.GPSTrack = GPSTrack;
 }());
+/*global rg2:false */
+/*global rg2Config:false */
+(function () {
+  function Georef(description, name, params) {
+    this.description = description;
+    this.name = name;
+    this.params = params;
+  }
+
+  function Georefs() {
+    this.georefsystems = [];
+    this.georefsystems.push(new Georef("Not georeferenced", "none", ""));
+    this.georefsystems.push(new Georef("GB National Grid", "EPSG:27700", "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs"));
+    this.georefsystems.push(new Georef("Google EPSG:900913", "EPSG:900913", "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs"));
+    if (rg2Config.epsg_code !== undefined) {
+      this.georefsystems.push(new Georef(rg2Config.epsg_code, rg2Config.epsg_code.replace(" ", ""), rg2Config.epsg_params));
+      this.defaultGeorefVal = rg2Config.epsg_code.replace(" ", "");
+    } else {
+      this.defaultGeorefVal = "EPSG:27700";
+    }
+  }
+
+  Georefs.prototype = {
+    Constructor : Georefs,
+
+    getDefault : function () {
+      return this.defaultGeorefVal;
+    },
+
+    getDropdown : function (dropdown) {
+      var i, opt;
+      for (i = 0; i < this.georefsystems.length; i += 1) {
+        opt = document.createElement("option");
+        opt.value = this.georefsystems[i].name;
+        opt.text = this.georefsystems[i].description;
+        dropdown.options.add(opt);
+      }
+      return dropdown;
+    },
+
+    getParams : function (name) {
+      var i, params;
+      params = "";
+      for (i = 0; i < this.georefsystems.length; i += 1) {
+        if (this.georefsystems[i].name === name) {
+          return this.georefsystems[i].params;
+        }
+      }
+      return params;
+    }
+  };
+
+  function Worldfile(a, b, c, d, e, f) {
+    // see http://en.wikipedia.org/wiki/World_file
+    this.A = parseFloat(a);
+    this.B = parseFloat(b);
+    this.C = parseFloat(c);
+    this.D = parseFloat(d);
+    this.E = parseFloat(e);
+    this.F = parseFloat(f);
+    if ((a !== 0) && (b !== 0) && (c !== 0) && (d !== 0) && (e !== 0) && (f !== 0)) {
+      this.valid = true;
+      // helps make later calculations easier
+      this.AEDB = (a * e) - (d * b);
+      this.xCorrection = (b * f) - (e * c);
+      this.yCorrection = (d * c) - (a * f);
+    } else {
+      this.valid = false;
+      this.AEDB = 0;
+      this.xCorrection = 0;
+      this.yCorrection = 0;
+    }
+  }
+
+  Worldfile.prototype = {
+    Constructor : Worldfile,
+
+    // use worldfile to generate X value
+    getX : function (x, y) {
+      return Math.round(((this.E * x) - (this.B * y) + this.xCorrection) / this.AEDB);
+    },
+
+    // use worldfile to generate y value
+    getY : function (x, y) {
+      return Math.round(((-1 * this.D * x) + (this.A * y) + this.yCorrection) / this.AEDB);
+    }
+  };
+
+  function Map(data) {
+    if (data !== undefined) {
+      // existing map from database
+      this.mapid = data.mapid;
+      this.name = data.name;
+      // worldfile for GPS to map image conversion (for GPS files)
+      this.worldfile = new Worldfile(data.A, data.B, data.C, data.D, data.E, data.F);
+      // worldfile for local co-ords to map image conversion (for georeferenced courses)
+      this.localworldfile = new Worldfile(data.localA, data.localB, data.localC, data.localD, data.localE, data.localF);
+      if (data.mapfilename === undefined) {
+        this.mapfilename = this.mapid + '.' + 'jpg';
+      } else {
+        this.mapfilename = data.mapfilename;
+      }
+
+    } else {
+      // new map to be added
+      this.mapid = 0;
+      this.name = "";
+      this.worldfile = new Worldfile(0, 0, 0, 0, 0, 0);
+      this.localworldfile = new Worldfile(0, 0, 0, 0, 0, 0);
+    }
+    this.xpx = [];
+    this.ypx = [];
+    this.lat = [];
+    this.lon = [];
+  }
+  rg2.Georefs = Georefs;
+  rg2.Worldfile = Worldfile;
+  rg2.Map = Map;
+}());
+
 // Avoid `console` errors in browsers that lack a console.
 ( function() {
     var method;
@@ -3674,6 +3915,414 @@ var rg2 = (function (window, $) {
       }
     }
   }());
+/*global rg2:false */
+(function () {
+  function Result(data, isScoreEvent, scorecodes, scorex, scorey) {
+    // resultid is the kartat id value
+    this.resultid = data.resultid;
+    this.rawid = this.resultid % rg2.config.GPS_RESULT_OFFSET;
+    this.isScoreEvent = isScoreEvent;
+    // GPS track ids are normal resultid + GPS_RESULT_OFFSET
+    if (this.resultid >= rg2.config.GPS_RESULT_OFFSET) {
+      this.isGPSTrack = true;
+    } else {
+      //this.name = data.name;
+      this.isGPSTrack = false;
+    }
+    this.name = rg2.he.decode(data.name);
+    this.initials = this.getInitials(this.name);
+    this.starttime = data.starttime;
+    this.time = data.time;
+    this.position = data.position;
+    this.status = data.status;
+    // get round iconv problem in API for now: unescape special characters to get sensible text
+    this.comments = rg2.he.decode(data.comments);
+    this.coursename = data.coursename;
+    if (this.coursename === "") {
+      this.coursename = data.courseid;
+    }
+    this.courseid = data.courseid;
+    this.splits = data.splits;
+    // insert a 0 split at the start to make life much easier elsewhere
+    this.splits.splice(0, 0, 0);
+
+    if (data.variant !== "") {
+      // save control locations for score course result
+      this.scorex = scorex;
+      this.scorey = scorey;
+      this.scorecodes = scorecodes;
+    }
+    // calculated cumulative distance in pixels
+    this.cumulativeDistance = [];
+    // set true if track includes all expected controls in correct order or is a GPS track
+    this.hasValidTrack = false;
+    this.displayTrack = false;
+    this.displayScoreCourse = false;
+    this.trackColour = rg2.colours.getNextColour();
+    // raw track data
+    this.trackx = [];
+    this.tracky = [];
+    this.speedColour = [];
+    // interpolated times
+    this.xysecs = [];
+    if (this.isGPSTrack) {
+      // don't get time or splits so need to copy them in from original result
+      this.time = rg2.results.getTimeForID(this.rawid);
+      // allow for events with no results where there won't be a non-GPS result
+      if (this.time === rg2.config.TIME_NOT_FOUND) {
+        this.time = data.time;
+      }
+      this.splits = rg2.results.getSplitsForID(this.rawid);
+
+    }
+    this.legpos = [];
+    if (data.gpsx.length > 0) {
+      this.addTrack(data);
+    }
+
+  }
+
+
+  Result.prototype = {
+    Constructor : Result,
+
+    putTrackOnDisplay : function () {
+      if (this.hasValidTrack) {
+        this.displayTrack = true;
+      }
+    },
+
+    removeTrackFromDisplay : function () {
+      if (this.hasValidTrack) {
+        this.displayTrack = false;
+      }
+    },
+
+    addTrack : function (data, format) {
+      var trackOK;
+      this.trackx = data.gpsx;
+      this.tracky = data.gpsy;
+      if (this.isGPSTrack) {
+        trackOK = this.expandGPSTrack();
+      } else {
+        if (format === rg2.config.EVENT_WITHOUT_RESULTS) {
+          trackOK = this.expandTrackWithNoSplits();
+        } else {
+          trackOK = this.expandNormalTrack();
+        }
+      }
+      if (trackOK) {
+        rg2.courses.incrementTracksCount(this.courseid);
+      }
+    },
+
+    drawTrack : function (opt) {
+      var i, l, oldx, oldy, stopCount;
+      if (this.displayTrack) {
+        rg2.ctx.lineWidth = opt.routeWidth;
+        rg2.ctx.strokeStyle = this.trackColour;
+        rg2.ctx.globalAlpha = opt.routeIntensity;
+        rg2.ctx.fillStyle = this.trackColour;
+        rg2.ctx.font = '10pt Arial';
+        rg2.ctx.textAlign = "left";
+        rg2.ctx.beginPath();
+        rg2.ctx.moveTo(this.trackx[0], this.tracky[0]);
+        oldx = this.trackx[0];
+        oldy = this.tracky[0];
+        stopCount = 0;
+        l = this.trackx.length;
+        for (i = 1; i < l; i += 1) {
+          // lines
+          rg2.ctx.lineTo(this.trackx[i], this.tracky[i]);
+          if ((this.trackx[i] === oldx) && (this.tracky[i] === oldy)) {
+            // we haven't moved
+            stopCount += 1;
+          } else {
+            // we have started moving again
+            if (stopCount > 0) {
+              if (!this.isGPSTrack || (this.isGPSTrack && opt.showThreeSeconds)) {
+                rg2.ctx.fillText("+" + (3 * stopCount), oldx + 5, oldy + 5);
+              }
+              stopCount = 0;
+            }
+          }
+          oldx = this.trackx[i];
+          oldy = this.tracky[i];
+          if (this.isGPSTrack && opt.showGPSSpeed) {
+            rg2.ctx.strokeStyle = this.speedColour[i];
+            rg2.ctx.stroke();
+            rg2.ctx.beginPath();
+            rg2.ctx.moveTo(oldx, oldy);
+          }
+        }
+        rg2.ctx.stroke();
+      }
+    },
+
+    drawScoreCourse : function () {
+      // draws a score course for an individual runner to show where they went
+      // based on drawCourse in courses.js
+      // could refactor in future...
+      // > 1 since we need at least a start and finish to draw something
+      var angle, i, opt;
+      if ((this.displayScoreCourse) && (this.scorex.length > 1)) {
+        opt = rg2.getOverprintDetails();
+        rg2.ctx.globalAlpha = rg2.config.FULL_INTENSITY;
+        angle = rg2.utils.getAngle(this.scorex[0], this.scorey[0], this.scorex[1], this.scorey[1]);
+        rg2.controls.drawStart(this.scorex[0], this.scorey[0], "", angle, opt);
+        angle = [];
+        for (i = 0; i < (this.scorex.length - 1); i += 1) {
+          angle[i] = rg2.utils.getAngle(this.scorex[i], this.scorey[i], this.scorex[i + 1], this.scorey[i + 1]);
+        }
+        rg2.courses.drawLinesBetweenControls(this.scorex, this.scorey, angle, this.courseid, opt);
+        for (i = 1; i < (this.scorex.length - 1); i += 1) {
+          rg2.controls.drawSingleControl(this.scorex[i], this.scorey[i], i, Math.PI * 0.25, opt);
+        }
+        rg2.controls.drawFinish(this.scorex[this.scorex.length - 1], this.scorey[this.scorey.length - 1], "", opt);
+      }
+    },
+
+    expandNormalTrack : function () {
+      var course, nextcontrol, nextx, nexty, dist, oldx, oldy, i, l, x, y, previouscontrolindex;
+      // allow for getting two tracks for same result: should have been filtered in API...
+      this.xysecs.length = 0;
+      this.cumulativeDistance.length = 0;
+
+      // add times and distances at each position
+      this.xysecs[0] = 0;
+      this.cumulativeDistance[0] = 0;
+
+      // get course details
+      course = {};
+      // each person has their own defined score course
+      if (this.isScoreEvent) {
+        course.x = this.scorex;
+        course.y = this.scorey;
+      } else {
+        course.x = rg2.courses.getCourseDetails(this.courseid).x;
+        course.y = rg2.courses.getCourseDetails(this.courseid).y;
+      }
+      // read through list of controls and copy in split times
+      nextcontrol = 1;
+      nextx = course.x[nextcontrol];
+      nexty = course.y[nextcontrol];
+      dist = 0;
+      oldx = this.trackx[0];
+      oldy = this.tracky[0];
+      x = 0;
+      y = 0;
+      previouscontrolindex = 0;
+      // we are assuming the track starts at the start which is index 0...
+      // look at each track point and see if it matches the next control location
+      l = this.trackx.length;
+      for (i = 1; i < l; i += 1) {
+        // calculate distance while we are looping through
+        x = this.trackx[i];
+        y = this.tracky[i];
+        dist += rg2.utils.getDistanceBetweenPoints(x, y, oldx, oldy);
+        this.cumulativeDistance[i] = Math.round(dist);
+        oldx = x;
+        oldy = y;
+        // track ends at control
+        if ((nextx === x) && (nexty === y)) {
+          this.xysecs[i] = this.splits[nextcontrol];
+          this.addInterpolatedTimes(previouscontrolindex, i);
+          previouscontrolindex = i;
+          nextcontrol += 1;
+          if (nextcontrol === course.x.length) {
+            // we have found all the controls
+            this.hasValidTrack = true;
+            break;
+          }
+          nextx = course.x[nextcontrol];
+          nexty = course.y[nextcontrol];
+        }
+      }
+      // treat all score tracks as valid for now
+      // may need a complete rethink on score course handling later
+      if (this.isScoreEvent) {
+        this.hasValidTrack = true;
+      }
+      return this.hasValidTrack;
+    },
+
+    expandTrackWithNoSplits : function () {
+      // based on ExpandNormalTrack, but deals with event format 2: no results
+      // this means we have a course and a finish time but no split times
+      var totaltime, currenttime, course, nextcontrol, nextx, nexty, lastx, lasty, i, len, x, y, moved, previouscontrolindex, dist, totaldist, oldx, oldy;
+      this.xysecs.length = 0;
+      this.cumulativeDistance.length = 0;
+
+      // only have finish time, which is in [1] at present
+      totaltime = this.splits[1];
+      currenttime = 0;
+      this.xysecs[0] = 0;
+      this.cumulativeDistance[0] = 0;
+
+      // get course details: can't be a score course since they aren't supported for format 2
+      course = {};
+      course.x = rg2.courses.getCourseDetails(this.courseid).x;
+      course.y = rg2.courses.getCourseDetails(this.courseid).y;
+      nextcontrol = 1;
+      nextx = course.x[nextcontrol];
+      nexty = course.y[nextcontrol];
+      lastx = course.x[course.x.length - 1];
+      lasty = course.y[course.y.length - 1];
+      // add finish location to track just in case...
+      this.trackx.push(lastx);
+      this.tracky.push(lasty);
+      dist = 0;
+      totaldist = 0;
+      oldx = this.trackx[0];
+      oldy = this.tracky[0];
+      x = 0;
+      y = 0;
+      previouscontrolindex = 0;
+      // read through track to find total distance
+      len = this.trackx.length;
+      for (i = 1; i < len; i += 1) {
+        x = this.trackx[i];
+        y = this.tracky[i];
+        totaldist += rg2.utils.getDistanceBetweenPoints(x, y, oldx, oldy);
+        oldx = x;
+        oldy = y;
+      }
+
+      // read through again to generate splits
+      x = 0;
+      y = 0;
+      moved = false;
+      oldx = this.trackx[0];
+      oldy = this.tracky[0];
+      for (i = 1; i < len; i += 1) {
+        x = this.trackx[i];
+        y = this.tracky[i];
+        // cope with routes that have start and finish in same place, and where the first point in a route is a repeat of the start
+        if ((x !== this.trackx[0]) || (y !== this.tracky[0])) {
+          moved = true;
+        }
+        dist += rg2.utils.getDistanceBetweenPoints(x, y, oldx, oldy);
+        this.cumulativeDistance[i] = Math.round(dist);
+        oldx = x;
+        oldy = y;
+        // track ends at control, as long as we have moved away from the start
+        if ((nextx === x) && (nexty === y) && moved) {
+          currenttime = parseInt((dist / totaldist) * totaltime, 10);
+          this.xysecs[i] = currenttime;
+          this.splits[nextcontrol] = currenttime;
+          this.addInterpolatedTimes(previouscontrolindex, i);
+          previouscontrolindex = i;
+          nextcontrol += 1;
+          if (nextcontrol === course.x.length) {
+            // we have found all the controls
+            this.hasValidTrack = true;
+            break;
+          }
+          nextx = course.x[nextcontrol];
+          nexty = course.y[nextcontrol];
+        }
+      }
+      return this.hasValidTrack;
+    },
+
+    addInterpolatedTimes : function (startindex, endindex) {
+      // add interpolated time at each point based on cumulative distance; this assumes uniform speed...
+      var oldt, deltat, olddist, deltadist, i;
+      oldt = this.xysecs[startindex];
+      deltat = this.xysecs[endindex] - oldt;
+      olddist = this.cumulativeDistance[startindex];
+      deltadist = this.cumulativeDistance[endindex] - olddist;
+      for (i = startindex; i <= endindex; i += 1) {
+        this.xysecs[i] = oldt + Math.round(((this.cumulativeDistance[i] - olddist) * deltat / deltadist));
+      }
+    },
+
+    expandGPSTrack : function () {
+      var t, dist, oldx, oldy, x, y, delta, maxSpeed, oldDelta, sum, POWER_FACTOR, l;
+      dist = 0;
+      oldx = this.trackx[0];
+      oldy = this.tracky[0];
+      x = 0;
+      y = 0;
+      maxSpeed = 0;
+      oldDelta = 0;
+      POWER_FACTOR = 1;
+      l = this.trackx.length;
+      // in theory we get one point every three seconds
+      for (t = 0; t < l; t += 1) {
+        this.xysecs[t] = 3 * t;
+        x = this.trackx[t];
+        y = this.tracky[t];
+        delta = rg2.utils.getDistanceBetweenPoints(x, y, oldx, oldy);
+        dist += delta;
+        sum = delta + oldDelta;
+        if (maxSpeed < sum) {
+          maxSpeed = sum;
+        }
+        this.speedColour[t] = Math.pow(sum, POWER_FACTOR);
+        this.cumulativeDistance[t] = Math.round(dist);
+        oldx = x;
+        oldy = y;
+        oldDelta = delta;
+      }
+      this.setSpeedColours(Math.pow(maxSpeed, POWER_FACTOR));
+      this.hasValidTrack = true;
+      return this.hasValidTrack;
+
+    },
+
+    setSpeedColours : function (maxspeed) {
+      var i, red, green, halfmax;
+      //console.log("'Max speed = " + maxspeed);
+      halfmax = maxspeed / 2;
+      // speedColour comes in with speeds at each point and gets updated to the associated colour
+      for (i = 1; i < this.speedColour.length; i += 1) {
+        if (this.speedColour[i] > halfmax) {
+          // fade green to orange
+          red = Math.round(255 * (this.speedColour[i] - halfmax) / halfmax);
+          green = 255;
+        } else {
+          // fade orange to red
+          green = Math.round(255 * this.speedColour[i] / halfmax);
+          red = 255;
+        }
+        this.speedColour[i] = '#';
+        if (red < 16) {
+          this.speedColour[i] += '0';
+        }
+        this.speedColour[i] += red.toString(16);
+        if (green < 16) {
+          this.speedColour[i] += '0';
+        }
+        this.speedColour[i] += green.toString(16) + '00';
+      }
+    },
+
+    getInitials : function (name) {
+      var i, addNext, len, initials;
+      // converts name to initials
+      if (name === null) {
+        return "";
+      }
+      name.trim();
+      len = name.length;
+      initials = "";
+      addNext = true;
+      for (i = 0; i < len; i += 1) {
+        if (addNext) {
+          initials += name.substr(i, 1);
+          addNext = false;
+        }
+        if (name.charAt(i) === " ") {
+          addNext = true;
+        }
+      }
+      return initials;
+    }
+  };
+  rg2.Result = Result;
+}());
+
 /*global rg2:false */
 (function () {
   function Results() {
@@ -4298,6 +4947,235 @@ var rg2 = (function (window, $) {
     }
   };
   rg2.Runner = Runner;
+}());
+
+/*global rg2:false */
+(function () {
+
+  function Utils() {
+    // don't need to do anything: just keep jsLint happy
+    return true;
+  }
+
+  Utils.prototype = {
+
+    Constructor : Utils,
+
+    getDistanceBetweenPoints : function (x1, y1, x2, y2) {
+      // Pythagoras
+      return Math.sqrt(Math.pow((x1 - x2), 2) + Math.pow((y1 - y2), 2));
+    },
+
+    getAngle : function (x1, y1, x2, y2) {
+      var angle = Math.atan2((y2 - y1), (x2 - x1));
+      if (angle < 0) {
+        angle = angle + (2 * Math.PI);
+      }
+      return angle;
+    },
+
+    getLatLonDistance : function (lat1, lon1, lat2, lon2) {
+      // Haversine formula (http://www.codecodex.com/wiki/Calculate_distance_between_two_points_on_a_globe)
+      var dLat, dLon, a;
+      dLat = (lat2 - lat1).toRad();
+      dLon = (lon2 - lon1).toRad();
+      a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1.toRad()) * Math.cos(lat2.toRad()) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      // multiply by IUUG earth mean radius (http://en.wikipedia.org/wiki/Earth_radius) in metres
+      return 6371009 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    },
+
+    // converts MM:SS or HH:MM:SS to seconds based on number of :
+    getSecsFromHHMMSS : function (time) {
+      var bits, secs;
+      if (!time) {
+        return 0;
+      }
+      secs = 0;
+      bits = time.split(":");
+      if (bits.length === 2) {
+        secs = (parseInt(bits[0], 10) * 60) + parseInt(bits[1], 10);
+      } else {
+        if (bits.length === 3) {
+          secs = (parseInt(bits[0], 10) * 3600) + (parseInt(bits[1], 10) * 60) + parseInt(bits[2], 10);
+        }
+      }
+      if (isNaN(secs)) {
+        return 0;
+      }
+      return secs;
+    },
+
+    getSecsFromHHMM : function (time) {
+      var bits, secs;
+      if (!time) {
+        return 0;
+      }
+      secs = 0;
+      bits = time.split(":");
+      secs = (parseInt(bits[0], 10) * 3600) + (parseInt(bits[1], 10) * 60);
+      if (isNaN(secs)) {
+        return 0;
+      }
+      return secs;
+    },
+
+    // converts seconds to MM:SS
+    formatSecsAsMMSS : function (secs) {
+      var formattedtime, minutes, seconds;
+      minutes = Math.floor(secs / 60);
+      formattedtime = minutes;
+      seconds = secs - (minutes * 60);
+      if (seconds < 10) {
+        formattedtime += ":0" + seconds;
+      } else {
+        formattedtime += ":" + seconds;
+      }
+      return formattedtime;
+    },
+
+    showWarningDialog : function (title, text) {
+      var msg = '<div id=rg2-warning-dialog>' + text + '</div>';
+      $(msg).dialog({
+        title : title,
+        dialogClass : "rg2-warning-dialog",
+        close : function () {
+          $('#rg2-warning-dialog').dialog('destroy').remove();
+        }
+      });
+    }
+  };
+
+  Number.prototype.toRad = function () {
+    return this * Math.PI / 180;
+  };
+
+  function Colours() {
+    // used to generate track colours: add extra colours as necessary
+    this.colours = ["#ff0000", "#ff8000", "#ff00ff", "#ff0080", "#008080", "#008000", "#0080ff", "#0000ff", "#8000ff", "#808080"];
+    //this.colours = ["#ff0000", "#ff8000",  "#ff00ff", "#ff0080", "#008080", "#008000", "#00ff00", "#0080ff", "#0000ff", "#8000ff", "#00ffff", "#808080"];
+
+    this.colourIndex = 0;
+  }
+
+  Colours.prototype = {
+    Constructor : Colours,
+
+    getNextColour : function () {
+      this.colourIndex = (this.colourIndex + 1) % this.colours.length;
+      return this.colours[this.colourIndex];
+    }
+  };
+
+  function User(keksi) {
+    this.x = "";
+    this.y = keksi;
+    this.name = null;
+    this.pwd = null;
+  }
+
+  function RequestedHash() {
+    this.id = 0;
+    this.courses = [];
+    this.routes = [];
+  }
+
+
+  RequestedHash.prototype = {
+    Constructor : RequestedHash,
+
+    parseHash : function (hash) {
+      var fields, i;
+      // input looks like #id&course=a,b,c&result=x,y,z
+      fields = hash.split('&');
+      for (i = 0; i < fields.length; i += 1) {
+        fields[i] = fields[i].toLowerCase();
+        if (fields[i].search('#') !== -1) {
+          this.id = parseInt(fields[i].replace("#", ""), 10);
+        }
+        if (fields[i].search('course=') !== -1) {
+          this.courses = fields[i].replace("course=", "").split(',');
+        }
+        if (fields[i].search('route=') !== -1) {
+          this.routes = fields[i].replace("route=", "").split(',');
+        }
+      }
+      // convert to integers: NaNs sort themselves out on display so don't check here
+      this.courses = this.courses.map(Number);
+      this.routes = this.routes.map(Number);
+
+      if (isNaN(this.id)) {
+        this.id = 0;
+        this.courses.length = 0;
+        this.routes.length = 0;
+      }
+    },
+
+    getRoutes : function () {
+      return this.routes;
+    },
+
+    getCourses : function () {
+      return this.courses;
+    },
+
+    getID : function () {
+      return this.id;
+    },
+
+    getTab : function () {
+      if (this.routes.length > 0) {
+        return rg2.config.TAB_RESULTS;
+      }
+      return rg2.config.TAB_COURSES;
+    },
+
+    setCourses : function () {
+      this.courses = rg2.courses.getCoursesOnDisplay();
+      window.history.pushState('', '', this.getHash());
+    },
+
+    setRoutes : function () {
+      this.routes = rg2.results.getTracksOnDisplay();
+      window.history.pushState('', '', this.getHash());
+    },
+
+    setNewEvent : function (id) {
+      this.id = id;
+      this.courses.length = 0;
+      this.routes.length = 0;
+      window.history.pushState('', '', this.getHash());
+    },
+
+    getHash : function () {
+      var hash;
+      if (this.id === 0) {
+        return '#0';
+      }
+      hash = '#' + this.id;
+      hash += this.extractItems(this.courses, "&course=");
+      hash += this.extractItems(this.routes, "&route=");
+      return hash;
+    },
+
+    extractItems : function (items, text) {
+      var i, extrahash;
+      extrahash = "";
+      if (items.length > 0) {
+        extrahash += text;
+        for (i = 0; i < items.length; i += 1) {
+          if (i > 0) {
+            extrahash += ',';
+          }
+          extrahash += items[i];
+        }
+      }
+      return extrahash;
+    }
+  };
+  rg2.RequestedHash = RequestedHash;
+  rg2.Utils = Utils;
+  rg2.Colours = Colours;
+  rg2.User = User;
 }());
 
 /*! https://mths.be/he v0.5.0 by @mathias | MIT license */
@@ -8340,865 +9218,4 @@ var rg2 = (function (window, $) {
   };
   rg2.he = he;
 
-}());
-/*global rg2:false */
-(function () {
-  function Course(data, isScoreCourse) {
-    this.name = data.name;
-    this.trackcount = 0;
-    this.display = false;
-    this.courseid = data.courseid;
-    this.codes = data.codes;
-    this.x = data.xpos;
-    this.y = data.ypos;
-    this.isScoreCourse = isScoreCourse;
-    this.resultcount = 0;
-    // save angle to next control to simplify later calculations
-    this.angle = [];
-    // save angle to show control code text
-    this.textAngle = [];
-    this.setAngles();
-  }
-
-  Course.prototype = {
-    Constructor : Course,
-
-    incrementTracksCount : function () {
-      this.trackcount += 1;
-    },
-
-    setAngles : function () {
-      var i, c1x, c1y, c2x, c2y, c3x, c3y;
-      for (i = 0; i < (this.x.length - 1); i += 1) {
-        if (this.isScoreCourse) {
-          // align score event start triangle and controls upwards
-          this.angle[i] = Math.PI * 1.5;
-          this.textAngle[i] = Math.PI * 0.25;
-        } else {
-          // angle of line to next control
-          this.angle[i] = rg2.utils.getAngle(this.x[i], this.y[i], this.x[i + 1], this.y[i + 1]);
-          // create bisector of angle to position number
-          c1x = Math.sin(this.angle[i - 1]);
-          c1y = Math.cos(this.angle[i - 1]);
-          c2x = Math.sin(this.angle[i]) + c1x;
-          c2y = Math.cos(this.angle[i]) + c1y;
-          c3x = c2x / 2;
-          c3y = c2y / 2;
-          this.textAngle[i] = rg2.utils.getAngle(c3x, c3y, c1x, c1y);
-        }
-      }
-      // not worried about angle for finish
-      this.angle[this.x.length - 1] = 0;
-      this.textAngle[this.x.length - 1] = 0;
-    },
-
-    drawCourse : function (intensity) {
-      var i, opt;
-      if (this.display) {
-        opt = rg2.getOverprintDetails();
-        rg2.ctx.globalAlpha = intensity;
-        rg2.controls.drawStart(this.x[0], this.y[0], "", this.angle[0], opt);
-        // don't join up controls for score events
-        if (!this.isScoreCourse) {
-          this.drawLinesBetweenControls(this.x, this.y, this.angle, opt);
-        }
-        if (this.isScoreCourse) {
-          for (i = 1; i < (this.x.length); i += 1) {
-            if ((this.codes[i].indexOf('F') === 0) || (this.codes[i].indexOf('M') === 0)) {
-              rg2.controls.drawFinish(this.x[i], this.y[i], "", opt);
-            } else {
-              rg2.controls.drawSingleControl(this.x[i], this.y[i], this.codes[i], this.textAngle[i], opt);
-            }
-          }
-
-        } else {
-          for (i = 1; i < (this.x.length - 1); i += 1) {
-            rg2.controls.drawSingleControl(this.x[i], this.y[i], i, this.textAngle[i], opt);
-          }
-          rg2.controls.drawFinish(this.x[this.x.length - 1], this.y[this.y.length - 1], "", opt);
-        }
-      }
-    },
-    drawLinesBetweenControls : function (x, y, angle, opt) {
-      var c1x, c1y, c2x, c2y, i, dist;
-      for (i = 0; i < (x.length - 1); i += 1) {
-        if (i === 0) {
-          dist = opt.startTriangleLength;
-        } else {
-          dist = opt.controlRadius;
-        }
-        c1x = x[i] + (dist * Math.cos(angle[i]));
-        c1y = y[i] + (dist * Math.sin(angle[i]));
-        //Assume the last control in the array is a finish
-        if (i === this.x.length - 2) {
-          dist = opt.finishOuterRadius;
-        } else {
-          dist = opt.controlRadius;
-        }
-        c2x = x[i + 1] - (dist * Math.cos(angle[i]));
-        c2y = y[i + 1] - (dist * Math.sin(angle[i]));
-        rg2.ctx.beginPath();
-        rg2.ctx.moveTo(c1x, c1y);
-        rg2.ctx.lineTo(c2x, c2y);
-        rg2.ctx.stroke();
-      }
-    }
-  };
-  rg2.Course = Course;
-}());
-/*global rg2:false */
-(function () {
-  function Result(data, isScoreEvent, scorecodes, scorex, scorey) {
-    // resultid is the kartat id value
-    this.resultid = data.resultid;
-    this.rawid = this.resultid % rg2.config.GPS_RESULT_OFFSET;
-    this.isScoreEvent = isScoreEvent;
-    // GPS track ids are normal resultid + GPS_RESULT_OFFSET
-    if (this.resultid >= rg2.config.GPS_RESULT_OFFSET) {
-      this.isGPSTrack = true;
-    } else {
-      //this.name = data.name;
-      this.isGPSTrack = false;
-    }
-    this.name = rg2.he.decode(data.name);
-    this.initials = this.getInitials(this.name);
-    this.starttime = data.starttime;
-    this.time = data.time;
-    this.position = data.position;
-    this.status = data.status;
-    // get round iconv problem in API for now: unescape special characters to get sensible text
-    this.comments = rg2.he.decode(data.comments);
-    this.coursename = data.coursename;
-    if (this.coursename === "") {
-      this.coursename = data.courseid;
-    }
-    this.courseid = data.courseid;
-    this.splits = data.splits;
-    // insert a 0 split at the start to make life much easier elsewhere
-    this.splits.splice(0, 0, 0);
-
-    if (data.variant !== "") {
-      // save control locations for score course result
-      this.scorex = scorex;
-      this.scorey = scorey;
-      this.scorecodes = scorecodes;
-    }
-    // calculated cumulative distance in pixels
-    this.cumulativeDistance = [];
-    // set true if track includes all expected controls in correct order or is a GPS track
-    this.hasValidTrack = false;
-    this.displayTrack = false;
-    this.displayScoreCourse = false;
-    this.trackColour = rg2.colours.getNextColour();
-    // raw track data
-    this.trackx = [];
-    this.tracky = [];
-    this.speedColour = [];
-    // interpolated times
-    this.xysecs = [];
-    if (this.isGPSTrack) {
-      // don't get time or splits so need to copy them in from original result
-      this.time = rg2.results.getTimeForID(this.rawid);
-      // allow for events with no results where there won't be a non-GPS result
-      if (this.time === rg2.config.TIME_NOT_FOUND) {
-        this.time = data.time;
-      }
-      this.splits = rg2.results.getSplitsForID(this.rawid);
-
-    }
-    this.legpos = [];
-    if (data.gpsx.length > 0) {
-      this.addTrack(data);
-    }
-
-  }
-
-
-  Result.prototype = {
-    Constructor : Result,
-
-    putTrackOnDisplay : function () {
-      if (this.hasValidTrack) {
-        this.displayTrack = true;
-      }
-    },
-
-    removeTrackFromDisplay : function () {
-      if (this.hasValidTrack) {
-        this.displayTrack = false;
-      }
-    },
-
-    addTrack : function (data, format) {
-      var trackOK;
-      this.trackx = data.gpsx;
-      this.tracky = data.gpsy;
-      if (this.isGPSTrack) {
-        trackOK = this.expandGPSTrack();
-      } else {
-        if (format === rg2.config.EVENT_WITHOUT_RESULTS) {
-          trackOK = this.expandTrackWithNoSplits();
-        } else {
-          trackOK = this.expandNormalTrack();
-        }
-      }
-      if (trackOK) {
-        rg2.courses.incrementTracksCount(this.courseid);
-      }
-    },
-
-    drawTrack : function (opt) {
-      var i, l, oldx, oldy, stopCount;
-      if (this.displayTrack) {
-        rg2.ctx.lineWidth = opt.routeWidth;
-        rg2.ctx.strokeStyle = this.trackColour;
-        rg2.ctx.globalAlpha = opt.routeIntensity;
-        rg2.ctx.fillStyle = this.trackColour;
-        rg2.ctx.font = '10pt Arial';
-        rg2.ctx.textAlign = "left";
-        rg2.ctx.beginPath();
-        rg2.ctx.moveTo(this.trackx[0], this.tracky[0]);
-        oldx = this.trackx[0];
-        oldy = this.tracky[0];
-        stopCount = 0;
-        l = this.trackx.length;
-        for (i = 1; i < l; i += 1) {
-          // lines
-          rg2.ctx.lineTo(this.trackx[i], this.tracky[i]);
-          if ((this.trackx[i] === oldx) && (this.tracky[i] === oldy)) {
-            // we haven't moved
-            stopCount += 1;
-          } else {
-            // we have started moving again
-            if (stopCount > 0) {
-              if (!this.isGPSTrack || (this.isGPSTrack && opt.showThreeSeconds)) {
-                rg2.ctx.fillText("+" + (3 * stopCount), oldx + 5, oldy + 5);
-              }
-              stopCount = 0;
-            }
-          }
-          oldx = this.trackx[i];
-          oldy = this.tracky[i];
-          if (this.isGPSTrack && opt.showGPSSpeed) {
-            rg2.ctx.strokeStyle = this.speedColour[i];
-            rg2.ctx.stroke();
-            rg2.ctx.beginPath();
-            rg2.ctx.moveTo(oldx, oldy);
-          }
-        }
-        rg2.ctx.stroke();
-      }
-    },
-
-    drawScoreCourse : function () {
-      // draws a score course for an individual runner to show where they went
-      // based on drawCourse in courses.js
-      // could refactor in future...
-      // > 1 since we need at least a start and finish to draw something
-      var angle, i, opt;
-      if ((this.displayScoreCourse) && (this.scorex.length > 1)) {
-        opt = rg2.getOverprintDetails();
-        rg2.ctx.globalAlpha = rg2.config.FULL_INTENSITY;
-        angle = rg2.utils.getAngle(this.scorex[0], this.scorey[0], this.scorex[1], this.scorey[1]);
-        rg2.controls.drawStart(this.scorex[0], this.scorey[0], "", angle, opt);
-        angle = [];
-        for (i = 0; i < (this.scorex.length - 1); i += 1) {
-          angle[i] = rg2.utils.getAngle(this.scorex[i], this.scorey[i], this.scorex[i + 1], this.scorey[i + 1]);
-        }
-        rg2.courses.drawLinesBetweenControls(this.scorex, this.scorey, angle, this.courseid, opt);
-        for (i = 1; i < (this.scorex.length - 1); i += 1) {
-          rg2.controls.drawSingleControl(this.scorex[i], this.scorey[i], i, Math.PI * 0.25, opt);
-        }
-        rg2.controls.drawFinish(this.scorex[this.scorex.length - 1], this.scorey[this.scorey.length - 1], "", opt);
-      }
-    },
-
-    expandNormalTrack : function () {
-      var course, nextcontrol, nextx, nexty, dist, oldx, oldy, i, l, x, y, previouscontrolindex;
-      // allow for getting two tracks for same result: should have been filtered in API...
-      this.xysecs.length = 0;
-      this.cumulativeDistance.length = 0;
-
-      // add times and distances at each position
-      this.xysecs[0] = 0;
-      this.cumulativeDistance[0] = 0;
-
-      // get course details
-      course = {};
-      // each person has their own defined score course
-      if (this.isScoreEvent) {
-        course.x = this.scorex;
-        course.y = this.scorey;
-      } else {
-        course.x = rg2.courses.getCourseDetails(this.courseid).x;
-        course.y = rg2.courses.getCourseDetails(this.courseid).y;
-      }
-      // read through list of controls and copy in split times
-      nextcontrol = 1;
-      nextx = course.x[nextcontrol];
-      nexty = course.y[nextcontrol];
-      dist = 0;
-      oldx = this.trackx[0];
-      oldy = this.tracky[0];
-      x = 0;
-      y = 0;
-      previouscontrolindex = 0;
-      // we are assuming the track starts at the start which is index 0...
-      // look at each track point and see if it matches the next control location
-      l = this.trackx.length;
-      for (i = 1; i < l; i += 1) {
-        // calculate distance while we are looping through
-        x = this.trackx[i];
-        y = this.tracky[i];
-        dist += rg2.utils.getDistanceBetweenPoints(x, y, oldx, oldy);
-        this.cumulativeDistance[i] = Math.round(dist);
-        oldx = x;
-        oldy = y;
-        // track ends at control
-        if ((nextx === x) && (nexty === y)) {
-          this.xysecs[i] = this.splits[nextcontrol];
-          this.addInterpolatedTimes(previouscontrolindex, i);
-          previouscontrolindex = i;
-          nextcontrol += 1;
-          if (nextcontrol === course.x.length) {
-            // we have found all the controls
-            this.hasValidTrack = true;
-            break;
-          }
-          nextx = course.x[nextcontrol];
-          nexty = course.y[nextcontrol];
-        }
-      }
-      // treat all score tracks as valid for now
-      // may need a complete rethink on score course handling later
-      if (this.isScoreEvent) {
-        this.hasValidTrack = true;
-      }
-      return this.hasValidTrack;
-    },
-
-    expandTrackWithNoSplits : function () {
-      // based on ExpandNormalTrack, but deals with event format 2: no results
-      // this means we have a course and a finish time but no split times
-      var totaltime, currenttime, course, nextcontrol, nextx, nexty, lastx, lasty, i, len, x, y, moved, previouscontrolindex, dist, totaldist, oldx, oldy;
-      this.xysecs.length = 0;
-      this.cumulativeDistance.length = 0;
-
-      // only have finish time, which is in [1] at present
-      totaltime = this.splits[1];
-      currenttime = 0;
-      this.xysecs[0] = 0;
-      this.cumulativeDistance[0] = 0;
-
-      // get course details: can't be a score course since they aren't supported for format 2
-      course = {};
-      course.x = rg2.courses.getCourseDetails(this.courseid).x;
-      course.y = rg2.courses.getCourseDetails(this.courseid).y;
-      nextcontrol = 1;
-      nextx = course.x[nextcontrol];
-      nexty = course.y[nextcontrol];
-      lastx = course.x[course.x.length - 1];
-      lasty = course.y[course.y.length - 1];
-      // add finish location to track just in case...
-      this.trackx.push(lastx);
-      this.tracky.push(lasty);
-      dist = 0;
-      totaldist = 0;
-      oldx = this.trackx[0];
-      oldy = this.tracky[0];
-      x = 0;
-      y = 0;
-      previouscontrolindex = 0;
-      // read through track to find total distance
-      len = this.trackx.length;
-      for (i = 1; i < len; i += 1) {
-        x = this.trackx[i];
-        y = this.tracky[i];
-        totaldist += rg2.utils.getDistanceBetweenPoints(x, y, oldx, oldy);
-        oldx = x;
-        oldy = y;
-      }
-
-      // read through again to generate splits
-      x = 0;
-      y = 0;
-      moved = false;
-      oldx = this.trackx[0];
-      oldy = this.tracky[0];
-      for (i = 1; i < len; i += 1) {
-        x = this.trackx[i];
-        y = this.tracky[i];
-        // cope with routes that have start and finish in same place, and where the first point in a route is a repeat of the start
-        if ((x !== this.trackx[0]) || (y !== this.tracky[0])) {
-          moved = true;
-        }
-        dist += rg2.utils.getDistanceBetweenPoints(x, y, oldx, oldy);
-        this.cumulativeDistance[i] = Math.round(dist);
-        oldx = x;
-        oldy = y;
-        // track ends at control, as long as we have moved away from the start
-        if ((nextx === x) && (nexty === y) && moved) {
-          currenttime = parseInt((dist / totaldist) * totaltime, 10);
-          this.xysecs[i] = currenttime;
-          this.splits[nextcontrol] = currenttime;
-          this.addInterpolatedTimes(previouscontrolindex, i);
-          previouscontrolindex = i;
-          nextcontrol += 1;
-          if (nextcontrol === course.x.length) {
-            // we have found all the controls
-            this.hasValidTrack = true;
-            break;
-          }
-          nextx = course.x[nextcontrol];
-          nexty = course.y[nextcontrol];
-        }
-      }
-      return this.hasValidTrack;
-    },
-
-    addInterpolatedTimes : function (startindex, endindex) {
-      // add interpolated time at each point based on cumulative distance; this assumes uniform speed...
-      var oldt, deltat, olddist, deltadist, i;
-      oldt = this.xysecs[startindex];
-      deltat = this.xysecs[endindex] - oldt;
-      olddist = this.cumulativeDistance[startindex];
-      deltadist = this.cumulativeDistance[endindex] - olddist;
-      for (i = startindex; i <= endindex; i += 1) {
-        this.xysecs[i] = oldt + Math.round(((this.cumulativeDistance[i] - olddist) * deltat / deltadist));
-      }
-    },
-
-    expandGPSTrack : function () {
-      var t, dist, oldx, oldy, x, y, delta, maxSpeed, oldDelta, sum, POWER_FACTOR, l;
-      dist = 0;
-      oldx = this.trackx[0];
-      oldy = this.tracky[0];
-      x = 0;
-      y = 0;
-      maxSpeed = 0;
-      oldDelta = 0;
-      POWER_FACTOR = 1;
-      l = this.trackx.length;
-      // in theory we get one point every three seconds
-      for (t = 0; t < l; t += 1) {
-        this.xysecs[t] = 3 * t;
-        x = this.trackx[t];
-        y = this.tracky[t];
-        delta = rg2.utils.getDistanceBetweenPoints(x, y, oldx, oldy);
-        dist += delta;
-        sum = delta + oldDelta;
-        if (maxSpeed < sum) {
-          maxSpeed = sum;
-        }
-        this.speedColour[t] = Math.pow(sum, POWER_FACTOR);
-        this.cumulativeDistance[t] = Math.round(dist);
-        oldx = x;
-        oldy = y;
-        oldDelta = delta;
-      }
-      this.setSpeedColours(Math.pow(maxSpeed, POWER_FACTOR));
-      this.hasValidTrack = true;
-      return this.hasValidTrack;
-
-    },
-
-    setSpeedColours : function (maxspeed) {
-      var i, red, green, halfmax;
-      //console.log("'Max speed = " + maxspeed);
-      halfmax = maxspeed / 2;
-      // speedColour comes in with speeds at each point and gets updated to the associated colour
-      for (i = 1; i < this.speedColour.length; i += 1) {
-        if (this.speedColour[i] > halfmax) {
-          // fade green to orange
-          red = Math.round(255 * (this.speedColour[i] - halfmax) / halfmax);
-          green = 255;
-        } else {
-          // fade orange to red
-          green = Math.round(255 * this.speedColour[i] / halfmax);
-          red = 255;
-        }
-        this.speedColour[i] = '#';
-        if (red < 16) {
-          this.speedColour[i] += '0';
-        }
-        this.speedColour[i] += red.toString(16);
-        if (green < 16) {
-          this.speedColour[i] += '0';
-        }
-        this.speedColour[i] += green.toString(16) + '00';
-      }
-    },
-
-    getInitials : function (name) {
-      var i, addNext, len, initials;
-      // converts name to initials
-      if (name === null) {
-        return "";
-      }
-      name.trim();
-      len = name.length;
-      initials = "";
-      addNext = true;
-      for (i = 0; i < len; i += 1) {
-        if (addNext) {
-          initials += name.substr(i, 1);
-          addNext = false;
-        }
-        if (name.charAt(i) === " ") {
-          addNext = true;
-        }
-      }
-      return initials;
-    }
-  };
-  rg2.Result = Result;
-}());
-
-/*global rg2:false */
-/*global rg2Config:false */
-(function () {
-  function Georef(description, name, params) {
-    this.description = description;
-    this.name = name;
-    this.params = params;
-  }
-
-  function Georefs() {
-    this.georefsystems = [];
-    this.georefsystems.push(new Georef("Not georeferenced", "none", ""));
-    this.georefsystems.push(new Georef("GB National Grid", "EPSG:27700", "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs"));
-    this.georefsystems.push(new Georef("Google EPSG:900913", "EPSG:900913", "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs"));
-    if (rg2Config.epsg_code !== undefined) {
-      this.georefsystems.push(new Georef(rg2Config.epsg_code, rg2Config.epsg_code.replace(" ", ""), rg2Config.epsg_params));
-      this.defaultGeorefVal = rg2Config.epsg_code.replace(" ", "");
-    } else {
-      this.defaultGeorefVal = "EPSG:27700";
-    }
-  }
-
-  Georefs.prototype = {
-    Constructor : Georefs,
-
-    getDefault : function () {
-      return this.defaultGeorefVal;
-    },
-
-    getDropdown : function (dropdown) {
-      var i, opt;
-      for (i = 0; i < this.georefsystems.length; i += 1) {
-        opt = document.createElement("option");
-        opt.value = this.georefsystems[i].name;
-        opt.text = this.georefsystems[i].description;
-        dropdown.options.add(opt);
-      }
-      return dropdown;
-    },
-
-    getParams : function (name) {
-      var i, params;
-      params = "";
-      for (i = 0; i < this.georefsystems.length; i += 1) {
-        if (this.georefsystems[i].name === name) {
-          return this.georefsystems[i].params;
-        }
-      }
-      return params;
-    }
-  };
-
-  function Worldfile(a, b, c, d, e, f) {
-    // see http://en.wikipedia.org/wiki/World_file
-    this.A = parseFloat(a);
-    this.B = parseFloat(b);
-    this.C = parseFloat(c);
-    this.D = parseFloat(d);
-    this.E = parseFloat(e);
-    this.F = parseFloat(f);
-    if ((a !== 0) && (b !== 0) && (c !== 0) && (d !== 0) && (e !== 0) && (f !== 0)) {
-      this.valid = true;
-      // helps make later calculations easier
-      this.AEDB = (a * e) - (d * b);
-      this.xCorrection = (b * f) - (e * c);
-      this.yCorrection = (d * c) - (a * f);
-    } else {
-      this.valid = false;
-      this.AEDB = 0;
-      this.xCorrection = 0;
-      this.yCorrection = 0;
-    }
-  }
-
-  Worldfile.prototype = {
-    Constructor : Worldfile,
-
-    // use worldfile to generate X value
-    getX : function (x, y) {
-      return Math.round(((this.E * x) - (this.B * y) + this.xCorrection) / this.AEDB);
-    },
-
-    // use worldfile to generate y value
-    getY : function (x, y) {
-      return Math.round(((-1 * this.D * x) + (this.A * y) + this.yCorrection) / this.AEDB);
-    }
-  };
-
-  function Map(data) {
-    if (data !== undefined) {
-      // existing map from database
-      this.mapid = data.mapid;
-      this.name = data.name;
-      // worldfile for GPS to map image conversion (for GPS files)
-      this.worldfile = new Worldfile(data.A, data.B, data.C, data.D, data.E, data.F);
-      // worldfile for local co-ords to map image conversion (for georeferenced courses)
-      this.localworldfile = new Worldfile(data.localA, data.localB, data.localC, data.localD, data.localE, data.localF);
-      if (data.mapfilename === undefined) {
-        this.mapfilename = this.mapid + '.' + 'jpg';
-      } else {
-        this.mapfilename = data.mapfilename;
-      }
-
-    } else {
-      // new map to be added
-      this.mapid = 0;
-      this.name = "";
-      this.worldfile = new Worldfile(0, 0, 0, 0, 0, 0);
-      this.localworldfile = new Worldfile(0, 0, 0, 0, 0, 0);
-    }
-    this.xpx = [];
-    this.ypx = [];
-    this.lat = [];
-    this.lon = [];
-  }
-  rg2.Georefs = Georefs;
-  rg2.Worldfile = Worldfile;
-  rg2.Map = Map;
-}());
-
-/*global rg2:false */
-(function () {
-
-  function Utils() {
-    // don't need to do anything: just keep jsLint happy
-    return true;
-  }
-
-  Utils.prototype = {
-
-    Constructor : Utils,
-
-    getDistanceBetweenPoints : function (x1, y1, x2, y2) {
-      // Pythagoras
-      return Math.sqrt(Math.pow((x1 - x2), 2) + Math.pow((y1 - y2), 2));
-    },
-
-    getAngle : function (x1, y1, x2, y2) {
-      var angle = Math.atan2((y2 - y1), (x2 - x1));
-      if (angle < 0) {
-        angle = angle + (2 * Math.PI);
-      }
-      return angle;
-    },
-
-    getLatLonDistance : function (lat1, lon1, lat2, lon2) {
-      // Haversine formula (http://www.codecodex.com/wiki/Calculate_distance_between_two_points_on_a_globe)
-      var dLat, dLon, a;
-      dLat = (lat2 - lat1).toRad();
-      dLon = (lon2 - lon1).toRad();
-      a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1.toRad()) * Math.cos(lat2.toRad()) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-      // multiply by IUUG earth mean radius (http://en.wikipedia.org/wiki/Earth_radius) in metres
-      return 6371009 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    },
-
-    // converts MM:SS or HH:MM:SS to seconds based on number of :
-    getSecsFromHHMMSS : function (time) {
-      var bits, secs;
-      if (!time) {
-        return 0;
-      }
-      secs = 0;
-      bits = time.split(":");
-      if (bits.length === 2) {
-        secs = (parseInt(bits[0], 10) * 60) + parseInt(bits[1], 10);
-      } else {
-        if (bits.length === 3) {
-          secs = (parseInt(bits[0], 10) * 3600) + (parseInt(bits[1], 10) * 60) + parseInt(bits[2], 10);
-        }
-      }
-      if (isNaN(secs)) {
-        return 0;
-      }
-      return secs;
-    },
-
-    getSecsFromHHMM : function (time) {
-      var bits, secs;
-      if (!time) {
-        return 0;
-      }
-      secs = 0;
-      bits = time.split(":");
-      secs = (parseInt(bits[0], 10) * 3600) + (parseInt(bits[1], 10) * 60);
-      if (isNaN(secs)) {
-        return 0;
-      }
-      return secs;
-    },
-
-    // converts seconds to MM:SS
-    formatSecsAsMMSS : function (secs) {
-      var formattedtime, minutes, seconds;
-      minutes = Math.floor(secs / 60);
-      formattedtime = minutes;
-      seconds = secs - (minutes * 60);
-      if (seconds < 10) {
-        formattedtime += ":0" + seconds;
-      } else {
-        formattedtime += ":" + seconds;
-      }
-      return formattedtime;
-    },
-
-    showWarningDialog : function (title, text) {
-      var msg = '<div id=rg2-warning-dialog>' + text + '</div>';
-      $(msg).dialog({
-        title : title,
-        dialogClass : "rg2-warning-dialog",
-        close : function () {
-          $('#rg2-warning-dialog').dialog('destroy').remove();
-        }
-      });
-    }
-  };
-
-  Number.prototype.toRad = function () {
-    return this * Math.PI / 180;
-  };
-
-  function Colours() {
-    // used to generate track colours: add extra colours as necessary
-    this.colours = ["#ff0000", "#ff8000", "#ff00ff", "#ff0080", "#008080", "#008000", "#0080ff", "#0000ff", "#8000ff", "#808080"];
-    //this.colours = ["#ff0000", "#ff8000",  "#ff00ff", "#ff0080", "#008080", "#008000", "#00ff00", "#0080ff", "#0000ff", "#8000ff", "#00ffff", "#808080"];
-
-    this.colourIndex = 0;
-  }
-
-  Colours.prototype = {
-    Constructor : Colours,
-
-    getNextColour : function () {
-      this.colourIndex = (this.colourIndex + 1) % this.colours.length;
-      return this.colours[this.colourIndex];
-    }
-  };
-
-  function User(keksi) {
-    this.x = "";
-    this.y = keksi;
-    this.name = null;
-    this.pwd = null;
-  }
-
-  function RequestedHash() {
-    this.id = 0;
-    this.courses = [];
-    this.routes = [];
-  }
-
-
-  RequestedHash.prototype = {
-    Constructor : RequestedHash,
-
-    parseHash : function (hash) {
-      var fields, i;
-      // input looks like #id&course=a,b,c&result=x,y,z
-      fields = hash.split('&');
-      for (i = 0; i < fields.length; i += 1) {
-        fields[i] = fields[i].toLowerCase();
-        if (fields[i].search('#') !== -1) {
-          this.id = parseInt(fields[i].replace("#", ""), 10);
-        }
-        if (fields[i].search('course=') !== -1) {
-          this.courses = fields[i].replace("course=", "").split(',');
-        }
-        if (fields[i].search('route=') !== -1) {
-          this.routes = fields[i].replace("route=", "").split(',');
-        }
-      }
-      // convert to integers: NaNs sort themselves out on display so don't check here
-      this.courses = this.courses.map(Number);
-      this.routes = this.routes.map(Number);
-
-      if (isNaN(this.id)) {
-        this.id = 0;
-        this.courses.length = 0;
-        this.routes.length = 0;
-      }
-    },
-
-    getRoutes : function () {
-      return this.routes;
-    },
-
-    getCourses : function () {
-      return this.courses;
-    },
-
-    getID : function () {
-      return this.id;
-    },
-
-    getTab : function () {
-      if (this.routes.length > 0) {
-        return rg2.config.TAB_RESULTS;
-      }
-      return rg2.config.TAB_COURSES;
-    },
-
-    setCourses : function () {
-      this.courses = rg2.courses.getCoursesOnDisplay();
-      window.history.pushState('', '', this.getHash());
-    },
-
-    setRoutes : function () {
-      this.routes = rg2.results.getTracksOnDisplay();
-      window.history.pushState('', '', this.getHash());
-    },
-
-    setNewEvent : function (id) {
-      this.id = id;
-      this.courses.length = 0;
-      this.routes.length = 0;
-      window.history.pushState('', '', this.getHash());
-    },
-
-    getHash : function () {
-      var hash;
-      if (this.id === 0) {
-        return '#0';
-      }
-      hash = '#' + this.id;
-      hash += this.extractItems(this.courses, "&course=");
-      hash += this.extractItems(this.routes, "&route=");
-      return hash;
-    },
-
-    extractItems : function (items, text) {
-      var i, extrahash;
-      extrahash = "";
-      if (items.length > 0) {
-        extrahash += text;
-        for (i = 0; i < items.length; i += 1) {
-          if (i > 0) {
-            extrahash += ',';
-          }
-          extrahash += items[i];
-        }
-      }
-      return extrahash;
-    }
-  };
-  rg2.RequestedHash = RequestedHash;
-  rg2.Utils = Utils;
-  rg2.Colours = Colours;
-  rg2.User = User;
 }());
