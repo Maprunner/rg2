@@ -28,7 +28,7 @@
     },
 
     processResultsCSV : function (evt) {
-      var rows, commas, semicolons, separator;
+      var rows, commas, semicolons, separator, format;
       rows = evt.target.result.split(/[\r\n|\n]+/);
       // try and work out what the separator is
       commas = rows[0].split(',').length - 1;
@@ -43,7 +43,8 @@
       if (rows[0].split(separator).length === 2) {
         this.processSpklasseCSVResults(rows, separator);
       } else {
-        this.processSICSVResults(rows, separator);
+        format = this.getCSVFormat(rows[0], separator);
+        this.processSICSVResults(rows, format, separator);
       }
     },
 
@@ -107,12 +108,7 @@
             } else {
               result.dbid = result.name;
             }
-            temp = personlist[j].getElementsByTagName('ShortName');
-            if (temp.length > 0) {
-              result.club = temp[0].textContent.trim();
-            } else {
-              result.club = '';
-            }
+            result.club = this.extractTextContentZero(personlist[j].getElementsByTagName('ShortName'), '');
             resultlist = personlist[j].getElementsByTagName('Result');
             this.extractIOFV2XMLResults(resultlist, result);
             if (result.status === 'DidNotStart') {
@@ -143,12 +139,7 @@
         } else {
           result.position = '';
         }
-        temp = resultlist[k].getElementsByTagName('CCardId');
-        if (temp.length > 0) {
-          result.chipid = temp[0].textContent;
-        } else {
-          result.chipid = 0;
-        }
+        result.chipid = this.extractTextContentZero(resultlist[k].getElementsByTagName('CCardId'), 0);
         // assuming first <Time> is the total time...
         temp = resultlist[k].getElementsByTagName('Time');
         if (temp.length > 0) {
@@ -248,27 +239,19 @@
 
     },
 
+    extractTextContentZero : function (text, defaultValue) {
+      if (text.length > 0) {
+        return text[0].textContent.trim();
+      }
+      return defaultValue;
+    },
+
     extractIOFV3XMLResults : function (resultlist, result) {
       var k, temp, temp2, time, splitlist;
       for (k = 0; k < resultlist.length; k += 1) {
-        temp = resultlist[k].getElementsByTagName('ControlCard');
-        if (temp.length > 0) {
-          result.chipid = temp[0].textContent;
-        } else {
-          result.chipid = 0;
-        }
-        temp = resultlist[k].getElementsByTagName('Position');
-        if (temp.length > 0) {
-          result.position = temp[0].textContent;
-        } else {
-          result.position = '';
-        }
-        temp = resultlist[k].getElementsByTagName('Status');
-        if (temp.length > 0) {
-          result.status = temp[0].textContent;
-        } else {
-          result.status = '';
-        }
+        result.chipid = this.extractTextContentZero(resultlist[k].getElementsByTagName('ControlCard'), 0);
+        result.position = this.extractTextContentZero(resultlist[k].getElementsByTagName('Position'), '');
+        result.status = this.extractTextContentZero(resultlist[k].getElementsByTagName('Status'), '');
         // assuming first <Time> is the total time...
         // this one is in seconds and might even have tenths...
         temp = resultlist[k].getElementsByTagName('Time');
@@ -312,38 +295,27 @@
     },
 
     extractIOFV3XMLSplits : function (splitlist, result) {
-      var l, temp;
-      for (l = 0; l < splitlist.length; l += 1) {
-        if (l > 0) {
+      var x;
+      for (x = 0; x < splitlist.length; x += 1) {
+        if (x > 0) {
           result.splits += ";";
         }
-        temp = splitlist[l].getElementsByTagName('Time');
-        if (temp.length > 0) {
-          result.splits += temp[0].textContent;
-        } else {
-          result.splits += 0;
-        }
-        temp = splitlist[l].getElementsByTagName('ControlCode');
-        if (temp.length > 0) {
-          result.codes[l] = temp[0].textContent;
-        } else {
-          result.codes[l] += 'X' + l;
-        }
+        result.splits += this.extractTextContentZero(splitlist[x].getElementsByTagName('Time'), 0);
+        result.codes[x] = this.extractTextContentZero(splitlist[x].getElementsByTagName('ControlCode'), 'X' + x);
       }
       // add finish split
       result.splits += ";";
     },
 
     // rows: array of raw lines from SI results csv file
-    processSICSVResults : function (rows, separator) {
-      var i, j, fields, nextsplit, nextcode, format, result;
-      format = this.getCSVFormat(rows[0], separator);
+    processSICSVResults : function (rows, format, separator) {
+      var i, j, fields, nextsplit, nextcode, result;
       // extract what we need: first row is headers so ignore
+      result = {};
       for (i = 1; i < rows.length; i += 1) {
         fields = rows[i].split(separator);
         // need at least this many fields...
         if (fields.length >= format.FIRST_SPLIT_IDX) {
-          result = {};
           result.chipid = fields[format.CHIP_IDX];
           // delete quotes from CSV file: output from MERCS
           result.name = (fields[format.FIRST_NAME_IDX] + " " + fields[format.SURNAME_IDX]).trim().replace(/\"/g, '');
@@ -374,16 +346,14 @@
             nextcode += format.STEP;
           }
           // add finish split
-          result.splits += ";";
-          result.splits += rg2.utils.getSecsFromHHMMSS(result.time);
+          result.splits += ";" + rg2.utils.getSecsFromHHMMSS(result.time);
           this.results.push(result);
         }
       }
     },
 
     getCSVFormat : function (headers, separator) {
-      // not a pretty function but it should allow some non-standard CSV formats to be processed
-      // such as OEScore output
+      // not a pretty function but it should allow some non-standard CSV formats to be processed such as OEScore output
       var a, titles, idx, fields, i, j, found;
       a = {};
       titles = ['SI card', 'Database Id', 'Surname', 'First name', 'nc', 'Start', 'Time', 'Classifier', 'City', 'Short', 'Course', 'Course controls', 'Pl', 'Start punch', 'Control1', 'Punch1', 'Control2'];
@@ -419,44 +389,27 @@
         }
       }
 
-      if (found) {
-        a.CHIP_IDX = idx[0];
-        a.DB_IDX = idx[1];
-        a.SURNAME_IDX = idx[2];
-        a.FIRST_NAME_IDX = idx[3];
-        a.NC_IDX = idx[4];
-        a.START_TIME_IDX = idx[5];
-        a.TOTAL_TIME_IDX = idx[6];
-        a.CLASSIFIER_IDX = idx[7];
-        a.CLUB_IDX = idx[8];
-        a.CLASS_IDX = idx[9];
-        a.COURSE_IDX = idx[10];
-        a.NUM_CONTROLS_IDX = idx[11];
-        a.POSITION_IDX = idx[12];
-        a.START_PUNCH_IDX = idx[13];
-        a.FIRST_CODE_IDX = idx[14];
-        a.FIRST_SPLIT_IDX = idx[15];
-        a.STEP = idx[16] - idx[14];
-      } else {
+      if (!found) {
         // default to BOF CSV format
-        a.CHIP_IDX = 1;
-        a.DB_IDX = 2;
-        a.SURNAME_IDX = 3;
-        a.FIRST_NAME_IDX = 4;
-        a.NC_IDX = 8;
-        a.START_TIME_IDX = 9;
-        a.TOTAL_TIME_IDX = 11;
-        a.CLASSIFIER_IDX = 12;
-        a.CLUB_IDX = 15;
-        a.CLASS_IDX = 18;
-        a.COURSE_IDX = 39;
-        a.NUM_CONTROLS_IDX = 42;
-        a.POSITION_IDX = 43;
-        a.START_PUNCH_IDX = 44;
-        a.FIRST_SPLIT_IDX = 47;
-        a.STEP = 2;
-        a.FIRST_CODE_IDX = 46;
+        idx = [1, 2, 3, 4, 8, 9, 11, 12, 15, 18, 39, 42, 43, 44, 46, 47, 2];
       }
+      a.CHIP_IDX = idx[0];
+      a.DB_IDX = idx[1];
+      a.SURNAME_IDX = idx[2];
+      a.FIRST_NAME_IDX = idx[3];
+      a.NC_IDX = idx[4];
+      a.START_TIME_IDX = idx[5];
+      a.TOTAL_TIME_IDX = idx[6];
+      a.CLASSIFIER_IDX = idx[7];
+      a.CLUB_IDX = idx[8];
+      a.CLASS_IDX = idx[9];
+      a.COURSE_IDX = idx[10];
+      a.NUM_CONTROLS_IDX = idx[11];
+      a.POSITION_IDX = idx[12];
+      a.START_PUNCH_IDX = idx[13];
+      a.FIRST_CODE_IDX = idx[14];
+      a.FIRST_SPLIT_IDX = idx[15];
+      a.STEP = idx[16] - idx[14];
       return a;
     },
 

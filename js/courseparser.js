@@ -4,6 +4,7 @@
     this.courses = [];
     this.newcontrols = new rg2.Controls();
     this.courses.length = 0;
+    this.creator = "";
     this.newcontrols.deleteAllControls();
     // holding copies of worldfiles: not ideal but it works
     this.localWorldfile = localWorldfile;
@@ -17,9 +18,8 @@
     Constructor : CourseParser,
 
     processCoursesXML : function (evt) {
-      var xml, version, nodelist, creator;
+      var xml, version, nodelist;
       version = "";
-      creator = "";
       try {
         xml = $.parseXML(evt.target.result);
         nodelist = xml.getElementsByTagName('CourseData');
@@ -37,8 +37,8 @@
           // test for IOF Version 3
           nodelist = xml.getElementsByTagName('CourseData');
           if (nodelist.length > 0) {
-            version = nodelist[0].getAttribute('iofVersion');
-            creator = nodelist[0].getAttribute('creator');
+            version = nodelist[0].getAttribute('iofVersion').trim();
+            this.setCreator(nodelist[0].getAttribute('creator')).trim();
           }
         }
       } catch (err) {
@@ -51,85 +51,85 @@
         this.processIOFV2XML(xml);
         break;
       case "3.0":
-        this.processIOFV3XML(xml, creator);
+        this.processIOFV3XML(xml);
         break;
       default:
         rg2.utils.showWarningDialog("XML file error", 'Invalid IOF file format. Version ' + version + ' not supported.');
       }
     },
 
+    setCreator : function (text) {
+      // allow handling of files from Condes which use original worldfile rather than WGS-84 as expected by IOF scheme
+      if (text) {
+        this.creator = text.toLowerCase();
+      }
+    },
+
     extractV3Courses : function (nodelist) {
-      var i, j, course, codes, x, y, controllist, tmp;
+      var i, j, name, code, codes, x, y, controllist;
       for (i = 0; i < nodelist.length; i += 1) {
-        course = {};
         codes = [];
         x = [];
         y = [];
-        course.name = nodelist[i].getElementsByTagName('Name')[0].textContent;
+        name = nodelist[i].getElementsByTagName('Name')[0].textContent.trim();
         controllist = nodelist[i].getElementsByTagName('CourseControl');
         for (j = 0; j < controllist.length; j += 1) {
-          tmp = controllist[j].getElementsByTagName('Control')[0].textContent;
+          code = controllist[j].getElementsByTagName('Control')[0].textContent.trim();
           // if control code doesn't exist it was a crossing point so we don't need it
-          if (this.validControlCode(tmp)) {
-            codes.push(tmp.trim());
+          if (this.validControlCode(code)) {
+            codes.push(code);
           }
         }
-
-        course.codes = codes;
-        // 0 for now: set when result mapping is known
-        course.courseid = 0;
-        course.x = x;
-        course.y = y;
-        this.courses.push(course);
+        // courseid 0 for now: set when result mapping is known
+        this.courses.push({courseid: 0, x: x, y: y, codes: codes, name: name});
       }
       $("#rg2-select-course-file").addClass('valid');
     },
 
-    processIOFV3XML : function (xml, creator) {
+    processIOFV3XML : function (xml) {
       // extract all controls
-      var nodelist, i, code, mappos, x, y, condes, latlng, lat, lng;
-      condes = false;
-      // handle files from Condes which use original worldfile rather than WGS-84 as expected by IOF scheme
-      if (creator) {
-        if (creator.indexOf('Condes') > -1) {
-          condes = true;
-        }
-      }
+      var nodelist, i, code, pt, latlng;
       nodelist = xml.getElementsByTagName('Control');
       // only need first-level Controls
+      pt = {x: 0, y: 0};
       for (i = 0; i < nodelist.length; i += 1) {
         if (nodelist[i].parentNode.nodeName === 'RaceCourseData') {
           code = nodelist[i].getElementsByTagName("Id")[0].textContent;
           latlng = nodelist[i].getElementsByTagName("Position");
           if ((this.localworldfile.valid) && (latlng.length > 0)) {
-            lat = latlng[0].getAttribute('lat');
-            lng = latlng[0].getAttribute('lng');
-            // handle Condes-specific georeferencing
-            if (condes) {
-              // use original map worldfile
-              x = this.localworldfile.getX(lng, lat);
-              y = this.localworldfile.getY(lng, lat);
-            } else {
-              // use WGS-84 worldfile as expected (?) by IOF V3 schema
-              x = this.worldfile.getX(lng, lat);
-              y = this.worldfile.getY(lng, lat);
-            }
+            pt = this.getXYFromLatLng(latlng);
             this.coursesGeoreferenced = true;
           } else {
             // only works if all controls have lat/lon or none do: surely a safe assumption...
-            mappos = nodelist[i].getElementsByTagName("MapPosition");
-            x = mappos[0].getAttribute('x');
-            y = mappos[0].getAttribute('y');
+            pt = this.getXYFromMapPosition(nodelist[i].getElementsByTagName("MapPosition"));
           }
           // don't want to save crossing points
           if (nodelist[i].getAttribute('type') !== 'CrossingPoint') {
-            this.newcontrols.addControl(code.trim(), x, y);
+            this.newcontrols.addControl(code.trim(), pt.x, pt.y);
           }
         }
       }
       // extract all courses
       nodelist = xml.getElementsByTagName('Course');
       this.extractV3Courses(nodelist);
+    },
+
+    getXYFromLatLng : function (latLng) {
+      var lat, lng, pt;
+      pt = {x: 0, y: 0};
+      lat = latLng[0].getAttribute('lat');
+      lng = latLng[0].getAttribute('lng');
+      // handle Condes-specific georeferencing
+      if (this.creator === "condes") {
+        // use original map worldfile
+        pt.x = this.localworldfile.getX(lng, lat);
+        pt.y = this.localworldfile.getY(lng, lat);
+      } else {
+        // use WGS-84 worldfile as expected (?) by IOF V3 schema
+        pt.x = this.worldfile.getX(lng, lat);
+        pt.y = this.worldfile.getY(lng, lat);
+      }
+      return pt;
     },
 
     processIOFV2XML : function (xml) {
@@ -161,38 +161,33 @@
     },
 
     extractV2Courses : function (nodelist) {
-      var i, j, course, codes, x, y, controllist, tmp;
+      var i, j, name, code, codes, x, y, controllist;
       for (i = 0; i < nodelist.length; i += 1) {
-        course = {};
         codes = [];
         x = [];
         y = [];
-        course.name = nodelist[i].getElementsByTagName('CourseName')[0].textContent.trim();
+        name = nodelist[i].getElementsByTagName('CourseName')[0].textContent.trim();
         codes.push(nodelist[i].getElementsByTagName('StartPointCode')[0].textContent.trim());
         controllist = nodelist[i].getElementsByTagName('CourseControl');
         for (j = 0; j < controllist.length; j += 1) {
-          tmp = controllist[j].getElementsByTagName('ControlCode')[0].textContent.trim();
+          code = controllist[j].getElementsByTagName('ControlCode')[0].textContent.trim();
           // if control code doesn't exist it was a crossing point so we don't need it
-          if (this.validControlCode(tmp)) {
-            codes.push(tmp);
+          if (this.validControlCode(code)) {
+            codes.push(code);
           }
         }
         codes.push(nodelist[i].getElementsByTagName('FinishPointCode')[0].textContent.trim());
-
-        course.codes = codes;
-        // 0 for now: set when result mapping is known
-        course.courseid = 0;
-        course.x = x;
-        course.y = y;
-        this.courses.push(course);
+        // courseid 0 for now: set when result mapping is known
+        this.courses.push({courseid: 0, x: x, y: y, codes: codes, name: name});
       }
       $("#rg2-select-course-file").addClass('valid');
     },
 
     // returns true if controls are georeferenced
     extractV2Controls : function (nodelist, type) {
-      var i, x, y, code, mappos, geopos, isGeoref;
+      var i, pt, code, geopos, isGeoref;
       isGeoref = false;
+      pt = {x: 0, y: 0};
       for (i = 0; i < nodelist.length; i += 1) {
         code = nodelist[i].getElementsByTagName(type)[0].textContent;
         geopos = nodelist[i].getElementsByTagName("ControlPosition");
@@ -201,17 +196,19 @@
         // the map file itself isn't georeferenced
         // then you need to use X, Y and not the georeferenced co-ordinates
         if ((geopos.length > 0) && (this.localworldfile.valid)) {
-          x = parseFloat(geopos[0].getAttribute('x'));
-          y = parseFloat(geopos[0].getAttribute('y'));
+          pt.x = parseFloat(geopos[0].getAttribute('x'));
+          pt.y = parseFloat(geopos[0].getAttribute('y'));
           isGeoref = true;
         } else {
-          mappos = nodelist[i].getElementsByTagName("MapPosition");
-          x = mappos[0].getAttribute('x');
-          y = mappos[0].getAttribute('y');
+          pt = this.getXYFromMapPosition(nodelist[i].getElementsByTagName("MapPosition"));
         }
-        this.newcontrols.addControl(code.trim(), x, y);
+        this.newcontrols.addControl(code.trim(), pt.x, pt.y);
       }
       return isGeoref;
+    },
+
+    getXYFromMapPosition : function (mapPosition) {
+      return {x: mapPosition[0].getAttribute('x'), y: mapPosition[0].getAttribute('y')};
     },
 
     // check if a given control code is in the list of known controls
