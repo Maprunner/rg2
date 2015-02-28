@@ -4,12 +4,12 @@
     this.courses = [];
     this.newcontrols = new rg2.Controls();
     this.courses.length = 0;
-    this.creator = "";
+    this.fromCondes = false;
     this.newcontrols.deleteAllControls();
     // holding copies of worldfiles: not ideal but it works
     this.localWorldfile = localWorldfile;
     this.worldfile = worldfile;
-    this.processCoursesXML(evt);
+    this.processCoursesXML(evt.target.result);
     return {courses: this.courses, newcontrols: this.newcontrols};
   }
 
@@ -17,11 +17,10 @@
 
     Constructor : CourseParser,
 
-    processCoursesXML : function (evt) {
+    processCoursesXML : function (rawXML) {
       var xml, version, nodelist;
-      version = "";
       try {
-        xml = $.parseXML(evt.target.result);
+        xml = $.parseXML(rawXML);
         nodelist = xml.getElementsByTagName('CourseData');
         if (nodelist.length === 0) {
           rg2.utils.showWarningDialog("XML file error", "File is not a valid XML course file. CourseData element missing.");
@@ -38,7 +37,7 @@
           nodelist = xml.getElementsByTagName('CourseData');
           if (nodelist.length > 0) {
             version = nodelist[0].getAttribute('iofVersion').trim();
-            this.setCreator(nodelist[0].getAttribute('creator')).trim();
+            this.setCreator(nodelist[0].getAttribute('creator').trim());
           }
         }
       } catch (err) {
@@ -48,10 +47,10 @@
 
       switch (version) {
       case "2.0.3":
-        this.processIOFV2XML(xml);
+        this.processIOFV2XMLCourses(xml);
         break;
       case "3.0":
-        this.processIOFV3XML(xml);
+        this.processIOFV3XMLCourses(xml);
         break;
       default:
         rg2.utils.showWarningDialog("XML file error", 'Invalid IOF file format. Version ' + version + ' not supported.');
@@ -60,33 +59,12 @@
 
     setCreator : function (text) {
       // allow handling of files from Condes which use original worldfile rather than WGS-84 as expected by IOF scheme
-      if (text) {
-        this.creator = text.toLowerCase();
+      if (text.indexOf('Condes') > -1) {
+        this.fromCondes = true;
       }
     },
 
-    extractV3Courses : function (nodelist) {
-      var i, j, name, code, codes, x, y, controllist;
-      for (i = 0; i < nodelist.length; i += 1) {
-        codes = [];
-        x = [];
-        y = [];
-        name = nodelist[i].getElementsByTagName('Name')[0].textContent.trim();
-        controllist = nodelist[i].getElementsByTagName('CourseControl');
-        for (j = 0; j < controllist.length; j += 1) {
-          code = controllist[j].getElementsByTagName('Control')[0].textContent.trim();
-          // if control code doesn't exist it was a crossing point so we don't need it
-          if (this.validControlCode(code)) {
-            codes.push(code);
-          }
-        }
-        // courseid 0 for now: set when result mapping is known
-        this.courses.push({courseid: 0, x: x, y: y, codes: codes, name: name});
-      }
-      $("#rg2-select-course-file").addClass('valid');
-    },
-
-    processIOFV3XML : function (xml) {
+    processIOFV3XMLCourses : function (xml) {
       // extract all controls
       var nodelist, i, code, pt, latlng;
       nodelist = xml.getElementsByTagName('Control');
@@ -120,7 +98,7 @@
       lat = latLng[0].getAttribute('lat');
       lng = latLng[0].getAttribute('lng');
       // handle Condes-specific georeferencing
-      if (this.creator === "condes") {
+      if (this.fromCondes) {
         // use original map worldfile
         pt.x = this.localworldfile.getX(lng, lat);
         pt.y = this.localworldfile.getY(lng, lat);
@@ -132,7 +110,7 @@
       return pt;
     },
 
-    processIOFV2XML : function (xml) {
+    processIOFV2XMLCourses : function (xml) {
       var nodelist, controlsGeoref, i, x, y;
       // extract all start controls
       nodelist = xml.getElementsByTagName('StartPoint');
@@ -161,26 +139,49 @@
     },
 
     extractV2Courses : function (nodelist) {
-      var i, j, name, code, codes, x, y, controllist;
+      var i, name, codes, x, y;
       for (i = 0; i < nodelist.length; i += 1) {
         codes = [];
         x = [];
         y = [];
         name = nodelist[i].getElementsByTagName('CourseName')[0].textContent.trim();
-        codes.push(nodelist[i].getElementsByTagName('StartPointCode')[0].textContent.trim());
-        controllist = nodelist[i].getElementsByTagName('CourseControl');
-        for (j = 0; j < controllist.length; j += 1) {
-          code = controllist[j].getElementsByTagName('ControlCode')[0].textContent.trim();
-          // if control code doesn't exist it was a crossing point so we don't need it
-          if (this.validControlCode(code)) {
-            codes.push(code);
-          }
-        }
+        codes = this.extractCodesFromControlList(nodelist[i], "ControlCode");
+        // add start code at beginning of array
+        codes.unshift(nodelist[i].getElementsByTagName('StartPointCode')[0].textContent.trim());
         codes.push(nodelist[i].getElementsByTagName('FinishPointCode')[0].textContent.trim());
         // courseid 0 for now: set when result mapping is known
         this.courses.push({courseid: 0, x: x, y: y, codes: codes, name: name});
       }
       $("#rg2-select-course-file").addClass('valid');
+    },
+
+    extractV3Courses : function (nodelist) {
+      var i, name, codes, x, y;
+      for (i = 0; i < nodelist.length; i += 1) {
+        codes = [];
+        x = [];
+        y = [];
+        name = nodelist[i].getElementsByTagName('Name')[0].textContent.trim();
+        codes = this.extractCodesFromControlList(nodelist[i], "Control");
+        // courseid 0 for now: set when result mapping is known
+        this.courses.push({courseid: 0, x: x, y: y, codes: codes, name: name});
+      }
+      $("#rg2-select-course-file").addClass('valid');
+    },
+
+    extractCodesFromControlList : function (nodeList, tagName) {
+      // tagName depends on IOF version being parsed
+      var i, code, codes, controlList;
+      controlList = nodeList.getElementsByTagName('CourseControl');
+      codes = [];
+      for (i = 0; i < controlList.length; i += 1) {
+        code = controlList[i].getElementsByTagName(tagName)[0].textContent.trim();
+        // if control code doesn't exist it was a crossing point so we don't need it
+        if (this.validControlCode(code)) {
+          codes.push(code);
+        }
+      }
+      return codes;
     },
 
     // returns true if controls are georeferenced

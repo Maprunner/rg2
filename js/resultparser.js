@@ -2,6 +2,7 @@
 (function () {
   function ResultParser(evt, fileFormat) {
     this.results = [];
+    this.formatSICSV = {};
     this.processResults(evt, fileFormat);
     return this.results;
   }
@@ -13,11 +14,11 @@
     processResults : function (evt, fileFormat) {
       switch (fileFormat) {
       case 'CSV':
-        this.processResultsCSV(evt);
+        this.processResultsCSV(evt.target.result);
         $("#rg2-select-results-file").addClass('valid');
         break;
       case 'XML':
-        this.processResultsXML(evt);
+        this.processResultsXML(evt.target.result);
         $("#rg2-select-results-file").addClass('valid');
         break;
       default:
@@ -27,9 +28,9 @@
       }
     },
 
-    processResultsCSV : function (evt) {
-      var rows, commas, semicolons, separator, format;
-      rows = evt.target.result.split(/[\r\n|\n]+/);
+    processResultsCSV : function (rawCSV) {
+      var rows, commas, semicolons, separator;
+      rows = rawCSV.split(/[\r\n|\n]+/);
       // try and work out what the separator is
       commas = rows[0].split(',').length - 1;
       semicolons = rows[0].split(';').length - 1;
@@ -43,16 +44,16 @@
       if (rows[0].split(separator).length === 2) {
         this.processSpklasseCSVResults(rows, separator);
       } else {
-        format = this.getCSVFormat(rows[0], separator);
-        this.processSICSVResults(rows, format, separator);
+        this.getCSVFormat(rows[0], separator);
+        this.processSICSVResults(rows, separator);
       }
     },
 
-    processResultsXML : function (evt) {
+    processResultsXML : function (rawXML) {
       var xml, version, nodelist;
       version = "";
       try {
-        xml = $.parseXML(evt.target.result);
+        xml = $.parseXML(rawXML);
         nodelist = xml.getElementsByTagName('ResultList');
         if (nodelist.length === 0) {
           rg2.utils.showWarningDialog("XML file error", "File is not a valid XML results file. ResultList element missing.");
@@ -181,12 +182,7 @@
           // allow for XML files that don't tell you what is going on
           // getSecsFromHHMMSS copes with MM:SS as well
           result.splits += rg2.utils.getSecsFromHHMMSS(temp[0].textContent);
-          temp = splitlist[l].getElementsByTagName('ControlCode');
-          if (temp.length > 0) {
-            result.codes[l] = temp[0].textContent;
-          } else {
-            result.codes[l] = "";
-          }
+          result.codes[l] = this.extractTextContentZero(splitlist[l].getElementsByTagName('ControlCode'), "");
         } else {
           result.splits += 0;
           result.codes[l] = "";
@@ -308,54 +304,58 @@
     },
 
     // rows: array of raw lines from SI results csv file
-    processSICSVResults : function (rows, format, separator) {
-      var i, j, fields, nextsplit, nextcode, result;
+    processSICSVResults : function (rows, separator) {
+      var i, fields;
       // extract what we need: first row is headers so ignore
-      result = {};
       for (i = 1; i < rows.length; i += 1) {
         fields = rows[i].split(separator);
         // need at least this many fields...
-        if (fields.length >= format.FIRST_SPLIT_IDX) {
-          result.chipid = fields[format.CHIP_IDX];
-          // delete quotes from CSV file: output from MERCS
-          result.name = (fields[format.FIRST_NAME_IDX] + " " + fields[format.SURNAME_IDX]).trim().replace(/\"/g, '');
-          result.dbid = (fields[format.DB_IDX] + "__" + result.name).replace(/\"/g, '');
-          result.starttime = rg2.utils.getSecsFromHHMMSS(fields[format.START_TIME_IDX]);
-          result.time = fields[format.TOTAL_TIME_IDX];
-          result.position = parseInt(fields[format.POSITION_IDX], 10);
-          if (isNaN(result.position)) {
-            result.position = '';
-          }
-          result.status = this.getSICSVStatus(fields[format.NC_IDX], fields[format.CLASSIFIER_IDX]);
-          result.club = fields[format.CLUB_IDX].trim().replace(/\"/g, '');
-          result.course = fields[format.COURSE_IDX];
-          result.controls = parseInt(fields[format.NUM_CONTROLS_IDX], 10);
-          nextsplit = format.FIRST_SPLIT_IDX;
-          nextcode = format.FIRST_CODE_IDX;
-          result.splits = "";
-          result.codes = [];
-          for (j = 0; j < result.controls; j += 1) {
-            if (fields[nextcode]) {
-              if (j > 0) {
-                result.splits += ";";
-              }
-              result.codes[j] = fields[nextcode];
-              result.splits += rg2.utils.getSecsFromHHMMSS(fields[nextsplit]);
-            }
-            nextsplit += format.STEP;
-            nextcode += format.STEP;
-          }
-          // add finish split
-          result.splits += ";" + rg2.utils.getSecsFromHHMMSS(result.time);
-          this.results.push(result);
+        if (fields.length >= this.formatSICSV.FIRST_SPLIT_IDX) {
+          this.results.push(this.extractSingleCSVResult(fields));
         }
       }
     },
 
+    extractSingleCSVResult: function (fields) {
+      var i, result, nextcode, nextsplit;
+      result = {};
+      result.chipid = fields[this.formatSICSV.CHIP_IDX];
+      // delete quotes from CSV file: output from MERCS
+      result.name = (fields[this.formatSICSV.FIRST_NAME_IDX] + " " + fields[this.formatSICSV.SURNAME_IDX]).trim().replace(/\"/g, '');
+      result.dbid = (fields[this.formatSICSV.DB_IDX] + "__" + result.name).replace(/\"/g, '');
+      result.starttime = rg2.utils.getSecsFromHHMMSS(fields[this.formatSICSV.START_TIME_IDX]);
+      result.time = fields[this.formatSICSV.TOTAL_TIME_IDX];
+      result.position = parseInt(fields[this.formatSICSV.POSITION_IDX], 10);
+      if (isNaN(result.position)) {
+        result.position = '';
+      }
+      result.status = this.getSICSVStatus(fields[this.formatSICSV.NC_IDX], fields[this.formatSICSV.CLASSIFIER_IDX]);
+      result.club = fields[this.formatSICSV.CLUB_IDX].trim().replace(/\"/g, '');
+      result.course = fields[this.formatSICSV.COURSE_IDX];
+      result.controls = parseInt(fields[this.formatSICSV.NUM_CONTROLS_IDX], 10);
+      nextsplit = this.formatSICSV.FIRST_SPLIT_IDX;
+      nextcode = this.formatSICSV.FIRST_CODE_IDX;
+      result.splits = "";
+      result.codes = [];
+      for (i = 0; i < result.controls; i += 1) {
+        if (fields[nextcode]) {
+          if (i > 0) {
+            result.splits += ";";
+          }
+          result.codes[i] = fields[nextcode];
+          result.splits += rg2.utils.getSecsFromHHMMSS(fields[nextsplit]);
+        }
+        nextsplit += this.formatSICSV.STEP;
+        nextcode += this.formatSICSV.STEP;
+      }
+      // add finish split
+      result.splits += ";" + rg2.utils.getSecsFromHHMMSS(result.time);
+      return result;
+    },
+
     getCSVFormat : function (headers, separator) {
       // not a pretty function but it should allow some non-standard CSV formats to be processed such as OEScore output
-      var a, titles, idx, fields, i, j, found;
-      a = {};
+      var titles, idx, fields, i, j, found;
       titles = ['SI card', 'Database Id', 'Surname', 'First name', 'nc', 'Start', 'Time', 'Classifier', 'City', 'Short', 'Course', 'Course controls', 'Pl', 'Start punch', 'Control1', 'Punch1', 'Control2'];
       idx = [];
       fields = headers.split(separator);
@@ -393,24 +393,23 @@
         // default to BOF CSV format
         idx = [1, 2, 3, 4, 8, 9, 11, 12, 15, 18, 39, 42, 43, 44, 46, 47, 2];
       }
-      a.CHIP_IDX = idx[0];
-      a.DB_IDX = idx[1];
-      a.SURNAME_IDX = idx[2];
-      a.FIRST_NAME_IDX = idx[3];
-      a.NC_IDX = idx[4];
-      a.START_TIME_IDX = idx[5];
-      a.TOTAL_TIME_IDX = idx[6];
-      a.CLASSIFIER_IDX = idx[7];
-      a.CLUB_IDX = idx[8];
-      a.CLASS_IDX = idx[9];
-      a.COURSE_IDX = idx[10];
-      a.NUM_CONTROLS_IDX = idx[11];
-      a.POSITION_IDX = idx[12];
-      a.START_PUNCH_IDX = idx[13];
-      a.FIRST_CODE_IDX = idx[14];
-      a.FIRST_SPLIT_IDX = idx[15];
-      a.STEP = idx[16] - idx[14];
-      return a;
+      this.formatSICSV.CHIP_IDX = idx[0];
+      this.formatSICSV.DB_IDX = idx[1];
+      this.formatSICSV.SURNAME_IDX = idx[2];
+      this.formatSICSV.FIRST_NAME_IDX = idx[3];
+      this.formatSICSV.NC_IDX = idx[4];
+      this.formatSICSV.START_TIME_IDX = idx[5];
+      this.formatSICSV.TOTAL_TIME_IDX = idx[6];
+      this.formatSICSV.CLASSIFIER_IDX = idx[7];
+      this.formatSICSV.CLUB_IDX = idx[8];
+      this.formatSICSV.CLASS_IDX = idx[9];
+      this.formatSICSV.COURSE_IDX = idx[10];
+      this.formatSICSV.NUM_CONTROLS_IDX = idx[11];
+      this.formatSICSV.POSITION_IDX = idx[12];
+      this.formatSICSV.START_PUNCH_IDX = idx[13];
+      this.formatSICSV.FIRST_CODE_IDX = idx[14];
+      this.formatSICSV.FIRST_SPLIT_IDX = idx[15];
+      this.formatSICSV.STEP = idx[16] - idx[14];
     },
 
     getSICSVStatus : function (nc, classifier) {

@@ -76,11 +76,15 @@
     },
 
     revertXY : function () {
-      // undo requested so restore previous locations
+      // undo requested so restore previous locations: copy basex to x
+      this.copyHandleFields('base', '');
+    },
+
+    copyHandleFields : function (from, to) {
       var i;
       for (i = 0; i < this.handles.length; i += 1) {
-        this.handles[i].x = this.handles[i].basex;
-        this.handles[i].y = this.handles[i].basey;
+        this.handles[i][to + 'x'] = this.handles[i][from + 'x'];
+        this.handles[i][to + 'y'] = this.handles[i][from + 'y'];
       }
     },
 
@@ -176,12 +180,19 @@
       }
     },
 
+    adjustThisHandle : function (handle, fromTime, toTime) {
+      if (!handle.locked && (handle.time >= fromTime) && (handle.time <= toTime)) {
+        return true;
+      }
+      return false;
+    },
+
     scaleAndRotate : function (lockedHandle, scale, angle, fromTime, toTime) {
       // scale and rotate handles around a single fixed point
       // times determine which side of locked point (or both) this applies to
       var i, pt;
       for (i = 0; i < this.handles.length; i += 1) {
-        if (!this.handles[i].locked && (this.handles[i].time >= fromTime) && (this.handles[i].time <= toTime)) {
+        if (this.adjustThisHandle(this.handles[i], fromTime, toTime)) {
           pt = rg2.utils.rotatePoint(this.handles[i].basex - lockedHandle.basex, this.handles[i].basey - lockedHandle.basey, angle);
           this.handles[i].x = (pt.x * scale) + lockedHandle.basex;
           this.handles[i].y = (pt.y * scale) + lockedHandle.basey;
@@ -190,19 +201,16 @@
     },
 
     scaleAndRotateBetweenLockedPoints : function (lockedHandle, a, scale, angle, reverseAngle, fromTime, toTime) {
-      var i, x, y, pt;
+      var i, pt, pt2;
       // scale/rotate/shear around two locked points
       for (i = 0; i < this.handles.length; i += 1) {
-        if ((!this.handles[i].locked) && (this.handles[i].time >= fromTime) && (this.handles[i].time <= toTime)) {
+        if (this.adjustThisHandle(this.handles[i], fromTime, toTime)) {
           // rotate to give locked points as x-axis
           pt = rg2.utils.rotatePoint(this.handles[i].basex - lockedHandle.basex, this.handles[i].basey - lockedHandle.basey, angle);
-          x = pt.x;
-          y = pt.y;
-
           // shear/stretch
-          pt = rg2.utils.rotatePoint(x + (y * a), y * scale, reverseAngle);
-          this.handles[i].x = pt.x + lockedHandle.basex;
-          this.handles[i].y = pt.y + lockedHandle.basey;
+          pt2 = rg2.utils.rotatePoint(pt.x + (pt.y * a), pt.y * scale, reverseAngle);
+          this.handles[i].x = pt2.x + lockedHandle.basex;
+          this.handles[i].y = pt2.y + lockedHandle.basey;
         }
       }
     }
