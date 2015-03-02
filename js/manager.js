@@ -5,22 +5,16 @@
 /*global console:false */
 (function () {
   function Manager(keksi) {
-    this.DO_NOT_SAVE_COURSE = 9999;
-    this.INVALID_MAP_ID = 9999;
-    this.FORMAT_NORMAL = 1;
-    this.FORMAT_NO_RESULTS = 2;
-    this.FORMAT_SCORE_EVENT = 3;
-    this.loggedIn = false;
     this.user = new rg2.User(keksi);
     this.newMap = new rg2.Map();
     this.georefsystems = new rg2.Georefs();
     this.eventName = null;
     this.eventDate = null;
     this.eventLevel = null;
-    this.mapIndex = this.INVALID_MAP_ID;
+    this.mapIndex = rg2.config.INVALID_MAP_ID;
     this.club = null;
     this.comments = null;
-    this.format = this.FORMAT_NORMAL;
+    this.format = rg2.config.FORMAT_NORMAL;
     this.newcontrols = new rg2.Controls();
     this.courses = [];
     this.mapLoaded = false;
@@ -35,12 +29,11 @@
     this.mapFile = undefined;
     this.resultsFileFormat = "";
     this.backgroundLocked = false;
-    this.handleX = null;
-    this.handleY = null;
+    this.handle = {x: null, y: null};
     this.maps = [];
     this.localworldfile = new rg2.Worldfile(0);
     this.worldfile = new rg2.Worldfile(0);
-    this.handleColor = '#ff0000';
+    this.ui = new rg2.ManagerUI();
     this.initialiseUI();
   }
 
@@ -49,15 +42,16 @@
     Constructor : Manager,
 
     initialiseUI : function () {
-      var self = this;
+      var self;
+      self = this;
       $("#btn-login").button();
       $("rg2-manager-courses").hide();
       $("rg2-manager-results").hide();
       $("#rg2-manager-login-form").submit(function () {
-        self.user.name = $("#rg2-user-name").val();
-        self.user.pwd = $("#rg2-password").val();
+        var validUser;
+        validUser = self.user.setDetails($("#rg2-user-name").val(), $("#rg2-password").val());
         // check we have user name and password
-        if ((self.user.name.length > 4) && (self.user.pwd.length > 4)) {
+        if (validUser) {
           self.logIn();
         } else {
           rg2.utils.showWarningDialog("Login failed", "Please enter user name and password of at least five characters");
@@ -65,32 +59,12 @@
         // prevent form submission
         return false;
       });
-      $("#rg2-new-event-details-form").submit(function () {
-        console.log("Form submitted");
-      });
-    },
-
-    encodeUser : function () {
-      var data = {};
-      data.x = this.alterString(this.user.name + this.user.pwd, this.user.y);
-      data.y = this.user.y;
-      return data;
-    },
-
-    alterString : function (input, pattern) {
-      var i, str;
-      str = "";
-      for (i = 0; i < input.length; i += 1) {
-        str += input.charAt(i) + pattern.charAt(i);
-      }
-      return str;
     },
 
     logIn : function () {
-      var url, user, json, self;
+      var url, json, self;
       url = rg2Config.json_url + '?type=login';
-      user = this.encodeUser();
-      json = JSON.stringify(user);
+      json = JSON.stringify(this.user.encodeUser());
       self = this;
       $.ajax({
         type : 'POST',
@@ -114,101 +88,9 @@
       return false;
     },
 
-    enableEventEdit : function () {
-      var self = this;
-      this.setUIVisibility();
-      this.loggedIn = true;
-      this.getMaps();
-      this.setButtons();
-      this.createEventLevelDropdown("rg2-event-level");
-      this.createEventLevelDropdown("rg2-event-level-edit");
-      this.createGeorefDropdown();
-      this.createEventEditDropdown();
-
-      $("#rg2-event-level").change(function () {
-        self.eventLevel = $("#rg2-event-level").val();
-        if (self.eventLevel !== 'X') {
-          $("#rg2-select-event-level").addClass('valid');
-        } else {
-          $("#rg2-select-event-level").removeClass('valid');
-        }
-      });
-
-      $("#rg2-map-selected").change(function () {
-        self.mapIndex = parseInt($("#rg2-map-selected").val(), 10);
-        if (self.mapIndex !== self.INVALID_MAP_ID) {
-          $("#rg2-manager-map-select").addClass('valid');
-          rg2.loadNewMap(rg2Config.maps_url + "/" + self.maps[self.mapIndex].mapfilename);
-        } else {
-          $("#rg2-manager-map-select").removeClass('valid');
-          self.mapLoaded = false;
-          self.mapWidth = 0;
-          self.mapHeight = 0;
-        }
-      });
-
-      $('#rg2-event-comments').focus(function () {
-        // Clear comment box if user focuses on it and it still contains default text
-        var text = $("#rg2-event-comments").val();
-        if (text === rg2.config.DEFAULT_EVENT_COMMENT) {
-          $('#rg2-event-comments').val("");
-        }
-      });
-
-      $("#rg2-event-date").datepicker({
-        dateFormat : 'yy-mm-dd',
-        onSelect : function (date) {
-          self.setDate(date);
-        }
-      });
-
-      $("#rg2-event-date-edit").datepicker({
-        dateFormat : 'yy-mm-dd'
-      });
-
-      $("#rg2-event-name").on("change", function () {
-        self.setEventName();
-      });
-
-      $("#rg2-map-name").on("change", function () {
-        self.setMapName();
-      });
-
-      $("#rg2-club-name").on("change", function () {
-        self.setClub();
-      });
-
-      $("#rg2-new-course-name").on("change", function () {
-        self.setCourseName();
-      });
-
-      $("#rg2-manager-event-select").change(function () {
-        self.setEvent(parseInt($("#rg2-event-selected").val(), 10));
-      });
-
-      $("#rg2-georef-type").change(function () {
-        self.setGeoref($("#rg2-georef-selected").val());
-      });
-
-      $('#rg2-info-panel').tabs('option', 'active', rg2.config.TAB_CREATE);
-    },
-
-    setUIVisibility : function () {
-      $('#rg2-draw-courses').hide();
-      $("#rg2-manage-create").show();
-      $("#rg2-create-tab").show();
-      $("#rg2-edit-tab").show();
-      $("#rg2-map-tab").show();
-      $("#rg2-manage-login").hide();
-      $("#rg2-login-tab").hide();
-      // TODO: hide course delete function for now: not fully implemented yet, and may not be needed...
-      $("#rg2-temp-hide-course-delete").hide();
-      // TODO hide results grouping for now: may never implement
-      $("#rg2-results-grouping").hide();
-    },
-
     setButtons : function () {
-      var self = this;
+      var self;
+      self = this;
       $("#btn-create-event").button().click(function () {
         self.confirmCreateEvent();
       }).button("enable");
@@ -257,6 +139,71 @@
       });
     },
 
+    enableEventEdit : function () {
+      var self = this;
+      this.ui.setUIVisibility();
+      this.getMaps();
+      this.setButtons();
+      this.ui.createEventLevelDropdown("rg2-event-level");
+      this.ui.createEventLevelDropdown("rg2-event-level-edit");
+      this.ui.createGeorefDropdown(this.georefsystems);
+      this.ui.createEventEditDropdown();
+      $("#rg2-event-level").change(function () {
+        self.eventLevel = $("#rg2-event-level").val();
+        if (self.eventLevel !== 'X') {
+          $("#rg2-select-event-level").addClass('valid');
+        } else {
+          $("#rg2-select-event-level").removeClass('valid');
+        }
+      });
+
+      $("#rg2-map-selected").change(function () {
+        self.mapIndex = parseInt($("#rg2-map-selected").val(), 10);
+        if (self.mapIndex !== rg2.config.INVALID_MAP_ID) {
+          $("#rg2-manager-map-select").addClass('valid');
+          rg2.loadNewMap(rg2Config.maps_url + "/" + self.maps[self.mapIndex].mapfilename);
+        } else {
+          $("#rg2-manager-map-select").removeClass('valid');
+          self.mapLoaded = false;
+          self.mapWidth = 0;
+          self.mapHeight = 0;
+        }
+      });
+
+      $("#rg2-event-date").datepicker({
+        dateFormat : 'yy-mm-dd',
+        onSelect : function (date) {
+          self.setDate(date);
+        }
+      });
+
+      $("#rg2-event-name").on("change", function () {
+        self.setEventName();
+      });
+
+      $("#rg2-map-name").on("change", function () {
+        self.setMapName();
+      });
+
+      $("#rg2-club-name").on("change", function () {
+        self.setClub();
+      });
+
+      $("#rg2-new-course-name").on("change", function () {
+        self.setCourseName();
+      });
+
+      $("#rg2-manager-event-select").change(function () {
+        self.ui.setEvent(parseInt($("#rg2-event-selected").val(), 10));
+      });
+
+      $("#rg2-georef-type").change(function () {
+        self.setGeoref($("#rg2-georef-selected").val());
+      });
+
+      $('#rg2-info-panel').tabs('option', 'active', rg2.config.TAB_CREATE);
+    },
+
     getMaps : function () {
       var i, self;
       self = this;
@@ -269,7 +216,7 @@
         for (i = 0; i < json.data.maps.length; i += 1) {
           self.maps.push(new rg2.Map(json.data.maps[i]));
         }
-        self.createMapDropdown();
+        self.ui.createMapDropdown(self.maps);
         $("#btn-toggle-controls").show();
       }).fail(function () {
         rg2.utils.showWarningDialog("Map request failed", "Error getting map list.");
@@ -282,93 +229,13 @@
       }
     },
 
-    setEvent : function (kartatid) {
-      var event;
-      if (kartatid) {
-        // load details for this event
-        event = rg2.events.getEventInfo(kartatid);
-        rg2.loadEvent(event.id);
-      } else {
-        // no event selected so disable everything
-        $("#btn-delete-event").button("disable");
-        $("#btn-update-event").button("disable");
-        $("#btn-delete-route").button("disable");
-        $("#rg2-event-name-edit").val("");
-        $("#rg2-club-name-edit").val("");
-        $("#rg2-event-date-edit").val("");
-        $("#rg2-event-level-edit").val("");
-        $("#rg2-edit-event-comments").val("");
-        $("#rg2-route-selected").empty();
-      }
-
-    },
-
     eventListLoaded : function () {
       // called after event list has been updated
-      this.createEventEditDropdown();
+      this.ui.createEventEditDropdown();
     },
 
     eventFinishedLoading : function () {
-      // called once the requested event has loaded
-      // copy event details to edit-form
-      // you tell me why this needs parseInt but the same call above doesn't
-      var kartatid, event;
-      kartatid = parseInt($("#rg2-event-selected").val(), 10);
-      event = rg2.events.getEventInfo(kartatid);
-      $("#rg2-event-name-edit").empty().val(event.name);
-      $("#rg2-club-name-edit").empty().val(event.club);
-      $("#rg2-event-date-edit").empty().val(event.date);
-      $("#rg2-event-level-edit").val(event.rawtype);
-      $("#rg2-edit-event-comments").empty().val(event.comment);
-      $("#btn-delete-event").button("enable");
-      $("#btn-update-event").button("enable");
-      $("#btn-delete-route").button("enable");
-      this.createCourseDeleteDropdown(event.id);
-      this.createRouteDeleteDropdown(event.id);
-    },
-
-    createMapDropdown : function () {
-      var dropdown, i;
-      $("#rg2-map-selected").empty();
-      dropdown = document.getElementById("rg2-map-selected");
-      dropdown.options.add(rg2.utils.generateOption(this.INVALID_MAP_ID, 'Select map'));
-      for (i = (this.maps.length - 1); i > -1; i -= 1) {
-        dropdown.options.add(rg2.utils.generateOption(i, this.maps[i].mapid + ": " + this.maps[i].name));
-      }
-    },
-
-    createGeorefDropdown : function () {
-      var dropdown;
-      $("#rg2-georef-selected").empty();
-      dropdown = document.getElementById("rg2-georef-selected");
-      dropdown = this.georefsystems.getDropdown(dropdown);
-    },
-
-    createEventEditDropdown : function () {
-      var dropdown;
-      $("#rg2-event-selected").empty();
-      dropdown = document.getElementById("rg2-event-selected");
-      dropdown = rg2.events.getEventEditDropdown(dropdown);
-    },
-
-    createCourseDeleteDropdown : function (id) {
-      var dropdown, i, courses;
-      $("#rg2-course-selected").empty();
-      dropdown = document.getElementById("rg2-course-selected");
-      courses = rg2.courses.getCoursesForEvent(id);
-      for (i = 0; i < courses.length; i += 1) {
-        dropdown.options.add(rg2.utils.generateOption(courses[i].id, courses[i].name));
-      }
-    },
-
-    createRouteDeleteDropdown : function (id) {
-      var dropdown, routes, i;
-      $("#rg2-route-selected").empty();
-      dropdown = document.getElementById("rg2-route-selected");
-      routes = rg2.results.getRoutesForEvent(id);
-      for (i = 0; i < routes.length; i += 1) {
-        dropdown.options.add(rg2.utils.generateOption(routes[i].resultid, routes[i].resultid + ": " + routes[i].name + " on " + routes[i].coursename));
-      }
+      this.ui.eventFinishedLoading();
     },
 
     getCoursesFromResults : function () {
@@ -388,11 +255,10 @@
           a = {};
           a.course = this.results[i].course;
           // set later when mapping is known
-          a.courseid = this.DO_NOT_SAVE_COURSE;
+          a.courseid = rg2.config.DO_NOT_SAVE_COURSE;
           this.resultCourses.push(a);
         }
       }
-
     },
 
     startDrawingCourses : function () {
@@ -429,7 +295,7 @@
       if (!this.eventName) {
         return 'Event name is not valid.';
       }
-      if (this.mapIndex === this.INVALID_MAP_ID) {
+      if (this.mapIndex === rg2.config.INVALID_MAP_ID) {
         return 'No map selected.';
       }
       if (!this.club) {
@@ -450,7 +316,7 @@
         }
       }
       if (this.results.length === 0) {
-        if (this.format !== this.FORMAT_NO_RESULTS) {
+        if (this.format !== rg2.config.FORMAT_NO_RESULTS) {
           return 'No results information. Check your results file.';
         }
       }
@@ -459,14 +325,14 @@
     },
 
     confirmCreateEvent : function () {
-      var valid, msg, me;
+      var valid, msg, self;
       valid = this.validateData();
       if (valid !== 'OK') {
         rg2.utils.showWarningDialog("Data missing", valid + " Please enter all necessary information before creating the event.");
         return;
       }
       msg = "<div id='event-create-dialog'>Are you sure you want to create this event?</div>";
-      me = this;
+      self = this;
       $(msg).dialog({
         title : "Confirm event creation",
         modal : true,
@@ -475,63 +341,26 @@
         buttons : [{
           text : "Cancel",
           click : function () {
-            me.doCancelCreateEvent();
+            self.ui.doCancelCreateEvent();
           }
         }, {
           text : "Create event",
           click : function () {
-            me.doCreateEvent();
+            self.doCreateEvent();
           }
         }]
       });
     },
 
-    doCancelCreateEvent : function () {
-      $("#event-create-dialog").dialog("destroy");
-    },
-
     doCreateEvent : function () {
-      var $url, data, user, json, self, text;
+      var self, data;
       $("#event-create-dialog").dialog("destroy");
-      $url = rg2Config.json_url + "?type=createevent";
-      data = {};
-      data.name = this.eventName;
-      data.mapid = this.maps[this.mapIndex].mapid;
-      data.eventdate = this.eventDate;
-      text = $("#rg2-event-comments").val();
-      if (text === rg2.config.DEFAULT_EVENT_COMMENT) {
-        data.comments = "";
-      } else {
-        data.comments = text;
-      }
-      data.club = this.club;
-      data.format = this.format;
-      // assume we can just overwrite 1 or 2 at this point
-      if ($('#btn-score-event').prop('checked')) {
-        data.format = this.FORMAT_SCORE_EVENT;
-      }
-      data.level = this.eventLevel;
-      if (this.drawingCourses) {
-        this.courses.push(this.drawnCourse);
-      }
-      this.setControlLocations();
-      this.mapResultsToCourses();
-      this.renumberResults();
-      if (data.format === this.FORMAT_SCORE_EVENT) {
-        this.extractVariants();
-        data.variants = this.variants.slice(0);
-      }
-      data.courses = this.courses.slice(0);
-      data.results = this.results.slice(0);
-      user = this.encodeUser();
-      data.x = user.x;
-      data.y = user.y;
-      json = JSON.stringify(data);
       self = this;
+      data = this.generateNewEventData();
       $.ajax({
-        data : json,
+        data : data,
         type : "POST",
-        url : $url,
+        url : rg2Config.json_url + "?type=createevent",
         dataType : "json",
         success : function (data) {
           // save new cookie
@@ -548,6 +377,43 @@
       });
     },
 
+    generateNewEventData : function () {
+      var data, text, user;
+      data = {};
+      data.name = this.eventName;
+      data.mapid = this.maps[this.mapIndex].mapid;
+      data.eventdate = this.eventDate;
+      text = $("#rg2-event-comments").val();
+      if (text === rg2.config.DEFAULT_EVENT_COMMENT) {
+        data.comments = "";
+      } else {
+        data.comments = text;
+      }
+      data.club = this.club;
+      data.format = this.format;
+      // assume we can just overwrite 1 or 2 at this point
+      if ($('#btn-score-event').prop('checked')) {
+        data.format = rg2.config.FORMAT_SCORE_EVENT;
+      }
+      data.level = this.eventLevel;
+      if (this.drawingCourses) {
+        this.courses.push(this.drawnCourse);
+      }
+      this.setControlLocations();
+      this.mapResultsToCourses();
+      this.renumberResults();
+      if (data.format === rg2.config.FORMAT_SCORE_EVENT) {
+        this.extractVariants();
+        data.variants = this.variants.slice(0);
+      }
+      data.courses = this.courses.slice(0);
+      data.results = this.results.slice(0);
+      user = this.user.encodeUser();
+      data.x = user.x;
+      data.y = user.y;
+      return JSON.stringify(data);
+    },
+
     renumberResults : function () {
       // updates the course id when we know the mapping
       // and deletes results for courses not required
@@ -555,7 +421,7 @@
       newResults = [];
       for (i = 0; i < this.results.length; i += 1) {
         id = this.getCourseIDForResult(this.results[i].course);
-        if (id !== this.DO_NOT_SAVE_COURSE) {
+        if (id !== rg2.config.DO_NOT_SAVE_COURSE) {
           this.results[i].courseid = id;
           // set null here: overwritten later in extractVariants if this is a variant
           this.results[i].variantid = '';
@@ -576,7 +442,7 @@
         selector = "#rg2-alloc-" + i;
         // comes back as NaN if selector doesn't exist when we have no results, which works OK
         id = parseInt($(selector).val(), 10);
-        if (id !== this.DO_NOT_SAVE_COURSE) {
+        if (id !== rg2.config.DO_NOT_SAVE_COURSE) {
           this.courses[i].courseid = courseid;
           // handle case where we have courses but no results
           if (this.resultCourses.length > 0) {
@@ -590,6 +456,37 @@
         }
       }
       this.courses = newCourses;
+    },
+
+    createCourseDropdown : function (course, courseidx) {
+      /*
+       * Input: course name to match
+       *
+       * Output: html select
+       */
+      var i, idx, html;
+      idx = -1;
+      // do results include this course name?
+      for (i = 0; i < this.resultCourses.length; i += 1) {
+        if (this.resultCourses[i].course === course) {
+          idx = i;
+          break;
+        }
+      }
+      html = "<select id='rg2-alloc-" + courseidx + "'><option value=" + rg2.config.DO_NOT_SAVE_COURSE;
+      if (idx === -1) {
+        html += " selected";
+      }
+      html += ">Do not save</option>";
+      for (i = 0; i < this.resultCourses.length; i += 1) {
+        html += "<option value=" + i;
+        if (idx === i) {
+          html += " selected";
+        }
+        html += ">" + this.resultCourses[i].course + "</option>";
+      }
+      html += "</select>";
+      return html;
     },
 
     extractVariants : function () {
@@ -620,10 +517,9 @@
       // checks if a variant array of codes already exists
       // adds it if it doesn't
       // returns variantid
-      var i, j, c, x, y, v, match, id;
+      var i, j, c, x, y, match, id;
       x = [];
       y = [];
-      v = {};
       id = 0;
       for (i = 0; i < this.variants.length; i += 1) {
         if (this.variants[i].codes.length === codes.length) {
@@ -643,18 +539,12 @@
       if (id === 0) {
         // didn't find a match so add a new variant
         id = this.variants.length + 1;
-        v.codes = codes;
         for (i = 0; i < codes.length; i += 1) {
           c = this.getControlXY(codes[i]);
           x.push(c.x);
           y.push(c.y);
         }
-        v.x = x;
-        v.y = y;
-        v.id = id;
-        v.courseid = courseid;
-        v.name = 'Variant ' + id;
-        this.variants.push(v);
+        this.variants.push({x: x, y: y, id: id, courseid: courseid, name: 'Variant ' + id, codes: codes});
       }
 
       return id;
@@ -699,7 +589,7 @@
     },
 
     confirmUpdateEvent : function () {
-      var me = this;
+      var self = this;
       $("<div id='event-update-dialog'>Are you sure you want to update this event?</div>").dialog({
         title : "Confirm event update",
         modal : true,
@@ -708,19 +598,15 @@
         buttons : [{
           text : "Cancel",
           click : function () {
-            me.doCancelUpdateEvent();
+            self.ui.doCancelUpdateEvent();
           }
         }, {
           text : "Update event",
           click : function () {
-            me.doUpdateEvent();
+            self.doUpdateEvent();
           }
         }]
       });
-    },
-
-    doCancelUpdateEvent : function () {
-      $("#event-update-dialog").dialog("destroy");
     },
 
     doUpdateEvent : function () {
@@ -734,7 +620,7 @@
       data.type = $("#rg2-event-level-edit").val();
       data.eventdate = $("#rg2-event-date-edit").val();
       data.club = $("#rg2-club-name-edit").val();
-      user = this.encodeUser();
+      user = this.user.encodeUser();
       data.x = user.x;
       data.y = user.y;
       json = JSON.stringify(data);
@@ -761,7 +647,7 @@
     },
 
     confirmDeleteRoute : function () {
-      var me = this;
+      var self = this;
       $("<div id='route-delete-dialog'>This route will be permanently deleted. Are you sure?</div>").dialog({
         title : "Confirm route delete",
         modal : true,
@@ -770,29 +656,24 @@
         buttons : [{
           text : "Cancel",
           click : function () {
-            me.doCancelDeleteRoute();
+            self.ui.doCancelDeleteRoute();
           }
         }, {
           text : "Delete route",
           click : function () {
-            me.doDeleteRoute();
+            self.doDeleteRoute();
           }
         }]
       });
     },
 
-    doCancelDeleteRoute : function () {
-      $("#route-delete-dialog").dialog("destroy");
-    },
-
     doDeleteRoute : function () {
-      var id, $url, routeid, json, self, user;
+      var id, $url, routeid, json, self;
       $("#route-delete-dialog").dialog("destroy");
       id = $("#rg2-event-selected").val();
       routeid = $("#rg2-route-selected").val();
       $url = rg2Config.json_url + "?type=deleteroute&id=" + id + "&routeid=" + routeid;
-      user = this.encodeUser();
-      json = JSON.stringify(user);
+      json = JSON.stringify(this.user.encodeUser());
       self = this;
       $.ajax({
         data : json,
@@ -816,7 +697,7 @@
     },
 
     confirmDeleteEvent : function () {
-      var me = this;
+      var self = this;
       $("<div id='event-delete-dialog'>This event will be deleted. Are you sure?</div>").dialog({
         title : "Confirm event delete",
         modal : true,
@@ -825,27 +706,23 @@
         buttons : [{
           text : "Cancel",
           click : function () {
-            me.doCancelDeleteEvent();
+            self.ui.doCancelDeleteEvent();
           }
         }, {
           text : "Delete event",
           click : function () {
-            me.doDeleteEvent();
+            self.doDeleteEvent();
           }
         }]
       });
     },
-    doCancelDeleteEvent : function () {
-      $("#event-delete-dialog").dialog("destroy");
-    },
 
     doDeleteEvent : function () {
-      var id, $url, user, json, self;
+      var id, $url, json, self;
       $("#event-delete-dialog").dialog("destroy");
       id = $("#rg2-event-selected").val();
       $url = rg2Config.json_url + "?type=deleteevent&id=" + id;
-      user = this.encodeUser();
-      json = JSON.stringify(user);
+      json = JSON.stringify(this.user.encodeUser());
       self = this;
       $.ajax({
         data : json,
@@ -858,7 +735,7 @@
           if (data.ok) {
             rg2.utils.showWarningDialog("Event deleted", "Event " + id + " has been deleted.");
             rg2.loadEventList();
-            self.setEvent();
+            self.ui.setEvent();
             $("#rg2-event-selected").empty();
           } else {
             rg2.utils.showWarningDialog("Delete failed", data.status_msg + ". Event delete failed. Please try again.");
@@ -895,7 +772,7 @@
       this.results = new rg2.ResultParser(evt, this.resultsFileFormat);
       // extract courses from results
       this.getCoursesFromResults();
-      this.displayResultInfo();
+      this.ui.displayResultInfo(this.getResultInfoAsHTML());
       this.displayCourseAllocations();
     },
 
@@ -917,55 +794,16 @@
       this.coursesGeoreferenced = false;
       this.backgroundLocked = false;
       $('#btn-move-map-and-controls').prop('checked', false);
-      this.handleX = null;
-      this.handleY = null;
+      this.handle = {x: null, y: null};
       this.newcontrols.deleteAllControls();
       parsedCourses = new rg2.CourseParser(evt, this.worldfile, this.localworldfile);
       this.courses = parsedCourses.courses;
       this.newcontrols = parsedCourses.newcontrols;
       this.coursesGeoreferenced = parsedCourses.georeferenced;
-      this.displayCourseInfo();
+      this.ui.displayCourseInfo(this.getCourseInfoAsHTML());
       this.displayCourseAllocations();
       this.fitControlsToMap();
       rg2.redraw(false);
-    },
-
-    displayCourseInfo : function () {
-      var info = this.getCourseInfoAsHTML();
-      if (info) {
-        $("#rg2-manage-courses").empty().html(info);
-        $("#rg2-manage-courses").dialog({
-          title : "Course details",
-          dialogClass : "rg2-course-info-dialog",
-          resizable : true,
-          width : 'auto',
-          maxHeight : (window.innerHeight * 0.9),
-          buttons : {
-            Ok : function () {
-              $(this).dialog("close");
-            }
-          }
-        });
-      }
-    },
-
-    displayResultInfo : function () {
-      var info = this.getResultInfoAsHTML();
-      $("#rg2-manage-results").empty().html(info);
-      if (info) {
-        $("#rg2-manage-results").dialog({
-          title : "Result details",
-          dialogClass : "rg2-result-info-dialog",
-          resizable : true,
-          width : 'auto',
-          maxHeight : (window.innerHeight * 0.9),
-          buttons : {
-            Ok : function () {
-              $(this).dialog("close");
-            }
-          }
-        });
-      }
     },
 
     getCourseInfoAsHTML : function () {
@@ -1029,7 +867,7 @@
       //callback when map image is loaded
       var size;
       this.mapLoaded = true;
-      if (this.mapIndex !== this.INVALID_MAP_ID) {
+      if (this.mapIndex !== rg2.config.INVALID_MAP_ID) {
         this.localworldfile = this.maps[this.mapIndex].localworldfile;
         this.worldfile = this.maps[this.mapIndex].worldfile;
       }
@@ -1055,24 +893,13 @@
     },
 
     fitControlsToMap : function () {
-      var i, georefOK, minX, maxX, minY, maxY, scale, xRange, yRange;
+      var i, georefOK, box, scale;
       georefOK = false;
       if ((this.mapLoaded) && (this.newcontrols.controls.length > 0)) {
-        // get max extent of controls
-        // find bounding box for track
-        minX = this.newcontrols.controls[0].x;
-        maxX = this.newcontrols.controls[0].x;
-        minY = this.newcontrols.controls[0].y;
-        maxY = this.newcontrols.controls[0].y;
-        for (i = 1; i < this.newcontrols.controls.length; i += 1) {
-          maxX = Math.max(maxX, this.newcontrols.controls[i].x);
-          maxY = Math.max(maxY, this.newcontrols.controls[i].y);
-          minX = Math.min(minX, this.newcontrols.controls[i].x);
-          minY = Math.min(minY, this.newcontrols.controls[i].y);
-        }
+        box = this.getBoundingBox();
         if (this.coursesGeoreferenced) {
           // check we are somewhere on the map
-          if ((maxX < 0) || (minX > this.mapWidth) || (minY > this.mapHeight) || (maxY < 0)) {
+          if ((box.maxX < 0) || (box.minX > this.mapWidth) || (box.minY > this.mapHeight) || (box.maxY < 0)) {
             // warn and fit to track
             rg2.utils.showWarningDialog("Course file problem", "Your course file does not match the map co-ordinates. Please check you have selected the correct file.");
           } else {
@@ -1087,17 +914,33 @@
         } else {
           // fit within the map since this is probably needed anyway
           scale = 0.8;
-          xRange = (maxX - minX);
-          yRange = (maxY - minY);
-
           for (i = 0; i < this.newcontrols.controls.length; i += 1) {
-            this.newcontrols.controls[i].x = ((this.newcontrols.controls[i].x - minX) * (this.mapWidth / xRange) * scale) + (this.mapWidth * (1 - scale) * 0.5);
-            this.newcontrols.controls[i].y = (this.mapHeight - ((this.newcontrols.controls[i].y - minY) * (this.mapHeight / yRange)) * scale) - (this.mapHeight * (1 - scale) * 0.5);
+            this.newcontrols.controls[i].x = ((this.newcontrols.controls[i].x - box.minX) * (this.mapWidth / box.xRange) * scale) + (this.mapWidth * (1 - scale) * 0.5);
+            this.newcontrols.controls[i].y = (this.mapHeight - ((this.newcontrols.controls[i].y - box.minY) * (this.mapHeight / box.yRange)) * scale) - (this.mapHeight * (1 - scale) * 0.5);
           }
         }
         this.copyXYToOldXY();
         this.newcontrols.displayAllControls();
       }
+    },
+
+    getBoundingBox : function () {
+      // find bounding box for controls
+      var box, i;
+      box = {};
+      box.minX = this.newcontrols.controls[0].x;
+      box.maxX = this.newcontrols.controls[0].x;
+      box.minY = this.newcontrols.controls[0].y;
+      box.maxY = this.newcontrols.controls[0].y;
+      for (i = 1; i < this.newcontrols.controls.length; i += 1) {
+        box.maxX = Math.max(box.maxX, this.newcontrols.controls[i].x);
+        box.maxY = Math.max(box.maxY, this.newcontrols.controls[i].y);
+        box.minX = Math.min(box.minX, this.newcontrols.controls[i].x);
+        box.minY = Math.min(box.minY, this.newcontrols.controls[i].y);
+      }
+      box.xRange = box.maxX - box.minX;
+      box.yRange = box.maxY - box.minY;
+      return box;
     },
 
     copyXYToOldXY : function () {
@@ -1152,97 +995,54 @@
       }
     },
 
-    createEventLevelDropdown : function (id) {
-      var dropdown, types, abbrev, i;
-      $("#" + id).empty();
-      dropdown = document.getElementById(id);
-      types = ["Select level", "Training", "Local", "Regional", "National", "International"];
-      abbrev = ["X", "T", "L", "R", "N", "I"];
-      for (i = 0; i < types.length; i += 1) {
-        dropdown.options.add(rg2.utils.generateOption(abbrev[i], types[i]));
-      }
-
-    },
-
-    createCourseDropdown : function (course, courseidx) {
-      /*
-       * Input: course name to match
-       *
-       * Output: html select
-       */
-      var i, idx, html;
-      idx = -1;
-      // do results include this course name?
-      for (i = 0; i < this.resultCourses.length; i += 1) {
-        if (this.resultCourses[i].course === course) {
-          idx = i;
-          break;
-        }
-      }
-      html = "<select id='rg2-alloc-" + courseidx + "'><option value=" + this.DO_NOT_SAVE_COURSE;
-      if (idx === -1) {
-        html += " selected";
-      }
-      html += ">Do not save</option>";
-      for (i = 0; i < this.resultCourses.length; i += 1) {
-        html += "<option value=" + i;
-        if (idx === i) {
-          html += " selected";
-        }
-        html += ">" + this.resultCourses[i].course + "</option>";
-      }
-      html += "</select>";
-      return html;
-    },
-
     drawControls : function () {
       if ((this.mapLoaded) && (this.newcontrols.controls.length > 0)) {
         this.newcontrols.drawControls(true);
         var opt = rg2.getOverprintDetails();
         // locked point for control edit
-        if (this.handleX !== null) {
+        if (this.handle.x !== null) {
           rg2.ctx.lineWidth = opt.overprintWidth;
-          rg2.ctx.strokeStyle = this.handleColor;
-          rg2.ctx.fillStyle = this.handleColour;
+          rg2.ctx.strokeStyle = rg2.config.HANDLE_COLOUR;
+          rg2.ctx.fillStyle = rg2.config.HANDLE_COLOUR;
           rg2.ctx.globalAlpha = 1.0;
 
           rg2.ctx.beginPath();
-          rg2.ctx.arc(this.handleX, this.handleY, rg2.config.HANDLE_DOT_RADIUS, 0, 2 * Math.PI, false);
+          rg2.ctx.arc(this.handle.x, this.handle.y, rg2.config.HANDLE_DOT_RADIUS, 0, 2 * Math.PI, false);
           rg2.ctx.fill();
           rg2.ctx.beginPath();
-          rg2.ctx.arc(this.handleX, this.handleY, 2 * rg2.config.HANDLE_DOT_RADIUS, 0, 2 * Math.PI, false);
+          rg2.ctx.arc(this.handle.x, this.handle.y, 2 * rg2.config.HANDLE_DOT_RADIUS, 0, 2 * Math.PI, false);
           rg2.ctx.stroke();
         }
       }
     },
 
     // based on adjustTrack from draw.js
-    adjustControls : function (x1, y1, x2, y2, button) {
-      // console.log (x1, y1, x2, y2, this.handleX, this.handleY, button);
+    adjustControls : function (p1, p2, button) {
+      // console.log (p1.x, p1.y, p2.x, p2.y, this.handle.x, this.handle.y, button);
       var i, x, y, dx, dy, scaleX, scaleY;
       if ((this.backgroundLocked) || (button === rg2.config.RIGHT_CLICK)) {
         // drag track and background
-        rg2.ctx.translate(x2 - x1, y2 - y1);
+        rg2.ctx.translate(p2.x - p1.x, p2.y - p1.y);
       } else {
-        if (this.handleX !== null) {
+        if (this.handle.x !== null) {
           // scale controls
-          scaleX = (x2 - this.handleX) / (x1 - this.handleX);
-          scaleY = (y2 - this.handleY) / (y1 - this.handleY);
+          scaleX = (p2.x - this.handle.x) / (p1.x - this.handle.x);
+          scaleY = (p2.y - this.handle.y) / (p1.y - this.handle.y);
           // don't rotate: we are assuming controls and map are already rotated the same
-          // console.log (x1, y1, x2, y2, this.handleX, this.handleY, scaleX, scaleY);
+          // console.log (p1.x, p1.y, p2.x, p2.y, this.handle.x, this.handle.y, scaleX, scaleY);
           if (isFinite(scaleX) && isFinite(scaleY)) {
             // just ignore very small moves
             for (i = 0; i < this.newcontrols.controls.length; i += 1) {
-              x = this.newcontrols.controls[i].oldX - this.handleX;
-              y = this.newcontrols.controls[i].oldY - this.handleY;
-              this.newcontrols.controls[i].x = (x * scaleX) + this.handleX;
-              this.newcontrols.controls[i].y = (y * scaleY) + this.handleY;
+              x = this.newcontrols.controls[i].oldX - this.handle.x;
+              y = this.newcontrols.controls[i].oldY - this.handle.y;
+              this.newcontrols.controls[i].x = (x * scaleX) + this.handle.x;
+              this.newcontrols.controls[i].y = (y * scaleY) + this.handle.y;
             }
           }
         } else {
           // drag controls
-          dx = x2 - x1;
-          dy = y2 - y1;
+          dx = p2.x - p1.x;
+          dy = p2.y - p1.y;
           for (i = 0; i < this.newcontrols.controls.length; i += 1) {
             this.newcontrols.controls[i].x = this.newcontrols.controls[i].oldX + dx;
             this.newcontrols.controls[i].y = this.newcontrols.controls[i].oldY + dy;
@@ -1267,12 +1067,10 @@
       }
       if ((this.mapLoaded) && (this.newcontrols.controls.length > 0)) {
         // adjusting the track
-        if (this.handleX === null) {
-          this.handleX = x;
-          this.handleY = y;
+        if (this.handle.x === null) {
+          this.handle = {x: x, y: y};
         } else {
-          this.handleX = null;
-          this.handleY = null;
+          this.handle = {x: null, y: null};
         }
       }
     },
@@ -1301,17 +1099,17 @@
     // TODO: score events
     toggleResultsRequired : function (noResults) {
       if (noResults) {
-        this.format = this.FORMAT_NO_RESULTS;
+        this.format = rg2.config.FORMAT_NO_RESULTS;
       } else {
-        this.format = this.FORMAT_NORMAL;
+        this.format = rg2.config.FORMAT_NORMAL;
       }
 
     },
 
     confirmAddMap : function () {
-      var msg, me;
+      var msg, self;
       msg = "<div id='add-map-dialog'>Are you sure you want to add this map?</div>";
-      me = this;
+      self = this;
       $(msg).dialog({
         title : "Confirm new map",
         modal : true,
@@ -1320,19 +1118,15 @@
         buttons : [{
           text : "Cancel",
           click : function () {
-            me.doCancelAddMap();
+            self.ui.doCancelAddMap();
           }
         }, {
           text : "Add map",
           click : function () {
-            me.doUploadMapFile();
+            self.doUploadMapFile();
           }
         }]
       });
-    },
-
-    doCancelAddMap : function () {
-      $("#add-map-dialog").dialog("destroy");
     },
 
     doUploadMapFile : function () {
@@ -1340,7 +1134,7 @@
       $("#add-map-dialog").dialog("destroy");
       // first transfer map file to server
       url = rg2Config.json_url + "?type=uploadmapfile";
-      user = this.encodeUser();
+      user = this.user.encodeUser();
       self = this;
       formData = new FormData();
       formData.append(this.mapFile.name, this.mapFile);
@@ -1378,7 +1172,7 @@
       data = {};
       this.newMap.localworldfile = this.localworldfile;
       data = this.newMap;
-      user = this.encodeUser();
+      user = this.user.encodeUser();
       data.x = user.x;
       data.y = user.y;
       json = JSON.stringify(data);
@@ -1435,7 +1229,7 @@
       // takes in a World file for the map image and translates it to WGS84 (GPS)
       try {
         var i, size, source, dest, xScale, yScale, xSkew, ySkew, xsrc, ysrc, xpx, ypx, p, pt,
-          hypot, adj, angle1, angle2, angle, pixResX, pixResY;
+          angle, pixResX, pixResY;
         size = rg2.getMapSize();
         this.mapWidth = size.width;
         this.mapHeight = size.height;
@@ -1448,7 +1242,7 @@
         Proj4js.defs[type] = this.georefsystems.getParams(type);
         source = new Proj4js.Proj(type);
 
-        // WGS84 as used by GPS: included by default in Proj4js.defs
+        // dest is WGS84 as used by GPS: included by default in Proj4js.defs
         dest = new Proj4js.Proj("EPSG:4326");
         xScale = this.localworldfile.A;
         ySkew = this.localworldfile.D;
@@ -1485,19 +1279,9 @@
           this.newMap.ypx.push(ypx[i]);
           this.newMap.lat.push(p[i].y);
           this.newMap.lon.push(p[i].x);
-
           //console.log(p[i].x, p[i].y);
         }
-
-        hypot = rg2.utils.getLatLonDistance(p[0].y, p[0].x, p[2].y, p[2].x);
-        adj = rg2.utils.getLatLonDistance(p[0].y, p[0].x, p[0].y, p[2].x);
-        angle1 = Math.acos(adj / hypot);
-        hypot = rg2.utils.getLatLonDistance(p[2].y, p[2].x, p[1].y, p[1].x);
-        adj = rg2.utils.getLatLonDistance(p[2].y, p[2].x, p[1].y, p[2].x);
-        angle2 = Math.acos(adj / hypot);
-
-        angle = (angle1 + angle2) / 2;
-        //console.log(hypot, hypot2, adj, adj2, angle1, angle2, angle);
+        angle = this.getAdjustmentAngle(p);
         pixResX = (p[2].x - p[0].x) / this.mapWidth;
         pixResY = (p[2].y - p[1].y) / this.mapHeight;
         delete this.newMap.worldfile;
@@ -1511,13 +1295,24 @@
       }
     },
 
+    getAdjustmentAngle : function (p) {
+      var hypot, adj, angle1, angle2;
+      // calculates the angle adjustment needed based on an average of two values
+      hypot = rg2.utils.getLatLonDistance(p[0].y, p[0].x, p[2].y, p[2].x);
+      adj = rg2.utils.getLatLonDistance(p[0].y, p[0].x, p[0].y, p[2].x);
+      angle1 = Math.acos(adj / hypot);
+      hypot = rg2.utils.getLatLonDistance(p[2].y, p[2].x, p[1].y, p[1].x);
+      adj = rg2.utils.getLatLonDistance(p[2].y, p[2].x, p[1].y, p[2].x);
+      angle2 = Math.acos(adj / hypot);
+      return (angle1 + angle2) / 2;
+    },
+
     updateGeorefDisplay : function () {
-      $("#georef-A").empty().text("A: " + this.newMap.worldfile.A);
-      $("#georef-B").empty().text("B: " + this.newMap.worldfile.B);
-      $("#georef-C").empty().text("C: " + this.newMap.worldfile.C);
-      $("#georef-D").empty().text("D: " + this.newMap.worldfile.D);
-      $("#georef-E").empty().text("E: " + this.newMap.worldfile.E);
-      $("#georef-F").empty().text("F: " + this.newMap.worldfile.F);
+      var letters, i;
+      letters = ["A", "B", "C", "D", "E", "F"];
+      for (i = 0; i < letters.length; i += 1) {
+        $("#georef-" + letters[i]).empty().text(letters[i] + ": " + this.newMap.worldfile[letters[i]]);
+      }
     }
   };
   rg2.Manager = Manager;

@@ -60,16 +60,10 @@
           return;
         }
         // test for IOF Version 2
-        nodelist = xml.getElementsByTagName('IOFVersion');
-        if (nodelist.length > 0) {
-          version = nodelist[0].getAttribute('version');
-        }
+        version = this.extractAttributeZero(xml.getElementsByTagName("IOFVersion"), "version", "");
         if (version === "") {
           // test for IOF Version 3
-          nodelist = xml.getElementsByTagName('ResultList');
-          if (nodelist.length > 0) {
-            version = nodelist[0].getAttribute('iofVersion');
-          }
+          version = this.extractAttributeZero(xml.getElementsByTagName('ResultList'), "iofVersion", "");
         }
       } catch (err) {
         rg2.utils.showWarningDialog("XML file error", "File is not a valid XML results file.");
@@ -128,12 +122,7 @@
     extractIOFV2XMLResults : function (resultlist, result) {
       var k, temp, time, splitlist;
       for (k = 0; k < resultlist.length; k += 1) {
-        temp = resultlist[k].getElementsByTagName('CompetitorStatus');
-        if (temp.length > 0) {
-          result.status = temp[0].getAttribute("value");
-        } else {
-          result.status = '';
-        }
+        result.status = this.extractAttributeZero(resultlist[k].getElementsByTagName('CompetitorStatus'), "value", "");
         temp = resultlist[k].getElementsByTagName('ResultPosition');
         if (temp.length > 0) {
           result.position = parseInt(temp[0].textContent, 10);
@@ -235,15 +224,22 @@
 
     },
 
-    extractTextContentZero : function (text, defaultValue) {
-      if (text.length > 0) {
-        return text[0].textContent.trim();
+    extractAttributeZero : function (nodelist, attribute, defaultValue) {
+      if (nodelist.length > 0) {
+        return nodelist[0].getAttribute(attribute).trim();
+      }
+      return defaultValue;
+    },
+
+    extractTextContentZero : function (nodelist, defaultValue) {
+      if (nodelist.length > 0) {
+        return nodelist[0].textContent.trim();
       }
       return defaultValue;
     },
 
     extractIOFV3XMLResults : function (resultlist, result) {
-      var k, temp, temp2, time, splitlist;
+      var k, temp, time, splitlist;
       for (k = 0; k < resultlist.length; k += 1) {
         result.chipid = this.extractTextContentZero(resultlist[k].getElementsByTagName('ControlCard'), 0);
         result.position = this.extractTextContentZero(resultlist[k].getElementsByTagName('Position'), '');
@@ -256,15 +252,10 @@
         } else {
           result.time = 0;
         }
-        temp = resultlist[k].getElementsByTagName('StartTime');
-        if (temp.length > 0) {
-          temp2 = temp[0].textContent;
-          if (temp2.length >= 19) {
-            // format is yyyy-mm-ddThh:mm:ss and might have extra Z or +nn
-            result.starttime = rg2.utils.getSecsFromHHMMSS(temp2.substr(11, 8));
-          } else {
-            result.starttime = 0;
-          }
+        temp = this.extractTextContentZero(resultlist[k].getElementsByTagName('StartTime'), 0);
+        if (temp.length >= 19) {
+          // format is yyyy-mm-ddThh:mm:ss and might have extra Z or +nn
+          result.starttime = rg2.utils.getSecsFromHHMMSS(temp.substr(11, 8));
         } else {
           result.starttime = 0;
         }
@@ -273,16 +264,10 @@
         splitlist = resultlist[k].getElementsByTagName('SplitTime');
         result.controls = splitlist.length;
         this.extractIOFV3XMLSplits(splitlist, result);
-
-        temp = resultlist[k].getElementsByTagName('FinishTime');
-        if (temp.length > 0) {
-          temp2 = temp[0].textContent;
-          if (temp2.length >= 19) {
-            // format is yyyy-mm-ddThh:mm:ss and might have extra Z or +nn
-            time = rg2.utils.getSecsFromHHMMSS(temp2.substr(11, 8));
-          } else {
-            time = 0;
-          }
+        temp = this.extractTextContentZero(resultlist[k].getElementsByTagName('FinishTime'), 0);
+        if (temp.length >= 19) {
+          // format is yyyy-mm-ddThh:mm:ss and might have extra Z or +nn
+          time = rg2.utils.getSecsFromHHMMSS(temp.substr(11, 8));
         } else {
           time = 0;
         }
@@ -369,7 +354,7 @@
           }
           // horrid hacks to handle semi-compliant files
           if ('SI card' === titles[i]) {
-            if ('Chipno' === fields[j]) {
+            if (('Chipno' === fields[j]) || ('SIcard' === fields[j])) {
               idx[i] = j;
               found = true;
               break;

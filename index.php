@@ -269,6 +269,7 @@ $languages .= '},'.PHP_EOL;
 <?php if ($manager) { ?><?php if ($debug) { ?>
 <script src='<?php echo $source_url . "/js/resultparser.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/courseparser.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/managerui.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/manager.js"; ?>'></script><?php } else {?>
 <script src='<?php echo $source_url . "/js/rg2manager.min.js"; ?>'></script><?php } ?>
 <script src='<?php echo $source_url . "/js/lib/proj4js-compressed.js"; ?>'></script><?php } ?>

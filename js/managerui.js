@@ -1,0 +1,183 @@
+/*global rg2:false */
+(function () {
+  function ManagerUI() {
+    return true;
+  }
+
+  ManagerUI.prototype = {
+
+    Constructor : ManagerUI,
+
+    setUIVisibility : function () {
+      $('#rg2-draw-courses').hide();
+      $("#rg2-manage-create").show();
+      $("#rg2-create-tab").show();
+      $("#rg2-edit-tab").show();
+      $("#rg2-map-tab").show();
+      $("#rg2-manage-login").hide();
+      $("#rg2-login-tab").hide();
+      // TODO: hide course delete function for now: not fully implemented yet, and may not be needed...
+      $("#rg2-temp-hide-course-delete").hide();
+      // TODO hide results grouping for now: may never implement
+      $("#rg2-results-grouping").hide();
+      $("#rg2-event-date-edit").datepicker({
+        dateFormat : 'yy-mm-dd'
+      });
+      $('#rg2-event-comments').focus(function () {
+        // Clear comment box if user focuses on it and it still contains default text
+        var text = $("#rg2-event-comments").val();
+        if (text === rg2.config.DEFAULT_EVENT_COMMENT) {
+          $('#rg2-event-comments').val("");
+        }
+      });
+    },
+
+
+    displayCourseInfo : function (info) {
+      if (info) {
+        $("#rg2-manage-courses").empty().html(info);
+        $("#rg2-manage-courses").dialog({
+          title : "Course details",
+          dialogClass : "rg2-course-info-dialog",
+          resizable : true,
+          width : 'auto',
+          maxHeight : (window.innerHeight * 0.9),
+          buttons : {
+            Ok : function () {
+              $(this).dialog("close");
+            }
+          }
+        });
+      }
+    },
+
+    displayResultInfo : function (info) {
+      $("#rg2-manage-results").empty().html(info);
+      if (info) {
+        $("#rg2-manage-results").dialog({
+          title : "Result details",
+          dialogClass : "rg2-result-info-dialog",
+          resizable : true,
+          width : 'auto',
+          maxHeight : (window.innerHeight * 0.9),
+          buttons : {
+            Ok : function () {
+              $(this).dialog("close");
+            }
+          }
+        });
+      }
+    },
+
+    createMapDropdown : function (maps) {
+      var dropdown, i;
+      $("#rg2-map-selected").empty();
+      dropdown = document.getElementById("rg2-map-selected");
+      dropdown.options.add(rg2.utils.generateOption(rg2.config.INVALID_MAP_ID, 'Select map'));
+      for (i = (maps.length - 1); i > -1; i -= 1) {
+        dropdown.options.add(rg2.utils.generateOption(i, maps[i].mapid + ": " + maps[i].name));
+      }
+    },
+
+    createGeorefDropdown : function (georef) {
+      var dropdown;
+      $("#rg2-georef-selected").empty();
+      dropdown = document.getElementById("rg2-georef-selected");
+      dropdown = georef.getDropdown(dropdown);
+    },
+
+    createEventEditDropdown : function () {
+      var dropdown;
+      $("#rg2-event-selected").empty();
+      dropdown = document.getElementById("rg2-event-selected");
+      dropdown = rg2.events.getEventEditDropdown(dropdown);
+    },
+
+    createCourseDeleteDropdown : function (id) {
+      var dropdown, i, courses;
+      $("#rg2-course-selected").empty();
+      dropdown = document.getElementById("rg2-course-selected");
+      courses = rg2.courses.getCoursesForEvent(id);
+      for (i = 0; i < courses.length; i += 1) {
+        dropdown.options.add(rg2.utils.generateOption(courses[i].id, courses[i].name));
+      }
+    },
+
+    createRouteDeleteDropdown : function (id) {
+      var dropdown, routes, i;
+      $("#rg2-route-selected").empty();
+      dropdown = document.getElementById("rg2-route-selected");
+      routes = rg2.results.getRoutesForEvent(id);
+      for (i = 0; i < routes.length; i += 1) {
+        dropdown.options.add(rg2.utils.generateOption(routes[i].resultid, routes[i].resultid + ": " + routes[i].name + " on " + routes[i].coursename));
+      }
+    },
+
+    createEventLevelDropdown : function (id) {
+      var dropdown, types, abbrev, i;
+      $("#" + id).empty();
+      dropdown = document.getElementById(id);
+      types = ["Select level", "Training", "Local", "Regional", "National", "International"];
+      abbrev = ["X", "T", "L", "R", "N", "I"];
+      for (i = 0; i < types.length; i += 1) {
+        dropdown.options.add(rg2.utils.generateOption(abbrev[i], types[i]));
+      }
+    },
+
+    setEvent : function (kartatid) {
+      var event;
+      if (kartatid) {
+        // load details for this event
+        event = rg2.events.getEventInfo(kartatid);
+        rg2.loadEvent(event.id);
+      } else {
+        // no event selected so disable everything
+        rg2.utils.setButtonState("disable", ["#btn-delete-event", "#btn-update-event", "#btn-delete-route"]);
+        $("#rg2-event-name-edit").val("");
+        $("#rg2-club-name-edit").val("");
+        $("#rg2-event-date-edit").val("");
+        $("#rg2-event-level-edit").val("");
+        $("#rg2-edit-event-comments").val("");
+        $("#rg2-route-selected").empty();
+      }
+    },
+
+    eventFinishedLoading : function () {
+      // called once the requested event has loaded
+      // copy event details to edit-form
+      // you tell me why this needs parseInt but the same call above doesn't
+      var kartatid, event;
+      kartatid = parseInt($("#rg2-event-selected").val(), 10);
+      event = rg2.events.getEventInfo(kartatid);
+      $("#rg2-event-name-edit").empty().val(event.name);
+      $("#rg2-club-name-edit").empty().val(event.club);
+      $("#rg2-event-date-edit").empty().val(event.date);
+      $("#rg2-event-level-edit").val(event.rawtype);
+      $("#rg2-edit-event-comments").empty().val(event.comment);
+      rg2.utils.setButtonState("enable", ["#btn-delete-event", "#btn-update-event", "#btn-delete-route"]);
+      this.createCourseDeleteDropdown(event.id);
+      this.createRouteDeleteDropdown(event.id);
+    },
+
+    doCancelDeleteEvent : function () {
+      $("#event-delete-dialog").dialog("destroy");
+    },
+
+    doCancelDeleteRoute : function () {
+      $("#route-delete-dialog").dialog("destroy");
+    },
+
+    doCancelUpdateEvent : function () {
+      $("#event-update-dialog").dialog("destroy");
+    },
+
+    doCancelCreateEvent : function () {
+      $("#event-create-dialog").dialog("destroy");
+    },
+
+    doCancelAddMap : function () {
+      $("#add-map-dialog").dialog("destroy");
+    }
+  };
+  rg2.ManagerUI = ManagerUI;
+}());

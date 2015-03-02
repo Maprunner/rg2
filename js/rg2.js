@@ -15,55 +15,11 @@
 var rg2 = (function (window, $) {
   'use strict';
   var canvas, ctx, dictionary, map, mapLoadingText, infoPanelMaximised, scaleFactor, lastX, lastY, zoomSize,
-    dragStart, dragged, whichButton, pinched, pinchStart0, pinchStart1, pinchEnd0, pinchEnd1, managing, config, options,
+    dragStart, dragged, whichButton, pinched, pinchStart0, pinchStart1, pinchEnd0, pinchEnd1, managing, options,
     $rg2infopanel, $rg2eventtitle, zoom, handleInputDown, handleInputMove, handleInputUp, handleTouchStart, handleTouchMove,
     handleTouchEnd, handleScroll, handleMouseUp, handleMouseDown, handleMouseMove;
   canvas = $("#rg2-map-canvas")[0];
   ctx = canvas.getContext('2d');
-  config = {
-    DEFAULT_SCALE_FACTOR : 1.1,
-    TAB_EVENTS : 0,
-    TAB_COURSES : 1,
-    TAB_RESULTS : 2,
-    TAB_DRAW : 3,
-    TAB_LOGIN : 4,
-    TAB_CREATE : 5,
-    TAB_EDIT : 6,
-    TAB_MAP : 7,
-    // translated when output so leave as English here
-    DEFAULT_NEW_COMMENT : "Type your comment",
-    DEFAULT_EVENT_COMMENT : "Comments (optional)",
-    // added to resultid when saving a GPS track
-    GPS_RESULT_OFFSET : 50000,
-    MASS_START_REPLAY : 1,
-    REAL_TIME_REPLAY : 2,
-    // dropdown selection value
-    MASS_START_BY_CONTROL : 99999,
-    VERY_HIGH_TIME_IN_SECS : 99999,
-    // screen sizes for different layouts
-    BIG_SCREEN_BREAK_POINT : 800,
-    SMALL_SCREEN_BREAK_POINT : 500,
-    PURPLE : '#b300ff',
-    RED : '#ff0000',
-    GREEN : '#00ff00',
-    WHITE : '#ffffff',
-    BLACK : '#ffoooo',
-    RUNNER_DOT_RADIUS : 6,
-    HANDLE_DOT_RADIUS : 7,
-    // parameters for call to draw courses
-    DIM : 0.75,
-    FULL_INTENSITY : 1.0,
-    // values of event format
-    NORMAL_EVENT : 1,
-    EVENT_WITHOUT_RESULTS : 2,
-    SCORE_EVENT : 3,
-    // version gets set automatically by grunt file during build process
-    RG2VERSION: '1.1.1',
-    TIME_NOT_FOUND : 9999,
-    SPLITS_NOT_FOUND : 9999,
-    // values for evt.which
-    RIGHT_CLICK : 3
-  };
 
   options = {
     // initialised to default values: overwritten from storage later
@@ -96,7 +52,7 @@ var rg2 = (function (window, $) {
     // reset everything back to initial size/state/orientation
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     // fill canvas to erase things: clearRect doesn't work on Android (?) and leaves the old map as background when changing
-    ctx.fillStyle = config.WHITE;
+    ctx.fillStyle = rg2.config.WHITE;
     ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     // go back to where we started
     ctx.restore();
@@ -107,16 +63,16 @@ var rg2 = (function (window, $) {
       // using non-zero map height to show we have a map loaded
       ctx.drawImage(map, 0, 0);
       var active = $rg2infopanel.tabs("option", "active");
-      if (active === config.TAB_DRAW) {
-        rg2.courses.drawCourses(config.DIM);
+      if (active === rg2.config.TAB_DRAW) {
+        rg2.courses.drawCourses(rg2.config.DIM);
         rg2.controls.drawControls(false);
         rg2.results.drawTracks();
         rg2.drawing.drawNewTrack();
       } else {
-        if (active === config.TAB_CREATE) {
+        if (active === rg2.config.TAB_CREATE) {
           rg2.manager.drawControls();
         } else {
-          rg2.courses.drawCourses(config.FULL_INTENSITY);
+          rg2.courses.drawCourses(rg2.config.FULL_INTENSITY);
           rg2.results.drawTracks();
           rg2.controls.drawControls(false);
           // parameter determines if animation time is updated or not
@@ -130,7 +86,7 @@ var rg2 = (function (window, $) {
     } else {
       ctx.font = '30pt Arial';
       ctx.textAlign = 'center';
-      ctx.fillStyle = config.BLACK;
+      ctx.fillStyle = rg2.config.BLACK;
       ctx.fillText(t(mapLoadingText), canvas.width / 2, canvas.height / 2);
     }
   }
@@ -143,10 +99,10 @@ var rg2 = (function (window, $) {
 
   function setTitleBar() {
     var title;
-    if (window.innerWidth >= config.BIG_SCREEN_BREAK_POINT) {
+    if (window.innerWidth >= rg2.config.BIG_SCREEN_BREAK_POINT) {
       title = rg2.events.getActiveEventName() + " " + rg2.events.getActiveEventDate();
       $rg2eventtitle.html(title).show();
-    } else if (window.innerWidth > config.SMALL_SCREEN_BREAK_POINT) {
+    } else if (window.innerWidth > rg2.config.SMALL_SCREEN_BREAK_POINT) {
       title = rg2.events.getActiveEventName();
       $rg2eventtitle.html(title).show();
     } else {
@@ -468,7 +424,7 @@ var rg2 = (function (window, $) {
     }
     // move map into view on small screens
     // avoid annoying jumps on larger screens
-    if (infoPanelMaximised || window.innerWidth >= config.BIG_SCREEN_BREAK_POINT) {
+    if (infoPanelMaximised || window.innerWidth >= rg2.config.BIG_SCREEN_BREAK_POINT) {
       ctx.setTransform(mapscale, 0, 0, mapscale, $rg2infopanel.outerWidth(), 0);
     } else {
       ctx.setTransform(mapscale, 0, 0, mapscale, 0, 0);
@@ -579,7 +535,7 @@ var rg2 = (function (window, $) {
     $('#rg2-new-comments').focus(function () {
       // Clear comment box if user focuses on it and it still contains default text
       text = $("#rg2-new-comments").val();
-      if (text === t(config.DEFAULT_NEW_COMMENT)) {
+      if (text === t(rg2.config.DEFAULT_NEW_COMMENT)) {
         $('#rg2-new-comments').val("");
       }
     });
@@ -617,7 +573,7 @@ var rg2 = (function (window, $) {
   function tabActivated() {
     var active = $rg2infopanel.tabs("option", "active");
     switch (active) {
-    case config.TAB_DRAW:
+    case rg2.config.TAB_DRAW:
       rg2.courses.removeAllFromDisplay();
       rg2.drawing.showCourseInProgress();
       break;
@@ -630,8 +586,8 @@ var rg2 = (function (window, $) {
   function configureUI() {
     // disable tabs until we have loaded something
     $rg2infopanel.tabs({
-      disabled : [config.TAB_COURSES, config.TAB_RESULTS, config.TAB_DRAW],
-      active : config.TAB_EVENTS,
+      disabled : [rg2.config.TAB_COURSES, rg2.config.TAB_RESULTS, rg2.config.TAB_DRAW],
+      active : rg2.config.TAB_EVENTS,
       heightStyle : "content",
       activate : function () {
         tabActivated();
@@ -705,7 +661,7 @@ var rg2 = (function (window, $) {
     $("#rg2-about-dialog").dialog({
       width : Math.min(1000, (canvas.width * 0.8)),
       maxHeight : Math.min(1000, (canvas.height * 0.9)),
-      title : "RG2 Version " + config.RG2VERSION,
+      title : "RG2 Version " + rg2.config.RG2VERSION,
       dialogClass : "rg2-about-dialog",
       resizable : false,
       buttons : {
@@ -758,14 +714,14 @@ var rg2 = (function (window, $) {
       }
     });
     $("#btn-mass-start").addClass('active').click(function () {
-      rg2.animation.setReplayType(config.MASS_START_REPLAY);
+      rg2.animation.setReplayType(rg2.config.MASS_START_REPLAY);
     });
     $("#btn-move-all").prop('checked', false);
     $("#btn-options").click(function () {
       displayOptionsDialog();
     });
     $("#btn-real-time").removeClass('active').click(function () {
-      rg2.animation.setReplayType(config.REAL_TIME_REPLAY);
+      rg2.animation.setReplayType(rg2.config.REAL_TIME_REPLAY);
     });
     $("#btn-reset").click(function () {
       resetMapState();
@@ -926,7 +882,7 @@ var rg2 = (function (window, $) {
     $("#rg2-results-tab").hide();
     $("#rg2-courses-tab").hide();
     $("#rg2-events-tab").hide();
-    $rg2infopanel.tabs("disable", config.TAB_EVENTS).tabs("option", "active", config.TAB_LOGIN);
+    $rg2infopanel.tabs("disable", rg2.config.TAB_EVENTS).tabs("option", "active", rg2.config.TAB_LOGIN);
   }
 
   function mapLoadedCallback() {
@@ -940,7 +896,7 @@ var rg2 = (function (window, $) {
     var winwidth, winheight;
     winwidth = window.innerWidth;
     winheight = window.innerHeight;
-    scaleFactor = config.DEFAULT_SCALE_FACTOR;
+    scaleFactor = rg2.config.DEFAULT_SCALE_FACTOR;
     // allow for header
     $("#rg2-container").css("height", winheight - 36);
     canvas.width = winwidth;
@@ -970,8 +926,8 @@ var rg2 = (function (window, $) {
         if (rg2.drawing.gpsFileLoaded()) {
           rg2.drawing.adjustTrack({x: Math.round(dragStart.x), y: Math.round(dragStart.y)}, pt, whichButton);
         } else {
-          if ($rg2infopanel.tabs("option", "active") === config.TAB_CREATE) {
-            rg2.manager.adjustControls(Math.round(dragStart.x), Math.round(dragStart.y), pt.x, pt.y, whichButton);
+          if ($rg2infopanel.tabs("option", "active") === rg2.config.TAB_CREATE) {
+            rg2.manager.adjustControls({x: Math.round(dragStart.x), y: Math.round(dragStart.y)}, pt, whichButton);
           } else {
             ctx.translate(pt.x - dragStart.x, pt.y - dragStart.y);
           }
@@ -986,14 +942,14 @@ var rg2 = (function (window, $) {
     // console.log("Input up " + dragged);
     var active = $rg2infopanel.tabs("option", "active");
     if (!dragged) {
-      if (active === config.TAB_CREATE) {
+      if (active === rg2.config.TAB_CREATE) {
         rg2.manager.mouseUp(Math.round(dragStart.x), Math.round(dragStart.y));
       } else {
         // pass button that was clicked
         rg2.drawing.mouseUp(Math.round(dragStart.x), Math.round(dragStart.y), evt.which);
       }
     } else {
-      if (active === config.TAB_CREATE) {
+      if (active === rg2.config.TAB_CREATE) {
         rg2.manager.dragEnded();
       } else {
         rg2.drawing.dragEnded();
@@ -1192,14 +1148,14 @@ var rg2 = (function (window, $) {
       if (managing) {
         rg2.manager.eventFinishedLoading();
       } else {
-        $rg2infopanel.tabs("enable", config.TAB_COURSES);
-        $rg2infopanel.tabs("enable", config.TAB_RESULTS);
-        $rg2infopanel.tabs("enable", config.TAB_DRAW);
+        $rg2infopanel.tabs("enable", rg2.config.TAB_COURSES);
+        $rg2infopanel.tabs("enable", rg2.config.TAB_RESULTS);
+        $rg2infopanel.tabs("enable", rg2.config.TAB_DRAW);
         // open courses tab for new event: else stay on draw tab
         active = $rg2infopanel.tabs("option", "active");
         // don't change tab if we have come from DRAW since it means
         // we have just reloaded following a save
-        if (active !== config.TAB_DRAW) {
+        if (active !== rg2.config.TAB_DRAW) {
           $rg2infopanel.tabs("option", "active", rg2.requestedHash.getTab());
         }
         $rg2infopanel.tabs("refresh");
@@ -1413,7 +1369,6 @@ var rg2 = (function (window, $) {
     // functions and variables available elsewhere
     t : t,
     init : init,
-    config : config,
     options : options,
     redraw : redraw,
     getOverprintDetails : getOverprintDetails,

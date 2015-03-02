@@ -8,7 +8,7 @@ module.exports = function(grunt) {
   var jsHintList = ['js/rg2.js', 'js/animation.js', 'js/control.js', 'js/controls.js', 'js/course.js', 'js/courseparser.js', 'js/courses.js', 'js/draw.js', 'js/event.js', 'js/events.js', 'js/gpstrack.js',
    'js/map.js', 'js/result.js', 'js/resultparser.js', 'js/results.js', 'js/runner.js', 'js/utils.js'];
    
-  var jsManagerSrc = ['js/manager.js', 'js/resultparser.js', 'js/courseparser.js'];
+  var jsManagerSrc = ['js/manager.js', 'js/resultparser.js', 'js/courseparser.js', 'js/managerui.js'];
 
   var jsConcatFile = 'js/rg2all.js';
   

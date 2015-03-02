@@ -21,32 +21,17 @@
     processCoursesXML : function (rawXML) {
       var xml, version, nodelist;
       try {
-        version = "";
         xml = $.parseXML(rawXML);
-        nodelist = xml.getElementsByTagName('CourseData');
-        if (nodelist.length === 0) {
-          rg2.utils.showWarningDialog("XML file error", "File is not a valid XML course file. CourseData element missing.");
-          return;
-        }
-
-        // test for IOF Version 2
-        nodelist = xml.getElementsByTagName('IOFVersion');
-        if (nodelist.length > 0) {
-          version = nodelist[0].getAttribute('version');
-        }
-        if (version === "") {
-          // test for IOF Version 3
-          nodelist = xml.getElementsByTagName('CourseData');
-          if (nodelist.length > 0) {
-            version = nodelist[0].getAttribute('iofVersion').trim();
-            this.setCreator(nodelist[0].getAttribute('creator').trim());
-          }
-        }
       } catch (err) {
         rg2.utils.showWarningDialog("XML file error", "File is not a valid XML course file.");
         return;
       }
-
+      nodelist = xml.getElementsByTagName('CourseData');
+      if (nodelist.length === 0) {
+        rg2.utils.showWarningDialog("XML file error", "File is not a valid XML course file. CourseData element missing.");
+        return;
+      }
+      version = this.getVersion(xml);
       switch (version) {
       case "2.0.3":
         this.processIOFV2XMLCourses(xml);
@@ -57,6 +42,25 @@
       default:
         rg2.utils.showWarningDialog("XML file error", 'Invalid IOF file format. Version ' + version + ' not supported.');
       }
+    },
+
+    getVersion : function (xml) {
+      var nodelist, version;
+      version = "";
+      // test for IOF Version 2
+      nodelist = xml.getElementsByTagName('IOFVersion');
+      if (nodelist.length > 0) {
+        version = nodelist[0].getAttribute('version');
+      }
+      if (version === "") {
+        // test for IOF Version 3
+        nodelist = xml.getElementsByTagName('CourseData');
+        if (nodelist.length > 0) {
+          version = nodelist[0].getAttribute('iofVersion').trim();
+          this.setCreator(nodelist[0].getAttribute('creator').trim());
+        }
+      }
+      return version;
     },
 
     setCreator : function (text) {

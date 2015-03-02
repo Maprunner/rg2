@@ -109,27 +109,20 @@
     },
 
     processGPSTrack : function () {
-      var minX, maxX, minY, maxY, i, worldFile, mapSize;
+      var minX, maxX, minY, maxY, mapSize;
       if (rg2.events.mapIsGeoreferenced()) {
-        // translate lat/lon to x,y based on world file info: see http://en.wikipedia.org/wiki/World_file
-        worldFile = rg2.events.getWorldFile();
-        for (i = 0; i < this.lat.length; i += 1) {
-          this.routeData.x[i] = Math.round(((worldFile.E * this.lon[i]) - (worldFile.B * this.lat[i]) + worldFile.xCorrection) / worldFile.AEDB);
-          this.routeData.y[i] = Math.round(((-1 * worldFile.D * this.lon[i]) + (worldFile.A * this.lat[i]) + worldFile.yCorrection) / worldFile.AEDB);
-        }
+        this.applyWorldFile();
         // find bounding box for track
         minX = Math.min.apply(Math, this.routeData.x);
         maxX = Math.max.apply(Math, this.routeData.x);
         minY = Math.min.apply(Math, this.routeData.y);
         maxY = Math.max.apply(Math, this.routeData.y);
-
         // check we are somewhere on the map
         mapSize = rg2.getMapSize();
         if ((maxX < 0) || (minX > mapSize.width) || (minY > mapSize.height) || (maxY < 0)) {
           // warn and fit to track
           rg2.utils.showWarningDialog('GPS file problem', 'Your GPS file does not match the map co-ordinates. Please check you have selected the correct file.');
           this.fitTrackInsideCourse();
-
         } else {
           // everything OK so lock background to avoid accidental adjustment
           $('#btn-move-all').prop('checked', true);
@@ -144,6 +137,16 @@
       this.fileLoaded = true;
       $("#btn-save-gps-route").button("enable");
       rg2.redraw(false);
+    },
+
+    applyWorldFile : function () {
+      var i, worldFile;
+      // translate lat/lon to x,y based on world file info: see http://en.wikipedia.org/wiki/World_file
+      worldFile = rg2.events.getWorldFile();
+      for (i = 0; i < this.lat.length; i += 1) {
+        this.routeData.x[i] = Math.round(((worldFile.E * this.lon[i]) - (worldFile.B * this.lat[i]) + worldFile.xCorrection) / worldFile.AEDB);
+        this.routeData.y[i] = Math.round(((-1 * worldFile.D * this.lon[i]) + (worldFile.A * this.lat[i]) + worldFile.yCorrection) / worldFile.AEDB);
+      }
     },
 
     addStartAndFinishHandles : function () {

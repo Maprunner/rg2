@@ -114,16 +114,12 @@
       }
       $("#rg2-name-select").prop('disabled', true);
       $("#rg2-undo").prop('disabled', true);
-      $("#btn-save-route").button("disable");
-      $("#btn-save-gps-route").button("disable");
-      $("#btn-undo").button("disable");
-      $("#btn-three-seconds").button("disable");
       $("#btn-reset-drawing").button("enable");
+      rg2.utils.setButtonState("disable", ["#btn-save-route", "#btn-save-gps-route", "#btn-undo", "#btn-three-seconds", "#rg2-load-gps-file"]);
       $("#rg2-name-select").empty();
       $("#rg2-new-comments").empty().val(rg2.t(rg2.config.DEFAULT_NEW_COMMENT));
       $("#rg2-event-comments").empty().val(rg2.t(rg2.config.DEFAULT_EVENT_COMMENT));
       $("#btn-move-all").prop('checked', false);
-      $("#rg2-load-gps-file").button('disable');
       $("#rg2-name-entry").empty().val('');
       $("#rg2-time-entry").empty().val('');
       $("#rg2-name").removeClass('valid');
