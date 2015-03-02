@@ -962,14 +962,16 @@ var rg2 = (function (window, $) {
     var pt;
     if (dragStart) {
       pt = ctx.transformedPoint(lastX, lastY);
+      Math.round(pt.x);
+      Math.round(pt.y);
       // console.log ("Mousemove after " + pt.x + ": " + pt.y);
       // simple debounce so that very small drags are treated as clicks instead
       if ((Math.abs(pt.x - dragStart.x) + Math.abs(pt.y - dragStart.y)) > 5) {
         if (rg2.drawing.gpsFileLoaded()) {
-          rg2.drawing.adjustTrack(Math.round(dragStart.x), Math.round(dragStart.y), Math.round(pt.x), Math.round(pt.y), whichButton);
+          rg2.drawing.adjustTrack({x: Math.round(dragStart.x), y: Math.round(dragStart.y)}, pt, whichButton);
         } else {
           if ($rg2infopanel.tabs("option", "active") === config.TAB_CREATE) {
-            rg2.manager.adjustControls(Math.round(dragStart.x), Math.round(dragStart.y), Math.round(pt.x), Math.round(pt.y), whichButton);
+            rg2.manager.adjustControls(Math.round(dragStart.x), Math.round(dragStart.y), pt.x, pt.y, whichButton);
           } else {
             ctx.translate(pt.x - dragStart.x, pt.y - dragStart.y);
           }

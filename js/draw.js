@@ -19,12 +19,8 @@
       this.gpstrack.uploadGPS(evt);
     },
 
-    getControlX : function () {
-      return this.controlx;
-    },
-
-    getControlY : function () {
-      return this.controly;
+    getControlXY : function () {
+      return {x: this.controlx, y: this.controly};
     },
 
     mouseUp : function (x, y, button) {
@@ -38,7 +34,7 @@
       }
       trk = this.gpstrack;
       if (trk.fileLoaded) {
-        handle = trk.handles.getHandleClicked(x, y);
+        handle = trk.handles.getHandleClicked({x: x, y: y});
         if (handle !== undefined) {
           // delete or unlock if not first or last entry
           if ((button === rg2.config.RIGHT_CLICK) && (handle.index !== 0) && (handle.index !== trk.handles.length)) {
@@ -88,9 +84,6 @@
         trk.savedBaseY = trk.baseY.slice(0);
         trk.baseX = trk.routeData.x.slice(0);
         trk.baseY = trk.routeData.y.slice(0);
-        // can't use slice(0) for an array of objects so need to do deep copy in jQuery
-        // see http://stackoverflow.com/questions/122102/most-efficient-way-to-clone-an-object
-        trk.savedHandles = $.extend(true, [], trk.handles);
         trk.handles.rebaselineXY();
         $("#btn-undo-gps-adjust").button("enable");
       }
@@ -358,10 +351,7 @@
       trk.baseY = trk.savedBaseY.slice(0);
       trk.routeData.x = trk.savedBaseX.slice(0);
       trk.routeData.y = trk.savedBaseY.slice(0);
-      // can't use slice(0) for an array of objects so need to do deep copy in jQuery
-      // see http://stackoverflow.com/questions/122102/most-efficient-way-to-clone-an-object
-      trk.handles = $.extend(true, [], trk.savedHandles);
-      trk.handles.revertXY();
+      trk.handles.undo();
       $("#btn-undo-gps-adjust").button("disable");
       rg2.redraw(false);
     },
@@ -488,21 +478,21 @@
       return false;
     },
 
-    adjustTrack : function (x1, y1, x2, y2, button) {
+    adjustTrack : function (p1, p2, button) {
       // called whilst dragging a GPS track
       var trk, handle, earliest, latest;
-      //console.log("adjustTrack ", x1, y1, x2, y2);
+      //console.log("adjustTrack ", p1.x, p1.y, p2.x, p2.y);
       // check if background is locked or right click
       if ($('#btn-move-all').prop('checked') || button === rg2.config.RIGHT_CLICK) {
-        rg2.ctx.translate(x2 - x1, y2 - y1);
+        rg2.ctx.translate(p2.x - p1.x, p2.y - p1.y);
       } else {
         trk = this.gpstrack;
         if (trk.handles.handlesLocked() > 0) {
           if (trk.handles.handlesLocked() === 1) {
-            this.scaleRotateAroundSingleLockedPoint(x1, y1, x2, y2, trk.handles.getSingleLockedHandle(), trk.handles.getStartHandle().time, trk.handles.getFinishHandle().time);
+            this.scaleRotateAroundSingleLockedPoint(p1, p2, trk.handles.getSingleLockedHandle(), trk.handles.getStartHandle().time, trk.handles.getFinishHandle().time);
           } else {
             // check if start of drag is on a handle
-            handle = trk.handles.getHandleClicked(x1, y1);
+            handle = trk.handles.getHandleClicked(p1);
             // we already know we have at least two points locked: cases to deal with from here
             // 1: drag point not on a handle: exit
             // 2: drag point on a locked handle: exit
@@ -522,23 +512,23 @@
 
             if (earliest.time >= handle.time) {
               // case 3: drag point between start and a locked handle
-              this.scaleRotateAroundSingleLockedPoint(x1, y1, x2, y2, earliest, trk.handles.getStartHandle().time, earliest.time);
+              this.scaleRotateAroundSingleLockedPoint(p1, p2, earliest, trk.handles.getStartHandle().time, earliest.time);
             } else if (latest.time < handle.time) {
               // case 4: drag point between locked handle and end
-              this.scaleRotateAroundSingleLockedPoint(x1, y1, x2, y2, latest, latest.time, trk.handles.getFinishHandle().time);
+              this.scaleRotateAroundSingleLockedPoint(p1, p2, latest, latest.time, trk.handles.getFinishHandle().time);
             } else {
               // case 5: shear/scale around two locked points
-              this.scaleRotateBetweenTwoLockedPoints(x1, y1, x2, y2, handle);
+              this.scaleRotateBetweenTwoLockedPoints(p1, p2, handle);
             }
           }
         } else {
           // nothing locked so drag track
-          this.dragTrack((x2 - x1), (y2 - y1));
+          this.dragTrack((p2.x - p1.x), (p2.y - p1.y));
         }
       }
     },
 
-    scaleRotateBetweenTwoLockedPoints : function (x1, y1, x2, y2, handle) {
+    scaleRotateBetweenTwoLockedPoints : function (p1, p2, handle) {
       // case 5: shear/scale between two locked points
       // all based on putting handle1 at (0, 0), rotating handle 2 to be on x-axis and then shearing on x-axis and scaling on y-axis.
       // there must be a better way...
@@ -546,12 +536,12 @@
       trk = this.gpstrack;
       lockedHandle1 = trk.handles.getPreviousLockedHandle(handle);
       lockedHandle2 = trk.handles.getNextLockedHandle(handle);
-      //console.log("Point (", x1, ", ", y1, ") in middle of ", lockedHandle1.index, lockedHandle1.basex, lockedHandle1.basey, " and ", lockedHandle2.index, lockedHandle2.basex, lockedHandle2.basey);
+      //console.log("Point (", p1.x, ", ", p1.y, ") in middle of ", lockedHandle1.index, lockedHandle1.basex, lockedHandle1.basey, " and ", lockedHandle2.index, lockedHandle2.basex, lockedHandle2.basey);
       reverseAngle = rg2.utils.getAngle(lockedHandle1.basex, lockedHandle1.basey, lockedHandle2.basex, lockedHandle2.basey);
       angle = (2 * Math.PI) - reverseAngle;
 
-      pt1 = rg2.utils.rotatePoint(x1 - lockedHandle1.basex, y1 - lockedHandle1.basey, angle);
-      pt2 = rg2.utils.rotatePoint(x2 - lockedHandle1.basex, y2 - lockedHandle1.basey, angle);
+      pt1 = rg2.utils.rotatePoint(p1.x - lockedHandle1.basex, p1.y - lockedHandle1.basey, angle);
+      pt2 = rg2.utils.rotatePoint(p2.x - lockedHandle1.basex, p2.y - lockedHandle1.basey, angle);
 
       // calculate scaling factors
       a = (pt2.x - pt1.x) / pt1.y;
@@ -560,7 +550,7 @@
       if (!isFinite(a) || !isFinite(scale)) {
         // this will cause trouble when y1 is 0 (or even just very small) but I've never managed to get it to happen
         // you need to click exactly on a line through the two locked handles: just do nothing for now
-        // console.log("y1 became 0: scale factors invalid", a, scale);
+        // console.log("p1.y became 0: scale factors invalid", a, scale);
         return;
       }
       // recalculate all points between locked handles
@@ -580,12 +570,12 @@
       trk.handles.scaleAndRotateBetweenLockedPoints(lockedHandle1, a, scale, angle, reverseAngle, lockedHandle1.time, lockedHandle2.time);
     },
 
-    scaleRotateAroundSingleLockedPoint : function (x1, y1, x2, y2, lockedHandle, fromTime, toTime) {
+    scaleRotateAroundSingleLockedPoint : function (p1, p2, lockedHandle, fromTime, toTime) {
       var i, scale, angle, pt;
       // scale and rotate track around single locked point
-      scale = rg2.utils.getDistanceBetweenPoints(x2, y2, lockedHandle.basex, lockedHandle.basey) / rg2.utils.getDistanceBetweenPoints(x1, y1, lockedHandle.basex, lockedHandle.basey);
-      angle = rg2.utils.getAngle(x2, y2, lockedHandle.basex, lockedHandle.basey) - rg2.utils.getAngle(x1, y1, lockedHandle.basex, lockedHandle.basey);
-      //console.log (x1, y1, x2, y2, handle.basex, handle.basey, scale, angle, fromTime, toTime);
+      scale = rg2.utils.getDistanceBetweenPoints(p2.x, p2.y, lockedHandle.basex, lockedHandle.basey) / rg2.utils.getDistanceBetweenPoints(p1.x, p1.y, lockedHandle.basex, lockedHandle.basey);
+      angle = rg2.utils.getAngle(p2.x, p2.y, lockedHandle.basex, lockedHandle.basey) - rg2.utils.getAngle(p1.x, p1.y, lockedHandle.basex, lockedHandle.basey);
+      //console.log (p1.x, p1.y, p2.x, p2.y, handle.basex, handle.basey, scale, angle, fromTime, toTime);
       for (i = fromTime; i <= toTime; i += 1) {
         pt = rg2.utils.rotatePoint(this.gpstrack.baseX[i] - lockedHandle.basex, this.gpstrack.baseY[i] - lockedHandle.basey, angle);
         this.gpstrack.routeData.x[i] = (pt.x * scale) + lockedHandle.basex;

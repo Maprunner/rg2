@@ -39,7 +39,7 @@
     },
 
     setActiveEventID : function (eventid) {
-      this.activeEventID = eventid;
+      this.activeEventID = parseInt(eventid, 10);
     },
 
     getActiveEventID : function () {
@@ -94,7 +94,7 @@
       if (this.activeEventID === null) {
         return false;
       }
-      return this.events[this.activeEventID].georeferenced;
+      return this.events[this.activeEventID].worldfile.valid;
     },
 
     getMetresPerPixel : function () {
@@ -105,7 +105,7 @@
       }
       size = rg2.getMapSize();
       pixels = rg2.utils.getDistanceBetweenPoints(0, 0, size.width, size.height);
-      w = this.events[this.activeEventID].worldFile;
+      w = this.events[this.activeEventID].worldfile;
       lon1 = w.C;
       lat1 = w.F;
       lon2 = (w.A * size.width) + (w.B * size.height) + w.C;
@@ -114,7 +114,7 @@
     },
 
     getWorldFile : function () {
-      return this.events[this.activeEventID].worldFile;
+      return this.events[this.activeEventID].worldfile;
     },
 
     formatEventsAsMenu : function () {
@@ -122,7 +122,7 @@
       html = '';
       for (i = this.events.length - 1; i >= 0; i -= 1) {
         title = rg2.t(this.events[i].type) + ": " + this.events[i].date;
-        if (this.events[i].georeferenced) {
+        if (this.events[i].worldfile.valid) {
           title += ": " + rg2.t("Map is georeferenced");
         }
 
@@ -133,7 +133,7 @@
         if (this.events[i].comment !== "") {
           html += "<i class='fa fa-info-circle event-info-icon' id='info-" + i + "'></i>";
         }
-        if (this.events[i].georeferenced) {
+        if (this.events[i].worldfile.valid) {
           html += "<i class='fa fa-globe event-info-icon' id='info-" + i + "'>&nbsp</i>";
         }
         html += this.events[i].date + ": " + this.events[i].name + "</a></li>";

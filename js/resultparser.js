@@ -420,6 +420,57 @@
         return 'nok';
       }
       return 'nc';
+    },
+
+    // rows: array of raw lines from Spklasse results csv file
+    processSpklasseCSVResults : function (rows, separator) {
+      // fields in course row
+      var COURSE_IDX = 0, NUM_CONTROLS_IDX = 1, FIRST_NAME_IDX = 0, SURNAME_IDX = 1, CLUB_IDX = 2,
+        START_TIME_IDX = 3, FIRST_SPLIT_IDX = 4, course, controls, i, j, fields, result, len, totaltime;
+      fields = [];
+      try {
+        course = '';
+        controls = 0;
+
+        // read through all rows
+        for (i = 0; i < rows.length; i += 1) {
+          fields = rows[i].split(separator);
+          // discard blank lines
+          if (fields.length > 0) {
+            // check for new course
+            if (fields.length === 2) {
+              course = fields[COURSE_IDX];
+              controls = parseInt(fields[NUM_CONTROLS_IDX], 10);
+            } else {
+              // assume everything else is a result
+              result = {};
+              result.chipid = 0;
+              result.name = (fields[FIRST_NAME_IDX] + " " + fields[SURNAME_IDX] + " " + fields[CLUB_IDX]).trim();
+              result.dbid = (result.chipid + "__" + result.name);
+              result.starttime = rg2.utils.getSecsFromHHMM(fields[START_TIME_IDX]);
+              result.club = fields[CLUB_IDX];
+              result.course = course;
+              result.controls = controls;
+              result.splits = '';
+              result.codes = [];
+              len = fields.length - FIRST_SPLIT_IDX;
+              totaltime = 0;
+              for (j = 0; j < len; j += 1) {
+                if (j > 0) {
+                  result.splits += ";";
+                }
+                result.codes[j] = 'X';
+                totaltime += rg2.utils.getSecsFromHHMMSS(fields[j + FIRST_SPLIT_IDX]);
+                result.splits += totaltime;
+              }
+              result.time = rg2.utils.formatSecsAsMMSS(totaltime);
+              this.results.push(result);
+            }
+          }
+        }
+      } catch (err) {
+        rg2.utils.showWarningDialog("Spklasse csv file contains invalid information");
+      }
     }
   };
   rg2.ResultParser = ResultParser;

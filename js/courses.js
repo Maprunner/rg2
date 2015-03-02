@@ -220,8 +220,8 @@
       return details;
     },
 
-    drawLinesBetweenControls : function (x, y, angle, courseid, opt) {
-      this.courses[courseid].drawLinesBetweenControls(x, y, angle, opt);
+    drawLinesBetweenControls : function (pt, angle, courseid, opt) {
+      this.courses[courseid].drawLinesBetweenControls(pt,  angle, opt);
     }
   };
   rg2.Courses = Courses;

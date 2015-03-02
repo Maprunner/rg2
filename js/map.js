@@ -47,25 +47,22 @@
     }
   };
 
-  function Worldfile(a, b, c, d, e, f) {
+  function Worldfile(wf) {
     // see http://en.wikipedia.org/wiki/World_file
-    this.A = parseFloat(a);
-    this.B = parseFloat(b);
-    this.C = parseFloat(c);
-    this.D = parseFloat(d);
-    this.E = parseFloat(e);
-    this.F = parseFloat(f);
-    if ((a !== 0) && (b !== 0) && (c !== 0) && (d !== 0) && (e !== 0) && (f !== 0)) {
+    if (wf.A === undefined) {
+      this.valid = false;
+    } else {
+      this.A = parseFloat(wf.A);
+      this.B = parseFloat(wf.B);
+      this.C = parseFloat(wf.C);
+      this.D = parseFloat(wf.D);
+      this.E = parseFloat(wf.E);
+      this.F = parseFloat(wf.F);
       this.valid = true;
       // helps make later calculations easier
-      this.AEDB = (a * e) - (d * b);
-      this.xCorrection = (b * f) - (e * c);
-      this.yCorrection = (d * c) - (a * f);
-    } else {
-      this.valid = false;
-      this.AEDB = 0;
-      this.xCorrection = 0;
-      this.yCorrection = 0;
+      this.AEDB = (wf.A * wf.E) - (wf.D * wf.B);
+      this.xCorrection = (wf.B * wf.F) - (wf.E * wf.C);
+      this.yCorrection = (wf.D * wf.C) - (wf.A * wf.F);
     }
   }
 
@@ -89,9 +86,9 @@
       this.mapid = data.mapid;
       this.name = data.name;
       // worldfile for GPS to map image conversion (for GPS files)
-      this.worldfile = new Worldfile(data.A, data.B, data.C, data.D, data.E, data.F);
+      this.worldfile = new Worldfile(data);
       // worldfile for local co-ords to map image conversion (for georeferenced courses)
-      this.localworldfile = new Worldfile(data.localA, data.localB, data.localC, data.localD, data.localE, data.localF);
+      this.localworldfile = new Worldfile({A: data.localA, B: data.localB, C: data.localC, D: data.localD, E: data.localE, F: data.localF});
       if (data.mapfilename === undefined) {
         this.mapfilename = this.mapid + '.' + 'jpg';
       } else {
@@ -102,8 +99,8 @@
       // new map to be added
       this.mapid = 0;
       this.name = "";
-      this.worldfile = new Worldfile(0, 0, 0, 0, 0, 0);
-      this.localworldfile = new Worldfile(0, 0, 0, 0, 0, 0);
+      this.worldfile = new Worldfile(0);
+      this.localworldfile = new Worldfile(0);
     }
     this.xpx = [];
     this.ypx = [];

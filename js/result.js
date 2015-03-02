@@ -155,7 +155,7 @@
         for (i = 0; i < (this.scorex.length - 1); i += 1) {
           angle[i] = rg2.utils.getAngle(this.scorex[i], this.scorey[i], this.scorex[i + 1], this.scorey[i + 1]);
         }
-        rg2.courses.drawLinesBetweenControls(this.scorex, this.scorey, angle, this.courseid, opt);
+        rg2.courses.drawLinesBetweenControls({x: this.scorex, y: this.scorey}, angle, this.courseid, opt);
         for (i = 1; i < (this.scorex.length - 1); i += 1) {
           rg2.controls.drawSingleControl(this.scorex[i], this.scorey[i], i, Math.PI * 0.25, opt);
         }
@@ -294,7 +294,7 @@
       return this.hasValidTrack;
     },
 
-    getTotalTrackLength : function () {
+    calculateTotalTrackLength : function () {
       // read through track to find total distance
       var i, oldx, oldy, totaldist;
       totaldist = 0;

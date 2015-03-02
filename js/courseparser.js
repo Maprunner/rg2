@@ -5,12 +5,13 @@
     this.newcontrols = new rg2.Controls();
     this.courses.length = 0;
     this.fromCondes = false;
+    this.coursesGeoreferenced = false;
     this.newcontrols.deleteAllControls();
     // holding copies of worldfiles: not ideal but it works
     this.localWorldfile = localWorldfile;
     this.worldfile = worldfile;
     this.processCoursesXML(evt.target.result);
-    return {courses: this.courses, newcontrols: this.newcontrols};
+    return {courses: this.courses, newcontrols: this.newcontrols, georeferenced: this.coursesGeoreferenced};
   }
 
   CourseParser.prototype = {
@@ -20,6 +21,7 @@
     processCoursesXML : function (rawXML) {
       var xml, version, nodelist;
       try {
+        version = "";
         xml = $.parseXML(rawXML);
         nodelist = xml.getElementsByTagName('CourseData');
         if (nodelist.length === 0) {
@@ -74,7 +76,7 @@
         if (nodelist[i].parentNode.nodeName === 'RaceCourseData') {
           code = nodelist[i].getElementsByTagName("Id")[0].textContent;
           latlng = nodelist[i].getElementsByTagName("Position");
-          if ((this.localworldfile.valid) && (latlng.length > 0)) {
+          if ((this.localWorldfile.valid) && (latlng.length > 0)) {
             pt = this.getXYFromLatLng(latlng);
             this.coursesGeoreferenced = true;
           } else {
@@ -100,8 +102,8 @@
       // handle Condes-specific georeferencing
       if (this.fromCondes) {
         // use original map worldfile
-        pt.x = this.localworldfile.getX(lng, lat);
-        pt.y = this.localworldfile.getY(lng, lat);
+        pt.x = this.localWorldfile.getX(lng, lat);
+        pt.y = this.localWorldfile.getY(lng, lat);
       } else {
         // use WGS-84 worldfile as expected (?) by IOF V3 schema
         pt.x = this.worldfile.getX(lng, lat);
@@ -111,31 +113,25 @@
     },
 
     processIOFV2XMLCourses : function (xml) {
-      var nodelist, controlsGeoref, i, x, y;
+      var i, x, y;
       // extract all start controls
-      nodelist = xml.getElementsByTagName('StartPoint');
-      this.extractV2Controls(nodelist, 'StartPointCode');
+      this.extractV2Controls(xml.getElementsByTagName('StartPoint'), 'StartPointCode');
       // extract all normal controls
-      nodelist = xml.getElementsByTagName('Control');
-      this.extractV2Controls(nodelist, 'ControlCode');
+      this.extractV2Controls(xml.getElementsByTagName('Control'), 'ControlCode');
       // extract all finish controls
-      nodelist = xml.getElementsByTagName('FinishPoint');
-      controlsGeoref = this.extractV2Controls(nodelist, 'FinishPointCode');
-
-      if (controlsGeoref) {
-        if (this.localworldfile.valid) {
+      this.coursesGeoreferenced = this.extractV2Controls(xml.getElementsByTagName('FinishPoint'), 'FinishPointCode');
+      if (this.coursesGeoreferenced) {
+        if (this.localWorldfile.valid) {
           for (i = 0; i < this.newcontrols.controls.length; i += 1) {
             x = this.newcontrols.controls[i].x;
             y = this.newcontrols.controls[i].y;
-            this.newcontrols.controls[i].x = this.localworldfile.getX(x, y);
-            this.newcontrols.controls[i].y = this.localworldfile.getY(x, y);
+            this.newcontrols.controls[i].x = this.localWorldfile.getX(x, y);
+            this.newcontrols.controls[i].y = this.localWorldfile.getY(x, y);
           }
-          this.coursesGeoreferenced = true;
         }
       }
       // extract all courses
-      nodelist = xml.getElementsByTagName('Course');
-      this.extractV2Courses(nodelist);
+      this.extractV2Courses(xml.getElementsByTagName('Course'));
     },
 
     extractV2Courses : function (nodelist) {
@@ -196,7 +192,7 @@
         // if you have an IOF XML V2 file which has georeferenced controls AND
         // the map file itself isn't georeferenced
         // then you need to use X, Y and not the georeferenced co-ordinates
-        if ((geopos.length > 0) && (this.localworldfile.valid)) {
+        if ((geopos.length > 0) && (this.localWorldfile.valid)) {
           pt.x = parseFloat(geopos[0].getAttribute('x'));
           pt.y = parseFloat(geopos[0].getAttribute('y'));
           isGeoref = true;

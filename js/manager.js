@@ -38,8 +38,8 @@
     this.handleX = null;
     this.handleY = null;
     this.maps = [];
-    this.localworldfile = new rg2.Worldfile(0, 0, 0, 0, 0, 0);
-    this.worldfile = new rg2.Worldfile(0, 0, 0, 0, 0, 0);
+    this.localworldfile = new rg2.Worldfile(0);
+    this.worldfile = new rg2.Worldfile(0);
     this.handleColor = '#ff0000';
     this.initialiseUI();
   }
@@ -923,6 +923,7 @@
       parsedCourses = new rg2.CourseParser(evt, this.worldfile, this.localworldfile);
       this.courses = parsedCourses.courses;
       this.newcontrols = parsedCourses.newcontrols;
+      this.coursesGeoreferenced = parsedCourses.georeferenced;
       this.displayCourseInfo();
       this.displayCourseAllocations();
       this.fitControlsToMap();
@@ -1006,58 +1007,6 @@
 
       return info;
     },
-
-    // rows: array of raw lines from Spklasse results csv file
-    processSpklasseCSVResults : function (rows, separator) {
-      // fields in course row
-      var COURSE_IDX = 0, NUM_CONTROLS_IDX = 1, FIRST_NAME_IDX = 0, SURNAME_IDX = 1, CLUB_IDX = 2,
-        START_TIME_IDX = 3, FIRST_SPLIT_IDX = 4, course, controls, i, j, fields, result, len, totaltime;
-      fields = [];
-      try {
-        course = '';
-        controls = 0;
-
-        // read through all rows
-        for (i = 0; i < rows.length; i += 1) {
-          fields = rows[i].split(separator);
-          // discard blank lines
-          if (fields.length > 0) {
-            // check for new course
-            if (fields.length === 2) {
-              course = fields[COURSE_IDX];
-              controls = parseInt(fields[NUM_CONTROLS_IDX], 10);
-            } else {
-              // assume everything else is a result
-              result = {};
-              result.chipid = 0;
-              result.name = (fields[FIRST_NAME_IDX] + " " + fields[SURNAME_IDX] + " " + fields[CLUB_IDX]).trim();
-              result.dbid = (result.chipid + "__" + result.name);
-              result.starttime = rg2.utils.getSecsFromHHMM(fields[START_TIME_IDX]);
-              result.club = fields[CLUB_IDX];
-              result.course = course;
-              result.controls = controls;
-              result.splits = '';
-              result.codes = [];
-              len = fields.length - FIRST_SPLIT_IDX;
-              totaltime = 0;
-              for (j = 0; j < len; j += 1) {
-                if (j > 0) {
-                  result.splits += ";";
-                }
-                result.codes[j] = 'X';
-                totaltime += rg2.utils.getSecsFromHHMMSS(fields[j + FIRST_SPLIT_IDX]);
-                result.splits += totaltime;
-              }
-              result.time = rg2.utils.formatSecsAsMMSS(totaltime);
-              this.results.push(result);
-            }
-          }
-        }
-      } catch (err) {
-        rg2.utils.showWarningDialog("Spklasse csv file contains invalid information");
-      }
-    },
-
 
     readMapFile : function (evt) {
       var reader, self, format;
@@ -1476,7 +1425,7 @@
         txt = evt.target.result;
         args = txt.split(/[\r\n]+/g);
         delete self.localworldfile;
-        self.localworldfile = new rg2.Worldfile(args[0], args[2], args[4], args[1], args[3], args[5]);
+        self.localworldfile = new rg2.Worldfile({A: args[0], B: args[2], C: args[4], D: args[1], E: args[3], F: args[5]});
         $("#rg2-georef-selected").val(self.georefsystems.getDefault());
         self.convertWorldFile(self.georefsystems.getDefault());
       };
@@ -1552,11 +1501,11 @@
         pixResX = (p[2].x - p[0].x) / this.mapWidth;
         pixResY = (p[2].y - p[1].y) / this.mapHeight;
         delete this.newMap.worldfile;
-        this.newMap.worldfile = new rg2.Worldfile(pixResX * Math.cos(angle), pixResX * Math.sin(angle), p[0].x, pixResY * Math.sin(angle), -1 * pixResY * Math.cos(angle), p[0].y);
+        this.newMap.worldfile = new rg2.Worldfile({A: pixResX * Math.cos(angle), B: pixResX * Math.sin(angle), C: p[0].x, D: pixResY * Math.sin(angle), E: -1 * pixResY * Math.cos(angle), F: p[0].y});
         this.updateGeorefDisplay();
       } catch (err) {
         delete this.newMap.worldfile;
-        this.newMap.worldfile = new rg2.Worldfile(0, 0, 0, 0, 0, 0);
+        this.newMap.worldfile = new rg2.Worldfile(0);
         this.updateGeorefDisplay();
         return;
       }

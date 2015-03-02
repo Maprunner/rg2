@@ -5,6 +5,8 @@
     this.y = y;
     this.basex = x;
     this.basey = y;
+    this.undox = x;
+    this.undoy = y;
     this.locked = false;
     this.time = time;
     this.index = index;
@@ -67,17 +69,15 @@
     },
 
     rebaselineXY : function () {
-      // save new locations for future undo
-      var i;
-      for (i = 0; i < this.handles.length; i += 1) {
-        this.handles[i].basex = this.handles[i].x;
-        this.handles[i].basey = this.handles[i].y;
-      }
+      // save new locations at end of drag
+      this.copyHandleFields('base', 'undo');
+      this.copyHandleFields('', 'base');
     },
 
-    revertXY : function () {
-      // undo requested so restore previous locations: copy basex to x
-      this.copyHandleFields('base', '');
+    undo : function () {
+      // undo last move: reset to saved values
+      this.copyHandleFields('undo', 'base');
+      this.copyHandleFields('undo', '');
     },
 
     copyHandleFields : function (from, to) {
@@ -98,12 +98,12 @@
       return this.handles[this.handles.length - 1];
     },
 
-    getHandleClicked : function (x, y) {
+    getHandleClicked : function (pt) {
       // find if the click was on an existing handle: return handle object or undefined
       // basex and basey are handle locations at the start of the drag which is what we are interested in
       var i, distance;
       for (i = 0; i < this.handles.length; i += 1) {
-        distance = rg2.utils.getDistanceBetweenPoints(x, y, this.handles[i].basex, this.handles[i].basey);
+        distance = rg2.utils.getDistanceBetweenPoints(pt.x, pt.y, this.handles[i].basex, this.handles[i].basey);
         if (distance <= rg2.config.HANDLE_DOT_RADIUS) {
           return this.handles[i];
         }
