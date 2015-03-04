@@ -132,6 +132,20 @@
         opt.selected = true;
       }
       return opt;
+    },
+
+    extractAttributeZero : function (nodelist, attribute, defaultValue) {
+      if (nodelist.length > 0) {
+        return nodelist[0].getAttribute(attribute).trim();
+      }
+      return defaultValue;
+    },
+
+    extractTextContentZero : function (nodelist, defaultValue) {
+      if (nodelist.length > 0) {
+        return nodelist[0].textContent.trim();
+      }
+      return defaultValue;
     }
   };
 

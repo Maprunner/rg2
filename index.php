@@ -269,6 +269,8 @@ $languages .= '},'.PHP_EOL;
 <?php if ($manager) { ?><?php if ($debug) { ?>
 <script src='<?php echo $source_url . "/js/resultparser.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/resultparsercsv.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/resultparseriofv2.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/resultparseriofv3.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/courseparser.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/managerui.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/manager.js"; ?>'></script><?php } else {?>

@@ -181,7 +181,6 @@
             count += 1;
           }
         }
-
       }
       return count;
     },
@@ -480,7 +479,5 @@
       }
     }
   };
-
   rg2.Results = Results;
-
 }());
