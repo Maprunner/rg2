@@ -35,6 +35,7 @@
     Constructor : Result,
 
     initialiseTrack : function (data) {
+      var info;
       this.cumulativeDistance = [];
       this.legpos = [];
       // set true if track includes all expected controls in correct order or is a GPS track
@@ -52,12 +53,13 @@
       if (this.resultid >= rg2.config.GPS_RESULT_OFFSET) {
         this.isGPSTrack = true;
         // don't get time or splits so need to copy them in from original result
-        this.time = rg2.results.getTimeForID(this.rawid);
+        info = rg2.results.getTimeAndSplitsForID(this.rawid);
+        this.time = info.time;
+        this.splits = info.splits;
         // allow for events with no results where there won't be a non-GPS result
         if (this.time === rg2.config.TIME_NOT_FOUND) {
           this.time = data.time;
         }
-        this.splits = rg2.results.getSplitsForID(this.rawid);
       } else {
         //this.name = data.name;
         this.isGPSTrack = false;

@@ -268,9 +268,9 @@ var rg2 = (function (window, $) {
     $(".tracklist").click(function (event) {
       var courseid = event.target.id;
       if (event.target.checked) {
-        rg2.results.putTracksOnDisplay(parseInt(courseid, 10));
+        rg2.results.updateTrackDisplay(parseInt(courseid, 10), true);
       } else {
-        rg2.results.removeTracksFromDisplay(parseInt(courseid, 10));
+        rg2.results.updateTrackDisplay(parseInt(courseid, 10), false);
         // make sure the all checkbox is not checked
         $(".alltracks").prop('checked', false);
       }
@@ -280,11 +280,11 @@ var rg2 = (function (window, $) {
     // checkbox on course tab to show all tracks
     $(".alltracks").click(function (event) {
       if (event.target.checked) {
-        rg2.results.putAllTracksOnDisplay();
+        rg2.results.updateTrackDisplay(rg2.config.DISPLAY_ALL_COURSES, true);
         // select all the individual checkboxes for each course
         $(".tracklist").prop('checked', true);
       } else {
-        rg2.results.removeAllTracksFromDisplay();
+        rg2.results.updateTrackDisplay(rg2.config.DISPLAY_ALL_COURSES, false);
         // deselect all the individual checkboxes for each course
         $(".tracklist").prop('checked', false);
       }

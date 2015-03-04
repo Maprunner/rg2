@@ -16,10 +16,6 @@
       $("#rg2-map-tab").show();
       $("#rg2-manage-login").hide();
       $("#rg2-login-tab").hide();
-      // TODO: hide course delete function for now: not fully implemented yet, and may not be needed...
-      $("#rg2-temp-hide-course-delete").hide();
-      // TODO hide results grouping for now: may never implement
-      $("#rg2-results-grouping").hide();
       $("#rg2-event-date-edit").datepicker({
         dateFormat : 'yy-mm-dd'
       });
@@ -32,31 +28,21 @@
       });
     },
 
-
     displayCourseInfo : function (info) {
-      if (info) {
-        $("#rg2-manage-courses").empty().html(info);
-        $("#rg2-manage-courses").dialog({
-          title : "Course details",
-          dialogClass : "rg2-course-info-dialog",
-          resizable : true,
-          width : 'auto',
-          maxHeight : (window.innerHeight * 0.9),
-          buttons : {
-            Ok : function () {
-              $(this).dialog("close");
-            }
-          }
-        });
-      }
+      this.displayInfoDialog(info, "Course");
     },
 
     displayResultInfo : function (info) {
-      $("#rg2-manage-results").empty().html(info);
+      this.displayInfoDialog(info, "Result");
+    },
+
+    displayInfoDialog : function (info, option) {
+      // option should be  "Result" or "Course"
       if (info) {
-        $("#rg2-manage-results").dialog({
-          title : "Result details",
-          dialogClass : "rg2-result-info-dialog",
+        $("#rg2-manage-" + option.toLowerCase() + "s").empty().html(info);
+        $("#rg2-manage-" + option.toLowerCase() + "s").dialog({
+          title : option + " details",
+          dialogClass : "rg2-" + option.toLowerCase() + "-info-dialog",
           resizable : true,
           width : 'auto',
           maxHeight : (window.innerHeight * 0.9),
@@ -142,13 +128,10 @@
       }
     },
 
-    eventFinishedLoading : function () {
+    eventFinishedLoading : function (event) {
       // called once the requested event has loaded
       // copy event details to edit-form
       // you tell me why this needs parseInt but the same call above doesn't
-      var kartatid, event;
-      kartatid = parseInt($("#rg2-event-selected").val(), 10);
-      event = rg2.events.getEventInfo(kartatid);
       $("#rg2-event-name-edit").empty().val(event.name);
       $("#rg2-club-name-edit").empty().val(event.club);
       $("#rg2-event-date-edit").empty().val(event.date);

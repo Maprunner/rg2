@@ -235,30 +235,9 @@
     },
 
     eventFinishedLoading : function () {
-      this.ui.eventFinishedLoading();
-    },
-
-    getCoursesFromResults : function () {
-      // creates an array of all course names in the results file
-      var i, j, a, idx;
-      this.resultCourses = [];
-      for (i = 0; i < this.results.length; i += 1) {
-        // have we already found this course?
-        idx = -1;
-        for (j = 0; j < this.resultCourses.length; j += 1) {
-          if (this.resultCourses[j].course === this.results[i].course) {
-            idx = j;
-            break;
-          }
-        }
-        if (idx === -1) {
-          a = {};
-          a.course = this.results[i].course;
-          // set later when mapping is known
-          a.courseid = rg2.config.DO_NOT_SAVE_COURSE;
-          this.resultCourses.push(a);
-        }
-      }
+      var kartatid;
+      kartatid = parseInt($("#rg2-event-selected").val(), 10);
+      this.ui.eventFinishedLoading(rg2.events.getEventInfo(kartatid));
     },
 
     startDrawingCourses : function () {
@@ -769,9 +748,14 @@
     },
 
     processResultFile : function (evt) {
-      this.results = new rg2.ResultParser(evt, this.resultsFileFormat);
-      // extract courses from results
-      this.getCoursesFromResults();
+      var parsedResults = new rg2.ResultParser(evt, this.resultsFileFormat);
+      this.results = parsedResults.results;
+      this.resultCourses = parsedResults.resultCourses;
+      if (parsedResults.valid) {
+        $("#rg2-select-results-file").addClass('valid');
+      } else {
+        $("#rg2-select-results-file").removeClass('valid');
+      }
       this.ui.displayResultInfo(this.getResultInfoAsHTML());
       this.displayCourseAllocations();
     },

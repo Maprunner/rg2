@@ -115,30 +115,17 @@
     },
 
     generateLegPositions : function () {
-      var i, j, k, courses, controls, pos, p;
-      courses = [];
-      controls = [];
-      for (i = 0; i < this.results.length; i += 1) {
-        if (courses.indexOf(this.results[i].courseid) === -1) {
-          courses.push(this.results[i].courseid);
-          // not a good way fo finding number of controls: better to get from courses?
-          controls.push(this.results[i].splits.length);
-        }
-
-      }
+      var i, j, k, info, pos;
+      info = this.getCoursesAndControls();
       pos = [];
-      for (i = 0; i < courses.length; i += 1) {
-        //console.log("Generate positions for course " + courses[i]);
-
+      for (i = 0; i < info.courses.length; i += 1) {
+        //console.log("Generate positions for course " + info.courses[i]);
         // start at 1 since 0 is time 0
-        for (k = 1; k < controls[i]; k += 1) {
+        for (k = 1; k < info.controls[i]; k += 1) {
           pos.length = 0;
           for (j = 0; j < this.results.length; j += 1) {
-            if (this.results[j].courseid === courses[i]) {
-              p = {};
-              p.time = this.results[j].splits[k];
-              p.id = j;
-              pos.push(p);
+            if (this.results[j].courseid === info.courses[i]) {
+              pos.push({time: this.results[j].splits[k], id: j});
             }
           }
           pos.sort(this.sortTimes);
@@ -149,6 +136,21 @@
           }
         }
       }
+    },
+
+    getCoursesAndControls : function () {
+      var i, courses, controls;
+      courses = [];
+      controls = [];
+      for (i = 0; i < this.results.length; i += 1) {
+        if (courses.indexOf(this.results[i].courseid) === -1) {
+          courses.push(this.results[i].courseid);
+          // not a good way fo finding number of controls: better to get from courses?
+          controls.push(this.results[i].splits.length);
+        }
+
+      }
+      return {courses: courses, controls: controls};
     },
 
     putScoreCourseOnDisplay : function (resultid, display) {
@@ -269,7 +271,17 @@
       } else {
         $("#rg2-track-names").hide();
       }
+    },
 
+    getTracksOnDisplay : function () {
+      var i, tracks;
+      tracks = [];
+      for (i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].displayTrack) {
+          tracks.push(i);
+        }
+      }
+      return tracks;
     },
 
     putOneTrackOnDisplay : function (resultid) {
@@ -282,36 +294,18 @@
       this.updateTrackNames();
     },
 
-    // add all tracks for one course
-    putTracksOnDisplay : function (courseid) {
+    updateTrackDisplay : function (courseid, display) {
       var i;
       for (i = 0; i < this.results.length; i += 1) {
-        if (this.results[i].courseid === courseid) {
-          this.results[i].putTrackOnDisplay();
+        if ((this.results[i].courseid === courseid) || (rg2.config.DISPLAY_ALL_COURSES === courseid)) {
+          if (display) {
+            this.results[i].putTrackOnDisplay();
+          } else {
+            this.results[i].removeTrackFromDisplay();
+          }
         }
       }
       this.updateTrackNames();
-    },
-
-    // put all tracks for all courses on display
-    putAllTracksOnDisplay : function () {
-      var i, l;
-      l = this.results.length;
-      for (i = 0; i < l; i += 1) {
-        this.results[i].putTrackOnDisplay();
-      }
-      this.updateTrackNames();
-    },
-
-    getTracksOnDisplay : function () {
-      var i, tracks;
-      tracks = [];
-      for (i = 0; i < this.results.length; i += 1) {
-        if (this.results[i].displayTrack) {
-          tracks.push(i);
-        }
-      }
-      return tracks;
     },
 
     getDisplayedTrackNames : function () {
@@ -336,42 +330,14 @@
       return false;
     },
 
-    getSplitsForID : function (resultid) {
+    getTimeAndSplitsForID : function (resultid) {
       var i;
       for (i = 0; i < this.results.length; i += 1) {
         if (resultid === this.results[i].resultid) {
-          return this.results[i].splits;
+          return {time: this.results[i].time, splits: this.results[i].splits};
         }
       }
-      return rg2.config.SPLITS_NOT_FOUND;
-    },
-
-    getTimeForID : function (resultid) {
-      var i;
-      for (i = 0; i < this.results.length; i += 1) {
-        if (resultid === this.results[i].resultid) {
-          return this.results[i].time;
-        }
-      }
-      return rg2.config.TIME_NOT_FOUND;
-    },
-
-    removeAllTracksFromDisplay : function () {
-      var i;
-      for (i = 0; i < this.results.length; i += 1) {
-        this.results[i].removeTrackFromDisplay();
-      }
-      this.updateTrackNames();
-    },
-
-    removeTracksFromDisplay : function (courseid) {
-      var i;
-      for (i = 0; i < this.results.length; i += 1) {
-        if (this.results[i].courseid === courseid) {
-          this.results[i].removeTrackFromDisplay();
-        }
-      }
-      this.updateTrackNames();
+      return {time: rg2.config.TIME_NOT_FOUND, splits: []};
     },
 
     addTracks : function (tracks) {
@@ -415,12 +381,11 @@
     },
 
     formatResultListAsAccordion : function () {
-      var html, namehtml, res, firstCourse, oldCourseID, i, tracksForThisCourse;
+      var html, res, firstCourse, oldCourseID, i, tracksForThisCourse;
       if (this.results.length === 0) {
         return "<p>" + rg2.t("No results available") + "</p>";
       }
       html = "";
-      namehtml = "";
       firstCourse = true;
       oldCourseID = 0;
       tracksForThisCourse = 0;
@@ -438,20 +403,11 @@
           html += this.getCourseHeader(res);
           oldCourseID = res.courseid;
         }
-        if (res.rawid === res.resultid) {
-          namehtml = res.name;
-        } else {
-          namehtml = "<i>" + res.name + "</i>";
-        }
-        if (res.isScoreEvent) {
-          namehtml = "<input class='showscorecourse showscorecourse-" + i + "' id=" + i + " type=checkbox name=scorecourse></input> " + namehtml;
-        }
-        namehtml = "<div>" + namehtml + "</div>";
         html += '<tr><td>' + res.position + '</td>';
         if (res.comments !== "") {
-          html += '<td><a href="#" title="' + res.comments + '">' + namehtml + "</a></td><td>" + res.time + "</td>";
+          html += '<td><a href="#" title="' + res.comments + '">' + this.getNameHTML(res, i) + "</a></td><td>" + res.time + "</td>";
         } else {
-          html += "<td>" + namehtml + "</td><td>" + res.time + "</td>";
+          html += "<td>" + this.getNameHTML(res, i) + "</td><td>" + res.time + "</td>";
         }
         if (res.hasValidTrack) {
           tracksForThisCourse += 1;
@@ -463,6 +419,19 @@
       }
       html += this.getBottomRow(tracksForThisCourse, oldCourseID) + "</table></div></div>";
       return html;
+    },
+
+    getNameHTML : function (res, i) {
+      var namehtml;
+      if (res.rawid === res.resultid) {
+        namehtml = res.name;
+      } else {
+        namehtml = "<i>" + res.name + "</i>";
+      }
+      if (res.isScoreEvent) {
+        namehtml = "<input class='showscorecourse showscorecourse-" + i + "' id=" + i + " type=checkbox name=scorecourse></input> " + namehtml;
+      }
+      return "<div>" + namehtml + "</div>";
     },
 
     getCourseHeader : function (result) {
