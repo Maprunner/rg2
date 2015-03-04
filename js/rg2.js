@@ -15,12 +15,10 @@
 var rg2 = (function (window, $) {
   'use strict';
   var canvas, ctx, dictionary, input, map, mapLoadingText, infoPanelMaximised, scaleFactor, zoomSize,
-    managing, options, $rg2infopanel, $rg2eventtitle, zoom;
+    options, $rg2eventtitle, zoom;
   canvas = $("#rg2-map-canvas")[0];
   ctx = canvas.getContext('2d');
-
   input = {};
-
   options = {
     // initialised to default values: overwritten from storage later
     mapIntensity : 100,
@@ -62,7 +60,7 @@ var rg2 = (function (window, $) {
     if (map.height > 0) {
       // using non-zero map height to show we have a map loaded
       ctx.drawImage(map, 0, 0);
-      var active = $rg2infopanel.tabs("option", "active");
+      var active = $("#rg2-info-panel").tabs("option", "active");
       if (active === rg2.config.TAB_DRAW) {
         rg2.courses.drawCourses(rg2.config.DIM);
         rg2.controls.drawControls(false);
@@ -89,12 +87,6 @@ var rg2 = (function (window, $) {
       ctx.fillStyle = rg2.config.BLACK;
       ctx.fillText(t(mapLoadingText), canvas.width / 2, canvas.height / 2);
     }
-  }
-
-  function reportJSONFail(errorText) {
-    $("#rg2-load-progress").hide();
-    $('body').css('cursor', 'auto');
-    rg2.utils.showWarningDialog('Configuration error', errorText);
   }
 
   function setTitleBar() {
@@ -204,7 +196,7 @@ var rg2 = (function (window, $) {
     html = html.replace(/&amp;/g, '&');
     $("#rg2-result-list").empty().append(html);
     $("#rg2-result-list").accordion("refresh");
-    $rg2infopanel.tabs("refresh");
+    $("#rg2-info-panel").tabs("refresh");
     setResultCheckboxes();
     // disable control dropdown if we have no controls
     if (rg2.courses.getHighestControlNumber() === 0) {
@@ -374,36 +366,23 @@ var rg2 = (function (window, $) {
     createLanguageDropdown();
   }
 
-  function setNewLanguage() {
+  function setNewLanguage(dict) {
     var eventid;
     $("#rg2-event-list").menu("destroy");
+    dictionary = dict;
     createEventMenu();
     eventid = rg2.events.getActiveEventID();
     if (eventid !== null) {
       rg2.courses.removeAllFromDisplay();
-      rg2.results.removeAllTracksFromDisplay();
+      rg2.results.updateTrackDisplay(rg2.config.DISPLAY_ALL_COURSES, false);
       rg2.animation.resetAnimation();
       rg2.drawing.initialiseDrawing(rg2.events.hasResults(eventid));
       createCourseMenu();
       createResultMenu();
     }
     translateFixedText();
-    $rg2infopanel.tabs("refresh");
+    $("#rg2-info-panel").tabs("refresh");
     redraw(false);
-  }
-
-  function getNewLanguage(lang) {
-    $.getJSON(rg2Config.json_url, {
-      id : lang,
-      type : 'lang',
-      cache : false
-    }).done(function (json) {
-      dictionary = json.data.dict;
-      setNewLanguage();
-    }).fail(function (jqxhr, textStatus, error) {
-      /*jslint unparam:true*/
-      reportJSONFail("Language request failed: " + error);
-    });
   }
 
   function resetMapState() {
@@ -425,7 +404,7 @@ var rg2 = (function (window, $) {
     // move map into view on small screens
     // avoid annoying jumps on larger screens
     if (infoPanelMaximised || window.innerWidth >= rg2.config.BIG_SCREEN_BREAK_POINT) {
-      ctx.setTransform(mapscale, 0, 0, mapscale, $rg2infopanel.outerWidth(), 0);
+      ctx.setTransform(mapscale, 0, 0, mapscale, $("#rg2-info-panel").outerWidth(), 0);
     } else {
       ctx.setTransform(mapscale, 0, 0, mapscale, 0, 0);
     }
@@ -456,54 +435,25 @@ var rg2 = (function (window, $) {
       $("#rg2-resize-info").prop("title", t("Show info panel"));
       $("#rg2-hide-info-panel-control").css("left", "0px");
       $("#rg2-hide-info-panel-icon").removeClass("fa-chevron-left").addClass("fa-chevron-right").prop("title", t("Show info panel"));
-      $rg2infopanel.hide();
+      $("#rg2-info-panel").hide();
     } else {
       infoPanelMaximised = true;
       $("#rg2-resize-info").prop("title", t("Hide info panel"));
       $("#rg2-hide-info-panel-control").css("left", "366px");
       $("#rg2-hide-info-panel-icon").removeClass("fa-chevron-right").addClass("fa-chevron-left").prop("title", t("Hide info panel"));
-      $rg2infopanel.show();
+      $("#rg2-info-panel").show();
     }
     // move map around if necesssary
     resetMapState();
   }
 
-  function loadEventList() {
-    var eventID;
-    $.getJSON(rg2Config.json_url, {
-      type : "events",
-      cache : false
-    }).done(function (json) {
-      console.log("Events: " + json.data.events.length);
-      rg2.events.deleteAllEvents();
-      $.each(json.data.events, function () {
-        rg2.events.addEvent(new rg2.Event(this));
-      });
-      createEventMenu();
-      // load requested event if set
-      // input is kartat ID so need to find internal ID first
-      if (rg2.requestedHash.getID()) {
-        eventID = rg2.events.getEventIDForKartatID(rg2.requestedHash.getID());
-        if (eventID !== undefined) {
-          loadEvent(eventID);
-        }
-      }
-      if (managing) {
-        rg2.manager.eventListLoaded();
-      }
-    }).fail(function (jqxhr, textStatus, error) {
-      /*jslint unparam:true*/
-      reportJSONFail("Events request failed: " + error);
-    });
-  }
-
   function startDisplayingInfo() {
     // check if a specific event has been requested
-    if ((window.location.hash) && (!managing)) {
+    if ((window.location.hash) && (!rg2Config.managing)) {
       rg2.requestedHash.parseHash(window.location.hash);
     }
     // load event details
-    loadEventList();
+    rg2.getEvents();
     // slight delay looks better than going straight in....
     setTimeout(function () {
       $("#rg2-container").show();
@@ -556,11 +506,9 @@ var rg2 = (function (window, $) {
       newlang = $("#rg2-select-language").val();
       if (newlang !== dictionary.code) {
         if (newlang === 'en') {
-          dictionary = {};
-          dictionary.code = 'en';
-          setNewLanguage();
+          setNewLanguage({code: "en"});
         } else {
-          getNewLanguage(newlang);
+          rg2.getNewLanguage(newlang);
         }
       }
     });
@@ -571,7 +519,7 @@ var rg2 = (function (window, $) {
 
   // called whenever the active tab changes to tidy up as necessary
   function tabActivated() {
-    var active = $rg2infopanel.tabs("option", "active");
+    var active = $("#rg2-info-panel").tabs("option", "active");
     switch (active) {
     case rg2.config.TAB_DRAW:
       rg2.courses.removeAllFromDisplay();
@@ -585,7 +533,7 @@ var rg2 = (function (window, $) {
 
   function configureUI() {
     // disable tabs until we have loaded something
-    $rg2infopanel.tabs({
+    $("#rg2-info-panel").tabs({
       disabled : [rg2.config.TAB_COURSES, rg2.config.TAB_RESULTS, rg2.config.TAB_DRAW],
       active : rg2.config.TAB_EVENTS,
       heightStyle : "content",
@@ -882,12 +830,12 @@ var rg2 = (function (window, $) {
     $("#rg2-results-tab").hide();
     $("#rg2-courses-tab").hide();
     $("#rg2-events-tab").hide();
-    $rg2infopanel.tabs("disable", rg2.config.TAB_EVENTS).tabs("option", "active", rg2.config.TAB_LOGIN);
+    $("#rg2-info-panel").tabs("disable", rg2.config.TAB_EVENTS).tabs("option", "active", rg2.config.TAB_LOGIN);
   }
 
   function mapLoadedCallback() {
     resetMapState();
-    if (managing) {
+    if (rg2Config.managing) {
       rg2.manager.mapLoadCallback();
     }
   }
@@ -990,121 +938,6 @@ var rg2 = (function (window, $) {
     }, false);
   }
 
-  function getGPSTracks() {
-    $("#rg2-load-progress-label").text(t("Loading routes"));
-    $.getJSON(rg2Config.json_url, {
-      id : rg2.events.getKartatEventID(),
-      type : "tracks",
-      cache : false
-    }).done(function (json) {
-      var active, i, event, routes, crs;
-      $("#rg2-load-progress-label").text(t("Saving routes"));
-      console.log("Tracks: " + json.data.routes.length);
-      // TODO remove temporary (?) fix to get round RG1 events with no courses defined: see #179
-      if (rg2.courses.getNumberOfCourses() > 0) {
-        rg2.results.addTracks(json.data.routes);
-      }
-      createCourseMenu();
-      createResultMenu();
-      rg2.animation.updateAnimationDetails();
-      $('body').css('cursor', 'auto');
-      if (managing) {
-        rg2.manager.eventFinishedLoading();
-      } else {
-        $rg2infopanel.tabs("enable", rg2.config.TAB_COURSES);
-        $rg2infopanel.tabs("enable", rg2.config.TAB_RESULTS);
-        $rg2infopanel.tabs("enable", rg2.config.TAB_DRAW);
-        // open courses tab for new event: else stay on draw tab
-        active = $rg2infopanel.tabs("option", "active");
-        // don't change tab if we have come from DRAW since it means
-        // we have just reloaded following a save
-        if (active !== rg2.config.TAB_DRAW) {
-          $rg2infopanel.tabs("option", "active", rg2.requestedHash.getTab());
-        }
-        $rg2infopanel.tabs("refresh");
-        $("#btn-show-splits").show();
-        if ((rg2Config.enable_splitsbrowser) && (rg2.events.hasResults())) {
-          $("#rg2-splitsbrowser").off().click(function () {
-            window.open(rg2Config.json_url + "?type=splitsbrowser&id=" + rg2.events.getKartatEventID());
-          }).show();
-        } else {
-          $("#rg2-splitsbrowser").off().hide();
-        }
-        // set up screen as requested in hash
-        event = $.Event('click');
-        event.target = {};
-        event.target.checked = true;
-        routes = rg2.requestedHash.getRoutes();
-        for (i = 0; i < routes.length; i += 1) {
-          event.target.id = routes[i];
-          $(".showtrack").filter("#" + routes[i]).trigger(event).prop('checked', true);
-        }
-        crs = rg2.requestedHash.getCourses();
-        for (i = 0; i < crs.length; i += 1) {
-          event.target.id = crs[i];
-          $(".showcourse").filter("#" + crs[i]).trigger(event).prop('checked', true);
-        }
-      }
-      $("#rg2-load-progress-label").text("");
-      $("#rg2-load-progress").hide();
-      redraw(false);
-    }).fail(function (jqxhr, textStatus, error) {
-      /*jslint unparam:true*/
-      reportJSONFail("Routes request failed for event " + rg2.events.getKartatEventID() + ": " + error);
-    });
-  }
-
-  function getResults() {
-    var isScoreEvent;
-    $("#rg2-load-progress-label").text(t("Loading results"));
-    $.getJSON(rg2Config.json_url, {
-      id : rg2.events.getKartatEventID(),
-      type : "results",
-      cache : false
-    }).done(function (json) {
-      console.log("Results: " + json.data.results.length);
-      $("#rg2-load-progress-label").text(t("Saving results"));
-      isScoreEvent = rg2.events.isScoreEvent();
-      // TODO remove temporary (?) fix to get round RG1 events with no courses defined: see #179
-      if (rg2.courses.getNumberOfCourses() > 0) {
-        rg2.results.addResults(json.data.results, isScoreEvent);
-      }
-      rg2.courses.setResultsCount();
-      if (isScoreEvent) {
-        rg2.controls.deleteAllControls();
-        rg2.results.generateScoreCourses();
-        rg2.courses.generateControlList(rg2.controls);
-      }
-      $("#rg2-result-list").accordion("refresh");
-      getGPSTracks();
-    }).fail(function (jqxhr, textStatus, error) {
-      /*jslint unparam:true*/
-      reportJSONFail("Results request failed for event " + rg2.events.getKartatEventID() + ": " + error);
-    });
-  }
-
-  function getCourses() {
-    // get courses for event
-    $.getJSON(rg2Config.json_url, {
-      id : rg2.events.getKartatEventID(),
-      type : "courses",
-      cache : false
-    }).done(function (json) {
-      $("#rg2-load-progress-label").text(t("Saving courses"));
-      console.log("Courses: " + json.data.courses.length);
-      $.each(json.data.courses, function () {
-        rg2.courses.addCourse(new rg2.Course(this, rg2.events.isScoreEvent()));
-      });
-      rg2.courses.updateCourseDropdown();
-      rg2.courses.generateControlList(rg2.controls);
-      $("#btn-toggle-controls").show();
-      $("#btn-toggle-names").show();
-      getResults();
-    }).fail(function (jqxhr, textStatus, error) {
-      /*jslint unparam:true*/
-      reportJSONFail("Courses request failed for event " + rg2.events.getKartatEventID() + ": " + error);
-    });
-  }
 
   function loadNewMap(mapFile) {
     // translated when displayed
@@ -1128,7 +961,7 @@ var rg2 = (function (window, $) {
     loadNewMap(rg2Config.maps_url + rg2.events.getMapFileName());
     redraw(false);
     setTitleBar();
-    getCourses();
+    rg2.getCourses();
   }
 
   function getMapSize() {
@@ -1182,15 +1015,14 @@ var rg2 = (function (window, $) {
     $("#rg2-container").hide();
     rg2.utils = new rg2.Utils();
     // cache jQuery things we use a lot
-    $rg2infopanel = $("#rg2-info-panel");
     $rg2eventtitle = $("#rg2-event-title");
     $.ajaxSetup({
       cache : false
     });
     if ($('#rg2-manage-login').length !== 0) {
-      managing = true;
+      rg2Config.managing = true;
     } else {
-      managing = false;
+      rg2Config.managing = false;
     }
     setLanguageOptions();
     setConfigOptions();
@@ -1213,7 +1045,7 @@ var rg2 = (function (window, $) {
     input.dragged = true;
     infoPanelMaximised = true;
 
-    if (managing) {
+    if (rg2Config.managing) {
       setManagerOptions();
       mapLoadingText = "";
     } else {
@@ -1243,7 +1075,10 @@ var rg2 = (function (window, $) {
     getMapSize : getMapSize,
     loadNewMap : loadNewMap,
     loadEvent : loadEvent,
-    loadEventList: loadEventList,
-    getSnapToControl : getSnapToControl
+    createEventMenu : createEventMenu,
+    createResultMenu : createResultMenu,
+    createCourseMenu : createCourseMenu,
+    getSnapToControl : getSnapToControl,
+    setNewLanguage : setNewLanguage
   };
 }(window, window.jQuery));

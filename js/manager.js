@@ -713,7 +713,7 @@
           self.user.y = data.keksi;
           if (data.ok) {
             rg2.utils.showWarningDialog("Event deleted", "Event " + id + " has been deleted.");
-            rg2.loadEventList();
+            rg2.getEvents();
             self.ui.setEvent();
             $("#rg2-event-selected").empty();
           } else {

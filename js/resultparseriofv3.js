@@ -42,7 +42,7 @@
               result.club = "";
             }
             resultlist = personlist[j].getElementsByTagName('Result');
-            this.extractIOFV3XMLResults(resultlist, result);
+            this.extractIOFV3Results(resultlist, result);
             this.results.push(result);
           }
 
