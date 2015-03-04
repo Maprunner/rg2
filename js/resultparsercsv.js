@@ -2,7 +2,7 @@
 (function () {
   function ResultParserCSV(rawCSV) {
     this.results = [];
-    this.formatCSV = {};
+    this.CSVFormat = {};
     this.separator = "";
     this.processResultsCSV(rawCSV);
     return this.results;
@@ -39,34 +39,45 @@
       for (i = 1; i < rows.length; i += 1) {
         fields = rows[i].split(this.separator);
         // need at least this many fields...
-        if (fields.length >= this.formatCSV.FIRST_SPLIT_IDX) {
+        if (fields.length >= this.CSVFormat.FIRST_SPLIT_IDX) {
           this.results.push(this.extractSingleCSVResult(fields));
         }
       }
     },
 
     extractSingleCSVResult: function (fields) {
-      var i, result, nextcode, nextsplit;
+      var result, info;
       result = {};
-      result.chipid = fields[this.formatCSV.CHIP_IDX];
+      result.chipid = fields[this.CSVFormat.CHIP_IDX];
       // delete quotes from CSV file: output from MERCS
-      result.name = (fields[this.formatCSV.FIRST_NAME_IDX] + " " + fields[this.formatCSV.SURNAME_IDX]).trim().replace(/\"/g, '');
-      result.dbid = (fields[this.formatCSV.DB_IDX] + "__" + result.name).replace(/\"/g, '');
-      result.starttime = rg2.utils.getSecsFromHHMMSS(fields[this.formatCSV.START_TIME_IDX]);
-      result.time = fields[this.formatCSV.TOTAL_TIME_IDX];
-      result.position = parseInt(fields[this.formatCSV.POSITION_IDX], 10);
+      result.name = (fields[this.CSVFormat.FIRST_NAME_IDX] + " " + fields[this.CSVFormat.SURNAME_IDX]).trim().replace(/\"/g, '');
+      result.dbid = (fields[this.CSVFormat.DB_IDX] + "__" + result.name).replace(/\"/g, '');
+      result.starttime = rg2.utils.getSecsFromHHMMSS(fields[this.CSVFormat.START_TIME_IDX]);
+      result.time = fields[this.CSVFormat.TOTAL_TIME_IDX];
+      result.position = parseInt(fields[this.CSVFormat.POSITION_IDX], 10);
       if (isNaN(result.position)) {
         result.position = '';
       }
-      result.status = this.getSICSVStatus(fields[this.formatCSV.NC_IDX], fields[this.formatCSV.CLASSIFIER_IDX]);
-      result.club = fields[this.formatCSV.CLUB_IDX].trim().replace(/\"/g, '');
-      result.course = fields[this.formatCSV.COURSE_IDX];
-      result.controls = parseInt(fields[this.formatCSV.NUM_CONTROLS_IDX], 10);
-      nextsplit = this.formatCSV.FIRST_SPLIT_IDX;
-      nextcode = this.formatCSV.FIRST_CODE_IDX;
+      result.status = this.getSICSVStatus(fields[this.CSVFormat.NC_IDX], fields[this.CSVFormat.CLASSIFIER_IDX]);
+      result.club = fields[this.CSVFormat.CLUB_IDX].trim().replace(/\"/g, '');
+      result.course = fields[this.CSVFormat.COURSE_IDX];
+      result.controls = parseInt(fields[this.CSVFormat.NUM_CONTROLS_IDX], 10);
+      info = this.extractSplits(fields, result.controls);
+      result.splits = info.splits;
+      // add finish split
+      result.splits += ";" + rg2.utils.getSecsFromHHMMSS(result.time);
+      result.codes = info.codes;
+      return result;
+    },
+
+    extractSplits : function (fields, controls) {
+      var i, result, nextcode, nextsplit;
+      nextsplit = this.CSVFormat.FIRST_SPLIT_IDX;
+      nextcode = this.CSVFormat.FIRST_CODE_IDX;
+      result = {};
       result.splits = "";
       result.codes = [];
-      for (i = 0; i < result.controls; i += 1) {
+      for (i = 0; i < controls; i += 1) {
         if (fields[nextcode]) {
           if (i > 0) {
             result.splits += ";";
@@ -74,39 +85,37 @@
           result.codes[i] = fields[nextcode];
           result.splits += rg2.utils.getSecsFromHHMMSS(fields[nextsplit]);
         }
-        nextsplit += this.formatCSV.STEP;
-        nextcode += this.formatCSV.STEP;
+        nextsplit += this.CSVFormat.STEP;
+        nextcode += this.CSVFormat.STEP;
       }
-      // add finish split
-      result.splits += ";" + rg2.utils.getSecsFromHHMMSS(result.time);
-      return result;
+      return {splits: result.splits, codes: result.codes};
     },
 
     getCSVFormat : function (headers) {
       // not a pretty function but it should allow some non-standard CSV formats to be processed such as OEScore output
-      var titles, idx, fields, i, j, found;
+      var titles, values, fields, i, j, found;
       titles = ['SI card', 'Database Id', 'Surname', 'First name', 'nc', 'Start', 'Time', 'Classifier', 'City', 'Short', 'Course', 'Course controls', 'Pl', 'Start punch', 'Control1', 'Punch1', 'Control2'];
-      idx = [];
+      values = [];
       fields = headers.split(this.separator);
       for (i = 0; i < titles.length; i += 1) {
         found = false;
         for (j = 0; j < fields.length; j += 1) {
           if (fields[j] === titles[i]) {
-            idx[i] = j;
+            values[i] = j;
             found = true;
             break;
           }
           // horrid hacks to handle semi-compliant files
           if ('SI card' === titles[i]) {
             if (('Chipno' === fields[j]) || ('SIcard' === fields[j])) {
-              idx[i] = j;
+              values[i] = j;
               found = true;
               break;
             }
           }
           if ('Pl' === titles[i]) {
             if ('Place' === fields[j]) {
-              idx[i] = j;
+              values[i] = j;
               found = true;
               break;
             }
@@ -120,25 +129,29 @@
 
       if (!found) {
         // default to BOF CSV format
-        idx = [1, 2, 3, 4, 8, 9, 11, 12, 15, 18, 39, 42, 43, 44, 46, 47, 2];
+        values = [1, 2, 3, 4, 8, 9, 11, 12, 15, 18, 39, 42, 43, 44, 46, 47, 2];
       }
-      this.formatCSV.CHIP_IDX = idx[0];
-      this.formatCSV.DB_IDX = idx[1];
-      this.formatCSV.SURNAME_IDX = idx[2];
-      this.formatCSV.FIRST_NAME_IDX = idx[3];
-      this.formatCSV.NC_IDX = idx[4];
-      this.formatCSV.START_TIME_IDX = idx[5];
-      this.formatCSV.TOTAL_TIME_IDX = idx[6];
-      this.formatCSV.CLASSIFIER_IDX = idx[7];
-      this.formatCSV.CLUB_IDX = idx[8];
-      this.formatCSV.CLASS_IDX = idx[9];
-      this.formatCSV.COURSE_IDX = idx[10];
-      this.formatCSV.NUM_CONTROLS_IDX = idx[11];
-      this.formatCSV.POSITION_IDX = idx[12];
-      this.formatCSV.START_PUNCH_IDX = idx[13];
-      this.formatCSV.FIRST_CODE_IDX = idx[14];
-      this.formatCSV.FIRST_SPLIT_IDX = idx[15];
-      this.formatCSV.STEP = idx[16] - idx[14];
+      this.setCSVFormat(values);
+    },
+
+    setCSVFormat : function (values) {
+      this.CSVFormat.CHIP_IDX = values[0];
+      this.CSVFormat.DB_IDX = values[1];
+      this.CSVFormat.SURNAME_IDX = values[2];
+      this.CSVFormat.FIRST_NAME_IDX = values[3];
+      this.CSVFormat.NC_IDX = values[4];
+      this.CSVFormat.START_TIME_IDX = values[5];
+      this.CSVFormat.TOTAL_TIME_IDX = values[6];
+      this.CSVFormat.CLASSIFIER_IDX = values[7];
+      this.CSVFormat.CLUB_IDX = values[8];
+      this.CSVFormat.CLASS_IDX = values[9];
+      this.CSVFormat.COURSE_IDX = values[10];
+      this.CSVFormat.NUM_CONTROLS_IDX = values[11];
+      this.CSVFormat.POSITION_IDX = values[12];
+      this.CSVFormat.START_PUNCH_IDX = values[13];
+      this.CSVFormat.FIRST_CODE_IDX = values[14];
+      this.CSVFormat.FIRST_SPLIT_IDX = values[15];
+      this.CSVFormat.STEP = values[16] - values[14];
     },
 
     getSICSVStatus : function (nc, classifier) {
