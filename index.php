@@ -250,6 +250,7 @@ $languages .= '},'.PHP_EOL;
 <script src='<?php echo $source_url . "/js/rg2.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/rg2input.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/rg2getjson.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/canvas.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/events.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/event.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/results.js"; ?>'></script>

@@ -91,16 +91,27 @@
     },
 
     // returns seconds as hh:mm:ss
-    formatSecsAsHHMMSS : function (time) {
-      var formattedtime, hours;
-      hours = Math.floor(time / 3600);
+    formatSecsAsHHMMSS : function (secs) {
+      var formattedtime, hours, minutes;
+      hours = Math.floor(secs / 3600);
       if (hours < 10) {
         formattedtime = "0" + hours + ":";
       } else {
         formattedtime = hours + ":";
       }
-      time = time - (hours * 3600);
-      formattedtime += this.formatSecsAsMMSS(time);
+      secs = secs - (hours * 3600);
+      minutes = Math.floor(secs / 60);
+      if (minutes < 10) {
+        formattedtime += "0" + minutes;
+      } else {
+        formattedtime += minutes;
+      }
+      secs = secs - (minutes * 60);
+      if (secs < 10) {
+        formattedtime += ":0" + secs;
+      } else {
+        formattedtime += ":" + secs;
+      }
       return formattedtime;
     },
 

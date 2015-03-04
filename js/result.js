@@ -387,7 +387,7 @@
       var i, addNext, len, initials;
       // converts name to initials
       if (name === null) {
-        return "";
+        return "??";
       }
       name.trim();
       len = name.length;

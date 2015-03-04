@@ -174,15 +174,12 @@
       // read through all rows
       for (i = 0; i < rows.length; i += 1) {
         fields = rows[i].split(this.separator);
-        // discard blank lines
-        if (fields.length > 0) {
-          // check for new course
-          if (fields.length === 2) {
-            course = fields[COURSE_IDX];
-            controls = parseInt(fields[NUM_CONTROLS_IDX], 10);
-          } else {
-            this.extractResult(fields, course, controls);
-          }
+        // check for new course
+        if (fields.length === 2) {
+          course = fields[COURSE_IDX];
+          controls = parseInt(fields[NUM_CONTROLS_IDX], 10);
+        } else {
+          this.extractResult(fields, course, controls);
         }
       }
     },

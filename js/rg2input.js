@@ -53,14 +53,18 @@
     rg2.redraw(false);
   }
 
+  function savePinchInfo(evt) {
+    rg2.input.pinchStart0 = rg2.ctx.transformedPoint(evt.touches[0].pageX, evt.touches[0].pageY);
+    rg2.input.pinchStart1 = rg2.ctx.transformedPoint(evt.touches[1].pageX, evt.touches[1].pageY);
+    rg2.input.pinched = true;
+  }
+
   // homegrown touch handling: seems no worse than adding some other library in
   // pinch zoom is primitive but works
   function handleTouchStart(evt) {
     evt.preventDefault();
     if (evt.touches.length > 1) {
-      rg2.input.pinchStart0 = rg2.ctx.transformedPoint(evt.touches[0].pageX, evt.touches[0].pageY);
-      rg2.input.pinchStart1 = rg2.ctx.transformedPoint(evt.touches[1].pageX, evt.touches[1].pageY);
-      rg2.input.pinched = true;
+      savePinchInfo(evt);
     }
     rg2.input.lastX = evt.touches[0].pageX;
     rg2.input.lastY = evt.touches[0].pageY;
@@ -71,10 +75,7 @@
     var oldDistance, newDistance;
     if (evt.touches.length > 1) {
       if (!rg2.input.pinched) {
-        // second touch seen during move
-        rg2.input.pinchStart0 = rg2.ctx.transformedPoint(evt.touches[0].pageX, evt.touches[0].pageY);
-        rg2.input.pinchStart1 = rg2.ctx.transformedPoint(evt.touches[1].pageX, evt.touches[1].pageY);
-        rg2.input.pinched = true;
+        savePinchInfo(evt);
       }
     } else {
       rg2.input.pinched = false;
@@ -114,17 +115,20 @@
     return evt.preventDefault() && false;
   }
 
-  function handleMouseDown(evt) {
+  function saveMouseEvent(evt) {
     rg2.input.lastX = evt.offsetX || (evt.layerX - rg2.canvas.offsetLeft);
     rg2.input.lastY = evt.offsetY || (evt.layerY - rg2.canvas.offsetTop);
+  }
+
+  function handleMouseDown(evt) {
+    saveMouseEvent(evt);
     handleInputDown(evt);
     evt.stopPropagation();
     return evt.preventDefault() && false;
   }
 
   function handleMouseMove(evt) {
-    rg2.input.lastX = evt.offsetX || (evt.layerX - rg2.canvas.offsetLeft);
-    rg2.input.lastY = evt.offsetY || (evt.layerY - rg2.canvas.offsetTop);
+    saveMouseEvent(evt);
     handleInputMove(evt);
     evt.stopPropagation();
     return evt.preventDefault() && false;
