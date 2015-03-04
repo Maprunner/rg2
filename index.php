@@ -248,6 +248,7 @@ $languages .= '},'.PHP_EOL;
 <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
 <?php if ($debug) { ?>
 <script src='<?php echo $source_url . "/js/rg2.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/rg2input.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/events.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/event.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/results.js"; ?>'></script>

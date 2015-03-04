@@ -14,12 +14,12 @@
 /*global console */
 var rg2 = (function (window, $) {
   'use strict';
-  var canvas, ctx, dictionary, map, mapLoadingText, infoPanelMaximised, scaleFactor, lastX, lastY, zoomSize,
-    dragStart, dragged, whichButton, pinched, pinchStart0, pinchStart1, pinchEnd0, pinchEnd1, managing, options,
-    $rg2infopanel, $rg2eventtitle, zoom, handleInputDown, handleInputMove, handleInputUp, handleTouchStart, handleTouchMove,
-    handleTouchEnd, handleScroll, handleMouseUp, handleMouseDown, handleMouseMove;
+  var canvas, ctx, dictionary, input, map, mapLoadingText, infoPanelMaximised, scaleFactor, zoomSize,
+    managing, options, $rg2infopanel, $rg2eventtitle, zoom;
   canvas = $("#rg2-map-canvas")[0];
   ctx = canvas.getContext('2d');
+
+  input = {};
 
   options = {
     // initialised to default values: overwritten from storage later
@@ -410,12 +410,12 @@ var rg2 = (function (window, $) {
     // place map in centre of canvas and scale it down to fit
     var mapscale, heightscale;
     heightscale = canvas.height / map.height;
-    lastX = canvas.width / 2;
-    lastY = canvas.height / 2;
+    input.lastX = canvas.width / 2;
+    input.lastY = canvas.height / 2;
     zoomSize = 1;
-    dragStart = null;
+    input.dragStart = null;
     // looks odd but this works for initialisation
-    dragged = true;
+    input.dragged = true;
     // don't stretch map: just shrink to fit
     if (heightscale < 1) {
       mapscale = heightscale;
@@ -441,7 +441,7 @@ var rg2 = (function (window, $) {
     // chosen values seem reasonable after some quick tests
     if ((tempZoom < 50) && (tempZoom > 0.05)) {
       zoomSize = tempZoom;
-      pt = ctx.transformedPoint(lastX, lastY);
+      pt = ctx.transformedPoint(input.lastX, input.lastY);
       ctx.translate(pt.x, pt.y);
       ctx.scale(factor, factor);
       ctx.translate(-pt.x, -pt.y);
@@ -906,143 +906,6 @@ var rg2 = (function (window, $) {
     resetMapState();
   }
 
-  handleInputDown = function (evt) {
-    dragStart = ctx.transformedPoint(lastX, lastY);
-    dragged = false;
-    // need to cache this here since IE and FF don't set it for mousemove events
-    whichButton = evt.which;
-    //console.log ("InputDown " + lastX + " " + lastY + " " + dragStart.x + " " + dragStart.y);
-  };
-
-  handleInputMove = function () {
-    var pt;
-    if (dragStart) {
-      pt = ctx.transformedPoint(lastX, lastY);
-      Math.round(pt.x);
-      Math.round(pt.y);
-      // console.log ("Mousemove after " + pt.x + ": " + pt.y);
-      // simple debounce so that very small drags are treated as clicks instead
-      if ((Math.abs(pt.x - dragStart.x) + Math.abs(pt.y - dragStart.y)) > 5) {
-        if (rg2.drawing.gpsFileLoaded()) {
-          rg2.drawing.adjustTrack({x: Math.round(dragStart.x), y: Math.round(dragStart.y)}, pt, whichButton);
-        } else {
-          if ($rg2infopanel.tabs("option", "active") === rg2.config.TAB_CREATE) {
-            rg2.manager.adjustControls({x: Math.round(dragStart.x), y: Math.round(dragStart.y)}, pt, whichButton);
-          } else {
-            ctx.translate(pt.x - dragStart.x, pt.y - dragStart.y);
-          }
-        }
-        dragged = true;
-        redraw(false);
-      }
-    }
-  };
-
-  handleInputUp = function (evt) {
-    // console.log("Input up " + dragged);
-    var active = $rg2infopanel.tabs("option", "active");
-    if (!dragged) {
-      if (active === rg2.config.TAB_CREATE) {
-        rg2.manager.mouseUp(Math.round(dragStart.x), Math.round(dragStart.y));
-      } else {
-        // pass button that was clicked
-        rg2.drawing.mouseUp(Math.round(dragStart.x), Math.round(dragStart.y), evt.which);
-      }
-    } else {
-      if (active === rg2.config.TAB_CREATE) {
-        rg2.manager.dragEnded();
-      } else {
-        rg2.drawing.dragEnded();
-      }
-    }
-    dragStart = null;
-    redraw(false);
-  };
-
-  // homegrown touch handling: seems no worse than adding some other library in
-  // pinch zoom is primitive but works
-  handleTouchStart = function (evt) {
-    evt.preventDefault();
-    if (evt.touches.length > 1) {
-      pinchStart0 = ctx.transformedPoint(evt.touches[0].pageX, evt.touches[0].pageY);
-      pinchStart1 = ctx.transformedPoint(evt.touches[1].pageX, evt.touches[1].pageY);
-      pinched = true;
-    }
-    lastX = evt.touches[0].pageX;
-    lastY = evt.touches[0].pageY;
-    handleInputDown(evt);
-  };
-
-  handleTouchMove = function (evt) {
-    var oldDistance, newDistance;
-    if (evt.touches.length > 1) {
-      if (!pinched) {
-        // second touch seen during move
-        pinchStart0 = ctx.transformedPoint(evt.touches[0].pageX, evt.touches[0].pageY);
-        pinchStart1 = ctx.transformedPoint(evt.touches[1].pageX, evt.touches[1].pageY);
-        pinched = true;
-      }
-    } else {
-      pinched = false;
-    }
-    if (pinched && (evt.touches.length > 1)) {
-      pinchEnd0 = ctx.transformedPoint(evt.touches[0].pageX, evt.touches[0].pageY);
-      pinchEnd1 = ctx.transformedPoint(evt.touches[1].pageX, evt.touches[1].pageY);
-      oldDistance = rg2.utils.getDistanceBetweenPoints(pinchStart0.x, pinchStart0.y, pinchStart1.x, pinchStart1.y);
-      newDistance = rg2.utils.getDistanceBetweenPoints(pinchEnd0.x, pinchEnd0.y, pinchEnd1.x, pinchEnd1.y);
-      if ((oldDistance / newDistance) > 1.1) {
-        zoom(-1);
-        pinchStart0 = pinchEnd0;
-        pinchStart1 = pinchEnd1;
-      } else if ((oldDistance / newDistance) < 0.9) {
-        zoom(1);
-        pinchStart0 = pinchEnd0;
-        pinchStart1 = pinchEnd1;
-      }
-    } else {
-      lastX = evt.touches[0].pageX;
-      lastY = evt.touches[0].pageY;
-      handleInputMove(evt);
-    }
-  };
-
-  handleTouchEnd = function (evt) {
-    handleInputUp(evt);
-    pinched = false;
-  };
-
-  handleScroll = function (evt) {
-    var delta = evt.wheelDelta ? evt.wheelDelta / 40 : evt.detail ? -evt.detail : 0;
-    if (delta) {
-      zoom(delta);
-    }
-    evt.stopPropagation();
-    return evt.preventDefault() && false;
-  };
-
-  handleMouseDown = function (evt) {
-    lastX = evt.offsetX || (evt.layerX - canvas.offsetLeft);
-    lastY = evt.offsetY || (evt.layerY - canvas.offsetTop);
-    handleInputDown(evt);
-    evt.stopPropagation();
-    return evt.preventDefault() && false;
-  };
-
-  handleMouseMove = function (evt) {
-    lastX = evt.offsetX || (evt.layerX - canvas.offsetLeft);
-    lastY = evt.offsetY || (evt.layerY - canvas.offsetTop);
-    handleInputMove(evt);
-    evt.stopPropagation();
-    return evt.preventDefault() && false;
-  };
-
-  handleMouseUp = function (evt) {
-    handleInputUp(evt);
-    evt.stopPropagation();
-    return evt.preventDefault() && false;
-  };
-
-
   // Adds ctx.getTransform() - returns an SVGMatrix
   // Adds ctx.transformedPoint(x,y) - returns an SVGPoint
   function trackTransforms(ctx) {
@@ -1110,17 +973,17 @@ var rg2 = (function (window, $) {
   }
 
   function setUpCanvas() {
-    canvas.addEventListener('touchstart', handleTouchStart, false);
-    canvas.addEventListener('touchmove', handleTouchMove, false);
-    canvas.addEventListener('touchend', handleTouchEnd, false);
+    canvas.addEventListener('touchstart', rg2.handleTouchStart, false);
+    canvas.addEventListener('touchmove', rg2.handleTouchMove, false);
+    canvas.addEventListener('touchend', rg2.handleTouchEnd, false);
     trackTransforms(ctx);
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas, false);
-    canvas.addEventListener('DOMMouseScroll', handleScroll, false);
-    canvas.addEventListener('mousewheel', handleScroll, false);
-    canvas.addEventListener('mousedown', handleMouseDown, false);
-    canvas.addEventListener('mousemove', handleMouseMove, false);
-    canvas.addEventListener('mouseup', handleMouseUp, false);
+    canvas.addEventListener('DOMMouseScroll', rg2.handleScroll, false);
+    canvas.addEventListener('mousewheel', rg2.handleScroll, false);
+    canvas.addEventListener('mousedown', rg2.handleMouseDown, false);
+    canvas.addEventListener('mousemove', rg2.handleMouseMove, false);
+    canvas.addEventListener('mouseup', rg2.handleMouseUp, false);
     // force redraw once map has loaded
     map.addEventListener("load", function () {
       mapLoadedCallback();
@@ -1345,9 +1208,9 @@ var rg2 = (function (window, $) {
     rg2.animation = new rg2.Animation();
     rg2.drawing = new rg2.Draw();
     rg2.requestedHash = new rg2.RequestedHash();
-    dragStart = null;
+    input.dragStart = null;
     // looks odd but this works for initialisation
-    dragged = true;
+    input.dragged = true;
     infoPanelMaximised = true;
 
     if (managing) {
@@ -1369,11 +1232,14 @@ var rg2 = (function (window, $) {
     // functions and variables available elsewhere
     t : t,
     init : init,
+    input: input,
     options : options,
     redraw : redraw,
+    zoom: zoom,
     getOverprintDetails : getOverprintDetails,
     getReplayDetails : getReplayDetails,
     ctx : ctx,
+    canvas: canvas,
     getMapSize : getMapSize,
     loadNewMap : loadNewMap,
     loadEvent : loadEvent,
