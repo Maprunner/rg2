@@ -8,41 +8,10 @@
  */
 /*global rg2Config:false */
 /*global setTimeout:false */
-/*global localStorage:false */
-/*global console */
 /*global loadEvent */
 var rg2 = (function (window, $) {
   'use strict';
-  var dictionary, input, options, $rg2eventtitle;
-
-  input = {
-    dragStart: null,
-    // looks odd but this works for initialisation
-    dragged: true,
-    infoPanelMaximised: true,
-    scaleFactor: 1.1
-  };
-
-  options = {
-    // initialised to default values: overwritten from storage later
-    mapIntensity : 100,
-    routeIntensity : 100,
-    replayFontSize : 12,
-    courseWidth : 3,
-    routeWidth : 4,
-    circleSize : 20,
-    snap : true,
-    showThreeSeconds : false,
-    showGPSSpeed : false
-  };
-
-  // translation function
-  function t(str) {
-    if (dictionary.hasOwnProperty(str)) {
-      return dictionary[str];
-    }
-    return str;
-  }
+  var $rg2eventtitle;
 
   function setTitleBar() {
     var title;
@@ -240,91 +209,28 @@ var rg2 = (function (window, $) {
     });
   }
 
-  function translateFixedText() {
-    var temp;
-    $("#rg2-events-tab a").text(t('Events'));
-    $("#rg2-courses-tab a").text(t('Courses'));
-    $("#rg2-results-tab a").text(t('Results'));
-    $("#rg2-draw-tab a").text(t('Draw'));
-    $("#rg2-hide-info-panel-icon").prop("title", t("Hide info panel"));
-    $('#btn-about').prop('title', t('Help'));
-    $('#btn-options').prop('title', t('Options'));
-    $('#btn-zoom-out').prop('title', t('Zoom out'));
-    $('#btn-zoom-in').prop('title', t('Zoom in'));
-    $('#btn-reset').prop('title', t('Reset'));
-    $('#btn-show-splits').prop('title', t('Splits'));
-    temp = $('#btn-toggle-controls').prop('title');
-    $('#btn-toggle-controls').prop('title', t(temp));
-    temp = $('#btn-toggle-names').prop('title');
-    $('#btn-toggle-names').prop('title', t(temp));
-    $('#rg2-splits-table').prop('title', t('Splits table'));
-    $('#btn-slower').prop('title', t('Slower'));
-    $('#btn-faster').prop('title', t('Faster'));
-    temp = $('#btn-start-stop').prop('title');
-    $('#btn-start-stop').prop('title', t(temp));
-    $('#btn-real-time').prop('title', t('Real time'));
-    $('#btn-mass-start').prop('title', t('Mass start'));
-    $('label[for=rg2-control-select]').prop('textContent', t('Start at'));
-    $('label[for=btn-full-tails]').prop('textContent', t('Full tails'));
-    $('label[for=spn-tail-length]').prop('textContent', t('Length'));
-    $('.rg2-options-dialog .ui-dialog-title').text(t('Configuration options'));
-    $('label[for=rg2-select-language]').prop('textContent', t('Language'));
-    $('label[for=spn-map-intensity]').prop('textContent', t('Map intensity %'));
-    $('label[for=spn-route-intensity]').prop('textContent', t('Route intensity %'));
-    $('label[for=spn-route-width]').prop('textContent', t('Route width'));
-    $('label[for=spn-name-font-size]').prop('textContent', t('Replay label font size'));
-    $('label[for=spn-course-width]').prop('textContent', t('Course overprint width'));
-    $('label[for=spn-control-circle]').prop('textContent', t('Control circle size'));
-    $('label[for=chk-snap-toggle]').prop('textContent', t('Snap to control when drawing'));
-    $('label[for=chk-show-three-seconds]').prop('textContent', t('Show +3 time loss for GPS routes'));
-    $('label[for=chk-show-GPS-speed]').prop('textContent', t('Show GPS speed colours'));
-    $('#btn-undo').button('option', 'label', t('Undo'));
-    $('#btn-undo-gps-adjust').button('option', 'label', t('Undo'));
-    $('#btn-save-route').button('option', 'label', t('Save'));
-    $('#btn-reset-drawing').button('option', 'label', t('Reset'));
-    $('#btn-three-seconds').button('option', 'label', t('+3 sec'));
-    $('#btn-save-gps-route').button('option', 'label', t('Save GPS route'));
-    $('#rg2-draw-title').text(t('Draw route'));
-    $('#draw-text-1').text(t('Left click to add/lock/unlock a handle'));
-    $('#draw-text-2').text(t('Green - draggable'));
-    $('#draw-text-3').text(t('Red - locked'));
-    $('#draw-text-4').text(t('Right click to delete a handle'));
-    $('#draw-text-5').text(t('Drag a handle to adjust track around locked point(s)'));
-    $('#rg2-load-gps-title').text(t('Load GPS file (GPX or TCX)'));
-    $('label[for=rg2-course-select]').prop('textContent', t('Select course'));
-    $('label[for=rg2-name-select]').prop('textContent', t('Select name'));
-    $('label[for=btn-move-all]').prop('textContent', t('Move track and map together (or right click-drag)'));
-  }
-
-  function createLanguageDropdown() {
-    var i, selected, dropdown;
-    $("#rg2-select-language").empty();
-    dropdown = document.getElementById("rg2-select-language");
-    selected = (dictionary.code === "en");
-    dropdown.options.add(rg2.utils.generateOption('en', 'en: English', selected));
-    for (i in rg2Config.languages) {
-      if (rg2Config.languages.hasOwnProperty(i)) {
-        selected = (dictionary.code === i);
-        dropdown.options.add(rg2.utils.generateOption(i, i + ": " + rg2Config.languages[i], selected));
-      }
-    }
-  }
-
-  function setLanguageOptions() {
-    // use English unless a dictionary was passed in
-    if (rg2Config.dictionary.code === undefined) {
-      dictionary = {};
-      dictionary.code = 'en';
+  function resizeInfoDisplay() {
+    if (rg2.input.infoPanelMaximised) {
+      rg2.input.infoPanelMaximised = false;
+      $("#rg2-resize-info").prop("title",  rg2.t("Show info panel"));
+      $("#rg2-hide-info-panel-control").css("left", "0px");
+      $("#rg2-hide-info-panel-icon").removeClass("fa-chevron-left").addClass("fa-chevron-right").prop("title",  rg2.t("Show info panel"));
+      $("#rg2-info-panel").hide();
     } else {
-      dictionary = rg2Config.dictionary;
+      rg2.input.infoPanelMaximised = true;
+      $("#rg2-resize-info").prop("title",  rg2.t("Hide info panel"));
+      $("#rg2-hide-info-panel-control").css("left", "366px");
+      $("#rg2-hide-info-panel-icon").removeClass("fa-chevron-right").addClass("fa-chevron-left").prop("title",  rg2.t("Hide info panel"));
+      $("#rg2-info-panel").show();
     }
-    createLanguageDropdown();
+    // move map around if necesssary
+    rg2.resetMapState();
   }
 
   function setNewLanguage(dict) {
     var eventid;
     $("#rg2-event-list").menu("destroy");
-    dictionary = dict;
+    rg2.setDictionary(dict);
     createEventMenu();
     eventid = rg2.events.getActiveEventID();
     if (eventid !== null) {
@@ -335,27 +241,8 @@ var rg2 = (function (window, $) {
       createCourseMenu();
       createResultMenu();
     }
-    translateFixedText();
     $("#rg2-info-panel").tabs("refresh");
     rg2.redraw(false);
-  }
-
-  function resizeInfoDisplay() {
-    if (input.infoPanelMaximised) {
-      input.infoPanelMaximised = false;
-      $("#rg2-resize-info").prop("title", t("Show info panel"));
-      $("#rg2-hide-info-panel-control").css("left", "0px");
-      $("#rg2-hide-info-panel-icon").removeClass("fa-chevron-left").addClass("fa-chevron-right").prop("title", t("Show info panel"));
-      $("#rg2-info-panel").hide();
-    } else {
-      input.infoPanelMaximised = true;
-      $("#rg2-resize-info").prop("title", t("Hide info panel"));
-      $("#rg2-hide-info-panel-control").css("left", "366px");
-      $("#rg2-hide-info-panel-icon").removeClass("fa-chevron-right").addClass("fa-chevron-left").prop("title", t("Hide info panel"));
-      $("#rg2-info-panel").show();
-    }
-    // move map around if necesssary
-    rg2.resetMapState();
   }
 
   function startDisplayingInfo() {
@@ -396,26 +283,26 @@ var rg2 = (function (window, $) {
     $('#rg2-new-comments').focus(function () {
       // Clear comment box if user focuses on it and it still contains default text
       text = $("#rg2-new-comments").val();
-      if (text === t(rg2.config.DEFAULT_NEW_COMMENT)) {
+      if (text ===  rg2.t(rg2.config.DEFAULT_NEW_COMMENT)) {
         $('#rg2-new-comments').val("");
       }
     });
-    $("#chk-snap-toggle").prop('checked', options.snap).click(function (event) {
+    $("#chk-snap-toggle").prop('checked', rg2.options.snap).click(function (event) {
       if (event.target.checked) {
-        options.snap = true;
+        rg2.options.snap = true;
       } else {
-        options.snap = false;
+        rg2.options.snap = false;
       }
     });
-    $("#chk-show-three-seconds").prop('checked', options.showThreeSeconds).click(function () {
+    $("#chk-show-three-seconds").prop('checked', rg2.options.showThreeSeconds).click(function () {
       rg2.redraw(false);
     });
-    $("#chk-show-GPS-speed").prop('checked', options.showGPSSpeed).click(function () {
+    $("#chk-show-GPS-speed").prop('checked', rg2.options.showGPSSpeed).click(function () {
       rg2.redraw(false);
     });
     $("#rg2-select-language").click(function () {
       newlang = $("#rg2-select-language").val();
-      if (newlang !== dictionary.code) {
+      if (newlang !== rg2.getDictionaryCode()) {
         if (newlang === 'en') {
           setNewLanguage({code: "en"});
         } else {
@@ -493,23 +380,23 @@ var rg2 = (function (window, $) {
     resultsinfo = rg2.results.getResultsInfo();
     runnercomments = rg2.results.getComments();
     mapSize = rg2.getMapSize();
-    stats = "<h3>" + t("Event statistics") + ": " + eventinfo.name + ": " + eventinfo.date + "</h3>";
+    stats = "<h3>" +  rg2.t("Event statistics") + ": " + eventinfo.name + ": " + eventinfo.date + "</h3>";
     if (eventinfo.comment) {
       stats += "<p>" + eventinfo.comment + "</p>";
     }
-    stats += "<p><strong>" + t("Courses") + ":</strong> " + coursearray.length + ". <strong>" + t("Results") + ":</strong> " + resultsinfo.results;
-    stats += ". <strong> " + t("Controls") + ":</strong> " + eventinfo.controls + ".</p>";
-    stats += "<p><strong>" + t("Routes") + ":</strong> " + resultsinfo.totalroutes + " (" + resultsinfo.percent + "%). ";
-    stats += "<strong>" + t("Drawn routes") + ":</strong> " + resultsinfo.drawnroutes + ". <strong>" + t("GPS routes") + ":</strong> " + resultsinfo.gpsroutes + ".</p>";
-    stats += "<p><strong>" + t("Total time") + ":</strong> " + resultsinfo.time + ".</p>";
-    stats += "<p><strong>" + t("Map ") + ":</strong> ID " + rg2.events.getActiveMapID() + ", " + mapSize.width + " x " + mapSize.height + " pixels";
+    stats += "<p><strong>" +  rg2.t("Courses") + ":</strong> " + coursearray.length + ". <strong>" +  rg2.t("Results") + ":</strong> " + resultsinfo.results;
+    stats += ". <strong> " +  rg2.t("Controls") + ":</strong> " + eventinfo.controls + ".</p>";
+    stats += "<p><strong>" +  rg2.t("Routes") + ":</strong> " + resultsinfo.totalroutes + " (" + resultsinfo.percent + "%). ";
+    stats += "<strong>" +  rg2.t("Drawn routes") + ":</strong> " + resultsinfo.drawnroutes + ". <strong>" +  rg2.t("GPS routes") + ":</strong> " + resultsinfo.gpsroutes + ".</p>";
+    stats += "<p><strong>" +  rg2.t("Total time") + ":</strong> " + resultsinfo.time + ".</p>";
+    stats += "<p><strong>" +  rg2.t("Map ") + ":</strong> ID " + rg2.events.getActiveMapID() + ", " + mapSize.width + " x " + mapSize.height + " pixels";
     if (eventinfo.worldfile.valid) {
-      stats += ". " + t("Map is georeferenced") + ".</p>";
+      stats += ". " +  rg2.t("Map is georeferenced") + ".</p>";
     } else {
       stats += ".</p>";
     }
     if (runnercomments) {
-      stats += "<p><strong>" + t("Comments") + ":</strong></p>" + runnercomments;
+      stats += "<p><strong>" +  rg2.t("Comments") + ":</strong></p>" + runnercomments;
     }
     // #177 not pretty but gets round problems of double encoding
     stats = stats.replace(/&amp;/g, '&');
@@ -532,27 +419,13 @@ var rg2 = (function (window, $) {
     });
   }
 
-  function saveConfigOptions() {
-    try {
-      if ((window.hasOwnProperty('localStorage')) && (window.localStorage !== null)) {
-        options.snap = $("#chk-snap-toggle").prop('checked');
-        options.showThreeSeconds = $("#chk-show-three-seconds").prop('checked');
-        options.showGPSSpeed = $("#chk-show-GPS-speed").prop('checked');
-        localStorage.setItem('rg2-options', JSON.stringify(options));
-      }
-    } catch (e) {
-      // storage not supported so just return
-      return;
-    }
-  }
-
   function displayOptionsDialog() {
     $("#rg2-option-controls").dialog({
       minWidth : 400,
-      title : t("Configuration options"),
+      title :  rg2.t("Configuration options"),
       dialogClass : "rg2-options-dialog",
       close : function () {
-        saveConfigOptions();
+        rg2.saveConfigOptions();
       }
     });
   }
@@ -645,20 +518,20 @@ var rg2 = (function (window, $) {
       step : 1,
       spin : function (event, ui) {
         /*jslint unparam:true*/
-        options.circleSize = ui.value;
+        rg2.setConfigOption("circleSize", ui.value);
         rg2.redraw(false);
       }
-    }).val(options.circleSize);
+    }).val(rg2.options.circleSize);
     $("#spn-course-width").spinner({
       max : 10,
       min : 1,
       step : 0.5,
       spin : function (event, ui) {
         /*jslint unparam:true*/
-        options.courseWidth = ui.value;
+        rg2.setConfigOption("courseWidth", ui.value);
         rg2.redraw(false);
       }
-    }).val(options.courseWidth);
+    }).val(rg2.options.courseWidth);
     $("#spn-map-intensity").spinner({
       max : 100,
       min : 0,
@@ -666,10 +539,10 @@ var rg2 = (function (window, $) {
       numberFormat : "n",
       spin : function (event, ui) {
         /*jslint unparam:true*/
-        options.mapIntensity = ui.value;
+        rg2.setConfigOption("mapIntensity", ui.value);
         rg2.redraw(false);
       }
-    }).val(options.mapIntensity);
+    }).val(rg2.options.mapIntensity);
     $("#spn-name-font-size").spinner({
       max : 30,
       min : 5,
@@ -677,10 +550,10 @@ var rg2 = (function (window, $) {
       numberFormat : "n",
       spin : function (event, ui) {
         /*jslint unparam:true*/
-        options.replayFontSize = ui.value;
+        rg2.setConfigOption("replayFontSize", ui.value);
         rg2.redraw(false);
       }
-    }).val(options.replayFontSize);
+    }).val(rg2.options.replayFontSize);
     $("#spn-route-intensity").spinner({
       max : 100,
       min : 0,
@@ -688,20 +561,20 @@ var rg2 = (function (window, $) {
       numberFormat : "n",
       spin : function (event, ui) {
         /*jslint unparam:true*/
-        options.routeIntensity = ui.value;
+        rg2.setConfigOption("routeIntensity", ui.value);
         rg2.redraw(false);
       }
-    }).val(options.routeIntensity);
+    }).val(rg2.options.routeIntensity);
     $("#spn-route-width").spinner({
       max : 10,
       min : 1,
       step : 0.5,
       spin : function (event, ui) {
         /*jslint unparam:true*/
-        options.routeWidth = ui.value;
+        rg2.setConfigOption("routeWidth", ui.value);
         rg2.redraw(false);
       }
-    }).val(options.routeWidth);
+    }).val(rg2.options.routeWidth);
     // set default to 0 secs = no tails
     $("#spn-tail-length").spinner({
       max : 600,
@@ -711,24 +584,6 @@ var rg2 = (function (window, $) {
         rg2.animation.setTailLength(ui.value);
       }
     }).val(0);
-  }
-
-  function setConfigOptions() {
-    try {
-      if ((window.hasOwnProperty('localStorage')) && (window.localStorage !== null)) {
-        if (localStorage.getItem('rg2-options') !== null) {
-          options = JSON.parse(localStorage.getItem('rg2-options'));
-          // best to keep this at default?
-          options.circleSize = 20;
-          if (options.mapIntensity === 0) {
-            rg2.utils.showWarningDialog("Warning", "Your saved settings have 0% map intensity so the map is invisible. You can adjust this on the configuration menu");
-          }
-        }
-      }
-    } catch (e) {
-      // storage not supported so just continue
-      console.log('Local storage not supported');
-    }
   }
 
   function setManagerOptions() {
@@ -750,7 +605,7 @@ var rg2 = (function (window, $) {
     $('#rg2-event-list > li').removeClass('rg2-active-event').filter('#' + eventid).addClass('rg2-active-event');
     // show we are waiting
     $('body').css('cursor', 'wait');
-    $("#rg2-load-progress-label").text(t("Loading courses"));
+    $("#rg2-load-progress-label").text(rg2.t("Loading courses"));
     $("#rg2-load-progress").show();
     rg2.courses.deleteAllCourses();
     rg2.controls.deleteAllControls();
@@ -762,46 +617,6 @@ var rg2 = (function (window, $) {
     rg2.redraw(false);
     setTitleBar();
     rg2.getCourses();
-  }
-
-  function getOverprintDetails() {
-    var opt, size, scaleFact, circleSize;
-    opt = {};
-    // attempt to scale overprint depending on map image size
-    // this avoids very small/large circles, or at least makes things a bit more sensible
-    size = rg2.getMapSize();
-    // Empirically derived  so open to suggestions. This is based on a nominal 20px circle
-    // as default. The square root stops things getting too big too quickly.
-    // 1500px is a typical map image maximum size.
-    scaleFact = Math.pow(Math.min(size.height, size.width) / 1500, 0.5);
-    // don't get too carried away, although these would be strange map files
-    scaleFact = Math.min(scaleFact, 5);
-    scaleFact = Math.max(scaleFact, 0.5);
-    circleSize = Math.round(options.circleSize * scaleFact);
-    // ratios based on IOF ISOM overprint specification
-    opt.controlRadius = circleSize;
-    opt.finishInnerRadius = circleSize * (5 / 6);
-    opt.finishOuterRadius = circleSize * (7 / 6);
-    opt.startTriangleLength = circleSize * (7 / 6);
-    opt.overprintWidth = options.courseWidth;
-    opt.font = circleSize + 'pt Arial';
-    return opt;
-  }
-
-  function getReplayDetails() {
-    var opt;
-    opt = {};
-    opt.routeWidth = options.routeWidth;
-    // stored as %, but used as 0 to 1.
-    opt.routeIntensity = options.routeIntensity / 100;
-    opt.replayFontSize = options.replayFontSize;
-    opt.showThreeSeconds = $("#chk-show-three-seconds").prop('checked');
-    opt.showGPSSpeed = $("#chk-show-GPS-speed").prop('checked');
-    return opt;
-  }
-
-  function getSnapToControl() {
-    return options.snap;
   }
 
   function init() {
@@ -817,12 +632,11 @@ var rg2 = (function (window, $) {
     } else {
       rg2Config.managing = false;
     }
-    setLanguageOptions();
-    setConfigOptions();
+    rg2.loadConfigOptions();
     initialiseButtons();
     initialiseSpinners();
+    rg2.setLanguageOptions();
     configureUI();
-    translateFixedText();
     rg2.events = new rg2.Events();
     rg2.courses = new rg2.Courses();
     rg2.colours = new rg2.Colours();
@@ -848,17 +662,11 @@ var rg2 = (function (window, $) {
 
   return {
     // functions and variables available elsewhere
-    t : t,
     init : init,
-    input: input,
-    options : options,
-    getOverprintDetails : getOverprintDetails,
-    getReplayDetails : getReplayDetails,
     loadEvent : loadEvent,
     createEventMenu : createEventMenu,
     createResultMenu : createResultMenu,
     createCourseMenu : createCourseMenu,
-    getSnapToControl : getSnapToControl,
     setNewLanguage : setNewLanguage,
     setTitleBar: setTitleBar
   };

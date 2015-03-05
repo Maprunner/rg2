@@ -461,7 +461,7 @@
     // snapto: test if drawn route is close enough to control
     closeEnough : function (x, y) {
       var range;
-      if (rg2.getSnapToControl()) {
+      if (rg2.options.set) {
         range = 7;
       } else {
         range = 2;

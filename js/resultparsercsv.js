@@ -4,8 +4,9 @@
     this.results = [];
     this.CSVFormat = {};
     this.separator = "";
+    this.valid = true;
     this.processResultsCSV(rawCSV);
-    return this.results;
+    return {results: this.results, valid: this.valid};
   }
 
   ResultParserCSV.prototype = {
@@ -62,7 +63,7 @@
       result.club = fields[this.CSVFormat.CLUB_IDX].trim().replace(/\"/g, '');
       result.course = fields[this.CSVFormat.COURSE_IDX];
       result.controls = parseInt(fields[this.CSVFormat.NUM_CONTROLS_IDX], 10);
-      info = this.extractSplits(fields, result.controls);
+      info = this.extractSISplits(fields, result.controls);
       result.splits = info.splits;
       // add finish split
       result.splits += ";" + rg2.utils.getSecsFromHHMMSS(result.time);
@@ -70,7 +71,7 @@
       return result;
     },
 
-    extractSplits : function (fields, controls) {
+    extractSISplits : function (fields, controls) {
       var i, result, nextcode, nextsplit;
       nextsplit = this.CSVFormat.FIRST_SPLIT_IDX;
       nextcode = this.CSVFormat.FIRST_CODE_IDX;
@@ -185,7 +186,7 @@
     },
 
     extractResult : function (fields, course, controls) {
-      var FIRST_NAME_IDX = 0, SURNAME_IDX = 1, CLUB_IDX = 2, START_TIME_IDX = 3, FIRST_SPLIT_IDX = 4, i, result, len, totaltime;
+      var FIRST_NAME_IDX = 0, SURNAME_IDX = 1, CLUB_IDX = 2, START_TIME_IDX = 3, result, info;
       result = {};
       result.chipid = 0;
       result.name = (fields[FIRST_NAME_IDX] + " " + fields[SURNAME_IDX] + " " + fields[CLUB_IDX]).trim();
@@ -194,20 +195,28 @@
       result.club = fields[CLUB_IDX];
       result.course = course;
       result.controls = controls;
-      result.splits = '';
-      result.codes = [];
+      info = this.extractSpklasseSplits(fields);
+      result.splits = info.splits;
+      result.codes = info.codes;
+      result.time = rg2.utils.formatSecsAsMMSS(info.totaltime);
+      this.results.push(result);
+    },
+
+    extractSpklasseSplits : function (fields) {
+      var i, splits, codes, totaltime, len, FIRST_SPLIT_IDX = 4;
+      splits = '';
+      codes = [];
       len = fields.length - FIRST_SPLIT_IDX;
       totaltime = 0;
       for (i = 0; i < len; i += 1) {
         if (i > 0) {
-          result.splits += ";";
+          splits += ";";
         }
-        result.codes[i] = 'X';
+        codes[i] = 'X';
         totaltime += rg2.utils.getSecsFromHHMMSS(fields[i + FIRST_SPLIT_IDX]);
-        result.splits += totaltime;
+        splits += totaltime;
       }
-      result.time = rg2.utils.formatSecsAsMMSS(totaltime);
-      this.results.push(result);
+      return {splits: splits, codes: codes, totaltime: totaltime};
     }
   };
   rg2.ResultParserCSV = ResultParserCSV;

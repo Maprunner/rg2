@@ -1,10 +1,13 @@
 /*global rg2:false */
 (function () {
   function ResultParser(evt, fileFormat) {
+    var parsedResults;
     this.results = [];
     this.resultCourses = [];
     this.valid = true;
-    this.processResults(evt, fileFormat);
+    parsedResults = this.processResults(evt, fileFormat);
+    this.results = parsedResults.results;
+    this.valid = parsedResults.valid;
     this.getCoursesFromResults();
     return {results: this.results, resultCourses: this.resultCourses, valid: this.valid};
   }
@@ -16,16 +19,13 @@
     processResults : function (evt, fileFormat) {
       switch (fileFormat) {
       case 'CSV':
-        this.results = new rg2.ResultParserCSV(evt.target.result);
-        break;
+        return (new rg2.ResultParserCSV(evt.target.result));
       case 'XML':
-        this.processResultsXML(evt.target.result);
-        break;
+        return this.processResultsXML(evt.target.result);
       default:
         // shouldn't ever get here but...
-        this.valid = false;
         rg2.utils.showWarningDialog("File type error", "Results file type is not recognised. Please select a valid file.");
-        return;
+        return {results: [], valid: false};
       }
     },
 
@@ -49,15 +49,14 @@
     },
 
     processResultsXML : function (rawXML) {
-      var xml, version, nodelist, parsedResults;
+      var xml, version, nodelist;
       version = "";
       try {
         xml = $.parseXML(rawXML);
         nodelist = xml.getElementsByTagName('ResultList');
         if (nodelist.length === 0) {
-          this.valid = false;
           rg2.utils.showWarningDialog("XML file error", "File is not a valid XML results file. ResultList element missing.");
-          return;
+          return {results: [], valid: false};
         }
         // test for IOF Version 2
         version = rg2.utils.extractAttributeZero(xml.getElementsByTagName("IOFVersion"), "version", "");
@@ -66,25 +65,18 @@
           version = rg2.utils.extractAttributeZero(xml.getElementsByTagName('ResultList'), "iofVersion", "");
         }
       } catch (err) {
-        this.valid = false;
         rg2.utils.showWarningDialog("XML file error", "File is not a valid XML results file.");
-        return;
+        return {results: [], valid: false};
       }
 
       switch (version) {
       case "2.0.3":
-        parsedResults = new rg2.ResultParserIOFV2(xml);
-        this.results = parsedResults.results;
-        this.valid = parsedResults.valid;
-        break;
+        return (new rg2.ResultParserIOFV2(xml));
       case "3.0":
-        parsedResults = new rg2.ResultParserIOFV3(xml);
-        this.results = parsedResults.results;
-        this.valid = parsedResults.valid;
-        break;
+        return (new rg2.ResultParserIOFV3(xml));
       default:
-        this.valid = false;
         rg2.utils.showWarningDialog("XML file error", 'Invalid IOF file format. Version ' + version + ' not supported.');
+        return {results: [], valid: false};
       }
     }
   };

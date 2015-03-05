@@ -2,8 +2,8 @@
 (function () {
   function ResultParserIOFV2(xml) {
     this.results = [];
-    this.processIOFV2Results(xml);
     this.valid = true;
+    this.processIOFV2Results(xml);
     return {results: this.results, valid: this.valid};
   }
 
@@ -11,8 +11,24 @@
 
     Constructor : ResultParserIOFV2,
 
+    getDBID : function (element, name) {
+      // remove new lines from empty <PersonId> tags
+      element = element.replace(/[\n\r]/g, '').trim();
+      if (element) {
+        return element;
+      }
+      return name;
+    },
+
+    getName : function (personlist) {
+      var temp;
+      temp = personlist.getElementsByTagName('Given')[0].textContent + " " + personlist.getElementsByTagName('Family')[0].textContent;
+      // remove new lines from empty <Given> and <Family> tags
+      return (temp.replace(/[\n\r]/g, '').trim());
+    },
+
     processIOFV2Results : function (xml) {
-      var classlist, personlist, resultlist, i, j, result, course, temp;
+      var classlist, personlist, resultlist, i, j, result, course;
       try {
         classlist = xml.getElementsByTagName('ClassResult');
         for (i = 0; i < classlist.length; i += 1) {
@@ -21,17 +37,8 @@
           for (j = 0; j < personlist.length; j += 1) {
             result = {};
             result.course = course;
-            temp = personlist[j].getElementsByTagName('Given')[0].textContent + " " + personlist[j].getElementsByTagName('Family')[0].textContent;
-            // remove new lines from empty <Given> and <Family> tags
-            result.name = temp.replace(/[\n\r]/g, '').trim();
-            temp = personlist[j].getElementsByTagName('PersonId')[0].textContent;
-            // remove new lines from empty <PersonId> tags
-            temp = temp.replace(/[\n\r]/g, '').trim();
-            if (temp) {
-              result.dbid = temp;
-            } else {
-              result.dbid = result.name;
-            }
+            result.name = this.getName(personlist[j]);
+            result.dbid = this.getDBID(personlist[j].getElementsByTagName('PersonId')[0].textContent, result.name);
             result.club = rg2.utils.extractTextContentZero(personlist[j].getElementsByTagName('ShortName'), '');
             resultlist = personlist[j].getElementsByTagName('Result');
             this.extractIOFV2Results(resultlist, result);
@@ -49,43 +56,45 @@
 
     },
 
+    getStartFinishTimeAsSecs : function (element) {
+      var time;
+      if (element.length > 0) {
+        time = element[0].getElementsByTagName('Clock')[0].textContent;
+        return rg2.utils.getSecsFromHHMMSS(time);
+      }
+      return 0;
+    },
+
+    getPosition : function (element) {
+      if (element.length > 0) {
+        return parseInt(element[0].textContent, 10);
+      }
+      return '';
+    },
+
+    getTime : function (element) {
+      if (element.length > 0) {
+        return element[0].textContent.replace(/[\n\r]/g, '');
+      }
+      return '';
+    },
+
     extractIOFV2Results : function (resultlist, result) {
-      var k, temp, time, splitlist;
-      for (k = 0; k < resultlist.length; k += 1) {
-        result.status = rg2.utils.extractAttributeZero(resultlist[k].getElementsByTagName('CompetitorStatus'), "value", "");
-        temp = resultlist[k].getElementsByTagName('ResultPosition');
-        if (temp.length > 0) {
-          result.position = parseInt(temp[0].textContent, 10);
-        } else {
-          result.position = '';
-        }
-        result.chipid = rg2.utils.extractTextContentZero(resultlist[k].getElementsByTagName('CCardId'), 0);
+      var i, finishtime, splitlist;
+      for (i = 0; i < resultlist.length; i += 1) {
+        result.status = rg2.utils.extractAttributeZero(resultlist[i].getElementsByTagName('CompetitorStatus'), "value", "");
+        result.position = this.getPosition(resultlist[i].getElementsByTagName('ResultPosition'));
+        result.chipid = rg2.utils.extractTextContentZero(resultlist[i].getElementsByTagName('CCardId'), 0);
         // assuming first <Time> is the total time...
-        temp = resultlist[k].getElementsByTagName('Time');
-        if (temp.length > 0) {
-          result.time = temp[0].textContent.replace(/[\n\r]/g, '');
-        } else {
-          result.time = 0;
-        }
-        temp = resultlist[k].getElementsByTagName('StartTime');
-        if (temp.length > 0) {
-          time = temp[0].getElementsByTagName('Clock')[0].textContent;
-          result.starttime = rg2.utils.getSecsFromHHMMSS(time);
-        } else {
-          result.starttime = 0;
-        }
+        result.time = this.getTime(resultlist[i].getElementsByTagName('Time'));
+        result.starttime = this.getStartFinishTimeAsSecs(resultlist[i].getElementsByTagName('StartTime'));
         result.splits = "";
         result.codes = [];
-        splitlist = resultlist[k].getElementsByTagName('SplitTime');
+        splitlist = resultlist[i].getElementsByTagName('SplitTime');
         result.controls = splitlist.length;
         this.extractIOFV2Splits(splitlist, result);
-        temp = resultlist[k].getElementsByTagName('FinishTime');
-        if (temp.length > 0) {
-          time = temp[0].getElementsByTagName('Clock')[0].textContent;
-          result.splits += rg2.utils.getSecsFromHHMMSS(time) - result.starttime;
-        } else {
-          result.splits += 0;
-        }
+        finishtime = this.getStartFinishTimeAsSecs(resultlist[i].getElementsByTagName('FinishTime'));
+        result.splits += Math.max(finishtime - result.starttime, 0);
       }
     },
 
