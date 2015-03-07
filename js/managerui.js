@@ -1,12 +1,18 @@
 /*global rg2:false */
 (function () {
-  function ManagerUI() {
-    return true;
-  }
-
-  ManagerUI.prototype = {
-
-    Constructor : ManagerUI,
+  var managerUI = {
+    initialiseUI : function () {
+      $("#rg2-animation-controls").hide();
+      $("#rg2-create-tab").hide();
+      $("#rg2-edit-tab").hide();
+      $("#rg2-map-tab").hide();
+      $("#rg2-manage-login").show();
+      $("#rg2-draw-tab").hide();
+      $("#rg2-results-tab").hide();
+      $("#rg2-courses-tab").hide();
+      $("#rg2-events-tab").hide();
+      $("#rg2-info-panel").tabs("disable", rg2.config.TAB_EVENTS).tabs("option", "active", rg2.config.TAB_LOGIN);
+    },
 
     setUIVisibility : function () {
       $('#rg2-draw-courses').hide();
@@ -79,16 +85,6 @@
       dropdown = rg2.events.getEventEditDropdown(dropdown);
     },
 
-    createCourseDeleteDropdown : function (id) {
-      var dropdown, i, courses;
-      $("#rg2-course-selected").empty();
-      dropdown = document.getElementById("rg2-course-selected");
-      courses = rg2.courses.getCoursesForEvent(id);
-      for (i = 0; i < courses.length; i += 1) {
-        dropdown.options.add(rg2.utils.generateOption(courses[i].id, courses[i].name));
-      }
-    },
-
     createRouteDeleteDropdown : function (id) {
       var dropdown, routes, i;
       $("#rg2-route-selected").empty();
@@ -138,7 +134,6 @@
       $("#rg2-event-level-edit").val(event.rawtype);
       $("#rg2-edit-event-comments").empty().val(event.comment);
       rg2.utils.setButtonState("enable", ["#btn-delete-event", "#btn-update-event", "#btn-delete-route"]);
-      this.createCourseDeleteDropdown(event.id);
       this.createRouteDeleteDropdown(event.id);
     },
 
@@ -162,5 +157,5 @@
       $("#add-map-dialog").dialog("destroy");
     }
   };
-  rg2.ManagerUI = ManagerUI;
+  rg2.managerUI = managerUI;
 }());

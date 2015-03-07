@@ -172,51 +172,38 @@
       rg2.redraw(false);
     },
 
+    doDrawingReset : function () {
+      $('#rg2-drawing-reset-dialog').dialog("destroy");
+      this.pendingCourseid = null;
+      this.initialiseDrawing();
+    },
+
+    doCancelDrawingReset : function () {
+      $('#rg2-drawing-reset-dialog').dialog("destroy");
+    },
+
     confirmCourseChange : function () {
-      var msg, me;
-      msg = "<div id='rg2-course-change-dialog'>The route you have started to draw will be discarded. Are you sure you want to change the course?</div>";
-      me = this;
-      $(msg).dialog({
-        title : "Confirm course change",
-        modal : true,
-        dialogClass : "no-close rg2-confirm-change-course",
-        closeOnEscape : false,
-        buttons : [{
-          text : "Change course",
-          click : function () {
-            me.doChangeCourse();
-          }
-        }, {
-          text : "Cancel",
-          click : function () {
-            me.doCancelChangeCourse();
-          }
-        }]
-      });
+      var dlg;
+      dlg = {};
+      dlg.selector = "<div id='rg2-course-change-dialog'>The route you have started to draw will be discarded. Are you sure you want to change the course?</div>";
+      dlg.title = "Confirm course change";
+      dlg.classes = "rg2-confirm-change-course";
+      dlg.doText = "Change course";
+      dlg.onDo = this.doChangeCourse.bind(this);
+      dlg.onCancel = this.doCancelChangeCourse.bind(this);
+      rg2.utils.createModalDialog(dlg);
     },
 
     resetDrawing : function () {
-      var msg, me;
-      msg = "<div id='rg2-drawing-reset-dialog'>All information you have entered will be removed. Are you sure you want to reset?</div>";
-      me = this;
-      $(msg).dialog({
-        title : "Confirm reset",
-        modal : true,
-        dialogClass : "no-close rg2-confirm-drawing-reset",
-        closeOnEscape : false,
-        buttons : [{
-          text : "Reset",
-          click : function () {
-            me.doDrawingReset();
-          }
-        }, {
-          text : "Cancel",
-          click : function () {
-            me.doCancelDrawingReset();
-          }
-        }]
-      });
-
+      var dlg;
+      dlg = {};
+      dlg.selector = "<div id='rg2-drawing-reset-dialog'>All information you have entered will be removed. Are you sure you want to reset?</div>";
+      dlg.title = "Confirm reset";
+      dlg.classes = "rg2-confirm-drawing-reset";
+      dlg.doText = "Reset";
+      dlg.onDo = this.doDrawingReset.bind(this);
+      dlg.onCancel = this.doCancelDrawingReset.bind(this);
+      rg2.utils.createModalDialog(dlg);
     },
 
     doChangeCourse : function () {
@@ -234,16 +221,6 @@
       $("#rg2-course-select").val(this.gpstrack.routeData.courseid);
       this.pendingCourseid = null;
       $('#rg2-course-change-dialog').dialog("destroy");
-    },
-
-    doDrawingReset : function () {
-      $('#rg2-drawing-reset-dialog').dialog("destroy");
-      this.pendingCourseid = null;
-      this.initialiseDrawing();
-    },
-
-    doCancelDrawingReset : function () {
-      $('#rg2-drawing-reset-dialog').dialog("destroy");
     },
 
     showCourseInProgress : function () {
@@ -461,8 +438,8 @@
     // snapto: test if drawn route is close enough to control
     closeEnough : function (x, y) {
       var range;
-      if (rg2.options.set) {
-        range = 7;
+      if (rg2.options.snap) {
+        range = 8;
       } else {
         range = 2;
       }
@@ -604,13 +581,13 @@
         rg2.ctx.beginPath();
         if (this.nextControl < (this.controlx.length - 1)) {
           // normal control
-          rg2.ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], opt.controlRadius, 0, 2 * Math.PI, false);
+          this.drawCircle(opt.controlRadius);
         } else {
           // finish
-          rg2.ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], opt.finishInnerRadius, 0, 2 * Math.PI, false);
+          this.drawCircle(opt.finishInnerRadius);
           rg2.ctx.stroke();
           rg2.ctx.beginPath();
-          rg2.ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], opt.finishOuterRadius, 0, 2 * Math.PI, false);
+          this.drawCircle(opt.finishOuterRadius);
         }
         // dot at centre of control circle
         rg2.ctx.fillRect(this.controlx[this.nextControl] - 1, this.controly[this.nextControl] - 1, 3, 3);
@@ -618,6 +595,10 @@
       }
       this.drawRoute();
       this.gpstrack.handles.drawHandles();
+    },
+
+    drawCircle : function (radius) {
+      rg2.ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], radius, 0, 2 * Math.PI, false);
     },
 
     drawRoute : function () {

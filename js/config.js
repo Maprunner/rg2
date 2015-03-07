@@ -170,16 +170,16 @@
   }
 
   function setConfigOption(option, value) {
-    options[option] = value;
+    this.options[option] = value;
   }
 
   function saveConfigOptions() {
     try {
       if ((window.hasOwnProperty('localStorage')) && (window.localStorage !== null)) {
-        options.snap = $("#chk-snap-toggle").prop('checked');
-        options.showThreeSeconds = $("#chk-show-three-seconds").prop('checked');
-        options.showGPSSpeed = $("#chk-show-GPS-speed").prop('checked');
-        localStorage.setItem('rg2-options', JSON.stringify(options));
+        this.options.snap = $("#chk-snap-toggle").prop('checked');
+        this.options.showThreeSeconds = $("#chk-show-three-seconds").prop('checked');
+        this.options.showGPSSpeed = $("#chk-show-GPS-speed").prop('checked');
+        localStorage.setItem('rg2-options', JSON.stringify(this.options));
       }
     } catch (e) {
       // storage not supported so just return
@@ -191,10 +191,10 @@
     try {
       if ((window.hasOwnProperty('localStorage')) && (window.localStorage !== null)) {
         if (localStorage.getItem('rg2-options') !== null) {
-          options = JSON.parse(localStorage.getItem('rg2-options'));
+          this.options = JSON.parse(localStorage.getItem('rg2-options'));
           // best to keep this at default?
-          options.circleSize = 20;
-          if (options.mapIntensity === 0) {
+          this.options.circleSize = 20;
+          if (this.options.mapIntensity === 0) {
             rg2.utils.showWarningDialog("Warning", "Your saved settings have 0% map intensity so the map is invisible. You can adjust this on the configuration menu");
           }
         }
@@ -232,10 +232,10 @@
   function getReplayDetails() {
     var opt;
     opt = {};
-    opt.routeWidth = options.routeWidth;
+    opt.routeWidth = this.options.routeWidth;
     // stored as %, but used as 0 to 1.
-    opt.routeIntensity = options.routeIntensity / 100;
-    opt.replayFontSize = options.replayFontSize;
+    opt.routeIntensity = this.options.routeIntensity / 100;
+    opt.replayFontSize = this.options.replayFontSize;
     opt.showThreeSeconds = $("#chk-show-three-seconds").prop('checked');
     opt.showGPSSpeed = $("#chk-show-GPS-speed").prop('checked');
     return opt;

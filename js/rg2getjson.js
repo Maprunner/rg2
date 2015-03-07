@@ -19,7 +19,7 @@
       $.each(json.data.events, function () {
         rg2.events.addEvent(new rg2.Event(this));
       });
-      rg2.createEventMenu();
+      rg2.ui.createEventMenu();
       // load requested event if set
       // input is kartat ID so need to find internal ID first
       if (rg2.requestedHash.getID()) {
@@ -28,7 +28,7 @@
           rg2.loadEvent(eventID);
         }
       }
-      if (rg2Config.managing) {
+      if (rg2.config.managing) {
         rg2.manager.eventListLoaded();
       }
     }).fail(function (jqxhr, textStatus, error) {
@@ -50,11 +50,11 @@
       if (rg2.courses.getNumberOfCourses() > 0) {
         rg2.results.addTracks(json.data.routes);
       }
-      rg2.createCourseMenu();
-      rg2.createResultMenu();
+      rg2.ui.createCourseMenu();
+      rg2.ui.createResultMenu();
       rg2.animation.updateAnimationDetails();
       $('body').css('cursor', 'auto');
-      if (rg2Config.managing) {
+      if (rg2.config.managing) {
         rg2.manager.eventFinishedLoading();
       } else {
         $("#rg2-info-panel").tabs("enable", rg2.config.TAB_COURSES);
@@ -158,7 +158,7 @@
       type : 'lang',
       cache : false
     }).done(function (json) {
-      rg2.setNewLanguage(json.data.dict);
+      rg2.ui.setNewLanguage(json.data.dict);
     }).fail(function (jqxhr, textStatus, error) {
       /*jslint unparam:true*/
       reportJSONFail("Language request failed: " + error);

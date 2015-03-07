@@ -33,7 +33,6 @@
     this.maps = [];
     this.localworldfile = new rg2.Worldfile(0);
     this.worldfile = new rg2.Worldfile(0);
-    this.ui = new rg2.ManagerUI();
     this.initialiseUI();
   }
 
@@ -141,13 +140,13 @@
 
     enableEventEdit : function () {
       var self = this;
-      this.ui.setUIVisibility();
+      rg2.managerUI.setUIVisibility();
       this.getMaps();
       this.setButtons();
-      this.ui.createEventLevelDropdown("rg2-event-level");
-      this.ui.createEventLevelDropdown("rg2-event-level-edit");
-      this.ui.createGeorefDropdown(this.georefsystems);
-      this.ui.createEventEditDropdown();
+      rg2.managerUI.createEventLevelDropdown("rg2-event-level");
+      rg2.managerUI.createEventLevelDropdown("rg2-event-level-edit");
+      rg2.managerUI.createGeorefDropdown(this.georefsystems);
+      rg2.managerUI.createEventEditDropdown();
       $("#rg2-event-level").change(function () {
         self.eventLevel = $("#rg2-event-level").val();
         if (self.eventLevel !== 'X') {
@@ -194,7 +193,7 @@
       });
 
       $("#rg2-manager-event-select").change(function () {
-        self.ui.setEvent(parseInt($("#rg2-event-selected").val(), 10));
+        rg2.managerUI.setEvent(parseInt($("#rg2-event-selected").val(), 10));
       });
 
       $("#rg2-georef-type").change(function () {
@@ -216,7 +215,7 @@
         for (i = 0; i < json.data.maps.length; i += 1) {
           self.maps.push(new rg2.Map(json.data.maps[i]));
         }
-        self.ui.createMapDropdown(self.maps);
+        rg2.managerUI.createMapDropdown(self.maps);
         $("#btn-toggle-controls").show();
       }).fail(function () {
         rg2.utils.showWarningDialog("Map request failed", "Error getting map list.");
@@ -231,13 +230,13 @@
 
     eventListLoaded : function () {
       // called after event list has been updated
-      this.ui.createEventEditDropdown();
+      rg2.managerUI.createEventEditDropdown();
     },
 
     eventFinishedLoading : function () {
       var kartatid;
       kartatid = parseInt($("#rg2-event-selected").val(), 10);
-      this.ui.eventFinishedLoading(rg2.events.getEventInfo(kartatid));
+      rg2.managerUI.eventFinishedLoading(rg2.events.getEventInfo(kartatid));
     },
 
     startDrawingCourses : function () {
@@ -304,31 +303,20 @@
     },
 
     confirmCreateEvent : function () {
-      var valid, msg, self;
+      var valid, dlg;
       valid = this.validateData();
       if (valid !== 'OK') {
         rg2.utils.showWarningDialog("Data missing", valid + " Please enter all necessary information before creating the event.");
         return;
       }
-      msg = "<div id='event-create-dialog'>Are you sure you want to create this event?</div>";
-      self = this;
-      $(msg).dialog({
-        title : "Confirm event creation",
-        modal : true,
-        dialogClass : "no-close rg2-confirm-create-event-dialog",
-        closeOnEscape : false,
-        buttons : [{
-          text : "Cancel",
-          click : function () {
-            self.ui.doCancelCreateEvent();
-          }
-        }, {
-          text : "Create event",
-          click : function () {
-            self.doCreateEvent();
-          }
-        }]
-      });
+      dlg = {};
+      dlg.selector = "<div id='event-create-dialog'>Are you sure you want to create this event?</div>";
+      dlg.title = "Confirm event creation";
+      dlg.classes = "rg2-confirm-create-event-dialog";
+      dlg.doText = "Create event";
+      dlg.onDo = this.doCreateEvent.bind(this);
+      dlg.onCancel = rg2.managerUI.doCancelCreateEvent.bind(this);
+      rg2.utils.createModalDialog(dlg);
     },
 
     doCreateEvent : function () {
@@ -568,24 +556,15 @@
     },
 
     confirmUpdateEvent : function () {
-      var self = this;
-      $("<div id='event-update-dialog'>Are you sure you want to update this event?</div>").dialog({
-        title : "Confirm event update",
-        modal : true,
-        dialogClass : "no-close rg2-confirm-update-dialog",
-        closeOnEscape : false,
-        buttons : [{
-          text : "Cancel",
-          click : function () {
-            self.ui.doCancelUpdateEvent();
-          }
-        }, {
-          text : "Update event",
-          click : function () {
-            self.doUpdateEvent();
-          }
-        }]
-      });
+      var dlg;
+      dlg = {};
+      dlg.selector = "<div id='event-update-dialog'>Are you sure you want to update this event?</div>";
+      dlg.title = "Confirm event update";
+      dlg.classes = "rg2-confirm-update-dialog";
+      dlg.doText = "Update event";
+      dlg.onDo = this.doUpdateEvent.bind(this);
+      dlg.onCancel = rg2.managerUI.doCancelUpdateEvent.bind(this);
+      rg2.utils.createModalDialog(dlg);
     },
 
     doUpdateEvent : function () {
@@ -626,24 +605,15 @@
     },
 
     confirmDeleteRoute : function () {
-      var self = this;
-      $("<div id='route-delete-dialog'>This route will be permanently deleted. Are you sure?</div>").dialog({
-        title : "Confirm route delete",
-        modal : true,
-        dialogClass : "no-close rg2-confirm-route-delete-dialog",
-        closeOnEscape : false,
-        buttons : [{
-          text : "Cancel",
-          click : function () {
-            self.ui.doCancelDeleteRoute();
-          }
-        }, {
-          text : "Delete route",
-          click : function () {
-            self.doDeleteRoute();
-          }
-        }]
-      });
+      var dlg;
+      dlg = {};
+      dlg.selector = "<div id='route-delete-dialog'>This route will be permanently deleted. Are you sure?</div>";
+      dlg.title = "Confirm route delete";
+      dlg.classes = "rg2-confirm-route-delete-dialog";
+      dlg.doText = "Delete route";
+      dlg.onDo = this.doDeleteRoute.bind(this);
+      dlg.onCancel = rg2.managerUI.doCancelDeleteRoute.bind(this);
+      rg2.utils.createModalDialog(dlg);
     },
 
     doDeleteRoute : function () {
@@ -676,24 +646,15 @@
     },
 
     confirmDeleteEvent : function () {
-      var self = this;
-      $("<div id='event-delete-dialog'>This event will be deleted. Are you sure?</div>").dialog({
-        title : "Confirm event delete",
-        modal : true,
-        dialogClass : "no-close rg2-confirm-delete-event-dialog",
-        closeOnEscape : false,
-        buttons : [{
-          text : "Cancel",
-          click : function () {
-            self.ui.doCancelDeleteEvent();
-          }
-        }, {
-          text : "Delete event",
-          click : function () {
-            self.doDeleteEvent();
-          }
-        }]
-      });
+      var dlg;
+      dlg = {};
+      dlg.selector = "<div id='event-delete-dialog'>This event will be deleted. Are you sure?</div>";
+      dlg.title = "Confirm event delete";
+      dlg.classes = "rg2-confirm-delete-event-dialog";
+      dlg.doText = "Delete event";
+      dlg.onDo = this.deleteEvent.bind(this);
+      dlg.onCancel = rg2.managerUI.doCancelDeleteEvent.bind(this);
+      rg2.utils.createModalDialog(dlg);
     },
 
     doDeleteEvent : function () {
@@ -714,7 +675,7 @@
           if (data.ok) {
             rg2.utils.showWarningDialog("Event deleted", "Event " + id + " has been deleted.");
             rg2.getEvents();
-            self.ui.setEvent();
+            rg2.managerUI.setEvent();
             $("#rg2-event-selected").empty();
           } else {
             rg2.utils.showWarningDialog("Delete failed", data.status_msg + ". Event delete failed. Please try again.");
@@ -756,7 +717,7 @@
       } else {
         $("#rg2-select-results-file").removeClass('valid');
       }
-      this.ui.displayResultInfo(this.getResultInfoAsHTML());
+      rg2.managerUI.displayResultInfo(this.getResultInfoAsHTML());
       this.displayCourseAllocations();
     },
 
@@ -784,7 +745,7 @@
       this.courses = parsedCourses.courses;
       this.newcontrols = parsedCourses.newcontrols;
       this.coursesGeoreferenced = parsedCourses.georeferenced;
-      this.ui.displayCourseInfo(this.getCourseInfoAsHTML());
+      rg2.managerUI.displayCourseInfo(this.getCourseInfoAsHTML());
       this.displayCourseAllocations();
       this.fitControlsToMap();
       rg2.redraw(false);
@@ -1091,26 +1052,15 @@
     },
 
     confirmAddMap : function () {
-      var msg, self;
-      msg = "<div id='add-map-dialog'>Are you sure you want to add this map?</div>";
-      self = this;
-      $(msg).dialog({
-        title : "Confirm new map",
-        modal : true,
-        dialogClass : "no-close rg2-confirm-add-map-dialog",
-        closeOnEscape : false,
-        buttons : [{
-          text : "Cancel",
-          click : function () {
-            self.ui.doCancelAddMap();
-          }
-        }, {
-          text : "Add map",
-          click : function () {
-            self.doUploadMapFile();
-          }
-        }]
-      });
+      var dlg;
+      dlg = {};
+      dlg.selector = "<div id='add-map-dialog'>Are you sure you want to add this map?</div>";
+      dlg.title = "Confirm new map";
+      dlg.classes = "rg2-confirm-add-map-dialog";
+      dlg.doText = "Add map";
+      dlg.onDo = this.doUploadMapFile.bind(this);
+      dlg.onCancel = rg2.managerUI.doCancelAddMap.bind(this);
+      rg2.utils.createModalDialog(dlg);
     },
 
     doUploadMapFile : function () {
@@ -1222,22 +1172,24 @@
           this.clearGeorefs();
           return;
         }
-
+        // set up source which is how map was originally georeferenced
         Proj4js.defs[type] = this.georefsystems.getParams(type);
         source = new Proj4js.Proj(type);
-
         // dest is WGS84 as used by GPS: included by default in Proj4js.defs
         dest = new Proj4js.Proj("EPSG:4326");
+
         xScale = this.localworldfile.A;
         ySkew = this.localworldfile.D;
         xSkew = this.localworldfile.B;
         yScale = this.localworldfile.E;
-        // x0, y0 is top left
-        // x1, y1 is bottom right
-        // x2, y2 is top right
-        xpx = [0, this.mapWidth, this.mapWidth];
-        ypx = [0, this.mapHeight, 0];
 
+        // calculation based on three fixed points on map
+        // x0, y0 is top left, x1, y1 is bottom right, x2, y2 is top right
+        // save pixel values of these locations for map image
+        xpx = [0, this.mapWidth, this.mapWidth, 0];
+        ypx = [0, this.mapHeight, 0, this.mapHeight];
+
+        // calculate same locations using worldfile for the map
         xsrc = [];
         ysrc = [];
         xsrc[0] = this.localworldfile.C;
@@ -1251,7 +1203,8 @@
         this.newMap.ypx.length = 0;
         this.newMap.lat.length = 0;
         this.newMap.lon.length = 0;
-        // translate source to WGS84 (as in GPS file)
+        // translate source georef to WGS84 (as in GPS file) and store with newMap details
+        // Careful: p[] has x = lon and y = lat
         p = [];
         for (i = 0; i < 3; i += 1) {
           pt = {};
@@ -1265,6 +1218,7 @@
           this.newMap.lon.push(p[i].x);
           //console.log(p[i].x, p[i].y);
         }
+        // now need to create the worldfile for WGS84 to map image
         angle = this.getAdjustmentAngle(p);
         pixResX = (p[2].x - p[0].x) / this.mapWidth;
         pixResY = (p[2].y - p[1].y) / this.mapHeight;
@@ -1280,15 +1234,19 @@
     },
 
     getAdjustmentAngle : function (p) {
-      var hypot, adj, angle1, angle2;
+      var angle1, angle2;
       // calculates the angle adjustment needed based on an average of two values
-      hypot = rg2.utils.getLatLonDistance(p[0].y, p[0].x, p[2].y, p[2].x);
-      adj = rg2.utils.getLatLonDistance(p[0].y, p[0].x, p[0].y, p[2].x);
-      angle1 = Math.acos(adj / hypot);
-      hypot = rg2.utils.getLatLonDistance(p[2].y, p[2].x, p[1].y, p[1].x);
-      adj = rg2.utils.getLatLonDistance(p[2].y, p[2].x, p[1].y, p[2].x);
-      angle2 = Math.acos(adj / hypot);
+      angle1 = this.getAngle([p[0].y, p[0].x, p[2].y, p[2].x, p[0].y, p[2].x]);
+      angle2 = this.getAngle([p[2].y, p[2].x, p[1].y, p[1].x, p[1].y, p[2].x]);
       return (angle1 + angle2) / 2;
+    },
+
+    getAngle : function (p) {
+      var hypot, adj;
+      // draw it on paper and it makes sense!
+      hypot = rg2.utils.getLatLonDistance(p[0], p[1], p[2], p[3]);
+      adj = rg2.utils.getLatLonDistance(p[0], p[1], p[4], p[5]);
+      return Math.acos(adj / hypot);
     },
 
     updateGeorefDisplay : function () {

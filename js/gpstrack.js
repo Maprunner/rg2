@@ -109,23 +109,15 @@
     },
 
     processGPSTrack : function () {
-      var minX, maxX, minY, maxY, mapSize;
       if (rg2.events.mapIsGeoreferenced()) {
         this.applyWorldFile();
-        // find bounding box for track
-        minX = Math.min.apply(Math, this.routeData.x);
-        maxX = Math.max.apply(Math, this.routeData.x);
-        minY = Math.min.apply(Math, this.routeData.y);
-        maxY = Math.max.apply(Math, this.routeData.y);
-        // check we are somewhere on the map
-        mapSize = rg2.getMapSize();
-        if ((maxX < 0) || (minX > mapSize.width) || (minY > mapSize.height) || (maxY < 0)) {
+        if (this.trackMatchesMapCoordinates()) {
+          // everything OK so lock background to avoid accidental adjustment
+          $('#btn-move-all').prop('checked', true);
+        } else {
           // warn and fit to track
           rg2.utils.showWarningDialog('GPS file problem', 'Your GPS file does not match the map co-ordinates. Please check you have selected the correct file.');
           this.fitTrackInsideCourse();
-        } else {
-          // everything OK so lock background to avoid accidental adjustment
-          $('#btn-move-all').prop('checked', true);
         }
       } else {
         this.fitTrackInsideCourse();
@@ -137,6 +129,18 @@
       this.fileLoaded = true;
       $("#btn-save-gps-route").button("enable");
       rg2.redraw(false);
+    },
+
+    trackMatchesMapCoordinates : function () {
+      var minX, maxX, minY, maxY, mapSize;
+      // find bounding box for track
+      minX = Math.min.apply(Math, this.routeData.x);
+      maxX = Math.max.apply(Math, this.routeData.x);
+      minY = Math.min.apply(Math, this.routeData.y);
+      maxY = Math.max.apply(Math, this.routeData.y);
+      mapSize = rg2.getMapSize();
+      // check we are somewhere on the map
+      return ((maxX > 0) && (minX < mapSize.width) && (minY < mapSize.height) && (maxY > 0));
     },
 
     applyWorldFile : function () {

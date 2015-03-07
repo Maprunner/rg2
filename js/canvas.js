@@ -1,5 +1,4 @@
 /*global rg2:false */
-/*global rg2Config:false */
 /*global Image:false */
 (function () {
   var canvas, ctx, map;
@@ -105,6 +104,24 @@
     redraw(false);
   }
 
+  function resizeInfoDisplay() {
+    if (rg2.input.infoPanelMaximised) {
+      rg2.input.infoPanelMaximised = false;
+      $("#rg2-resize-info").prop("title",  rg2.t("Show info panel"));
+      $("#rg2-hide-info-panel-control").css("left", "0px");
+      $("#rg2-hide-info-panel-icon").removeClass("fa-chevron-left").addClass("fa-chevron-right").prop("title",  rg2.t("Show info panel"));
+      $("#rg2-info-panel").hide();
+    } else {
+      rg2.input.infoPanelMaximised = true;
+      $("#rg2-resize-info").prop("title",  rg2.t("Hide info panel"));
+      $("#rg2-hide-info-panel-control").css("left", "366px");
+      $("#rg2-hide-info-panel-icon").removeClass("fa-chevron-right").addClass("fa-chevron-left").prop("title",  rg2.t("Hide info panel"));
+      $("#rg2-info-panel").show();
+    }
+    // move map around if necesssary
+    resetMapState();
+  }
+
   function zoom(zoomDirection) {
     var pt, factor, tempZoom;
     factor = Math.pow(rg2.input.scaleFactor, zoomDirection);
@@ -190,7 +207,7 @@
 
   function mapLoadedCallback() {
     resetMapState();
-    if (rg2Config.managing) {
+    if (rg2.config.managing) {
       rg2.manager.mapLoadCallback();
     }
   }
@@ -206,7 +223,7 @@
     canvas.width = window.innerWidth;
     // allow for header
     canvas.height = window.innerHeight - 36;
-    rg2.setTitleBar();
+    rg2.ui.setTitleBar();
     resetMapState();
   }
 
@@ -230,4 +247,5 @@
   rg2.getMapSize = getMapSize;
   rg2.loadNewMap = loadNewMap;
   rg2.setMapLoadingText = setMapLoadingText;
+  rg2.resizeInfoDisplay = resizeInfoDisplay;
 }());

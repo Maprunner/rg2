@@ -1,15 +1,6 @@
 /*global rg2:false */
 (function () {
-
-  function Utils() {
-    // don't need to do anything: just keep jsLint happy
-    return true;
-  }
-
-  Utils.prototype = {
-
-    Constructor : Utils,
-
+  var utils =  {
     rotatePoint : function (x, y, angle) {
       // rotation matrix: see http://en.wikipedia.org/wiki/Rotation_matrix
       var pt = {};
@@ -157,6 +148,30 @@
         return nodelist[0].textContent.trim();
       }
       return defaultValue;
+    },
+
+    createModalDialog : function (dlg) {
+      var self;
+      self = this;
+      self.onDo = dlg.onDo;
+      self.onCancel = dlg.onCancel;
+      $(dlg.selector).dialog({
+        title : dlg.title,
+        modal : true,
+        dialogClass : "no-close " + dlg.classes,
+        closeOnEscape : false,
+        buttons : [{
+          text : dlg.doText,
+          click : function () {
+            self.onDo();
+          }
+        }, {
+          text : "Cancel",
+          click : function () {
+            self.onCancel();
+          }
+        }]
+      });
     }
   };
 
@@ -329,9 +344,9 @@
       return extrahash;
     }
   };
+  rg2.utils = utils;
   rg2.RouteData = RouteData;
   rg2.RequestedHash = RequestedHash;
-  rg2.Utils = Utils;
   rg2.Colours = Colours;
   rg2.User = User;
 }());

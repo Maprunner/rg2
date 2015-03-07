@@ -46,6 +46,15 @@
       }
     },
 
+    getPosition : function (fields) {
+      var position;
+      position = parseInt(fields[this.CSVFormat.POSITION_IDX], 10);
+      if (isNaN(position)) {
+        position = '';
+      }
+      return position;
+    },
+
     extractSingleCSVResult: function (fields) {
       var result, info;
       result = {};
@@ -55,10 +64,7 @@
       result.dbid = (fields[this.CSVFormat.DB_IDX] + "__" + result.name).replace(/\"/g, '');
       result.starttime = rg2.utils.getSecsFromHHMMSS(fields[this.CSVFormat.START_TIME_IDX]);
       result.time = fields[this.CSVFormat.TOTAL_TIME_IDX];
-      result.position = parseInt(fields[this.CSVFormat.POSITION_IDX], 10);
-      if (isNaN(result.position)) {
-        result.position = '';
-      }
+      result.position = this.getPosition(fields);
       result.status = this.getSICSVStatus(fields[this.CSVFormat.NC_IDX], fields[this.CSVFormat.CLASSIFIER_IDX]);
       result.club = fields[this.CSVFormat.CLUB_IDX].trim().replace(/\"/g, '');
       result.course = fields[this.CSVFormat.COURSE_IDX];
