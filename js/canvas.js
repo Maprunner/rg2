@@ -7,17 +7,6 @@
   map = new Image();
   map.loadingText = "";
 
-  function addListeners() {
-    canvas.addEventListener('touchstart', rg2.handleTouchStart, false);
-    canvas.addEventListener('touchmove', rg2.handleTouchMove, false);
-    canvas.addEventListener('touchend', rg2.handleTouchEnd, false);
-    canvas.addEventListener('DOMMouseScroll', rg2.handleScroll, false);
-    canvas.addEventListener('mousewheel', rg2.handleScroll, false);
-    canvas.addEventListener('mousedown', rg2.handleMouseDown, false);
-    canvas.addEventListener('mousemove', rg2.handleMouseMove, false);
-    canvas.addEventListener('mouseup', rg2.handleMouseUp, false);
-  }
-
   function loadNewMap(mapFile) {
     // translated when displayed
     map.loadingText = "Loading map";
@@ -26,6 +15,13 @@
 
   function setMapLoadingText(text) {
     map.loadingText = text;
+  }
+
+  function drawMapLoadingText() {
+    ctx.font = '30pt Arial';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = rg2.config.BLACK;
+    ctx.fillText(rg2.t(map.loadingText), rg2.canvas.width / 2, rg2.canvas.height / 2);
   }
 
   /* called whenever anything changes enough to need screen redraw
@@ -43,7 +39,7 @@
     // go back to where we started
     ctx.restore();
     // set transparency of map
-    ctx.globalAlpha = (rg2.options.mapIntensity / 100);
+    ctx.globalAlpha = rg2.options.mapIntensity;
 
     if (map.height > 0) {
       // using non-zero map height to show we have a map loaded
@@ -70,10 +66,7 @@
         }
       }
     } else {
-      ctx.font = '30pt Arial';
-      ctx.textAlign = 'center';
-      ctx.fillStyle = rg2.config.BLACK;
-      ctx.fillText(rg2.t(map.loadingText), rg2.canvas.width / 2, rg2.canvas.height / 2);
+      drawMapLoadingText();
     }
   }
 
@@ -104,19 +97,28 @@
     redraw(false);
   }
 
+  function showInfoDisplay(show, title, position) {
+    var chevronRemove, chevronAdd;
+    rg2.input.infoPanelMaximised = show;
+    $("#rg2-resize-info").prop("title",  rg2.t(title));
+    $("#rg2-hide-info-panel-control").css("left", position);
+    if (show) {
+      $("#rg2-info-panel").show();
+      chevronRemove = "fa-chevron-right";
+      chevronAdd = "fa-chevron-left";
+    } else {
+      $("#rg2-info-panel").hide();
+      chevronRemove = "fa-chevron-left";
+      chevronAdd = "fa-chevron-right";
+    }
+    $("#rg2-hide-info-panel-icon").removeClass(chevronRemove).addClass(chevronAdd).prop("title",  rg2.t(title));
+  }
+
   function resizeInfoDisplay() {
     if (rg2.input.infoPanelMaximised) {
-      rg2.input.infoPanelMaximised = false;
-      $("#rg2-resize-info").prop("title",  rg2.t("Show info panel"));
-      $("#rg2-hide-info-panel-control").css("left", "0px");
-      $("#rg2-hide-info-panel-icon").removeClass("fa-chevron-left").addClass("fa-chevron-right").prop("title",  rg2.t("Show info panel"));
-      $("#rg2-info-panel").hide();
+      showInfoDisplay(false, "Show info panel", "0px");
     } else {
-      rg2.input.infoPanelMaximised = true;
-      $("#rg2-resize-info").prop("title",  rg2.t("Hide info panel"));
-      $("#rg2-hide-info-panel-control").css("left", "366px");
-      $("#rg2-hide-info-panel-icon").removeClass("fa-chevron-right").addClass("fa-chevron-left").prop("title",  rg2.t("Hide info panel"));
-      $("#rg2-info-panel").show();
+      showInfoDisplay(true, "Hide info panel", "366px");
     }
     // move map around if necesssary
     resetMapState();
@@ -205,13 +207,6 @@
     //};
   }
 
-  function mapLoadedCallback() {
-    resetMapState();
-    if (rg2.config.managing) {
-      rg2.manager.mapLoadCallback();
-    }
-  }
-
   function getMapSize() {
     return {height: map.height, width: map.width};
   }
@@ -227,14 +222,31 @@
     resetMapState();
   }
 
-  function setUpCanvas() {
-    addListeners();
-    window.addEventListener('resize', resizeCanvas, false);
-    // force redraw once map has loaded
+  function mapLoadedCallback() {
+    resetMapState();
+    if (rg2.config.managing) {
+      rg2.manager.mapLoadCallback();
+    }
+  }
+
+  function addListeners() {
+    canvas.addEventListener('touchstart', rg2.handleTouchStart, false);
+    canvas.addEventListener('touchmove', rg2.handleTouchMove, false);
+    canvas.addEventListener('touchend', rg2.handleTouchEnd, false);
+    canvas.addEventListener('DOMMouseScroll', rg2.handleScroll, false);
+    canvas.addEventListener('mousewheel', rg2.handleScroll, false);
+    canvas.addEventListener('mousedown', rg2.handleMouseDown, false);
+    canvas.addEventListener('mousemove', rg2.handleMouseMove, false);
+    canvas.addEventListener('mouseup', rg2.handleMouseUp, false);
+    window.addEventListener('resize', resizeCanvas, false);    // force redraw once map has loaded
     map.addEventListener("load", function () {
       mapLoadedCallback();
     }, false);
-    trackTransforms(rg2.ctx);
+  }
+
+  function setUpCanvas() {
+    addListeners();
+    trackTransforms(ctx);
     resizeCanvas();
   }
   rg2.zoom = zoom;

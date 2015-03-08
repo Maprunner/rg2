@@ -104,7 +104,7 @@
       if (this.displayTrack) {
         rg2.ctx.lineWidth = opt.routeWidth;
         rg2.ctx.strokeStyle = this.trackColour;
-        rg2.ctx.globalAlpha = opt.routeIntensity;
+        rg2.ctx.globalAlpha = rg2.options.routeIntensity;
         rg2.ctx.fillStyle = this.trackColour;
         rg2.ctx.font = '10pt Arial';
         rg2.ctx.textAlign = "left";

@@ -59,8 +59,8 @@
 
   options = {
     // initialised to default values: overwritten from storage later
-    mapIntensity : 100,
-    routeIntensity : 100,
+    mapIntensity : 1,
+    routeIntensity : 1,
     replayFontSize : 12,
     courseWidth : 3,
     routeWidth : 4,
@@ -192,7 +192,7 @@
       if ((window.hasOwnProperty('localStorage')) && (window.localStorage !== null)) {
         if (localStorage.getItem('rg2-options') !== null) {
           this.options = JSON.parse(localStorage.getItem('rg2-options'));
-          // best to keep this at default?
+          // best to keep these at default?
           this.options.circleSize = 20;
           if (this.options.mapIntensity === 0) {
             rg2.utils.showWarningDialog("Warning", "Your saved settings have 0% map intensity so the map is invisible. You can adjust this on the configuration menu");
@@ -224,7 +224,7 @@
     opt.finishInnerRadius = circleSize * (5 / 6);
     opt.finishOuterRadius = circleSize * (7 / 6);
     opt.startTriangleLength = circleSize * (7 / 6);
-    opt.overprintWidth = rg2.options.courseWidth;
+    opt.overprintWidth = this.options.courseWidth;
     opt.font = circleSize + 'pt Arial';
     return opt;
   }
@@ -233,8 +233,7 @@
     var opt;
     opt = {};
     opt.routeWidth = this.options.routeWidth;
-    // stored as %, but used as 0 to 1.
-    opt.routeIntensity = this.options.routeIntensity / 100;
+    opt.routeIntensity = this.options.routeIntensity;
     opt.replayFontSize = this.options.replayFontSize;
     opt.showThreeSeconds = $("#chk-show-three-seconds").prop('checked');
     opt.showGPSSpeed = $("#chk-show-GPS-speed").prop('checked');

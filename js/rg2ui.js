@@ -351,16 +351,17 @@
         }
       }).val(rg2.options.courseWidth);
       $("#spn-map-intensity").spinner({
+        // spinner uses 0 to 100%: stored and used as 0 to 1
         max : 100,
         min : 0,
         step : 10,
         numberFormat : "n",
         spin : function (event, ui) {
           /*jslint unparam:true*/
-          rg2.setConfigOption("mapIntensity", ui.value);
+          rg2.setConfigOption("mapIntensity", ui.value / 100);
           rg2.redraw(false);
         }
-      }).val(rg2.options.mapIntensity);
+      }).val(rg2.options.mapIntensity * 100);
       $("#spn-name-font-size").spinner({
         max : 30,
         min : 5,
@@ -373,16 +374,17 @@
         }
       }).val(rg2.options.replayFontSize);
       $("#spn-route-intensity").spinner({
+        // spinner uses 0 to 100%: stored and used as 0 to 1
         max : 100,
         min : 0,
         step : 10,
         numberFormat : "n",
         spin : function (event, ui) {
           /*jslint unparam:true*/
-          rg2.setConfigOption("routeIntensity", ui.value);
+          rg2.setConfigOption("routeIntensity", ui.value / 100);
           rg2.redraw(false);
         }
-      }).val(rg2.options.routeIntensity);
+      }).val(rg2.options.routeIntensity * 100);
       $("#spn-route-width").spinner({
         max : 10,
         min : 1,
@@ -475,6 +477,10 @@
     },
 
     configureUI : function () {
+      // disable right click menu: may add our own later
+      $(document).bind("contextmenu", function (evt) {
+        evt.preventDefault();
+      });
       // disable tabs until we have loaded something
       var self;
       self = this;
