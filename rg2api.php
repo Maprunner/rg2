@@ -1440,10 +1440,14 @@ function getAllEvents($includeStats) {
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
       $detail = array();
       $fields = count($data);
+      if ($fields < 7) {
+        // not enough fields to be a valid line
+        continue;
+      }
       $detail["id"] = intval($data[0]);
       $detail["mapid"] = intval($data[1]);
       if (file_exists(KARTAT_DIRECTORY.$detail["mapid"].'.gif')) {
-        $detail["suffix"] = 'gif';          
+        $detail["suffix"] = 'gif';
       }
       for ($i = 0; $i < $referenced; $i++) {
         if ($detail["mapid"] == $maps[$i]["mapid"]) {
