@@ -47,7 +47,6 @@
     // version gets set automatically by grunt file during build process
     RG2VERSION: '1.1.1',
     TIME_NOT_FOUND : 9999,
-    SPLITS_NOT_FOUND : 9999,
     // values for evt.which
     RIGHT_CLICK : 3,
     DO_NOT_SAVE_COURSE: 9999,

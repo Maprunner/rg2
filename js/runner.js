@@ -53,7 +53,8 @@
       var control, ind, lastPointIndex;
       lastPointIndex = this.cumulativeDistance.length - 1;
       if (course.codes !== undefined) {
-        if (res.splits !== rg2.config.SPLITS_NOT_FOUND) {
+        // if we got no splits then there will just be a finish time
+        if (res.splits.length > 1) {
           for (control = 1; control < course.codes.length; control += 1) {
             // avoid NaN values for GPS tracks that are shorter than the result time
             if (res.splits[control] <= lastPointIndex) {

@@ -72,7 +72,7 @@
     // read through results to get list of all controls on score courses
     // since there is no master list of controls!
     generateScoreCourses : function () {
-      var i, j, k, res, courses, codes, x, y, newControl, courseid;
+      var i, j, res, courses, codes, x, y, courseid;
       courses = [];
       codes = [];
       x = [];
@@ -91,14 +91,7 @@
           }
           // read all controls for this result and save if new
           for (j = 0; j < res.scorecodes.length; j += 1) {
-            newControl = true;
-            for (k = 0; k < codes[courseid].length; k += 1) {
-              if (res.scorecodes[j] === codes[courseid][k]) {
-                newControl = false;
-                break;
-              }
-            }
-            if (newControl) {
+            if (codes[courseid].indexOf(res.scorecodes[j]) === -1) {
               codes[courseid].push(res.scorecodes[j]);
               x[courseid].push(res.scorex[j]);
               y[courseid].push(res.scorey[j]);

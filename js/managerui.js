@@ -1,27 +1,31 @@
 /*global rg2:false */
 (function () {
   var managerUI = {
+    showItems : function (items, doShow) {
+      var i;
+      for (i = 0; i < items.length; i += 1) {
+        if (doShow) {
+          $(items[i]).show();
+        } else {
+          $(items[i]).hide();
+        }
+      }
+    },
+
     initialiseUI : function () {
-      $("#rg2-animation-controls").hide();
-      $("#rg2-create-tab").hide();
-      $("#rg2-edit-tab").hide();
-      $("#rg2-map-tab").hide();
+      var items;
+      items = ["#rg2-animation-controls", "#rg2-create-tab", "#rg2-edit-tab", "#rg2-map-tab", "#rg2-draw-tab", "#rg2-results-tab", "#rg2-courses-tab", "#rg2-events-tab"];
+      this.showItems(items, false);
       $("#rg2-manage-login").show();
-      $("#rg2-draw-tab").hide();
-      $("#rg2-results-tab").hide();
-      $("#rg2-courses-tab").hide();
-      $("#rg2-events-tab").hide();
       $("#rg2-info-panel").tabs("disable", rg2.config.TAB_EVENTS).tabs("option", "active", rg2.config.TAB_LOGIN);
     },
 
     setUIVisibility : function () {
-      $('#rg2-draw-courses').hide();
-      $("#rg2-manage-create").show();
-      $("#rg2-create-tab").show();
-      $("#rg2-edit-tab").show();
-      $("#rg2-map-tab").show();
-      $("#rg2-manage-login").hide();
-      $("#rg2-login-tab").hide();
+      var items;
+      items = ["#rg2-draw-courses", "#rg2-manage-login", "#rg2-login-tab"];
+      this.showItems(items, false);
+      items = ["#rg2-manage-create", "#rg2-create-tab", "#rg2-edit-tab", "#rg2-map-tab"];
+      this.showItems(items, true);
       $("#rg2-event-date-edit").datepicker({
         dateFormat : 'yy-mm-dd'
       });

@@ -51,6 +51,12 @@
     // see http://en.wikipedia.org/wiki/World_file
     if (wf.A === undefined) {
       this.valid = false;
+      this.A = 0;
+      this.B = 0;
+      this.C = 0;
+      this.D = 0;
+      this.E = 0;
+      this.F = 0;
     } else {
       this.A = parseFloat(wf.A);
       this.B = parseFloat(wf.B);

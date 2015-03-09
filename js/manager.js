@@ -652,7 +652,7 @@
       dlg.title = "Confirm event delete";
       dlg.classes = "rg2-confirm-delete-event-dialog";
       dlg.doText = "Delete event";
-      dlg.onDo = this.deleteEvent.bind(this);
+      dlg.onDo = this.doDeleteEvent.bind(this);
       dlg.onCancel = rg2.managerUI.doCancelDeleteEvent.bind(this);
       rg2.utils.createModalDialog(dlg);
     },
@@ -1169,8 +1169,7 @@
         this.mapHeight = size.height;
         if ((!this.localworldfile.valid) || (this.mapWidth === 0) || (type === "none")) {
           // no map or world file loaded or user selected do not georef
-          this.clearGeorefs();
-          return;
+          throw "Do not georeference";
         }
         // set up source which is how map was originally georeferenced
         Proj4js.defs[type] = this.georefsystems.getParams(type);

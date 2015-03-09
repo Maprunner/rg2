@@ -100,6 +100,7 @@
 
     getMaxControls : function () {
       var maxControls, i;
+      maxControls = 0;
       // find maximum number of controls to set size of table
       for (i = 0; i < this.runners.length; i += 1) {
         maxControls = Math.max(maxControls, this.runners[i].splits.length);
@@ -118,19 +119,15 @@
     },
 
     getSplitsTable : function () {
-      var html, i, j, run, metresPerPixel, units, maxControls, legSplit, prevControlSecs;
+      var html, i, j, run, metresPerPixel, units, maxControls, legSplit, prevControlSecs, info;
       if (this.runners.length < 1) {
         return "<p>Select runners on Results tab.</p>";
       }
       legSplit = [];
       prevControlSecs = 0;
-      if (rg2.events.mapIsGeoreferenced()) {
-        metresPerPixel = rg2.events.getMetresPerPixel();
-        units = "metres";
-      } else {
-        metresPerPixel = 1;
-        units = "pixels";
-      }
+      info = rg2.events.getMetresPerPixel();
+      metresPerPixel = info.metresPerPixel;
+      units = info.units;
       maxControls = this.getMaxControls();
       html = this.getSplitsTableHeader(maxControls);
       for (i = 0; i < this.runners.length; i += 1) {
@@ -159,7 +156,6 @@
             html += "<td>" + Math.round(metresPerPixel * run.legTrackDistance[j]) + "</td>";
           }
         }
-
       }
       html += "</tr></table>";
       return html;
