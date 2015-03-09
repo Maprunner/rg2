@@ -1,4 +1,4 @@
-// Version 1.1.0 2015-02-24T17:12:13;
+// Version 1.1.2 2015-03-09T15:30:10;
 /*
  * Routegadget 2
  * https://github.com/Maprunner/rg2
@@ -8,675 +8,49 @@
  * https://github.com/Maprunner/rg2/blob/master/LICENSE
  */
 /*global rg2Config:false */
-/*global Image:false */
 /*global setTimeout:false */
-/*global localStorage:false */
-/*global loadEvent */
-/*global console */
 var rg2 = (function (window, $) {
   'use strict';
-  var canvas, ctx, dictionary, map, mapLoadingText, infoPanelMaximised, scaleFactor, lastX, lastY, zoomSize,
-    dragStart, dragged, whichButton, pinched, pinchStart0, pinchStart1, pinchEnd0, pinchEnd1, managing, config, options,
-    $rg2infopanel, $rg2eventtitle, zoom, handleInputDown, handleInputMove, handleInputUp, handleTouchStart, handleTouchMove,
-    handleTouchEnd, handleScroll, handleMouseUp, handleMouseDown, handleMouseMove;
-  canvas = $("#rg2-map-canvas")[0];
-  ctx = canvas.getContext('2d');
-  config = {
-    DEFAULT_SCALE_FACTOR : 1.1,
-    TAB_EVENTS : 0,
-    TAB_COURSES : 1,
-    TAB_RESULTS : 2,
-    TAB_DRAW : 3,
-    TAB_LOGIN : 4,
-    TAB_CREATE : 5,
-    TAB_EDIT : 6,
-    TAB_MAP : 7,
-    // translated when output so leave as English here
-    DEFAULT_NEW_COMMENT : "Type your comment",
-    DEFAULT_EVENT_COMMENT : "Comments (optional)",
-    // added to resultid when saving a GPS track
-    GPS_RESULT_OFFSET : 50000,
-    MASS_START_REPLAY : 1,
-    REAL_TIME_REPLAY : 2,
-    // dropdown selection value
-    MASS_START_BY_CONTROL : 99999,
-    VERY_HIGH_TIME_IN_SECS : 99999,
-    // screen sizes for different layouts
-    BIG_SCREEN_BREAK_POINT : 800,
-    SMALL_SCREEN_BREAK_POINT : 500,
-    PURPLE : '#b300ff',
-    RED : '#ff0000',
-    GREEN : '#00ff00',
-    WHITE : '#ffffff',
-    BLACK : '#ffoooo',
-    RUNNER_DOT_RADIUS : 6,
-    // parameters for call to draw courses
-    DIM : 0.75,
-    FULL_INTENSITY : 1.0,
-    // values of event format
-    NORMAL_EVENT : 1,
-    EVENT_WITHOUT_RESULTS : 2,
-    SCORE_EVENT : 3,
-    // version gets set automatically by grunt file during build process
-    RG2VERSION: '1.1.0',
-    TIME_NOT_FOUND : 9999,
-    SPLITS_NOT_FOUND : 9999,
-    // values for evt.which
-    RIGHT_CLICK : 3
-  };
-
-  options = {
-    // initialised to default values: overwritten from storage later
-    mapIntensity : 100,
-    routeIntensity : 100,
-    replayFontSize : 12,
-    courseWidth : 3,
-    routeWidth : 4,
-    circleSize : 20,
-    snap : true,
-    showThreeSeconds : false,
-    showGPSSpeed : false
-  };
-
-  // translation function
-  function t(str) {
-    if (dictionary.hasOwnProperty(str)) {
-      return dictionary[str];
-    }
-    return str;
-  }
-
-  /* called whenever anything changes enough to need screen redraw
-   * @param fromTimer {Boolean} true if called from timer: used to determine if animation time should be incremented
-   */
-  function redraw(fromTimer) {
-    // Clear the entire canvas
-    // first save current transformed state
-    ctx.save();
-    // reset everything back to initial size/state/orientation
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    // fill canvas to erase things: clearRect doesn't work on Android (?) and leaves the old map as background when changing
-    ctx.fillStyle = config.WHITE;
-    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    // go back to where we started
-    ctx.restore();
-    // set transparency of map
-    ctx.globalAlpha = (options.mapIntensity / 100);
-
-    if (map.height > 0) {
-      // using non-zero map height to show we have a map loaded
-      ctx.drawImage(map, 0, 0);
-      var active = $rg2infopanel.tabs("option", "active");
-      if (active === config.TAB_DRAW) {
-        rg2.courses.drawCourses(config.DIM);
-        rg2.controls.drawControls(false);
-        rg2.results.drawTracks();
-        rg2.drawing.drawNewTrack();
-      } else {
-        if (active === config.TAB_CREATE) {
-          rg2.manager.drawControls();
-        } else {
-          rg2.courses.drawCourses(config.FULL_INTENSITY);
-          rg2.results.drawTracks();
-          rg2.controls.drawControls(false);
-          // parameter determines if animation time is updated or not
-          if (fromTimer) {
-            rg2.animation.runAnimation(true);
-          } else {
-            rg2.animation.runAnimation(false);
-          }
-        }
-      }
-    } else {
-      ctx.font = '30pt Arial';
-      ctx.textAlign = 'center';
-      ctx.fillStyle = config.BLACK;
-      ctx.fillText(t(mapLoadingText), canvas.width / 2, canvas.height / 2);
-    }
-  }
-
-  function reportJSONFail(errorText) {
-    $("#rg2-load-progress").hide();
-    $('body').css('cursor', 'auto');
-    rg2.utils.showWarningDialog('Configuration error', errorText);
-  }
-
-  function setTitleBar() {
-    var title;
-    if (window.innerWidth >= config.BIG_SCREEN_BREAK_POINT) {
-      title = rg2.events.getActiveEventName() + " " + rg2.events.getActiveEventDate();
-      $rg2eventtitle.html(title).show();
-    } else if (window.innerWidth > config.SMALL_SCREEN_BREAK_POINT) {
-      title = rg2.events.getActiveEventName();
-      $rg2eventtitle.html(title).show();
-    } else {
-      $rg2eventtitle.hide();
-    }
-    if (rg2.events.mapIsGeoreferenced()) {
-      $("#rg2-event-title-icon").addClass("fa fa-globe");
-    } else {
-      $("#rg2-event-title-icon").removeClass("fa fa-globe");
-    }
-  }
-
-  function setResultCheckboxes() {
-    // checkbox to show a course
-    $(".showcourse").click(function (event) {
-      var id;
-      //Prevent opening accordion when check box is clicked
-      event.stopPropagation();
-      id = event.target.id;
-      if (event.target.checked) {
-        rg2.courses.putOnDisplay(id);
-        // check box on courses tab
-        $(".courselist").filter("#" + id).prop('checked', true);
-      } else {
-        rg2.courses.removeFromDisplay(id);
-        // uncheck box on courses tab
-        $(".courselist").filter("#" + id).prop('checked', false);
-        // make sure the all checkbox is not checked
-        $(".allcourses").prop('checked', false);
-      }
-      rg2.requestedHash.setCourses();
-      redraw(false);
-    });
-    // checkbox to show an individual score course
-    $(".showscorecourse").click(function (event) {
-      rg2.results.displayScoreCourse(parseInt(event.target.id, 10), event.target.checked);
-      redraw(false);
-    });
-    // checkbox to show a result
-    $(".showtrack").click(function (event) {
-      if (event.target.checked) {
-        rg2.results.putOneTrackOnDisplay(event.target.id);
-      } else {
-        rg2.results.removeOneTrackFromDisplay(event.target.id);
-      }
-      rg2.requestedHash.setRoutes();
-      redraw(false);
-    });
-    // checkbox to animate a result
-    $(".showreplay").click(function (event) {
-      if (event.target.checked) {
-        rg2.animation.addRunner(new rg2.Runner(parseInt(event.target.id, 10)), true);
-      } else {
-        rg2.animation.removeRunner(parseInt(event.target.id, 10), true);
-      }
-      redraw(false);
-    });
-    // checkbox to display all tracks for course
-    $(".allcoursetracks").click(function (event) {
-      var runners, selector, i;
-      runners = rg2.results.getAllRunnersForCourse(parseInt(event.target.id, 10));
-      for (i = 0; i < runners.length; i += 1) {
-        if (event.target.checked) {
-          rg2.results.putOneTrackOnDisplay(runners[i]);
-        } else {
-          rg2.results.removeOneTrackFromDisplay(runners[i]);
-        }
-      }
-      selector = ".showtrack-" + event.target.id;
-      if (event.target.checked) {
-        // select all the individual checkboxes for the course
-        $(selector).prop('checked', true);
-      } else {
-        $(selector).prop('checked', false);
-      }
-      rg2.requestedHash.setRoutes();
-      redraw(false);
-    });
-    // checkbox to animate all results for course
-    $(".allcoursereplay").click(function (event) {
-      var courseresults, selector;
-      courseresults = rg2.results.getAllRunnersForCourse(parseInt(event.target.id, 10));
-      rg2.animation.animateRunners(courseresults, event.target.checked);
-      selector = ".showreplay-" + event.target.id;
-      if (event.target.checked) {
-        // select all the individual checkboxes for each course
-        $(selector).prop('checked', true);
-      } else {
-        $(selector).prop('checked', false);
-      }
-      redraw(false);
-    });
-  }
-
-  function createResultMenu() {
-    //loads menu from populated result array
-    var html = rg2.results.formatResultListAsAccordion();
-    // #177 not pretty but gets round problems of double encoding
-    html = html.replace(/&amp;/g, '&');
-    $("#rg2-result-list").empty().append(html);
-    $("#rg2-result-list").accordion("refresh");
-    $rg2infopanel.tabs("refresh");
-    setResultCheckboxes();
-    // disable control dropdown if we have no controls
-    if (rg2.courses.getHighestControlNumber() === 0) {
-      $("#rg2-control-select").prop('disabled', true);
-    } else {
-      $("#rg2-control-select").prop('disabled', false);
-    }
-  }
-
-  function createEventMenu() {
-    //loads menu from populated events array
-    var html = rg2.events.formatEventsAsMenu();
-    $("#rg2-event-list").append(html).menu({
-      select : function (event, ui) {
-        /*jslint unparam:true*/
-        loadEvent(ui.item[0].id);
-        rg2.requestedHash.setNewEvent(rg2.events.getKartatEventID());
-      }
-    });
-  }
-
-  function createCourseMenu() {
-    //loads menu from populated courses array
-    $("#rg2-course-table").empty().append(rg2.courses.formatCoursesAsTable());
-
-    // checkbox on course tab to show a course
-    $(".courselist").click(function (event) {
-      var id = parseInt(event.currentTarget.id, 10);
-      if (event.target.checked) {
-        rg2.courses.putOnDisplay(id);
-        // check box on results tab
-        $(".showcourse").filter("#" + id).prop('checked', true);
-      } else {
-        rg2.courses.removeFromDisplay(id);
-        // make sure the all checkbox is not checked
-        $(".allcourses").prop('checked', false);
-        // uncheck box on results tab
-        $(".showcourse").filter("#" + id).prop('checked', false);
-      }
-      rg2.requestedHash.setCourses();
-      redraw(false);
-    });
-    // checkbox on course tab to show all courses
-    $(".allcourses").click(function (event) {
-      if (event.target.checked) {
-        rg2.courses.putAllOnDisplay();
-        // select all the individual checkboxes for each course
-        $(".courselist").prop('checked', true);
-        // check all boxes on results tab
-        $(".showcourse").prop('checked', true);
-      } else {
-        rg2.courses.removeAllFromDisplay();
-        $(".courselist").prop('checked', false);
-        // uncheck all boxes on results tab
-        $(".showcourse").prop('checked', false);
-      }
-      rg2.requestedHash.setCourses();
-      redraw(false);
-    });
-    // checkbox on course tab to show tracks for one course
-    $(".tracklist").click(function (event) {
-      var courseid = event.target.id;
-      if (event.target.checked) {
-        rg2.results.putTracksOnDisplay(parseInt(courseid, 10));
-      } else {
-        rg2.results.removeTracksFromDisplay(parseInt(courseid, 10));
-        // make sure the all checkbox is not checked
-        $(".alltracks").prop('checked', false);
-      }
-      rg2.requestedHash.setRoutes();
-      redraw(false);
-    });
-    // checkbox on course tab to show all tracks
-    $(".alltracks").click(function (event) {
-      if (event.target.checked) {
-        rg2.results.putAllTracksOnDisplay();
-        // select all the individual checkboxes for each course
-        $(".tracklist").prop('checked', true);
-      } else {
-        rg2.results.removeAllTracksFromDisplay();
-        // deselect all the individual checkboxes for each course
-        $(".tracklist").prop('checked', false);
-      }
-      rg2.requestedHash.setRoutes();
-      redraw(false);
-    });
-  }
-
-  function translateFixedText() {
-    var temp;
-    $("#rg2-events-tab a").text(t('Events'));
-    $("#rg2-courses-tab a").text(t('Courses'));
-    $("#rg2-results-tab a").text(t('Results'));
-    $("#rg2-draw-tab a").text(t('Draw'));
-    $("#rg2-hide-info-panel-icon").prop("title", t("Hide info panel"));
-    $('#btn-about').prop('title', t('Help'));
-    $('#btn-options').prop('title', t('Options'));
-    $('#btn-zoom-out').prop('title', t('Zoom out'));
-    $('#btn-zoom-in').prop('title', t('Zoom in'));
-    $('#btn-reset').prop('title', t('Reset'));
-    $('#btn-show-splits').prop('title', t('Splits'));
-    temp = $('#btn-toggle-controls').prop('title');
-    $('#btn-toggle-controls').prop('title', t(temp));
-    temp = $('#btn-toggle-names').prop('title');
-    $('#btn-toggle-names').prop('title', t(temp));
-    $('#rg2-splits-table').prop('title', t('Splits table'));
-    $('#btn-slower').prop('title', t('Slower'));
-    $('#btn-faster').prop('title', t('Faster'));
-    temp = $('#btn-start-stop').prop('title');
-    $('#btn-start-stop').prop('title', t(temp));
-    $('#btn-real-time').prop('title', t('Real time'));
-    $('#btn-mass-start').prop('title', t('Mass start'));
-    $('label[for=rg2-control-select]').prop('textContent', t('Start at'));
-    $('label[for=btn-full-tails]').prop('textContent', t('Full tails'));
-    $('label[for=spn-tail-length]').prop('textContent', t('Length'));
-    $('.rg2-options-dialog .ui-dialog-title').text(t('Configuration options'));
-    $('label[for=rg2-select-language]').prop('textContent', t('Language'));
-    $('label[for=spn-map-intensity]').prop('textContent', t('Map intensity %'));
-    $('label[for=spn-route-intensity]').prop('textContent', t('Route intensity %'));
-    $('label[for=spn-route-width]').prop('textContent', t('Route width'));
-    $('label[for=spn-name-font-size]').prop('textContent', t('Replay label font size'));
-    $('label[for=spn-course-width]').prop('textContent', t('Course overprint width'));
-    $('label[for=spn-control-circle]').prop('textContent', t('Control circle size'));
-    $('label[for=chk-snap-toggle]').prop('textContent', t('Snap to control when drawing'));
-    $('label[for=chk-show-three-seconds]').prop('textContent', t('Show +3 time loss for GPS routes'));
-    $('label[for=chk-show-GPS-speed]').prop('textContent', t('Show GPS speed colours'));
-    $('#btn-undo').button('option', 'label', t('Undo'));
-    $('#btn-undo-gps-adjust').button('option', 'label', t('Undo'));
-    $('#btn-save-route').button('option', 'label', t('Save'));
-    $('#btn-reset-drawing').button('option', 'label', t('Reset'));
-    $('#btn-three-seconds').button('option', 'label', t('+3 sec'));
-    $('#btn-save-gps-route').button('option', 'label', t('Save GPS route'));
-    $('#rg2-draw-title').text(t('Draw route'));
-    $('#draw-text-1').text(t('Left click to add/lock/unlock a handle'));
-    $('#draw-text-2').text(t('Green - draggable'));
-    $('#draw-text-3').text(t('Red - locked'));
-    $('#draw-text-4').text(t('Right click to delete a handle'));
-    $('#draw-text-5').text(t('Drag a handle to adjust track around locked point(s)'));
-    $('#rg2-load-gps-title').text(t('Load GPS file (GPX or TCX)'));
-    $('label[for=rg2-course-select]').prop('textContent', t('Select course'));
-    $('label[for=rg2-name-select]').prop('textContent', t('Select name'));
-    $('label[for=btn-move-all]').prop('textContent', t('Move track and map together (or right click-drag)'));
-  }
-
-  function createLanguageDropdown() {
-    var i, opt, dropdown;
-    dropdown = document.getElementById("rg2-select-language");
-    $("#rg2-select-language").empty();
-    opt = document.createElement("option");
-    opt.value = "en";
-    opt.text = "en: English";
-    if (dictionary.code === "en") {
-      opt.selected = true;
-    }
-    dropdown.options.add(opt);
-    for (i in rg2Config.languages) {
-      if (rg2Config.languages.hasOwnProperty(i)) {
-        opt = document.createElement("option");
-        opt.value = i;
-        opt.text = i + ": " + rg2Config.languages[i];
-        if (dictionary.code === i) {
-          opt.selected = true;
-        }
-        dropdown.options.add(opt);
-      }
-    }
-  }
-
-  function setLanguageOptions() {
-    // use English unless a dictionary was passed in
-    if (rg2Config.dictionary.code === undefined) {
-      dictionary = {};
-      dictionary.code = 'en';
-    } else {
-      dictionary = rg2Config.dictionary;
-    }
-    createLanguageDropdown();
-  }
-
-  function setNewLanguage() {
-    var eventid;
-    $("#rg2-event-list").menu("destroy");
-    createEventMenu();
-    eventid = rg2.events.getActiveEventID();
-    if (eventid !== null) {
-      rg2.courses.removeAllFromDisplay();
-      rg2.results.removeAllTracksFromDisplay();
-      rg2.animation.resetAnimation();
-      rg2.drawing.initialiseDrawing(rg2.events.hasResults(eventid));
-      createCourseMenu();
-      createResultMenu();
-    }
-    translateFixedText();
-    $rg2infopanel.tabs("refresh");
-    redraw(false);
-  }
-
-  function getNewLanguage(lang) {
-    $.getJSON(rg2Config.json_url, {
-      id : lang,
-      type : 'lang',
-      cache : false
-    }).done(function (json) {
-      dictionary = json.data.dict;
-      setNewLanguage();
-    }).fail(function (jqxhr, textStatus, error) {
-      /*jslint unparam:true*/
-      reportJSONFail("Language request failed: " + error);
-    });
-  }
-
-  function resetMapState() {
-    // place map in centre of canvas and scale it down to fit
-    var mapscale, heightscale;
-    heightscale = canvas.height / map.height;
-    lastX = canvas.width / 2;
-    lastY = canvas.height / 2;
-    zoomSize = 1;
-    dragStart = null;
-    // looks odd but this works for initialisation
-    dragged = true;
-    // don't stretch map: just shrink to fit
-    if (heightscale < 1) {
-      mapscale = heightscale;
-    } else {
-      mapscale = 1;
-    }
-    // move map into view on small screens
-    // avoid annoying jumps on larger screens
-    if (infoPanelMaximised || window.innerWidth >= config.BIG_SCREEN_BREAK_POINT) {
-      ctx.setTransform(mapscale, 0, 0, mapscale, $rg2infopanel.outerWidth(), 0);
-    } else {
-      ctx.setTransform(mapscale, 0, 0, mapscale, 0, 0);
-    }
-    ctx.save();
-    redraw(false);
-  }
-
-  zoom = function (zoomDirection) {
-    var pt, factor, tempZoom;
-    factor = Math.pow(scaleFactor, zoomDirection);
-    tempZoom = zoomSize * factor;
-    // limit zoom to avoid things disappearing
-    // chosen values seem reasonable after some quick tests
-    if ((tempZoom < 50) && (tempZoom > 0.05)) {
-      zoomSize = tempZoom;
-      pt = ctx.transformedPoint(lastX, lastY);
-      ctx.translate(pt.x, pt.y);
-      ctx.scale(factor, factor);
-      ctx.translate(-pt.x, -pt.y);
-      ctx.save();
-      redraw(false);
-    }
-  };
-
-  function resizeInfoDisplay() {
-    if (infoPanelMaximised) {
-      infoPanelMaximised = false;
-      $("#rg2-resize-info").prop("title", t("Show info panel"));
-      $("#rg2-hide-info-panel-control").css("left", "0px");
-      $("#rg2-hide-info-panel-icon").removeClass("fa-chevron-left").addClass("fa-chevron-right").prop("title", t("Show info panel"));
-      $rg2infopanel.hide();
-    } else {
-      infoPanelMaximised = true;
-      $("#rg2-resize-info").prop("title", t("Hide info panel"));
-      $("#rg2-hide-info-panel-control").css("left", "366px");
-      $("#rg2-hide-info-panel-icon").removeClass("fa-chevron-right").addClass("fa-chevron-left").prop("title", t("Hide info panel"));
-      $rg2infopanel.show();
-    }
-    // move map around if necesssary
-    resetMapState();
-  }
-
-  function loadEventList() {
-    var eventID;
-    $.getJSON(rg2Config.json_url, {
-      type : "events",
-      cache : false
-    }).done(function (json) {
-      console.log("Events: " + json.data.events.length);
-      rg2.events.deleteAllEvents();
-      $.each(json.data.events, function () {
-        rg2.events.addEvent(new rg2.Event(this));
-      });
-      createEventMenu();
-      // load requested event if set
-      // input is kartat ID so need to find internal ID first
-      if (rg2.requestedHash.getID()) {
-        eventID = rg2.events.getEventIDForKartatID(rg2.requestedHash.getID());
-        if (eventID !== undefined) {
-          loadEvent(eventID);
-        }
-      }
-      if (managing) {
-        rg2.manager.eventListLoaded();
-      }
-    }).fail(function (jqxhr, textStatus, error) {
-      /*jslint unparam:true*/
-      reportJSONFail("Events request failed: " + error);
-    });
-  }
 
   function startDisplayingInfo() {
     // check if a specific event has been requested
-    if ((window.location.hash) && (!managing)) {
+    if ((window.location.hash) && (!rg2.config.managing)) {
       rg2.requestedHash.parseHash(window.location.hash);
     }
     // load event details
-    loadEventList();
+    rg2.getEvents();
     // slight delay looks better than going straight in....
     setTimeout(function () {
       $("#rg2-container").show();
     }, 500);
   }
 
-  function setUIEventHandlers() {
-    var text, newlang;
-    $("#rg2-resize-info").click(function () {
-      resizeInfoDisplay();
-    });
-    $("#rg2-hide-info-panel-control").click(function () {
-      resizeInfoDisplay();
-    });
-    $("#rg2-control-select").prop('disabled', true).change(function () {
-      rg2.animation.setStartControl($("#rg2-control-select").val());
-    });
-    $("#rg2-name-select").prop('disabled', true).change(function () {
-      rg2.drawing.setName(parseInt($("#rg2-name-select").val(), 10));
-    });
-    $("#rg2-course-select").change(function () {
-      rg2.drawing.setCourse(parseInt($("#rg2-course-select").val(), 10));
-    });
-    $("#rg2-enter-name").click(function () {
-      rg2.drawing.setNameAndTime();
-    }).keyup(function () {
-      rg2.drawing.setNameAndTime();
-    });
-    $('#rg2-new-comments').focus(function () {
-      // Clear comment box if user focuses on it and it still contains default text
-      text = $("#rg2-new-comments").val();
-      if (text === t(config.DEFAULT_NEW_COMMENT)) {
-        $('#rg2-new-comments').val("");
-      }
-    });
-    $("#chk-snap-toggle").prop('checked', options.snap).click(function (event) {
-      if (event.target.checked) {
-        options.snap = true;
-      } else {
-        options.snap = false;
-      }
-    });
-    $("#chk-show-three-seconds").prop('checked', options.showThreeSeconds).click(function () {
-      redraw(false);
-    });
-    $("#chk-show-GPS-speed").prop('checked', options.showGPSSpeed).click(function () {
-      redraw(false);
-    });
-    $("#rg2-select-language").click(function () {
-      newlang = $("#rg2-select-language").val();
-      if (newlang !== dictionary.code) {
-        if (newlang === 'en') {
-          dictionary = {};
-          dictionary.code = 'en';
-          setNewLanguage();
-        } else {
-          getNewLanguage(newlang);
-        }
-      }
-    });
-    $("#rg2-load-gps-file").change(function (evt) {
-      rg2.drawing.uploadGPS(evt);
-    });
+  function getResultsStats(controls) {
+    var stats, resultsinfo, coursearray;
+    resultsinfo = rg2.results.getResultsInfo();
+    coursearray = rg2.courses.getCoursesForEvent();
+    stats = "<p><strong>" +  rg2.t("Courses") + ":</strong> " + coursearray.length + ". <strong>" +  rg2.t("Controls") + ":</strong> " + controls;
+    stats += ". <strong> " +  rg2.t("Results") + ":</strong> " + resultsinfo.results + ".</p>";
+    stats += "<p><strong>" +  rg2.t("Routes") + ":</strong> " + resultsinfo.totalroutes + " (" + resultsinfo.percent + "%). ";
+    stats += "<strong>" +  rg2.t("Drawn routes") + ":</strong> " + resultsinfo.drawnroutes + ". <strong>" +  rg2.t("GPS routes") + ":</strong> " + resultsinfo.gpsroutes + ".</p>";
+    stats += "<p><strong>" +  rg2.t("Total time") + ":</strong> " + resultsinfo.time + ".</p>";
+    return stats;
   }
 
-  // called whenever the active tab changes to tidy up as necessary
-  function tabActivated() {
-    var active = $rg2infopanel.tabs("option", "active");
-    switch (active) {
-    case config.TAB_DRAW:
-      rg2.courses.removeAllFromDisplay();
-      rg2.drawing.showCourseInProgress();
-      break;
-    default:
-      break;
+  function getMapStats(validWordlfile) {
+    var stats, mapSize;
+    mapSize = rg2.getMapSize();
+    stats = "<p><strong>" +  rg2.t("Map ") + ":</strong> ID " + rg2.events.getActiveMapID() + ", " + mapSize.width + " x " + mapSize.height + " pixels";
+    if (validWordlfile) {
+      stats += ". " +  rg2.t("Map is georeferenced") + ".</p>";
+    } else {
+      stats += ".</p>";
     }
-    redraw(false);
-  }
-
-  function configureUI() {
-    // disable tabs until we have loaded something
-    $rg2infopanel.tabs({
-      disabled : [config.TAB_COURSES, config.TAB_RESULTS, config.TAB_DRAW],
-      active : config.TAB_EVENTS,
-      heightStyle : "content",
-      activate : function () {
-        tabActivated();
-      }
-    });
-    $("#rg2-result-list").accordion({
-      collapsible : true,
-      heightStyle : "content"
-    });
-    $("#rg2-clock").text("00:00:00");
-    $("#rg2-clock-slider").slider({
-      slide : function (event, ui) {
-        /*jslint unparam:true*/
-        // passes slider value as new time
-        rg2.animation.clockSliderMoved(ui.value);
-      }
-    });
-    $("#rg2-header-container").css("color", rg2Config.header_text_colour).css("background", rg2Config.header_colour);
-    $("#rg2-about-dialog").hide();
-    $("#rg2-splits-display").hide();
-    $("#rg2-track-names").hide();
-    $("#rg2-add-new-event").hide();
-    $("#rg2-load-progress-bar").progressbar({
-      value : false
-    });
-    $("#rg2-load-progress-label").text("");
-    $("#rg2-load-progress").hide();
-    $("#rg2-option-controls").hide();
-    $("#rg2-animation-controls").hide();
-    $("#rg2-splitsbrowser").hide();
-    setUIEventHandlers();
+    return stats;
   }
 
   function getEventStats() {
-    var stats, coursearray, resultsinfo, runnercomments, eventinfo, id;
+    var stats, runnercomments, eventinfo, id;
     id = rg2.events.getActiveEventID();
     // check there is an event to report on
     if (id === null) {
@@ -684,711 +58,57 @@ var rg2 = (function (window, $) {
     }
     id = rg2.events.getKartatEventID();
     eventinfo = rg2.events.getEventInfo(parseInt(id, 10));
-    coursearray = rg2.courses.getCoursesForEvent();
-    resultsinfo = rg2.results.getResultsInfo();
     runnercomments = rg2.results.getComments();
-    stats = "<h3>" + t("Event statistics") + ": " + eventinfo.name + ": " + eventinfo.date + "</h3>";
+    stats = "<h3>" +  rg2.t("Event statistics") + ": " + eventinfo.name + ": " + eventinfo.date + "</h3>";
+    stats += getResultsStats(eventinfo.controls);
     if (eventinfo.comment) {
       stats += "<p>" + eventinfo.comment + "</p>";
     }
-    stats += "<p><strong>" + t("Courses") + ":</strong> " + coursearray.length + ". <strong>" + t("Results") + ":</strong> " + resultsinfo.results;
-    stats += ". <strong> " + t("Controls") + ":</strong> " + eventinfo.controls + ".</p>";
-    stats += "<p><strong>" + t("Routes") + ":</strong> " + resultsinfo.totalroutes + " (" + resultsinfo.percent + "%). ";
-    stats += "<strong>" + t("Drawn routes") + ":</strong> " + resultsinfo.drawnroutes + ". <strong>" + t("GPS routes") + ":</strong> " + resultsinfo.gpsroutes + ".</p>";
-    stats += "<p><strong>" + t("Total time") + ":</strong> " + resultsinfo.time + ".</p>";
-    stats += "<p><strong>" + t("Map ") + ":</strong> ID " + rg2.events.getActiveMapID() + ", " + map.width + " x " + map.height + " pixels";
-    if (eventinfo.georeferenced) {
-      stats += ". " + t("Map is georeferenced") + ".</p>";
-    } else {
-      stats += ".</p>";
-    }
+    stats += getMapStats(eventinfo.worldfile.valid);
     if (runnercomments) {
-      stats += "<p><strong>" + t("Comments") + ":</strong></p>" + runnercomments;
+      stats += "<p><strong>" +  rg2.t("Comments") + ":</strong></p>" + runnercomments;
     }
     // #177 not pretty but gets round problems of double encoding
     stats = stats.replace(/&amp;/g, '&');
     return stats;
   }
 
-  function displayAboutDialog() {
-    $("#rg2-event-stats").empty().html(getEventStats());
-    $("#rg2-about-dialog").dialog({
-      width : Math.min(1000, (canvas.width * 0.8)),
-      maxHeight : Math.min(1000, (canvas.height * 0.9)),
-      title : "RG2 Version " + config.RG2VERSION,
-      dialogClass : "rg2-about-dialog",
-      resizable : false,
-      buttons : {
-        Ok : function () {
-          $(this).dialog("close");
-        }
-      }
-    });
-  }
-
-  function saveConfigOptions() {
-    try {
-      if ((window.hasOwnProperty('localStorage')) && (window.localStorage !== null)) {
-        options.snap = $("#chk-snap-toggle").prop('checked');
-        options.showThreeSeconds = $("#chk-show-three-seconds").prop('checked');
-        options.showGPSSpeed = $("#chk-show-GPS-speed").prop('checked');
-        localStorage.setItem('rg2-options', JSON.stringify(options));
-      }
-    } catch (e) {
-      // storage not supported so just return
-      return;
-    }
-  }
-
-  function displayOptionsDialog() {
-    $("#rg2-option-controls").dialog({
-      minWidth : 400,
-      title : t("Configuration options"),
-      dialogClass : "rg2-options-dialog",
-      close : function () {
-        saveConfigOptions();
-      }
-    });
-  }
-
-  function initialiseButtons() {
-    $("#btn-about").click(function () {
-      displayAboutDialog();
-    });
-    $("#btn-faster").click(function () {
-      rg2.animation.goFaster();
-    });
-    $("#btn-full-tails").prop('checked', false).click(function (event) {
-      if (event.target.checked) {
-        rg2.animation.setFullTails(true);
-        $("#spn-tail-length").spinner("disable");
-      } else {
-        rg2.animation.setFullTails(false);
-        $("#spn-tail-length").spinner("enable");
-      }
-    });
-    $("#btn-mass-start").addClass('active').click(function () {
-      rg2.animation.setReplayType(config.MASS_START_REPLAY);
-    });
-    $("#btn-move-all").prop('checked', false);
-    $("#btn-options").click(function () {
-      displayOptionsDialog();
-    });
-    $("#btn-real-time").removeClass('active').click(function () {
-      rg2.animation.setReplayType(config.REAL_TIME_REPLAY);
-    });
-    $("#btn-reset").click(function () {
-      resetMapState();
-    });
-    $("#btn-reset-drawing").button().button("disable").click(function () {
-      rg2.drawing.resetDrawing();
-    });
-    $("#btn-save-gps-route").button().button("disable").click(function () {
-      rg2.drawing.saveGPSRoute();
-    });
-    $("#btn-save-route").button().button("disable").click(function () {
-      rg2.drawing.saveRoute();
-    });
-    $("#btn-show-splits").click(function () {
-      $("#rg2-splits-table").empty().append(rg2.animation.getSplitsTable()).dialog({
-        width : 'auto',
-        dialogClass : "rg2-splits-table",
-        buttons : {
-          Ok : function () {
-            $(this).dialog('close');
-          }
-        }
-      });
-    }).hide();
-    $("#btn-slower").click(function () {
-      rg2.animation.goSlower();
-    });
-    $("#btn-start-stop").click(function () {
-      rg2.animation.toggleAnimation();
-    });
-    $("#btn-three-seconds").button().click(function () {
-      rg2.drawing.waitThreeSeconds();
-    }).button("disable");
-    $("#btn-toggle-controls").click(function () {
-      rg2.controls.toggleControlDisplay();
-      redraw(false);
-    }).hide();
-    $("#btn-toggle-names").click(function () {
-      rg2.animation.toggleNameDisplay();
-      redraw(false);
-    }).hide();
-    $("#btn-undo").button().button("disable").click(function () {
-      rg2.drawing.undoLastPoint();
-    });
-    $("#btn-undo-gps-adjust").button().button("disable").click(function () {
-      rg2.drawing.undoGPSAdjust();
-    });
-    $("#btn-zoom-in").click(function () {
-      zoom(1);
-    });
-    $("#btn-zoom-out").click(function () {
-      zoom(-1);
-    });
-    $("#rg2-load-gps-file").button().button("disable");
-  }
-
-  function initialiseSpinners() {
-    $("#spn-control-circle").spinner({
-      max : 50,
-      min : 3,
-      step : 1,
-      spin : function (event, ui) {
-        /*jslint unparam:true*/
-        options.circleSize = ui.value;
-        redraw(false);
-      }
-    }).val(options.circleSize);
-    $("#spn-course-width").spinner({
-      max : 10,
-      min : 1,
-      step : 0.5,
-      spin : function (event, ui) {
-        /*jslint unparam:true*/
-        options.courseWidth = ui.value;
-        redraw(false);
-      }
-    }).val(options.courseWidth);
-    $("#spn-map-intensity").spinner({
-      max : 100,
-      min : 0,
-      step : 10,
-      numberFormat : "n",
-      spin : function (event, ui) {
-        /*jslint unparam:true*/
-        options.mapIntensity = ui.value;
-        redraw(false);
-      }
-    }).val(options.mapIntensity);
-    $("#spn-name-font-size").spinner({
-      max : 30,
-      min : 5,
-      step : 1,
-      numberFormat : "n",
-      spin : function (event, ui) {
-        /*jslint unparam:true*/
-        options.replayFontSize = ui.value;
-        redraw(false);
-      }
-    }).val(options.replayFontSize);
-    $("#spn-route-intensity").spinner({
-      max : 100,
-      min : 0,
-      step : 10,
-      numberFormat : "n",
-      spin : function (event, ui) {
-        /*jslint unparam:true*/
-        options.routeIntensity = ui.value;
-        redraw(false);
-      }
-    }).val(options.routeIntensity);
-    $("#spn-route-width").spinner({
-      max : 10,
-      min : 1,
-      step : 0.5,
-      spin : function (event, ui) {
-        /*jslint unparam:true*/
-        options.routeWidth = ui.value;
-        redraw(false);
-      }
-    }).val(options.routeWidth);
-    // set default to 0 secs = no tails
-    $("#spn-tail-length").spinner({
-      max : 600,
-      min : 0,
-      spin : function (event, ui) {
-        /*jslint unparam:true*/
-        rg2.animation.setTailLength(ui.value);
-      }
-    }).val(0);
-  }
-
-  function setConfigOptions() {
-    try {
-      if ((window.hasOwnProperty('localStorage')) && (window.localStorage !== null)) {
-        if (localStorage.getItem('rg2-options') !== null) {
-          options = JSON.parse(localStorage.getItem('rg2-options'));
-          // best to keep this at default?
-          options.circleSize = 20;
-          if (options.mapIntensity === 0) {
-            rg2.utils.showWarningDialog("Warning", "Your saved settings have 0% map intensity so the map is invisible. You can adjust this on the configuration menu");
-          }
-        }
-      }
-    } catch (e) {
-      // storage not supported so just continue
-      console.log('Local storage not supported');
-    }
-  }
-
   function setManagerOptions() {
-    rg2.manager = new rg2.Manager(rg2Config.keksi);
-    $("#rg2-animation-controls").hide();
-    $("#rg2-create-tab").hide();
-    $("#rg2-edit-tab").hide();
-    $("#rg2-map-tab").hide();
-    $("#rg2-manage-login").show();
-    $("#rg2-draw-tab").hide();
-    $("#rg2-results-tab").hide();
-    $("#rg2-courses-tab").hide();
-    $("#rg2-events-tab").hide();
-    $rg2infopanel.tabs("disable", config.TAB_EVENTS).tabs("option", "active", config.TAB_LOGIN);
-  }
-
-  function mapLoadedCallback() {
-    resetMapState();
-    if (managing) {
-      rg2.manager.mapLoadCallback();
-    }
-  }
-
-  function resizeCanvas() {
-    var winwidth, winheight;
-    winwidth = window.innerWidth;
-    winheight = window.innerHeight;
-    scaleFactor = config.DEFAULT_SCALE_FACTOR;
-    // allow for header
-    $("#rg2-container").css("height", winheight - 36);
-    canvas.width = winwidth;
-    // allow for header
-    canvas.height = winheight - 36;
-    setTitleBar();
-    resetMapState();
-  }
-
-  handleInputDown = function (evt) {
-    dragStart = ctx.transformedPoint(lastX, lastY);
-    dragged = false;
-    // need to cache this here since IE and FF don't set it for mousemove events
-    whichButton = evt.which;
-    //console.log ("InputDown " + lastX + " " + lastY + " " + dragStart.x + " " + dragStart.y);
-  };
-
-  handleInputMove = function () {
-    var pt;
-    if (dragStart) {
-      pt = ctx.transformedPoint(lastX, lastY);
-      // console.log ("Mousemove after " + pt.x + ": " + pt.y);
-      // simple debounce so that very small drags are treated as clicks instead
-      if ((Math.abs(pt.x - dragStart.x) + Math.abs(pt.y - dragStart.y)) > 5) {
-        if (rg2.drawing.gpsFileLoaded()) {
-          rg2.drawing.adjustTrack(Math.round(dragStart.x), Math.round(dragStart.y), Math.round(pt.x), Math.round(pt.y), whichButton);
-        } else {
-          if ($rg2infopanel.tabs("option", "active") === config.TAB_CREATE) {
-            rg2.manager.adjustControls(Math.round(dragStart.x), Math.round(dragStart.y), Math.round(pt.x), Math.round(pt.y), whichButton);
-          } else {
-            ctx.translate(pt.x - dragStart.x, pt.y - dragStart.y);
-          }
-        }
-        dragged = true;
-        redraw(false);
-      }
-    }
-  };
-
-  handleInputUp = function (evt) {
-    // console.log("Input up " + dragged);
-    var active = $rg2infopanel.tabs("option", "active");
-    if (!dragged) {
-      if (active === config.TAB_CREATE) {
-        rg2.manager.mouseUp(Math.round(dragStart.x), Math.round(dragStart.y));
-      } else {
-        // pass button that was clicked
-        rg2.drawing.mouseUp(Math.round(dragStart.x), Math.round(dragStart.y), evt.which);
-      }
+    if ($('#rg2-manage-login').length !== 0) {
+      rg2.config.managing = true;
+      rg2.manager = new rg2.Manager(rg2Config.keksi);
+      rg2.managerUI.initialiseUI();
     } else {
-      if (active === config.TAB_CREATE) {
-        rg2.manager.dragEnded();
-      } else {
-        rg2.drawing.dragEnded();
-      }
+      rg2.config.managing = false;
+      // translated when displayed
+      rg2.setMapLoadingText("Select an event");
     }
-    dragStart = null;
-    redraw(false);
-  };
-
-  // homegrown touch handling: seems no worse than adding some other library in
-  // pinch zoom is primitive but works
-  handleTouchStart = function (evt) {
-    evt.preventDefault();
-    if (evt.touches.length > 1) {
-      pinchStart0 = ctx.transformedPoint(evt.touches[0].pageX, evt.touches[0].pageY);
-      pinchStart1 = ctx.transformedPoint(evt.touches[1].pageX, evt.touches[1].pageY);
-      pinched = true;
-    }
-    lastX = evt.touches[0].pageX;
-    lastY = evt.touches[0].pageY;
-    handleInputDown(evt);
-  };
-
-  handleTouchMove = function (evt) {
-    var oldDistance, newDistance;
-    if (evt.touches.length > 1) {
-      if (!pinched) {
-        // second touch seen during move
-        pinchStart0 = ctx.transformedPoint(evt.touches[0].pageX, evt.touches[0].pageY);
-        pinchStart1 = ctx.transformedPoint(evt.touches[1].pageX, evt.touches[1].pageY);
-        pinched = true;
-      }
-    } else {
-      pinched = false;
-    }
-    if (pinched && (evt.touches.length > 1)) {
-      pinchEnd0 = ctx.transformedPoint(evt.touches[0].pageX, evt.touches[0].pageY);
-      pinchEnd1 = ctx.transformedPoint(evt.touches[1].pageX, evt.touches[1].pageY);
-      oldDistance = rg2.utils.getDistanceBetweenPoints(pinchStart0.x, pinchStart0.y, pinchStart1.x, pinchStart1.y);
-      newDistance = rg2.utils.getDistanceBetweenPoints(pinchEnd0.x, pinchEnd0.y, pinchEnd1.x, pinchEnd1.y);
-      if ((oldDistance / newDistance) > 1.1) {
-        zoom(-1);
-        pinchStart0 = pinchEnd0;
-        pinchStart1 = pinchEnd1;
-      } else if ((oldDistance / newDistance) < 0.9) {
-        zoom(1);
-        pinchStart0 = pinchEnd0;
-        pinchStart1 = pinchEnd1;
-      }
-    } else {
-      lastX = evt.touches[0].pageX;
-      lastY = evt.touches[0].pageY;
-      handleInputMove(evt);
-    }
-  };
-
-  handleTouchEnd = function (evt) {
-    handleInputUp(evt);
-    pinched = false;
-  };
-
-  handleScroll = function (evt) {
-    var delta = evt.wheelDelta ? evt.wheelDelta / 40 : evt.detail ? -evt.detail : 0;
-    if (delta) {
-      zoom(delta);
-    }
-    evt.stopPropagation();
-    return evt.preventDefault() && false;
-  };
-
-  handleMouseDown = function (evt) {
-    lastX = evt.offsetX || (evt.layerX - canvas.offsetLeft);
-    lastY = evt.offsetY || (evt.layerY - canvas.offsetTop);
-    handleInputDown(evt);
-    evt.stopPropagation();
-    return evt.preventDefault() && false;
-  };
-
-  handleMouseMove = function (evt) {
-    lastX = evt.offsetX || (evt.layerX - canvas.offsetLeft);
-    lastY = evt.offsetY || (evt.layerY - canvas.offsetTop);
-    handleInputMove(evt);
-    evt.stopPropagation();
-    return evt.preventDefault() && false;
-  };
-
-  handleMouseUp = function (evt) {
-    handleInputUp(evt);
-    evt.stopPropagation();
-    return evt.preventDefault() && false;
-  };
-
-
-  // Adds ctx.getTransform() - returns an SVGMatrix
-  // Adds ctx.transformedPoint(x,y) - returns an SVGPoint
-  function trackTransforms(ctx) {
-    var xform, svg, savedTransforms, save, restore, scale, rotate, translate, transform, m2, setTransform, pt;
-    svg = document.createElementNS("http://www.w3.org/2000/svg", 'svg');
-    xform = svg.createSVGMatrix();
-    ctx.getTransform = function () {
-      return xform;
-    };
-
-    savedTransforms = [];
-    save = ctx.save;
-    ctx.save = function () {
-      savedTransforms.push(xform.translate(0, 0));
-      return save.call(ctx);
-    };
-    restore = ctx.restore;
-    ctx.restore = function () {
-      xform = savedTransforms.pop();
-      return restore.call(ctx);
-    };
-    scale = ctx.scale;
-    ctx.scale = function (sx, sy) {
-      xform = xform.scaleNonUniform(sx, sy);
-      return scale.call(ctx, sx, sy);
-    };
-    rotate = ctx.rotate;
-    ctx.rotate = function (radians) {
-      xform = xform.rotate(radians * 180 / Math.PI);
-      return rotate.call(ctx, radians);
-    };
-    translate = ctx.translate;
-    ctx.translate = function (dx, dy) {
-      xform = xform.translate(dx, dy);
-      return translate.call(ctx, dx, dy);
-    };
-    transform = ctx.transform;
-    ctx.transform = function (a, b, c, d, e, f) {
-      m2 = svg.createSVGMatrix();
-      m2.a = a;
-      m2.b = b;
-      m2.c = c;
-      m2.d = d;
-      m2.e = e;
-      m2.f = f;
-      xform = xform.multiply(m2);
-      return transform.call(ctx, a, b, c, d, e, f);
-    };
-    setTransform = ctx.setTransform;
-    ctx.setTransform = function (a, b, c, d, e, f) {
-      xform.a = a;
-      xform.b = b;
-      xform.c = c;
-      xform.d = d;
-      xform.e = e;
-      xform.f = f;
-      return setTransform.call(ctx, a, b, c, d, e, f);
-    };
-    pt = svg.createSVGPoint();
-    ctx.transformedPoint = function (x, y) {
-      pt.x = x;
-      pt.y = y;
-      return pt.matrixTransform(xform.inverse());
-    };
   }
 
-  function setUpCanvas() {
-    canvas.addEventListener('touchstart', handleTouchStart, false);
-    canvas.addEventListener('touchmove', handleTouchMove, false);
-    canvas.addEventListener('touchend', handleTouchEnd, false);
-    trackTransforms(ctx);
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas, false);
-    canvas.addEventListener('DOMMouseScroll', handleScroll, false);
-    canvas.addEventListener('mousewheel', handleScroll, false);
-    canvas.addEventListener('mousedown', handleMouseDown, false);
-    canvas.addEventListener('mousemove', handleMouseMove, false);
-    canvas.addEventListener('mouseup', handleMouseUp, false);
-    // force redraw once map has loaded
-    map.addEventListener("load", function () {
-      mapLoadedCallback();
-    }, false);
-  }
-
-  function getGPSTracks() {
-    $("#rg2-load-progress-label").text(t("Loading routes"));
-    $.getJSON(rg2Config.json_url, {
-      id : rg2.events.getKartatEventID(),
-      type : "tracks",
-      cache : false
-    }).done(function (json) {
-      var active, i, event, routes, crs;
-      $("#rg2-load-progress-label").text(t("Saving routes"));
-      console.log("Tracks: " + json.data.routes.length);
-      // TODO remove temporary (?) fix to get round RG1 events with no courses defined: see #179
-      if (rg2.courses.getNumberOfCourses() > 0) {
-        rg2.results.addTracks(json.data.routes);
-      }
-      createCourseMenu();
-      createResultMenu();
-      rg2.animation.updateAnimationDetails();
-      $('body').css('cursor', 'auto');
-      if (managing) {
-        rg2.manager.eventFinishedLoading();
-      } else {
-        $rg2infopanel.tabs("enable", config.TAB_COURSES);
-        $rg2infopanel.tabs("enable", config.TAB_RESULTS);
-        $rg2infopanel.tabs("enable", config.TAB_DRAW);
-        // open courses tab for new event: else stay on draw tab
-        active = $rg2infopanel.tabs("option", "active");
-        // don't change tab if we have come from DRAW since it means
-        // we have just reloaded following a save
-        if (active !== config.TAB_DRAW) {
-          $rg2infopanel.tabs("option", "active", rg2.requestedHash.getTab());
-        }
-        $rg2infopanel.tabs("refresh");
-        $("#btn-show-splits").show();
-        if ((rg2Config.enable_splitsbrowser) && (rg2.events.hasResults())) {
-          $("#rg2-splitsbrowser").off().click(function () {
-            window.open(rg2Config.json_url + "?type=splitsbrowser&id=" + rg2.events.getKartatEventID());
-          }).show();
-        } else {
-          $("#rg2-splitsbrowser").off().hide();
-        }
-        // set up screen as requested in hash
-        event = $.Event('click');
-        event.target = {};
-        event.target.checked = true;
-        routes = rg2.requestedHash.getRoutes();
-        for (i = 0; i < routes.length; i += 1) {
-          event.target.id = routes[i];
-          $(".showtrack").filter("#" + routes[i]).trigger(event).prop('checked', true);
-        }
-        crs = rg2.requestedHash.getCourses();
-        for (i = 0; i < crs.length; i += 1) {
-          event.target.id = crs[i];
-          $(".showcourse").filter("#" + crs[i]).trigger(event).prop('checked', true);
-        }
-      }
-      $("#rg2-load-progress-label").text("");
-      $("#rg2-load-progress").hide();
-      redraw(false);
-    }).fail(function (jqxhr, textStatus, error) {
-      /*jslint unparam:true*/
-      reportJSONFail("Routes request failed for event " + rg2.events.getKartatEventID() + ": " + error);
-    });
-  }
-
-  function getResults() {
-    var isScoreEvent;
-    $("#rg2-load-progress-label").text(t("Loading results"));
-    $.getJSON(rg2Config.json_url, {
-      id : rg2.events.getKartatEventID(),
-      type : "results",
-      cache : false
-    }).done(function (json) {
-      console.log("Results: " + json.data.results.length);
-      $("#rg2-load-progress-label").text(t("Saving results"));
-      isScoreEvent = rg2.events.isScoreEvent();
-      // TODO remove temporary (?) fix to get round RG1 events with no courses defined: see #179
-      if (rg2.courses.getNumberOfCourses() > 0) {
-        rg2.results.addResults(json.data.results, isScoreEvent);
-      }
-      rg2.courses.setResultsCount();
-      if (isScoreEvent) {
-        rg2.controls.deleteAllControls();
-        rg2.results.generateScoreCourses();
-        rg2.courses.generateControlList(rg2.controls);
-      }
-      $("#rg2-result-list").accordion("refresh");
-      getGPSTracks();
-    }).fail(function (jqxhr, textStatus, error) {
-      /*jslint unparam:true*/
-      reportJSONFail("Results request failed for event " + rg2.events.getKartatEventID() + ": " + error);
-    });
-  }
-
-  function getCourses() {
-    // get courses for event
-    $.getJSON(rg2Config.json_url, {
-      id : rg2.events.getKartatEventID(),
-      type : "courses",
-      cache : false
-    }).done(function (json) {
-      $("#rg2-load-progress-label").text(t("Saving courses"));
-      console.log("Courses: " + json.data.courses.length);
-      $.each(json.data.courses, function () {
-        rg2.courses.addCourse(new rg2.Course(this, rg2.events.isScoreEvent()));
-      });
-      rg2.courses.updateCourseDropdown();
-      rg2.courses.generateControlList(rg2.controls);
-      $("#btn-toggle-controls").show();
-      $("#btn-toggle-names").show();
-      getResults();
-    }).fail(function (jqxhr, textStatus, error) {
-      /*jslint unparam:true*/
-      reportJSONFail("Courses request failed for event " + rg2.events.getKartatEventID() + ": " + error);
-    });
-  }
-
-  function loadNewMap(mapFile) {
-    // translated when displayed
-    mapLoadingText = "Loading map";
-    map.src = mapFile;
-  }
-
-  function loadEvent(eventid) {
+  function updateUIForNewEvent(eventid) {
     // highlight the selected event
     $('#rg2-event-list > li').removeClass('rg2-active-event').filter('#' + eventid).addClass('rg2-active-event');
     // show we are waiting
     $('body').css('cursor', 'wait');
-    $("#rg2-load-progress-label").text(t("Loading courses"));
+    $("#rg2-load-progress-label").text(rg2.t("Loading courses"));
     $("#rg2-load-progress").show();
+  }
+
+  function loadEvent(eventid) {
+    updateUIForNewEvent(eventid);
     rg2.courses.deleteAllCourses();
     rg2.controls.deleteAllControls();
     rg2.animation.resetAnimation();
     rg2.results.deleteAllResults();
     rg2.events.setActiveEventID(eventid);
     rg2.drawing.initialiseDrawing(rg2.events.hasResults(eventid));
-    loadNewMap(rg2Config.maps_url + rg2.events.getMapFileName());
-    redraw(false);
-    setTitleBar();
-    getCourses();
+    rg2.loadNewMap(rg2Config.maps_url + rg2.events.getMapFileName());
+    rg2.ui.setTitleBar();
+    rg2.redraw(false);
+    rg2.getCourses();
   }
 
-  function getMapSize() {
-    var size = {};
-    size.height = map.height;
-    size.width = map.width;
-    return size;
-  }
-
-  function getOverprintDetails() {
-    var opt, size, scaleFact, circleSize;
-    opt = {};
-    // attempt to scale overprint depending on map image size
-    // this avoids very small/large circles, or at least makes things a bit more sensible
-    size = getMapSize();
-    // Empirically derived  so open to suggestions. This is based on a nominal 20px circle
-    // as default. The square root stops things getting too big too quickly.
-    // 1500px is a typical map image maximum size.
-    scaleFact = Math.pow(Math.min(size.height, size.width) / 1500, 0.5);
-    // don't get too carried away, although these would be strange map files
-    scaleFact = Math.min(scaleFact, 5);
-    scaleFact = Math.max(scaleFact, 0.5);
-    circleSize = Math.round(options.circleSize * scaleFact);
-    // ratios based on IOF ISOM overprint specification
-    opt.controlRadius = circleSize;
-    opt.finishInnerRadius = circleSize * (5 / 6);
-    opt.finishOuterRadius = circleSize * (7 / 6);
-    opt.startTriangleLength = circleSize * (7 / 6);
-    opt.overprintWidth = options.courseWidth;
-    opt.font = circleSize + 'pt Arial';
-    return opt;
-  }
-
-  function getReplayDetails() {
-    var opt;
-    opt = {};
-    opt.routeWidth = options.routeWidth;
-    // stored as %, but used as 0 to 1.
-    opt.routeIntensity = options.routeIntensity / 100;
-    opt.replayFontSize = options.replayFontSize;
-    opt.showThreeSeconds = $("#chk-show-three-seconds").prop('checked');
-    opt.showGPSSpeed = $("#chk-show-GPS-speed").prop('checked');
-    return opt;
-  }
-
-  function getSnapToControl() {
-    return options.snap;
-  }
-
-  function init() {
-    $("#rg2-container").hide();
-    rg2.utils = new rg2.Utils();
-    // cache jQuery things we use a lot
-    $rg2infopanel = $("#rg2-info-panel");
-    $rg2eventtitle = $("#rg2-event-title");
-    $.ajaxSetup({
-      cache : false
-    });
-    if ($('#rg2-manage-login').length !== 0) {
-      managing = true;
-    } else {
-      managing = false;
-    }
-    setLanguageOptions();
-    setConfigOptions();
-    initialiseButtons();
-    initialiseSpinners();
-    configureUI();
-    translateFixedText();
-
-    map = new Image();
+  function createObjects() {
     rg2.events = new rg2.Events();
     rg2.courses = new rg2.Courses();
     rg2.colours = new rg2.Colours();
@@ -1397,41 +117,27 @@ var rg2 = (function (window, $) {
     rg2.animation = new rg2.Animation();
     rg2.drawing = new rg2.Draw();
     rg2.requestedHash = new rg2.RequestedHash();
-    dragStart = null;
-    // looks odd but this works for initialisation
-    dragged = true;
-    infoPanelMaximised = true;
+  }
 
-    if (managing) {
-      setManagerOptions();
-      mapLoadingText = "";
-    } else {
-      // translated when displayed
-      mapLoadingText = "Select an event";
-    }
-    setUpCanvas();
-    // disable right click menu: may add our own later
-    $(document).bind("contextmenu", function (evt) {
-      evt.preventDefault();
+  function init() {
+    $("#rg2-container").hide();
+    $.ajaxSetup({
+      cache : false
     });
+    rg2.loadConfigOptions();
+    rg2.ui.configureUI();
+    rg2.setLanguageOptions();
+    createObjects();
+    setManagerOptions();
+    rg2.setUpCanvas();
     startDisplayingInfo();
   }
 
   return {
     // functions and variables available elsewhere
-    t : t,
     init : init,
-    config : config,
-    options : options,
-    redraw : redraw,
-    getOverprintDetails : getOverprintDetails,
-    getReplayDetails : getReplayDetails,
-    ctx : ctx,
-    getMapSize : getMapSize,
-    loadNewMap : loadNewMap,
     loadEvent : loadEvent,
-    loadEventList: loadEventList,
-    getSnapToControl : getSnapToControl
+    getEventStats : getEventStats
   };
 }(window, window.jQuery));
 
@@ -1469,6 +175,8 @@ var rg2 = (function (window, $) {
       this.runners.length = 0;
       clearInterval(this.timer);
       this.timer = null;
+      this.massStartControl = 0;
+      this.massStartByControl = false;
       this.updateAnimationDetails();
       $("#btn-start-stop").removeClass("fa-pause").addClass("fa-play");
       $("#btn-start-stop").prop("title", rg2.t("Run"));
@@ -1505,16 +213,14 @@ var rg2 = (function (window, $) {
     updateAnimationDetails : function () {
       var html = this.getAnimationNames();
       if (html !== "") {
-        $("#rg2-track-names").empty();
-        $("#rg2-track-names").append(html);
-        $("#rg2-track-names").show();
+        $("#rg2-track-names").empty().append(html).show();
         $("#rg2-animation-controls").show();
       } else {
         $("#rg2-track-names").hide();
         $("#rg2-animation-controls").hide();
       }
       this.calculateAnimationRange();
-      $("#rg2-clock").text(this.formatSecsAsHHMMSS(this.animationSecs));
+      $("#rg2-clock").text(rg2.utils.formatSecsAsHHMMSS(this.animationSecs));
     },
 
     // slider callback
@@ -1535,34 +241,38 @@ var rg2 = (function (window, $) {
       return html;
     },
 
-    getSplitsTable : function () {
-      var html, i, j, run, metresPerPixel, units, maxControls, legSplit, prevControlSecs;
-      if (this.runners.length < 1) {
-        return "<p>Select runners on Results tab.</p>";
-      }
-
-      if (rg2.events.mapIsGeoreferenced()) {
-        metresPerPixel = rg2.events.getMetresPerPixel();
-        units = "metres";
-      } else {
-        metresPerPixel = 1;
-        units = "pixels";
-      }
+    getMaxControls : function () {
+      var maxControls, i;
       maxControls = 0;
-      legSplit = [];
-      prevControlSecs = 0;
       // find maximum number of controls to set size of table
       for (i = 0; i < this.runners.length; i += 1) {
         maxControls = Math.max(maxControls, this.runners[i].splits.length);
       }
       // allow for start and finish
-      maxControls -= 2;
+      return (maxControls - 2);
+    },
 
+    getSplitsTableHeader: function (controls) {
+      var html, i;
       html = "<table class='splitstable'><tr><th>Course</th><th>Name</th>";
-      for (i = 1; i <= maxControls; i += 1) {
+      for (i = 1; i <= controls; i += 1) {
         html += "<th>" + i + "</th>";
       }
-      html += "<th>F</th></tr>";
+      return (html + "<th>F</th></tr>");
+    },
+
+    getSplitsTable : function () {
+      var html, i, j, run, metresPerPixel, units, maxControls, legSplit, prevControlSecs, info;
+      if (this.runners.length < 1) {
+        return "<p>Select runners on Results tab.</p>";
+      }
+      legSplit = [];
+      prevControlSecs = 0;
+      info = rg2.events.getMetresPerPixel();
+      metresPerPixel = info.metresPerPixel;
+      units = info.units;
+      maxControls = this.getMaxControls();
+      html = this.getSplitsTableHeader(maxControls);
       for (i = 0; i < this.runners.length; i += 1) {
         run = this.runners[i];
         prevControlSecs = 0;
@@ -1589,7 +299,6 @@ var rg2 = (function (window, $) {
             html += "<td>" + Math.round(metresPerPixel * run.legTrackDistance[j]) + "</td>";
           }
         }
-
       }
       html += "</tr></table>";
       return html;
@@ -1611,12 +320,10 @@ var rg2 = (function (window, $) {
     toggleAnimation : function () {
       if (this.timer === null) {
         this.startAnimation();
-        $("#btn-start-stop").removeClass("fa-play").addClass("fa-pause");
-        $("#btn-start-stop").prop("title", rg2.t("Pause"));
+        $("#btn-start-stop").removeClass("fa-play").addClass("fa-pause").prop("title", rg2.t("Pause"));
       } else {
         this.stopAnimation();
-        $("#btn-start-stop").removeClass("fa-pause").addClass("fa-play");
-        $("#btn-start-stop").prop("title", rg2.t("Run"));
+        $("#btn-start-stop").removeClass("fa-pause").addClass("fa-play").prop("title", rg2.t("Run"));
       }
     },
 
@@ -1732,7 +439,7 @@ var rg2 = (function (window, $) {
         $("#rg2-clock-slider").slider("option", "min", 0);
       }
       $("#rg2-clock-slider").slider("value", this.animationSecs);
-      $("#rg2-clock").text(this.formatSecsAsHHMMSS(this.animationSecs));
+      $("#rg2-clock").text(rg2.utils.formatSecsAsHHMMSS(this.animationSecs));
     },
 
     toggleNameDisplay : function () {
@@ -1753,8 +460,23 @@ var rg2 = (function (window, $) {
       $("#btn-toggle-names").prop("title", rg2.t(title));
     },
 
-    runAnimation : function (fromTimer) {
-      var text, opt, runner, timeOffset, i, t, tailStartTimeSecs;
+    displayName : function (runner, time) {
+      var text;
+      if (this.displayNames) {
+        rg2.ctx.fillStyle = "black";
+        rg2.ctx.font = rg2.options.replayFontSize + 'pt Arial';
+        rg2.ctx.globalAlpha = rg2.config.FULL_INTENSITY;
+        rg2.ctx.textAlign = "left";
+        if (this.displayInitials) {
+          text = runner.initials;
+        } else {
+          text = runner.name;
+        }
+        rg2.ctx.fillText(text, runner.x[time] + 15, runner.y[time] + 7);
+      }
+    },
+
+    setAnimationTime : function (fromTimer) {
       // only increment time if called from the timer and we haven't got to the end already
       if (this.realTime) {
         if (this.animationSecs < this.latestFinishSecs) {
@@ -1769,17 +491,20 @@ var rg2 = (function (window, $) {
           }
         }
       }
-      opt = rg2.getReplayDetails();
-      $("#rg2-clock-slider").slider("value", this.animationSecs);
-      $("#rg2-clock").text(this.formatSecsAsHHMMSS(this.animationSecs));
-      rg2.ctx.lineWidth = opt.routeWidth;
-      rg2.ctx.globalAlpha = 1.0;
       if (this.useFullTails) {
-        tailStartTimeSecs = this.startSecs + 1;
-      } else {
-        tailStartTimeSecs = Math.max(this.animationSecs - this.tailLength, this.startSecs + 1);
+        return (this.startSecs + 1);
       }
+      return Math.max(this.animationSecs - this.tailLength, this.startSecs + 1);
+    },
 
+    runAnimation : function (fromTimer) {
+      var runner, timeOffset, i, t, tailStartTimeSecs;
+      tailStartTimeSecs = this.setAnimationTime(fromTimer);
+      $("#rg2-clock-slider").slider("value", this.animationSecs);
+      $("#rg2-clock").text(rg2.utils.formatSecsAsHHMMSS(this.animationSecs));
+      rg2.ctx.lineWidth = rg2.options.routeWidth;
+      t = rg2.options.routeWidth;
+      rg2.ctx.globalAlpha = 1.0;
       for (i = 0; i < this.runners.length; i += 1) {
         runner = this.runners[i];
         if (this.realTime) {
@@ -1794,7 +519,7 @@ var rg2 = (function (window, $) {
           }
         }
         rg2.ctx.strokeStyle = runner.colour;
-        rg2.ctx.globalAlpha = opt.routeIntensity;
+        rg2.ctx.globalAlpha = rg2.options.routeIntensity;
         rg2.ctx.beginPath();
         rg2.ctx.moveTo(runner.x[tailStartTimeSecs - timeOffset], runner.y[tailStartTimeSecs - timeOffset]);
 
@@ -1815,18 +540,7 @@ var rg2 = (function (window, $) {
         }
         rg2.ctx.arc(runner.x[t] + (rg2.config.RUNNER_DOT_RADIUS / 2), runner.y[t], rg2.config.RUNNER_DOT_RADIUS, 0, 2 * Math.PI, false);
         rg2.ctx.fill();
-        if (this.displayNames) {
-          rg2.ctx.fillStyle = "black";
-          rg2.ctx.font = opt.replayFontSize + 'pt Arial';
-          rg2.ctx.globalAlpha = rg2.config.FULL_INTENSITY;
-          rg2.ctx.textAlign = "left";
-          if (this.displayInitials) {
-            text = runner.initials;
-          } else {
-            text = runner.name;
-          }
-          rg2.ctx.fillText(text, runner.x[t] + 15, runner.y[t] + 7);
-        }
+        this.displayName(runner, t);
       }
       if (this.massStartByControl) {
         this.checkForStopControl(this.animationSecs);
@@ -1869,34 +583,540 @@ var rg2 = (function (window, $) {
 
     goFaster : function () {
       this.deltaSecs += 1;
-    },
-
-    // returns seconds as hh:mm:ss
-    formatSecsAsHHMMSS : function (time) {
-      var formattedtime, minutes, seconds, hours;
-      hours = Math.floor(time / 3600);
-      if (hours < 10) {
-        formattedtime = "0" + hours + ":";
-      } else {
-        formattedtime = hours + ":";
-      }
-      time = time - (hours * 3600);
-      minutes = Math.floor(time / 60);
-      if (minutes < 10) {
-        formattedtime += "0" + minutes;
-      } else {
-        formattedtime += minutes;
-      }
-      seconds = time - (minutes * 60);
-      if (seconds < 10) {
-        formattedtime += ":0" + seconds;
-      } else {
-        formattedtime += ":" + seconds;
-      }
-      return formattedtime;
     }
   };
   rg2.Animation = Animation;
+}());
+/*global rg2:false */
+/*global Image:false */
+(function () {
+  var canvas, ctx, map;
+  canvas = $("#rg2-map-canvas")[0];
+  ctx = canvas.getContext('2d');
+  map = new Image();
+  map.loadingText = "";
+
+  function loadNewMap(mapFile) {
+    // translated when displayed
+    map.loadingText = "Loading map";
+    map.src = mapFile;
+  }
+
+  function setMapLoadingText(text) {
+    map.loadingText = text;
+  }
+
+  function drawMapLoadingText() {
+    ctx.font = '30pt Arial';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = rg2.config.BLACK;
+    ctx.fillText(rg2.t(map.loadingText), rg2.canvas.width / 2, rg2.canvas.height / 2);
+  }
+
+  /* called whenever anything changes enough to need screen redraw
+   * @param fromTimer {Boolean} true if called from timer: used to determine if animation time should be incremented
+   */
+  function redraw(fromTimer) {
+    // Clear the entire canvas
+    // first save current transformed state
+    ctx.save();
+    // reset everything back to initial size/state/orientation
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    // fill canvas to erase things: clearRect doesn't work on Android (?) and leaves the old map as background when changing
+    ctx.fillStyle = rg2.config.WHITE;
+    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    // go back to where we started
+    ctx.restore();
+    // set transparency of map
+    ctx.globalAlpha = rg2.options.mapIntensity;
+
+    if (map.height > 0) {
+      // using non-zero map height to show we have a map loaded
+      ctx.drawImage(map, 0, 0);
+      var active = $("#rg2-info-panel").tabs("option", "active");
+      if (active === rg2.config.TAB_DRAW) {
+        rg2.courses.drawCourses(rg2.config.DIM);
+        rg2.controls.drawControls(false);
+        rg2.results.drawTracks();
+        rg2.drawing.drawNewTrack();
+      } else {
+        if (active === rg2.config.TAB_CREATE) {
+          rg2.manager.drawControls();
+        } else {
+          rg2.courses.drawCourses(rg2.config.FULL_INTENSITY);
+          rg2.results.drawTracks();
+          rg2.controls.drawControls(false);
+          // parameter determines if animation time is updated or not
+          if (fromTimer) {
+            rg2.animation.runAnimation(true);
+          } else {
+            rg2.animation.runAnimation(false);
+          }
+        }
+      }
+    } else {
+      drawMapLoadingText();
+    }
+  }
+
+  function resetMapState() {
+    // place map in centre of canvas and scale it down to fit
+    var mapscale, heightscale;
+    heightscale = canvas.height / map.height;
+    rg2.input.lastX = canvas.width / 2;
+    rg2.input.lastY = canvas.height / 2;
+    rg2.input.zoomSize = 1;
+    rg2.input.dragStart = null;
+    // looks odd but this works for initialisation
+    rg2.input.dragged = true;
+    // don't stretch map: just shrink to fit
+    if (heightscale < 1) {
+      mapscale = heightscale;
+    } else {
+      mapscale = 1;
+    }
+    // move map into view on small screens
+    // avoid annoying jumps on larger screens
+    if (rg2.input.infoPanelMaximised || window.innerWidth >= rg2.config.BIG_SCREEN_BREAK_POINT) {
+      ctx.setTransform(mapscale, 0, 0, mapscale, $("#rg2-info-panel").outerWidth(), 0);
+    } else {
+      ctx.setTransform(mapscale, 0, 0, mapscale, 0, 0);
+    }
+    ctx.save();
+    redraw(false);
+  }
+
+  function showInfoDisplay(show, title, position) {
+    var chevronRemove, chevronAdd;
+    rg2.input.infoPanelMaximised = show;
+    $("#rg2-resize-info").prop("title",  rg2.t(title));
+    $("#rg2-hide-info-panel-control").css("left", position);
+    if (show) {
+      $("#rg2-info-panel").show();
+      chevronRemove = "fa-chevron-right";
+      chevronAdd = "fa-chevron-left";
+    } else {
+      $("#rg2-info-panel").hide();
+      chevronRemove = "fa-chevron-left";
+      chevronAdd = "fa-chevron-right";
+    }
+    $("#rg2-hide-info-panel-icon").removeClass(chevronRemove).addClass(chevronAdd).prop("title",  rg2.t(title));
+  }
+
+  function resizeInfoDisplay() {
+    if (rg2.input.infoPanelMaximised) {
+      showInfoDisplay(false, "Show info panel", "0px");
+    } else {
+      showInfoDisplay(true, "Hide info panel", "366px");
+    }
+    // move map around if necesssary
+    resetMapState();
+  }
+
+  function zoom(zoomDirection) {
+    var pt, factor, tempZoom;
+    factor = Math.pow(rg2.input.scaleFactor, zoomDirection);
+    tempZoom = rg2.input.zoomSize * factor;
+    // limit zoom to avoid things disappearing
+    // chosen values seem reasonable after some quick tests
+    if ((tempZoom < 50) && (tempZoom > 0.05)) {
+      rg2.input.zoomSize = tempZoom;
+      pt = ctx.transformedPoint(rg2.input.lastX, rg2.input.lastY);
+      ctx.translate(pt.x, pt.y);
+      ctx.scale(factor, factor);
+      ctx.translate(-pt.x, -pt.y);
+      ctx.save();
+      redraw(false);
+    }
+  }
+
+  // Adds ctx.getTransform() - returns an SVGMatrix
+  // Adds ctx.transformedPoint(x,y) - returns an SVGPoint
+  function trackTransforms(ctx) {
+    var xform, svg, savedTransforms, save, restore, scale, translate, setTransform, pt;
+    svg = document.createElementNS("http://www.w3.org/2000/svg", 'svg');
+    xform = svg.createSVGMatrix();
+    savedTransforms = [];
+    save = ctx.save;
+    ctx.save = function () {
+      savedTransforms.push(xform.translate(0, 0));
+      return save.call(ctx);
+    };
+    restore = ctx.restore;
+    ctx.restore = function () {
+      xform = savedTransforms.pop();
+      return restore.call(ctx);
+    };
+    scale = ctx.scale;
+    ctx.scale = function (sx, sy) {
+      xform = xform.scaleNonUniform(sx, sy);
+      return scale.call(ctx, sx, sy);
+    };
+    translate = ctx.translate;
+    ctx.translate = function (dx, dy) {
+      xform = xform.translate(dx, dy);
+      return translate.call(ctx, dx, dy);
+    };
+    setTransform = ctx.setTransform;
+    ctx.setTransform = function (a, b, c, d, e, f) {
+      xform.a = a;
+      xform.b = b;
+      xform.c = c;
+      xform.d = d;
+      xform.e = e;
+      xform.f = f;
+      return setTransform.call(ctx, a, b, c, d, e, f);
+    };
+    pt = svg.createSVGPoint();
+    ctx.transformedPoint = function (x, y) {
+      pt.x = x;
+      pt.y = y;
+      return pt.matrixTransform(xform.inverse());
+    };
+    // don't need these functions at present
+    //ctx.getTransform = function () {
+    //  return xform;
+    //};
+    //transform = ctx.transform;
+    //ctx.transform = function (a, b, c, d, e, f) {
+    //  m2 = svg.createSVGMatrix();
+    //  m2.a = a;
+    //  m2.b = b;
+    //  m2.c = c;
+    //  m2.d = d;
+    //  m2.e = e;
+    //  m2.f = f;
+    //  xform = xform.multiply(m2);
+    //  return transform.call(ctx, a, b, c, d, e, f);
+    //};
+    //rotate = ctx.rotate;
+    //ctx.rotate = function (radians) {
+    //  xform = xform.rotate(radians * 180 / Math.PI);
+    //  return rotate.call(ctx, radians);
+    //};
+  }
+
+  function getMapSize() {
+    return {height: map.height, width: map.width};
+  }
+
+  function resizeCanvas() {
+    rg2.input.scaleFactor = rg2.config.DEFAULT_SCALE_FACTOR;
+    // allow for header
+    $("#rg2-container").css("height", window.innerHeight - 36);
+    canvas.width = window.innerWidth;
+    // allow for header
+    canvas.height = window.innerHeight - 36;
+    rg2.ui.setTitleBar();
+    resetMapState();
+  }
+
+  function mapLoadedCallback() {
+    resetMapState();
+    if (rg2.config.managing) {
+      rg2.manager.mapLoadCallback();
+    }
+  }
+
+  function addListeners() {
+    canvas.addEventListener('touchstart', rg2.handleTouchStart, false);
+    canvas.addEventListener('touchmove', rg2.handleTouchMove, false);
+    canvas.addEventListener('touchend', rg2.handleTouchEnd, false);
+    canvas.addEventListener('DOMMouseScroll', rg2.handleScroll, false);
+    canvas.addEventListener('mousewheel', rg2.handleScroll, false);
+    canvas.addEventListener('mousedown', rg2.handleMouseDown, false);
+    canvas.addEventListener('mousemove', rg2.handleMouseMove, false);
+    canvas.addEventListener('mouseup', rg2.handleMouseUp, false);
+    window.addEventListener('resize', resizeCanvas, false);    // force redraw once map has loaded
+    map.addEventListener("load", function () {
+      mapLoadedCallback();
+    }, false);
+  }
+
+  function setUpCanvas() {
+    addListeners();
+    trackTransforms(ctx);
+    resizeCanvas();
+  }
+  rg2.zoom = zoom;
+  rg2.redraw =  redraw;
+  rg2.canvas = canvas;
+  rg2.setUpCanvas = setUpCanvas;
+  rg2.ctx = ctx;
+  rg2.addListeners = addListeners;
+  rg2.resetMapState = resetMapState;
+  rg2.getMapSize = getMapSize;
+  rg2.loadNewMap = loadNewMap;
+  rg2.setMapLoadingText = setMapLoadingText;
+  rg2.resizeInfoDisplay = resizeInfoDisplay;
+}());
+
+/*global rg2:false */
+/*global console:false */
+/*global localStorage:false */
+/*global rg2Config:false */
+(function () {
+  var config, options, dictionary;
+
+  config = {
+    DEFAULT_SCALE_FACTOR : 1.1,
+    TAB_EVENTS : 0,
+    TAB_COURSES : 1,
+    TAB_RESULTS : 2,
+    TAB_DRAW : 3,
+    TAB_LOGIN : 4,
+    TAB_CREATE : 5,
+    TAB_EDIT : 6,
+    TAB_MAP : 7,
+    INVALID_MAP_ID: 9999,
+    // translated when output so leave as English here
+    DEFAULT_NEW_COMMENT : "Type your comment",
+    DEFAULT_EVENT_COMMENT : "Comments (optional)",
+    // added to resultid when saving a GPS track
+    GPS_RESULT_OFFSET : 50000,
+    MASS_START_REPLAY : 1,
+    REAL_TIME_REPLAY : 2,
+    // dropdown selection value
+    MASS_START_BY_CONTROL : 99999,
+    VERY_HIGH_TIME_IN_SECS : 99999,
+    // screen sizes for different layouts
+    BIG_SCREEN_BREAK_POINT : 800,
+    SMALL_SCREEN_BREAK_POINT : 500,
+    PURPLE : '#b300ff',
+    RED : '#ff0000',
+    GREEN : '#00ff00',
+    WHITE : '#ffffff',
+    BLACK : '#ffoooo',
+    RUNNER_DOT_RADIUS : 6,
+    HANDLE_DOT_RADIUS : 7,
+    HANDLE_COLOUR: '#ff0000',
+    // parameters for call to draw courses
+    DIM : 0.75,
+    FULL_INTENSITY : 1.0,
+    // values of event format
+    NORMAL_EVENT : 1,
+    EVENT_WITHOUT_RESULTS : 2,
+    SCORE_EVENT : 3,
+    // version gets set automatically by grunt file during build process
+    RG2VERSION: '1.1.2',
+    TIME_NOT_FOUND : 9999,
+    // values for evt.which
+    RIGHT_CLICK : 3,
+    DO_NOT_SAVE_COURSE: 9999,
+    FORMAT_NORMAL: 1,
+    FORMAT_NO_RESULTS: 2,
+    FORMAT_SCORE_EVENT: 3,
+    DISPLAY_ALL_COURSES: 99999
+  };
+
+  options = {
+    // initialised to default values: overwritten from storage later
+    mapIntensity : 1,
+    routeIntensity : 1,
+    replayFontSize : 12,
+    courseWidth : 3,
+    routeWidth : 4,
+    circleSize : 20,
+    snap : true,
+    showThreeSeconds : false,
+    showGPSSpeed : false
+  };
+
+  // translation function
+  function t(str) {
+    if (dictionary.hasOwnProperty(str)) {
+      return dictionary[str];
+    }
+    return str;
+  }
+
+  function translateTextFields() {
+    var i, selector, text;
+    selector = ["#rg2-events-tab a", "#rg2-courses-tab a", "#rg2-results-tab a", "#rg2-draw-tab a", '#rg2-draw-title', '#draw-text-1', '#draw-text-2', '#draw-text-3',
+      '#draw-text-4', '#draw-text-5', '#rg2-load-gps-title', '.rg2-options-dialog .ui-dialog-title'];
+    text = ['Events', 'Courses', 'Results', 'Draw', 'Draw route', 'Left click to add/lock/unlock a handle', 'Green - draggable', 'Red - locked', 'Right click to delete a handle',
+      'Drag a handle to adjust track around locked point(s)', 'Load GPS file (GPX or TCX)', 'Configuration options'];
+    for (i = 0; i < selector.length; i += 1) {
+      $(selector[i]).text(t(text[i]));
+    }
+  }
+
+  function translateTitleProperties() {
+    var i, selector, text;
+    selector = ["#rg2-hide-info-panel-icon", '#btn-about', '#btn-options', '#btn-zoom-out', '#btn-zoom-in', '#btn-reset', '#btn-show-splits', '#rg2-splits-table', '#btn-slower',
+      '#btn-faster', '#btn-real-time', '#btn-mass-start'];
+    text = ["Hide info panel", 'Help', 'Options', 'Zoom out', 'Zoom in', 'Reset', 'Splits', 'Splits table', 'Slower', 'Faster', 'Real time', 'Mass start'];
+    for (i = 0; i < selector.length; i += 1) {
+      $(selector[i]).prop('title', t(text[i]));
+    }
+  }
+
+  function translateTextContentProperties() {
+    var i, selector, text;
+    selector = ['label[for=rg2-control-select]', 'label[for=btn-full-tails]', 'label[for=spn-tail-length]', 'label[for=rg2-select-language]', 'label[for=spn-map-intensity]',
+      'label[for=spn-route-intensity]', 'label[for=spn-route-width]', 'label[for=spn-name-font-size]', 'label[for=spn-course-width]', 'label[for=spn-control-circle]',
+      'label[for=chk-snap-toggle]', 'label[for=chk-show-three-seconds]', 'label[for=chk-show-GPS-speed]', 'label[for=rg2-course-select]', 'label[for=rg2-name-select]', 'label[for=btn-move-all]'];
+    text = ['Start at', 'Full tails', 'Length', 'Language', 'Map intensity %', 'Route intensity %', 'Route width', 'Replay label font size', 'Course overprint width', 'Control circle size',
+      'Snap to control when drawing', 'Show +3 time loss for GPS routes', 'Show GPS speed colours', 'Select course', 'Select name', 'Move track and map together (or right click-drag)'];
+    for (i = 0; i < selector.length; i += 1) {
+      $(selector[i]).prop('textContent', t(text[i]));
+    }
+  }
+
+  function translateButtons() {
+    var i, selector, text;
+    selector = ['#btn-undo', '#btn-undo-gps-adjust', '#btn-save-route', '#btn-reset-drawing', '#btn-three-seconds', '#btn-save-gps-route'];
+    text = ['Undo', 'Undo', 'Save', 'Reset', '+3 sec', 'Save GPS route'];
+    for (i = 0; i < selector.length; i += 1) {
+      $(selector[i]).button('option', 'label', t(text[i]));
+    }
+  }
+
+  function translateFixedText() {
+    var temp;
+    translateTextFields();
+    translateTitleProperties();
+    translateTextContentProperties();
+    translateButtons();
+    temp = $('#btn-toggle-controls').prop('title');
+    $('#btn-toggle-controls').prop('title', t(temp));
+    temp = $('#btn-toggle-names').prop('title');
+    $('#btn-toggle-names').prop('title', t(temp));
+    temp = $('#btn-start-stop').prop('title');
+    $('#btn-start-stop').prop('title', t(temp));
+  }
+
+  function createLanguageDropdown() {
+    var i, selected, dropdown;
+    $("#rg2-select-language").empty();
+    dropdown = document.getElementById("rg2-select-language");
+    selected = (dictionary.code === "en");
+    dropdown.options.add(rg2.utils.generateOption('en', 'en: English', selected));
+    for (i in rg2Config.languages) {
+      if (rg2Config.languages.hasOwnProperty(i)) {
+        selected = (dictionary.code === i);
+        dropdown.options.add(rg2.utils.generateOption(i, i + ": " + rg2Config.languages[i], selected));
+      }
+    }
+  }
+
+  function getDictionaryCode() {
+    return dictionary.code;
+  }
+
+  function setDictionary(newDictionary) {
+    dictionary = newDictionary;
+    translateFixedText();
+  }
+
+  function setLanguageOptions() {
+    // use English unless a dictionary was passed in
+    if (rg2Config.dictionary.code === undefined) {
+      dictionary = {};
+      dictionary.code = 'en';
+    } else {
+      dictionary = rg2Config.dictionary;
+    }
+    translateFixedText();
+    createLanguageDropdown();
+  }
+
+  function setConfigOption(option, value) {
+    this.options[option] = value;
+  }
+
+  function saveConfigOptions() {
+    try {
+      if ((window.hasOwnProperty('localStorage')) && (window.localStorage !== null)) {
+        this.options.snap = $("#chk-snap-toggle").prop('checked');
+        this.options.showThreeSeconds = $("#chk-show-three-seconds").prop('checked');
+        this.options.showGPSSpeed = $("#chk-show-GPS-speed").prop('checked');
+        localStorage.setItem('rg2-options', JSON.stringify(this.options));
+      }
+    } catch (e) {
+      // storage not supported so just return
+      return;
+    }
+  }
+
+  function loadConfigOptions() {
+    try {
+      if ((window.hasOwnProperty('localStorage')) && (window.localStorage !== null)) {
+        if (localStorage.getItem('rg2-options') !== null) {
+          this.options = JSON.parse(localStorage.getItem('rg2-options'));
+          // best to keep these at default?
+          this.options.circleSize = 20;
+          if (this.options.mapIntensity === 0) {
+            rg2.utils.showWarningDialog("Warning", "Your saved settings have 0% map intensity so the map is invisible. You can adjust this on the configuration menu");
+          }
+        }
+      }
+    } catch (e) {
+      // storage not supported so just continue
+      console.log('Local storage not supported');
+    }
+  }
+
+  function getOverprintDetails() {
+    var opt, size, scaleFact, circleSize;
+    opt = {};
+    // attempt to scale overprint depending on map image size
+    // this avoids very small/large circles, or at least makes things a bit more sensible
+    size = rg2.getMapSize();
+    // Empirically derived  so open to suggestions. This is based on a nominal 20px circle
+    // as default. The square root stops things getting too big too quickly.
+    // 1500px is a typical map image maximum size.
+    scaleFact = Math.pow(Math.min(size.height, size.width) / 1500, 0.5);
+    // don't get too carried away, although these would be strange map files
+    scaleFact = Math.min(scaleFact, 5);
+    scaleFact = Math.max(scaleFact, 0.5);
+    circleSize = Math.round(rg2.options.circleSize * scaleFact);
+    // ratios based on IOF ISOM overprint specification
+    opt.controlRadius = circleSize;
+    opt.finishInnerRadius = circleSize * (5 / 6);
+    opt.finishOuterRadius = circleSize * (7 / 6);
+    opt.startTriangleLength = circleSize * (7 / 6);
+    opt.overprintWidth = this.options.courseWidth;
+    opt.font = circleSize + 'pt Arial';
+    return opt;
+  }
+
+  function getReplayDetails() {
+    var opt;
+    opt = {};
+    opt.routeWidth = this.options.routeWidth;
+    opt.routeIntensity = this.options.routeIntensity;
+    opt.replayFontSize = this.options.replayFontSize;
+    opt.showThreeSeconds = $("#chk-show-three-seconds").prop('checked');
+    opt.showGPSSpeed = $("#chk-show-GPS-speed").prop('checked');
+    return opt;
+  }
+  rg2.t = t;
+  rg2.options = options;
+  rg2.config = config;
+  rg2.saveConfigOptions = saveConfigOptions;
+  rg2.setConfigOption = setConfigOption;
+  rg2.loadConfigOptions = loadConfigOptions;
+  rg2.getReplayDetails = getReplayDetails;
+  rg2.getOverprintDetails = getOverprintDetails;
+  rg2.setDictionary = setDictionary;
+  rg2.getDictionaryCode = getDictionaryCode;
+  rg2.setLanguageOptions = setLanguageOptions;
+}());
+
+/*global rg2:false */
+(function () {
+  function Control(code, x, y) {
+    this.code = code;
+    this.x = x;
+    this.y = y;
+  }
+
+  Control.prototype = {
+    Constructor : Control
+  };
+
+  rg2.Control = Control;
 }());
 /*global rg2:false */
 (function () {
@@ -2110,6 +1330,339 @@ var rg2 = (function (window, $) {
 }());
 /*global rg2:false */
 (function () {
+  function Course(data, isScoreCourse) {
+    this.name = data.name;
+    this.trackcount = 0;
+    this.display = false;
+    this.courseid = data.courseid;
+    this.codes = data.codes;
+    this.x = data.xpos;
+    this.y = data.ypos;
+    this.isScoreCourse = isScoreCourse;
+    this.resultcount = 0;
+    // save angle to next control to simplify later calculations
+    this.angle = [];
+    // save angle to show control code text
+    this.textAngle = [];
+    this.setAngles();
+  }
+
+  Course.prototype = {
+    Constructor : Course,
+
+    incrementTracksCount : function () {
+      this.trackcount += 1;
+    },
+
+    setAngles : function () {
+      var i, c1x, c1y, c2x, c2y, c3x, c3y;
+      for (i = 0; i < (this.x.length - 1); i += 1) {
+        if (this.isScoreCourse) {
+          // align score event start triangle and controls upwards
+          this.angle[i] = Math.PI * 1.5;
+          this.textAngle[i] = Math.PI * 0.25;
+        } else {
+          // angle of line to next control
+          this.angle[i] = rg2.utils.getAngle(this.x[i], this.y[i], this.x[i + 1], this.y[i + 1]);
+          // create bisector of angle to position number
+          c1x = Math.sin(this.angle[i - 1]);
+          c1y = Math.cos(this.angle[i - 1]);
+          c2x = Math.sin(this.angle[i]) + c1x;
+          c2y = Math.cos(this.angle[i]) + c1y;
+          c3x = c2x / 2;
+          c3y = c2y / 2;
+          this.textAngle[i] = rg2.utils.getAngle(c3x, c3y, c1x, c1y);
+        }
+      }
+      // not worried about angle for finish
+      this.angle[this.x.length - 1] = 0;
+      this.textAngle[this.x.length - 1] = 0;
+    },
+
+    drawCourse : function (intensity) {
+      var i, opt;
+      if (this.display) {
+        opt = rg2.getOverprintDetails();
+        rg2.ctx.globalAlpha = intensity;
+        rg2.controls.drawStart(this.x[0], this.y[0], "", this.angle[0], opt);
+        // don't join up controls for score events
+        if (!this.isScoreCourse) {
+          this.drawLinesBetweenControls({x: this.x, y: this.y}, this.angle, opt);
+        }
+        if (this.isScoreCourse) {
+          for (i = 1; i < (this.x.length); i += 1) {
+            if ((this.codes[i].indexOf('F') === 0) || (this.codes[i].indexOf('M') === 0)) {
+              rg2.controls.drawFinish(this.x[i], this.y[i], "", opt);
+            } else {
+              rg2.controls.drawSingleControl(this.x[i], this.y[i], this.codes[i], this.textAngle[i], opt);
+            }
+          }
+
+        } else {
+          for (i = 1; i < (this.x.length - 1); i += 1) {
+            rg2.controls.drawSingleControl(this.x[i], this.y[i], i, this.textAngle[i], opt);
+          }
+          rg2.controls.drawFinish(this.x[this.x.length - 1], this.y[this.y.length - 1], "", opt);
+        }
+      }
+    },
+    drawLinesBetweenControls : function (pt, angle, opt) {
+      var c1x, c1y, c2x, c2y, i, dist;
+      for (i = 0; i < (pt.x.length - 1); i += 1) {
+        if (i === 0) {
+          dist = opt.startTriangleLength;
+        } else {
+          dist = opt.controlRadius;
+        }
+        c1x = pt.x[i] + (dist * Math.cos(angle[i]));
+        c1y = pt.y[i] + (dist * Math.sin(angle[i]));
+        //Assume the last control in the array is a finish
+        if (i === this.x.length - 2) {
+          dist = opt.finishOuterRadius;
+        } else {
+          dist = opt.controlRadius;
+        }
+        c2x = pt.x[i + 1] - (dist * Math.cos(angle[i]));
+        c2y = pt.y[i + 1] - (dist * Math.sin(angle[i]));
+        rg2.ctx.beginPath();
+        rg2.ctx.moveTo(c1x, c1y);
+        rg2.ctx.lineTo(c2x, c2y);
+        rg2.ctx.stroke();
+      }
+    }
+  };
+  rg2.Course = Course;
+}());
+/*global rg2:false */
+(function () {
+  function CourseParser(evt, worldfile, localWorldfile) {
+    this.courses = [];
+    this.newcontrols = new rg2.Controls();
+    this.courses.length = 0;
+    this.fromCondes = false;
+    this.coursesGeoreferenced = false;
+    this.newcontrols.deleteAllControls();
+    // holding copies of worldfiles: not ideal but it works
+    this.localWorldfile = localWorldfile;
+    this.worldfile = worldfile;
+    this.processCoursesXML(evt.target.result);
+    return {courses: this.courses, newcontrols: this.newcontrols, georeferenced: this.coursesGeoreferenced};
+  }
+
+  CourseParser.prototype = {
+
+    Constructor : CourseParser,
+
+    processCoursesXML : function (rawXML) {
+      var xml, version, nodelist;
+      try {
+        xml = $.parseXML(rawXML);
+      } catch (err) {
+        rg2.utils.showWarningDialog("XML file error", "File is not a valid XML course file.");
+        return;
+      }
+      nodelist = xml.getElementsByTagName('CourseData');
+      if (nodelist.length === 0) {
+        rg2.utils.showWarningDialog("XML file error", "File is not a valid XML course file. CourseData element missing.");
+        return;
+      }
+      version = this.getVersion(xml);
+      switch (version) {
+      case "2.0.3":
+        this.processIOFV2XMLCourses(xml);
+        break;
+      case "3.0":
+        this.processIOFV3XMLCourses(xml);
+        break;
+      default:
+        rg2.utils.showWarningDialog("XML file error", 'Invalid IOF file format. Version ' + version + ' not supported.');
+      }
+    },
+
+    getVersion : function (xml) {
+      var nodelist, version;
+      version = "";
+      // test for IOF Version 2
+      nodelist = xml.getElementsByTagName('IOFVersion');
+      if (nodelist.length > 0) {
+        version = nodelist[0].getAttribute('version');
+      }
+      if (version === "") {
+        // test for IOF Version 3
+        nodelist = xml.getElementsByTagName('CourseData');
+        if (nodelist.length > 0) {
+          version = nodelist[0].getAttribute('iofVersion').trim();
+          this.setCreator(nodelist[0].getAttribute('creator').trim());
+        }
+      }
+      return version;
+    },
+
+    setCreator : function (text) {
+      // allow handling of files from Condes which use original worldfile rather than WGS-84 as expected by IOF scheme
+      if (text.indexOf('Condes') > -1) {
+        this.fromCondes = true;
+      }
+    },
+
+    processIOFV3XMLCourses : function (xml) {
+      // extract all controls
+      var nodelist, i, code, pt, latlng;
+      nodelist = xml.getElementsByTagName('Control');
+      // only need first-level Controls
+      pt = {x: 0, y: 0};
+      for (i = 0; i < nodelist.length; i += 1) {
+        if (nodelist[i].parentNode.nodeName === 'RaceCourseData') {
+          code = nodelist[i].getElementsByTagName("Id")[0].textContent;
+          latlng = nodelist[i].getElementsByTagName("Position");
+          if ((this.localWorldfile.valid) && (latlng.length > 0)) {
+            pt = this.getXYFromLatLng(latlng);
+            this.coursesGeoreferenced = true;
+          } else {
+            // only works if all controls have lat/lon or none do: surely a safe assumption...
+            pt = this.getXYFromMapPosition(nodelist[i].getElementsByTagName("MapPosition"));
+          }
+          // don't want to save crossing points
+          if (nodelist[i].getAttribute('type') !== 'CrossingPoint') {
+            this.newcontrols.addControl(code.trim(), pt.x, pt.y);
+          }
+        }
+      }
+      // extract all courses
+      nodelist = xml.getElementsByTagName('Course');
+      this.extractV3Courses(nodelist);
+    },
+
+    getXYFromLatLng : function (latLng) {
+      var lat, lng, pt;
+      pt = {x: 0, y: 0};
+      lat = latLng[0].getAttribute('lat');
+      lng = latLng[0].getAttribute('lng');
+      // handle Condes-specific georeferencing
+      if (this.fromCondes) {
+        // use original map worldfile
+        pt.x = this.localWorldfile.getX(lng, lat);
+        pt.y = this.localWorldfile.getY(lng, lat);
+      } else {
+        // use WGS-84 worldfile as expected (?) by IOF V3 schema
+        pt.x = this.worldfile.getX(lng, lat);
+        pt.y = this.worldfile.getY(lng, lat);
+      }
+      return pt;
+    },
+
+    processIOFV2XMLCourses : function (xml) {
+      var i, x, y;
+      // extract all start controls
+      this.extractV2Controls(xml.getElementsByTagName('StartPoint'), 'StartPointCode');
+      // extract all normal controls
+      this.extractV2Controls(xml.getElementsByTagName('Control'), 'ControlCode');
+      // extract all finish controls
+      this.coursesGeoreferenced = this.extractV2Controls(xml.getElementsByTagName('FinishPoint'), 'FinishPointCode');
+      if (this.coursesGeoreferenced) {
+        if (this.localWorldfile.valid) {
+          for (i = 0; i < this.newcontrols.controls.length; i += 1) {
+            x = this.newcontrols.controls[i].x;
+            y = this.newcontrols.controls[i].y;
+            this.newcontrols.controls[i].x = this.localWorldfile.getX(x, y);
+            this.newcontrols.controls[i].y = this.localWorldfile.getY(x, y);
+          }
+        }
+      }
+      // extract all courses
+      this.extractV2Courses(xml.getElementsByTagName('Course'));
+    },
+
+    extractV2Courses : function (nodelist) {
+      var i, name, codes, x, y;
+      for (i = 0; i < nodelist.length; i += 1) {
+        codes = [];
+        x = [];
+        y = [];
+        name = nodelist[i].getElementsByTagName('CourseName')[0].textContent.trim();
+        codes = this.extractCodesFromControlList(nodelist[i], "ControlCode");
+        // add start code at beginning of array
+        codes.unshift(nodelist[i].getElementsByTagName('StartPointCode')[0].textContent.trim());
+        codes.push(nodelist[i].getElementsByTagName('FinishPointCode')[0].textContent.trim());
+        // courseid 0 for now: set when result mapping is known
+        this.courses.push({courseid: 0, x: x, y: y, codes: codes, name: name});
+      }
+      $("#rg2-select-course-file").addClass('valid');
+    },
+
+    extractV3Courses : function (nodelist) {
+      var i, name, codes, x, y;
+      for (i = 0; i < nodelist.length; i += 1) {
+        codes = [];
+        x = [];
+        y = [];
+        name = nodelist[i].getElementsByTagName('Name')[0].textContent.trim();
+        codes = this.extractCodesFromControlList(nodelist[i], "Control");
+        // courseid 0 for now: set when result mapping is known
+        this.courses.push({courseid: 0, x: x, y: y, codes: codes, name: name});
+      }
+      $("#rg2-select-course-file").addClass('valid');
+    },
+
+    extractCodesFromControlList : function (nodeList, tagName) {
+      // tagName depends on IOF version being parsed
+      var i, code, codes, controlList;
+      controlList = nodeList.getElementsByTagName('CourseControl');
+      codes = [];
+      for (i = 0; i < controlList.length; i += 1) {
+        code = controlList[i].getElementsByTagName(tagName)[0].textContent.trim();
+        // if control code doesn't exist it was a crossing point so we don't need it
+        if (this.validControlCode(code)) {
+          codes.push(code);
+        }
+      }
+      return codes;
+    },
+
+    // returns true if controls are georeferenced
+    extractV2Controls : function (nodelist, type) {
+      var i, pt, code, geopos, isGeoref;
+      isGeoref = false;
+      pt = {x: 0, y: 0};
+      for (i = 0; i < nodelist.length; i += 1) {
+        code = nodelist[i].getElementsByTagName(type)[0].textContent;
+        geopos = nodelist[i].getElementsByTagName("ControlPosition");
+        // subtle bug and a half #190
+        // if you have an IOF XML V2 file which has georeferenced controls AND
+        // the map file itself isn't georeferenced
+        // then you need to use X, Y and not the georeferenced co-ordinates
+        if ((geopos.length > 0) && (this.localWorldfile.valid)) {
+          pt.x = parseFloat(geopos[0].getAttribute('x'));
+          pt.y = parseFloat(geopos[0].getAttribute('y'));
+          isGeoref = true;
+        } else {
+          pt = this.getXYFromMapPosition(nodelist[i].getElementsByTagName("MapPosition"));
+        }
+        this.newcontrols.addControl(code.trim(), pt.x, pt.y);
+      }
+      return isGeoref;
+    },
+
+    getXYFromMapPosition : function (mapPosition) {
+      return {x: mapPosition[0].getAttribute('x'), y: mapPosition[0].getAttribute('y')};
+    },
+
+    // check if a given control code is in the list of known controls
+    validControlCode : function (code) {
+      var i, controls;
+      controls = this.newcontrols.controls;
+      for (i = 0; i < controls.length; i += 1) {
+        if (controls[i].code === code) {
+          return true;
+        }
+      }
+      return false;
+    }
+  };
+  rg2.CourseParser = CourseParser;
+}());
+/*global rg2:false */
+(function () {
   function Courses() {
     // indexed by the provided courseid which omits 0 and hence a sparse array
     // careful when iterating or getting length!
@@ -2171,41 +1724,25 @@ var rg2 = (function (window, $) {
 
     updateCourseDropdown : function () {
       $("#rg2-course-select").empty();
-      var i, dropdown, opt;
+      var i, dropdown;
       dropdown = document.getElementById("rg2-course-select");
-      opt = document.createElement("option");
-      opt.value = null;
-      opt.text = rg2.t("Select course");
-      dropdown.options.add(opt);
-
+      dropdown.options.add(rg2.utils.generateOption(null, rg2.t("Select course")));
       for (i = 0; i < this.courses.length; i += 1) {
         if (this.courses[i] !== undefined) {
-          opt = document.createElement("option");
-          opt.value = i;
-          opt.text = this.courses[i].name;
-          dropdown.options.add(opt);
+          dropdown.options.add(rg2.utils.generateOption(i, this.courses[i].name));
         }
       }
     },
 
     updateControlDropdown : function () {
-      var i, dropdown, opt;
+      var i, dropdown;
       dropdown = document.getElementById("rg2-control-select");
       $("#rg2-control-select").empty();
+      dropdown.options.add(rg2.utils.generateOption(0, "S"));
       for (i = 0; i < this.highestControlNumber; i += 1) {
-        opt = document.createElement("option");
-        opt.value = i;
-        if (i === 0) {
-          opt.text = "S";
-        } else {
-          opt.text = i;
-        }
-        dropdown.options.add(opt);
+        dropdown.options.add(rg2.utils.generateOption(i, i));
       }
-      opt = document.createElement("option");
-      opt.value = rg2.config.MASS_START_BY_CONTROL;
-      opt.text = "By control";
-      dropdown.options.add(opt);
+      dropdown.options.add(rg2.utils.generateOption(rg2.config.MASS_START_BY_CONTROL, "By control"));
     },
 
     deleteAllCourses : function () {
@@ -2313,36 +1850,41 @@ var rg2 = (function (window, $) {
     },
 
     formatCoursesAsTable : function () {
-      var i, res, html;
-      res = 0;
+      var details, html;
       html = "<table class='coursemenutable'><tr><th>" + rg2.t("Course") + "</th><th><i class='fa fa-eye'></i></th>";
       html += "<th>" + rg2.t("Runners") + "</th><th>" + rg2.t("Routes") + "</th><th><i class='fa fa-eye'></i></th></tr>";
-      for (i = 0; i < this.courses.length; i += 1) {
-        if (this.courses[i] !== undefined) {
-          html += "<tr><td>" + this.courses[i].name + "</td>";
-          html += "<td><input class='courselist' id=" + i + " type=checkbox name=course></input></td>";
-          html += "<td>" + this.courses[i].resultcount + "</td>";
-          res += this.courses[i].resultcount;
-          html += "<td>" + this.courses[i].trackcount + "</td><td>";
-          if (this.courses[i].trackcount > 0) {
-            html += "<input id=" + i + " class='tracklist' type=checkbox name=track></input>";
-          }
-          html += "</td></tr>";
-        }
-      }
+      details = this.formatCourseDetails();
       // add bottom row for all courses checkboxes
-      html += "<tr class='allitemsrow'><td>" + rg2.t("All") + "</td>";
-      html += "<td><input class='allcourses' id=" + i + " type=checkbox name=course></input></td>";
-      html += "<td>" + res + "</td><td>" + this.totaltracks + "</td><td>";
+      html += details.html + "<tr class='allitemsrow'><td>" + rg2.t("All") + "</td>";
+      html += "<td><input class='allcourses' id=" + details.coursecount + " type=checkbox name=course></input></td>";
+      html += "<td>" + details.res + "</td><td>" + this.totaltracks + "</td><td>";
       if (this.totaltracks > 0) {
-        html += "<input id=" + i + " class='alltracks' type=checkbox name=track></input>";
+        html += "<input id=" + details.coursecount + " class='alltracks' type=checkbox name=track></input>";
       }
       html += "</td></tr></table>";
       return html;
     },
 
-    drawLinesBetweenControls : function (x, y, angle, courseid, opt) {
-      this.courses[courseid].drawLinesBetweenControls(x, y, angle, opt);
+    formatCourseDetails : function () {
+      var i, details;
+      details = {html: "", res: 0};
+      for (i = 0; i < this.courses.length; i += 1) {
+        if (this.courses[i] !== undefined) {
+          details.html += "<tr><td>" + this.courses[i].name + "</td>" + "<td><input class='courselist' id=" + i + " type=checkbox name=course></input></td>";
+          details.html += "<td>" + this.courses[i].resultcount + "</td>" + "<td>" + this.courses[i].trackcount + "</td><td>";
+          details.res += this.courses[i].resultcount;
+          if (this.courses[i].trackcount > 0) {
+            details.html += "<input id=" + i + " class='tracklist' type=checkbox name=track></input>";
+          }
+          details.html += "</td></tr>";
+        }
+      }
+      details.coursecount = i;
+      return details;
+    },
+
+    drawLinesBetweenControls : function (pt, angle, courseid, opt) {
+      this.courses[courseid].drawLinesBetweenControls(pt,  angle, opt);
     }
   };
   rg2.Courses = Courses;
@@ -2353,28 +1895,9 @@ var rg2 = (function (window, $) {
 (function () {
   function Draw() {
     this.trackColor = '#ff0000';
-    this.HANDLE_DOT_RADIUS = 7;
     this.hasResults = false;
     this.initialiseDrawing();
   }
-
-  function RouteData() {
-    this.courseid = null;
-    this.coursename = null;
-    this.resultid = null;
-    this.isScoreCourse = false;
-    this.eventid = null;
-    this.name = null;
-    this.comments = null;
-    this.x = [];
-    this.y = [];
-    this.controlx = [];
-    this.controly = [];
-    this.time = [];
-    this.startsecs = 0;
-    this.totaltime = 0;
-  }
-
 
   Draw.prototype = {
     Constructor : Draw,
@@ -2387,46 +1910,38 @@ var rg2 = (function (window, $) {
       this.gpstrack.uploadGPS(evt);
     },
 
-    getControlX : function () {
-      return this.controlx;
-    },
-
-    getControlY : function () {
-      return this.controly;
+    getControlXY : function () {
+      return {x: this.controlx, y: this.controly};
     },
 
     mouseUp : function (x, y, button) {
       // console.log(x, y);
-      var i, trk, len, delta, h, handle, active;
+      var i, trk, len, delta, handle, active;
       // called after a click at (x, y)
       active = $("#rg2-info-panel").tabs("option", "active");
-      h = {};
       delta = 3;
       if (active !== rg2.config.TAB_DRAW) {
         return;
       }
       trk = this.gpstrack;
       if (trk.fileLoaded) {
-        handle = this.getHandleClicked(x, y);
+        handle = trk.handles.getHandleClicked({x: x, y: y});
         if (handle !== undefined) {
           // delete or unlock if not first or last entry
-          if ((button === rg2.config.RIGHT_CLICK) && (handle !== 0) && (handle !== trk.handles.length)) {
-            if (trk.handles[handle].locked) {
+          if ((button === rg2.config.RIGHT_CLICK) && (handle.index !== 0) && (handle.index !== trk.handles.length)) {
+            if (handle.locked) {
               // unlock, don't delete
-              trk.handles[handle].locked = false;
-              this.pointsLocked -= 1;
+              trk.handles.unlockHandle(handle.index);
             } else {
               // delete handle
-              trk.handles.splice(handle, 1);
+              trk.handles.deleteHandle(handle.index);
             }
           } else {
             // clicked in a handle area so toggle state
-            if (trk.handles[handle].locked) {
-              trk.handles[handle].locked = false;
-              this.pointsLocked -= 1;
+            if (handle.locked) {
+              trk.handles.unlockHandle(handle.index);
             } else {
-              trk.handles[handle].locked = true;
-              this.pointsLocked += 1;
+              trk.handles.lockHandle(handle.index);
             }
           }
         } else {
@@ -2435,13 +1950,7 @@ var rg2 = (function (window, $) {
           for (i = 0; i < len; i += 1) {
             if ((trk.baseX[i] + delta >= x) && (trk.baseX[i] - delta <= x) && (trk.baseY[i] + delta >= y) && (trk.baseY[i] - delta <= y)) {
               // found on track so add new handle
-              h.x = x;
-              h.y = y;
-              h.basex = x;
-              h.basey = y;
-              h.locked = false;
-              h.time = i;
-              trk.handles.push(h);
+              trk.handles.addHandle(x, y, i);
               break;
             }
           }
@@ -2458,7 +1967,7 @@ var rg2 = (function (window, $) {
     },
 
     dragEnded : function () {
-      var i, trk;
+      var trk;
       if (this.gpstrack.fileLoaded) {
         trk = this.gpstrack;
         // rebaseline GPS track
@@ -2466,13 +1975,7 @@ var rg2 = (function (window, $) {
         trk.savedBaseY = trk.baseY.slice(0);
         trk.baseX = trk.routeData.x.slice(0);
         trk.baseY = trk.routeData.y.slice(0);
-        // can't use slice(0) for an array of objects so need to do deep copy in jQuery
-        // see http://stackoverflow.com/questions/122102/most-efficient-way-to-clone-an-object
-        trk.savedHandles = $.extend(true, [], trk.handles);
-        for (i = 0; i < trk.handles.length; i += 1) {
-          trk.handles[i].basex = trk.handles[i].x;
-          trk.handles[i].basey = trk.handles[i].y;
-        }
+        trk.handles.rebaselineXY();
         $("#btn-undo-gps-adjust").button("enable");
       }
     },
@@ -2480,7 +1983,6 @@ var rg2 = (function (window, $) {
     initialiseDrawing : function () {
       this.gpstrack = new rg2.GPSTrack();
       this.gpstrack.routeData = new rg2.RouteData();
-      this.pointsLocked = 0;
       this.pendingCourseID = null;
       // the RouteData versions of these have the start control removed for saving
       this.controlx = [];
@@ -2503,16 +2005,12 @@ var rg2 = (function (window, $) {
       }
       $("#rg2-name-select").prop('disabled', true);
       $("#rg2-undo").prop('disabled', true);
-      $("#btn-save-route").button("disable");
-      $("#btn-save-gps-route").button("disable");
-      $("#btn-undo").button("disable");
-      $("#btn-three-seconds").button("disable");
       $("#btn-reset-drawing").button("enable");
+      rg2.utils.setButtonState("disable", ["#btn-save-route", "#btn-save-gps-route", "#btn-undo", "#btn-three-seconds", "#rg2-load-gps-file"]);
       $("#rg2-name-select").empty();
       $("#rg2-new-comments").empty().val(rg2.t(rg2.config.DEFAULT_NEW_COMMENT));
       $("#rg2-event-comments").empty().val(rg2.t(rg2.config.DEFAULT_EVENT_COMMENT));
       $("#btn-move-all").prop('checked', false);
-      $("#rg2-load-gps-file").button('disable');
       $("#rg2-name-entry").empty().val('');
       $("#rg2-time-entry").empty().val('');
       $("#rg2-name").removeClass('valid');
@@ -2565,51 +2063,38 @@ var rg2 = (function (window, $) {
       rg2.redraw(false);
     },
 
+    doDrawingReset : function () {
+      $('#rg2-drawing-reset-dialog').dialog("destroy");
+      this.pendingCourseid = null;
+      this.initialiseDrawing();
+    },
+
+    doCancelDrawingReset : function () {
+      $('#rg2-drawing-reset-dialog').dialog("destroy");
+    },
+
     confirmCourseChange : function () {
-      var msg, me;
-      msg = "<div id='rg2-course-change-dialog'>The route you have started to draw will be discarded. Are you sure you want to change the course?</div>";
-      me = this;
-      $(msg).dialog({
-        title : "Confirm course change",
-        modal : true,
-        dialogClass : "no-close rg2-confirm-change-course",
-        closeOnEscape : false,
-        buttons : [{
-          text : "Change course",
-          click : function () {
-            me.doChangeCourse();
-          }
-        }, {
-          text : "Cancel",
-          click : function () {
-            me.doCancelChangeCourse();
-          }
-        }]
-      });
+      var dlg;
+      dlg = {};
+      dlg.selector = "<div id='rg2-course-change-dialog'>The route you have started to draw will be discarded. Are you sure you want to change the course?</div>";
+      dlg.title = "Confirm course change";
+      dlg.classes = "rg2-confirm-change-course";
+      dlg.doText = "Change course";
+      dlg.onDo = this.doChangeCourse.bind(this);
+      dlg.onCancel = this.doCancelChangeCourse.bind(this);
+      rg2.utils.createModalDialog(dlg);
     },
 
     resetDrawing : function () {
-      var msg, me;
-      msg = "<div id='rg2-drawing-reset-dialog'>All information you have entered will be removed. Are you sure you want to reset?</div>";
-      me = this;
-      $(msg).dialog({
-        title : "Confirm reset",
-        modal : true,
-        dialogClass : "no-close rg2-confirm-drawing-reset",
-        closeOnEscape : false,
-        buttons : [{
-          text : "Reset",
-          click : function () {
-            me.doDrawingReset();
-          }
-        }, {
-          text : "Cancel",
-          click : function () {
-            me.doCancelDrawingReset();
-          }
-        }]
-      });
-
+      var dlg;
+      dlg = {};
+      dlg.selector = "<div id='rg2-drawing-reset-dialog'>All information you have entered will be removed. Are you sure you want to reset?</div>";
+      dlg.title = "Confirm reset";
+      dlg.classes = "rg2-confirm-drawing-reset";
+      dlg.doText = "Reset";
+      dlg.onDo = this.doDrawingReset.bind(this);
+      dlg.onCancel = this.doCancelDrawingReset.bind(this);
+      rg2.utils.createModalDialog(dlg);
     },
 
     doChangeCourse : function () {
@@ -2627,16 +2112,6 @@ var rg2 = (function (window, $) {
       $("#rg2-course-select").val(this.gpstrack.routeData.courseid);
       this.pendingCourseid = null;
       $('#rg2-course-change-dialog').dialog("destroy");
-    },
-
-    doDrawingReset : function () {
-      $('#rg2-drawing-reset-dialog').dialog("destroy");
-      this.pendingCourseid = null;
-      this.initialiseDrawing();
-    },
-
-    doCancelDrawingReset : function () {
-      $('#rg2-drawing-reset-dialog').dialog("destroy");
     },
 
     showCourseInProgress : function () {
@@ -2715,35 +2190,32 @@ var rg2 = (function (window, $) {
 
     addNewPoint : function (x, y) {
       if (this.closeEnough(x, y)) {
-        this.gpstrack.routeData.x.push(this.controlx[this.nextControl]);
-        this.gpstrack.routeData.y.push(this.controly[this.nextControl]);
+        this.addRouteDataPoint(this.controlx[this.nextControl], this.controly[this.nextControl]);
         this.nextControl += 1;
         if (this.nextControl === this.controlx.length) {
           $("#btn-save-route").button("enable");
         }
       } else {
-        this.gpstrack.routeData.x.push(Math.round(x));
-        this.gpstrack.routeData.y.push(Math.round(y));
+        this.addRouteDataPoint(Math.round(x), Math.round(y));
       }
       $("#btn-undo").button("enable");
       rg2.redraw(false);
     },
 
+    addRouteDataPoint : function (x, y) {
+      this.gpstrack.routeData.x.push(x);
+      this.gpstrack.routeData.y.push(y);
+    },
+
     undoGPSAdjust : function () {
       // restore route from before last adjust operation
-      var trk, i;
+      var trk;
       trk = this.gpstrack;
       trk.baseX = trk.savedBaseX.slice(0);
       trk.baseY = trk.savedBaseY.slice(0);
       trk.routeData.x = trk.savedBaseX.slice(0);
       trk.routeData.y = trk.savedBaseY.slice(0);
-      // can't use slice(0) for an array of objects so need to do deep copy in jQuery
-      // see http://stackoverflow.com/questions/122102/most-efficient-way-to-clone-an-object
-      trk.handles = $.extend(true, [], trk.savedHandles);
-      for (i = 0; i < trk.handles.length; i += 1) {
-        trk.handles[i].x = trk.handles[i].basex;
-        trk.handles[i].y = trk.handles[i].basey;
-      }
+      trk.handles.undo();
       $("#btn-undo-gps-adjust").button("disable");
       rg2.redraw(false);
     },
@@ -2834,11 +2306,11 @@ var rg2 = (function (window, $) {
           if (data.ok) {
             self.routeSaved(data.status_msg);
           } else {
-            rg2.utils.showWarningDialog(this.gpstrack.routeData.name, rg2.t('Your route was not saved. Please try again'));
+            rg2.utils.showWarningDialog(self.gpstrack.routeData.name, rg2.t('Your route was not saved. Please try again'));
           }
         },
         error : function () {
-          rg2.utils.showWarningDialog(this.gpstrack.routeData.name, rg2.t('Your route was not saved. Please try again'));
+          rg2.utils.showWarningDialog(self.gpstrack.routeData.name, rg2.t('Your route was not saved. Please try again'));
         }
       });
     },
@@ -2850,16 +2322,15 @@ var rg2 = (function (window, $) {
 
     waitThreeSeconds : function () {
       // insert a new point in the same place as the last point
-      this.gpstrack.routeData.x.push(this.gpstrack.routeData.x[this.gpstrack.routeData.x.length - 1]);
-      this.gpstrack.routeData.y.push(this.gpstrack.routeData.y[this.gpstrack.routeData.y.length - 1]);
+      this.addRouteDataPoint(this.gpstrack.routeData.x[this.gpstrack.routeData.x.length - 1], this.gpstrack.routeData.y[this.gpstrack.routeData.y.length - 1]);
       rg2.redraw(false);
     },
 
     // snapto: test if drawn route is close enough to control
     closeEnough : function (x, y) {
       var range;
-      if (rg2.getSnapToControl()) {
-        range = 7;
+      if (rg2.options.snap) {
+        range = 8;
       } else {
         range = 2;
       }
@@ -2871,23 +2342,21 @@ var rg2 = (function (window, $) {
       return false;
     },
 
-    adjustTrack : function (x1, y1, x2, y2, button) {
+    adjustTrack : function (p1, p2, button) {
       // called whilst dragging a GPS track
-      // TODO: not the greatest function in the world and a candidate for refactoring big-time
-      // but it works which is a huge step forward
-      var trk, handle, earliest, latest, backgroundLocked;
-      //console.log("adjustTrack ", x1, y1, x2, y2);
-      backgroundLocked = $('#btn-move-all').prop('checked');
-      if (backgroundLocked || button === rg2.config.RIGHT_CLICK) {
-        rg2.ctx.translate(x2 - x1, y2 - y1);
+      var trk, handle, earliest, latest;
+      //console.log("adjustTrack ", p1.x, p1.y, p2.x, p2.y);
+      // check if background is locked or right click
+      if ($('#btn-move-all').prop('checked') || button === rg2.config.RIGHT_CLICK) {
+        rg2.ctx.translate(p2.x - p1.x, p2.y - p1.y);
       } else {
         trk = this.gpstrack;
-        if (this.pointsLocked > 0) {
-          if (this.pointsLocked === 1) {
-            this.rotateAroundLockedPoint(trk, x1, y1, x2, y2);
+        if (trk.handles.handlesLocked() > 0) {
+          if (trk.handles.handlesLocked() === 1) {
+            this.scaleRotateAroundSingleLockedPoint(p1, p2, trk.handles.getSingleLockedHandle(), trk.handles.getStartHandle().time, trk.handles.getFinishHandle().time);
           } else {
             // check if start of drag is on a handle
-            handle = this.getHandleClicked(x1, y1);
+            handle = trk.handles.getHandleClicked(p1);
             // we already know we have at least two points locked: cases to deal with from here
             // 1: drag point not on a handle: exit
             // 2: drag point on a locked handle: exit
@@ -2896,257 +2365,101 @@ var rg2 = (function (window, $) {
             // 5: drag point between two locked handles: shear around two fixed handles
             //case 1
             if (handle === undefined) {
-              //console.log("Point (" + x1 + ", " + y1 + ") not on track: " + this.pointsLocked + " points locked.");
               return;
             }
             // case 2
-            if (trk.handles[handle].locked) {
-              //console.log("Point (" + x1 + ", " + y1 + ") locked: " + this.pointsLocked + " points locked.");
+            if (handle.locked) {
               return;
             }
-            earliest = this.getEarliestLockedHandle();
-            latest = this.getLatestLockedHandle();
+            earliest = trk.handles.getEarliestLockedHandle();
+            latest = trk.handles.getLatestLockedHandle();
 
-            if ((trk.handles[earliest].time > trk.handles[handle].time) || (trk.handles[latest].time < trk.handles[handle].time)) {
-              // case 3 and 4: floating end point
-              this.scaleRotateAroundLockedPoint(trk, x1, y1, x2, y2, earliest, latest, handle);
+            if (earliest.time >= handle.time) {
+              // case 3: drag point between start and a locked handle
+              this.scaleRotateAroundSingleLockedPoint(p1, p2, earliest, trk.handles.getStartHandle().time, earliest.time);
+            } else if (latest.time < handle.time) {
+              // case 4: drag point between locked handle and end
+              this.scaleRotateAroundSingleLockedPoint(p1, p2, latest, latest.time, trk.handles.getFinishHandle().time);
             } else {
               // case 5: shear/scale around two locked points
-              this.shearScaleAroundLockedPoints(trk, x1, y1, x2, y2, handle);
+              this.scaleRotateBetweenTwoLockedPoints(p1, p2, handle);
             }
           }
         } else {
           // nothing locked so drag track
-          this.dragTrack(trk, (x2 - x1), (y2 - y1));
+          this.dragTrack((p2.x - p1.x), (p2.y - p1.y));
         }
       }
     },
 
-    shearScaleAroundLockedPoints : function (trk, x1, y1, x2, y2, handle) {
-      // case 5: shear/scale around two locked points
+    scaleRotateBetweenTwoLockedPoints : function (p1, p2, handle) {
+      // case 5: shear/scale between two locked points
       // all based on putting handle1 at (0, 0), rotating handle 2 to be on x-axis and then shearing on x-axis and scaling on y-axis.
       // there must be a better way...
-      var i, lockedHandle1, lockedHandle2, fromTime, toTime, scale, angle, reverseAngle, a, xb, yb, xs, ys, x, y;
-      lockedHandle1 = this.getPreviousLockedHandle(handle);
-      fromTime = trk.handles[lockedHandle1].time;
-      lockedHandle2 = this.getNextLockedHandle(handle);
-      toTime = trk.handles[lockedHandle2].time;
-      //console.log("Point (", x1, ", ", y1, ") in middle of ", lockedHandle1, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey, " and ",lockedHandle2, trk.handles[lockedHandle2].basex, trk.handles[lockedHandle2].basey);
-      reverseAngle = rg2.utils.getAngle(trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey, trk.handles[lockedHandle2].basex, trk.handles[lockedHandle2].basey);
+      var i, lockedHandle1, lockedHandle2, scale, angle, reverseAngle, a, x, y, pt, pt1, pt2, trk;
+      trk = this.gpstrack;
+      lockedHandle1 = trk.handles.getPreviousLockedHandle(handle);
+      lockedHandle2 = trk.handles.getNextLockedHandle(handle);
+      //console.log("Point (", p1.x, ", ", p1.y, ") in middle of ", lockedHandle1.index, lockedHandle1.basex, lockedHandle1.basey, " and ", lockedHandle2.index, lockedHandle2.basex, lockedHandle2.basey);
+      reverseAngle = rg2.utils.getAngle(lockedHandle1.basex, lockedHandle1.basey, lockedHandle2.basex, lockedHandle2.basey);
       angle = (2 * Math.PI) - reverseAngle;
-      xb = x1 - trk.handles[lockedHandle1].basex;
-      yb = y1 - trk.handles[lockedHandle1].basey;
-      x1 = (Math.cos(angle) * xb) - (Math.sin(angle) * yb);
-      y1 = (Math.sin(angle) * xb) + (Math.cos(angle) * yb);
 
-      xb = x2 - trk.handles[lockedHandle1].basex;
-      yb = y2 - trk.handles[lockedHandle1].basey;
-      x2 = (Math.cos(angle) * xb) - (Math.sin(angle) * yb);
-      y2 = (Math.sin(angle) * xb) + (Math.cos(angle) * yb);
-
-      xb = trk.handles[lockedHandle2].basex - trk.handles[lockedHandle1].basex;
-      yb = trk.handles[lockedHandle2].basey - trk.handles[lockedHandle1].basey;
-      x = (Math.cos(angle) * xb) - (Math.sin(angle) * yb);
-      y = (Math.sin(angle) * xb) + (Math.cos(angle) * yb);
+      pt1 = rg2.utils.rotatePoint(p1.x - lockedHandle1.basex, p1.y - lockedHandle1.basey, angle);
+      pt2 = rg2.utils.rotatePoint(p2.x - lockedHandle1.basex, p2.y - lockedHandle1.basey, angle);
 
       // calculate scaling factors
-      a = (x2 - x1) / y1;
-      scale = y2 / y1;
+      a = (pt2.x - pt1.x) / pt1.y;
+      scale = pt2.y / pt1.y;
 
       if (!isFinite(a) || !isFinite(scale)) {
-        // TODO: this will cause trouble when y1 is 0 (or even just very small) but I've never managed to get it to happen
+        // this will cause trouble when y1 is 0 (or even just very small) but I've never managed to get it to happen
         // you need to click exactly on a line through the two locked handles: just do nothing for now
-        // console.log("y1 became 0: scale factors invalid", a, scale);
+        // console.log("p1.y became 0: scale factors invalid", a, scale);
         return;
       }
       // recalculate all points between locked handles
-      for (i = fromTime + 1; i < toTime; i += 1) {
+      for (i = lockedHandle1.time + 1; i < lockedHandle2.time; i += 1) {
         // translate to put locked point at origin
-        xb = trk.baseX[i] - trk.handles[lockedHandle1].basex;
-        yb = trk.baseY[i] - trk.handles[lockedHandle1].basey;
         // rotate to give locked points as x-axis
-        x = (Math.cos(angle) * xb) - (Math.sin(angle) * yb);
-        y = (Math.sin(angle) * xb) + (Math.cos(angle) * yb);
+        pt = rg2.utils.rotatePoint(trk.baseX[i] - lockedHandle1.basex, trk.baseY[i] - lockedHandle1.basey, angle);
+        x = pt.x;
+        y = pt.y;
 
-        // shear/stretch
-        xs = x + (y * a);
-        ys = y * scale;
-        // rotate and translate back
-        trk.routeData.x[i] = (Math.cos(reverseAngle) * xs) - (Math.sin(reverseAngle) * ys) + trk.handles[lockedHandle1].basex;
-        trk.routeData.y[i] = (Math.sin(reverseAngle) * xs) + (Math.cos(reverseAngle) * ys) + trk.handles[lockedHandle1].basey;
+        // shear/stretch/rotate and translate back
+        pt = rg2.utils.rotatePoint(x + (y * a), y * scale, reverseAngle);
+        trk.routeData.x[i] = pt.x + lockedHandle1.basex;
+        trk.routeData.y[i] = pt.y + lockedHandle1.basey;
       }
       // recalculate all handles between locked handles
-      for (i = 0; i < trk.handles.length; i += 1) {
-        if ((!trk.handles[i].locked) && (trk.handles[i].time >= fromTime) && (trk.handles[i].time <= toTime)) {
-          xb = trk.handles[i].basex - trk.handles[lockedHandle1].basex;
-          yb = trk.handles[i].basey - trk.handles[lockedHandle1].basey;
-          // rotate to give locked points as x-axis
-          x = (Math.cos(angle) * xb) - (Math.sin(angle) * yb);
-          y = (Math.sin(angle) * xb) + (Math.cos(angle) * yb);
-          // shear/stretch
-          xs = x + (y * a);
-          ys = y * scale;
-          trk.handles[i].x = ((Math.cos(reverseAngle) * xs) - (Math.sin(reverseAngle) * ys)) + trk.handles[lockedHandle1].basex;
-          trk.handles[i].y = ((Math.sin(reverseAngle) * xs) + (Math.cos(reverseAngle) * ys)) + trk.handles[lockedHandle1].basey;
-        }
-      }
+      trk.handles.scaleAndRotateBetweenLockedPoints(lockedHandle1, a, scale, angle, reverseAngle, lockedHandle1.time, lockedHandle2.time);
     },
 
-    scaleRotateAroundLockedPoint : function (trk, x1, y1, x2, y2, earliest, latest, handle) {
-      var i, lockedHandle1, fromTime, toTime, scale, angle, x, y;
-      if (trk.handles[earliest].time > trk.handles[handle].time) {
-        lockedHandle1 = earliest;
-        fromTime = 0;
-        toTime = trk.handles[earliest].time;
-      } else {
-        lockedHandle1 = latest;
-        fromTime = trk.handles[latest].time + 1;
-        // second entry is always the last point in the route
-        toTime = trk.handles[1].time + 1;
-      }
+    scaleRotateAroundSingleLockedPoint : function (p1, p2, lockedHandle, fromTime, toTime) {
+      var i, scale, angle, pt;
       // scale and rotate track around single locked point
-      scale = rg2.utils.getDistanceBetweenPoints(x2, y2, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey) / rg2.utils.getDistanceBetweenPoints(x1, y1, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
-      angle = rg2.utils.getAngle(x2, y2, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey) - rg2.utils.getAngle(x1, y1, trk.handles[lockedHandle1].basex, trk.handles[lockedHandle1].basey);
-      //console.log (x1, y1, x2, y2, trk.handles[handle].basex, trk.handles[handle].basey, scale, angle, fromTime, toTime);
-      for (i = fromTime; i < toTime; i += 1) {
-        x = trk.baseX[i] - trk.handles[lockedHandle1].basex;
-        y = trk.baseY[i] - trk.handles[lockedHandle1].basey;
-        trk.routeData.x[i] = (((Math.cos(angle) * x) - (Math.sin(angle) * y)) * scale) + trk.handles[lockedHandle1].basex;
-        trk.routeData.y[i] = (((Math.sin(angle) * x) + (Math.cos(angle) * y)) * scale) + trk.handles[lockedHandle1].basey;
+      scale = rg2.utils.getDistanceBetweenPoints(p2.x, p2.y, lockedHandle.basex, lockedHandle.basey) / rg2.utils.getDistanceBetweenPoints(p1.x, p1.y, lockedHandle.basex, lockedHandle.basey);
+      angle = rg2.utils.getAngle(p2.x, p2.y, lockedHandle.basex, lockedHandle.basey) - rg2.utils.getAngle(p1.x, p1.y, lockedHandle.basex, lockedHandle.basey);
+      //console.log (p1.x, p1.y, p2.x, p2.y, handle.basex, handle.basey, scale, angle, fromTime, toTime);
+      for (i = fromTime; i <= toTime; i += 1) {
+        pt = rg2.utils.rotatePoint(this.gpstrack.baseX[i] - lockedHandle.basex, this.gpstrack.baseY[i] - lockedHandle.basey, angle);
+        this.gpstrack.routeData.x[i] = (pt.x * scale) + lockedHandle.basex;
+        this.gpstrack.routeData.y[i] = (pt.y * scale) + lockedHandle.basey;
       }
-      for (i = 0; i < trk.handles.length; i += 1) {
-        if ((!trk.handles[i].locked) && (trk.handles[i].time >= fromTime) && (trk.handles[i].time <= toTime)) {
-          x = trk.handles[i].basex - trk.handles[lockedHandle1].basex;
-          y = trk.handles[i].basey - trk.handles[lockedHandle1].basey;
-          trk.handles[i].x = (((Math.cos(angle) * x) - (Math.sin(angle) * y)) * scale) + trk.handles[lockedHandle1].basex;
-          trk.handles[i].y = (((Math.sin(angle) * x) + (Math.cos(angle) * y)) * scale) + trk.handles[lockedHandle1].basey;
-        }
-      }
+      this.gpstrack.handles.scaleAndRotate(lockedHandle, scale, angle, fromTime, toTime);
     },
 
-    rotateAroundLockedPoint : function (trk, x1, y1, x2, y2) {
-      var scale, angle, x, y, i, handle;
-      handle = this.getLockedHandle();
-      // scale and rotate track around single locked point
-      angle = rg2.utils.getAngle(x2, y2, handle.basex, handle.basey) - rg2.utils.getAngle(x1, y1, handle.basex, handle.basey);
-      scale = rg2.utils.getDistanceBetweenPoints(x2, y2, handle.basex, handle.basey) / rg2.utils.getDistanceBetweenPoints(x1, y1, handle.basex, handle.basey);
-      //console.log (x1, y1, x2, y2, handle.basex, handle.basey, scale, angle);
-      for (i = 0; i < trk.baseX.length; i += 1) {
-        x = trk.baseX[i] - handle.basex;
-        y = trk.baseY[i] - handle.basey;
-        trk.routeData.x[i] = (((Math.cos(angle) * x) - (Math.sin(angle) * y)) * scale) + handle.basex;
-        trk.routeData.y[i] = (((Math.sin(angle) * x) + (Math.cos(angle) * y)) * scale) + handle.basey;
-      }
-      for (i = 0; i < trk.handles.length; i += 1) {
-        if (!trk.handles[i].locked) {
-          x = trk.handles[i].basex - handle.basex;
-          y = trk.handles[i].basey - handle.basey;
-          trk.handles[i].x = (((Math.cos(angle) * x) - (Math.sin(angle) * y)) * scale) + handle.basex;
-          trk.handles[i].y = (((Math.sin(angle) * x) + (Math.cos(angle) * y)) * scale) + handle.basey;
-        }
-      }
-    },
-
-    dragTrack : function (trk, dx, dy) {
-      var i;
+    dragTrack : function (dx, dy) {
+      var i, trk;
+      trk = this.gpstrack;
       for (i = 0; i < trk.baseX.length; i += 1) {
         trk.routeData.x[i] = trk.baseX[i] + dx;
         trk.routeData.y[i] = trk.baseY[i] + dy;
       }
-      for (i = 0; i < trk.handles.length; i += 1) {
-        trk.handles[i].x = trk.handles[i].basex + dx;
-        trk.handles[i].y = trk.handles[i].basey + dy;
-      }
-    },
-
-    // find if the click was on an existing handle
-    // return: handle index or undefined
-    // basex and basey are handle locations at the start of the drag which is what we are interested in
-    getHandleClicked : function (x, y) {
-      //console.log("Get handle clicked for " + x + ", " + y);
-      var i, distance;
-      for (i = 0; i < this.gpstrack.handles.length; i += 1) {
-        distance = rg2.utils.getDistanceBetweenPoints(x, y, this.gpstrack.handles[i].basex, this.gpstrack.handles[i].basey);
-        if (distance <= this.HANDLE_DOT_RADIUS) {
-          return i;
-        }
-      }
-      return undefined;
-    },
-
-    // called when we know there is only one locked handle
-    // return: handle object or undefined
-    getLockedHandle : function () {
-      var i;
-      for (i = 0; i < this.gpstrack.handles.length; i += 1) {
-        if (this.gpstrack.handles[i].locked) {
-          return this.gpstrack.handles[i];
-        }
-      }
-      return undefined;
-    },
-
-    // called to find earliest locked handle
-    getEarliestLockedHandle : function () {
-      var i, earliest, handle;
-      earliest = 99999;
-      for (i = 0; i < this.gpstrack.handles.length; i += 1) {
-        if (this.gpstrack.handles[i].locked) {
-          if (this.gpstrack.handles[i].time < earliest) {
-            earliest = this.gpstrack.handles[i].time;
-            handle = i;
-          }
-        }
-      }
-      return handle;
-    },
-
-    // called to find latest locked handle
-    getLatestLockedHandle : function () {
-      var i, latest, handle;
-      latest = -1;
-      for (i = 0; i < this.gpstrack.handles.length; i += 1) {
-        if (this.gpstrack.handles[i].locked) {
-          if (this.gpstrack.handles[i].time > latest) {
-            latest = this.gpstrack.handles[i].time;
-            handle = i;
-          }
-        }
-      }
-      return handle;
-    },
-
-    getPreviousLockedHandle : function (handle) {
-      var i, minDiff, time, previous;
-      // max diff possible is last entry time
-      minDiff = this.gpstrack.handles[1].time;
-      time = this.gpstrack.handles[handle].time;
-      for (i = 0; i < this.gpstrack.handles.length; i += 1) {
-        if (((time - this.gpstrack.handles[i].time) < minDiff) && (this.gpstrack.handles[i].time < time) && this.gpstrack.handles[i].locked) {
-          minDiff = time - this.gpstrack.handles[i].time;
-          previous = i;
-        }
-      }
-      return previous;
-    },
-
-    getNextLockedHandle : function (handle) {
-      var i, l, minDiff, time, next;
-      // max diff possible is last entry time
-      minDiff = this.gpstrack.handles[1].time;
-      time = this.gpstrack.handles[handle].time;
-      l = this.gpstrack.handles.length;
-      for (i = 0; i < l; i += 1) {
-        if (((this.gpstrack.handles[i].time - time) < minDiff) && (this.gpstrack.handles[i].time > time) && this.gpstrack.handles[i].locked) {
-          minDiff = this.gpstrack.handles[i].time - time;
-          next = i;
-        }
-      }
-      return next;
+      trk.handles.dragHandles(dx, dy);
     },
 
     drawNewTrack : function () {
-      var i, l, opt;
+      var opt;
       opt = rg2.getOverprintDetails();
       rg2.ctx.lineWidth = opt.overprintWidth;
       rg2.ctx.strokeStyle = this.trackColor;
@@ -3159,23 +2472,28 @@ var rg2 = (function (window, $) {
         rg2.ctx.beginPath();
         if (this.nextControl < (this.controlx.length - 1)) {
           // normal control
-          rg2.ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], opt.controlRadius, 0, 2 * Math.PI, false);
+          this.drawCircle(opt.controlRadius);
         } else {
           // finish
-          rg2.ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], opt.finishInnerRadius, 0, 2 * Math.PI, false);
+          this.drawCircle(opt.finishInnerRadius);
           rg2.ctx.stroke();
           rg2.ctx.beginPath();
-          rg2.ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], opt.finishOuterRadius, 0, 2 * Math.PI, false);
+          this.drawCircle(opt.finishOuterRadius);
         }
         // dot at centre of control circle
         rg2.ctx.fillRect(this.controlx[this.nextControl] - 1, this.controly[this.nextControl] - 1, 3, 3);
         rg2.ctx.stroke();
-        // dot at start of route
-        rg2.ctx.beginPath();
-        rg2.ctx.arc(this.gpstrack.routeData.x[0] + (rg2.config.RUNNER_DOT_RADIUS / 2), this.gpstrack.routeData.y[0], rg2.config.RUNNER_DOT_RADIUS, 0, 2 * Math.PI, false);
-        rg2.ctx.fill();
       }
-      // route itself
+      this.drawRoute();
+      this.gpstrack.handles.drawHandles();
+    },
+
+    drawCircle : function (radius) {
+      rg2.ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], radius, 0, 2 * Math.PI, false);
+    },
+
+    drawRoute : function () {
+      var i, l;
       if (this.gpstrack.routeData.x.length > 1) {
         rg2.ctx.beginPath();
         rg2.ctx.moveTo(this.gpstrack.routeData.x[0], this.gpstrack.routeData.y[0]);
@@ -3186,24 +2504,9 @@ var rg2 = (function (window, $) {
         }
         rg2.ctx.stroke();
       }
-      // locked points
-      l = this.gpstrack.handles.length;
-      for (i = 0; i < l; i += 1) {
-        if (this.gpstrack.handles[i].locked === true) {
-          rg2.ctx.fillStyle = rg2.config.RED;
-        } else {
-          rg2.ctx.fillStyle = rg2.config.GREEN;
-        }
-        rg2.ctx.strokestyle = rg2.config.PURPLE;
-        rg2.ctx.beginPath();
-        rg2.ctx.arc(this.gpstrack.handles[i].x, this.gpstrack.handles[i].y, this.HANDLE_DOT_RADIUS, 0, 2 * Math.PI, false);
-        rg2.ctx.fill();
-        rg2.ctx.stroke();
-      }
     }
   };
   rg2.Draw = Draw;
-  rg2.RouteData = RouteData;
 }());
 /*global rg2:false */
 (function () {
@@ -3250,18 +2553,7 @@ var rg2 = (function (window, $) {
       } else {
         this.mapfilename = this.mapid + '.' + data.suffix;
       }
-      this.worldFile = [];
-      if (data.A === undefined) {
-        this.georeferenced = false;
-      } else {
-        this.georeferenced = true;
-        this.worldFile.A = data.A;
-        this.worldFile.B = data.B;
-        this.worldFile.C = data.C;
-        this.worldFile.D = data.D;
-        this.worldFile.E = data.E;
-        this.worldFile.F = data.F;
-      }
+      this.worldfile = new rg2.Worldfile(data);
     }
   };
   rg2.Event = Event;
@@ -3308,7 +2600,7 @@ var rg2 = (function (window, $) {
     },
 
     setActiveEventID : function (eventid) {
-      this.activeEventID = eventid;
+      this.activeEventID = parseInt(eventid, 10);
     },
 
     getActiveEventID : function () {
@@ -3340,17 +2632,10 @@ var rg2 = (function (window, $) {
     },
 
     getEventEditDropdown : function (dropdown) {
-      var i, len, opt;
-      opt = document.createElement("option");
-      opt.value = null;
-      opt.text = 'No event selected';
-      dropdown.options.add(opt);
-      len = this.events.length - 1;
-      for (i = len; i > -1; i -= 1) {
-        opt = document.createElement("option");
-        opt.value = this.events[i].kartatid;
-        opt.text = this.events[i].kartatid + ": " + this.events[i].date + ": " + this.events[i].name;
-        dropdown.options.add(opt);
+      var i;
+      dropdown.options.add(rg2.utils.generateOption(null, 'No event selected'));
+      for (i = (this.events.length - 1); i > -1; i -= 1) {
+        dropdown.options.add(rg2.utils.generateOption(this.events[i].kartatid, this.events[i].kartatid + ": " + this.events[i].date + ": " + this.events[i].name));
       }
       return dropdown;
     },
@@ -3370,27 +2655,27 @@ var rg2 = (function (window, $) {
       if (this.activeEventID === null) {
         return false;
       }
-      return this.events[this.activeEventID].georeferenced;
+      return this.events[this.activeEventID].worldfile.valid;
     },
 
     getMetresPerPixel : function () {
       var lat1, lat2, lon1, lon2, size, pixels, w;
-      if (this.activeEventID === null) {
-        // 1 is as harmless as anything else in this error situation
-        return 1;
+      if ((this.activeEventID === null) || (!this.mapIsGeoreferenced())) {
+        // 1 is as harmless as anything else in this situation
+        return {metresPerPixel: 1, units: "pixels"};
       }
       size = rg2.getMapSize();
       pixels = rg2.utils.getDistanceBetweenPoints(0, 0, size.width, size.height);
-      w = this.events[this.activeEventID].worldFile;
+      w = this.events[this.activeEventID].worldfile;
       lon1 = w.C;
       lat1 = w.F;
       lon2 = (w.A * size.width) + (w.B * size.height) + w.C;
       lat2 = (w.D * size.width) + (w.E * size.height) + w.F;
-      return (rg2.utils.getLatLonDistance(lat1, lon1, lat2, lon2)) / pixels;
+      return {metresPerPixel: rg2.utils.getLatLonDistance(lat1, lon1, lat2, lon2) / pixels, units: "metres"};
     },
 
     getWorldFile : function () {
-      return this.events[this.activeEventID].worldFile;
+      return this.events[this.activeEventID].worldfile;
     },
 
     formatEventsAsMenu : function () {
@@ -3398,7 +2683,7 @@ var rg2 = (function (window, $) {
       html = '';
       for (i = this.events.length - 1; i >= 0; i -= 1) {
         title = rg2.t(this.events[i].type) + ": " + this.events[i].date;
-        if (this.events[i].georeferenced) {
+        if (this.events[i].worldfile.valid) {
           title += ": " + rg2.t("Map is georeferenced");
         }
 
@@ -3409,7 +2694,7 @@ var rg2 = (function (window, $) {
         if (this.events[i].comment !== "") {
           html += "<i class='fa fa-info-circle event-info-icon' id='info-" + i + "'></i>";
         }
-        if (this.events[i].georeferenced) {
+        if (this.events[i].worldfile.valid) {
           html += "<i class='fa fa-globe event-info-icon' id='info-" + i + "'>&nbsp</i>";
         }
         html += this.events[i].date + ": " + this.events[i].name + "</a></li>";
@@ -3429,10 +2714,9 @@ var rg2 = (function (window, $) {
     this.time = [];
     this.baseX = [];
     this.baseY = [];
-    this.handles = [];
+    this.handles = new rg2.Handles();
     this.savedBaseX = [];
     this.savedBaseY = [];
-    this.savedHandles = [];
     this.fileLoaded = false;
     this.fileName = '';
     this.routeData = new rg2.RouteData();
@@ -3449,10 +2733,9 @@ var rg2 = (function (window, $) {
       this.time.length = 0;
       this.baseX.length = 0;
       this.baseY.length = 0;
-      this.handles.length = 0;
+      this.handles.deleteAllHandles();
       this.savedBaseX.length = 0;
       this.savedBaseY.length = 0;
-      this.savedHandles.length = 0;
       this.fileLoaded = false;
     },
 
@@ -3534,34 +2817,15 @@ var rg2 = (function (window, $) {
     },
 
     processGPSTrack : function () {
-      var minX, maxX, minY, maxY, i, w, AEDB, xCorrection, yCorrection, mapSize;
       if (rg2.events.mapIsGeoreferenced()) {
-        // translate lat/lon to x,y based on world file info: see http://en.wikipedia.org/wiki/World_file
-        w = rg2.events.getWorldFile();
-        // simplify calculation a little
-        AEDB = (w.A * w.E) - (w.D * w.B);
-        xCorrection = (w.B * w.F) - (w.E * w.C);
-        yCorrection = (w.D * w.C) - (w.A * w.F);
-        for (i = 0; i < this.lat.length; i += 1) {
-          this.routeData.x[i] = Math.round(((w.E * this.lon[i]) - (w.B * this.lat[i]) + xCorrection) / AEDB);
-          this.routeData.y[i] = Math.round(((-1 * w.D * this.lon[i]) + (w.A * this.lat[i]) + yCorrection) / AEDB);
-        }
-        // find bounding box for track
-        minX = Math.min.apply(Math, this.routeData.x);
-        maxX = Math.max.apply(Math, this.routeData.x);
-        minY = Math.min.apply(Math, this.routeData.y);
-        maxY = Math.max.apply(Math, this.routeData.y);
-
-        // check we are somewhere on the map
-        mapSize = rg2.getMapSize();
-        if ((maxX < 0) || (minX > mapSize.width) || (minY > mapSize.height) || (maxY < 0)) {
+        this.applyWorldFile();
+        if (this.trackMatchesMapCoordinates()) {
+          // everything OK so lock background to avoid accidental adjustment
+          $('#btn-move-all').prop('checked', true);
+        } else {
           // warn and fit to track
           rg2.utils.showWarningDialog('GPS file problem', 'Your GPS file does not match the map co-ordinates. Please check you have selected the correct file.');
           this.fitTrackInsideCourse();
-
-        } else {
-          // everything OK so lock background to avoid accidental adjustment
-          $('#btn-move-all').prop('checked', true);
         }
       } else {
         this.fitTrackInsideCourse();
@@ -3575,86 +2839,442 @@ var rg2 = (function (window, $) {
       rg2.redraw(false);
     },
 
+    trackMatchesMapCoordinates : function () {
+      var minX, maxX, minY, maxY, mapSize;
+      // find bounding box for track
+      minX = Math.min.apply(Math, this.routeData.x);
+      maxX = Math.max.apply(Math, this.routeData.x);
+      minY = Math.min.apply(Math, this.routeData.y);
+      maxY = Math.max.apply(Math, this.routeData.y);
+      mapSize = rg2.getMapSize();
+      // check we are somewhere on the map
+      return ((maxX > 0) && (minX < mapSize.width) && (minY < mapSize.height) && (maxY > 0));
+    },
+
+    applyWorldFile : function () {
+      var i, worldFile;
+      // translate lat/lon to x,y based on world file info: see http://en.wikipedia.org/wiki/World_file
+      worldFile = rg2.events.getWorldFile();
+      for (i = 0; i < this.lat.length; i += 1) {
+        this.routeData.x[i] = Math.round(((worldFile.E * this.lon[i]) - (worldFile.B * this.lat[i]) + worldFile.xCorrection) / worldFile.AEDB);
+        this.routeData.y[i] = Math.round(((-1 * worldFile.D * this.lon[i]) + (worldFile.A * this.lat[i]) + worldFile.yCorrection) / worldFile.AEDB);
+      }
+    },
+
     addStartAndFinishHandles : function () {
-      // add handles at start and finish of route
-      var h1, h2;
-      h1 = {};
-      h1.x = this.baseX[0];
-      h1.y = this.baseY[0];
-      h1.basex = h1.x;
-      h1.basey = h1.y;
-      h1.locked = false;
-      h1.time = 0;
-      this.handles.push(h1);
-      h2 = {};
-      h2.x = this.baseX[this.baseX.length - 1];
-      h2.y = this.baseY[this.baseY.length - 1];
-      h2.basex = h2.x;
-      h2.basey = h2.y;
-      h2.locked = false;
-      h2.time = this.baseY.length - 1;
-      this.handles.push(h2);
+      // add handles at start and finish of route: will always be index 0 and 1
+      this.handles.addHandle(this.baseX[0], this.baseY[0], 0);
+      this.handles.addHandle(this.baseX[this.baseX.length - 1], this.baseY[this.baseY.length - 1], this.baseY.length - 1);
     },
 
     fitTrackInsideCourse : function () {
       // fit track to within limits of course
       // find bounding box for track
-      var maxLat, maxLon, minLat, minLon, minControlX, maxControlX, minControlY, maxControlY, size, i, controlx, controly, scaleX, scaleY, lonCorrection, latCorrection, deltaX, deltaY;
-      maxLat = Math.max.apply(Math, this.lat);
-      maxLon = Math.max.apply(Math, this.lon);
-      minLat = Math.min.apply(Math, this.lat);
-      minLon = Math.min.apply(Math, this.lon);
-      controlx = rg2.drawing.getControlX();
-      controly = rg2.drawing.getControlY();
-
-      minControlX = Math.min.apply(Math, controlx);
-      maxControlX = Math.max.apply(Math, controlx);
-      minControlY = Math.min.apply(Math, controly);
-      maxControlY = Math.max.apply(Math, controly);
-
-      // issue #60: allow for no controls or just a few in a small area
-      // 100 is an arbitrary but sensible cut-off
-      if (((maxControlY - minControlY) < 100) || ((maxControlX - minControlX) < 100)) {
-        minControlX = 0;
-        minControlY = 0;
-        size = rg2.getMapSize();
-        maxControlX = size.width;
-        maxControlY = size.height;
-      }
-
-      //console.log (minControlX, maxControlX, minControlY, maxControlY);
+      var i, latLon, controlXY, scaleX, scaleY, deltaX, deltaY;
+      latLon = this.getLatLonInfo();
+      controlXY = this.getControlInfo();
 
       // scale GPS track to within bounding box of controls: a reasonable start
-      scaleX = (maxControlX - minControlX) / (maxLon - minLon);
-      scaleY = (maxControlY - minControlY) / (maxLat - minLat);
-      lonCorrection = rg2.utils.getLatLonDistance(minLat, maxLon, minLat, minLon) / (maxLon - minLon);
-      latCorrection = rg2.utils.getLatLonDistance(minLat, minLon, maxLat, minLon) / (maxLat - minLat);
-
+      scaleX = (controlXY.maxX - controlXY.minX) / (latLon.maxLon - latLon.minLon);
+      scaleY = (controlXY.maxY - controlXY.minY) / (latLon.maxLat - latLon.minLat);
       // don't want to skew track so scale needs to be equal in each direction
       // so we need to account for differences between a degree of latitude and longitude
       if (scaleX > scaleY) {
         // pix/lat = pix/lon * m/lat * lon/m
-        scaleY = scaleX * latCorrection / lonCorrection;
+        scaleY = scaleX * latLon.latCorrection / latLon.lonCorrection;
       } else {
         // pix/lon = pix/lat * m/lon * lat/m
-        scaleX = scaleY * lonCorrection / latCorrection;
+        scaleX = scaleY * latLon.lonCorrection / latLon.latCorrection;
       }
       // extra offset to put start of track at start location
-      this.routeData.x[0] = ((this.lon[0] - minLon) * scaleX) + minControlX;
-      this.routeData.y[0] = (-1 * (this.lat[0] - maxLat) * scaleY) + minControlY;
+      this.routeData.x[0] = ((this.lon[0] - latLon.minLon) * scaleX) + controlXY.minX;
+      this.routeData.y[0] = (-1 * (this.lat[0] - latLon.maxLat) * scaleY) + controlXY.minY;
 
       // translate lat/lon to x,y
-      deltaX = minControlX - (this.routeData.x[0] - controlx[0]);
-      deltaY = minControlY - (this.routeData.y[0] - controly[0]);
+      deltaX = controlXY.minX - (this.routeData.x[0] - controlXY.x[0]);
+      deltaY = controlXY.minY - (this.routeData.y[0] - controlXY.y[0]);
 
       for (i = 0; i < this.lat.length; i += 1) {
-        this.routeData.x[i] = ((this.lon[i] - minLon) * scaleX) + deltaX;
-        this.routeData.y[i] = (-1 * (this.lat[i] - maxLat) * scaleY) + deltaY;
+        this.routeData.x[i] = ((this.lon[i] - latLon.minLon) * scaleX) + deltaX;
+        this.routeData.y[i] = (-1 * (this.lat[i] - latLon.maxLat) * scaleY) + deltaY;
       }
+    },
+
+    getLatLonInfo : function () {
+      var latLon;
+      latLon = {};
+      latLon.maxLat = Math.max.apply(Math, this.lat);
+      latLon.maxLon = Math.max.apply(Math, this.lon);
+      latLon.minLat = Math.min.apply(Math, this.lat);
+      latLon.minLon = Math.min.apply(Math, this.lon);
+      latLon.lonCorrection = rg2.utils.getLatLonDistance(latLon.minLat, latLon.maxLon, latLon.minLat, latLon.minLon) / (latLon.maxLon - latLon.minLon);
+      latLon.latCorrection = rg2.utils.getLatLonDistance(latLon.minLat, latLon.minLon, latLon.maxLat, latLon.minLon) / (latLon.maxLat - latLon.minLat);
+      return latLon;
+    },
+
+    getControlInfo : function () {
+      var controlXY, size;
+      controlXY = rg2.drawing.getControlXY();
+      controlXY.minX = Math.min.apply(Math, controlXY.x);
+      controlXY.maxX = Math.max.apply(Math, controlXY.x);
+      controlXY.minY = Math.min.apply(Math, controlXY.y);
+      controlXY.maxY = Math.max.apply(Math, controlXY.y);
+
+      // issue #60: allow for no controls or just a few in a small area
+      // 100 is an arbitrary but sensible cut-off
+      if (((controlXY.maxY - controlXY.minY) < 100) || ((controlXY.maxX - controlXY.minX) < 100)) {
+        controlXY.minX = 0;
+        controlXY.minY = 0;
+        size = rg2.getMapSize();
+        controlXY.maxX = size.width;
+        controlXY.maxY = size.height;
+      }
+      //console.log (minControlX, maxControlX, minControlY, maxControlY);
+      return controlXY;
     }
   };
   rg2.GPSTrack = GPSTrack;
 }());
+/*global rg2:false */
+(function () {
+  function Handle(x, y, time, index) {
+    this.x = x;
+    this.y = y;
+    this.basex = x;
+    this.basey = y;
+    this.undox = x;
+    this.undoy = y;
+    this.locked = false;
+    this.time = time;
+    this.index = index;
+  }
+
+  function Handles() {
+    // array of handles used to adjust GPS tracks
+    // maintained in time order which means they are also in order along the GPS track
+    this.handles = [];
+  }
+
+  Handles.prototype = {
+    Constructor : Handles,
+
+    addHandle : function (x, y, time) {
+      this.handles.push(new Handle(x, y, time, this.handles.length));
+      this.handles.sort(function (a, b) {
+        return a.time - b.time;
+      });
+      this.renumberHandles();
+    },
+
+    deleteHandle : function (index) {
+      if ((index === 0) || (index === this.handles.length - 1)) {
+        // can't delete start or finish
+        return;
+      }
+      this.handles.splice(index, 1);
+      this.renumberHandles();
+    },
+
+    renumberHandles : function () {
+      var i;
+      for (i = 0; i < this.handles.length; i += 1) {
+        this.handles[i].index = i;
+      }
+    },
+
+    lockHandle : function (index) {
+      this.handles[index].locked = true;
+    },
+
+    unlockHandle : function (index) {
+      this.handles[index].locked = false;
+    },
+
+    handlesLocked : function () {
+      var i, count;
+      count = 0;
+      for (i = 0; i < this.handles.length; i += 1) {
+        if (this.handles[i].locked) {
+          count += 1;
+        }
+      }
+      return count;
+    },
+
+    deleteAllHandles : function () {
+      this.handles.length = 0;
+    },
+
+    rebaselineXY : function () {
+      // save new locations at end of drag
+      this.copyHandleFields('base', 'undo');
+      this.copyHandleFields('', 'base');
+    },
+
+    undo : function () {
+      // undo last move: reset to saved values
+      this.copyHandleFields('undo', 'base');
+      this.copyHandleFields('undo', '');
+    },
+
+    copyHandleFields : function (from, to) {
+      var i;
+      for (i = 0; i < this.handles.length; i += 1) {
+        this.handles[i][to + 'x'] = this.handles[i][from + 'x'];
+        this.handles[i][to + 'y'] = this.handles[i][from + 'y'];
+      }
+    },
+
+    getStartHandle : function () {
+      // always the first entry
+      return this.handles[0];
+    },
+
+    getFinishHandle : function () {
+      // always the last entry
+      return this.handles[this.handles.length - 1];
+    },
+
+    getHandleClicked : function (pt) {
+      // find if the click was on an existing handle: return handle object or undefined
+      // basex and basey are handle locations at the start of the drag which is what we are interested in
+      var i, distance;
+      for (i = 0; i < this.handles.length; i += 1) {
+        distance = rg2.utils.getDistanceBetweenPoints(pt.x, pt.y, this.handles[i].basex, this.handles[i].basey);
+        if (distance <= rg2.config.HANDLE_DOT_RADIUS) {
+          return this.handles[i];
+        }
+      }
+      return undefined;
+    },
+
+    getEarliestLockedHandle : function () {
+      // called to find earliest locked handle: we already know at least one is locked
+      var i;
+      for (i = 0; i < this.handles.length; i += 1) {
+        if (this.handles[i].locked) {
+          return this.handles[i];
+        }
+      }
+    },
+
+    getLatestLockedHandle : function () {
+      // called to find latest locked handle: we already know at least one is locked
+      var i;
+      for (i = this.handles.length - 1; i > 0; i -= 1) {
+        if (this.handles[i].locked) {
+          return this.handles[i];
+        }
+      }
+    },
+
+    getPreviousLockedHandle : function (handle) {
+      // called to find previous locked handle: we already know we are between locked handles
+      var i;
+      for (i = handle.index - 1; i >= 0; i -= 1) {
+        if (this.handles[i].locked) {
+          return this.handles[i];
+        }
+      }
+    },
+
+    getNextLockedHandle : function (handle) {
+      // called to find next locked handle: we already know we are between locked handles
+      var i;
+      for (i = handle.index + 1; i < this.handles.length; i += 1) {
+        if (this.handles[i].locked) {
+          return this.handles[i];
+        }
+      }
+    },
+
+    getSingleLockedHandle : function () {
+    // called when we know there is only one locked handle, so we can reuse another function
+      return this.getEarliestLockedHandle();
+    },
+
+    dragHandles : function (dx, dy) {
+      var i;
+      for (i = 0; i < this.handles.length; i += 1) {
+        this.handles[i].x = this.handles[i].basex + dx;
+        this.handles[i].y = this.handles[i].basey + dy;
+      }
+    },
+
+    drawHandles : function () {
+      var i;
+      for (i = 0; i < this.handles.length; i += 1) {
+        if (this.handles[i].locked === true) {
+          rg2.ctx.fillStyle = rg2.config.RED;
+        } else {
+          rg2.ctx.fillStyle = rg2.config.GREEN;
+        }
+        rg2.ctx.strokestyle = rg2.config.PURPLE;
+        rg2.ctx.beginPath();
+        rg2.ctx.arc(this.handles[i].x, this.handles[i].y, rg2.config.HANDLE_DOT_RADIUS, 0, 2 * Math.PI, false);
+        rg2.ctx.fill();
+        rg2.ctx.stroke();
+      }
+    },
+
+    adjustThisHandle : function (handle, fromTime, toTime) {
+      if (!handle.locked && (handle.time >= fromTime) && (handle.time <= toTime)) {
+        return true;
+      }
+      return false;
+    },
+
+    scaleAndRotate : function (lockedHandle, scale, angle, fromTime, toTime) {
+      // scale and rotate handles around a single fixed point
+      // times determine which side of locked point (or both) this applies to
+      var i, pt;
+      for (i = 0; i < this.handles.length; i += 1) {
+        if (this.adjustThisHandle(this.handles[i], fromTime, toTime)) {
+          pt = rg2.utils.rotatePoint(this.handles[i].basex - lockedHandle.basex, this.handles[i].basey - lockedHandle.basey, angle);
+          this.handles[i].x = (pt.x * scale) + lockedHandle.basex;
+          this.handles[i].y = (pt.y * scale) + lockedHandle.basey;
+        }
+      }
+    },
+
+    scaleAndRotateBetweenLockedPoints : function (lockedHandle, a, scale, angle, reverseAngle, fromTime, toTime) {
+      var i, pt, pt2;
+      // scale/rotate/shear around two locked points
+      for (i = 0; i < this.handles.length; i += 1) {
+        if (this.adjustThisHandle(this.handles[i], fromTime, toTime)) {
+          // rotate to give locked points as x-axis
+          pt = rg2.utils.rotatePoint(this.handles[i].basex - lockedHandle.basex, this.handles[i].basey - lockedHandle.basey, angle);
+          // shear/stretch
+          pt2 = rg2.utils.rotatePoint(pt.x + (pt.y * a), pt.y * scale, reverseAngle);
+          this.handles[i].x = pt2.x + lockedHandle.basex;
+          this.handles[i].y = pt2.y + lockedHandle.basey;
+        }
+      }
+    }
+  };
+  rg2.Handles = Handles;
+}());
+
+/*global rg2:false */
+/*global rg2Config:false */
+(function () {
+  function Georef(description, name, params) {
+    this.description = description;
+    this.name = name;
+    this.params = params;
+  }
+
+  function Georefs() {
+    this.georefsystems = [];
+    this.georefsystems.push(new Georef("Not georeferenced", "none", ""));
+    this.georefsystems.push(new Georef("GB National Grid", "EPSG:27700", "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs"));
+    this.georefsystems.push(new Georef("Google EPSG:900913", "EPSG:900913", "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs"));
+    if (rg2Config.epsg_code !== undefined) {
+      this.georefsystems.push(new Georef(rg2Config.epsg_code, rg2Config.epsg_code.replace(" ", ""), rg2Config.epsg_params));
+      this.defaultGeorefVal = rg2Config.epsg_code.replace(" ", "");
+    } else {
+      this.defaultGeorefVal = "EPSG:27700";
+    }
+  }
+
+  Georefs.prototype = {
+    Constructor : Georefs,
+
+    getDefault : function () {
+      return this.defaultGeorefVal;
+    },
+
+    getDropdown : function (dropdown) {
+      var i;
+      for (i = 0; i < this.georefsystems.length; i += 1) {
+        dropdown.options.add(rg2.utils.generateOption(this.georefsystems[i].name, this.georefsystems[i].description));
+      }
+      return dropdown;
+    },
+
+    getParams : function (name) {
+      var i, params;
+      params = "";
+      for (i = 0; i < this.georefsystems.length; i += 1) {
+        if (this.georefsystems[i].name === name) {
+          return this.georefsystems[i].params;
+        }
+      }
+      return params;
+    }
+  };
+
+  function Worldfile(wf) {
+    // see http://en.wikipedia.org/wiki/World_file
+    if (wf.A === undefined) {
+      this.valid = false;
+      this.A = 0;
+      this.B = 0;
+      this.C = 0;
+      this.D = 0;
+      this.E = 0;
+      this.F = 0;
+    } else {
+      this.A = parseFloat(wf.A);
+      this.B = parseFloat(wf.B);
+      this.C = parseFloat(wf.C);
+      this.D = parseFloat(wf.D);
+      this.E = parseFloat(wf.E);
+      this.F = parseFloat(wf.F);
+      this.valid = true;
+      // helps make later calculations easier
+      this.AEDB = (wf.A * wf.E) - (wf.D * wf.B);
+      this.xCorrection = (wf.B * wf.F) - (wf.E * wf.C);
+      this.yCorrection = (wf.D * wf.C) - (wf.A * wf.F);
+    }
+  }
+
+  Worldfile.prototype = {
+    Constructor : Worldfile,
+
+    // use worldfile to generate X value
+    getX : function (x, y) {
+      return Math.round(((this.E * x) - (this.B * y) + this.xCorrection) / this.AEDB);
+    },
+
+    // use worldfile to generate y value
+    getY : function (x, y) {
+      return Math.round(((-1 * this.D * x) + (this.A * y) + this.yCorrection) / this.AEDB);
+    }
+  };
+
+  function Map(data) {
+    if (data !== undefined) {
+      // existing map from database
+      this.mapid = data.mapid;
+      this.name = data.name;
+      // worldfile for GPS to map image conversion (for GPS files)
+      this.worldfile = new Worldfile(data);
+      // worldfile for local co-ords to map image conversion (for georeferenced courses)
+      this.localworldfile = new Worldfile({A: data.localA, B: data.localB, C: data.localC, D: data.localD, E: data.localE, F: data.localF});
+      if (data.mapfilename === undefined) {
+        this.mapfilename = this.mapid + '.' + 'jpg';
+      } else {
+        this.mapfilename = data.mapfilename;
+      }
+
+    } else {
+      // new map to be added
+      this.mapid = 0;
+      this.name = "";
+      this.worldfile = new Worldfile(0);
+      this.localworldfile = new Worldfile(0);
+    }
+    this.xpx = [];
+    this.ypx = [];
+    this.lat = [];
+    this.lon = [];
+  }
+  rg2.Georefs = Georefs;
+  rg2.Worldfile = Worldfile;
+  rg2.Map = Map;
+}());
+
 // Avoid `console` errors in browsers that lack a console.
 ( function() {
     var method;
@@ -3676,6 +3296,963 @@ var rg2 = (function (window, $) {
   }());
 /*global rg2:false */
 (function () {
+  function Result(data, isScoreEvent, scorecodes, scorex, scorey) {
+    // resultid is the kartat id value
+    this.resultid = data.resultid;
+    this.rawid = this.resultid % rg2.config.GPS_RESULT_OFFSET;
+    this.isScoreEvent = isScoreEvent;
+    this.name = rg2.he.decode(data.name);
+    this.initials = this.getInitials(this.name);
+    this.starttime = data.starttime;
+    this.time = data.time;
+    this.position = data.position;
+    this.status = data.status;
+    // get round iconv problem in API for now: unescape special characters to get sensible text
+    this.comments = rg2.he.decode(data.comments);
+    this.coursename = data.coursename;
+    if (this.coursename === "") {
+      this.coursename = data.courseid;
+    }
+    this.courseid = data.courseid;
+    this.splits = data.splits;
+    // insert a 0 split at the start to make life much easier elsewhere
+    this.splits.splice(0, 0, 0);
+    if (data.variant !== "") {
+      // save control locations for score course result
+      this.scorex = scorex;
+      this.scorey = scorey;
+      this.scorecodes = scorecodes;
+    }
+    this.initialiseTrack(data);
+  }
+
+
+  Result.prototype = {
+    Constructor : Result,
+
+    initialiseTrack : function (data) {
+      var info;
+      this.cumulativeDistance = [];
+      this.legpos = [];
+      // set true if track includes all expected controls in correct order or is a GPS track
+      this.hasValidTrack = false;
+      this.displayTrack = false;
+      this.displayScoreCourse = false;
+      this.trackColour = rg2.colours.getNextColour();
+      // raw track data
+      this.trackx = [];
+      this.tracky = [];
+      this.speedColour = [];
+      // interpolated times
+      this.xysecs = [];
+      // GPS track ids are normal resultid + GPS_RESULT_OFFSET
+      if (this.resultid >= rg2.config.GPS_RESULT_OFFSET) {
+        this.isGPSTrack = true;
+        // don't get time or splits so need to copy them in from original result
+        info = rg2.results.getTimeAndSplitsForID(this.rawid);
+        this.time = info.time;
+        this.splits = info.splits;
+        // allow for events with no results where there won't be a non-GPS result
+        if (this.time === rg2.config.TIME_NOT_FOUND) {
+          this.time = data.time;
+        }
+      } else {
+        //this.name = data.name;
+        this.isGPSTrack = false;
+      }
+      if (data.gpsx.length > 0) {
+        this.addTrack(data);
+      }
+    },
+
+    putTrackOnDisplay : function () {
+      if (this.hasValidTrack) {
+        this.displayTrack = true;
+      }
+    },
+
+    removeTrackFromDisplay : function () {
+      if (this.hasValidTrack) {
+        this.displayTrack = false;
+      }
+    },
+
+    addTrack : function (data, format) {
+      var trackOK;
+      this.trackx = data.gpsx;
+      this.tracky = data.gpsy;
+      if (this.isGPSTrack) {
+        trackOK = this.expandGPSTrack();
+      } else {
+        if (format === rg2.config.EVENT_WITHOUT_RESULTS) {
+          trackOK = this.expandTrackWithNoSplits();
+        } else {
+          trackOK = this.expandNormalTrack();
+        }
+      }
+      if (trackOK) {
+        rg2.courses.incrementTracksCount(this.courseid);
+      }
+    },
+
+    drawTrack : function (opt) {
+      var i, l, oldx, oldy, stopCount;
+      if (this.displayTrack) {
+        rg2.ctx.lineWidth = opt.routeWidth;
+        rg2.ctx.strokeStyle = this.trackColour;
+        rg2.ctx.globalAlpha = rg2.options.routeIntensity;
+        rg2.ctx.fillStyle = this.trackColour;
+        rg2.ctx.font = '10pt Arial';
+        rg2.ctx.textAlign = "left";
+        rg2.ctx.beginPath();
+        rg2.ctx.moveTo(this.trackx[0], this.tracky[0]);
+        oldx = this.trackx[0];
+        oldy = this.tracky[0];
+        stopCount = 0;
+        l = this.trackx.length;
+        for (i = 1; i < l; i += 1) {
+          // lines
+          rg2.ctx.lineTo(this.trackx[i], this.tracky[i]);
+          if ((this.trackx[i] === oldx) && (this.tracky[i] === oldy)) {
+            // we haven't moved
+            stopCount += 1;
+          } else {
+            // we have started moving again
+            if (stopCount > 0) {
+              if (!this.isGPSTrack || (this.isGPSTrack && opt.showThreeSeconds)) {
+                rg2.ctx.fillText("+" + (3 * stopCount), oldx + 5, oldy + 5);
+              }
+              stopCount = 0;
+            }
+          }
+          oldx = this.trackx[i];
+          oldy = this.tracky[i];
+          if (this.isGPSTrack && opt.showGPSSpeed) {
+            rg2.ctx.strokeStyle = this.speedColour[i];
+            rg2.ctx.stroke();
+            rg2.ctx.beginPath();
+            rg2.ctx.moveTo(oldx, oldy);
+          }
+        }
+        rg2.ctx.stroke();
+      }
+    },
+
+    drawScoreCourse : function () {
+      // draws a score course for an individual runner to show where they went
+      // based on drawCourse in course.js
+      // could refactor in future...
+      // > 1 since we need at least a start and finish to draw something
+      var angle, i, opt;
+      if ((this.displayScoreCourse) && (this.scorex.length > 1)) {
+        opt = rg2.getOverprintDetails();
+        rg2.ctx.globalAlpha = rg2.config.FULL_INTENSITY;
+        angle = rg2.utils.getAngle(this.scorex[0], this.scorey[0], this.scorex[1], this.scorey[1]);
+        rg2.controls.drawStart(this.scorex[0], this.scorey[0], "", angle, opt);
+        angle = [];
+        for (i = 0; i < (this.scorex.length - 1); i += 1) {
+          angle[i] = rg2.utils.getAngle(this.scorex[i], this.scorey[i], this.scorex[i + 1], this.scorey[i + 1]);
+        }
+        rg2.courses.drawLinesBetweenControls({x: this.scorex, y: this.scorey}, angle, this.courseid, opt);
+        for (i = 1; i < (this.scorex.length - 1); i += 1) {
+          rg2.controls.drawSingleControl(this.scorex[i], this.scorey[i], i, Math.PI * 0.25, opt);
+        }
+        rg2.controls.drawFinish(this.scorex[this.scorex.length - 1], this.scorey[this.scorey.length - 1], "", opt);
+      }
+    },
+
+    expandNormalTrack : function () {
+      var course;
+      // allow for getting two tracks for same result: should have been filtered in API...
+      this.xysecs.length = 0;
+      this.cumulativeDistance.length = 0;
+      // add times and distances at each position
+      this.xysecs[0] = 0;
+      this.cumulativeDistance[0] = 0;
+      // get course details
+      course = {};
+      // each person has their own defined score course
+      if (this.isScoreEvent) {
+        course.x = this.scorex;
+        course.y = this.scorey;
+      } else {
+        course.x = rg2.courses.getCourseDetails(this.courseid).x;
+        course.y = rg2.courses.getCourseDetails(this.courseid).y;
+      }
+      this.calculateTrackTimes(course);
+      // treat all score tracks as valid for now
+      // may need a complete rethink on score course handling later
+      if (this.isScoreEvent) {
+        this.hasValidTrack = true;
+      }
+      return this.hasValidTrack;
+    },
+
+    calculateTrackTimes: function (course) {
+      var nextcontrol, nextx, nexty, dist, oldx, oldy, i, x, y, previouscontrolindex;
+      nextcontrol = 1;
+      nextx = course.x[nextcontrol];
+      nexty = course.y[nextcontrol];
+      dist = 0;
+      oldx = this.trackx[0];
+      oldy = this.tracky[0];
+      x = 0;
+      y = 0;
+      previouscontrolindex = 0;
+      // read through list of controls and copy in split times
+      // we are assuming the track starts at the start which is index 0...
+      // look at each track point and see if it matches the next control location
+      for (i = 1; i < this.trackx.length; i += 1) {
+        // calculate distance while we are looping through
+        x = this.trackx[i];
+        y = this.tracky[i];
+        dist += rg2.utils.getDistanceBetweenPoints(x, y, oldx, oldy);
+        this.cumulativeDistance[i] = Math.round(dist);
+        oldx = x;
+        oldy = y;
+        // track ends at control
+        if ((nextx === x) && (nexty === y)) {
+          this.xysecs[i] = this.splits[nextcontrol];
+          this.addInterpolatedTimes(previouscontrolindex, i);
+          previouscontrolindex = i;
+          nextcontrol += 1;
+          if (nextcontrol === course.x.length) {
+            // we have found all the controls
+            this.hasValidTrack = true;
+            break;
+          }
+          nextx = course.x[nextcontrol];
+          nexty = course.y[nextcontrol];
+        }
+      }
+    },
+
+    expandTrackWithNoSplits : function () {
+      // based on ExpandNormalTrack, but deals with event format 2: no results
+      // this means we have a course and a finish time but no split times
+      var totaltime, currenttime, course, nextcontrol, nextx, nexty, lastx, lasty, i, x, y, moved, previouscontrolindex, dist, totaldist, oldx, oldy;
+      this.xysecs.length = 0;
+      this.cumulativeDistance.length = 0;
+
+      // only have finish time, which is in [1] at present
+      totaltime = this.splits[1];
+      currenttime = 0;
+      this.xysecs[0] = 0;
+      this.cumulativeDistance[0] = 0;
+
+      // get course details: can't be a score course since they aren't supported for format 2
+      course = {};
+      course.x = rg2.courses.getCourseDetails(this.courseid).x;
+      course.y = rg2.courses.getCourseDetails(this.courseid).y;
+      nextcontrol = 1;
+      nextx = course.x[nextcontrol];
+      nexty = course.y[nextcontrol];
+      lastx = course.x[course.x.length - 1];
+      lasty = course.y[course.y.length - 1];
+      // add finish location to track just in case...
+      this.trackx.push(lastx);
+      this.tracky.push(lasty);
+      dist = 0;
+      previouscontrolindex = 0;
+      totaldist = this.calculateTotalTrackLength();
+      // read through track to generate splits
+      x = 0;
+      y = 0;
+      moved = false;
+      oldx = this.trackx[0];
+      oldy = this.tracky[0];
+      for (i = 1; i < this.trackx.length; i += 1) {
+        x = this.trackx[i];
+        y = this.tracky[i];
+        // cope with routes that have start and finish in same place, and where the first point in a route is a repeat of the start
+        if ((x !== this.trackx[0]) || (y !== this.tracky[0])) {
+          moved = true;
+        }
+        dist += rg2.utils.getDistanceBetweenPoints(x, y, oldx, oldy);
+        this.cumulativeDistance[i] = Math.round(dist);
+        oldx = x;
+        oldy = y;
+        // track ends at control, as long as we have moved away from the start
+        if ((nextx === x) && (nexty === y) && moved) {
+          currenttime = parseInt((dist / totaldist) * totaltime, 10);
+          this.xysecs[i] = currenttime;
+          this.splits[nextcontrol] = currenttime;
+          this.addInterpolatedTimes(previouscontrolindex, i);
+          previouscontrolindex = i;
+          nextcontrol += 1;
+          if (nextcontrol === course.x.length) {
+            // we have found all the controls
+            this.hasValidTrack = true;
+            break;
+          }
+          nextx = course.x[nextcontrol];
+          nexty = course.y[nextcontrol];
+        }
+      }
+      return this.hasValidTrack;
+    },
+
+    calculateTotalTrackLength : function () {
+      // read through track to find total distance
+      var i, oldx, oldy, totaldist;
+      totaldist = 0;
+      oldx = this.trackx[0];
+      oldy = this.tracky[0];
+      for (i = 1; i < this.trackx.length; i += 1) {
+        totaldist += rg2.utils.getDistanceBetweenPoints(this.trackx[i], this.tracky[i], oldx, oldy);
+        oldx = this.trackx[i];
+        oldy = this.tracky[i];
+      }
+      return totaldist;
+    },
+
+    addInterpolatedTimes : function (startindex, endindex) {
+      // add interpolated time at each point based on cumulative distance; this assumes uniform speed...
+      var oldt, deltat, olddist, deltadist, i;
+      oldt = this.xysecs[startindex];
+      deltat = this.xysecs[endindex] - oldt;
+      olddist = this.cumulativeDistance[startindex];
+      deltadist = this.cumulativeDistance[endindex] - olddist;
+      for (i = startindex; i <= endindex; i += 1) {
+        this.xysecs[i] = oldt + Math.round(((this.cumulativeDistance[i] - olddist) * deltat / deltadist));
+      }
+    },
+
+    expandGPSTrack : function () {
+      var t, dist, oldx, oldy, x, y, delta, maxSpeed, oldDelta, sum, POWER_FACTOR, l;
+      dist = 0;
+      oldx = this.trackx[0];
+      oldy = this.tracky[0];
+      x = 0;
+      y = 0;
+      maxSpeed = 0;
+      oldDelta = 0;
+      POWER_FACTOR = 1;
+      l = this.trackx.length;
+      // in theory we get one point every three seconds
+      for (t = 0; t < l; t += 1) {
+        this.xysecs[t] = 3 * t;
+        x = this.trackx[t];
+        y = this.tracky[t];
+        delta = rg2.utils.getDistanceBetweenPoints(x, y, oldx, oldy);
+        dist += delta;
+        sum = delta + oldDelta;
+        if (maxSpeed < sum) {
+          maxSpeed = sum;
+        }
+        this.speedColour[t] = Math.pow(sum, POWER_FACTOR);
+        this.cumulativeDistance[t] = Math.round(dist);
+        oldx = x;
+        oldy = y;
+        oldDelta = delta;
+      }
+      this.setSpeedColours(Math.pow(maxSpeed, POWER_FACTOR));
+      this.hasValidTrack = true;
+      return this.hasValidTrack;
+
+    },
+
+    setSpeedColours : function (maxspeed) {
+      var i, red, green, halfmax;
+      //console.log("'Max speed = " + maxspeed);
+      halfmax = maxspeed / 2;
+      // speedColour comes in with speeds at each point and gets updated to the associated colour
+      for (i = 1; i < this.speedColour.length; i += 1) {
+        if (this.speedColour[i] > halfmax) {
+          // fade green to orange
+          red = Math.round(255 * (this.speedColour[i] - halfmax) / halfmax);
+          green = 255;
+        } else {
+          // fade orange to red
+          green = Math.round(255 * this.speedColour[i] / halfmax);
+          red = 255;
+        }
+        this.speedColour[i] = '#';
+        if (red < 16) {
+          this.speedColour[i] += '0';
+        }
+        this.speedColour[i] += red.toString(16);
+        if (green < 16) {
+          this.speedColour[i] += '0';
+        }
+        this.speedColour[i] += green.toString(16) + '00';
+      }
+    },
+
+    getInitials : function (name) {
+      var i, addNext, len, initials;
+      // converts name to initials
+      if (name === null) {
+        return "??";
+      }
+      name.trim();
+      len = name.length;
+      initials = "";
+      addNext = true;
+      for (i = 0; i < len; i += 1) {
+        if (addNext) {
+          initials += name.substr(i, 1);
+          addNext = false;
+        }
+        if (name.charAt(i) === " ") {
+          addNext = true;
+        }
+      }
+      return initials;
+    }
+  };
+  rg2.Result = Result;
+}());
+
+/*global rg2:false */
+(function () {
+  function ResultParser(evt, fileFormat) {
+    var parsedResults;
+    this.results = [];
+    this.resultCourses = [];
+    this.valid = true;
+    parsedResults = this.processResults(evt, fileFormat);
+    this.results = parsedResults.results;
+    this.valid = parsedResults.valid;
+    this.getCoursesFromResults();
+    return {results: this.results, resultCourses: this.resultCourses, valid: this.valid};
+  }
+
+  ResultParser.prototype = {
+
+    Constructor : ResultParser,
+
+    processResults : function (evt, fileFormat) {
+      switch (fileFormat) {
+      case 'CSV':
+        return (new rg2.ResultParserCSV(evt.target.result));
+      case 'XML':
+        return this.processResultsXML(evt.target.result);
+      default:
+        // shouldn't ever get here but...
+        rg2.utils.showWarningDialog("File type error", "Results file type is not recognised. Please select a valid file.");
+        return {results: [], valid: false};
+      }
+    },
+
+    getCoursesFromResults : function () {
+      // creates an array of all course names in the results file
+      var i, j, found;
+      for (i = 0; i < this.results.length; i += 1) {
+        // have we already found this course?
+        found = false;
+        for (j = 0; j < this.resultCourses.length; j += 1) {
+          if (this.resultCourses[j].course === this.results[i].course) {
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          // courseid is set later when mapping is known
+          this.resultCourses.push({course: this.results[i].course, courseid: rg2.config.DO_NOT_SAVE_COURSE});
+        }
+      }
+    },
+
+    processResultsXML : function (rawXML) {
+      var xml, version, nodelist;
+      version = "";
+      try {
+        xml = $.parseXML(rawXML);
+        nodelist = xml.getElementsByTagName('ResultList');
+        if (nodelist.length === 0) {
+          rg2.utils.showWarningDialog("XML file error", "File is not a valid XML results file. ResultList element missing.");
+          return {results: [], valid: false};
+        }
+        // test for IOF Version 2
+        version = rg2.utils.extractAttributeZero(xml.getElementsByTagName("IOFVersion"), "version", "");
+        if (version === "") {
+          // test for IOF Version 3
+          version = rg2.utils.extractAttributeZero(xml.getElementsByTagName('ResultList'), "iofVersion", "");
+        }
+      } catch (err) {
+        rg2.utils.showWarningDialog("XML file error", "File is not a valid XML results file.");
+        return {results: [], valid: false};
+      }
+
+      switch (version) {
+      case "2.0.3":
+        return (new rg2.ResultParserIOFV2(xml));
+      case "3.0":
+        return (new rg2.ResultParserIOFV3(xml));
+      default:
+        rg2.utils.showWarningDialog("XML file error", 'Invalid IOF file format. Version ' + version + ' not supported.');
+        return {results: [], valid: false};
+      }
+    }
+  };
+  rg2.ResultParser = ResultParser;
+}());
+/*global rg2:false */
+(function () {
+  function ResultParserCSV(rawCSV) {
+    this.results = [];
+    this.CSVFormat = {};
+    this.separator = "";
+    this.valid = true;
+    this.processResultsCSV(rawCSV);
+    return {results: this.results, valid: this.valid};
+  }
+
+  ResultParserCSV.prototype = {
+
+    Constructor : ResultParserCSV,
+
+    processResultsCSV : function (rawCSV) {
+      var rows, commas, semicolons;
+      rows = rawCSV.split(/[\r\n|\n]+/);
+      // try and work out what the separator is
+      commas = rows[0].split(',').length - 1;
+      semicolons = rows[0].split(';').length - 1;
+      if (commas > semicolons) {
+        this.separator = ',';
+      } else {
+        this.separator = ";";
+      }
+      // Spklasse has two items on first row, SI CSV has a lot more...
+      if (rows[0].split(this.separator).length === 2) {
+        this.processSpklasseCSVResults(rows);
+      } else {
+        this.getCSVFormat(rows[0]);
+        this.processCSVResults(rows);
+      }
+    },
+
+    // rows: array of raw lines from SI results csv file
+    processCSVResults : function (rows) {
+      var i, fields;
+      // extract what we need: first row is headers so ignore
+      for (i = 1; i < rows.length; i += 1) {
+        fields = rows[i].split(this.separator);
+        // need at least this many fields...
+        if (fields.length >= this.CSVFormat.FIRST_SPLIT_IDX) {
+          this.results.push(this.extractSingleCSVResult(fields));
+        }
+      }
+    },
+
+    getPosition : function (fields) {
+      var position;
+      position = parseInt(fields[this.CSVFormat.POSITION_IDX], 10);
+      if (isNaN(position)) {
+        position = '';
+      }
+      return position;
+    },
+
+    extractSingleCSVResult: function (fields) {
+      var result, info;
+      result = {};
+      result.chipid = fields[this.CSVFormat.CHIP_IDX];
+      // delete quotes from CSV file: output from MERCS
+      result.name = (fields[this.CSVFormat.FIRST_NAME_IDX] + " " + fields[this.CSVFormat.SURNAME_IDX]).trim().replace(/\"/g, '');
+      result.dbid = (fields[this.CSVFormat.DB_IDX] + "__" + result.name).replace(/\"/g, '');
+      result.starttime = rg2.utils.getSecsFromHHMMSS(fields[this.CSVFormat.START_TIME_IDX]);
+      result.time = fields[this.CSVFormat.TOTAL_TIME_IDX];
+      result.position = this.getPosition(fields);
+      result.status = this.getSICSVStatus(fields[this.CSVFormat.NC_IDX], fields[this.CSVFormat.CLASSIFIER_IDX]);
+      result.club = fields[this.CSVFormat.CLUB_IDX].trim().replace(/\"/g, '');
+      result.course = fields[this.CSVFormat.COURSE_IDX];
+      result.controls = parseInt(fields[this.CSVFormat.NUM_CONTROLS_IDX], 10);
+      info = this.extractSISplits(fields, result.controls);
+      result.splits = info.splits;
+      // add finish split
+      result.splits += ";" + rg2.utils.getSecsFromHHMMSS(result.time);
+      result.codes = info.codes;
+      return result;
+    },
+
+    extractSISplits : function (fields, controls) {
+      var i, result, nextcode, nextsplit;
+      nextsplit = this.CSVFormat.FIRST_SPLIT_IDX;
+      nextcode = this.CSVFormat.FIRST_CODE_IDX;
+      result = {};
+      result.splits = "";
+      result.codes = [];
+      for (i = 0; i < controls; i += 1) {
+        if (fields[nextcode]) {
+          if (i > 0) {
+            result.splits += ";";
+          }
+          result.codes[i] = fields[nextcode];
+          result.splits += rg2.utils.getSecsFromHHMMSS(fields[nextsplit]);
+        }
+        nextsplit += this.CSVFormat.STEP;
+        nextcode += this.CSVFormat.STEP;
+      }
+      return {splits: result.splits, codes: result.codes};
+    },
+
+    getCSVFormat : function (headers) {
+      // not a pretty function but it should allow some non-standard CSV formats to be processed such as OEScore output
+      var titles, values, fields, i, j, found;
+      titles = ['SI card', 'Database Id', 'Surname', 'First name', 'nc', 'Start', 'Time', 'Classifier', 'City', 'Short', 'Course', 'Course controls', 'Pl', 'Start punch', 'Control1', 'Punch1', 'Control2'];
+      values = [];
+      fields = headers.split(this.separator);
+      for (i = 0; i < titles.length; i += 1) {
+        found = false;
+        for (j = 0; j < fields.length; j += 1) {
+          if (fields[j] === titles[i]) {
+            values[i] = j;
+            found = true;
+            break;
+          }
+          // horrid hacks to handle semi-compliant files
+          if ('SI card' === titles[i]) {
+            if (('Chipno' === fields[j]) || ('SIcard' === fields[j])) {
+              values[i] = j;
+              found = true;
+              break;
+            }
+          }
+          if ('Pl' === titles[i]) {
+            if ('Place' === fields[j]) {
+              values[i] = j;
+              found = true;
+              break;
+            }
+          }
+        }
+        if (!found) {
+          // stop if we didn't find what we needed
+          break;
+        }
+      }
+
+      if (!found) {
+        // default to BOF CSV format
+        values = [1, 2, 3, 4, 8, 9, 11, 12, 15, 18, 39, 42, 43, 44, 46, 47, 2];
+      }
+      this.setCSVFormat(values);
+    },
+
+    setCSVFormat : function (values) {
+      this.CSVFormat.CHIP_IDX = values[0];
+      this.CSVFormat.DB_IDX = values[1];
+      this.CSVFormat.SURNAME_IDX = values[2];
+      this.CSVFormat.FIRST_NAME_IDX = values[3];
+      this.CSVFormat.NC_IDX = values[4];
+      this.CSVFormat.START_TIME_IDX = values[5];
+      this.CSVFormat.TOTAL_TIME_IDX = values[6];
+      this.CSVFormat.CLASSIFIER_IDX = values[7];
+      this.CSVFormat.CLUB_IDX = values[8];
+      this.CSVFormat.CLASS_IDX = values[9];
+      this.CSVFormat.COURSE_IDX = values[10];
+      this.CSVFormat.NUM_CONTROLS_IDX = values[11];
+      this.CSVFormat.POSITION_IDX = values[12];
+      this.CSVFormat.START_PUNCH_IDX = values[13];
+      this.CSVFormat.FIRST_CODE_IDX = values[14];
+      this.CSVFormat.FIRST_SPLIT_IDX = values[15];
+      this.CSVFormat.STEP = values[16] - values[14];
+    },
+
+    getSICSVStatus : function (nc, classifier) {
+      if ((nc === '0') || (nc === '') || (nc === 'N')) {
+        if ((classifier === '') || (classifier === '0')) {
+          return 'ok';
+        }
+        return 'nok';
+      }
+      return 'nc';
+    },
+
+    // rows: array of raw lines from Spklasse results csv file
+    processSpklasseCSVResults : function (rows) {
+      // fields in course row
+      var COURSE_IDX = 0, NUM_CONTROLS_IDX = 1, course, controls, i, fields;
+      fields = [];
+      course = '';
+      controls = 0;
+      // read through all rows
+      for (i = 0; i < rows.length; i += 1) {
+        fields = rows[i].split(this.separator);
+        // check for new course
+        if (fields.length === 2) {
+          course = fields[COURSE_IDX];
+          controls = parseInt(fields[NUM_CONTROLS_IDX], 10);
+        } else {
+          this.extractResult(fields, course, controls);
+        }
+      }
+    },
+
+    extractResult : function (fields, course, controls) {
+      var FIRST_NAME_IDX = 0, SURNAME_IDX = 1, CLUB_IDX = 2, START_TIME_IDX = 3, result, info;
+      result = {};
+      result.chipid = 0;
+      result.name = (fields[FIRST_NAME_IDX] + " " + fields[SURNAME_IDX] + " " + fields[CLUB_IDX]).trim();
+      result.dbid = (result.chipid + "__" + result.name);
+      result.starttime = rg2.utils.getSecsFromHHMM(fields[START_TIME_IDX]);
+      result.club = fields[CLUB_IDX];
+      result.course = course;
+      result.controls = controls;
+      info = this.extractSpklasseSplits(fields);
+      result.splits = info.splits;
+      result.codes = info.codes;
+      result.time = rg2.utils.formatSecsAsMMSS(info.totaltime);
+      this.results.push(result);
+    },
+
+    extractSpklasseSplits : function (fields) {
+      var i, splits, codes, totaltime, len, FIRST_SPLIT_IDX = 4;
+      splits = '';
+      codes = [];
+      len = fields.length - FIRST_SPLIT_IDX;
+      totaltime = 0;
+      for (i = 0; i < len; i += 1) {
+        if (i > 0) {
+          splits += ";";
+        }
+        codes[i] = 'X';
+        totaltime += rg2.utils.getSecsFromHHMMSS(fields[i + FIRST_SPLIT_IDX]);
+        splits += totaltime;
+      }
+      return {splits: splits, codes: codes, totaltime: totaltime};
+    }
+  };
+  rg2.ResultParserCSV = ResultParserCSV;
+}());
+/*global rg2:false */
+(function () {
+  function ResultParserIOFV2(xml) {
+    this.results = [];
+    this.valid = true;
+    this.processIOFV2Results(xml);
+    return {results: this.results, valid: this.valid};
+  }
+
+  ResultParserIOFV2.prototype = {
+
+    Constructor : ResultParserIOFV2,
+
+    getDBID : function (element, name) {
+      // remove new lines from empty <PersonId> tags
+      element = element.replace(/[\n\r]/g, '').trim();
+      if (element) {
+        return element;
+      }
+      return name;
+    },
+
+    getName : function (personlist) {
+      var temp;
+      temp = personlist.getElementsByTagName('Given')[0].textContent + " " + personlist.getElementsByTagName('Family')[0].textContent;
+      // remove new lines from empty <Given> and <Family> tags
+      return (temp.replace(/[\n\r]/g, '').trim());
+    },
+
+    processIOFV2Results : function (xml) {
+      var classlist, personlist, resultlist, i, j, result, course;
+      try {
+        classlist = xml.getElementsByTagName('ClassResult');
+        for (i = 0; i < classlist.length; i += 1) {
+          course = classlist[i].getElementsByTagName('ClassShortName')[0].textContent;
+          personlist = classlist[i].getElementsByTagName('PersonResult');
+          for (j = 0; j < personlist.length; j += 1) {
+            result = {};
+            result.course = course;
+            result.name = this.getName(personlist[j]);
+            result.dbid = this.getDBID(personlist[j].getElementsByTagName('PersonId')[0].textContent, result.name);
+            result.club = rg2.utils.extractTextContentZero(personlist[j].getElementsByTagName('ShortName'), '');
+            resultlist = personlist[j].getElementsByTagName('Result');
+            this.extractIOFV2Results(resultlist, result);
+            if (result.status === 'DidNotStart') {
+              break;
+            }
+            this.results.push(result);
+          }
+        }
+      } catch (err) {
+        this.valid = false;
+        rg2.utils.showWarningDialog("XML parse error", "Error processing XML file. Error is : " + err.message);
+        return;
+      }
+
+    },
+
+    getStartFinishTimeAsSecs : function (element) {
+      var time;
+      if (element.length > 0) {
+        time = element[0].getElementsByTagName('Clock')[0].textContent;
+        return rg2.utils.getSecsFromHHMMSS(time);
+      }
+      return 0;
+    },
+
+    getPosition : function (element) {
+      if (element.length > 0) {
+        return parseInt(element[0].textContent, 10);
+      }
+      return '';
+    },
+
+    getTime : function (element) {
+      if (element.length > 0) {
+        return element[0].textContent.replace(/[\n\r]/g, '');
+      }
+      return '';
+    },
+
+    extractIOFV2Results : function (resultlist, result) {
+      var i, finishtime, splitlist;
+      for (i = 0; i < resultlist.length; i += 1) {
+        result.status = rg2.utils.extractAttributeZero(resultlist[i].getElementsByTagName('CompetitorStatus'), "value", "");
+        result.position = this.getPosition(resultlist[i].getElementsByTagName('ResultPosition'));
+        result.chipid = rg2.utils.extractTextContentZero(resultlist[i].getElementsByTagName('CCardId'), 0);
+        // assuming first <Time> is the total time...
+        result.time = this.getTime(resultlist[i].getElementsByTagName('Time'));
+        result.starttime = this.getStartFinishTimeAsSecs(resultlist[i].getElementsByTagName('StartTime'));
+        result.splits = "";
+        result.codes = [];
+        splitlist = resultlist[i].getElementsByTagName('SplitTime');
+        result.controls = splitlist.length;
+        this.extractIOFV2Splits(splitlist, result);
+        finishtime = this.getStartFinishTimeAsSecs(resultlist[i].getElementsByTagName('FinishTime'));
+        result.splits += Math.max(finishtime - result.starttime, 0);
+      }
+    },
+
+    extractIOFV2Splits : function (splitlist, result) {
+      var l, temp;
+      for (l = 0; l < splitlist.length; l += 1) {
+        if (l > 0) {
+          result.splits += ";";
+        }
+        temp = splitlist[l].getElementsByTagName('Time');
+        if (temp.length > 0) {
+          // previously read timeFormat but some files lied!
+          // allow for XML files that don't tell you what is going on
+          // getSecsFromHHMMSS copes with MM:SS as well
+          result.splits += rg2.utils.getSecsFromHHMMSS(temp[0].textContent);
+          result.codes[l] = rg2.utils.extractTextContentZero(splitlist[l].getElementsByTagName('ControlCode'), "");
+        } else {
+          result.splits += 0;
+          result.codes[l] = "";
+        }
+      }
+      // add finish split
+      result.splits += ";";
+    }
+  };
+  rg2.ResultParserIOFV2 = ResultParserIOFV2;
+}());
+/*global rg2:false */
+(function () {
+  function ResultParserIOFV3(xml) {
+    this.results = [];
+    this.valid = true;
+    this.processIOFV3Results(xml);
+    return {results: this.results, valid: this.valid};
+  }
+
+  ResultParserIOFV3.prototype = {
+
+    Constructor : ResultParserIOFV3,
+
+    getID : function (element, name) {
+      var temp;
+      if (element.length > 0) {
+        temp = element[0].textContent;
+        // remove new lines from empty <Id> tags
+        temp.replace(/[\n\r]/g, '');
+        return (temp.trim() + "__" + name);
+      }
+      // no id defined so just use count of runners
+      return (this.results.length + "__" + name);
+    },
+
+    getClub : function (element) {
+      if (element.length > 0) {
+        return element[0].getElementsByTagName('Name')[0].textContent;
+      }
+      return "";
+    },
+
+    processIOFV3Results : function (xml) {
+      var classlist, personlist, resultlist, i, j, result, course, temp;
+      try {
+        classlist = xml.getElementsByTagName('ClassResult');
+        for (i = 0; i < classlist.length; i += 1) {
+          temp = classlist[i].getElementsByTagName('Class');
+          course = temp[0].getElementsByTagName('Name')[0].textContent;
+          personlist = classlist[i].getElementsByTagName('PersonResult');
+          for (j = 0; j < personlist.length; j += 1) {
+            result = {};
+            result.course = course;
+            temp = personlist[j].getElementsByTagName('Given')[0].textContent + " " + personlist[j].getElementsByTagName('Family')[0].textContent;
+            // remove new lines from empty <Given> and <Family> tags
+            result.name = temp.replace(/[\n\r]/g, '').trim();
+            result.dbid = this.getID(personlist[j].getElementsByTagName('Id'), result.name);
+            result.club = this.getClub(personlist[j].getElementsByTagName('Organisation'));
+            resultlist = personlist[j].getElementsByTagName('Result');
+            this.extractIOFV3Results(resultlist, result);
+            this.results.push(result);
+          }
+        }
+      } catch (err) {
+        this.valid = false;
+        rg2.utils.showWarningDialog("XML parse error", "Error processing XML file. Error is : " + err.message);
+        return;
+      }
+    },
+
+    getStartFinishTimeAsSeconds : function (time) {
+      if (time.length >= 19) {
+        // format is yyyy-mm-ddThh:mm:ss and might have extra Z or +nn
+        return rg2.utils.getSecsFromHHMMSS(time.substr(11, 8));
+      }
+      return 0;
+    },
+
+    getTotalTimeAsSeconds : function (time) {
+      if (time.length > 0) {
+        return rg2.utils.formatSecsAsMMSS(parseInt(time[0].textContent, 10));
+      }
+      return 0;
+    },
+
+    extractIOFV3Results : function (resultlist, result) {
+      var k, finishtime, splitlist;
+      for (k = 0; k < resultlist.length; k += 1) {
+        result.chipid = rg2.utils.extractTextContentZero(resultlist[k].getElementsByTagName('ControlCard'), 0);
+        result.position = rg2.utils.extractTextContentZero(resultlist[k].getElementsByTagName('Position'), '');
+        result.status = rg2.utils.extractTextContentZero(resultlist[k].getElementsByTagName('Status'), '');
+        // assuming first <Time> is the total time...
+        // this one is in seconds and might even have tenths...
+        result.time = this.getTotalTimeAsSeconds(resultlist[k].getElementsByTagName('Time'));
+        result.starttime = this.getStartFinishTimeAsSeconds(rg2.utils.extractTextContentZero(resultlist[k].getElementsByTagName('StartTime'), 0));
+        result.splits = "";
+        result.codes = [];
+        splitlist = resultlist[k].getElementsByTagName('SplitTime');
+        result.controls = splitlist.length;
+        this.extractIOFV3Splits(splitlist, result);
+        finishtime = this.getStartFinishTimeAsSeconds(rg2.utils.extractTextContentZero(resultlist[k].getElementsByTagName('FinishTime'), 0));
+        result.splits += finishtime - result.starttime;
+      }
+    },
+
+    extractIOFV3Splits : function (splitlist, result) {
+      var x;
+      for (x = 0; x < splitlist.length; x += 1) {
+        if (x > 0) {
+          result.splits += ";";
+        }
+        result.splits += rg2.utils.extractTextContentZero(splitlist[x].getElementsByTagName('Time'), 0);
+        result.codes[x] = rg2.utils.extractTextContentZero(splitlist[x].getElementsByTagName('ControlCode'), 'X' + x);
+      }
+      // add finish split
+      result.splits += ";";
+    }
+  };
+  rg2.ResultParserIOFV3 = ResultParserIOFV3;
+}());
+/*global rg2:false */
+(function () {
   function Results() {
     this.results = [];
   }
@@ -3684,7 +4261,7 @@ var rg2 = (function (window, $) {
     Constructor : Results,
 
     addResults : function (data, isScoreEvent) {
-      var i, j, l, result, id, baseresult, variant, codes, scorex, scorey;
+      var i, l, result, variant, codes, scorex, scorey;
       l = data.length;
       // extract score course details if necessary
       if (isScoreEvent) {
@@ -3712,15 +4289,16 @@ var rg2 = (function (window, $) {
         }
         this.results.push(result);
       }
+      this.setScoreCourseInfo();
+      this.generateLegPositions();
+    },
+
+    setScoreCourseInfo : function () {
       // don't get score course info for GPS tracks so find it from original result
+      var i, baseresult;
       for (i = 0; i < this.results.length; i += 1) {
         if (this.results[i].resultid >= rg2.config.GPS_RESULT_OFFSET) {
-          id = this.results[i].rawid;
-          for (j = 0; j < this.results.length; j += 1) {
-            if (id === this.results[j].resultid) {
-              baseresult = this.getFullResult(j);
-            }
-          }
+          baseresult = this.getFullResult(this.results[i].rawid);
           if (baseresult !== undefined) {
             if (baseresult.scorex !== undefined) {
               this.results[i].scorex = baseresult.scorex;
@@ -3730,7 +4308,6 @@ var rg2 = (function (window, $) {
           }
         }
       }
-      this.generateLegPositions();
     },
 
     // lists all runners on a given course
@@ -3748,7 +4325,7 @@ var rg2 = (function (window, $) {
     // read through results to get list of all controls on score courses
     // since there is no master list of controls!
     generateScoreCourses : function () {
-      var i, j, k, res, courses, codes, x, y, newControl, courseid;
+      var i, j, res, courses, codes, x, y, courseid;
       courses = [];
       codes = [];
       x = [];
@@ -3767,14 +4344,7 @@ var rg2 = (function (window, $) {
           }
           // read all controls for this result and save if new
           for (j = 0; j < res.scorecodes.length; j += 1) {
-            newControl = true;
-            for (k = 0; k < codes[courseid].length; k += 1) {
-              if (res.scorecodes[j] === codes[courseid][k]) {
-                newControl = false;
-                break;
-              }
-            }
-            if (newControl) {
+            if (codes[courseid].indexOf(res.scorecodes[j]) === -1) {
               codes[courseid].push(res.scorecodes[j]);
               x[courseid].push(res.scorex[j]);
               y[courseid].push(res.scorey[j]);
@@ -3791,30 +4361,17 @@ var rg2 = (function (window, $) {
     },
 
     generateLegPositions : function () {
-      var i, j, k, courses, controls, pos, p;
-      courses = [];
-      controls = [];
-      for (i = 0; i < this.results.length; i += 1) {
-        if (courses.indexOf(this.results[i].courseid) === -1) {
-          courses.push(this.results[i].courseid);
-          // not a good way fo finding number of controls: better to get from courses?
-          controls.push(this.results[i].splits.length);
-        }
-
-      }
+      var i, j, k, info, pos;
+      info = this.getCoursesAndControls();
       pos = [];
-      for (i = 0; i < courses.length; i += 1) {
-        //console.log("Generate positions for course " + courses[i]);
-
+      for (i = 0; i < info.courses.length; i += 1) {
+        //console.log("Generate positions for course " + info.courses[i]);
         // start at 1 since 0 is time 0
-        for (k = 1; k < controls[i]; k += 1) {
+        for (k = 1; k < info.controls[i]; k += 1) {
           pos.length = 0;
           for (j = 0; j < this.results.length; j += 1) {
-            if (this.results[j].courseid === courses[i]) {
-              p = {};
-              p.time = this.results[j].splits[k];
-              p.id = j;
-              pos.push(p);
+            if (this.results[j].courseid === info.courses[i]) {
+              pos.push({time: this.results[j].splits[k], id: j});
             }
           }
           pos.sort(this.sortTimes);
@@ -3825,6 +4382,21 @@ var rg2 = (function (window, $) {
           }
         }
       }
+    },
+
+    getCoursesAndControls : function () {
+      var i, courses, controls;
+      courses = [];
+      controls = [];
+      for (i = 0; i < this.results.length; i += 1) {
+        if (courses.indexOf(this.results[i].courseid) === -1) {
+          courses.push(this.results[i].courseid);
+          // not a good way fo finding number of controls: better to get from courses?
+          controls.push(this.results[i].splits.length);
+        }
+
+      }
+      return {courses: courses, controls: controls};
     },
 
     putScoreCourseOnDisplay : function (resultid, display) {
@@ -3855,7 +4427,6 @@ var rg2 = (function (window, $) {
             count += 1;
           }
         }
-
       }
       return count;
     },
@@ -3878,7 +4449,7 @@ var rg2 = (function (window, $) {
     },
 
     getResultsInfo : function () {
-      var i, info, res, temp;
+      var i, info, res;
       info = {};
       info.results = 0;
       info.drawnroutes = 0;
@@ -3907,13 +4478,19 @@ var rg2 = (function (window, $) {
       } else {
         info.percent = 0;
       }
-      info.time = Math.floor(info.secs / 86400) + " days ";
-      temp = info.secs - (86400 * Math.floor(info.secs / 86400));
-      info.time += Math.floor(temp / 3600) + " hours ";
-      temp = temp - (3600 * Math.floor(temp / 3600));
-      info.time += Math.floor(temp / 60) + " minutes ";
-      info.time += temp - (60 * Math.floor(temp / 60)) + " seconds";
+      info.time = this.formatTotalRunningTime(info.secs);
       return info;
+    },
+
+    formatTotalRunningTime : function (secs) {
+      var time;
+      time = Math.floor(secs / 86400) + " days ";
+      secs = secs - (86400 * Math.floor(secs / 86400));
+      time += Math.floor(secs / 3600) + " hours ";
+      secs = secs - (3600 * Math.floor(secs / 3600));
+      time += Math.floor(secs / 60) + " minutes ";
+      time += secs - (60 * Math.floor(secs / 60)) + " seconds";
+      return time;
     },
 
     getFullResult : function (resultid) {
@@ -3939,7 +4516,17 @@ var rg2 = (function (window, $) {
       } else {
         $("#rg2-track-names").hide();
       }
+    },
 
+    getTracksOnDisplay : function () {
+      var i, tracks;
+      tracks = [];
+      for (i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].displayTrack) {
+          tracks.push(i);
+        }
+      }
+      return tracks;
     },
 
     putOneTrackOnDisplay : function (resultid) {
@@ -3952,36 +4539,18 @@ var rg2 = (function (window, $) {
       this.updateTrackNames();
     },
 
-    // add all tracks for one course
-    putTracksOnDisplay : function (courseid) {
+    updateTrackDisplay : function (courseid, display) {
       var i;
       for (i = 0; i < this.results.length; i += 1) {
-        if (this.results[i].courseid === courseid) {
-          this.results[i].putTrackOnDisplay();
+        if ((this.results[i].courseid === courseid) || (rg2.config.DISPLAY_ALL_COURSES === courseid)) {
+          if (display) {
+            this.results[i].putTrackOnDisplay();
+          } else {
+            this.results[i].removeTrackFromDisplay();
+          }
         }
       }
       this.updateTrackNames();
-    },
-
-    // put all tracks for all courses on display
-    putAllTracksOnDisplay : function () {
-      var i, l;
-      l = this.results.length;
-      for (i = 0; i < l; i += 1) {
-        this.results[i].putTrackOnDisplay();
-      }
-      this.updateTrackNames();
-    },
-
-    getTracksOnDisplay : function () {
-      var i, tracks;
-      tracks = [];
-      for (i = 0; i < this.results.length; i += 1) {
-        if (this.results[i].displayTrack) {
-          tracks.push(i);
-        }
-      }
-      return tracks;
     },
 
     getDisplayedTrackNames : function () {
@@ -4006,42 +4575,14 @@ var rg2 = (function (window, $) {
       return false;
     },
 
-    getSplitsForID : function (resultid) {
+    getTimeAndSplitsForID : function (resultid) {
       var i;
       for (i = 0; i < this.results.length; i += 1) {
         if (resultid === this.results[i].resultid) {
-          return this.results[i].splits;
+          return {time: this.results[i].time, splits: this.results[i].splits};
         }
       }
-      return rg2.config.SPLITS_NOT_FOUND;
-    },
-
-    getTimeForID : function (resultid) {
-      var i;
-      for (i = 0; i < this.results.length; i += 1) {
-        if (resultid === this.results[i].resultid) {
-          return this.results[i].time;
-        }
-      }
-      return rg2.config.TIME_NOT_FOUND;
-    },
-
-    removeAllTracksFromDisplay : function () {
-      var i;
-      for (i = 0; i < this.results.length; i += 1) {
-        this.results[i].removeTrackFromDisplay();
-      }
-      this.updateTrackNames();
-    },
-
-    removeTracksFromDisplay : function (courseid) {
-      var i;
-      for (i = 0; i < this.results.length; i += 1) {
-        if (this.results[i].courseid === courseid) {
-          this.results[i].removeTrackFromDisplay();
-        }
-      }
-      this.updateTrackNames();
+      return {time: rg2.config.TIME_NOT_FOUND, splits: []};
     },
 
     addTracks : function (tracks) {
@@ -4085,18 +4626,18 @@ var rg2 = (function (window, $) {
     },
 
     formatResultListAsAccordion : function () {
-      // puts all GPS results at bottom of relevant course results
-      var html, namehtml, temp, firstCourse, oldCourseID, i, l, tracksForThisCourse;
+      var html, res, firstCourse, oldCourseID, i, tracksForThisCourse;
+      if (this.results.length === 0) {
+        return "<p>" + rg2.t("No results available") + "</p>";
+      }
       html = "";
-      namehtml = "";
       firstCourse = true;
       oldCourseID = 0;
       tracksForThisCourse = 0;
       this.results.sort(this.sortByCourseIDThenResultID);
-      l = this.results.length;
-      for (i = 0; i < l; i += 1) {
-        temp = this.results[i];
-        if (temp.courseid !== oldCourseID) {
+      for (i = 0; i < this.results.length; i += 1) {
+        res = this.results[i];
+        if (res.courseid !== oldCourseID) {
           // found a new course so add header
           if (firstCourse) {
             firstCourse = false;
@@ -4104,28 +4645,16 @@ var rg2 = (function (window, $) {
             html += this.getBottomRow(tracksForThisCourse, oldCourseID) + "</table></div>";
           }
           tracksForThisCourse = 0;
-          html += "<h3>" + temp.coursename;
-          html += "<input class='showcourse' id=" + temp.courseid + " type=checkbox name=course title='Show course'></input></h3><div>";
-          html += "<table class='resulttable'><tr><th></th><th>" + rg2.t("Name") + "</th><th>" + rg2.t("Time") + "</th><th><i class='fa fa-pencil'></i></th><th><i class='fa fa-play'></i></th></tr>";
-          oldCourseID = temp.courseid;
+          html += this.getCourseHeader(res);
+          oldCourseID = res.courseid;
         }
-        if (temp.rawid === temp.resultid) {
-          namehtml = temp.name;
+        html += '<tr><td>' + res.position + '</td>';
+        if (res.comments !== "") {
+          html += '<td><a href="#" title="' + res.comments + '">' + this.getNameHTML(res, i) + "</a></td><td>" + res.time + "</td>";
         } else {
-          namehtml = "<i>" + temp.name + "</i>";
+          html += "<td>" + this.getNameHTML(res, i) + "</td><td>" + res.time + "</td>";
         }
-        if (temp.isScoreEvent) {
-          namehtml = "<div><input class='showscorecourse showscorecourse-" + i + "' id=" + i + " type=checkbox name=scorecourse></input> " + namehtml + "</div>";
-        } else {
-          namehtml = "<div>" + namehtml + "</div>";
-        }
-        html += '<tr><td>' + temp.position + '</td>';
-        if (temp.comments !== "") {
-          html += '<td><a href="#" title="' + temp.comments + '">' + namehtml + "</a></td><td>" + temp.time + "</td>";
-        } else {
-          html += "<td>" + namehtml + "</td><td>" + temp.time + "</td>";
-        }
-        if (temp.hasValidTrack) {
+        if (res.hasValidTrack) {
           tracksForThisCourse += 1;
           html += "<td><input class='showtrack showtrack-" + oldCourseID + "' id=" + i + " type=checkbox name=result></input></td>";
         } else {
@@ -4133,12 +4662,27 @@ var rg2 = (function (window, $) {
         }
         html += "<td><input class='showreplay showreplay-" + oldCourseID + "' id=" + i + " type=checkbox name=replay></input></td></tr>";
       }
+      html += this.getBottomRow(tracksForThisCourse, oldCourseID) + "</table></div></div>";
+      return html;
+    },
 
-      if (html === "") {
-        html = "<p>" + rg2.t("No results available") + "</p>";
+    getNameHTML : function (res, i) {
+      var namehtml;
+      if (res.rawid === res.resultid) {
+        namehtml = res.name;
       } else {
-        html += this.getBottomRow(tracksForThisCourse, oldCourseID) + "</table></div></div>";
+        namehtml = "<i>" + res.name + "</i>";
       }
+      if (res.isScoreEvent) {
+        namehtml = "<input class='showscorecourse showscorecourse-" + i + "' id=" + i + " type=checkbox name=scorecourse></input> " + namehtml;
+      }
+      return "<div>" + namehtml + "</div>";
+    },
+
+    getCourseHeader : function (result) {
+      var html;
+      html = "<h3>" + result.coursename + "<input class='showcourse' id=" + result.courseid + " type=checkbox name=course title='Show course'></input></h3><div>";
+      html += "<table class='resulttable'><tr><th></th><th>" + rg2.t("Name") + "</th><th>" + rg2.t("Time") + "</th><th><i class='fa fa-pencil'></i></th><th><i class='fa fa-play'></i></th></tr>";
       return html;
     },
 
@@ -4167,38 +4711,888 @@ var rg2 = (function (window, $) {
     },
 
     createNameDropdown : function (courseid) {
-      var i, dropdown, opt;
-      dropdown = document.getElementById("rg2-name-select");
-      opt = document.createElement("option");
+      var i, dropdown;
       $("#rg2-name-select").empty();
-      opt.value = null;
-      opt.text = rg2.t('Select name');
-      dropdown.options.add(opt);
+      dropdown = document.getElementById("rg2-name-select");
+      dropdown.options.add(rg2.utils.generateOption(null, rg2.t('Select name')));
       for (i = 0; i < this.results.length; i += 1) {
         // only use original results, not GPS results
         if (this.results[i].courseid === courseid) {
           if (this.results[i].resultid < rg2.config.GPS_RESULT_OFFSET) {
-            opt = document.createElement("option");
-            opt.value = i;
-            opt.text = this.results[i].name;
-            dropdown.options.add(opt);
+            dropdown.options.add(rg2.utils.generateOption(i, this.results[i].name));
           }
         }
       }
-      dropdown.options.add(opt);
     }
   };
-
   rg2.Results = Results;
-
 }());
 
+/*global rg2:false */
+/*global rg2Config:false */
+/*global console */
+(function () {
+  function reportJSONFail(errorText) {
+    $("#rg2-load-progress").hide();
+    $('body').css('cursor', 'auto');
+    rg2.utils.showWarningDialog('Configuration error', errorText);
+  }
+
+  function getEvents() {
+    var eventID;
+    $.getJSON(rg2Config.json_url, {
+      type : "events",
+      cache : false
+    }).done(function (json) {
+      console.log("Events: " + json.data.events.length);
+      rg2.events.deleteAllEvents();
+      $.each(json.data.events, function () {
+        rg2.events.addEvent(new rg2.Event(this));
+      });
+      rg2.ui.createEventMenu();
+      // load requested event if set
+      // input is kartat ID so need to find internal ID first
+      if (rg2.requestedHash.getID()) {
+        eventID = rg2.events.getEventIDForKartatID(rg2.requestedHash.getID());
+        if (eventID !== undefined) {
+          rg2.loadEvent(eventID);
+        }
+      }
+      if (rg2.config.managing) {
+        rg2.manager.eventListLoaded();
+      }
+    }).fail(function (jqxhr, textStatus, error) {
+      /*jslint unparam:true*/
+      reportJSONFail("Events request failed: " + error);
+    });
+  }
+  function getGPSTracks() {
+    $("#rg2-load-progress-label").text(rg2.t("Loading routes"));
+    $.getJSON(rg2Config.json_url, {
+      id : rg2.events.getKartatEventID(),
+      type : "tracks",
+      cache : false
+    }).done(function (json) {
+      var active, i, event, routes, crs;
+      $("#rg2-load-progress-label").text(rg2.t("Saving routes"));
+      console.log("Tracks: " + json.data.routes.length);
+      // TODO remove temporary (?) fix to get round RG1 events with no courses defined: see #179
+      if (rg2.courses.getNumberOfCourses() > 0) {
+        rg2.results.addTracks(json.data.routes);
+      }
+      rg2.ui.createCourseMenu();
+      rg2.ui.createResultMenu();
+      rg2.animation.updateAnimationDetails();
+      $('body').css('cursor', 'auto');
+      if (rg2.config.managing) {
+        rg2.manager.eventFinishedLoading();
+      } else {
+        $("#rg2-info-panel").tabs("enable", rg2.config.TAB_COURSES);
+        $("#rg2-info-panel").tabs("enable", rg2.config.TAB_RESULTS);
+        $("#rg2-info-panel").tabs("enable", rg2.config.TAB_DRAW);
+        // open courses tab for new event: else stay on draw tab
+        active = $("#rg2-info-panel").tabs("option", "active");
+        // don't change tab if we have come from DRAW since it means
+        // we have just reloaded following a save
+        if (active !== rg2.config.TAB_DRAW) {
+          $("#rg2-info-panel").tabs("option", "active", rg2.requestedHash.getTab());
+        }
+        $("#rg2-info-panel").tabs("refresh");
+        $("#btn-show-splits").show();
+        if ((rg2Config.enable_splitsbrowser) && (rg2.events.hasResults())) {
+          $("#rg2-splitsbrowser").off().click(function () {
+            window.open(rg2Config.json_url + "?type=splitsbrowser&id=" + rg2.events.getKartatEventID());
+          }).show();
+        } else {
+          $("#rg2-splitsbrowser").off().hide();
+        }
+        // set up screen as requested in hash
+        event = $.Event('click');
+        event.target = {};
+        event.target.checked = true;
+        routes = rg2.requestedHash.getRoutes();
+        for (i = 0; i < routes.length; i += 1) {
+          event.target.id = routes[i];
+          $(".showtrack").filter("#" + routes[i]).trigger(event).prop('checked', true);
+        }
+        crs = rg2.requestedHash.getCourses();
+        for (i = 0; i < crs.length; i += 1) {
+          event.target.id = crs[i];
+          $(".showcourse").filter("#" + crs[i]).trigger(event).prop('checked', true);
+        }
+      }
+      $("#rg2-load-progress-label").text("");
+      $("#rg2-load-progress").hide();
+      rg2.redraw(false);
+    }).fail(function (jqxhr, textStatus, error) {
+      /*jslint unparam:true*/
+      reportJSONFail("Routes request failed for event " + rg2.events.getKartatEventID() + ": " + error);
+    });
+  }
+
+  function getResults() {
+    var isScoreEvent;
+    $("#rg2-load-progress-label").text(rg2.t("Loading results"));
+    $.getJSON(rg2Config.json_url, {
+      id : rg2.events.getKartatEventID(),
+      type : "results",
+      cache : false
+    }).done(function (json) {
+      console.log("Results: " + json.data.results.length);
+      $("#rg2-load-progress-label").text(rg2.t("Saving results"));
+      isScoreEvent = rg2.events.isScoreEvent();
+      // TODO remove temporary (?) fix to get round RG1 events with no courses defined: see #179
+      if (rg2.courses.getNumberOfCourses() > 0) {
+        rg2.results.addResults(json.data.results, isScoreEvent);
+      }
+      rg2.courses.setResultsCount();
+      if (isScoreEvent) {
+        rg2.controls.deleteAllControls();
+        rg2.results.generateScoreCourses();
+        rg2.courses.generateControlList(rg2.controls);
+      }
+      $("#rg2-result-list").accordion("refresh");
+      getGPSTracks();
+    }).fail(function (jqxhr, textStatus, error) {
+      /*jslint unparam:true*/
+      reportJSONFail("Results request failed for event " + rg2.events.getKartatEventID() + ": " + error);
+    });
+  }
+
+  function getCourses() {
+    // get courses for event
+    $.getJSON(rg2Config.json_url, {
+      id : rg2.events.getKartatEventID(),
+      type : "courses",
+      cache : false
+    }).done(function (json) {
+      $("#rg2-load-progress-label").text(rg2.t("Saving courses"));
+      console.log("Courses: " + json.data.courses.length);
+      $.each(json.data.courses, function () {
+        rg2.courses.addCourse(new rg2.Course(this, rg2.events.isScoreEvent()));
+      });
+      rg2.courses.updateCourseDropdown();
+      rg2.courses.generateControlList(rg2.controls);
+      $("#btn-toggle-controls").show();
+      $("#btn-toggle-names").show();
+      getResults();
+    }).fail(function (jqxhr, textStatus, error) {
+      /*jslint unparam:true*/
+      reportJSONFail("Courses request failed for event " + rg2.events.getKartatEventID() + ": " + error);
+    });
+  }
+
+  function getNewLanguage(lang) {
+    $.getJSON(rg2Config.json_url, {
+      id : lang,
+      type : 'lang',
+      cache : false
+    }).done(function (json) {
+      rg2.ui.setNewLanguage(json.data.dict);
+    }).fail(function (jqxhr, textStatus, error) {
+      /*jslint unparam:true*/
+      reportJSONFail("Language request failed: " + error);
+    });
+  }
+
+  rg2.getEvents = getEvents;
+  rg2.getCourses = getCourses;
+  rg2.getResults = getResults;
+  rg2.getGPSTracks = getGPSTracks;
+  rg2.getNewLanguage = getNewLanguage;
+}());
+
+/*global rg2:false */
+(function () {
+  var input = {
+    dragStart: null,
+    // looks odd but this works for initialisation
+    dragged: true,
+    infoPanelMaximised: true,
+    scaleFactor: 1.1
+  };
+
+  function handleInputDown(evt) {
+    input.dragStart = rg2.ctx.transformedPoint(input.lastX, input.lastY);
+    input.dragged = false;
+    // need to cache this here since IE and FF don't set it for mousemove events
+    input.whichButton = evt.which;
+    //console.log ("InputDown " + input.lastX + " " + input.lastY + " " + input.dragStart.x + " " + input.dragStart.y);
+  }
+
+  function handleInputMove() {
+    var pt;
+    if (input.dragStart) {
+      pt = rg2.ctx.transformedPoint(input.lastX, input.lastY);
+      Math.round(pt.x);
+      Math.round(pt.y);
+      // console.log ("Mousemove after " + pt.x + ": " + pt.y);
+      // simple debounce so that very small drags are treated as clicks instead
+      if ((Math.abs(pt.x - input.dragStart.x) + Math.abs(pt.y - input.dragStart.y)) > 5) {
+        if (rg2.drawing.gpsFileLoaded()) {
+          rg2.drawing.adjustTrack({x: Math.round(input.dragStart.x), y: Math.round(input.dragStart.y)}, pt, input.whichButton);
+        } else {
+          if ($("#rg2-info-panel").tabs("option", "active") === rg2.config.TAB_CREATE) {
+            rg2.manager.adjustControls({x: Math.round(input.dragStart.x), y: Math.round(input.dragStart.y)}, pt, input.whichButton);
+          } else {
+            rg2.ctx.translate(pt.x - input.dragStart.x, pt.y - input.dragStart.y);
+          }
+        }
+        input.dragged = true;
+        rg2.redraw(false);
+      }
+    }
+  }
+
+  function handleInputUp(evt) {
+    // console.log("Input up " + input.dragged);
+    var active = $("#rg2-info-panel").tabs("option", "active");
+    if (!input.dragged) {
+      if (active === rg2.config.TAB_CREATE) {
+        rg2.manager.mouseUp(Math.round(input.dragStart.x), Math.round(input.dragStart.y));
+      } else {
+        // pass button that was clicked
+        rg2.drawing.mouseUp(Math.round(input.dragStart.x), Math.round(input.dragStart.y), evt.which);
+      }
+    } else {
+      if (active === rg2.config.TAB_CREATE) {
+        rg2.manager.dragEnded();
+      } else {
+        rg2.drawing.dragEnded();
+      }
+    }
+    input.dragStart = null;
+    rg2.redraw(false);
+  }
+
+  function savePinchInfo(evt) {
+    input.pinchStart0 = rg2.ctx.transformedPoint(evt.touches[0].pageX, evt.touches[0].pageY);
+    input.pinchStart1 = rg2.ctx.transformedPoint(evt.touches[1].pageX, evt.touches[1].pageY);
+    input.pinched = true;
+  }
+
+  // homegrown touch handling: seems no worse than adding some other library in
+  // pinch zoom is primitive but works
+  function handleTouchStart(evt) {
+    evt.preventDefault();
+    if (evt.touches.length > 1) {
+      savePinchInfo(evt);
+    }
+    input.lastX = evt.touches[0].pageX;
+    input.lastY = evt.touches[0].pageY;
+    handleInputDown(evt);
+  }
+
+  function handleTouchMove(evt) {
+    var oldDistance, newDistance;
+    if (evt.touches.length > 1) {
+      if (!input.pinched) {
+        savePinchInfo(evt);
+      }
+    } else {
+      input.pinched = false;
+    }
+    if (input.pinched && (evt.touches.length > 1)) {
+      input.pinchEnd0 = rg2.ctx.transformedPoint(evt.touches[0].pageX, evt.touches[0].pageY);
+      input.pinchEnd1 = rg2.ctx.transformedPoint(evt.touches[1].pageX, evt.touches[1].pageY);
+      oldDistance = rg2.utils.getDistanceBetweenPoints(input.pinchStart0.x, input.pinchStart0.y, input.pinchStart1.x, input.pinchStart1.y);
+      newDistance = rg2.utils.getDistanceBetweenPoints(input.pinchEnd0.x, input.pinchEnd0.y, input.pinchEnd1.x, input.pinchEnd1.y);
+      if ((oldDistance / newDistance) > 1.1) {
+        rg2.zoom(-1);
+        input.pinchStart0 = input.pinchEnd0;
+        input.pinchStart1 = input.pinchEnd1;
+      } else if ((oldDistance / newDistance) < 0.9) {
+        rg2.zoom(1);
+        input.pinchStart0 = input.pinchEnd0;
+        input.pinchStart1 = input.pinchEnd1;
+      }
+    } else {
+      input.lastX = evt.touches[0].pageX;
+      input.lastY = evt.touches[0].pageY;
+      handleInputMove(evt);
+    }
+  }
+
+  function handleTouchEnd(evt) {
+    handleInputUp(evt);
+    input.pinched = false;
+  }
+
+  function handleScroll(evt) {
+    var delta = evt.wheelDelta ? evt.wheelDelta / 40 : evt.detail ? -evt.detail : 0;
+    if (delta) {
+      rg2.zoom(delta);
+    }
+    evt.stopPropagation();
+    return evt.preventDefault() && false;
+  }
+
+  function saveMouseEvent(evt) {
+    input.lastX = evt.offsetX || (evt.layerX - rg2.canvas.offsetLeft);
+    input.lastY = evt.offsetY || (evt.layerY - rg2.canvas.offsetTop);
+  }
+
+  function handleMouseDown(evt) {
+    saveMouseEvent(evt);
+    handleInputDown(evt);
+    evt.stopPropagation();
+    return evt.preventDefault() && false;
+  }
+
+  function handleMouseMove(evt) {
+    saveMouseEvent(evt);
+    handleInputMove(evt);
+    evt.stopPropagation();
+    return evt.preventDefault() && false;
+  }
+
+  function handleMouseUp(evt) {
+    handleInputUp(evt);
+    evt.stopPropagation();
+    return evt.preventDefault() && false;
+  }
+  rg2.input = input;
+  rg2.handleMouseDown = handleMouseDown;
+  rg2.handleMouseUp = handleMouseUp;
+  rg2.handleMouseMove = handleMouseMove;
+  rg2.handleTouchEnd = handleTouchEnd;
+  rg2.handleTouchStart = handleTouchStart;
+  rg2.handleTouchMove = handleTouchMove;
+  rg2.handleScroll = handleScroll;
+}());
+
+/*global rg2:false */
+/*global rg2Config:false */
+(function () {
+  var ui = {
+
+    setTitleBar: function () {
+      var title;
+      if (window.innerWidth >= rg2.config.BIG_SCREEN_BREAK_POINT) {
+        title = rg2.events.getActiveEventName() + " " + rg2.events.getActiveEventDate();
+        $("#rg2-event-title").html(title).show();
+      } else if (window.innerWidth > rg2.config.SMALL_SCREEN_BREAK_POINT) {
+        title = rg2.events.getActiveEventName();
+        $("#rg2-event-title").html(title).show();
+      } else {
+        $("#rg2-event-title").hide();
+      }
+      if (rg2.events.mapIsGeoreferenced()) {
+        $("#rg2-event-title-icon").addClass("fa fa-globe");
+      } else {
+        $("#rg2-event-title-icon").removeClass("fa fa-globe");
+      }
+    },
+
+    setNewLanguage : function (dict) {
+      var eventid;
+      $("#rg2-event-list").menu("destroy");
+      rg2.setDictionary(dict);
+      this.createEventMenu();
+      eventid = rg2.events.getActiveEventID();
+      if (eventid !== null) {
+        rg2.courses.removeAllFromDisplay();
+        rg2.results.updateTrackDisplay(rg2.config.DISPLAY_ALL_COURSES, false);
+        rg2.animation.resetAnimation();
+        rg2.drawing.initialiseDrawing(rg2.events.hasResults(eventid));
+        this.createCourseMenu();
+        this.createResultMenu();
+      }
+      $("#rg2-info-panel").tabs("refresh");
+      rg2.redraw(false);
+    },
+
+  // called whenever the active tab changes to tidy up as necessary
+    tabActivated : function () {
+      var active = $("#rg2-info-panel").tabs("option", "active");
+      switch (active) {
+      case rg2.config.TAB_DRAW:
+        rg2.courses.removeAllFromDisplay();
+        rg2.drawing.showCourseInProgress();
+        break;
+      default:
+        break;
+      }
+      rg2.redraw(false);
+    },
+
+    displayAboutDialog : function () {
+      $("#rg2-event-stats").empty().html(rg2.getEventStats());
+      $("#rg2-about-dialog").dialog({
+        width : Math.min(1000, (rg2.canvas.width * 0.8)),
+        maxHeight : Math.min(1000, (rg2.canvas.height * 0.9)),
+        title : "RG2 Version " + rg2.config.RG2VERSION,
+        dialogClass : "rg2-about-dialog",
+        resizable : false,
+        buttons : {
+          Ok : function () {
+            $(this).dialog("close");
+          }
+        }
+      });
+    },
+
+    displayOptionsDialog : function () {
+      $("#rg2-option-controls").dialog({
+        minWidth : 400,
+        title :  rg2.t("Configuration options"),
+        dialogClass : "rg2-options-dialog",
+        close : function () {
+          rg2.saveConfigOptions();
+        }
+      });
+    },
+
+    initialiseButtons : function () {
+      var self;
+      self = this;
+      $("#btn-about").click(function () {
+        self.displayAboutDialog();
+      });
+      $("#btn-faster").click(function () {
+        rg2.animation.goFaster();
+      });
+      $("#btn-full-tails").prop('checked', false).click(function (event) {
+        if (event.target.checked) {
+          rg2.animation.setFullTails(true);
+          $("#spn-tail-length").spinner("disable");
+        } else {
+          rg2.animation.setFullTails(false);
+          $("#spn-tail-length").spinner("enable");
+        }
+      });
+      $("#btn-mass-start").addClass('active').click(function () {
+        rg2.animation.setReplayType(rg2.config.MASS_START_REPLAY);
+      });
+      $("#btn-move-all").prop('checked', false);
+      $("#btn-options").click(function () {
+        self.displayOptionsDialog();
+      });
+      $("#btn-real-time").removeClass('active').click(function () {
+        rg2.animation.setReplayType(rg2.config.REAL_TIME_REPLAY);
+      });
+      $("#btn-reset").click(function () {
+        rg2.resetMapState();
+      });
+      $("#btn-reset-drawing").button().button("disable").click(function () {
+        rg2.drawing.resetDrawing();
+      });
+      $("#btn-save-gps-route").button().button("disable").click(function () {
+        rg2.drawing.saveGPSRoute();
+      });
+      $("#btn-save-route").button().button("disable").click(function () {
+        rg2.drawing.saveRoute();
+      });
+      $("#btn-show-splits").click(function () {
+        $("#rg2-splits-table").empty().append(rg2.animation.getSplitsTable()).dialog({
+          width : 'auto',
+          dialogClass : "rg2-splits-table",
+          buttons : {
+            Ok : function () {
+              $("#rg2-splits-table").dialog('close');
+            }
+          }
+        });
+      }).hide();
+      $("#btn-slower").click(function () {
+        rg2.animation.goSlower();
+      });
+      $("#btn-start-stop").click(function () {
+        rg2.animation.toggleAnimation();
+      });
+      $("#btn-three-seconds").button().click(function () {
+        rg2.drawing.waitThreeSeconds();
+      }).button("disable");
+      $("#btn-toggle-controls").click(function () {
+        rg2.controls.toggleControlDisplay();
+        rg2.redraw(false);
+      }).hide();
+      $("#btn-toggle-names").click(function () {
+        rg2.animation.toggleNameDisplay();
+        rg2.redraw(false);
+      }).hide();
+      $("#btn-undo").button().button("disable").click(function () {
+        rg2.drawing.undoLastPoint();
+      });
+      $("#btn-undo-gps-adjust").button().button("disable").click(function () {
+        rg2.drawing.undoGPSAdjust();
+      });
+      $("#btn-zoom-in").click(function () {
+        rg2.zoom(1);
+      });
+      $("#btn-zoom-out").click(function () {
+        rg2.zoom(-1);
+      });
+      $("#rg2-load-gps-file").button().button("disable");
+    },
+
+    setResultCheckboxes : function () {
+      // checkbox to show a course
+      $(".showcourse").click(function (event) {
+        var id;
+        //Prevent opening accordion when check box is clicked
+        event.stopPropagation();
+        id = event.target.id;
+        if (event.target.checked) {
+          rg2.courses.putOnDisplay(id);
+          // check box on courses tab
+          $(".courselist").filter("#" + id).prop('checked', true);
+        } else {
+          rg2.courses.removeFromDisplay(id);
+          // uncheck box on courses tab
+          $(".courselist").filter("#" + id).prop('checked', false);
+          // make sure the all checkbox is not checked
+          $(".allcourses").prop('checked', false);
+        }
+        rg2.requestedHash.setCourses();
+        rg2.redraw(false);
+      });
+      // checkbox to show an individual score course
+      $(".showscorecourse").click(function (event) {
+        rg2.results.displayScoreCourse(parseInt(event.target.id, 10), event.target.checked);
+        rg2.redraw(false);
+      });
+      // checkbox to show a result
+      $(".showtrack").click(function (event) {
+        if (event.target.checked) {
+          rg2.results.putOneTrackOnDisplay(event.target.id);
+        } else {
+          rg2.results.removeOneTrackFromDisplay(event.target.id);
+        }
+        rg2.requestedHash.setRoutes();
+        rg2.redraw(false);
+      });
+      // checkbox to animate a result
+      $(".showreplay").click(function (event) {
+        if (event.target.checked) {
+          rg2.animation.addRunner(new rg2.Runner(parseInt(event.target.id, 10)), true);
+        } else {
+          rg2.animation.removeRunner(parseInt(event.target.id, 10), true);
+        }
+        rg2.redraw(false);
+      });
+      // checkbox to display all tracks for course
+      $(".allcoursetracks").click(function (event) {
+        var runners, selector, i;
+        runners = rg2.results.getAllRunnersForCourse(parseInt(event.target.id, 10));
+        for (i = 0; i < runners.length; i += 1) {
+          if (event.target.checked) {
+            rg2.results.putOneTrackOnDisplay(runners[i]);
+          } else {
+            rg2.results.removeOneTrackFromDisplay(runners[i]);
+          }
+        }
+        selector = ".showtrack-" + event.target.id;
+        if (event.target.checked) {
+          // select all the individual checkboxes for the course
+          $(selector).prop('checked', true);
+        } else {
+          $(selector).prop('checked', false);
+        }
+        rg2.requestedHash.setRoutes();
+        rg2.redraw(false);
+      });
+      // checkbox to animate all results for course
+      $(".allcoursereplay").click(function (event) {
+        var courseresults, selector;
+        courseresults = rg2.results.getAllRunnersForCourse(parseInt(event.target.id, 10));
+        rg2.animation.animateRunners(courseresults, event.target.checked);
+        selector = ".showreplay-" + event.target.id;
+        if (event.target.checked) {
+          // select all the individual checkboxes for each course
+          $(selector).prop('checked', true);
+        } else {
+          $(selector).prop('checked', false);
+        }
+        rg2.redraw(false);
+      });
+    },
+
+    createResultMenu : function () {
+      //loads menu from populated result array
+      var html = rg2.results.formatResultListAsAccordion();
+      // #177 not pretty but gets round problems of double encoding
+      html = html.replace(/&amp;/g, '&');
+      $("#rg2-result-list").empty().append(html);
+      $("#rg2-result-list").accordion("refresh");
+      $("#rg2-info-panel").tabs("refresh");
+      this.setResultCheckboxes();
+      // disable control dropdown if we have no controls
+      if (rg2.courses.getHighestControlNumber() === 0) {
+        $("#rg2-control-select").prop('disabled', true);
+      } else {
+        $("#rg2-control-select").prop('disabled', false);
+      }
+    },
+
+    createCourseMenu : function () {
+      //loads menu from populated courses array
+      $("#rg2-course-table").empty().append(rg2.courses.formatCoursesAsTable());
+
+      // checkbox on course tab to show a course
+      $(".courselist").click(function (event) {
+        var id = parseInt(event.currentTarget.id, 10);
+        if (event.target.checked) {
+          rg2.courses.putOnDisplay(id);
+          // check box on results tab
+          $(".showcourse").filter("#" + id).prop('checked', true);
+        } else {
+          rg2.courses.removeFromDisplay(id);
+          // make sure the all checkbox is not checked
+          $(".allcourses").prop('checked', false);
+          // uncheck box on results tab
+          $(".showcourse").filter("#" + id).prop('checked', false);
+        }
+        rg2.requestedHash.setCourses();
+        rg2.redraw(false);
+      });
+      // checkbox on course tab to show all courses
+      $(".allcourses").click(function (event) {
+        if (event.target.checked) {
+          rg2.courses.putAllOnDisplay();
+          // select all the individual checkboxes for each course
+          $(".courselist").prop('checked', true);
+          // check all boxes on results tab
+          $(".showcourse").prop('checked', true);
+        } else {
+          rg2.courses.removeAllFromDisplay();
+          $(".courselist").prop('checked', false);
+          // uncheck all boxes on results tab
+          $(".showcourse").prop('checked', false);
+        }
+        rg2.requestedHash.setCourses();
+        rg2.redraw(false);
+      });
+      // checkbox on course tab to show tracks for one course
+      $(".tracklist").click(function (event) {
+        var courseid = event.target.id;
+        if (event.target.checked) {
+          rg2.results.updateTrackDisplay(parseInt(courseid, 10), true);
+        } else {
+          rg2.results.updateTrackDisplay(parseInt(courseid, 10), false);
+          // make sure the all checkbox is not checked
+          $(".alltracks").prop('checked', false);
+        }
+        rg2.requestedHash.setRoutes();
+        rg2.redraw(false);
+      });
+      // checkbox on course tab to show all tracks
+      $(".alltracks").click(function (event) {
+        if (event.target.checked) {
+          rg2.results.updateTrackDisplay(rg2.config.DISPLAY_ALL_COURSES, true);
+          // select all the individual checkboxes for each course
+          $(".tracklist").prop('checked', true);
+        } else {
+          rg2.results.updateTrackDisplay(rg2.config.DISPLAY_ALL_COURSES, false);
+          // deselect all the individual checkboxes for each course
+          $(".tracklist").prop('checked', false);
+        }
+        rg2.requestedHash.setRoutes();
+        rg2.redraw(false);
+      });
+    },
+
+    initialiseSpinners : function () {
+      $("#spn-control-circle").spinner({
+        max : 50,
+        min : 3,
+        step : 1,
+        spin : function (event, ui) {
+          /*jslint unparam:true*/
+          rg2.setConfigOption("circleSize", ui.value);
+          rg2.redraw(false);
+        }
+      }).val(rg2.options.circleSize);
+      $("#spn-course-width").spinner({
+        max : 10,
+        min : 1,
+        step : 0.5,
+        spin : function (event, ui) {
+          /*jslint unparam:true*/
+          rg2.setConfigOption("courseWidth", ui.value);
+          rg2.redraw(false);
+        }
+      }).val(rg2.options.courseWidth);
+      $("#spn-map-intensity").spinner({
+        // spinner uses 0 to 100%: stored and used as 0 to 1
+        max : 100,
+        min : 0,
+        step : 10,
+        numberFormat : "n",
+        spin : function (event, ui) {
+          /*jslint unparam:true*/
+          rg2.setConfigOption("mapIntensity", ui.value / 100);
+          rg2.redraw(false);
+        }
+      }).val(rg2.options.mapIntensity * 100);
+      $("#spn-name-font-size").spinner({
+        max : 30,
+        min : 5,
+        step : 1,
+        numberFormat : "n",
+        spin : function (event, ui) {
+          /*jslint unparam:true*/
+          rg2.setConfigOption("replayFontSize", ui.value);
+          rg2.redraw(false);
+        }
+      }).val(rg2.options.replayFontSize);
+      $("#spn-route-intensity").spinner({
+        // spinner uses 0 to 100%: stored and used as 0 to 1
+        max : 100,
+        min : 0,
+        step : 10,
+        numberFormat : "n",
+        spin : function (event, ui) {
+          /*jslint unparam:true*/
+          rg2.setConfigOption("routeIntensity", ui.value / 100);
+          rg2.redraw(false);
+        }
+      }).val(rg2.options.routeIntensity * 100);
+      $("#spn-route-width").spinner({
+        max : 10,
+        min : 1,
+        step : 0.5,
+        spin : function (event, ui) {
+          /*jslint unparam:true*/
+          rg2.setConfigOption("routeWidth", ui.value);
+          rg2.redraw(false);
+        }
+      }).val(rg2.options.routeWidth);
+      // set default to 0 secs = no tails
+      $("#spn-tail-length").spinner({
+        max : 600,
+        min : 0,
+        spin : function (event, ui) {
+          /*jslint unparam:true*/
+          rg2.animation.setTailLength(ui.value);
+        }
+      }).val(0);
+    },
+
+    createEventMenu : function () {
+      //loads menu from populated events array
+      var html = rg2.events.formatEventsAsMenu();
+      $("#rg2-event-list").append(html).menu({
+        select : function (event, ui) {
+          /*jslint unparam:true*/
+          rg2.loadEvent(ui.item[0].id);
+          rg2.requestedHash.setNewEvent(rg2.events.getKartatEventID());
+        }
+      });
+    },
+
+    setUIEventHandlers : function () {
+      var text, newlang, self;
+      self = this;
+      $("#rg2-resize-info").click(function () {
+        rg2.resizeInfoDisplay();
+      });
+      $("#rg2-hide-info-panel-control").click(function () {
+        rg2.resizeInfoDisplay();
+      });
+      $("#rg2-control-select").prop('disabled', true).change(function () {
+        rg2.animation.setStartControl($("#rg2-control-select").val());
+      });
+      $("#rg2-name-select").prop('disabled', true).change(function () {
+        rg2.drawing.setName(parseInt($("#rg2-name-select").val(), 10));
+      });
+      $("#rg2-course-select").change(function () {
+        rg2.drawing.setCourse(parseInt($("#rg2-course-select").val(), 10));
+      });
+      $("#rg2-enter-name").click(function () {
+        rg2.drawing.setNameAndTime();
+      }).keyup(function () {
+        rg2.drawing.setNameAndTime();
+      });
+      $('#rg2-new-comments').focus(function () {
+        // Clear comment box if user focuses on it and it still contains default text
+        text = $("#rg2-new-comments").val();
+        if (text ===  rg2.t(rg2.config.DEFAULT_NEW_COMMENT)) {
+          $('#rg2-new-comments').val("");
+        }
+      });
+      $("#chk-snap-toggle").prop('checked', rg2.options.snap).click(function (event) {
+        if (event.target.checked) {
+          rg2.options.snap = true;
+        } else {
+          rg2.options.snap = false;
+        }
+      });
+      $("#chk-show-three-seconds").prop('checked', rg2.options.showThreeSeconds).click(function () {
+        rg2.redraw(false);
+      });
+      $("#chk-show-GPS-speed").prop('checked', rg2.options.showGPSSpeed).click(function () {
+        rg2.redraw(false);
+      });
+      $("#rg2-select-language").click(function () {
+        newlang = $("#rg2-select-language").val();
+        if (newlang !== rg2.getDictionaryCode()) {
+          if (newlang === 'en') {
+            self.setNewLanguage({code: "en"});
+          } else {
+            rg2.getNewLanguage(newlang);
+          }
+        }
+      });
+      $("#rg2-load-gps-file").change(function (evt) {
+        rg2.drawing.uploadGPS(evt);
+      });
+    },
+
+    configureUI : function () {
+      // disable right click menu: may add our own later
+      $(document).bind("contextmenu", function (evt) {
+        evt.preventDefault();
+      });
+      // disable tabs until we have loaded something
+      var self;
+      self = this;
+      $("#rg2-info-panel").tabs({
+        disabled : [rg2.config.TAB_COURSES, rg2.config.TAB_RESULTS, rg2.config.TAB_DRAW],
+        active : rg2.config.TAB_EVENTS,
+        heightStyle : "content",
+        activate : function () {
+          self.tabActivated();
+        }
+      });
+      $("#rg2-result-list").accordion({
+        collapsible : true,
+        heightStyle : "content"
+      });
+      $("#rg2-clock").text("00:00:00");
+      $("#rg2-clock-slider").slider({
+        slide : function (event, ui) {
+          /*jslint unparam:true*/
+          // passes slider value as new time
+          rg2.animation.clockSliderMoved(ui.value);
+        }
+      });
+      $("#rg2-header-container").css("color", rg2Config.header_text_colour).css("background", rg2Config.header_colour);
+      $("#rg2-about-dialog").hide();
+      $("#rg2-splits-display").hide();
+      $("#rg2-track-names").hide();
+      $("#rg2-add-new-event").hide();
+      $("#rg2-load-progress-bar").progressbar({
+        value : false
+      });
+      $("#rg2-load-progress-label").text("");
+      $("#rg2-load-progress").hide();
+      $("#rg2-option-controls").hide();
+      $("#rg2-animation-controls").hide();
+      $("#rg2-splitsbrowser").hide();
+      this.setUIEventHandlers();
+      this.initialiseButtons();
+      this.initialiseSpinners();
+    }
+  };
+  rg2.ui = ui;
+}());
 /*global rg2:false */
 /*exported Runner */
 // animated runner details
 (function () {
   function Runner(resultid) {
-    var res, course, control, lastPointIndex, ind;
+    var res, course;
     res = rg2.results.getFullResult(resultid);
     this.name = res.name;
     this.initials = res.initials;
@@ -4228,39 +5622,46 @@ var rg2 = (function (window, $) {
     this.cumulativeTrackDistance = [];
     this.cumulativeDistance = [];
     this.cumulativeDistance[0] = 0;
+    this.legTrackDistance[0] = 0;
+    this.cumulativeTrackDistance[0] = 0;
     if (res.hasValidTrack) {
       this.expandTrack(res.trackx, res.tracky, res.xysecs);
     } else {
       // no track so use straight line between controls
       this.expandTrack(course.x, course.y, res.splits);
     }
-    // add track distances for each leg
-    this.legTrackDistance[0] = 0;
-    this.cumulativeTrackDistance[0] = 0;
-    lastPointIndex = this.cumulativeDistance.length - 1;
-    if (course.codes !== undefined) {
-      if (res.splits !== rg2.config.SPLITS_NOT_FOUND) {
-        for (control = 1; control < course.codes.length; control += 1) {
-          // avoid NaN values for GPS tracks that are shorter than the result time
-          if (res.splits[control] <= lastPointIndex) {
-            ind = res.splits[control];
-          } else {
-            ind = lastPointIndex;
-          }
-          this.cumulativeTrackDistance[control] = Math.round(this.cumulativeDistance[ind]);
-          this.legTrackDistance[control] = this.cumulativeTrackDistance[control] - this.cumulativeTrackDistance[control - 1];
-        }
-      } else {
-        // allows for tracks at events with no results so no splits: just use start and finish
-        this.legTrackDistance[1] = Math.round(this.cumulativeDistance[lastPointIndex]);
-        this.cumulativeTrackDistance[1] = Math.round(this.cumulativeDistance[lastPointIndex]);
-      }
-    }
+    this.addTrackDistances(course, res);
     res = 0;
     course = 0;
   }
   Runner.prototype = {
     Constructor : Runner,
+
+    addTrackDistances : function (course, res) {
+      // add track distances for each leg
+      var control, ind, lastPointIndex;
+      lastPointIndex = this.cumulativeDistance.length - 1;
+      if (course.codes !== undefined) {
+        // if we got no splits then there will just be a finish time
+        if (res.splits.length > 1) {
+          for (control = 1; control < course.codes.length; control += 1) {
+            // avoid NaN values for GPS tracks that are shorter than the result time
+            if (res.splits[control] <= lastPointIndex) {
+              ind = res.splits[control];
+            } else {
+              ind = lastPointIndex;
+            }
+            this.cumulativeTrackDistance[control] = Math.round(this.cumulativeDistance[ind]);
+            this.legTrackDistance[control] = this.cumulativeTrackDistance[control] - this.cumulativeTrackDistance[control - 1];
+          }
+        } else {
+          // allows for tracks at events with no results so no splits: just use start and finish
+          this.legTrackDistance[1] = Math.round(this.cumulativeDistance[lastPointIndex]);
+          this.cumulativeTrackDistance[1] = Math.round(this.cumulativeDistance[lastPointIndex]);
+        }
+      }
+    },
+
     expandTrack : function (itemsx, itemsy, itemstime) {
       // gets passed arrays of x, y and time
       // iterate over item which will be xy or controls
@@ -4278,7 +5679,7 @@ var rg2 = (function (window, $) {
         toy = itemsy[item];
         diffx = tox - fromx;
         diffy = toy - fromy;
-        dist = dist + Math.sqrt(((tox - fromx) * (tox - fromx)) + ((toy - fromy) * (toy - fromy)));
+        dist = dist + rg2.utils.getDistanceBetweenPoints(tox, toy, fromx, fromy);
         diffdist = dist - fromdist;
         timeatitem = itemstime[item];
         difft = timeatitem - timeatprevitem;
@@ -4298,6 +5699,359 @@ var rg2 = (function (window, $) {
     }
   };
   rg2.Runner = Runner;
+}());
+
+/*global rg2:false */
+(function () {
+  var utils =  {
+    rotatePoint : function (x, y, angle) {
+      // rotation matrix: see http://en.wikipedia.org/wiki/Rotation_matrix
+      var pt = {};
+      pt.x = (Math.cos(angle) * x) - (Math.sin(angle) * y);
+      pt.y = (Math.sin(angle) * x) + (Math.cos(angle) * y);
+      return pt;
+    },
+
+    getDistanceBetweenPoints : function (x1, y1, x2, y2) {
+      // Pythagoras
+      return Math.sqrt(Math.pow((x1 - x2), 2) + Math.pow((y1 - y2), 2));
+    },
+
+    getAngle : function (x1, y1, x2, y2) {
+      var angle = Math.atan2((y2 - y1), (x2 - x1));
+      if (angle < 0) {
+        angle = angle + (2 * Math.PI);
+      }
+      return angle;
+    },
+
+    getLatLonDistance : function (lat1, lon1, lat2, lon2) {
+      // Haversine formula (http://www.codecodex.com/wiki/Calculate_distance_between_two_points_on_a_globe)
+      var dLat, dLon, a;
+      dLat = (lat2 - lat1).toRad();
+      dLon = (lon2 - lon1).toRad();
+      a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1.toRad()) * Math.cos(lat2.toRad()) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      // multiply by IUUG earth mean radius (http://en.wikipedia.org/wiki/Earth_radius) in metres
+      return 6371009 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    },
+
+    // converts MM:SS or HH:MM:SS to seconds based on number of :
+    getSecsFromHHMMSS : function (time) {
+      var bits, secs;
+      if (!time) {
+        return 0;
+      }
+      secs = 0;
+      bits = time.split(":");
+      if (bits.length === 2) {
+        secs = (parseInt(bits[0], 10) * 60) + parseInt(bits[1], 10);
+      } else {
+        if (bits.length === 3) {
+          secs = (parseInt(bits[0], 10) * 3600) + (parseInt(bits[1], 10) * 60) + parseInt(bits[2], 10);
+        }
+      }
+      if (isNaN(secs)) {
+        return 0;
+      }
+      return secs;
+    },
+
+    getSecsFromHHMM : function (time) {
+      var bits, secs;
+      if (!time) {
+        return 0;
+      }
+      secs = 0;
+      bits = time.split(":");
+      secs = (parseInt(bits[0], 10) * 3600) + (parseInt(bits[1], 10) * 60);
+      if (isNaN(secs)) {
+        return 0;
+      }
+      return secs;
+    },
+
+    // converts seconds to MM:SS
+    formatSecsAsMMSS : function (secs) {
+      var formattedtime, minutes, seconds;
+      minutes = Math.floor(secs / 60);
+      formattedtime = minutes;
+      seconds = secs - (minutes * 60);
+      if (seconds < 10) {
+        formattedtime += ":0" + seconds;
+      } else {
+        formattedtime += ":" + seconds;
+      }
+      return formattedtime;
+    },
+
+    // returns seconds as hh:mm:ss
+    formatSecsAsHHMMSS : function (secs) {
+      var formattedtime, hours, minutes;
+      hours = Math.floor(secs / 3600);
+      if (hours < 10) {
+        formattedtime = "0" + hours + ":";
+      } else {
+        formattedtime = hours + ":";
+      }
+      secs = secs - (hours * 3600);
+      minutes = Math.floor(secs / 60);
+      if (minutes < 10) {
+        formattedtime += "0" + minutes;
+      } else {
+        formattedtime += minutes;
+      }
+      secs = secs - (minutes * 60);
+      if (secs < 10) {
+        formattedtime += ":0" + secs;
+      } else {
+        formattedtime += ":" + secs;
+      }
+      return formattedtime;
+    },
+
+    showWarningDialog : function (title, text) {
+      var msg = '<div id=rg2-warning-dialog>' + text + '</div>';
+      $(msg).dialog({
+        title : title,
+        dialogClass : "rg2-warning-dialog",
+        close : function () {
+          $('#rg2-warning-dialog').dialog('destroy').remove();
+        }
+      });
+    },
+
+    setButtonState : function (state, buttonArray) {
+      // bulk enable/disable for buttons
+      var i;
+      for (i = 0; i < buttonArray.length; i += 1) {
+        $(buttonArray[i]).button(state);
+      }
+    },
+
+    generateOption : function (value, text, selected) {
+      var opt;
+      opt = document.createElement("option");
+      opt.value = value;
+      opt.text = text;
+      if (selected) {
+        opt.selected = true;
+      }
+      return opt;
+    },
+
+    extractAttributeZero : function (nodelist, attribute, defaultValue) {
+      if (nodelist.length > 0) {
+        return nodelist[0].getAttribute(attribute).trim();
+      }
+      return defaultValue;
+    },
+
+    extractTextContentZero : function (nodelist, defaultValue) {
+      if (nodelist.length > 0) {
+        return nodelist[0].textContent.trim();
+      }
+      return defaultValue;
+    },
+
+    createModalDialog : function (dlg) {
+      var self;
+      self = this;
+      self.onDo = dlg.onDo;
+      self.onCancel = dlg.onCancel;
+      $(dlg.selector).dialog({
+        title : dlg.title,
+        modal : true,
+        dialogClass : "no-close " + dlg.classes,
+        closeOnEscape : false,
+        buttons : [{
+          text : dlg.doText,
+          click : function () {
+            self.onDo();
+          }
+        }, {
+          text : "Cancel",
+          click : function () {
+            self.onCancel();
+          }
+        }]
+      });
+    }
+  };
+
+  Number.prototype.toRad = function () {
+    return this * Math.PI / 180;
+  };
+
+  function Colours() {
+    // used to generate track colours: add extra colours as necessary
+    this.colours = ["#ff0000", "#ff8000", "#ff00ff", "#ff0080", "#008080", "#008000", "#0080ff", "#0000ff", "#8000ff", "#808080"];
+    //this.colours = ["#ff0000", "#ff8000",  "#ff00ff", "#ff0080", "#008080", "#008000", "#00ff00", "#0080ff", "#0000ff", "#8000ff", "#00ffff", "#808080"];
+
+    this.colourIndex = 0;
+  }
+
+  Colours.prototype = {
+    Constructor : Colours,
+
+    getNextColour : function () {
+      this.colourIndex = (this.colourIndex + 1) % this.colours.length;
+      return this.colours[this.colourIndex];
+    }
+  };
+
+  function User(keksi) {
+    this.x = "";
+    this.y = keksi;
+    this.name = null;
+    this.password = null;
+  }
+
+  User.prototype = {
+    Constructor : User,
+
+    setDetails : function (name, password) {
+      if ((name.length > 4) && (password.length > 4)) {
+        this.name = name;
+        this.password = password;
+        return true;
+      }
+      return false;
+    },
+
+    alterString : function (input, pattern) {
+      var i, str;
+      str = "";
+      for (i = 0; i < input.length; i += 1) {
+        str += input.charAt(i) + pattern.charAt(i);
+      }
+      return str;
+    },
+
+    encodeUser : function () {
+      return {x: this.alterString(this.name + this.password, this.y), y: this.y};
+    }
+  };
+
+  function RouteData() {
+    this.courseid = null;
+    this.coursename = null;
+    this.resultid = null;
+    this.isScoreCourse = false;
+    this.eventid = null;
+    this.name = null;
+    this.comments = null;
+    this.x = [];
+    this.y = [];
+    this.controlx = [];
+    this.controly = [];
+    this.time = [];
+    this.startsecs = 0;
+    this.totaltime = 0;
+  }
+
+  function RequestedHash() {
+    this.id = 0;
+    this.courses = [];
+    this.routes = [];
+  }
+
+  RequestedHash.prototype = {
+    Constructor : RequestedHash,
+
+    parseHash : function (hash) {
+      var fields, i;
+      // input looks like #id&course=a,b,c&result=x,y,z
+      fields = hash.split('&');
+      for (i = 0; i < fields.length; i += 1) {
+        fields[i] = fields[i].toLowerCase();
+        if (fields[i].search('#') !== -1) {
+          this.id = parseInt(fields[i].replace("#", ""), 10);
+        }
+        if (fields[i].search('course=') !== -1) {
+          this.courses = fields[i].replace("course=", "").split(',');
+        }
+        if (fields[i].search('route=') !== -1) {
+          this.routes = fields[i].replace("route=", "").split(',');
+        }
+      }
+      // convert to integers: NaNs sort themselves out on display so don't check here
+      this.courses = this.courses.map(Number);
+      this.routes = this.routes.map(Number);
+
+      if (isNaN(this.id)) {
+        this.id = 0;
+        this.courses.length = 0;
+        this.routes.length = 0;
+      }
+    },
+
+    getRoutes : function () {
+      return this.routes;
+    },
+
+    getCourses : function () {
+      return this.courses;
+    },
+
+    getID : function () {
+      return this.id;
+    },
+
+    getTab : function () {
+      if (this.routes.length > 0) {
+        return rg2.config.TAB_RESULTS;
+      }
+      return rg2.config.TAB_COURSES;
+    },
+
+    setCourses : function () {
+      this.courses = rg2.courses.getCoursesOnDisplay();
+      window.history.pushState('', '', this.getHash());
+    },
+
+    setRoutes : function () {
+      this.routes = rg2.results.getTracksOnDisplay();
+      window.history.pushState('', '', this.getHash());
+    },
+
+    setNewEvent : function (id) {
+      this.id = id;
+      this.courses.length = 0;
+      this.routes.length = 0;
+      window.history.pushState('', '', this.getHash());
+    },
+
+    getHash : function () {
+      var hash;
+      if (this.id === 0) {
+        return '#0';
+      }
+      hash = '#' + this.id;
+      hash += this.extractItems(this.courses, "&course=");
+      hash += this.extractItems(this.routes, "&route=");
+      return hash;
+    },
+
+    extractItems : function (items, text) {
+      var i, extrahash;
+      extrahash = "";
+      if (items.length > 0) {
+        extrahash += text;
+        for (i = 0; i < items.length; i += 1) {
+          if (i > 0) {
+            extrahash += ',';
+          }
+          extrahash += items[i];
+        }
+      }
+      return extrahash;
+    }
+  };
+  rg2.utils = utils;
+  rg2.RouteData = RouteData;
+  rg2.RequestedHash = RequestedHash;
+  rg2.Colours = Colours;
+  rg2.User = User;
 }());
 
 /*! https://mths.be/he v0.5.0 by @mathias | MIT license */
@@ -8340,865 +10094,4 @@ var rg2 = (function (window, $) {
   };
   rg2.he = he;
 
-}());
-/*global rg2:false */
-(function () {
-  function Course(data, isScoreCourse) {
-    this.name = data.name;
-    this.trackcount = 0;
-    this.display = false;
-    this.courseid = data.courseid;
-    this.codes = data.codes;
-    this.x = data.xpos;
-    this.y = data.ypos;
-    this.isScoreCourse = isScoreCourse;
-    this.resultcount = 0;
-    // save angle to next control to simplify later calculations
-    this.angle = [];
-    // save angle to show control code text
-    this.textAngle = [];
-    this.setAngles();
-  }
-
-  Course.prototype = {
-    Constructor : Course,
-
-    incrementTracksCount : function () {
-      this.trackcount += 1;
-    },
-
-    setAngles : function () {
-      var i, c1x, c1y, c2x, c2y, c3x, c3y;
-      for (i = 0; i < (this.x.length - 1); i += 1) {
-        if (this.isScoreCourse) {
-          // align score event start triangle and controls upwards
-          this.angle[i] = Math.PI * 1.5;
-          this.textAngle[i] = Math.PI * 0.25;
-        } else {
-          // angle of line to next control
-          this.angle[i] = rg2.utils.getAngle(this.x[i], this.y[i], this.x[i + 1], this.y[i + 1]);
-          // create bisector of angle to position number
-          c1x = Math.sin(this.angle[i - 1]);
-          c1y = Math.cos(this.angle[i - 1]);
-          c2x = Math.sin(this.angle[i]) + c1x;
-          c2y = Math.cos(this.angle[i]) + c1y;
-          c3x = c2x / 2;
-          c3y = c2y / 2;
-          this.textAngle[i] = rg2.utils.getAngle(c3x, c3y, c1x, c1y);
-        }
-      }
-      // not worried about angle for finish
-      this.angle[this.x.length - 1] = 0;
-      this.textAngle[this.x.length - 1] = 0;
-    },
-
-    drawCourse : function (intensity) {
-      var i, opt;
-      if (this.display) {
-        opt = rg2.getOverprintDetails();
-        rg2.ctx.globalAlpha = intensity;
-        rg2.controls.drawStart(this.x[0], this.y[0], "", this.angle[0], opt);
-        // don't join up controls for score events
-        if (!this.isScoreCourse) {
-          this.drawLinesBetweenControls(this.x, this.y, this.angle, opt);
-        }
-        if (this.isScoreCourse) {
-          for (i = 1; i < (this.x.length); i += 1) {
-            if ((this.codes[i].indexOf('F') === 0) || (this.codes[i].indexOf('M') === 0)) {
-              rg2.controls.drawFinish(this.x[i], this.y[i], "", opt);
-            } else {
-              rg2.controls.drawSingleControl(this.x[i], this.y[i], this.codes[i], this.textAngle[i], opt);
-            }
-          }
-
-        } else {
-          for (i = 1; i < (this.x.length - 1); i += 1) {
-            rg2.controls.drawSingleControl(this.x[i], this.y[i], i, this.textAngle[i], opt);
-          }
-          rg2.controls.drawFinish(this.x[this.x.length - 1], this.y[this.y.length - 1], "", opt);
-        }
-      }
-    },
-    drawLinesBetweenControls : function (x, y, angle, opt) {
-      var c1x, c1y, c2x, c2y, i, dist;
-      for (i = 0; i < (x.length - 1); i += 1) {
-        if (i === 0) {
-          dist = opt.startTriangleLength;
-        } else {
-          dist = opt.controlRadius;
-        }
-        c1x = x[i] + (dist * Math.cos(angle[i]));
-        c1y = y[i] + (dist * Math.sin(angle[i]));
-        //Assume the last control in the array is a finish
-        if (i === this.x.length - 2) {
-          dist = opt.finishOuterRadius;
-        } else {
-          dist = opt.controlRadius;
-        }
-        c2x = x[i + 1] - (dist * Math.cos(angle[i]));
-        c2y = y[i + 1] - (dist * Math.sin(angle[i]));
-        rg2.ctx.beginPath();
-        rg2.ctx.moveTo(c1x, c1y);
-        rg2.ctx.lineTo(c2x, c2y);
-        rg2.ctx.stroke();
-      }
-    }
-  };
-  rg2.Course = Course;
-}());
-/*global rg2:false */
-(function () {
-  function Result(data, isScoreEvent, scorecodes, scorex, scorey) {
-    // resultid is the kartat id value
-    this.resultid = data.resultid;
-    this.rawid = this.resultid % rg2.config.GPS_RESULT_OFFSET;
-    this.isScoreEvent = isScoreEvent;
-    // GPS track ids are normal resultid + GPS_RESULT_OFFSET
-    if (this.resultid >= rg2.config.GPS_RESULT_OFFSET) {
-      this.isGPSTrack = true;
-    } else {
-      //this.name = data.name;
-      this.isGPSTrack = false;
-    }
-    this.name = rg2.he.decode(data.name);
-    this.initials = this.getInitials(this.name);
-    this.starttime = data.starttime;
-    this.time = data.time;
-    this.position = data.position;
-    this.status = data.status;
-    // get round iconv problem in API for now: unescape special characters to get sensible text
-    this.comments = rg2.he.decode(data.comments);
-    this.coursename = data.coursename;
-    if (this.coursename === "") {
-      this.coursename = data.courseid;
-    }
-    this.courseid = data.courseid;
-    this.splits = data.splits;
-    // insert a 0 split at the start to make life much easier elsewhere
-    this.splits.splice(0, 0, 0);
-
-    if (data.variant !== "") {
-      // save control locations for score course result
-      this.scorex = scorex;
-      this.scorey = scorey;
-      this.scorecodes = scorecodes;
-    }
-    // calculated cumulative distance in pixels
-    this.cumulativeDistance = [];
-    // set true if track includes all expected controls in correct order or is a GPS track
-    this.hasValidTrack = false;
-    this.displayTrack = false;
-    this.displayScoreCourse = false;
-    this.trackColour = rg2.colours.getNextColour();
-    // raw track data
-    this.trackx = [];
-    this.tracky = [];
-    this.speedColour = [];
-    // interpolated times
-    this.xysecs = [];
-    if (this.isGPSTrack) {
-      // don't get time or splits so need to copy them in from original result
-      this.time = rg2.results.getTimeForID(this.rawid);
-      // allow for events with no results where there won't be a non-GPS result
-      if (this.time === rg2.config.TIME_NOT_FOUND) {
-        this.time = data.time;
-      }
-      this.splits = rg2.results.getSplitsForID(this.rawid);
-
-    }
-    this.legpos = [];
-    if (data.gpsx.length > 0) {
-      this.addTrack(data);
-    }
-
-  }
-
-
-  Result.prototype = {
-    Constructor : Result,
-
-    putTrackOnDisplay : function () {
-      if (this.hasValidTrack) {
-        this.displayTrack = true;
-      }
-    },
-
-    removeTrackFromDisplay : function () {
-      if (this.hasValidTrack) {
-        this.displayTrack = false;
-      }
-    },
-
-    addTrack : function (data, format) {
-      var trackOK;
-      this.trackx = data.gpsx;
-      this.tracky = data.gpsy;
-      if (this.isGPSTrack) {
-        trackOK = this.expandGPSTrack();
-      } else {
-        if (format === rg2.config.EVENT_WITHOUT_RESULTS) {
-          trackOK = this.expandTrackWithNoSplits();
-        } else {
-          trackOK = this.expandNormalTrack();
-        }
-      }
-      if (trackOK) {
-        rg2.courses.incrementTracksCount(this.courseid);
-      }
-    },
-
-    drawTrack : function (opt) {
-      var i, l, oldx, oldy, stopCount;
-      if (this.displayTrack) {
-        rg2.ctx.lineWidth = opt.routeWidth;
-        rg2.ctx.strokeStyle = this.trackColour;
-        rg2.ctx.globalAlpha = opt.routeIntensity;
-        rg2.ctx.fillStyle = this.trackColour;
-        rg2.ctx.font = '10pt Arial';
-        rg2.ctx.textAlign = "left";
-        rg2.ctx.beginPath();
-        rg2.ctx.moveTo(this.trackx[0], this.tracky[0]);
-        oldx = this.trackx[0];
-        oldy = this.tracky[0];
-        stopCount = 0;
-        l = this.trackx.length;
-        for (i = 1; i < l; i += 1) {
-          // lines
-          rg2.ctx.lineTo(this.trackx[i], this.tracky[i]);
-          if ((this.trackx[i] === oldx) && (this.tracky[i] === oldy)) {
-            // we haven't moved
-            stopCount += 1;
-          } else {
-            // we have started moving again
-            if (stopCount > 0) {
-              if (!this.isGPSTrack || (this.isGPSTrack && opt.showThreeSeconds)) {
-                rg2.ctx.fillText("+" + (3 * stopCount), oldx + 5, oldy + 5);
-              }
-              stopCount = 0;
-            }
-          }
-          oldx = this.trackx[i];
-          oldy = this.tracky[i];
-          if (this.isGPSTrack && opt.showGPSSpeed) {
-            rg2.ctx.strokeStyle = this.speedColour[i];
-            rg2.ctx.stroke();
-            rg2.ctx.beginPath();
-            rg2.ctx.moveTo(oldx, oldy);
-          }
-        }
-        rg2.ctx.stroke();
-      }
-    },
-
-    drawScoreCourse : function () {
-      // draws a score course for an individual runner to show where they went
-      // based on drawCourse in courses.js
-      // could refactor in future...
-      // > 1 since we need at least a start and finish to draw something
-      var angle, i, opt;
-      if ((this.displayScoreCourse) && (this.scorex.length > 1)) {
-        opt = rg2.getOverprintDetails();
-        rg2.ctx.globalAlpha = rg2.config.FULL_INTENSITY;
-        angle = rg2.utils.getAngle(this.scorex[0], this.scorey[0], this.scorex[1], this.scorey[1]);
-        rg2.controls.drawStart(this.scorex[0], this.scorey[0], "", angle, opt);
-        angle = [];
-        for (i = 0; i < (this.scorex.length - 1); i += 1) {
-          angle[i] = rg2.utils.getAngle(this.scorex[i], this.scorey[i], this.scorex[i + 1], this.scorey[i + 1]);
-        }
-        rg2.courses.drawLinesBetweenControls(this.scorex, this.scorey, angle, this.courseid, opt);
-        for (i = 1; i < (this.scorex.length - 1); i += 1) {
-          rg2.controls.drawSingleControl(this.scorex[i], this.scorey[i], i, Math.PI * 0.25, opt);
-        }
-        rg2.controls.drawFinish(this.scorex[this.scorex.length - 1], this.scorey[this.scorey.length - 1], "", opt);
-      }
-    },
-
-    expandNormalTrack : function () {
-      var course, nextcontrol, nextx, nexty, dist, oldx, oldy, i, l, x, y, previouscontrolindex;
-      // allow for getting two tracks for same result: should have been filtered in API...
-      this.xysecs.length = 0;
-      this.cumulativeDistance.length = 0;
-
-      // add times and distances at each position
-      this.xysecs[0] = 0;
-      this.cumulativeDistance[0] = 0;
-
-      // get course details
-      course = {};
-      // each person has their own defined score course
-      if (this.isScoreEvent) {
-        course.x = this.scorex;
-        course.y = this.scorey;
-      } else {
-        course.x = rg2.courses.getCourseDetails(this.courseid).x;
-        course.y = rg2.courses.getCourseDetails(this.courseid).y;
-      }
-      // read through list of controls and copy in split times
-      nextcontrol = 1;
-      nextx = course.x[nextcontrol];
-      nexty = course.y[nextcontrol];
-      dist = 0;
-      oldx = this.trackx[0];
-      oldy = this.tracky[0];
-      x = 0;
-      y = 0;
-      previouscontrolindex = 0;
-      // we are assuming the track starts at the start which is index 0...
-      // look at each track point and see if it matches the next control location
-      l = this.trackx.length;
-      for (i = 1; i < l; i += 1) {
-        // calculate distance while we are looping through
-        x = this.trackx[i];
-        y = this.tracky[i];
-        dist += rg2.utils.getDistanceBetweenPoints(x, y, oldx, oldy);
-        this.cumulativeDistance[i] = Math.round(dist);
-        oldx = x;
-        oldy = y;
-        // track ends at control
-        if ((nextx === x) && (nexty === y)) {
-          this.xysecs[i] = this.splits[nextcontrol];
-          this.addInterpolatedTimes(previouscontrolindex, i);
-          previouscontrolindex = i;
-          nextcontrol += 1;
-          if (nextcontrol === course.x.length) {
-            // we have found all the controls
-            this.hasValidTrack = true;
-            break;
-          }
-          nextx = course.x[nextcontrol];
-          nexty = course.y[nextcontrol];
-        }
-      }
-      // treat all score tracks as valid for now
-      // may need a complete rethink on score course handling later
-      if (this.isScoreEvent) {
-        this.hasValidTrack = true;
-      }
-      return this.hasValidTrack;
-    },
-
-    expandTrackWithNoSplits : function () {
-      // based on ExpandNormalTrack, but deals with event format 2: no results
-      // this means we have a course and a finish time but no split times
-      var totaltime, currenttime, course, nextcontrol, nextx, nexty, lastx, lasty, i, len, x, y, moved, previouscontrolindex, dist, totaldist, oldx, oldy;
-      this.xysecs.length = 0;
-      this.cumulativeDistance.length = 0;
-
-      // only have finish time, which is in [1] at present
-      totaltime = this.splits[1];
-      currenttime = 0;
-      this.xysecs[0] = 0;
-      this.cumulativeDistance[0] = 0;
-
-      // get course details: can't be a score course since they aren't supported for format 2
-      course = {};
-      course.x = rg2.courses.getCourseDetails(this.courseid).x;
-      course.y = rg2.courses.getCourseDetails(this.courseid).y;
-      nextcontrol = 1;
-      nextx = course.x[nextcontrol];
-      nexty = course.y[nextcontrol];
-      lastx = course.x[course.x.length - 1];
-      lasty = course.y[course.y.length - 1];
-      // add finish location to track just in case...
-      this.trackx.push(lastx);
-      this.tracky.push(lasty);
-      dist = 0;
-      totaldist = 0;
-      oldx = this.trackx[0];
-      oldy = this.tracky[0];
-      x = 0;
-      y = 0;
-      previouscontrolindex = 0;
-      // read through track to find total distance
-      len = this.trackx.length;
-      for (i = 1; i < len; i += 1) {
-        x = this.trackx[i];
-        y = this.tracky[i];
-        totaldist += rg2.utils.getDistanceBetweenPoints(x, y, oldx, oldy);
-        oldx = x;
-        oldy = y;
-      }
-
-      // read through again to generate splits
-      x = 0;
-      y = 0;
-      moved = false;
-      oldx = this.trackx[0];
-      oldy = this.tracky[0];
-      for (i = 1; i < len; i += 1) {
-        x = this.trackx[i];
-        y = this.tracky[i];
-        // cope with routes that have start and finish in same place, and where the first point in a route is a repeat of the start
-        if ((x !== this.trackx[0]) || (y !== this.tracky[0])) {
-          moved = true;
-        }
-        dist += rg2.utils.getDistanceBetweenPoints(x, y, oldx, oldy);
-        this.cumulativeDistance[i] = Math.round(dist);
-        oldx = x;
-        oldy = y;
-        // track ends at control, as long as we have moved away from the start
-        if ((nextx === x) && (nexty === y) && moved) {
-          currenttime = parseInt((dist / totaldist) * totaltime, 10);
-          this.xysecs[i] = currenttime;
-          this.splits[nextcontrol] = currenttime;
-          this.addInterpolatedTimes(previouscontrolindex, i);
-          previouscontrolindex = i;
-          nextcontrol += 1;
-          if (nextcontrol === course.x.length) {
-            // we have found all the controls
-            this.hasValidTrack = true;
-            break;
-          }
-          nextx = course.x[nextcontrol];
-          nexty = course.y[nextcontrol];
-        }
-      }
-      return this.hasValidTrack;
-    },
-
-    addInterpolatedTimes : function (startindex, endindex) {
-      // add interpolated time at each point based on cumulative distance; this assumes uniform speed...
-      var oldt, deltat, olddist, deltadist, i;
-      oldt = this.xysecs[startindex];
-      deltat = this.xysecs[endindex] - oldt;
-      olddist = this.cumulativeDistance[startindex];
-      deltadist = this.cumulativeDistance[endindex] - olddist;
-      for (i = startindex; i <= endindex; i += 1) {
-        this.xysecs[i] = oldt + Math.round(((this.cumulativeDistance[i] - olddist) * deltat / deltadist));
-      }
-    },
-
-    expandGPSTrack : function () {
-      var t, dist, oldx, oldy, x, y, delta, maxSpeed, oldDelta, sum, POWER_FACTOR, l;
-      dist = 0;
-      oldx = this.trackx[0];
-      oldy = this.tracky[0];
-      x = 0;
-      y = 0;
-      maxSpeed = 0;
-      oldDelta = 0;
-      POWER_FACTOR = 1;
-      l = this.trackx.length;
-      // in theory we get one point every three seconds
-      for (t = 0; t < l; t += 1) {
-        this.xysecs[t] = 3 * t;
-        x = this.trackx[t];
-        y = this.tracky[t];
-        delta = rg2.utils.getDistanceBetweenPoints(x, y, oldx, oldy);
-        dist += delta;
-        sum = delta + oldDelta;
-        if (maxSpeed < sum) {
-          maxSpeed = sum;
-        }
-        this.speedColour[t] = Math.pow(sum, POWER_FACTOR);
-        this.cumulativeDistance[t] = Math.round(dist);
-        oldx = x;
-        oldy = y;
-        oldDelta = delta;
-      }
-      this.setSpeedColours(Math.pow(maxSpeed, POWER_FACTOR));
-      this.hasValidTrack = true;
-      return this.hasValidTrack;
-
-    },
-
-    setSpeedColours : function (maxspeed) {
-      var i, red, green, halfmax;
-      //console.log("'Max speed = " + maxspeed);
-      halfmax = maxspeed / 2;
-      // speedColour comes in with speeds at each point and gets updated to the associated colour
-      for (i = 1; i < this.speedColour.length; i += 1) {
-        if (this.speedColour[i] > halfmax) {
-          // fade green to orange
-          red = Math.round(255 * (this.speedColour[i] - halfmax) / halfmax);
-          green = 255;
-        } else {
-          // fade orange to red
-          green = Math.round(255 * this.speedColour[i] / halfmax);
-          red = 255;
-        }
-        this.speedColour[i] = '#';
-        if (red < 16) {
-          this.speedColour[i] += '0';
-        }
-        this.speedColour[i] += red.toString(16);
-        if (green < 16) {
-          this.speedColour[i] += '0';
-        }
-        this.speedColour[i] += green.toString(16) + '00';
-      }
-    },
-
-    getInitials : function (name) {
-      var i, addNext, len, initials;
-      // converts name to initials
-      if (name === null) {
-        return "";
-      }
-      name.trim();
-      len = name.length;
-      initials = "";
-      addNext = true;
-      for (i = 0; i < len; i += 1) {
-        if (addNext) {
-          initials += name.substr(i, 1);
-          addNext = false;
-        }
-        if (name.charAt(i) === " ") {
-          addNext = true;
-        }
-      }
-      return initials;
-    }
-  };
-  rg2.Result = Result;
-}());
-
-/*global rg2:false */
-/*global rg2Config:false */
-(function () {
-  function Georef(description, name, params) {
-    this.description = description;
-    this.name = name;
-    this.params = params;
-  }
-
-  function Georefs() {
-    this.georefsystems = [];
-    this.georefsystems.push(new Georef("Not georeferenced", "none", ""));
-    this.georefsystems.push(new Georef("GB National Grid", "EPSG:27700", "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs"));
-    this.georefsystems.push(new Georef("Google EPSG:900913", "EPSG:900913", "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs"));
-    if (rg2Config.epsg_code !== undefined) {
-      this.georefsystems.push(new Georef(rg2Config.epsg_code, rg2Config.epsg_code.replace(" ", ""), rg2Config.epsg_params));
-      this.defaultGeorefVal = rg2Config.epsg_code.replace(" ", "");
-    } else {
-      this.defaultGeorefVal = "EPSG:27700";
-    }
-  }
-
-  Georefs.prototype = {
-    Constructor : Georefs,
-
-    getDefault : function () {
-      return this.defaultGeorefVal;
-    },
-
-    getDropdown : function (dropdown) {
-      var i, opt;
-      for (i = 0; i < this.georefsystems.length; i += 1) {
-        opt = document.createElement("option");
-        opt.value = this.georefsystems[i].name;
-        opt.text = this.georefsystems[i].description;
-        dropdown.options.add(opt);
-      }
-      return dropdown;
-    },
-
-    getParams : function (name) {
-      var i, params;
-      params = "";
-      for (i = 0; i < this.georefsystems.length; i += 1) {
-        if (this.georefsystems[i].name === name) {
-          return this.georefsystems[i].params;
-        }
-      }
-      return params;
-    }
-  };
-
-  function Worldfile(a, b, c, d, e, f) {
-    // see http://en.wikipedia.org/wiki/World_file
-    this.A = parseFloat(a);
-    this.B = parseFloat(b);
-    this.C = parseFloat(c);
-    this.D = parseFloat(d);
-    this.E = parseFloat(e);
-    this.F = parseFloat(f);
-    if ((a !== 0) && (b !== 0) && (c !== 0) && (d !== 0) && (e !== 0) && (f !== 0)) {
-      this.valid = true;
-      // helps make later calculations easier
-      this.AEDB = (a * e) - (d * b);
-      this.xCorrection = (b * f) - (e * c);
-      this.yCorrection = (d * c) - (a * f);
-    } else {
-      this.valid = false;
-      this.AEDB = 0;
-      this.xCorrection = 0;
-      this.yCorrection = 0;
-    }
-  }
-
-  Worldfile.prototype = {
-    Constructor : Worldfile,
-
-    // use worldfile to generate X value
-    getX : function (x, y) {
-      return Math.round(((this.E * x) - (this.B * y) + this.xCorrection) / this.AEDB);
-    },
-
-    // use worldfile to generate y value
-    getY : function (x, y) {
-      return Math.round(((-1 * this.D * x) + (this.A * y) + this.yCorrection) / this.AEDB);
-    }
-  };
-
-  function Map(data) {
-    if (data !== undefined) {
-      // existing map from database
-      this.mapid = data.mapid;
-      this.name = data.name;
-      // worldfile for GPS to map image conversion (for GPS files)
-      this.worldfile = new Worldfile(data.A, data.B, data.C, data.D, data.E, data.F);
-      // worldfile for local co-ords to map image conversion (for georeferenced courses)
-      this.localworldfile = new Worldfile(data.localA, data.localB, data.localC, data.localD, data.localE, data.localF);
-      if (data.mapfilename === undefined) {
-        this.mapfilename = this.mapid + '.' + 'jpg';
-      } else {
-        this.mapfilename = data.mapfilename;
-      }
-
-    } else {
-      // new map to be added
-      this.mapid = 0;
-      this.name = "";
-      this.worldfile = new Worldfile(0, 0, 0, 0, 0, 0);
-      this.localworldfile = new Worldfile(0, 0, 0, 0, 0, 0);
-    }
-    this.xpx = [];
-    this.ypx = [];
-    this.lat = [];
-    this.lon = [];
-  }
-  rg2.Georefs = Georefs;
-  rg2.Worldfile = Worldfile;
-  rg2.Map = Map;
-}());
-
-/*global rg2:false */
-(function () {
-
-  function Utils() {
-    // don't need to do anything: just keep jsLint happy
-    return true;
-  }
-
-  Utils.prototype = {
-
-    Constructor : Utils,
-
-    getDistanceBetweenPoints : function (x1, y1, x2, y2) {
-      // Pythagoras
-      return Math.sqrt(Math.pow((x1 - x2), 2) + Math.pow((y1 - y2), 2));
-    },
-
-    getAngle : function (x1, y1, x2, y2) {
-      var angle = Math.atan2((y2 - y1), (x2 - x1));
-      if (angle < 0) {
-        angle = angle + (2 * Math.PI);
-      }
-      return angle;
-    },
-
-    getLatLonDistance : function (lat1, lon1, lat2, lon2) {
-      // Haversine formula (http://www.codecodex.com/wiki/Calculate_distance_between_two_points_on_a_globe)
-      var dLat, dLon, a;
-      dLat = (lat2 - lat1).toRad();
-      dLon = (lon2 - lon1).toRad();
-      a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1.toRad()) * Math.cos(lat2.toRad()) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-      // multiply by IUUG earth mean radius (http://en.wikipedia.org/wiki/Earth_radius) in metres
-      return 6371009 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    },
-
-    // converts MM:SS or HH:MM:SS to seconds based on number of :
-    getSecsFromHHMMSS : function (time) {
-      var bits, secs;
-      if (!time) {
-        return 0;
-      }
-      secs = 0;
-      bits = time.split(":");
-      if (bits.length === 2) {
-        secs = (parseInt(bits[0], 10) * 60) + parseInt(bits[1], 10);
-      } else {
-        if (bits.length === 3) {
-          secs = (parseInt(bits[0], 10) * 3600) + (parseInt(bits[1], 10) * 60) + parseInt(bits[2], 10);
-        }
-      }
-      if (isNaN(secs)) {
-        return 0;
-      }
-      return secs;
-    },
-
-    getSecsFromHHMM : function (time) {
-      var bits, secs;
-      if (!time) {
-        return 0;
-      }
-      secs = 0;
-      bits = time.split(":");
-      secs = (parseInt(bits[0], 10) * 3600) + (parseInt(bits[1], 10) * 60);
-      if (isNaN(secs)) {
-        return 0;
-      }
-      return secs;
-    },
-
-    // converts seconds to MM:SS
-    formatSecsAsMMSS : function (secs) {
-      var formattedtime, minutes, seconds;
-      minutes = Math.floor(secs / 60);
-      formattedtime = minutes;
-      seconds = secs - (minutes * 60);
-      if (seconds < 10) {
-        formattedtime += ":0" + seconds;
-      } else {
-        formattedtime += ":" + seconds;
-      }
-      return formattedtime;
-    },
-
-    showWarningDialog : function (title, text) {
-      var msg = '<div id=rg2-warning-dialog>' + text + '</div>';
-      $(msg).dialog({
-        title : title,
-        dialogClass : "rg2-warning-dialog",
-        close : function () {
-          $('#rg2-warning-dialog').dialog('destroy').remove();
-        }
-      });
-    }
-  };
-
-  Number.prototype.toRad = function () {
-    return this * Math.PI / 180;
-  };
-
-  function Colours() {
-    // used to generate track colours: add extra colours as necessary
-    this.colours = ["#ff0000", "#ff8000", "#ff00ff", "#ff0080", "#008080", "#008000", "#0080ff", "#0000ff", "#8000ff", "#808080"];
-    //this.colours = ["#ff0000", "#ff8000",  "#ff00ff", "#ff0080", "#008080", "#008000", "#00ff00", "#0080ff", "#0000ff", "#8000ff", "#00ffff", "#808080"];
-
-    this.colourIndex = 0;
-  }
-
-  Colours.prototype = {
-    Constructor : Colours,
-
-    getNextColour : function () {
-      this.colourIndex = (this.colourIndex + 1) % this.colours.length;
-      return this.colours[this.colourIndex];
-    }
-  };
-
-  function User(keksi) {
-    this.x = "";
-    this.y = keksi;
-    this.name = null;
-    this.pwd = null;
-  }
-
-  function RequestedHash() {
-    this.id = 0;
-    this.courses = [];
-    this.routes = [];
-  }
-
-
-  RequestedHash.prototype = {
-    Constructor : RequestedHash,
-
-    parseHash : function (hash) {
-      var fields, i;
-      // input looks like #id&course=a,b,c&result=x,y,z
-      fields = hash.split('&');
-      for (i = 0; i < fields.length; i += 1) {
-        fields[i] = fields[i].toLowerCase();
-        if (fields[i].search('#') !== -1) {
-          this.id = parseInt(fields[i].replace("#", ""), 10);
-        }
-        if (fields[i].search('course=') !== -1) {
-          this.courses = fields[i].replace("course=", "").split(',');
-        }
-        if (fields[i].search('route=') !== -1) {
-          this.routes = fields[i].replace("route=", "").split(',');
-        }
-      }
-      // convert to integers: NaNs sort themselves out on display so don't check here
-      this.courses = this.courses.map(Number);
-      this.routes = this.routes.map(Number);
-
-      if (isNaN(this.id)) {
-        this.id = 0;
-        this.courses.length = 0;
-        this.routes.length = 0;
-      }
-    },
-
-    getRoutes : function () {
-      return this.routes;
-    },
-
-    getCourses : function () {
-      return this.courses;
-    },
-
-    getID : function () {
-      return this.id;
-    },
-
-    getTab : function () {
-      if (this.routes.length > 0) {
-        return rg2.config.TAB_RESULTS;
-      }
-      return rg2.config.TAB_COURSES;
-    },
-
-    setCourses : function () {
-      this.courses = rg2.courses.getCoursesOnDisplay();
-      window.history.pushState('', '', this.getHash());
-    },
-
-    setRoutes : function () {
-      this.routes = rg2.results.getTracksOnDisplay();
-      window.history.pushState('', '', this.getHash());
-    },
-
-    setNewEvent : function (id) {
-      this.id = id;
-      this.courses.length = 0;
-      this.routes.length = 0;
-      window.history.pushState('', '', this.getHash());
-    },
-
-    getHash : function () {
-      var hash;
-      if (this.id === 0) {
-        return '#0';
-      }
-      hash = '#' + this.id;
-      hash += this.extractItems(this.courses, "&course=");
-      hash += this.extractItems(this.routes, "&route=");
-      return hash;
-    },
-
-    extractItems : function (items, text) {
-      var i, extrahash;
-      extrahash = "";
-      if (items.length > 0) {
-        extrahash += text;
-        for (i = 0; i < items.length; i += 1) {
-          if (i > 0) {
-            extrahash += ',';
-          }
-          extrahash += items[i];
-        }
-      }
-      return extrahash;
-    }
-  };
-  rg2.RequestedHash = RequestedHash;
-  rg2.Utils = Utils;
-  rg2.Colours = Colours;
-  rg2.User = User;
 }());

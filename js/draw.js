@@ -415,11 +415,11 @@
           if (data.ok) {
             self.routeSaved(data.status_msg);
           } else {
-            rg2.utils.showWarningDialog(this.gpstrack.routeData.name, rg2.t('Your route was not saved. Please try again'));
+            rg2.utils.showWarningDialog(self.gpstrack.routeData.name, rg2.t('Your route was not saved. Please try again'));
           }
         },
         error : function () {
-          rg2.utils.showWarningDialog(this.gpstrack.routeData.name, rg2.t('Your route was not saved. Please try again'));
+          rg2.utils.showWarningDialog(self.gpstrack.routeData.name, rg2.t('Your route was not saved. Please try again'));
         }
       });
     },
