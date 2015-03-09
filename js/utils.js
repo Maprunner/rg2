@@ -1,14 +1,13 @@
 /*global rg2:false */
 (function () {
-
-  function Utils() {
-    // don't need to do anything: just keep jsLint happy
-    return true;
-  }
-
-  Utils.prototype = {
-
-    Constructor : Utils,
+  var utils =  {
+    rotatePoint : function (x, y, angle) {
+      // rotation matrix: see http://en.wikipedia.org/wiki/Rotation_matrix
+      var pt = {};
+      pt.x = (Math.cos(angle) * x) - (Math.sin(angle) * y);
+      pt.y = (Math.sin(angle) * x) + (Math.cos(angle) * y);
+      return pt;
+    },
 
     getDistanceBetweenPoints : function (x1, y1, x2, y2) {
       // Pythagoras
@@ -82,6 +81,31 @@
       return formattedtime;
     },
 
+    // returns seconds as hh:mm:ss
+    formatSecsAsHHMMSS : function (secs) {
+      var formattedtime, hours, minutes;
+      hours = Math.floor(secs / 3600);
+      if (hours < 10) {
+        formattedtime = "0" + hours + ":";
+      } else {
+        formattedtime = hours + ":";
+      }
+      secs = secs - (hours * 3600);
+      minutes = Math.floor(secs / 60);
+      if (minutes < 10) {
+        formattedtime += "0" + minutes;
+      } else {
+        formattedtime += minutes;
+      }
+      secs = secs - (minutes * 60);
+      if (secs < 10) {
+        formattedtime += ":0" + secs;
+      } else {
+        formattedtime += ":" + secs;
+      }
+      return formattedtime;
+    },
+
     showWarningDialog : function (title, text) {
       var msg = '<div id=rg2-warning-dialog>' + text + '</div>';
       $(msg).dialog({
@@ -90,6 +114,63 @@
         close : function () {
           $('#rg2-warning-dialog').dialog('destroy').remove();
         }
+      });
+    },
+
+    setButtonState : function (state, buttonArray) {
+      // bulk enable/disable for buttons
+      var i;
+      for (i = 0; i < buttonArray.length; i += 1) {
+        $(buttonArray[i]).button(state);
+      }
+    },
+
+    generateOption : function (value, text, selected) {
+      var opt;
+      opt = document.createElement("option");
+      opt.value = value;
+      opt.text = text;
+      if (selected) {
+        opt.selected = true;
+      }
+      return opt;
+    },
+
+    extractAttributeZero : function (nodelist, attribute, defaultValue) {
+      if (nodelist.length > 0) {
+        return nodelist[0].getAttribute(attribute).trim();
+      }
+      return defaultValue;
+    },
+
+    extractTextContentZero : function (nodelist, defaultValue) {
+      if (nodelist.length > 0) {
+        return nodelist[0].textContent.trim();
+      }
+      return defaultValue;
+    },
+
+    createModalDialog : function (dlg) {
+      var self;
+      self = this;
+      self.onDo = dlg.onDo;
+      self.onCancel = dlg.onCancel;
+      $(dlg.selector).dialog({
+        title : dlg.title,
+        modal : true,
+        dialogClass : "no-close " + dlg.classes,
+        closeOnEscape : false,
+        buttons : [{
+          text : dlg.doText,
+          click : function () {
+            self.onDo();
+          }
+        }, {
+          text : "Cancel",
+          click : function () {
+            self.onCancel();
+          }
+        }]
       });
     }
   };
@@ -119,7 +200,50 @@
     this.x = "";
     this.y = keksi;
     this.name = null;
-    this.pwd = null;
+    this.password = null;
+  }
+
+  User.prototype = {
+    Constructor : User,
+
+    setDetails : function (name, password) {
+      if ((name.length > 4) && (password.length > 4)) {
+        this.name = name;
+        this.password = password;
+        return true;
+      }
+      return false;
+    },
+
+    alterString : function (input, pattern) {
+      var i, str;
+      str = "";
+      for (i = 0; i < input.length; i += 1) {
+        str += input.charAt(i) + pattern.charAt(i);
+      }
+      return str;
+    },
+
+    encodeUser : function () {
+      return {x: this.alterString(this.name + this.password, this.y), y: this.y};
+    }
+  };
+
+  function RouteData() {
+    this.courseid = null;
+    this.coursename = null;
+    this.resultid = null;
+    this.isScoreCourse = false;
+    this.eventid = null;
+    this.name = null;
+    this.comments = null;
+    this.x = [];
+    this.y = [];
+    this.controlx = [];
+    this.controly = [];
+    this.time = [];
+    this.startsecs = 0;
+    this.totaltime = 0;
   }
 
   function RequestedHash() {
@@ -127,7 +251,6 @@
     this.courses = [];
     this.routes = [];
   }
-
 
   RequestedHash.prototype = {
     Constructor : RequestedHash,
@@ -221,8 +344,9 @@
       return extrahash;
     }
   };
+  rg2.utils = utils;
+  rg2.RouteData = RouteData;
   rg2.RequestedHash = RequestedHash;
-  rg2.Utils = Utils;
   rg2.Colours = Colours;
   rg2.User = User;
 }());

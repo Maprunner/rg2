@@ -57,7 +57,7 @@
         rg2.controls.drawStart(this.x[0], this.y[0], "", this.angle[0], opt);
         // don't join up controls for score events
         if (!this.isScoreCourse) {
-          this.drawLinesBetweenControls(this.x, this.y, this.angle, opt);
+          this.drawLinesBetweenControls({x: this.x, y: this.y}, this.angle, opt);
         }
         if (this.isScoreCourse) {
           for (i = 1; i < (this.x.length); i += 1) {
@@ -76,24 +76,24 @@
         }
       }
     },
-    drawLinesBetweenControls : function (x, y, angle, opt) {
+    drawLinesBetweenControls : function (pt, angle, opt) {
       var c1x, c1y, c2x, c2y, i, dist;
-      for (i = 0; i < (x.length - 1); i += 1) {
+      for (i = 0; i < (pt.x.length - 1); i += 1) {
         if (i === 0) {
           dist = opt.startTriangleLength;
         } else {
           dist = opt.controlRadius;
         }
-        c1x = x[i] + (dist * Math.cos(angle[i]));
-        c1y = y[i] + (dist * Math.sin(angle[i]));
+        c1x = pt.x[i] + (dist * Math.cos(angle[i]));
+        c1y = pt.y[i] + (dist * Math.sin(angle[i]));
         //Assume the last control in the array is a finish
         if (i === this.x.length - 2) {
           dist = opt.finishOuterRadius;
         } else {
           dist = opt.controlRadius;
         }
-        c2x = x[i + 1] - (dist * Math.cos(angle[i]));
-        c2y = y[i + 1] - (dist * Math.sin(angle[i]));
+        c2x = pt.x[i + 1] - (dist * Math.cos(angle[i]));
+        c2y = pt.y[i + 1] - (dist * Math.sin(angle[i]));
         rg2.ctx.beginPath();
         rg2.ctx.moveTo(c1x, c1y);
         rg2.ctx.lineTo(c2x, c2y);

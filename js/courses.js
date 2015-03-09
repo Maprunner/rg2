@@ -61,41 +61,25 @@
 
     updateCourseDropdown : function () {
       $("#rg2-course-select").empty();
-      var i, dropdown, opt;
+      var i, dropdown;
       dropdown = document.getElementById("rg2-course-select");
-      opt = document.createElement("option");
-      opt.value = null;
-      opt.text = rg2.t("Select course");
-      dropdown.options.add(opt);
-
+      dropdown.options.add(rg2.utils.generateOption(null, rg2.t("Select course")));
       for (i = 0; i < this.courses.length; i += 1) {
         if (this.courses[i] !== undefined) {
-          opt = document.createElement("option");
-          opt.value = i;
-          opt.text = this.courses[i].name;
-          dropdown.options.add(opt);
+          dropdown.options.add(rg2.utils.generateOption(i, this.courses[i].name));
         }
       }
     },
 
     updateControlDropdown : function () {
-      var i, dropdown, opt;
+      var i, dropdown;
       dropdown = document.getElementById("rg2-control-select");
       $("#rg2-control-select").empty();
+      dropdown.options.add(rg2.utils.generateOption(0, "S"));
       for (i = 0; i < this.highestControlNumber; i += 1) {
-        opt = document.createElement("option");
-        opt.value = i;
-        if (i === 0) {
-          opt.text = "S";
-        } else {
-          opt.text = i;
-        }
-        dropdown.options.add(opt);
+        dropdown.options.add(rg2.utils.generateOption(i, i));
       }
-      opt = document.createElement("option");
-      opt.value = rg2.config.MASS_START_BY_CONTROL;
-      opt.text = "By control";
-      dropdown.options.add(opt);
+      dropdown.options.add(rg2.utils.generateOption(rg2.config.MASS_START_BY_CONTROL, "By control"));
     },
 
     deleteAllCourses : function () {
@@ -203,36 +187,41 @@
     },
 
     formatCoursesAsTable : function () {
-      var i, res, html;
-      res = 0;
+      var details, html;
       html = "<table class='coursemenutable'><tr><th>" + rg2.t("Course") + "</th><th><i class='fa fa-eye'></i></th>";
       html += "<th>" + rg2.t("Runners") + "</th><th>" + rg2.t("Routes") + "</th><th><i class='fa fa-eye'></i></th></tr>";
-      for (i = 0; i < this.courses.length; i += 1) {
-        if (this.courses[i] !== undefined) {
-          html += "<tr><td>" + this.courses[i].name + "</td>";
-          html += "<td><input class='courselist' id=" + i + " type=checkbox name=course></input></td>";
-          html += "<td>" + this.courses[i].resultcount + "</td>";
-          res += this.courses[i].resultcount;
-          html += "<td>" + this.courses[i].trackcount + "</td><td>";
-          if (this.courses[i].trackcount > 0) {
-            html += "<input id=" + i + " class='tracklist' type=checkbox name=track></input>";
-          }
-          html += "</td></tr>";
-        }
-      }
+      details = this.formatCourseDetails();
       // add bottom row for all courses checkboxes
-      html += "<tr class='allitemsrow'><td>" + rg2.t("All") + "</td>";
-      html += "<td><input class='allcourses' id=" + i + " type=checkbox name=course></input></td>";
-      html += "<td>" + res + "</td><td>" + this.totaltracks + "</td><td>";
+      html += details.html + "<tr class='allitemsrow'><td>" + rg2.t("All") + "</td>";
+      html += "<td><input class='allcourses' id=" + details.coursecount + " type=checkbox name=course></input></td>";
+      html += "<td>" + details.res + "</td><td>" + this.totaltracks + "</td><td>";
       if (this.totaltracks > 0) {
-        html += "<input id=" + i + " class='alltracks' type=checkbox name=track></input>";
+        html += "<input id=" + details.coursecount + " class='alltracks' type=checkbox name=track></input>";
       }
       html += "</td></tr></table>";
       return html;
     },
 
-    drawLinesBetweenControls : function (x, y, angle, courseid, opt) {
-      this.courses[courseid].drawLinesBetweenControls(x, y, angle, opt);
+    formatCourseDetails : function () {
+      var i, details;
+      details = {html: "", res: 0};
+      for (i = 0; i < this.courses.length; i += 1) {
+        if (this.courses[i] !== undefined) {
+          details.html += "<tr><td>" + this.courses[i].name + "</td>" + "<td><input class='courselist' id=" + i + " type=checkbox name=course></input></td>";
+          details.html += "<td>" + this.courses[i].resultcount + "</td>" + "<td>" + this.courses[i].trackcount + "</td><td>";
+          details.res += this.courses[i].resultcount;
+          if (this.courses[i].trackcount > 0) {
+            details.html += "<input id=" + i + " class='tracklist' type=checkbox name=track></input>";
+          }
+          details.html += "</td></tr>";
+        }
+      }
+      details.coursecount = i;
+      return details;
+    },
+
+    drawLinesBetweenControls : function (pt, angle, courseid, opt) {
+      this.courses[courseid].drawLinesBetweenControls(pt,  angle, opt);
     }
   };
   rg2.Courses = Courses;

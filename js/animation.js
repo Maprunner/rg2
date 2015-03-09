@@ -70,16 +70,14 @@
     updateAnimationDetails : function () {
       var html = this.getAnimationNames();
       if (html !== "") {
-        $("#rg2-track-names").empty();
-        $("#rg2-track-names").append(html);
-        $("#rg2-track-names").show();
+        $("#rg2-track-names").empty().append(html).show();
         $("#rg2-animation-controls").show();
       } else {
         $("#rg2-track-names").hide();
         $("#rg2-animation-controls").hide();
       }
       this.calculateAnimationRange();
-      $("#rg2-clock").text(this.formatSecsAsHHMMSS(this.animationSecs));
+      $("#rg2-clock").text(rg2.utils.formatSecsAsHHMMSS(this.animationSecs));
     },
 
     // slider callback
@@ -100,34 +98,38 @@
       return html;
     },
 
-    getSplitsTable : function () {
-      var html, i, j, run, metresPerPixel, units, maxControls, legSplit, prevControlSecs;
-      if (this.runners.length < 1) {
-        return "<p>Select runners on Results tab.</p>";
-      }
-
-      if (rg2.events.mapIsGeoreferenced()) {
-        metresPerPixel = rg2.events.getMetresPerPixel();
-        units = "metres";
-      } else {
-        metresPerPixel = 1;
-        units = "pixels";
-      }
+    getMaxControls : function () {
+      var maxControls, i;
       maxControls = 0;
-      legSplit = [];
-      prevControlSecs = 0;
       // find maximum number of controls to set size of table
       for (i = 0; i < this.runners.length; i += 1) {
         maxControls = Math.max(maxControls, this.runners[i].splits.length);
       }
       // allow for start and finish
-      maxControls -= 2;
+      return (maxControls - 2);
+    },
 
+    getSplitsTableHeader: function (controls) {
+      var html, i;
       html = "<table class='splitstable'><tr><th>Course</th><th>Name</th>";
-      for (i = 1; i <= maxControls; i += 1) {
+      for (i = 1; i <= controls; i += 1) {
         html += "<th>" + i + "</th>";
       }
-      html += "<th>F</th></tr>";
+      return (html + "<th>F</th></tr>");
+    },
+
+    getSplitsTable : function () {
+      var html, i, j, run, metresPerPixel, units, maxControls, legSplit, prevControlSecs, info;
+      if (this.runners.length < 1) {
+        return "<p>Select runners on Results tab.</p>";
+      }
+      legSplit = [];
+      prevControlSecs = 0;
+      info = rg2.events.getMetresPerPixel();
+      metresPerPixel = info.metresPerPixel;
+      units = info.units;
+      maxControls = this.getMaxControls();
+      html = this.getSplitsTableHeader(maxControls);
       for (i = 0; i < this.runners.length; i += 1) {
         run = this.runners[i];
         prevControlSecs = 0;
@@ -154,7 +156,6 @@
             html += "<td>" + Math.round(metresPerPixel * run.legTrackDistance[j]) + "</td>";
           }
         }
-
       }
       html += "</tr></table>";
       return html;
@@ -176,12 +177,10 @@
     toggleAnimation : function () {
       if (this.timer === null) {
         this.startAnimation();
-        $("#btn-start-stop").removeClass("fa-play").addClass("fa-pause");
-        $("#btn-start-stop").prop("title", rg2.t("Pause"));
+        $("#btn-start-stop").removeClass("fa-play").addClass("fa-pause").prop("title", rg2.t("Pause"));
       } else {
         this.stopAnimation();
-        $("#btn-start-stop").removeClass("fa-pause").addClass("fa-play");
-        $("#btn-start-stop").prop("title", rg2.t("Run"));
+        $("#btn-start-stop").removeClass("fa-pause").addClass("fa-play").prop("title", rg2.t("Run"));
       }
     },
 
@@ -297,7 +296,7 @@
         $("#rg2-clock-slider").slider("option", "min", 0);
       }
       $("#rg2-clock-slider").slider("value", this.animationSecs);
-      $("#rg2-clock").text(this.formatSecsAsHHMMSS(this.animationSecs));
+      $("#rg2-clock").text(rg2.utils.formatSecsAsHHMMSS(this.animationSecs));
     },
 
     toggleNameDisplay : function () {
@@ -318,8 +317,23 @@
       $("#btn-toggle-names").prop("title", rg2.t(title));
     },
 
-    runAnimation : function (fromTimer) {
-      var text, opt, runner, timeOffset, i, t, tailStartTimeSecs;
+    displayName : function (runner, time) {
+      var text;
+      if (this.displayNames) {
+        rg2.ctx.fillStyle = "black";
+        rg2.ctx.font = rg2.options.replayFontSize + 'pt Arial';
+        rg2.ctx.globalAlpha = rg2.config.FULL_INTENSITY;
+        rg2.ctx.textAlign = "left";
+        if (this.displayInitials) {
+          text = runner.initials;
+        } else {
+          text = runner.name;
+        }
+        rg2.ctx.fillText(text, runner.x[time] + 15, runner.y[time] + 7);
+      }
+    },
+
+    setAnimationTime : function (fromTimer) {
       // only increment time if called from the timer and we haven't got to the end already
       if (this.realTime) {
         if (this.animationSecs < this.latestFinishSecs) {
@@ -334,17 +348,20 @@
           }
         }
       }
-      opt = rg2.getReplayDetails();
-      $("#rg2-clock-slider").slider("value", this.animationSecs);
-      $("#rg2-clock").text(this.formatSecsAsHHMMSS(this.animationSecs));
-      rg2.ctx.lineWidth = opt.routeWidth;
-      rg2.ctx.globalAlpha = 1.0;
       if (this.useFullTails) {
-        tailStartTimeSecs = this.startSecs + 1;
-      } else {
-        tailStartTimeSecs = Math.max(this.animationSecs - this.tailLength, this.startSecs + 1);
+        return (this.startSecs + 1);
       }
+      return Math.max(this.animationSecs - this.tailLength, this.startSecs + 1);
+    },
 
+    runAnimation : function (fromTimer) {
+      var runner, timeOffset, i, t, tailStartTimeSecs;
+      tailStartTimeSecs = this.setAnimationTime(fromTimer);
+      $("#rg2-clock-slider").slider("value", this.animationSecs);
+      $("#rg2-clock").text(rg2.utils.formatSecsAsHHMMSS(this.animationSecs));
+      rg2.ctx.lineWidth = rg2.options.routeWidth;
+      t = rg2.options.routeWidth;
+      rg2.ctx.globalAlpha = 1.0;
       for (i = 0; i < this.runners.length; i += 1) {
         runner = this.runners[i];
         if (this.realTime) {
@@ -359,7 +376,7 @@
           }
         }
         rg2.ctx.strokeStyle = runner.colour;
-        rg2.ctx.globalAlpha = opt.routeIntensity;
+        rg2.ctx.globalAlpha = rg2.options.routeIntensity;
         rg2.ctx.beginPath();
         rg2.ctx.moveTo(runner.x[tailStartTimeSecs - timeOffset], runner.y[tailStartTimeSecs - timeOffset]);
 
@@ -380,18 +397,7 @@
         }
         rg2.ctx.arc(runner.x[t] + (rg2.config.RUNNER_DOT_RADIUS / 2), runner.y[t], rg2.config.RUNNER_DOT_RADIUS, 0, 2 * Math.PI, false);
         rg2.ctx.fill();
-        if (this.displayNames) {
-          rg2.ctx.fillStyle = "black";
-          rg2.ctx.font = opt.replayFontSize + 'pt Arial';
-          rg2.ctx.globalAlpha = rg2.config.FULL_INTENSITY;
-          rg2.ctx.textAlign = "left";
-          if (this.displayInitials) {
-            text = runner.initials;
-          } else {
-            text = runner.name;
-          }
-          rg2.ctx.fillText(text, runner.x[t] + 15, runner.y[t] + 7);
-        }
+        this.displayName(runner, t);
       }
       if (this.massStartByControl) {
         this.checkForStopControl(this.animationSecs);
@@ -434,31 +440,6 @@
 
     goFaster : function () {
       this.deltaSecs += 1;
-    },
-
-    // returns seconds as hh:mm:ss
-    formatSecsAsHHMMSS : function (time) {
-      var formattedtime, minutes, seconds, hours;
-      hours = Math.floor(time / 3600);
-      if (hours < 10) {
-        formattedtime = "0" + hours + ":";
-      } else {
-        formattedtime = hours + ":";
-      }
-      time = time - (hours * 3600);
-      minutes = Math.floor(time / 60);
-      if (minutes < 10) {
-        formattedtime += "0" + minutes;
-      } else {
-        formattedtime += minutes;
-      }
-      seconds = time - (minutes * 60);
-      if (seconds < 10) {
-        formattedtime += ":0" + seconds;
-      } else {
-        formattedtime += ":" + seconds;
-      }
-      return formattedtime;
     }
   };
   rg2.Animation = Animation;

@@ -147,7 +147,7 @@ $languages .= '},'.PHP_EOL;
     <link rel="stylesheet" href='<?php echo $source_url ."/css/rg2.css'>"; ?>
     <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/themes/<?php echo $ui_theme; ?>/jquery-ui.min.css">
     <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css">
-    <!-- ('RG2VERSION', '1.1.1') -->
+    <!-- ('RG2VERSION', '1.1.2') -->
   </head>
   <body>
     <!--[if lt IE 7]>
@@ -248,6 +248,11 @@ $languages .= '},'.PHP_EOL;
 <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
 <?php if ($debug) { ?>
 <script src='<?php echo $source_url . "/js/rg2.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/rg2ui.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/rg2input.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/rg2getjson.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/config.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/canvas.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/events.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/event.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/results.js"; ?>'></script>
@@ -263,9 +268,16 @@ $languages .= '},'.PHP_EOL;
 <script src='<?php echo $source_url . "/js/map.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/utils.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/plugins.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/handles.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/lib/he.js"; ?>'></script><?php } else { ?>
-<script src='<?php echo $source_url . "/js/rg2all.min.js"; ?>'></script><?php } ?>  
+<script src='<?php echo $source_url . "/js/rg2all.min.js"; ?>'></script><?php } ?>
 <?php if ($manager) { ?><?php if ($debug) { ?>
+<script src='<?php echo $source_url . "/js/resultparser.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/resultparsercsv.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/resultparseriofv2.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/resultparseriofv3.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/courseparser.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/managerui.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/manager.js"; ?>'></script><?php } else {?>
 <script src='<?php echo $source_url . "/js/rg2manager.min.js"; ?>'></script><?php } ?>
 <script src='<?php echo $source_url . "/js/lib/proj4js-compressed.js"; ?>'></script><?php } ?>

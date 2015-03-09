@@ -13,7 +13,7 @@
     $url = "../kartat/";
   }
   // version replaced by Gruntfile as part of release 
-  define ('RG2VERSION', '1.1.1');
+  define ('RG2VERSION', '1.1.2');
   define ('KARTAT_DIRECTORY', $url);
   define ('LOCK_DIRECTORY', dirname(__FILE__)."/lock/saving/");
   define ('CACHE_DIRECTORY', $url."cache/");
@@ -120,12 +120,12 @@ function uploadMapFile() {
   $keksi = generateNewKeksi();
   $write["keksi"] = $keksi;
   
-  header("Content-type: application/json"); 
+  header("Content-type: application/json");
   echo json_encode($write);
 }
   
 function handlePostRequest($type, $eventid) {
-  $data = json_decode(file_get_contents('php://input')); 
+  $data = json_decode(file_get_contents('php://input'));
   $write = array();
   if (lockDatabase() !== FALSE) {
     if ($type != 'addroute') {
@@ -142,23 +142,23 @@ function handlePostRequest($type, $eventid) {
 	      @unlink(CACHE_DIRECTORY."results_".$eventid.".json");
 	      @unlink(CACHE_DIRECTORY."tracks_".$eventid.".json");
         @unlink(CACHE_DIRECTORY."stats.json");
-        break; 
+        break;
 
       case 'addmap':
         $write = addNewMap($data);
-        break;     
+        break;
 
       case 'createevent':
         $write = addNewEvent($data);
 	      @unlink(CACHE_DIRECTORY."events.json");
         @unlink(CACHE_DIRECTORY."stats.json");
-        break;  
+        break;
  
       case 'editevent':
         $write = editEvent($eventid, $data);
         @unlink(CACHE_DIRECTORY."events.json");
         @unlink(CACHE_DIRECTORY."stats.json");
-        break; 
+        break;
 
       case 'deleteevent':
         $write = deleteEvent($eventid);
@@ -167,14 +167,14 @@ function handlePostRequest($type, $eventid) {
 	      @unlink(CACHE_DIRECTORY."courses_".$eventid.".json");
 	      @unlink(CACHE_DIRECTORY."tracks_".$eventid.".json");
         @unlink(CACHE_DIRECTORY."stats.json");
-       break; 
+       break;
 
       case 'deleteroute':
         $write = deleteRoute($eventid);
 	      @unlink(CACHE_DIRECTORY."results_".$eventid.".json");
 	      @unlink(CACHE_DIRECTORY."tracks_".$eventid.".json");
         @unlink(CACHE_DIRECTORY."stats.json");
-        break; 
+        break;
         
       case 'deletecourse':
         $write = deleteCourse($eventid);
@@ -182,7 +182,7 @@ function handlePostRequest($type, $eventid) {
 	      @unlink(CACHE_DIRECTORY."courses_".$eventid.".json");
 	      @unlink(CACHE_DIRECTORY."tracks_".$eventid.".json");
         @unlink(CACHE_DIRECTORY."stats.json");
-        break; 
+        break;
       
       case 'login':
         // handled by default before we got here
@@ -208,7 +208,7 @@ function handlePostRequest($type, $eventid) {
   $keksi = generateNewKeksi();
   $write["keksi"] = $keksi;
   
-  header("Content-type: application/json"); 
+  header("Content-type: application/json");
   $write["version"] = RG2VERSION;
   echo json_encode($write);
 }
@@ -239,7 +239,7 @@ function logIn ($data) {
     // new account being set up: rely on JS end to force a reasonable name/password
     $temp = crypt($userdetails, $keksi);
     //rg2log("Creating new account ".$temp);
-    file_put_contents(KARTAT_DIRECTORY."rg2userinfo.txt", $temp.PHP_EOL);  
+    file_put_contents(KARTAT_DIRECTORY."rg2userinfo.txt", $temp.PHP_EOL);
   }
   return $ok;
 }
@@ -259,7 +259,7 @@ function generateNewKeksi() {
   $keksi = substr(str_shuffle("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"), 0, 20);
   file_put_contents(KARTAT_DIRECTORY."keksi.txt", $keksi.PHP_EOL);
   //rg2log("Writing keksi.txt ".$keksi);
-  return $keksi; 
+  return $keksi;
 }
 
 function addNewEvent($data) {
@@ -280,7 +280,7 @@ function addNewEvent($data) {
 	}
   $name = encode_rg_output($data->name);
   $club = encode_rg_output($data->club);
-  $comments = encode_rg_output($data->comments);
+  $comments = tidyNewComments($data->comments);
   $newevent = $newid."|".$data->mapid."|".$data->format."|".$name."|".$data->eventdate."|".$club."|".$data->level."|".$comments;
   $newevent .= PHP_EOL;
   $write["newid"] = $newid;
@@ -305,7 +305,7 @@ function addNewEvent($data) {
           $controls .= "|".$data->courses[$i]->codes[$j];
     }
     $controls .= PHP_EOL;
-    file_put_contents(KARTAT_DIRECTORY."sarjojenkoodit_".$newid.".txt", $controls, FILE_APPEND);    
+    file_put_contents(KARTAT_DIRECTORY."sarjojenkoodit_".$newid.".txt", $controls, FILE_APPEND);
   }
 
   // create new ratapisteet file: control locations
@@ -318,7 +318,7 @@ function addNewEvent($data) {
       }
       $controls .= PHP_EOL;
       file_put_contents(KARTAT_DIRECTORY."ratapisteet_".$newid.".txt", $controls, FILE_APPEND);
-    }     
+    } 
   } else {
       // normal event or score event without results so save courses
       for ($i = 0; $i < count($data->courses); $i++) {
@@ -380,12 +380,12 @@ function addNewEvent($data) {
         list($x1, $y1, $x2, $y2) = getLineEnds($a->x[$j], $a->y[$j], $a->x[$j-1], $a->y[$j-1]);
         $course .= "4;".$x1.";-".$y1.";".$x2.";-".$y2."N";
         // text: just use 20 offset for now: RG1 and RGJS seem happy
-        $course .= "3;".($a->x[$j] + 20).";-".($a->y[$j] + 20).";".$j.";0N";   
+        $course .= "3;".($a->x[$j] + 20).";-".($a->y[$j] + 20).";".$j.";0N";
       }
       // start triangle
       $side = 20;
       $angle = getAngle($a->x[0], $a->y[0], $a->x[1], $a->y[1]);
-      $angle = $angle + (M_PI / 2);  
+      $angle = $angle + (M_PI / 2);
       $x0 = (int) ($a->x[0] + ($side * sin($angle)));
       $y0 = (int) ($a->y[0] - ($side * cos($angle)));
       $x1 = (int) ($a->x[0] + ($side * sin($angle + (2 * M_PI / 3))));
@@ -415,12 +415,12 @@ function addNewEvent($data) {
         list($x1, $y1, $x2, $y2) = getLineEnds($a->x[$j], $a->y[$j], $a->x[$j-1], $a->y[$j-1]);
         $course .= "4;".$x1.";-".$y1.";".$x2.";-".$y2."N";
         // text: just use 20 offset for now: RG1 and RGJS seem happy
-        $course .= "3;".($a->x[$j] + 20).";-".($a->y[$j] + 20).";".$j.";0N";   
+        $course .= "3;".($a->x[$j] + 20).";-".($a->y[$j] + 20).";".$j.";0N";
       }
       // start triangle
       $side = 20;
       $angle = getAngle($a->x[0], $a->y[0], $a->x[1], $a->y[1]);
-      $angle = $angle + (M_PI / 2);  
+      $angle = $angle + (M_PI / 2);
       $x0 = (int) ($a->x[0] + ($side * sin($angle)));
       $y0 = (int) ($a->y[0] - ($side * cos($angle)));
       $x1 = (int) ($a->x[0] + ($side * sin($angle + (2 * M_PI / 3))));
@@ -434,7 +434,7 @@ function addNewEvent($data) {
     
       $course .= PHP_EOL;
     }
-  }    
+  }
   file_put_contents(KARTAT_DIRECTORY."radat_".$newid.".txt", $course);
   
   // create new kilpailijat file: results
@@ -462,7 +462,7 @@ function addNewEvent($data) {
     $write["ok"] = TRUE;
     $write["status_msg"] = "Event created.";
   } else {
-    $write["ok"] = FALSE;    
+    $write["ok"] = FALSE;
   }
   
   return $write;
@@ -502,7 +502,7 @@ function getAngle($x1, $y1, $x2, $y2) {
   if ($angle < 0) {
     $angle = $angle + (2 * M_PI);
   }
-  return $angle;  
+  return $angle;
 }
 
 function getLineEnds($x1, $y1, $x2, $y2) {
@@ -527,21 +527,21 @@ function editEvent($eventid, $newdata) {
       $data[4] = $newdata->eventdate;
       $data[5] = encode_rg_output($newdata->club);
       $data[6] = $newdata->type;
-      $data[7] = encode_rg_output($newdata->comments);
+      $data[7] = tidyNewComments($newdata->comments);
       $row = "";
       // reconstruct |-separated row
       for ($i = 0; $i < count($data); $i++) {
         if ($i > 0) {
           $row .= "|";
         }
-        $row .= $data[$i];  
+        $row .= $data[$i];
       }
       $row .= PHP_EOL;
       //rg2log($row);
     }
     $updatedfile[] = $row;
   }
-  $status = file_put_contents(KARTAT_DIRECTORY."kisat.txt", $updatedfile);   
+  $status = file_put_contents(KARTAT_DIRECTORY."kisat.txt", $updatedfile);
   
   if (!$status) {
     $write["status_msg"] .= " Save error for kisat.txt.";
@@ -551,7 +551,7 @@ function editEvent($eventid, $newdata) {
     $write["status_msg"] = "Event detail updated";
     rg2log("Event updated|".$eventid);
   } else {
-    $write["ok"] = FALSE;    
+    $write["ok"] = FALSE;
   }
   
   return($write);
@@ -567,7 +567,7 @@ function deleteEvent($eventid) {
       $updatedfile[] = $row;
     }
   }
-  $status = file_put_contents(KARTAT_DIRECTORY."kisat.txt", $updatedfile);   
+  $status = file_put_contents(KARTAT_DIRECTORY."kisat.txt", $updatedfile);
   
   if (!$status) {
     $write["status_msg"] .= " Save error for kisat.";
@@ -585,7 +585,7 @@ function deleteEvent($eventid) {
     $write["status_msg"] = "Event deleted";
     rg2log("Event deleted|".$eventid);
   } else {
-    $write["ok"] = FALSE;    
+    $write["ok"] = FALSE;
   }
   
   return($write);
@@ -623,7 +623,7 @@ function deleteCourse($eventid) {
       $data = explode("|", $row);
       $deleted = FALSE;
       if ($data[1] == $courseid) {
-        $deleted = TRUE;                    
+        $deleted = TRUE;   
       } else {
         $updatedfile[] = $row;
       }
@@ -647,7 +647,7 @@ function deleteCourse($eventid) {
         $updatedfile[] = $row;
       }
     }
-    $status = file_put_contents($filename, $updatedfile);   
+    $status = file_put_contents($filename, $updatedfile);
   
     if (!$status) {
       $write["status_msg"] .= " Save error for merkinnat. ";
@@ -670,7 +670,7 @@ function deleteCourse($eventid) {
     
     if (!$status) {
       $write["status_msg"] .= "Save error for radat. ";
-    }    
+    }
     
     // delete course template
     $filename = KARTAT_DIRECTORY."ratapisteet_".$eventid.".txt";
@@ -689,7 +689,7 @@ function deleteCourse($eventid) {
     
     if (!$status) {
       $write["status_msg"] .= "Save error for ratapisteet. ";
-    }    
+    }
 
     // delete course names
     $filename = KARTAT_DIRECTORY."sarjat_".$eventid.".txt";
@@ -730,7 +730,7 @@ function deleteCourse($eventid) {
     } 
             
   } else {
-    $write["status_msg"] = "Invalid course id. ";  
+    $write["status_msg"] = "Invalid course id. ";
   }
   
   if ($write["status_msg"] == "") {
@@ -826,7 +826,7 @@ function deleteRoute($eventid) {
       $write["status_msg"] .= "Invalid route id. ";
     }
   } else {
-    $write["status_msg"] = "Invalid route id. ";  
+    $write["status_msg"] = "Invalid route id. ";
   }
   
   if ($write["status_msg"] == "") {
@@ -834,7 +834,7 @@ function deleteRoute($eventid) {
     $write["status_msg"] = "Route deleted";
     rg2log("Route deleted|".$eventid."|".$routeid);
   } else {
-    $write["ok"] = FALSE;    
+    $write["ok"] = FALSE;
   }
   
   return($write);
@@ -858,7 +858,7 @@ function addNewRoute($eventid, $data) {
       $id = $rows;
     } else {
       $id = $rows + GPS_RESULT_OFFSET;
-    }  
+    }
   }
 
   $write["oldid"] = $data->resultid;
@@ -872,14 +872,7 @@ function addNewRoute($eventid, $data) {
   //
   $name = encode_rg_output($name);
   // tidy up commments
-  $comments = trim($data->comments);
-  // remove HTML tags: probably not needed but do it anyway
-  $comments = strip_tags($comments);
-  //
-  // remove line breaks and keep compatibility with RG1
-  $comments = str_replace("\r", "", $comments);
-  $comments = str_replace("\n", "#cr##nl#", $comments);
-  $comments = encode_rg_output($comments);
+  $comments = tidyNewComments($data->comments);
   $newcommentdata = $data->courseid."|".$id."|".$name."||".$comments.PHP_EOL;
 
   // convert x,y to internal RG format
@@ -914,28 +907,28 @@ function addNewRoute($eventid, $data) {
           $ypersec = ($data->y[$i] - $oldy) / $difftime;
           $time = GPS_INTERVAL;
           while ($time <= $difftime) {
-            $track .= intval($oldx + ($xpersec * $time)).';-'.intval($oldy + ($ypersec * $time)).',0N';                
-            $time = $time + GPS_INTERVAL;      
+            $track .= intval($oldx + ($xpersec * $time)).';-'.intval($oldy + ($ypersec * $time)).',0N';
+            $time = $time + GPS_INTERVAL;
           }
           $oldx = intval($oldx + ($xpersec * $time));
-          $oldy = intval($oldy + ($ypersec * $time));    
-          $oldtime = $oldtime + $time - GPS_INTERVAL;    
+          $oldy = intval($oldy + ($ypersec * $time));
+          $oldtime = $oldtime + $time - GPS_INTERVAL;
         }
-      }            
+      }
     }
   
-    $newresultdata = $id."|".$data->courseid."|".encode_rg_output($data->coursename)."|".$name;  
+    $newresultdata = $id."|".$data->courseid."|".encode_rg_output($data->coursename)."|".$name;
     if ($id >= GPS_RESULT_OFFSET) {
       $newresultdata .= "|".$data->startsecs."|||".$data->totaltime."||".$track.PHP_EOL;
     } else {
-      $newresultdata .= "|".$data->startsecs."|||".$data->totaltime."|".$data->totalsecs.";|".PHP_EOL;      
+      $newresultdata .= "|".$data->startsecs."|||".$data->totaltime."|".$data->totalsecs.";|".PHP_EOL;
     }
   }
 
   $write["status_msg"] = "";
   
   if (($handle = @fopen(KARTAT_DIRECTORY."kommentit_".$eventid.".txt", "a")) !== FALSE) {
-    $status =fwrite($handle, $newcommentdata);    
+    $status =fwrite($handle, $newcommentdata);
     if (!$status) {
       $write["status_msg"] = "Save error for kommentit. ";
     }
@@ -961,7 +954,7 @@ function addNewRoute($eventid, $data) {
   // add new track at end of file
   $updatedfile[] = $newtrackdata;
   
-  $status = file_put_contents($filename, $updatedfile);  
+  $status = file_put_contents($filename, $updatedfile);
  
   if (!$status) {
     $write["status_msg"] .= " Save error for merkinnat. ";
@@ -969,7 +962,7 @@ function addNewRoute($eventid, $data) {
 
   if (($newresult === TRUE) || ($id >= GPS_RESULT_OFFSET)) {
     if (($handle = @fopen(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt", "a")) !== FALSE) {
-      $status =fwrite($handle, $newresultdata);   
+      $status =fwrite($handle, $newresultdata);
       if (!$status) {
         $write["status_msg"] .= " Save error for kilpailijat.";
       }
@@ -983,7 +976,7 @@ function addNewRoute($eventid, $data) {
     $write["status_msg"] = "Record saved";
     rg2log("Route saved|".$eventid."|".$id);
   } else {
-    $write["ok"] = FALSE;    
+    $write["ok"] = FALSE;
   }
   
   return $write;
@@ -1007,7 +1000,7 @@ function addNewMap($data) {
   }
   // may not have a GIF
   if (file_exists(KARTAT_DIRECTORY."temp.gif")) {
-    $renameGIF = rename(KARTAT_DIRECTORY."temp.gif", KARTAT_DIRECTORY.$newid.".gif");      
+    $renameGIF = rename(KARTAT_DIRECTORY."temp.gif", KARTAT_DIRECTORY.$newid.".gif");
   } else {
     $renameGIF = TRUE;
   }
@@ -1023,13 +1016,13 @@ function addNewMap($data) {
     }
     if ($data->localworldfile->valid) {
       // save local worldfile for use in aligning georeferenced courses
-      $wf =$data->localworldfile->A.",".$data->localworldfile->B.",".$data->localworldfile->C.",".$data->localworldfile->D.",".$data->localworldfile->E.",".$data->localworldfile->F.PHP_EOL; 
+      $wf =$data->localworldfile->A.",".$data->localworldfile->B.",".$data->localworldfile->C.",".$data->localworldfile->D.",".$data->localworldfile->E.",".$data->localworldfile->F.PHP_EOL;
       @file_put_contents(KARTAT_DIRECTORY."worldfile_".$newid.".txt", $wf);
     }
 
     $newmap .= PHP_EOL;
     $write["newid"] = $newid;
-    $status =fwrite($handle, $newmap);    
+    $status =fwrite($handle, $newmap);
     if (!$status) {
       $write["status_msg"] = "Save error for kartat. ";
     }
@@ -1044,7 +1037,7 @@ function addNewMap($data) {
     $write["status_msg"] = "Map added";
     rg2log("Map added|".$newid);
   } else {
-    $write["ok"] = FALSE;    
+    $write["ok"] = FALSE;
   }
   
   return $write;
@@ -1093,13 +1086,13 @@ function lockDatabase() {
 
 function unlockDatabase() {
   // ignore any errors but try to tidy up everything
-  @rmdir(LOCK_DIRECTORY);         
+  @rmdir(LOCK_DIRECTORY);
 }
 
 function handleGetRequest($type, $id) {
   validateCache($id);
   $output = array();
-  rg2log("Type ".$type."|ID ".$id);     
+  rg2log("Type ".$type."|ID ".$id);
   switch ($type) {  
   case 'events':
 	  if (file_exists(CACHE_DIRECTORY."events.json")) {
@@ -1109,7 +1102,7 @@ function handleGetRequest($type, $id) {
       $output = getAllEvents(FALSE);
 		  @file_put_contents(CACHE_DIRECTORY."events.json", $output);
 		}	
-    break;    
+    break;
   case 'stats':
     if (file_exists(CACHE_DIRECTORY."stats.json")) {
       $output = file_get_contents(CACHE_DIRECTORY."stats.json");
@@ -1118,7 +1111,7 @@ function handleGetRequest($type, $id) {
       $output = getAllEvents(TRUE);
       @file_put_contents(CACHE_DIRECTORY."stats.json", $output);
     } 
-    break;    
+    break;
   case 'courses':
 	  if (file_exists(CACHE_DIRECTORY."courses_".$id.".json")) {
 	    $output = file_get_contents(CACHE_DIRECTORY."courses_".$id.".json");
@@ -1126,7 +1119,7 @@ function handleGetRequest($type, $id) {
       $output = getCoursesForEvent($id);
 		  @file_put_contents(CACHE_DIRECTORY."courses_".$id.".json", $output);
 		}		
-    break;  
+    break;
   case 'results':
 	  if (file_exists(CACHE_DIRECTORY."results_".$id.".json")) {
 	    $output = file_get_contents(CACHE_DIRECTORY."results_".$id.".json");
@@ -1161,7 +1154,7 @@ function handleGetRequest($type, $id) {
   	echo $output;
   } else {
     // output JSON data
-    header("Content-type: application/json"); 
+    header("Content-type: application/json");
     echo "{\"data\":" .$output. "}";
 	}
 }
@@ -1178,7 +1171,7 @@ function validateCache($id) {
   
   $apitimestamp = filemtime(__FILE__);
   //rg2log("API file mod date ".$apitimestamp);
-  $cachedirtimestamp = filemtime(CACHE_DIRECTORY.'.');  
+  $cachedirtimestamp = filemtime(CACHE_DIRECTORY.'.');
   //rg2log("Cache dir mod date ".$cachedirtimestamp);
   if ($apitimestamp >= $cachedirtimestamp) {
     rg2log("Flush cache: API script file has been updated");
@@ -1204,7 +1197,7 @@ function validateCache($id) {
         @unlink(CACHE_DIRECTORY."courses_".$id.".json");
         @unlink(CACHE_DIRECTORY."tracks_".$id.".json");
         @unlink(CACHE_DIRECTORY."events.json");
-        return;      
+        return;
     }
   }
     
@@ -1278,7 +1271,7 @@ function getResultsCSV($eventid) {
        // ignore start and finish: just need control codes
        for ($j = 2; $j < (count($data) - 1); $j++) {
           $codes[$j - 2] = $data[$j];
-       }  
+       }
        $controls[$coursecount] = $codes;
        $coursecount++;
       }
@@ -1311,7 +1304,7 @@ function getResultsCSV($eventid) {
         $result_data .= "---;;;;;;;";
       } else {
         $result_data .= $t.";;;;;;;";
-			}  
+			}
 			// 18: course name
 			$result_data .= encode_rg_input($data[2]).";;;;;;;;;;;;;;;;;;;;";
       // find codes for this course
@@ -1374,7 +1367,7 @@ function getResultsCSV($eventid) {
       	  $result_data .= convertSecondsToMMSS($splits[$i]).";";
 				}
 			}
-      $result_data .= "\\n'";  
+      $result_data .= "\\n'";
     }
  	}
 	$result_data .= ";";
@@ -1440,10 +1433,14 @@ function getAllEvents($includeStats) {
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
       $detail = array();
       $fields = count($data);
+      if ($fields < 7) {
+        // not enough fields to be a valid line
+        continue;
+      }
       $detail["id"] = intval($data[0]);
       $detail["mapid"] = intval($data[1]);
       if (file_exists(KARTAT_DIRECTORY.$detail["mapid"].'.gif')) {
-        $detail["suffix"] = 'gif';          
+        $detail["suffix"] = 'gif';
       }
       for ($i = 0; $i < $referenced; $i++) {
         if ($detail["mapid"] == $maps[$i]["mapid"]) {
@@ -1474,9 +1471,7 @@ function getAllEvents($includeStats) {
         $detail["type"] = "X";
       }
       if ($fields > 7) {
-        // allow for RG1 comment formatting
-        $temp = str_replace("<br>", "\n", $data[7]);
-        $detail["comment"] = encode_rg_input($temp);
+        $detail["comment"] = formatCommentsForOutput($data[7]);
       } else {
         $detail["comment"] = "";
       }
@@ -1603,7 +1598,7 @@ function isScoreEvent($eventid) {
 
 function getResultsForEvent($eventid) {
   $output = array();
-	$comments = 0;  
+	$comments = 0;
   $text = array();
   // @ suppresses error report if file does not exist
   if (($handle = @fopen(KARTAT_DIRECTORY."kommentit_".$eventid.".txt", "r")) !== FALSE) {
@@ -1612,13 +1607,7 @@ function getResultsForEvent($eventid) {
         // remove null comments
         if (strncmp($data[4], "Type your comment", 17) != 0) {
            $text[$comments]["resultid"] = $data[1];
-           // replace carriage return and line break codes
-           $temp = encode_rg_input($data[4]);  
-           // RG1 uses #cr##nl# and #nl# to allow saving to text file
-           $temp = str_replace("#cr##nl#", "\n", $temp);
-           $temp = str_replace("#nl#", "\n", $temp);
-           $temp = str_replace("<br>", "\n", $temp);
-           $text[$comments]["comments"] = $temp;
+           $text[$comments]["comments"] = formatCommentsForOutput($data[4]);
            $comments++;
         }
       }
@@ -1647,14 +1636,14 @@ function getResultsForEvent($eventid) {
             $y[$j] = -1 * $xy[1];
 						// needs to be a string for javascript
 						$tempcodes[$j] = strval($j);
-          }            
+          }
          }
         $variant[$row] = $data[0];
         $xpos[$row] = $x;
         $ypos[$row] = $y;
 				$codes[$row] = $tempcodes;
         $sentalready[$row] = false;
-        $row++;    
+        $row++;
       }
       fclose($handle);
     }
@@ -1671,7 +1660,7 @@ function getResultsForEvent($eventid) {
         // add finish at end of array
         array_push($allcodes, "F");
         $codes[$row] = $allcodes;
-        $row++;    
+        $row++;
       }
       fclose($handle);
     }
@@ -1721,20 +1710,20 @@ function getResultsForEvent($eventid) {
               $sentalready[$i] = true;
             }
           }
-        }          
+        }
       }
       $detail["time"] = tidyTime($data[7]);;
-      // trim trailing ; which create null fields when expanded
+      // trim trailing ;which create null fields when expanded
       $temp = rtrim($data[8], ";");
-      // split array at ; and force to integers
+      // split array at ;and force to integers
       $detail["splits"] = array_map('intval', explode(";", $temp));
       
       if (sizeof($data) > 9) {
         // list allocates return values in an array to the specified variables 
         list($detail["gpsx"], $detail["gpsy"]) = expandCoords($data[9]);
       } else {
-        $detail["gpsx"] = ""; 
-        $detail["gpsy"] = ""; 
+        $detail["gpsx"] = "";
+        $detail["gpsy"] = "";
       }
       
       $detail["comments"] = "";
@@ -1742,7 +1731,7 @@ function getResultsForEvent($eventid) {
         if ($detail["resultid"] == $text[$i]["resultid"]) {
           $detail["comments"] = $text[$i]["comments"];
         }
-      }  
+      }
       $output[$row] = $detail;
       $row++;
     }
@@ -1769,16 +1758,16 @@ function getCoursesForEvent($eventid) {
       $codes = array();
       for ($j = 1; $j < count($data); $j++) {
         $codes[$j - 1] = $data[$j];
-      }  
+      }
       $controls[$row] = $codes;
-      $row++;    
+      $row++;
     }
     fclose($handle);
   }
 
   // extract control locations based on map co-ords
   if (($handle = @fopen(KARTAT_DIRECTORY."ratapisteet_".$eventid.".txt", "r")) !== FALSE) {
-    $row = 0;  
+    $row = 0;
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
       // ignore first field: it is an index  
       $x = array();
@@ -1794,17 +1783,17 @@ function getCoursesForEvent($eventid) {
           $x[$j] = 1 * $xy[0];
           // make it easier to draw map
          $y[$j] = -1 * $xy[1];
-        }            
+        }
       }
       $xpos[$row] = $x;
       $ypos[$row] = $y;
       $dummycontrols[$row] = $dummycodes;
-      $row++;    
+      $row++;
     }
     fclose($handle);
   }
 
-  $row = 0; 
+  $row = 0;
   // set up details for each course
   if (($handle = @fopen(KARTAT_DIRECTORY."sarjat_".$eventid.".txt", "r")) !== FALSE) {
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
@@ -1835,7 +1824,7 @@ function expandCoords($coords) {
   // handle empty coord string: found some examples in Jukola files
   // 5 is enough for one coordinate set, but the problem files just had "0"
   if (strlen($coords) < 5) {
-    return array(array_map('intval', $x), array_map('intval', $y));    
+    return array(array_map('intval', $x), array_map('intval', $y));
   }
   $xy = explode("N", $coords);
   foreach ($xy as $point) {
@@ -1853,7 +1842,7 @@ function expandCoords($coords) {
     }
   }
   // return the two arrays converted to integer values
-  return array(array_map('intval', $x), array_map('intval', $y)); 
+  return array(array_map('intval', $x), array_map('intval', $y));
 }
 
 function getDummyCode($code) {
@@ -1920,9 +1909,31 @@ function tidyTime($in) {
   return $t;
 }
 
+function tidyNewComments($inputComments) {
+  $comments = trim($inputComments);
+  // remove HTML tags: probably not needed but do it anyway
+  $comments = strip_tags($comments);
+  // remove line breaks and keep compatibility with RG1
+  $comments = str_replace("\r", "", $comments);
+  $comments = str_replace("\n", "#cr##nl#", $comments);
+  $comments = encode_rg_output($comments);
+  return $comments;
+}
+
+function formatCommentsForOutput($inputComments) {
+  // replace carriage return and line break codes
+  $comments = encode_rg_input($inputComments);
+  // RG1 uses #cr##nl# and #nl# to allow saving to text file
+  $comments = str_replace("#cr##nl#", "\n", $comments);
+  $comments = str_replace("#nl#", "\n", $comments);
+  $comments = str_replace("<br>", "\n", $comments);
+  $comments = encode_rg_input($comments);
+  return $comments;
+}
+
 function rg2log($msg) {
   if (defined('RG_LOG_FILE')){
-    $user_agent = $_SERVER['HTTP_USER_AGENT']; 
+    $user_agent = $_SERVER['HTTP_USER_AGENT'];
     if( ! ini_get('date.timezone') ) {
      date_default_timezone_set('GMT');
     }
@@ -1936,7 +1947,7 @@ function generateCookie() {
   // overwrite old cookie file  
   //TODO add error check
   file_put_contents($manager_url."keksi.txt", $keksi);
-  return $keksi;  
+  return $keksi;
 }
 
 function generateLocalWorldFile($data) {
@@ -1962,7 +1973,7 @@ function generateWorldFile($data) {
     $y[$i] = intval($data[4 + ($i * 4)]);
     $lat[$i] = floatval($data[5 + ($i * 4)]);
     //rg2log($data[0].", ".$lat[$i].", ".$lon[$i].", ".$x[$i].", ".$y[$i]);
-  }  
+  }
   $hypot = getLatLonDistance($lat[0], $lon[0], $lat[2], $lon[2]);
   $adj = getLatLonDistance($lat[0], $lon[0], $lat[0], $lon[2]);
   //rg2log($hypot.", ".$adj);
@@ -2001,11 +2012,11 @@ function generateWorldFile($data) {
 */
 function getLatLonDistance($lat1, $lon1, $lat2, $lon2) {
   // Haversine formula (http://www.codecodex.com/wiki/Calculate_distance_between_two_points_on_a_globe)
-  //echo $lat1, " ", $lon1, " ",$lat2, " ",$lon2, "<br />";     
-  $dLat = deg2rad($lat2 - $lat1);  
-  $dLon = deg2rad($lon2 - $lon1);     
-  $a = sin($dLat/2) * sin($dLat/2) + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLon/2) * sin($dLon/2);  
-  $c = 2 * asin(sqrt($a));  
+  //echo $lat1, " ", $lon1, " ",$lat2, " ",$lon2, "<br />";
+  $dLat = deg2rad($lat2 - $lat1);
+  $dLon = deg2rad($lon2 - $lon1);
+  $a = sin($dLat/2) * sin($dLat/2) + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLon/2) * sin($dLon/2);
+  $c = 2 * asin(sqrt($a));
   // multiply by IUUG earth mean radius (http://en.wikipedia.org/wiki/Earth_radius) in metres
   return 6371009 * $c;
 }

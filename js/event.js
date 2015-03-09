@@ -43,18 +43,7 @@
       } else {
         this.mapfilename = this.mapid + '.' + data.suffix;
       }
-      this.worldFile = [];
-      if (data.A === undefined) {
-        this.georeferenced = false;
-      } else {
-        this.georeferenced = true;
-        this.worldFile.A = data.A;
-        this.worldFile.B = data.B;
-        this.worldFile.C = data.C;
-        this.worldFile.D = data.D;
-        this.worldFile.E = data.E;
-        this.worldFile.F = data.F;
-      }
+      this.worldfile = new rg2.Worldfile(data);
     }
   };
   rg2.Event = Event;

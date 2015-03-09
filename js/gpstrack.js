@@ -6,10 +6,9 @@
     this.time = [];
     this.baseX = [];
     this.baseY = [];
-    this.handles = [];
+    this.handles = new rg2.Handles();
     this.savedBaseX = [];
     this.savedBaseY = [];
-    this.savedHandles = [];
     this.fileLoaded = false;
     this.fileName = '';
     this.routeData = new rg2.RouteData();
@@ -26,10 +25,9 @@
       this.time.length = 0;
       this.baseX.length = 0;
       this.baseY.length = 0;
-      this.handles.length = 0;
+      this.handles.deleteAllHandles();
       this.savedBaseX.length = 0;
       this.savedBaseY.length = 0;
-      this.savedHandles.length = 0;
       this.fileLoaded = false;
     },
 
@@ -111,34 +109,15 @@
     },
 
     processGPSTrack : function () {
-      var minX, maxX, minY, maxY, i, w, AEDB, xCorrection, yCorrection, mapSize;
       if (rg2.events.mapIsGeoreferenced()) {
-        // translate lat/lon to x,y based on world file info: see http://en.wikipedia.org/wiki/World_file
-        w = rg2.events.getWorldFile();
-        // simplify calculation a little
-        AEDB = (w.A * w.E) - (w.D * w.B);
-        xCorrection = (w.B * w.F) - (w.E * w.C);
-        yCorrection = (w.D * w.C) - (w.A * w.F);
-        for (i = 0; i < this.lat.length; i += 1) {
-          this.routeData.x[i] = Math.round(((w.E * this.lon[i]) - (w.B * this.lat[i]) + xCorrection) / AEDB);
-          this.routeData.y[i] = Math.round(((-1 * w.D * this.lon[i]) + (w.A * this.lat[i]) + yCorrection) / AEDB);
-        }
-        // find bounding box for track
-        minX = Math.min.apply(Math, this.routeData.x);
-        maxX = Math.max.apply(Math, this.routeData.x);
-        minY = Math.min.apply(Math, this.routeData.y);
-        maxY = Math.max.apply(Math, this.routeData.y);
-
-        // check we are somewhere on the map
-        mapSize = rg2.getMapSize();
-        if ((maxX < 0) || (minX > mapSize.width) || (minY > mapSize.height) || (maxY < 0)) {
+        this.applyWorldFile();
+        if (this.trackMatchesMapCoordinates()) {
+          // everything OK so lock background to avoid accidental adjustment
+          $('#btn-move-all').prop('checked', true);
+        } else {
           // warn and fit to track
           rg2.utils.showWarningDialog('GPS file problem', 'Your GPS file does not match the map co-ordinates. Please check you have selected the correct file.');
           this.fitTrackInsideCourse();
-
-        } else {
-          // everything OK so lock background to avoid accidental adjustment
-          $('#btn-move-all').prop('checked', true);
         }
       } else {
         this.fitTrackInsideCourse();
@@ -152,82 +131,98 @@
       rg2.redraw(false);
     },
 
+    trackMatchesMapCoordinates : function () {
+      var minX, maxX, minY, maxY, mapSize;
+      // find bounding box for track
+      minX = Math.min.apply(Math, this.routeData.x);
+      maxX = Math.max.apply(Math, this.routeData.x);
+      minY = Math.min.apply(Math, this.routeData.y);
+      maxY = Math.max.apply(Math, this.routeData.y);
+      mapSize = rg2.getMapSize();
+      // check we are somewhere on the map
+      return ((maxX > 0) && (minX < mapSize.width) && (minY < mapSize.height) && (maxY > 0));
+    },
+
+    applyWorldFile : function () {
+      var i, worldFile;
+      // translate lat/lon to x,y based on world file info: see http://en.wikipedia.org/wiki/World_file
+      worldFile = rg2.events.getWorldFile();
+      for (i = 0; i < this.lat.length; i += 1) {
+        this.routeData.x[i] = Math.round(((worldFile.E * this.lon[i]) - (worldFile.B * this.lat[i]) + worldFile.xCorrection) / worldFile.AEDB);
+        this.routeData.y[i] = Math.round(((-1 * worldFile.D * this.lon[i]) + (worldFile.A * this.lat[i]) + worldFile.yCorrection) / worldFile.AEDB);
+      }
+    },
+
     addStartAndFinishHandles : function () {
-      // add handles at start and finish of route
-      var h1, h2;
-      h1 = {};
-      h1.x = this.baseX[0];
-      h1.y = this.baseY[0];
-      h1.basex = h1.x;
-      h1.basey = h1.y;
-      h1.locked = false;
-      h1.time = 0;
-      this.handles.push(h1);
-      h2 = {};
-      h2.x = this.baseX[this.baseX.length - 1];
-      h2.y = this.baseY[this.baseY.length - 1];
-      h2.basex = h2.x;
-      h2.basey = h2.y;
-      h2.locked = false;
-      h2.time = this.baseY.length - 1;
-      this.handles.push(h2);
+      // add handles at start and finish of route: will always be index 0 and 1
+      this.handles.addHandle(this.baseX[0], this.baseY[0], 0);
+      this.handles.addHandle(this.baseX[this.baseX.length - 1], this.baseY[this.baseY.length - 1], this.baseY.length - 1);
     },
 
     fitTrackInsideCourse : function () {
       // fit track to within limits of course
       // find bounding box for track
-      var maxLat, maxLon, minLat, minLon, minControlX, maxControlX, minControlY, maxControlY, size, i, controlx, controly, scaleX, scaleY, lonCorrection, latCorrection, deltaX, deltaY;
-      maxLat = Math.max.apply(Math, this.lat);
-      maxLon = Math.max.apply(Math, this.lon);
-      minLat = Math.min.apply(Math, this.lat);
-      minLon = Math.min.apply(Math, this.lon);
-      controlx = rg2.drawing.getControlX();
-      controly = rg2.drawing.getControlY();
-
-      minControlX = Math.min.apply(Math, controlx);
-      maxControlX = Math.max.apply(Math, controlx);
-      minControlY = Math.min.apply(Math, controly);
-      maxControlY = Math.max.apply(Math, controly);
-
-      // issue #60: allow for no controls or just a few in a small area
-      // 100 is an arbitrary but sensible cut-off
-      if (((maxControlY - minControlY) < 100) || ((maxControlX - minControlX) < 100)) {
-        minControlX = 0;
-        minControlY = 0;
-        size = rg2.getMapSize();
-        maxControlX = size.width;
-        maxControlY = size.height;
-      }
-
-      //console.log (minControlX, maxControlX, minControlY, maxControlY);
+      var i, latLon, controlXY, scaleX, scaleY, deltaX, deltaY;
+      latLon = this.getLatLonInfo();
+      controlXY = this.getControlInfo();
 
       // scale GPS track to within bounding box of controls: a reasonable start
-      scaleX = (maxControlX - minControlX) / (maxLon - minLon);
-      scaleY = (maxControlY - minControlY) / (maxLat - minLat);
-      lonCorrection = rg2.utils.getLatLonDistance(minLat, maxLon, minLat, minLon) / (maxLon - minLon);
-      latCorrection = rg2.utils.getLatLonDistance(minLat, minLon, maxLat, minLon) / (maxLat - minLat);
-
+      scaleX = (controlXY.maxX - controlXY.minX) / (latLon.maxLon - latLon.minLon);
+      scaleY = (controlXY.maxY - controlXY.minY) / (latLon.maxLat - latLon.minLat);
       // don't want to skew track so scale needs to be equal in each direction
       // so we need to account for differences between a degree of latitude and longitude
       if (scaleX > scaleY) {
         // pix/lat = pix/lon * m/lat * lon/m
-        scaleY = scaleX * latCorrection / lonCorrection;
+        scaleY = scaleX * latLon.latCorrection / latLon.lonCorrection;
       } else {
         // pix/lon = pix/lat * m/lon * lat/m
-        scaleX = scaleY * lonCorrection / latCorrection;
+        scaleX = scaleY * latLon.lonCorrection / latLon.latCorrection;
       }
       // extra offset to put start of track at start location
-      this.routeData.x[0] = ((this.lon[0] - minLon) * scaleX) + minControlX;
-      this.routeData.y[0] = (-1 * (this.lat[0] - maxLat) * scaleY) + minControlY;
+      this.routeData.x[0] = ((this.lon[0] - latLon.minLon) * scaleX) + controlXY.minX;
+      this.routeData.y[0] = (-1 * (this.lat[0] - latLon.maxLat) * scaleY) + controlXY.minY;
 
       // translate lat/lon to x,y
-      deltaX = minControlX - (this.routeData.x[0] - controlx[0]);
-      deltaY = minControlY - (this.routeData.y[0] - controly[0]);
+      deltaX = controlXY.minX - (this.routeData.x[0] - controlXY.x[0]);
+      deltaY = controlXY.minY - (this.routeData.y[0] - controlXY.y[0]);
 
       for (i = 0; i < this.lat.length; i += 1) {
-        this.routeData.x[i] = ((this.lon[i] - minLon) * scaleX) + deltaX;
-        this.routeData.y[i] = (-1 * (this.lat[i] - maxLat) * scaleY) + deltaY;
+        this.routeData.x[i] = ((this.lon[i] - latLon.minLon) * scaleX) + deltaX;
+        this.routeData.y[i] = (-1 * (this.lat[i] - latLon.maxLat) * scaleY) + deltaY;
       }
+    },
+
+    getLatLonInfo : function () {
+      var latLon;
+      latLon = {};
+      latLon.maxLat = Math.max.apply(Math, this.lat);
+      latLon.maxLon = Math.max.apply(Math, this.lon);
+      latLon.minLat = Math.min.apply(Math, this.lat);
+      latLon.minLon = Math.min.apply(Math, this.lon);
+      latLon.lonCorrection = rg2.utils.getLatLonDistance(latLon.minLat, latLon.maxLon, latLon.minLat, latLon.minLon) / (latLon.maxLon - latLon.minLon);
+      latLon.latCorrection = rg2.utils.getLatLonDistance(latLon.minLat, latLon.minLon, latLon.maxLat, latLon.minLon) / (latLon.maxLat - latLon.minLat);
+      return latLon;
+    },
+
+    getControlInfo : function () {
+      var controlXY, size;
+      controlXY = rg2.drawing.getControlXY();
+      controlXY.minX = Math.min.apply(Math, controlXY.x);
+      controlXY.maxX = Math.max.apply(Math, controlXY.x);
+      controlXY.minY = Math.min.apply(Math, controlXY.y);
+      controlXY.maxY = Math.max.apply(Math, controlXY.y);
+
+      // issue #60: allow for no controls or just a few in a small area
+      // 100 is an arbitrary but sensible cut-off
+      if (((controlXY.maxY - controlXY.minY) < 100) || ((controlXY.maxX - controlXY.minX) < 100)) {
+        controlXY.minX = 0;
+        controlXY.minY = 0;
+        size = rg2.getMapSize();
+        controlXY.maxX = size.width;
+        controlXY.maxY = size.height;
+      }
+      //console.log (minControlX, maxControlX, minControlY, maxControlY);
+      return controlXY;
     }
   };
   rg2.GPSTrack = GPSTrack;
