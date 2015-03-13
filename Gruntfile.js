@@ -723,7 +723,12 @@ module.exports = function(grunt) {
           failOnError: false
         }
       }
+    },
+
+   clean: {
+      minified: ['js/rg2all.js', 'js/rg2all.min.js', 'js/rg2manager.min.js']
     }
+
   });
 
   // Load all the grunt tasks
@@ -734,7 +739,7 @@ module.exports = function(grunt) {
   // increment minor version number: do anything else by editting package.json by hand
   grunt.registerTask('bump', ['bumpup']);
 
-  grunt.registerTask('build', ['csslint', 'jslint:all', 'jshint:all', 'concat:js', 'uglify', 'build-manager' ]);
+  grunt.registerTask('build', ['clean:minified', 'csslint', 'jslint:all', 'jshint:all', 'concat:js', 'uglify', 'build-manager' ]);
   
   grunt.registerTask('build-manager', ['jslint:manager', 'jshint:manager', 'uglify:manager' ]);
 

@@ -114,7 +114,21 @@
           }
           // horrid hacks to handle semi-compliant files
           if ('SI card' === titles[i]) {
-            if (('Chipno' === fields[j]) || ('SIcard' === fields[j])) {
+            if (('Chipno' === fields[j]) || ('SIcard' === fields[j]) || ('Database Id' === fields[j])) {
+              values[i] = j;
+              found = true;
+              break;
+            }
+          }
+          if ('nc' === titles[i]) {
+            if ('Classifier' === fields[j]) {
+              values[i] = j;
+              found = true;
+              break;
+            }
+          }
+          if ('City' === titles[i]) {
+            if ('Club' === fields[j]) {
               values[i] = j;
               found = true;
               break;

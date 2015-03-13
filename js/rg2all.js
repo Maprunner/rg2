@@ -1,4 +1,4 @@
-// Version 1.1.2 2015-03-09T15:30:10;
+// Version 1.1.3 2015-03-13T19:27:27;
 /*
  * Routegadget 2
  * https://github.com/Maprunner/rg2
@@ -898,7 +898,7 @@ var rg2 = (function (window, $) {
     EVENT_WITHOUT_RESULTS : 2,
     SCORE_EVENT : 3,
     // version gets set automatically by grunt file during build process
-    RG2VERSION: '1.1.2',
+    RG2VERSION: '1.1.3',
     TIME_NOT_FOUND : 9999,
     // values for evt.which
     RIGHT_CLICK : 3,
@@ -3904,7 +3904,21 @@ var rg2 = (function (window, $) {
           }
           // horrid hacks to handle semi-compliant files
           if ('SI card' === titles[i]) {
-            if (('Chipno' === fields[j]) || ('SIcard' === fields[j])) {
+            if (('Chipno' === fields[j]) || ('SIcard' === fields[j]) || ('Database Id' === fields[j])) {
+              values[i] = j;
+              found = true;
+              break;
+            }
+          }
+          if ('nc' === titles[i]) {
+            if ('Classifier' === fields[j]) {
+              values[i] = j;
+              found = true;
+              break;
+            }
+          }
+          if ('City' === titles[i]) {
+            if ('Club' === fields[j]) {
               values[i] = j;
               found = true;
               break;

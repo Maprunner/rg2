@@ -13,7 +13,7 @@
     $url = "../kartat/";
   }
   // version replaced by Gruntfile as part of release 
-  define ('RG2VERSION', '1.1.2');
+  define ('RG2VERSION', '1.1.3');
   define ('KARTAT_DIRECTORY', $url);
   define ('LOCK_DIRECTORY', dirname(__FILE__)."/lock/saving/");
   define ('CACHE_DIRECTORY', $url."cache/");
@@ -1559,19 +1559,6 @@ function getMaps() {
         if (($E != 0) && ($F != 0)) {
           $detail["georeferenced"] = TRUE;
         }
-      } else {
-        $detail["A"] = 0;
-        $detail["B"] = 0;
-        $detail["C"] = 0;
-        $detail["D"] = 0;
-        $detail["E"] = 0;
-        $detail["F"] = 0;
-        $detail["localA"] = 0;
-        $detail["localB"] = 0;
-        $detail["localC"] = 0;
-        $detail["localD"] = 0;
-        $detail["localE"] = 0;
-        $detail["localF"] = 0;
       }
       $output[$row] = $detail;
       $row++;
