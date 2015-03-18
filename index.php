@@ -128,6 +128,7 @@ foreach(glob($langdir.'??.txt') as $file) {
 
 $languages .= '},'.PHP_EOL;
 
+header('Content-type: text/html; charset=utf-8');
 ?>
 <!DOCTYPE html>
 <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
@@ -137,7 +138,6 @@ $languages .= '},'.PHP_EOL;
 <html class="no-js">
   <!--<![endif]-->
   <head>
-    <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <title>Routegadget 2</title>
     <meta name="description" content="View and save route choices for orienteering events">
