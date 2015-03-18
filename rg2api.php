@@ -575,7 +575,7 @@ function deleteEvent($eventid) {
   
   // rename all associated files but don't worry about errors
   // safer than deleting them since you can always add the event again
-  $files = array("kilpailijat_", "kommentit_", "merkinnat_", "radat_", "ratapisteet_", "sarjat_", "sarjojenkoodit_");
+  $files = array("kilpailijat_", "kommentit_", "hajontakanta_", "merkinnat_", "radat_", "ratapisteet_", "sarjat_", "sarjojenkoodit_");
   foreach ($files as $file) {
     @rename(KARTAT_DIRECTORY.$file.$eventid.".txt", KARTAT_DIRECTORY."deleted_".$file.$eventid.".txt");
   }
