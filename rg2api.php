@@ -6,7 +6,11 @@
     require_once ( dirname(__FILE__) . '/rg2-override-config.php');
     define ('DEBUG', true);
 	}
-	
+  // enable logging by default
+  if (!defined('RG_LOG_FILE')) {
+    define("RG_LOG_FILE", dirname(__FILE__)."/log/rg2log.txt");
+  }
+
   if (defined('OVERRIDE_KARTAT_DIRECTORY')) {
     $url = OVERRIDE_KARTAT_DIRECTORY;
   } else {
@@ -135,8 +139,8 @@ function handlePostRequest($type, $eventid) {
       $loggedIn = TRUE;
     }
     if ($loggedIn) {
-      rg2log($type);
-      switch ($type) {  
+      //rg2log($type);
+      switch ($type) {
       case 'addroute':
         $write = addNewRoute($eventid, $data);
 	      @unlink(CACHE_DIRECTORY."results_".$eventid.".json");
@@ -191,6 +195,7 @@ function handlePostRequest($type, $eventid) {
         break;
       
       default:
+        rg2log("Post request not recognised: ".$type);
         $write["status_msg"] = "Request not recognised: ".$type;
         $write["ok"] = FALSE;
         break;
@@ -228,17 +233,17 @@ function logIn ($data) {
     $saved_user = trim(file_get_contents(KARTAT_DIRECTORY."rg2userinfo.txt"));
     $temp = crypt($userdetails, $saved_user);
     if ($temp != $saved_user) {
-      rg2log("User details incorrect. ".$temp." : ".$saved_user);
+      //rg2log("User details incorrect. ".$temp." : ".$saved_user);
       $ok = FALSE;
     }
     if ($keksi != $cookie) {
-      rg2log("Cookies don't match. ".$keksi." : ".$cookie);
+      //rg2log("Cookies don't match. ".$keksi." : ".$cookie);
       $ok = FALSE;
     }
   } else {
     // new account being set up: rely on JS end to force a reasonable name/password
     $temp = crypt($userdetails, $keksi);
-    //rg2log("Creating new account ".$temp);
+    rg2log("Creating new account ".$temp);
     file_put_contents(KARTAT_DIRECTORY."rg2userinfo.txt", $temp.PHP_EOL);
   }
   return $ok;
@@ -263,7 +268,6 @@ function generateNewKeksi() {
 }
 
 function addNewEvent($data) {
-  rg2log("Add new event");
   $format = $data->format;
   $write["status_msg"] = "";
   if (($handle = @fopen(KARTAT_DIRECTORY."kisat.txt", "r+")) !== FALSE) {
@@ -464,7 +468,7 @@ function addNewEvent($data) {
   } else {
     $write["ok"] = FALSE;
   }
-  
+  rg2log("Added new event ");
   return $write;
 
 }
@@ -522,7 +526,6 @@ function editEvent($eventid, $newdata) {
   foreach ($oldfile as $row) {
     $data = explode("|", $row);
     if ($data[0] == $eventid) {
-      //rg2log($eventid);
       $data[3] = encode_rg_output($newdata->name);
       $data[4] = $newdata->eventdate;
       $data[5] = encode_rg_output($newdata->club);
@@ -537,7 +540,6 @@ function editEvent($eventid, $newdata) {
         $row .= $data[$i];
       }
       $row .= PHP_EOL;
-      //rg2log($row);
     }
     $updatedfile[] = $row;
   }
@@ -974,7 +976,7 @@ function addNewRoute($eventid, $data) {
   if ($write["status_msg"] == "") {
     $write["ok"] = TRUE;
     $write["status_msg"] = "Record saved";
-    rg2log("Route saved|".$eventid."|".$id);
+    //rg2log("Route saved|".$eventid."|".$id);
   } else {
     $write["ok"] = FALSE;
   }
@@ -984,7 +986,6 @@ function addNewRoute($eventid, $data) {
 }
 
 function addNewMap($data) {
-  //rg2log("Add new map);
   $write["status_msg"] = "";
   if (($handle = @fopen(KARTAT_DIRECTORY."kartat.txt", "r+")) !== FALSE) {
     // read to end of file to find last entry
@@ -1060,7 +1061,7 @@ function lockDatabase() {
     }
     if (is_dir(LOCK_DIRECTORY)) {
       // locked already by someone else
-      rg2log("Directory exists ".date("D M j G:i:s T Y", filemtime(LOCK_DIRECTORY)));
+      //rg2log("Directory exists ".date("D M j G:i:s T Y", filemtime(LOCK_DIRECTORY)));
     } else {
       // try to lock it ourselves
      //rg2log("Trying to lock");
@@ -1092,7 +1093,7 @@ function unlockDatabase() {
 function handleGetRequest($type, $id) {
   validateCache($id);
   $output = array();
-  rg2log("Type ".$type."|ID ".$id);
+  //rg2log("Type ".$type."|ID ".$id);
   switch ($type) {  
   case 'events':
 	  if (file_exists(CACHE_DIRECTORY."events.json")) {
@@ -1146,6 +1147,7 @@ function handleGetRequest($type, $id) {
     $output = getSplitsbrowser($id);
     break;
   default:
+    rg2log("Get request not recognised: ".$type.", ".$id);
     $output = json_encode("Request not recognised.");
     break;
   }
@@ -1173,7 +1175,7 @@ function validateCache($id) {
   $cachedirtimestamp = filemtime(CACHE_DIRECTORY.'.');
   //rg2log("Cache dir mod date ".$cachedirtimestamp);
   if ($apitimestamp >= $cachedirtimestamp) {
-    rg2log("Flush cache: API script file has been updated");
+    //rg2log("Flush cache: API script file has been updated");
     @array_map('unlink', glob(CACHE_DIRECTORY."*.json"));
     return;
   }
@@ -1191,11 +1193,12 @@ function validateCache($id) {
   // base decision on kilpailijat only which seems reasonable enough
   if ((is_file(CACHE_DIRECTORY.'results_'.$id.'.json')) && is_file(KARTAT_DIRECTORY.'kilpailijat_'.$id.'.txt')) {
     if (filemtime(KARTAT_DIRECTORY.'kilpailijat_'.$id.'.txt') >= filemtime(CACHE_DIRECTORY.'results_'.$id.'.json')) {
-        rg2log("Flush cache for event id ".$id);
+        //rg2log("Flush cache for event id ".$id);
         @unlink(CACHE_DIRECTORY."results_".$id.".json");
         @unlink(CACHE_DIRECTORY."courses_".$id.".json");
         @unlink(CACHE_DIRECTORY."tracks_".$id.".json");
         @unlink(CACHE_DIRECTORY."events.json");
+        @unlink(CACHE_DIRECTORY."stats.json");
         return;
     }
   }
@@ -1583,6 +1586,7 @@ function isScoreEvent($eventid) {
 }
 
 function getResultsForEvent($eventid) {
+  rg2log("Get results for event ".$eventid);
   $output = array();
 	$comments = 0;
   $text = array();
@@ -1919,11 +1923,14 @@ function formatCommentsForOutput($inputComments) {
 
 function rg2log($msg) {
   if (defined('RG_LOG_FILE')){
-    $user_agent = $_SERVER['HTTP_USER_AGENT'];
     if( ! ini_get('date.timezone') ) {
      date_default_timezone_set('GMT');
     }
-    error_log(date("c", time())."|".$user_agent."|".$msg.PHP_EOL, 3, RG_LOG_FILE);
+    error_log(date("c", time())."|".$msg.PHP_EOL, 3, RG_LOG_FILE);
+  
+    if (filesize(RG_LOG_FILE) > 100000) {
+      rename(RG_LOG_FILE, RG_LOG_FILE."-".date("Y-m-d-His", time()));
+    }
   }
 }
 
