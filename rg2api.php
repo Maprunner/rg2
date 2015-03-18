@@ -1787,8 +1787,8 @@ function getCoursesForEvent($eventid) {
       $detail = array();
       $detail["courseid"] = intval($data[0]);
       $detail["name"] = encode_rg_input($data[1]);
-      if ($controlsFound) {
-        // assuming files have same number of entries: should cross-check courseid?  
+      // sarjojenkoodit quite often seems to have things missing for old RG1 events so protect against it
+      if (($controlsFound) && (count($controls) > $row)) {
         $detail["codes"] = $controls[$row];
       } else {
         $detail["codes"] = $dummycontrols[$row];
