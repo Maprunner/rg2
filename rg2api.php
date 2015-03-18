@@ -1146,7 +1146,6 @@ function handleGetRequest($type, $id) {
     $output = getSplitsbrowser($id);
     break;
   default:
-    echo "Request not recognised: ".$type."\n";
     $output = json_encode("Request not recognised.");
     break;
   }
