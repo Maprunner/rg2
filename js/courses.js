@@ -171,6 +171,7 @@
             this.courses[i].codes = codes;
             this.courses[i].x = x;
             this.courses[i].y = y;
+            this.courses[i].setAngles();
             break;
           }
         }

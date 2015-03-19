@@ -1,4 +1,4 @@
-// Version 1.1.3 2015-03-13T19:27:27;
+// Version 1.1.4 2015-03-19T19:09:59;
 /*
  * Routegadget 2
  * https://github.com/Maprunner/rg2
@@ -898,7 +898,7 @@ var rg2 = (function (window, $) {
     EVENT_WITHOUT_RESULTS : 2,
     SCORE_EVENT : 3,
     // version gets set automatically by grunt file during build process
-    RG2VERSION: '1.1.3',
+    RG2VERSION: '1.1.4',
     TIME_NOT_FOUND : 9999,
     // values for evt.which
     RIGHT_CLICK : 3,
@@ -1834,6 +1834,7 @@ var rg2 = (function (window, $) {
             this.courses[i].codes = codes;
             this.courses[i].x = x;
             this.courses[i].y = y;
+            this.courses[i].setAngles();
             break;
           }
         }
