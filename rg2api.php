@@ -1796,8 +1796,14 @@ function getCoursesForEvent($eventid) {
       } else {
         $detail["codes"] = $dummycontrols[$row];
       }
-      $detail["xpos"] = $xpos[$row];
-      $detail["ypos"] = $ypos[$row];
+      // some RG1 events seem to have unused courses which cause trouble
+      if (count($xpos) > $row) {
+        $detail["xpos"] = $xpos[$row];
+        $detail["ypos"] = $ypos[$row];
+      } else {
+        $detail["xpos"] = array();
+        $detail["ypos"] = array();
+      }
       $output[$row] = $detail;
       $row++;
     }
