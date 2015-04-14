@@ -990,8 +990,10 @@ function addNewMap($data) {
   if (($handle = @fopen(KARTAT_DIRECTORY."kartat.txt", "r+")) !== FALSE) {
     // read to end of file to find last entry
     $oldid = 0;
-    while (($olddata = fgetcsv($handle, 0, "|")) !== FALSE) {  
-      $oldid = intval($olddata[0]);
+    while (($olddata = fgetcsv($handle, 0, "|")) !== FALSE) {
+      if (count($olddata) > 0) {
+        $oldid = intval($olddata[0]);
+      }
     }
     $newid = $oldid + 1;
   } else {
@@ -1534,36 +1536,37 @@ function getMaps() {
   if (($handle = @fopen(KARTAT_DIRECTORY."kartat.txt", "r")) !== FALSE) {
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
       $detail = array();
-      $detail["mapid"] = intval($data[0]);
-      $detail["name"] = encode_rg_input($data[1]);
-      // defaults to jpg so only need to say if we have something else as well
-      if (file_exists(KARTAT_DIRECTORY.$detail['mapid'].'.gif')) {
-        $detail["mapfilename"] = $detail['mapid'].'.gif';
-      }
-      $detail["georeferenced"] = FALSE;
-      if (count($data) == 14) {
-        list($A, $B, $C, $D, $E, $F) = generateWorldFile($data);
-        $detail["A"] = $A;
-        $detail["B"] = $B;
-        $detail["C"] = $C;
-        $detail["D"] = $D;
-        $detail["E"] = $E;
-        $detail["F"] = $F;
-        list($localA, $localB, $localC, $localD, $localE, $localF) = generateLocalWorldFile($data);
-        $detail["localA"] = $localA;
-        $detail["localB"] = $localB;
-        $detail["localC"] = $localC;
-        $detail["localD"] = $localD;
-        $detail["localE"] = $localE;
-        $detail["localF"] = $localF;
-
-        // make sure it worked OK
-        if (($E != 0) && ($F != 0)) {
-          $detail["georeferenced"] = TRUE;
+      if (count($data) > 1) {
+        $detail["mapid"] = intval($data[0]);
+        $detail["name"] = encode_rg_input($data[1]);
+        // defaults to jpg so only need to say if we have something else as well
+        if (file_exists(KARTAT_DIRECTORY.$detail['mapid'].'.gif')) {
+          $detail["mapfilename"] = $detail['mapid'].'.gif';
         }
-      }
+        $detail["georeferenced"] = FALSE;
+        if (count($data) == 14) {
+          list($A, $B, $C, $D, $E, $F) = generateWorldFile($data);
+          $detail["A"] = $A;
+          $detail["B"] = $B;
+          $detail["C"] = $C;
+          $detail["D"] = $D;
+          $detail["E"] = $E;
+          $detail["F"] = $F;
+          list($localA, $localB, $localC, $localD, $localE, $localF) = generateLocalWorldFile($data);
+          $detail["localA"] = $localA;
+          $detail["localB"] = $localB;
+          $detail["localC"] = $localC;
+          $detail["localD"] = $localD;
+          $detail["localE"] = $localE;
+          $detail["localF"] = $localF;
+          // make sure it worked OK
+          if (($E != 0) && ($F != 0)) {
+            $detail["georeferenced"] = TRUE;
+          }
+        }
       $output[$row] = $detail;
       $row++;
+      }
     }
     fclose($handle);
     }
