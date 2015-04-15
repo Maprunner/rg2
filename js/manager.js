@@ -769,7 +769,8 @@
     getResultInfoAsHTML : function () {
       var info, i, runners, oldcourse;
       if (this.results.length) {
-        info = "<table><thead><tr><th>Course</th><th>Winner</th><th>Time</th><th>Runners</th></tr></thead><tbody>";
+        info = this.testForInvalidCharacters();
+        info += "<table><thead><tr><th>Course</th><th>Winner</th><th>Time</th><th>Runners</th></tr></thead><tbody>";
         runners = 0;
         oldcourse = null;
         for (i = 0; i < this.results.length; i += 1) {
@@ -789,6 +790,19 @@
       }
 
       return info;
+    },
+
+    testForInvalidCharacters : function () {
+      var i, j;
+      for (i = 0; i < this.results.length; i += 1) {
+        for (j = 0; j < this.results[i].name.length; j += 1) {
+          // not strictly the correct test but it does what we need
+          if (this.results[i].name.charCodeAt(j) > 255) {
+            return '<p><strong>Warning:</strong> Results contain non-UTF-8 characters. Open original results file in Notepad and "Save as..Encoding..UTF-8.".';
+          }
+        }
+      }
+      return "";
     },
 
     readMapFile : function (evt) {
