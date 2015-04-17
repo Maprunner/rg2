@@ -1917,7 +1917,6 @@ function formatCommentsForOutput($inputComments) {
   $comments = str_replace("#cr##nl#", "\n", $comments);
   $comments = str_replace("#nl#", "\n", $comments);
   $comments = str_replace("<br>", "\n", $comments);
-  $comments = encode_rg_input($comments);
   return $comments;
 }
 
