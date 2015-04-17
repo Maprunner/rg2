@@ -56,9 +56,9 @@
 function encode_rg_input($input_str) {
   $encoded = '';
   if ( RG_INPUT_ENCODING != 'UTF-8' ) {
-    $temp = @iconv( RG_INPUT_ENCODING, RG_OUTPUT_ENCODING, $input_str);
+    $temp = @iconv( RG_INPUT_ENCODING, RG_OUTPUT_ENCODING . '//TRANSLIT//IGNORE', $input_str);
     // ENT_COMPAT is just a default flag: ENT_SUBSTITUTE is PHP 5.4.0+
-    $encoded = htmlentities($temp, ENT_COMPAT, RG_INPUT_ENCODING);
+    $encoded = htmlentities($temp, ENT_COMPAT, RG_OUTPUT_ENCODING);
   } else {
     // this removes any non-UTF-8 characters that are stored locally, normally by an original Routegadget installation
     $temp = mb_convert_encoding($input_str, 'UTF-8', 'UTF-8');
@@ -75,8 +75,8 @@ function encode_rg_input($input_str) {
 // Handle the encoding for output data if output encoding is not set to UTF-8
 function encode_rg_output($output_str) {
   $encoded = '';
-  if ( RG_INPUT_ENCODING != 'UTF-8' ) {
-    $encoded = @iconv( RG_OUTPUT_ENCODING, RG_INPUT_ENCODING, $output_str);
+  if ( RG_INPUT_ENCODING != 'UTF-8' && mb_detect_encoding($output_str, 'UTF-8', true) ) {
+    $encoded = @iconv( RG_OUTPUT_ENCODING, RG_INPUT_ENCODING . '//TRANSLIT//IGNORE', $output_str);
   } else {
     $encoded = $output_str;
   }
