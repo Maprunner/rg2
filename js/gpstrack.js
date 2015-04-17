@@ -105,7 +105,7 @@
       var secs;
       // needs to be set to midnight for supplied timestring
       // input is 2013-12-03T12:34:56Z (or 56.000Z)
-      secs = parseInt(Date.parse(timestring.substr(0, 11) + "00:00:00") / 1000, 10);
+      secs = parseInt(Date.parse(timestring.substr(0, 11) + "00:00:00Z") / 1000, 10);
       if (isNaN(secs)) {
         return 0;
       }
