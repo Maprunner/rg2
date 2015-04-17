@@ -1,0 +1,128 @@
+<div id="rg2-manage-login">
+  <form id="rg2-manager-login-form">
+    <div>
+      <label for="rg2-user-name">User name:</label>
+      <input class="pushright" id="rg2-user-name" type="text">
+    </div>
+    <div>
+      <label for="rg2-password">Password:</label>
+      <input class="pushright" id="rg2-password" type="password">
+    </div>
+    <button id="btn-login">
+      Log in
+    </button>
+  </form>
+</div>
+<div id="rg2-manage-create">
+  <h3 class="no-top-margin">Event details</h3>
+  <div id="rg2-select-event-name">
+    <span id='span-event'>Event name:<input id="rg2-event-name"  class="pushright manage-input" type="text" autofocus></span>
+  </div>
+  <div id="rg2-manager-map-select">
+    <span>Map:<select class="pushright manage-input" id="rg2-map-selected"></select></span>
+  </div>
+  <div id="rg2-select-club-name">
+    <span>Club:<input class="pushright manage-input" id="rg2-club-name" type="text"></span>
+  </div>
+  <div id="rg2-select-event-date">
+    <span>Event date:<input class="pushright manage-input" id="rg2-event-date" type="text"></span>
+  </div>
+  <div id="rg2-select-event-level">
+    <span>Event level:<select class="pushright manage-input" id="rg2-event-level"></select></span>
+  </div>
+  <textarea id="rg2-event-comments"></textarea>
+  <h3 class="no-top-margin">Results</h3>
+  <div id="rg2-select-results-file" class="manage-file-input-div">
+    <span>Results file<input type='file' accept='.csv, .xml' id='rg2-load-results-file' class="pushright manage-file-input" /></span>
+  </div>
+  <div>
+    <span>No results file <input type="checkbox" id="btn-no-results"></span>
+  </div>
+  <h3 class="no-top-margin">Courses</h3>
+  <div id="rg2-select-course-file" class="manage-file-input-div">
+    <span>Course file<input type='file' accept='.xml' id='rg2-load-course-file' class="pushright manage-file-input" /></span>
+  </div>
+  <div>
+    <span>Individual courses (butterfly/score/relay) <input type="checkbox" id="btn-score-event"></span>
+  </div>
+  <button type="button" id="btn-draw-courses">Draw course</button>
+  <div id="rg2-draw-courses">
+    <span>Name:<input class="pushright manage-input" id="rg2-new-course-name" type="text"></span>
+  </div>
+  <hr class="rg2-hr">
+  <div>
+    <span>Move map and controls together <input type="checkbox" id="btn-move-map-and-controls"></span>
+  </div>
+  <div id="rg2-course-allocations"></div>
+  <hr class="rg2-hr">
+  <button type="button" id="btn-create-event">Create Event</button>
+</div>
+<div id="rg2-manage-edit">
+  <h3 class="no-top-margin">Select event</h3>
+  <div id="rg2-manager-event-select">
+    <select id="rg2-event-selected"></select>
+  </div>
+  <hr class="rg2-hr">
+  <div id="manage-edit-options">
+    <h3 class="no-top-margin">Edit event details</h3>
+    <div>
+      <div id="rg2-edit-event-name" class="manage-event-edit-div">
+      <span>Event:<input class="pushright manage-event-edit-form" id="rg2-event-name-edit" type="text" autofocus></span>
+    </div>
+    <div id="rg2-edit-club-name" class="manage-event-edit-div">
+      <span>Club:<input class="pushright manage-event-edit-form" id="rg2-club-name-edit" type="text"></span>
+    </div>
+    <div id="rg2-edit-event-date" class="manage-event-edit-div">
+      <span>Date:<input class="pushright manage-event-edit-form" id="rg2-event-date-edit" type="text"></span>
+    </div>
+    <div id="rg2-edit-event-level" class="manage-event-edit-div">
+      <span>Level:<select class="pushright manage-event-edit-form" id="rg2-event-level-edit"></select></span>
+    </div>
+    <textarea id="rg2-edit-event-comments"></textarea> 
+    <button type="button" class="manage-file-label" id="btn-update-event">Update event details</button>
+    </div>
+    <hr class="rg2-hr">
+    <h3 class="no-top-margin">Delete route</h3>
+    <div>
+      <select id="rg2-route-selected"></select>
+      <br/>
+      <button type="button" class="manage-file-label" id="btn-delete-route">Delete</button>
+    </div>   
+    <hr class="rg2-hr">
+    <h3 class="no-top-margin">Delete event</h3>
+    <div id="manage-delete-event">
+      <button type="button" id="btn-delete-event">Delete event</button>
+    </div> 
+  </div>
+</div>  
+<div id="rg2-manage-map">
+  <h3 class="no-top-margin">Map details</h3>
+  <div id="rg2-select-map-name">
+    <span>Map name:<input class="pushright manage-input" id="rg2-map-name" type="text"></span>
+  </div>
+  <div>
+    <span>Map file:<input type='file' accept='.jpg, .gif' id='rg2-load-map-file' class="pushright manage-file-input" /></span>
+  </div>
+  <h3 class="no-top-margin">Georeferencing</h3>
+  <div  class="manage-file-input-div">
+    <span>Georef file:<input type='file' accept='.jgw, .gfw' id='rg2-load-georef-file' class="pushright manage-file-input" /></span>
+  </div>
+  <div id="rg2-georef-type">  
+    <span>Co-ords:<select class="pushright manage-event-edit-div" id="rg2-georef-selected"></select></span>
+  </div>
+  <div id="rg2-world-file">
+    <p id="georef-A">A:</p>
+    <p id="georef-D">D:</p>
+    <p id="georef-B">B:</p>
+    <p id="georef-E">E:</p>
+    <p id="georef-C">C:</p>
+    <p id="georef-F">F:</p>
+  </div> 
+  <hr class="rg2-hr">
+  <div id="rg2-add-map">
+    <button type="button" id="btn-add-map">Add map</button>
+  </div> 
+</div>
+<div id="rg2-manage-courses"></div>
+<div id="rg2-manage-results"></div>
+

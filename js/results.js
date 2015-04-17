@@ -1,485 +1,476 @@
 /*global rg2:false */
-/*global Colours:false */
-function Results() {
-	this.results = [];
-	this.colours = new Colours();
-}
+(function () {
+  function Results() {
+    this.results = [];
+  }
 
-Results.prototype = {
-	Constructor : Results,
+  Results.prototype = {
+    Constructor : Results,
 
-	addResults : function(data, isScoreEvent) {
-		// for each result
-		for (var i = 0; i < data.length; i += 1) {
-			var result = new Result(data[i], isScoreEvent, this.colours.getNextColour());
-			this.results.push(result);
-		}
-	},
+    addResults : function (data, isScoreEvent) {
+      var i, l, result, variant, codes, scorex, scorey;
+      l = data.length;
+      // extract score course details if necessary
+      if (isScoreEvent) {
+        codes = [];
+        scorex = [];
+        scorey = [];
+        // details are only sent the first time a variant occurs (to reduce file size quite a lot in some cases)
+        // so need to extract them for use later
+        for (i = 0; i < l; i += 1) {
+          variant = data[i].variant;
+          if (codes[variant] === undefined) {
+            codes[variant] = data[i].scorecodes;
+            scorex[variant] = data[i].scorex;
+            scorey[variant] = data[i].scorey;
+          }
+        }
+      }
+      // save each result
+      for (i = 0; i < l; i += 1) {
+        if (isScoreEvent) {
+          variant = data[i].variant;
+          result = new rg2.Result(data[i], isScoreEvent, codes[variant], scorex[variant], scorey[variant]);
+        } else {
+          result = new rg2.Result(data[i], isScoreEvent);
+        }
+        this.results.push(result);
+      }
+      this.setScoreCourseInfo();
+      this.generateLegPositions();
+    },
 
-	getResultsByCourseID : function(courseid) {
-		var count = 0;
-		for (var i = 0; i < this.results.length; i += 1) {
-			if (this.results[i].courseid === courseid) {
-				count += 1;
-			}
+    setScoreCourseInfo : function () {
+      // don't get score course info for GPS tracks so find it from original result
+      var i, baseresult;
+      for (i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].resultid >= rg2.config.GPS_RESULT_OFFSET) {
+          baseresult = this.getFullResult(this.results[i].rawid);
+          if (baseresult !== undefined) {
+            if (baseresult.scorex !== undefined) {
+              this.results[i].scorex = baseresult.scorex;
+              this.results[i].scorey = baseresult.scorey;
+              this.results[i].scorecodes = baseresult.scorecodes;
+            }
+          }
+        }
+      }
+    },
 
-		}
-		return count;
-	},
+    // lists all runners on a given course
+    getAllRunnersForCourse : function (courseid) {
+      var i, runners;
+      runners = [];
+      for (i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].courseid === courseid) {
+          runners.push(i);
+        }
+      }
+      return runners;
+    },
 
-	getTotalResults : function() {
-		return this.results.length;
-	},
+    // read through results to get list of all controls on score courses
+    // since there is no master list of controls!
+    generateScoreCourses : function () {
+      var i, j, res, courses, codes, x, y, courseid;
+      courses = [];
+      codes = [];
+      x = [];
+      y = [];
+      for (i = 0; i < this.results.length; i += 1) {
+        res = this.results[i];
+        // only do this for original results, not GPS results
+        if (res.resultid < rg2.config.GPS_RESULT_OFFSET) {
+          courseid = res.courseid;
+          // save courseid if it is new
+          if (courses.indexOf(courseid) === -1) {
+            courses.push(courseid);
+            codes[courseid] = [];
+            x[courseid] = [];
+            y[courseid] = [];
+          }
+          // read all controls for this result and save if new
+          for (j = 0; j < res.scorecodes.length; j += 1) {
+            if (codes[courseid].indexOf(res.scorecodes[j]) === -1) {
+              codes[courseid].push(res.scorecodes[j]);
+              x[courseid].push(res.scorex[j]);
+              y[courseid].push(res.scorey[j]);
+            }
+          }
+        }
 
-	getCourseID : function(resultid) {
-		return this.results[resultid].courseid;
-	},
+      }
+      // save the details we have just generated
+      for (i = 0; i < courses.length; i += 1) {
+        courseid = courses[i];
+        rg2.courses.updateScoreCourse(courseid, codes[courseid], x[courseid], y[courseid]);
+      }
+    },
 
-	getFullResult : function(resultid) {
-		return this.results[resultid];
-	},
+    generateLegPositions : function () {
+      var i, j, k, info, pos;
+      info = this.getCoursesAndControls();
+      pos = [];
+      for (i = 0; i < info.courses.length; i += 1) {
+        //console.log("Generate positions for course " + info.courses[i]);
+        // start at 1 since 0 is time 0
+        for (k = 1; k < info.controls[i]; k += 1) {
+          pos.length = 0;
+          for (j = 0; j < this.results.length; j += 1) {
+            if (this.results[j].courseid === info.courses[i]) {
+              pos.push({time: this.results[j].splits[k], id: j});
+            }
+          }
+          pos.sort(this.sortTimes);
+          //console.log(pos);
+          for (j = 0; j < pos.length; j += 1) {
+            // no allowance for ties yet
+            this.results[pos[j].id].legpos[k] = j + 1;
+          }
+        }
+      }
+    },
 
-	getKartatResultID : function(resultid) {
-		return this.results[resultid].resultid;
-	},
+    getCoursesAndControls : function () {
+      var i, courses, controls;
+      courses = [];
+      controls = [];
+      for (i = 0; i < this.results.length; i += 1) {
+        if (courses.indexOf(this.results[i].courseid) === -1) {
+          courses.push(this.results[i].courseid);
+          // not a good way fo finding number of controls: better to get from courses?
+          controls.push(this.results[i].splits.length);
+        }
 
-	drawTracks : function() {
-		for (var i = 0; i < this.results.length; i += 1) {
-			this.results[i].drawTrack();
-		}
-	},
+      }
+      return {courses: courses, controls: controls};
+    },
 
-	updateTrackNames : function() {
-		$("#rg2-track-names").empty();
-		var html = this.getDisplayedTrackNames();
-		if (html !== "") {
-			$("#rg2-track-names").append(html);
-			$("#rg2-track-names").show();
-		} else {
-			$("#rg2-track-names").hide();
-		}
+    putScoreCourseOnDisplay : function (resultid, display) {
+      var i;
+      for (i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].resultid === resultid) {
+          this.results[i].displayScoreCourse = display;
+        }
+      }
 
-	},
+    },
 
-	putOneTrackOnDisplay : function(resultid) {
-		this.results[resultid].putTrackOnDisplay();
-		this.updateTrackNames();
-	},
+    displayScoreCourse : function (id, display) {
+      this.results[id].displayScoreCourse = display;
+    },
 
-	removeOneTrackFromDisplay : function(resultid) {
-		this.results[resultid].removeTrackFromDisplay();
-		this.updateTrackNames();
-	},
+    sortTimes : function (a, b) {
+      return a.time - b.time;
+    },
 
-	// add all tracks for one course
-	putTracksOnDisplay : function(courseid) {
-		for (var i = 0; i < this.results.length; i += 1) {
-			if (this.results[i].courseid == courseid) {
-				this.results[i].putTrackOnDisplay();
-			}
-		}
-		this.updateTrackNames();
-	},
+    countResultsByCourseID : function (courseid) {
+      var i, count;
+      count = 0;
+      for (i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].courseid === courseid) {
+          // don't double-count GPS tracks
+          if (this.results[i].resultid < rg2.config.GPS_RESULT_OFFSET) {
+            count += 1;
+          }
+        }
+      }
+      return count;
+    },
 
-	// put all tracks for all courses on display
-	putAllTracksOnDisplay : function() {
-		for (var i = 0; i < this.results.length; i += 1) {
-			this.results[i].putTrackOnDisplay();
-		}
-		this.updateTrackNames();
-	},
+    getRoutesForEvent : function () {
+      var route, routes, i;
+      routes = [];
+      for (i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].hasValidTrack) {
+          route = {};
+          route.id = i;
+          route.resultid = this.results[i].resultid;
+          route.name = this.results[i].name;
+          route.time = this.results[i].time;
+          route.coursename = this.results[i].coursename;
+          routes.push(route);
+        }
+      }
+      return routes;
+    },
 
-	getDisplayedTrackNames : function() {
-		var html = "";
-		for (var i = 0; i < this.results.length; i += 1) {
-			if (this.results[i].displayTrack) {
-				html += "<p style='color:" + this.results[i].trackColour + ";'>" + rg2.getCourseName(this.results[i].courseid);
-				html += ": " + this.results[i].name + "</p>";
-			}
-		}
-		return html;
-	},
+    getResultsInfo : function () {
+      var i, info, res;
+      info = {};
+      info.results = 0;
+      info.drawnroutes = 0;
+      info.gpsroutes = 0;
+      info.secs = 0;
+      for (i = 0; i < this.results.length; i += 1) {
+        res = this.results[i];
+        if (res.resultid < rg2.config.GPS_RESULT_OFFSET) {
+          info.results += 1;
+          // beware invalid splits for incomplete runs
+          if (res.time) {
+            info.secs += res.splits[res.splits.length - 1];
+          }
+        }
+        if (res.hasValidTrack) {
+          if (res.resultid < rg2.config.GPS_RESULT_OFFSET) {
+            info.drawnroutes += 1;
+          } else {
+            info.gpsroutes += 1;
+          }
+        }
+      }
+      info.totalroutes = info.drawnroutes + info.gpsroutes;
+      if (info.results > 0) {
+        info.percent = (100 * info.totalroutes / info.results).toFixed(1);
+      } else {
+        info.percent = 0;
+      }
+      info.time = this.formatTotalRunningTime(info.secs);
+      return info;
+    },
 
-	resultIDExists : function(resultid) {
-		for (var i = 0; i < this.results.length; i += 1) {
-			if (resultid === this.results[i].resultid) {
-				return true;
-			}
-		}
-		return false;
-	},
+    formatTotalRunningTime : function (secs) {
+      var time;
+      time = Math.floor(secs / 86400) + " days ";
+      secs = secs - (86400 * Math.floor(secs / 86400));
+      time += Math.floor(secs / 3600) + " hours ";
+      secs = secs - (3600 * Math.floor(secs / 3600));
+      time += Math.floor(secs / 60) + " minutes ";
+      time += secs - (60 * Math.floor(secs / 60)) + " seconds";
+      return time;
+    },
 
-	getSplitsForID : function(resultid) {
-		for (var i = 0; i < this.results.length; i += 1) {
-			if (resultid === this.results[i].resultid) {
-				return this.results[i].splits;
-			}
-		}
-		return rg2.config.SPLITS_NOT_FOUND;
-	},
+    getFullResult : function (resultid) {
+      return this.results[resultid];
+    },
 
-	getTimeForID : function(resultid) {
-		for (var i = 0; i < this.results.length; i += 1) {
-			if (resultid === this.results[i].resultid) {
-				return this.results[i].time;
-			}
-		}
-		return rg2.config.TIME_NOT_FOUND;
-	},
+    drawTracks : function () {
+      var i, opt;
+      opt = rg2.getReplayDetails();
+      for (i = 0; i < this.results.length; i += 1) {
+        this.results[i].drawTrack(opt);
+        this.results[i].drawScoreCourse();
+      }
+    },
 
-	removeAllTracksFromDisplay : function() {
-		for (var i = 0; i < this.results.length; i += 1) {
-			this.results[i].removeTrackFromDisplay();
-		}
-		this.updateTrackNames();
-	},
+    updateTrackNames : function () {
+      var html;
+      $("#rg2-track-names").empty();
+      html = this.getDisplayedTrackNames();
+      if (html !== "") {
+        $("#rg2-track-names").append(html);
+        $("#rg2-track-names").show();
+      } else {
+        $("#rg2-track-names").hide();
+      }
+    },
 
-	removeTracksFromDisplay : function(courseid) {
-		for (var i = 0; i < this.results.length; i += 1) {
-			if (this.results[i].courseid == courseid) {
-				this.results[i].removeTrackFromDisplay();
-			}
-		}
-		this.updateTrackNames();
-	},
+    getTracksOnDisplay : function () {
+      var i, tracks;
+      tracks = [];
+      for (i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].displayTrack) {
+          tracks.push(i);
+        }
+      }
+      return tracks;
+    },
 
-	addTracks : function(tracks) {
-		// this gets passed the json data array
-		var resultIndex;
-		var j;
-		// for each track
-		for (var i = 0; i < tracks.length; i += 1) {
-			resultIndex = tracks[i].resultid;
-			j = 0;
-			// don't add GPS track since we got a better one in the original results
-			if (resultIndex < rg2.config.GPS_RESULT_OFFSET) {
-				// loop through all results and add it against the correct id
-				while (j < this.results.length) {
-					if (resultIndex == this.results[j].resultid) {
-						if (this.results[j].addTrack(tracks[i].coords)) {
-							rg2.incrementTracksCount(this.results[j].courseid);
-						}
-						break;
-					}
-					j += 1;
-				}
-			}
-		}
+    putOneTrackOnDisplay : function (resultid) {
+      this.results[resultid].putTrackOnDisplay();
+      this.updateTrackNames();
+    },
 
-	},
+    removeOneTrackFromDisplay : function (resultid) {
+      this.results[resultid].removeTrackFromDisplay();
+      this.updateTrackNames();
+    },
 
-	deleteAllResults : function() {
-		this.results.length = 0;
-	},
+    updateTrackDisplay : function (courseid, display) {
+      var i;
+      for (i = 0; i < this.results.length; i += 1) {
+        if ((this.results[i].courseid === courseid) || (rg2.config.DISPLAY_ALL_COURSES === courseid)) {
+          if (display) {
+            this.results[i].putTrackOnDisplay();
+          } else {
+            this.results[i].removeTrackFromDisplay();
+          }
+        }
+      }
+      this.updateTrackNames();
+    },
 
-	getRunnerName : function(runner) {
-		return this.results[runner].name;
-	},
+    getDisplayedTrackNames : function () {
+      var i, html;
+      html = "";
+      for (i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].displayTrack) {
+          html += "<p style='color:" + this.results[i].trackColour + ";'>" + rg2.courses.getCourseName(this.results[i].courseid);
+          html += ": " + this.results[i].name + "</p>";
+        }
+      }
+      return html;
+    },
 
-	sortByCourseIDThenResultID : function(a, b) {
-		if (a.courseid > b.courseid) {
-			return 1;
-		} else if (b.courseid > a.courseid) {
-			return -1;
-		} else {
-			return a.resultid - b.resultid;
-		}
-	},
+    resultIDExists : function (resultid) {
+      var i;
+      for (i = 0; i < this.results.length; i += 1) {
+        if (resultid === this.results[i].resultid) {
+          return true;
+        }
+      }
+      return false;
+    },
 
-	formatResultListAsAccordion : function() {
-		// puts all GPS results at bottom of relevant course results
-		this.results.sort(this.sortByCourseIDThenResultID);
+    getTimeAndSplitsForID : function (resultid) {
+      var i;
+      for (i = 0; i < this.results.length; i += 1) {
+        if (resultid === this.results[i].resultid) {
+          return {time: this.results[i].time, splits: this.results[i].splits};
+        }
+      }
+      return {time: rg2.config.TIME_NOT_FOUND, splits: []};
+    },
 
-		var html = "";
-		var temp;
-		var firstCourse = true;
-		var oldCourseID = 0;
-		for (var i = 0; i < this.results.length; i += 1) {
-			temp = this.results[i];
-			if (temp.courseid != oldCourseID) {
-				// found a new course so add header
-				if (firstCourse) {
-					firstCourse = false;
-				} else {
-					html += "</table></div>";
-				}
-				html += "<h3>" + temp.coursename;
-				html += "<input class='showcourse' id=" + temp.courseid + " type=checkbox name=course title='Show course'></input></h3><div>";
-				html += "<table class='resulttable'><tr><th>Name</th><th>Time</th><th>Track</th><th>Replay</th></tr>";
-				oldCourseID = temp.courseid;
-			}
-			if (temp.comments !== "") {
-				html += "<tr><td><a href='#' title='" + temp.comments + "'>" + temp.name + "</a></td><td>" + temp.time + "</td>";
-			} else {
-				html += "<tr><td>" + temp.name + "</td><td>" + temp.time + "</td>";
-			}
-			if (temp.hasValidTrack) {
-				html += "<td><input class='showtrack' id=" + i + " type=checkbox name=result></input></td>";
-			} else {
-				html += "<td></td>";
-			}
-			html += "<td><input class='replay' id=" + i + " type=checkbox name=replay></input></td></tr>";
-		}
-		
-		if (html === "") {
-			html = "<p>No results available.</p>";
-		} else {
-			html += "</table></div></div>";
-		}
-		return html;
-	},
+    addTracks : function (tracks) {
+      // this gets passed the json data array
+      var resultIndex, i, j, l, eventid, eventinfo;
+      eventid = rg2.events.getKartatEventID();
+      eventinfo = rg2.events.getEventInfo(eventid);
+      // for each track
+      l = tracks.length;
+      for (i = 0; i < l; i += 1) {
+        resultIndex = tracks[i].resultid;
+        j = 0;
+        // API filters out GPS results since we get a better track in the original results
+        // loop through all results and add it against the correct id
+        while (j < this.results.length) {
+          if (resultIndex === this.results[j].resultid) {
+            this.results[j].addTrack(tracks[i], eventinfo.format);
+            break;
+          }
+          j += 1;
+        }
+      }
+    },
 
-	createNameDropdown : function(courseid) {
-		$("#rg2-name-select").empty();
-		var dropdown = document.getElementById("rg2-name-select");
-		var opt = document.createElement("option");
-		opt.value = null;
-		opt.text = 'Select name';
-		dropdown.options.add(opt);
-		for (var i = 0; i < this.results.length; i += 1) {
-			// don't include result if it has a valid track already
-			if ((this.results[i].courseid === courseid) && (!this.results[i].hasValidTrack)) {
-				opt = document.createElement("option");
-				opt.value = i;
-				opt.text = this.results[i].name;
-				dropdown.options.add(opt);
-			}
-		}
-		dropdown.options.add(opt);
-	}
-};
+    deleteAllResults : function () {
+      this.results.length = 0;
+    },
 
-function Result(data, isScoreEvent, colour) {
-	// resultid is the kartat id value
-	this.resultid = parseInt(data.resultid, 10);
-	this.isScoreEvent = isScoreEvent;
-	// GPS track ids are normal resultid + GPS_RESULT_OFFSET
-	if (this.resultid >= rg2.config.GPS_RESULT_OFFSET) {
-		//this.name = (data.name).replace("GPS ", "");
-		this.isGPSTrack = true;
-	} else {
-		//this.name = data.name;
-		this.isGPSTrack = false;
-	}
-	this.name = data.name;
-	this.starttime = Math.round(data.starttime);
-	this.time = data.time;
-	// get round iconv problem in API for now
-	if (data.comments !== null) {
-		// escape single quotes so that tooltips show correctly
-		this.comments = data.comments.replace("'", "&apos;");
-	} else {
-		this.comments = "";
-	}
-	this.coursename = data.coursename;
-	if (this.coursename === "") {
-		this.coursename = data.courseid;
-	}
-	this.courseid = parseInt(data.courseid, 10);
-	this.splits = data.splits.split(";");
-	// force to integers to avoid doing it every time we read it
-	for (var i = 0; i < this.splits.length; i += 1) {
-		this.splits[i] = Math.round(this.splits[i]);
-	}
-	// insert a 0 split at the start to make life much easier elsewhere
-	this.splits.splice(0, 0, 0);
+    sortByCourseIDThenResultID : function (a, b) {
+      // sorts GPS results to be immediately after the associated main id
+      if (a.courseid > b.courseid) {
+        return 1;
+      }
+      if (b.courseid > a.courseid) {
+        return -1;
+      }
+      if (a.rawid === b.rawid) {
+        return a.resultid - b.resultid;
+      }
+      return a.rawid - b.rawid;
+    },
 
-	if (data.scoreref !== "") {
-		// save control locations for score course result
-		this.scorex = data.scorex;
-		this.scorey = data.scorey;
-	}
+    formatResultListAsAccordion : function () {
+      var html, res, firstCourse, oldCourseID, i, tracksForThisCourse;
+      if (this.results.length === 0) {
+        return "<p>" + rg2.t("No results available") + "</p>";
+      }
+      html = "";
+      firstCourse = true;
+      oldCourseID = 0;
+      tracksForThisCourse = 0;
+      this.results.sort(this.sortByCourseIDThenResultID);
+      for (i = 0; i < this.results.length; i += 1) {
+        res = this.results[i];
+        if (res.courseid !== oldCourseID) {
+          // found a new course so add header
+          if (firstCourse) {
+            firstCourse = false;
+          } else {
+            html += this.getBottomRow(tracksForThisCourse, oldCourseID) + "</table></div>";
+          }
+          tracksForThisCourse = 0;
+          html += this.getCourseHeader(res);
+          oldCourseID = res.courseid;
+        }
+        html += '<tr><td>' + res.position + '</td>';
+        if (res.comments !== "") {
+          html += '<td><a href="#" title="' + res.comments + '">' + this.getNameHTML(res, i) + "</a></td><td>" + res.time + "</td>";
+        } else {
+          html += "<td>" + this.getNameHTML(res, i) + "</td><td>" + res.time + "</td>";
+        }
+        if (res.hasValidTrack) {
+          tracksForThisCourse += 1;
+          html += "<td><input class='showtrack showtrack-" + oldCourseID + "' id=" + i + " type=checkbox name=result></input></td>";
+        } else {
+          html += "<td></td>";
+        }
+        html += "<td><input class='showreplay showreplay-" + oldCourseID + "' id=" + i + " type=checkbox name=replay></input></td></tr>";
+      }
+      html += this.getBottomRow(tracksForThisCourse, oldCourseID) + "</table></div></div>";
+      return html;
+    },
 
-	// calculated cumulative distance in pixels
-	this.cumulativeDistance = [];
-	// set true if track includes all expected controls in correct order
-	// or is a GPS track
-	this.hasValidTrack = false;
-	this.displayTrack = false;
-	this.trackColour = colour;
-	// raw track data
-	this.trackx = [];
-	this.tracky = [];
-	// interpolated times
-	this.xysecs = [];
-	if (this.isGPSTrack) {
-		// don't get time or splits so need to copy them in from (GPS_RESULT_OFFSET - resultid)
-		this.time = rg2.getTimeForID(this.resultid - rg2.config.GPS_RESULT_OFFSET);
-		// allow for events with no results where there won't be a non-GPS result
-		if (this.time === rg2.config.TIME_NOT_FOUND) {
-      this.time = data.time;
-		}
-		this.splits = rg2.getSplitsForID(this.resultid - rg2.config.GPS_RESULT_OFFSET);
+    getNameHTML : function (res, i) {
+      var namehtml;
+      if (res.rawid === res.resultid) {
+        namehtml = res.name;
+      } else {
+        namehtml = "<i>" + res.name + "</i>";
+      }
+      if (res.isScoreEvent) {
+        namehtml = "<input class='showscorecourse showscorecourse-" + i + "' id=" + i + " type=checkbox name=scorecourse></input> " + namehtml;
+      }
+      return "<div>" + namehtml + "</div>";
+    },
 
-	}
-	if (data.gpscoords.length > 0) {
-		if (this.addTrack(data.gpscoords)) {
-			rg2.incrementTracksCount(this.courseid);
-		}
-	}
+    getCourseHeader : function (result) {
+      var html;
+      html = "<h3>" + result.coursename + "<input class='showcourse' id=" + result.courseid + " type=checkbox name=course title='Show course'></input></h3><div>";
+      html += "<table class='resulttable'><tr><th></th><th>" + rg2.t("Name") + "</th><th>" + rg2.t("Time") + "</th><th><i class='fa fa-pencil'></i></th><th><i class='fa fa-play'></i></th></tr>";
+      return html;
+    },
 
-}
+    getBottomRow : function (tracks, oldCourseID) {
+      // create bottom row for all tracks checkboxes
+      var html;
+      html = "<tr class='allitemsrow'><td></td><td>" + rg2.t("All") + "</td><td></td>";
+      if (tracks > 0) {
+        html += "<td><input class='allcoursetracks' id=" + oldCourseID + " type=checkbox name=track></input></td>";
+      } else {
+        html += "<td></td>";
+      }
+      html += "<td><input class='allcoursereplay' id=" + oldCourseID + " type=checkbox name=replay></input></td></tr>";
+      return html;
+    },
 
-Result.prototype = {
-	Constructor : Result,
+    getComments : function () {
+      var i, comments;
+      comments = "";
+      for (i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].comments !== "") {
+          comments += "<p><strong>" + this.results[i].name + "</strong>: " + this.results[i].coursename + ": " + this.results[i].comments + "</p>";
+        }
+      }
+      return comments;
+    },
 
-	putTrackOnDisplay : function() {
-		if (this.hasValidTrack) {
-			this.displayTrack = true;
-		}
-	},
-
-	removeTrackFromDisplay : function() {
-		if (this.hasValidTrack) {
-			this.displayTrack = false;
-		}
-	},
-
-	drawTrack : function() {
-		if (this.displayTrack) {
-			rg2.ctx.lineWidth = 2;
-			rg2.ctx.strokeStyle = this.trackColour;
-			rg2.ctx.globalAlpha = 1.0;
-			// set transparency of overprint
-			rg2.ctx.beginPath();
-			rg2.ctx.moveTo(this.trackx[0], this.tracky[0]);
-			for (var i = 1; i < this.trackx.length; i += 1) {
-				// lines
-				rg2.ctx.lineTo(this.trackx[i], this.tracky[i]);
-			}
-			rg2.ctx.stroke();
-
-		}
-	},
-
-	addTrack : function(trackcoords, getFullCourse) {
-		// gets passed in coords
-		// coord sets are separated by "N"
-		var temp = trackcoords.split("N");
-		var xy = 0;
-		// ignore first point hack for now
-		for (var i = 1; i < temp.length; i += 1) {
-			// coord sets are 2 items in csv format
-			xy = temp[i].split(";");
-			this.trackx.push(parseInt(xy[0], 10));
-			this.tracky.push(-1 * parseInt(xy[1], 10));
-		}
-		var trackOK;
-		if (this.isGPSTrack) {
-			trackOK = this.expandGPSTrack();
-		} else {
-			trackOK = this.expandNormalTrack();
-		}
-		return trackOK;
-	},
-
-	expandNormalTrack : function() {
-		// add times and distances at each position
-		this.xysecs[0] = 0;
-		this.cumulativeDistance[0] = 0;
-		// get course details
-		var course = {};
-		// each person has their own defined score course
-		if (this.isScoreEvent) {
-			course.x = this.scorex;
-			course.y = this.scorey;
-		} else {
-			//course.x = getFullCourse(this.courseid).x;
-			//course.y = getFullCourse(this.courseid).y;
-			course.x = rg2.getCourseDetails(this.courseid).x;
-			course.y = rg2.getCourseDetails(this.courseid).y;
-
-		}
-		// read through list of controls and copy in split times
-		var nextcontrol = 1;
-		var nextx = course.x[nextcontrol];
-		var nexty = course.y[nextcontrol];
-		var dist = 0;
-		var oldx = this.trackx[0];
-		var oldy = this.tracky[0];
-		var i;
-		var x = 0;
-		var y = 0;
-		var deltat = 0;
-		var deltadist = 0;
-		var olddist = 0;
-		var oldt = 0;
-		var previouscontrolindex = 0;
-		// we are assuming the track starts at the start which is index 0...
-		// look at each track point and see if it matches the next control location
-		for ( i = 1; i < this.trackx.length; i += 1) {
-			// calculate distance while we are looping through
-			x = this.trackx[i];
-			y = this.tracky[i];
-			dist = dist + Math.sqrt(((x - oldx) * (x - oldx)) + ((y - oldy) * (y - oldy)));
-			this.cumulativeDistance[i] = Math.round(dist);
-			oldx = x;
-			oldy = y;
-			// track ends at control
-			if ((nextx == x) && (nexty == y)) {
-				this.xysecs[i] = parseInt(this.splits[nextcontrol], 10);
-				// go back and add interpolated time at each point based on cumulative distance
-				// this assumes uniform speed...
-				oldt = this.xysecs[previouscontrolindex];
-				deltat = this.xysecs[i] - oldt;
-				olddist = this.cumulativeDistance[previouscontrolindex];
-				deltadist = this.cumulativeDistance[i] - olddist;
-				for (var j = previouscontrolindex; j <= i; j += 1) {
-					this.xysecs[j] = oldt + Math.round(((this.cumulativeDistance[j] - olddist) * deltat / deltadist));
-				}
-				previouscontrolindex = i;
-				nextcontrol += 1;
-				if (nextcontrol === course.x.length) {
-					// we have found all the controls
-					this.hasValidTrack = true;
-					break;
-				} else {
-					nextx = course.x[nextcontrol];
-					nexty = course.y[nextcontrol];
-				}
-			}
-		}
-		// treat all score tracks as valid for now
-		// may need a complete rethink on score course handling later
-		if (this.isScoreEvent) {
-			this.hasValidTrack = true;
-		}
-		return this.hasValidTrack;
-	},
-
-	expandGPSTrack : function() {
-		var t;
-		var dist = 0;
-		var oldx = this.trackx[0];
-		var oldy = this.tracky[0];
-		var x = 0;
-		var y = 0;
-		// in theory we get one point every three seconds
-		for ( t = 0; t < this.trackx.length; t += 1) {
-			this.xysecs[t] = 3 * t;
-			x = this.trackx[t];
-			y = this.tracky[t];
-			dist = dist + Math.sqrt(((x - oldx) * (x - oldx)) + ((y - oldy) * (y - oldy)));
-			this.cumulativeDistance[t] = Math.round(dist);
-			oldx = x;
-			oldy = y;
-		}
-		this.hasValidTrack = true;
-		return this.hasValidTrack;
-
-	},
-
-	getCourseName : function() {
-		if (this.coursename !== "") {
-			return this.coursename;
-		} else {
-			return "GPS tracks";
-		}
-	},
-	getRunnerName : function() {
-		return this.name;
-	},
-	getTime : function() {
-		return this.time;
-	}
-};
+    createNameDropdown : function (courseid) {
+      var i, dropdown;
+      $("#rg2-name-select").empty();
+      dropdown = document.getElementById("rg2-name-select");
+      dropdown.options.add(rg2.utils.generateOption(null, rg2.t('Select name')));
+      for (i = 0; i < this.results.length; i += 1) {
+        // only use original results, not GPS results
+        if (this.results[i].courseid === courseid) {
+          if (this.results[i].resultid < rg2.config.GPS_RESULT_OFFSET) {
+            dropdown.options.add(rg2.utils.generateOption(i, this.results[i].name));
+          }
+        }
+      }
+    }
+  };
+  rg2.Results = Results;
+}());

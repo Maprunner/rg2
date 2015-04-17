@@ -1,163 +1,146 @@
 /*global rg2:false */
-function Events() {
-	this.events = [];
-	this.activeEventID = null;
-}
+(function () {
+  function Events() {
+    this.events = [];
+    this.activeEventID = null;
+  }
 
-Events.prototype = {
-	Constructor : Events,
+  Events.prototype = {
+    Constructor : Events,
 
-	addEvent : function(eventObject) {
-		this.events.push(eventObject);
-	},
+    deleteAllEvents : function () {
+      this.events.length = 0;
+      this.activeEventID = null;
+    },
 
-	getKartatEventID : function() {
-		return this.events[this.activeEventID].kartatid;
-	},
+    addEvent : function (eventObject) {
+      this.events.push(eventObject);
+    },
 
-	getActiveMapID : function() {
-		return this.events[this.activeEventID].mapid;
-	},
+    getEventInfo : function (id) {
+      var realid, info;
+      realid = this.getEventIDForKartatID(id);
+      info = this.events[realid];
+      info.id = realid;
+      info.controls = rg2.controls.getControlCount();
+      return info;
+    },
 
-	setActiveEventID : function(eventid) {
-		this.activeEventID = eventid;
-	},
+    getKartatEventID : function () {
+      return this.events[this.activeEventID].kartatid;
+    },
 
-	getActiveEventID : function() {
-		return this.activeEventID;
-	},
-	
-	getEventIDForKartatID : function (kartatID) {
-    var i;
-    for (i = 0; i < this.events.length; i += 1) {
-      if (this.events[i].kartatid === kartatID) {
-        return i;
+    getActiveMapID : function () {
+      return this.events[this.activeEventID].mapid;
+    },
+
+    getMapFileName : function () {
+      return this.events[this.activeEventID].mapfilename;
+    },
+
+    setActiveEventID : function (eventid) {
+      this.activeEventID = parseInt(eventid, 10);
+    },
+
+    getActiveEventID : function () {
+      return this.activeEventID;
+    },
+
+    getEventIDForKartatID : function (kartatID) {
+      var i;
+      for (i = 0; i < this.events.length; i += 1) {
+        if (this.events[i].kartatid === kartatID) {
+          return i;
+        }
       }
-    }
-    return undefined;
-	},
+      return undefined;
+    },
 
-	getActiveEventDate : function() {
-		if (this.activeEventID !== null) {
-			return this.events[this.activeEventID].date;
-		} else {
-			return "";
-		}
-	},
+    getActiveEventDate : function () {
+      if (this.activeEventID !== null) {
+        return this.events[this.activeEventID].date;
+      }
+      return "";
+    },
 
-	getActiveEventName : function() {
-		if (this.activeEventID !== null) {
-			return this.events[this.activeEventID].name;
-		} else {
-			return "Routegadget 2.0";
-		}
-	},
+    getActiveEventName : function () {
+      if (this.activeEventID !== null) {
+        return this.events[this.activeEventID].name;
+      }
+      return "Routegadget 2";
+    },
 
-	createEventEditDropdown : function() {
-		$("#rg2-manager-event-select").empty();
-		var dropdown = document.getElementById("rg2-manager-event-select");
-		var i;
-		for (i = 0; i < this.events.length; i += 1) {
-			var opt = document.createElement("option");
-			opt.value = this.events[i].kartatid;
-			opt.text = this.events[i].date + ": " + this.events[i].name;
-			dropdown.options.add(opt);
-		}
-	},
+    getEventEditDropdown : function (dropdown) {
+      var i;
+      dropdown.options.add(rg2.utils.generateOption(null, 'No event selected'));
+      for (i = (this.events.length - 1); i > -1; i -= 1) {
+        dropdown.options.add(rg2.utils.generateOption(this.events[i].kartatid, this.events[i].kartatid + ": " + this.events[i].date + ": " + this.events[i].name));
+      }
+      return dropdown;
+    },
 
-	isScoreEvent : function() {
-		return (this.events[this.activeEventID].format === rg2.config.SCORE_EVENT);
-	},
-	
-	hasResults: function () {
-    if (this.activeEventID !== null) {
-      return (this.events[this.activeEventID].format !== rg2.config.EVENT_WITHOUT_RESULTS);
-    } else {
+    isScoreEvent : function () {
+      return (this.events[this.activeEventID].format === rg2.config.SCORE_EVENT);
+    },
+
+    hasResults : function () {
+      if (this.activeEventID !== null) {
+        return (this.events[this.activeEventID].format !== rg2.config.EVENT_WITHOUT_RESULTS);
+      }
       return true;
+    },
+
+    mapIsGeoreferenced : function () {
+      if (this.activeEventID === null) {
+        return false;
+      }
+      return this.events[this.activeEventID].worldfile.valid;
+    },
+
+    getMetresPerPixel : function () {
+      var lat1, lat2, lon1, lon2, size, pixels, w;
+      if ((this.activeEventID === null) || (!this.mapIsGeoreferenced())) {
+        // 1 is as harmless as anything else in this situation
+        return {metresPerPixel: 1, units: "pixels"};
+      }
+      size = rg2.getMapSize();
+      pixels = rg2.utils.getDistanceBetweenPoints(0, 0, size.width, size.height);
+      w = this.events[this.activeEventID].worldfile;
+      lon1 = w.C;
+      lat1 = w.F;
+      lon2 = (w.A * size.width) + (w.B * size.height) + w.C;
+      lat2 = (w.D * size.width) + (w.E * size.height) + w.F;
+      return {metresPerPixel: rg2.utils.getLatLonDistance(lat1, lon1, lat2, lon2) / pixels, units: "metres"};
+    },
+
+    getWorldFile : function () {
+      return this.events[this.activeEventID].worldfile;
+    },
+
+    formatEventsAsMenu : function () {
+      var title, html, i;
+      html = '';
+      for (i = this.events.length - 1; i >= 0; i -= 1) {
+        title = rg2.t(this.events[i].type) + ": " + this.events[i].date;
+        if (this.events[i].worldfile.valid) {
+          title += ": " + rg2.t("Map is georeferenced");
+        }
+
+        if (this.events[i].comment !== "") {
+          title += ": " + this.events[i].comment;
+        }
+        html += '<li title="' + title + '" id=' + i + "><a href='#" + this.events[i].kartatid + "'>";
+        if (this.events[i].comment !== "") {
+          html += "<i class='fa fa-info-circle event-info-icon' id='info-" + i + "'></i>";
+        }
+        if (this.events[i].worldfile.valid) {
+          html += "<i class='fa fa-globe event-info-icon' id='info-" + i + "'>&nbsp</i>";
+        }
+        html += this.events[i].date + ": " + this.events[i].name + "</a></li>";
+      }
+      return html;
+
     }
-	},
-
-  isValidEventID : function (eventid) {
-    if ((this.events.length >= eventid) && (eventid > 0)) {
-        return true;
-    } else {
-      return false;
-    }
-  },
-
-	mapIsGeoreferenced : function() {
-		return this.events[this.activeEventID].georeferenced;
-	},
-
-	getWorldFile : function() {
-		return this.events[this.activeEventID].worldFile;
-	},
-
-	formatEventsAsMenu : function() {
-		var title;
-		var html = '';
-		var i;
-		for (i = this.events.length - 1; i >= 0; i -= 1) {
-			if (this.events[i].comment !== "") {
-				title = this.events[i].type + " event on " + this.events[i].date + ": " + this.events[i].comment;
-			} else {
-				title = this.events[i].type + " event on " + this.events[i].date;
-			}
-			html += "<li title='" + title + "' id=" + i + "><a href='#" + this.events[i].kartatid + "'>";
-			if (this.events[i].comment !== "") {
-				html += "<i class='fa fa-info-circle event-info-icon' id='info-" + i + "'></i>";
-			}
-			html += this.events[i].name + "</a></li>";
-		}
-		return html;
-
-	}
-};
-
-function Event(data) {
-	this.kartatid = parseInt(data.id, 10);
-	this.mapid = data.mapid;
-	this.format = parseInt(data.format, 10);
-	this.name = data.name;
-	this.date = data.date;
-	this.club = data.club;
-	this.worldFile = [];
-	if ( typeof (data.A) === 'undefined') {
-		this.georeferenced = false;
-	} else {
-		this.georeferenced = true;
-		this.worldFile.A = data.A;
-		this.worldFile.B = data.B;
-		this.worldFile.C = data.C;
-		this.worldFile.D = data.D;
-		this.worldFile.E = data.E;
-		this.worldFile.F = data.F;
-	}
-	switch(data.type) {
-		case "I":
-			this.type = "International";
-			break;
-		case "N":
-			this.type = "National";
-			break;
-		case "R":
-			this.type = "Regional";
-			break;
-		case "L":
-			this.type = "Local";
-			break;
-		case "T":
-			this.type = "Training";
-			break;
-		default:
-			this.type = "Unknown";
-			break;
-	}
-	this.comment = data.comment;
-	this.courses = 0;
-
-}
-
-Event.prototype = {
-	Constructor : Event
-};
+  };
+  rg2.Events = Events;
+}());

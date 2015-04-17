@@ -1,10 +1,10 @@
 ####
 ## rg2
 #####
-
+rg2-config.php
 rg2-override-config.txt
 rg2-override-config.php
-log/rg2log.txt
+log
 node_modules
 rel
 ftpsite
@@ -12,8 +12,10 @@ ftpsite
 test
 karma.conf.js
 js/coords.js
+lang/xx.js
 coords.html
-
+coverage
+cache/*.json
 #################
 ## Eclipse
 #################

@@ -1,60 +1,135 @@
 <?php
+if (file_exists( dirname(__FILE__) . '/rg2-config.php')) {
+	require_once( dirname(__FILE__) . '/rg2-config.php' );
+} else {
+	echo "Routegadget 2: Configuration file " . dirname(__FILE__) . "/rg2-config.php not found.";
+  return;
+}
 
- require_once( 'rg2-config.php' ); 
- 
- // override allows testing of a local configuration such as c:/xampp/htdocs/rg2
- if (file_exists('rg2-override-config.php')) {
-   $override = true;
-   require_once ( 'rg2-override-config.php');
- } else {
-   $override = false;  
- }
- 
- if (defined('OVERRIDE_UI_THEME')) {
-    $ui_theme = OVERRIDE_UI_THEME;
- } else {
-    $ui_theme = UI_THEME;
- }
+// override allows testing of a local configuration such as c:/xampp/htdocs/rg2
+if (file_exists( dirname(__FILE__) . '/rg2-override-config.php')) {
+	$override = true;
+	require_once ( dirname(__FILE__) . '/rg2-override-config.php');
+} else {
+	$override = false;
+}
 
-  if (defined('HEADER_COLOUR')) {
-    $header_colour = HEADER_COLOUR;
-  } else {
-    $header_colour = '#002bd9';
-  }
-  if (defined('HEADER_TEXT_COLOUR')) {
-    $header_text_colour = HEADER_TEXT_COLOUR;
-  } else {
-    $header_text_colour = '#ffffff';
-  }
-  
-  if (defined('OVERRIDE_BASE_DIRECTORY')) {
-    $json_url = OVERRIDE_BASE_DIRECTORY."/rg2/rg2api.php";
-    $script_url = OVERRIDE_BASE_DIRECTORY."/rg2/js/";
-    $img_url = OVERRIDE_BASE_DIRECTORY."/rg2/img/";
+if (defined('OVERRIDE_UI_THEME')) {
+	$ui_theme = OVERRIDE_UI_THEME;
+} else {
+	$ui_theme = UI_THEME;
+}
 
-   } else {
-    $json_url = RG_BASE_DIRECTORY."/rg2/rg2api.php";
-    $script_url = RG_BASE_DIRECTORY."/rg2/js/";
-    $img_url = RG_BASE_DIRECTORY."/rg2/img/";
-  }
-  
-  $maps_url = RG_BASE_DIRECTORY."/kartat/";
-  
-  // include manager function as parameter for now until we decide the best way forward
-  if (isset($_GET['manage'])) {
-    $manager = true;
-  } else {
-    $manager = false;
-  }
+if (defined('HEADER_COLOUR')) {
+	$header_colour = HEADER_COLOUR;
+} else {
+	$header_colour = '#002bd9';
+}
+if (defined('HEADER_TEXT_COLOUR')) {
+	$header_text_colour = HEADER_TEXT_COLOUR;
+} else {
+	$header_text_colour = '#ffffff';
+}
 
-  // include debug function as parameter for now until we decide the best way forward
-  if (isset($_GET['debug']) || $override) {
-    $debug = true;
+if (defined('OVERRIDE_BASE_DIRECTORY')) {
+	$json_url = OVERRIDE_BASE_DIRECTORY . "/rg2/rg2api.php";
+	if (defined('OVERRIDE_SOURCE_DIRECTORY')) {
+		$source_url = OVERRIDE_SOURCE_DIRECTORY . "/rg2";
+	} else {
+		$source_url = OVERRIDE_BASE_DIRECTORY . "/rg2";
+	}
+} else {
+	$json_url = RG_BASE_DIRECTORY . "/rg2/rg2api.php";
+	if (defined('OVERRIDE_SOURCE_DIRECTORY')) {
+		$source_url = OVERRIDE_SOURCE_DIRECTORY . "/rg2";
+	} else {
+		$source_url = RG_BASE_DIRECTORY . "/rg2";
+	}
+}
+
+if (defined('OVERRIDE_KARTAT_DIRECTORY')) {
+  $maps_url = OVERRIDE_KARTAT_DIRECTORY;
+} else {
+  $maps_url = RG_BASE_DIRECTORY . "/kartat/";
+}
+
+// include manager function as parameter for now until we decide the best way forward
+if (isset($_GET['manage'])) {
+	$manager = TRUE;
+  if (defined('OVERRIDE_KARTAT_DIRECTORY')) {
+    $manager_url = OVERRIDE_KARTAT_DIRECTORY;
   } else {
-    $debug = false;
+    $manager_url = "../kartat/";
   }
+  // simple cookie generator! Don't need unique, just need something vaguely random
+  $keksi = substr(str_shuffle("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"), 0, 20);
+  file_put_contents($manager_url."keksi.txt", $keksi.PHP_EOL); 
+} else {
+	$manager=  FALSE;
+}
+
+// include debug function as parameter for now until we decide the best way forward
+if (isset($_GET['debug']) || $override) {
+	$debug = TRUE;
+} else {
+	$debug = FALSE;
+}
+
+// include language file if requested
+if (isset($_GET['lang'])) {
+	$lang = $_GET['lang'];
+} else {
+	if ((defined('START_LANGUAGE'))) {
+		$lang = START_LANGUAGE;
+	} else {
+		$lang = "";
+	}
+}
+$langdir = dirname(__FILE__) . '/lang/';
+if (file_exists($langdir.$lang.'.txt')) {
+	$dictionary = 'dictionary: {'.PHP_EOL;
+	$dictionary .= file_get_contents($langdir.$lang.'.txt').PHP_EOL;
+	$dictionary .= '}'.PHP_EOL; 
+} else {
+	$dictionary = "dictionary: {}".PHP_EOL;
+}
+
+// create list of available languages
+$languages = "languages: {".PHP_EOL;
+foreach(glob($langdir.'??.txt') as $file) {
+	// xx is a dummy file to hold the master list of terms
+  if ($file != $langdir.'xx.txt') {
+    $lines = explode(PHP_EOL, file_get_contents($file));
+    $code = "";
+		$name = "";
+    foreach ($lines as $line) {
+    	$line = trim($line);
+      if (strpos($line, 'code') !== FALSE) {
+      	$codepos = strpos($line, "'") + 1;
+				$code = substr($line, $codepos, 2);
+				if ($name !== "") {
+					break;
+				}
+			}
+      if (strpos($line, 'language') !== FALSE) {
+      	$namepos = strpos($line, "'");
+				$name = substr($line, $namepos);
+				if ($code !== "") {
+					break;
+				}
+      }
+		}
+		
+	  if (($code != "") && ($name != "")) {
+	    $languages .= $code.': '.$name.PHP_EOL;
+	  }
+	}
+}
+
+$languages .= '},'.PHP_EOL;
+
+header('Content-type: text/html; charset=utf-8');
 ?>
-
 <!DOCTYPE html>
 <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
 <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
@@ -63,36 +138,23 @@
 <html class="no-js">
   <!--<![endif]-->
   <head>
-    <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Routegadget 2.0 Viewer<?php if ($manager) {?> and Manager<?php } ?></title>
+    <title>Routegadget 2</title>
     <meta name="description" content="View and save route choices for orienteering events">
     <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
-
-    <link rel="stylesheet" href="css/normalize.min.css">
-    <link rel="stylesheet" href="css/rg2.css">
-    <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/themes/<?php echo $ui_theme; ?>/jquery-ui.min.css">
-    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
- 
+    <link rel="shortcut icon" href="img/favicon.ico"/>
+    <link rel="stylesheet" href='<?php echo $source_url ."/css/normalize.min.css'>"; ?>  
+    <link rel="stylesheet" href='<?php echo $source_url ."/css/rg2.css'>"; ?>
+    <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/themes/<?php echo $ui_theme; ?>/jquery-ui.min.css">
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css">
+    <!-- ('RG2VERSION', '1.1.4') -->
   </head>
   <body>
     <!--[if lt IE 7]>
     <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
     <![endif]-->
-
-    <div id="rg2-header-container">
-      <div  id="rg2-resize-info" title="Hide info panel">
-        <a href="#"><img id="rg2-resize-info-icon" class="hide" src='<?php echo $img_url."hide-info.png"; ?>'></a>
-      </div>
-      <div id="rg2-header"><span id="rg2-event-title">Routegadget 2.0 Viewer</span></div>  
-        <div class="rg2-button"><i id="btn-about" title = "Help" class="fa fa-question"></i></div>
-        <div class="rg2-button"><i id="btn-zoom-out" title = "Zoom out" class="fa fa-search-minus"></i></div>
-        <div class="rg2-button"><i id="btn-reset" title = "Reset" class="fa fa-undo"></i></div>
-        <div class="rg2-button"><i id="btn-zoom-in" title = "Zoom in" class="fa fa-search-plus"></i></div>
-        <div class="rg2-button"><i id="btn-show-splits" title = "Splits" class="fa fa-list-alt"></i></div>
-        <div class="rg2-button"><i  id="btn-toggle-controls" title = "Show controls" class="fa fa-circle-o"></i></div>
-        <div class="rg2-button"><i id="btn-toggle-names" title = "Show runner names" class="fa fa-tag"></i></div> 
-    </div>
+    <?php include 'html/header.html';?>
+    <noscript><h3>You have javascript disabled. Routegadget cannot run. Please update your browser configuration.</h3></noscript>
     <div id="rg2-container">
       <div id="rg2-info-panel">
         <div id="rg2-info-panel-tab-headers">
@@ -110,11 +172,20 @@
             <a href="#rg2-draw">Draw</a>
           </li>
           <?php if ($manager) { ?>
-          <li id="rg2-manage-tab">
-            <a href="#rg2-manage">Manage</a>
+          <li id="rg2-login-tab">
+            <a href="#rg2-manage-login">Login</a>
+          </li>
+          <li id="rg2-create-tab">
+          	<a href="#rg2-manage-create">Add event</a>
+          </li>
+          <li id="rg2-edit-tab">
+          	<a href="#rg2-manage-edit">Edit event</a>
+          </li>
+          <li id="rg2-map-tab">
+            <a href="#rg2-manage-map">Add map</a>
           </li>
           <?php } ?>
-    </ul>
+   			</ul>
         </div>
         <div id="rg2-info-panel-tab-body">
         <div id="rg2-event-list"></div>
@@ -123,15 +194,24 @@
         </div>
         <div id="rg2-result-list"></div>
       <div id="rg2-draw">
+          <h3 class="no-top-margin" id='rg2-draw-title'>Draw route</h3>
           <div id="rg2-select-course">
-           Select course: <select  id="rg2-course-select"></select>
+           <label for='rg2-course-select'>Select course: </label>
+           <select  id="rg2-course-select"></select>
           </div>     
           <div id="rg2-select-name">
-           Select name: <select  id="rg2-name-select"></select>
+           <label for='rg2-name-select'>Select name: </label>
+           <select id="rg2-name-select"></select>
           </div>
           <div id="rg2-enter-name">
-           <p id = "rg2-name">Enter name: <input  id="rg2-name-entry" class="pushright" type="text"></input></p>
-           <p id = "rg2-time">Enter time (mm:ss): <input  id="rg2-time-entry" class="pushright" type="text"></input></p>
+           <div>
+           	 <label for='rg2-name'>Enter name: </label>
+             <span id = "rg2-name"><input id="rg2-name-entry" class="pushright" type="text"></span>
+           </div>
+           <div>
+           	 <label for='rg2-time'>Enter time (mm:ss): </label>
+             <span id = "rg2-time"><input  id="rg2-time-entry" class="pushright" type="text"></span>
+           </div>
           </div>
           <div>
            <textarea id="rg2-new-comments"></textarea>
@@ -139,158 +219,90 @@
        <button id="btn-three-seconds">+3 sec</button>
        <button id="btn-undo">Undo</button>
        <button id="btn-save-route">Save</button>
-       <button class="pushright" id="btn-reset-drawing">Reset</button>
+       <button id="btn-reset-drawing">Reset</button>
           <hr class="rg2-hr">
-          <h3>Load GPS file (GPX or TCX)</h3>
+          <h3 id='rg2-load-gps-title'>Load GPS file (GPX or TCX)</h3>
           <div id="rg2-select-gps-file">
            <input type='file' accept='.gpx, .tcx' id='rg2-load-gps-file'>
           </div>
-       <input type=checkbox id="btn-move-all"><label for="btn-move-all"> Move track and map together</label>
+       <input type=checkbox id="btn-move-all"><label for="btn-move-all">Move track and map together (or right click-drag)</label>
        <ul>
-        <li>Drag track to align track on map</li>
-            <li>Single click to lock/unlock a point</li>
-            <li>Drag to scale and rotate around locked point</li>
+        <li><span id="draw-text-1">Left click to add/lock/unlock a handle></span>
+        	<ul><li><span id="draw-text-2">Green: draggable</span></li>
+        		<li><span id="draw-text-3">Red: locked</span></li></ul>
+        </li>
+        <li id="draw-text-4">Right click to delete a handle</li>
+        <li id="draw-text-5">Drag a handle to adjust track around locked point(s)</li>
        </ul>
+       <button id="btn-undo-gps-adjust">Undo</button>
        <button class="pushright" id="btn-save-gps-route">Save GPS route</button> 
     </div>
-        <?php if ($manager) { ?>
-        <div id="rg2-manage">
-          <form id="rg2-manager-login">
-            <div>
-              <label for"rg2-user-name">User name: </label>
-              <input class="pushright" id="rg2-user-name" type="text">
-            </div>
-            <div>
-              <label for"rg2-password">Password: </label>
-              <input class="pushright" id="rg2-password" type="password">
-            </div>
-            <button id="btn-login">Log in</button>
-          </form>
-          <div id="rg2-manager-options">
-            <button id="btn-add-event">Add new event</button>
-            <input type=checkbox id="btn-move-map-and-controls"><label for="btn-move-map-and-controls"> Move map and controls together</label>
-            <select id="rg2-manager-event-select"></select>
-            <button id="btn-edit-event">Edit selected event</button>
-            <button id="btn-delete-event">Delete selected event</button>
-
-          </div>
-      </div>  
-      <?php } ?>
+    <?php if ($manager) {include  'html/manager.html'; } ?>     
        </div>
       </div>
-      <canvas id="rg2-map-canvas">Your browser does not support HTML5</canvas>
-      <div id="rg2-animation-controls">
-        <div class="rg2-ani-row row-1">
-          <div class="rg2-button"><i id="btn-slower" title = "Slower" class="fa fa-minus"></i></div>
-          <div class="rg2-button"><i id="btn-start-stop" title = "Run" class="fa fa-play"></i></div>
-          <div class="rg2-button"><i id="btn-faster" title = "Faster" class="fa fa-plus"></i></div>
-          <div id="rg2-clock"></div>
-        </div>
-        <div class="rg2-ani-row row-2">
-          <div id="rg2-clock-slider"></div>
-        </div>
-        <div class="rg2-ani-row row-3">
-          <div id="rg2-replay-start-control">
-            Start at: <select  id="rg2-control-select"><option>S</option></select>
-          </div>
-          <div class="rg2-button"><i id="btn-real-time" title = "Real time" class="fa fa-clock-o"></i></div>
-          <div class="rg2-button"><i id="btn-mass-start" title = "Mass start" class="fa fa-users"></i></div>
-        </div>
-        <div class="rg2-ani-row row-4">
-          <div id="rg2-tails-spinner">
-            <label for="spn-tail-length">Length</label>
-            <input id="spn-tail-length" name="value" />
-          </div>
-          <div id="rg2-tails-type">
-            <label for="btn-full-tails">Full tails </label>
-            <input type="checkbox" id="btn-full-tails" />
-          </div>
-        </div>
-      </div>       
-      <div id="rg2-track-names"></div>
-      <div id="rg2-about-dialog" title="Routegadget 2.0 Viewer">
-       <p>This application allows you to view existing <a href="http://www.routegadget.net">Routegadget</a> information in any modern (HTML5-compliant) browser without the need for Java.</p>
-       <p>The latest version is available for
-         <a href="https://github.com/Maprunner/rg2/archive/master.zip"> download here</a>.
-         Later versions will allow you to create new events, but for now it only works on events that have been set
-         up in in the original Routegadget.</p>
-        <p>It does not currently work properly on iPads, tablets and phones because of problems with the touch interface and screen size. This is on the list of things to be looked at.</p>
-        <p><strong>Simon Errington</strong> (simon (at) maprunner.co.uk)</p>
-        <p id="rg2-version-info"></p>
-        <p><?php echo ADDITIONAL_INFO_TEXT; ?></p>
-      </div>
-      <div id="rg2-splits-table" title="Splits display"></div>
-      <?php if ($manager) { ?>
-      <div id="rg2-add-new-event">
-        <form id="rg2-new-event-details">
-          <div id="rg2-select-event-name">
-            Event name:
-            <input id="rg2-event-name" type="text" autofocus></input>
-          </div>
-          <div id="rg2-select-map-name">
-            Map name:
-            <input id="rg2-map-name" type="text"></input>
-          </div>
-          <div id="rg2-select-club-name">
-            Club name:
-            <input id="rg2-club-name" type="text"></input>
-          </div>
-          <div id="rg2-select-event-date">
-            Event date:
-            <input id="rg2-event-date" type="text"></input>
-          </div>
-          <div id="rg2-select-event-level">
-            Event level: <select id="rg2-event-level"></select>
-          </div>
-          <textarea id="rg2-event-comments"></textarea>
-          <div id="rg2-select-map-file">
-            <input type='file' accept='.jpg' id='rg2-load-map-file' />
-            <label for="rg2-load-map-file">Map file</label>
-          </div>
-          <div id="rg2-select-results-file">
-            <input type='file' accept='.csv' id='rg2-load-results-file' />
-            <label for="rg2-load-results-file">Results file</label>
-          </div>
-          <div id="rg2-select-course-file">
-            <input type='file' accept='.xml' id='rg2-load-course-file' />
-            <label for="rg2-load-course-file">Course file</label>            
-          </div>
-          <div id="rg2-course-allocations"></div>
-          <div id="rg2-results-grouping">
-            <label><input type='radio' name='rg2-course-breakdown' val='course' checked="checked" />Group results by course</label>
-            <label><input type='radio' name='rg2-course-breakdown' val='class' />Group results by class</label>
-          </div> 
-        </form>
-      </div>
-      <?php } ?>
+      <?php include 'html/animation.html'; ?>   
+      <?php include 'html/options.html'; ?>
+      <?php include 'html/misc.html'; ?>
     </div>
-
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
-    <script type="text/javascript">
-      var json_url = "<?php echo $json_url; ?>";
-      var maps_url = "<?php echo $maps_url; ?>";
-      var header_colour = "<?php echo $header_colour; ?>";
-      var header_text_colour = "<?php echo $header_text_colour; ?>";
-    </script>
-    <?php if ($debug) { ?>
-      <script src='<?php echo $script_url."events.js"; ?>'></script>
-      <script src='<?php echo $script_url."results.js"; ?>'></script>
-      <script src='<?php echo $script_url."gpstrack.js"; ?>'></script>
-      <script src='<?php echo $script_url."controls.js"; ?>'></script>
-      <script src='<?php echo $script_url."courses.js"; ?>'></script>
-      <script src='<?php echo $script_url."draw.js"; ?>'></script>
-      <script src='<?php echo $script_url."animation.js"; ?>'></script>
-      <script src='<?php echo $script_url."runner.js"; ?>'></script>
-      <script src='<?php echo $script_url."plugins.js"; ?>'></script>
-      <script src='<?php echo $script_url."lib/hammer.min.js"; ?>'></script>
-      <script src='<?php echo $script_url."rg2.js"; ?>'></script>
-    <?php } else { ?>
-      <script src='<?php echo $script_url."lib/hammer.min.js"; ?>'></script>
-      <script src='<?php echo $script_url."rg2all.min.js"; ?>'></script>      
-    <?php } ?>  
-      <?php if ($manager) { ?>
-      <script src='<?php echo $script_url."manager.js"; ?>'></script>
-      <?php } ?>
-  </body>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
+<?php if ($debug) { ?>
+<script src='<?php echo $source_url . "/js/rg2.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/rg2ui.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/rg2input.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/rg2getjson.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/config.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/canvas.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/events.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/event.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/results.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/result.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/gpstrack.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/controls.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/control.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/courses.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/course.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/draw.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/animation.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/runner.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/map.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/utils.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/plugins.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/handles.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/lib/he.js"; ?>'></script><?php } else { ?>
+<script src='<?php echo $source_url . "/js/rg2all.min.js"; ?>'></script><?php } ?>
+<?php if ($manager) { ?><?php if ($debug) { ?>
+<script src='<?php echo $source_url . "/js/resultparser.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/resultparsercsv.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/resultparseriofv2.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/resultparseriofv3.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/courseparser.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/managerui.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/manager.js"; ?>'></script><?php } else {?>
+<script src='<?php echo $source_url . "/js/rg2manager.min.js"; ?>'></script><?php } ?>
+<script src='<?php echo $source_url . "/js/lib/proj4js-compressed.js"; ?>'></script><?php } ?>
+<script type="text/javascript">
+var rg2Config = {
+json_url: "<?php echo $json_url; ?>",
+maps_url: "<?php echo $maps_url; ?>",
+header_colour: "<?php echo $header_colour; ?>",
+header_text_colour: "<?php echo $header_text_colour; ?>",
+<?php if (defined('SPLITSBROWSER_DIRECTORY')) { ?>
+enable_splitsbrowser: true,
+<?php } else { ?>
+enable_splitsbrowser: false,
+<?php } ?>
+<?php if ($manager) { ?>
+keksi: "<?php echo $keksi; ?>",
+<?php if (defined('EPSG_CODE')) { ?>
+epsg_code: "<?php echo EPSG_CODE; ?>",
+epsg_params: "<?php echo EPSG_PARAMS; ?>",
+<?php } ?>
+<?php } ?>
+<?php echo $languages; ?>
+<?php echo $dictionary; ?>
+};
+<?php echo "$(document).ready(rg2.init);" ?>
+</script>
+</body>
 </html>

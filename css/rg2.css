@@ -5,7 +5,7 @@
 html, body {
 	width: 100%;
   height: 100%;
-  margin: 0px;
+  margin: 0;
   border: 0;
   display: block;
   font: 16px/26px Helvetica, Helvetica Neue, Arial;
@@ -28,7 +28,7 @@ html, body {
 }
 
 #rg2-manager-event-select {
-  margin-top:100px;
+  /*margin-top:100px;*/
   width: 100%;
 }
 
@@ -36,7 +36,7 @@ html, body {
 	margin-top:10px;
 	margin-bottom: 10px;
 	width: 100%;
-	height: 100px;
+	height: 50px;
 }
 
 .rg2-ani-row {
@@ -46,7 +46,7 @@ html, body {
     vertical-align: middle;
     height: 36px;
 	  width: 240px;
-    right: 0px;
+    right: 0;
 	  border: 4px solid darkgray;
   	z-index: 100;
     line-height: 36px;
@@ -67,7 +67,7 @@ html, body {
 }
 
 .row-4 {
-    bottom: 0px;
+    bottom: 0;
     color: black;   
 }
 
@@ -103,7 +103,7 @@ html, body {
 
 #rg2-about {
    position: absolute;	
-   right: 0px;
+   right: 0;
    padding-right: 20px;
 }
 
@@ -141,9 +141,13 @@ html, body {
 	float: right;
 }
 
+.allitemsrow {
+  font-weight: bold;  
+}
+
 .rg2-hr {
-	margin-top:20px;
-	margin-bottom:20px;
+	margin-top: 10px;
+	margin-bottom: 10px;
 }
 #rg2-clock {
    font-weight: bold;
@@ -167,20 +171,33 @@ html, body {
   padding-right: 5px;
 }
 
+
+#spn-map-intensity, #spn-course-width, #spn-route-width, #spn-name-font-size, #spn-route-intensity, #spn-control-circle {
+  width: 40px;
+}
+
+.options {
+  float: right;
+  padding-right: 5px;
+  margin-top: 5px;
+  clear:both;
+}
+
 #rg2-container {
 	 height: 100%;
    width: 100%;
    position: relative;
-   background: silver;
+   background: white;
    overflow: hidden;
+   display: none;
 }
 
 #rg2-info-panel {
    font-size: 0.75em;
-	 height: 99%;
 	 width: 360px;
    position: absolute;
 	 z-index: 100;
+	 height: 99%;
 }
 
 #rg2-info-panel-tab-headers {
@@ -188,9 +205,41 @@ html, body {
    position: relative;
 }
 
+#rg2-info-panel-tab-headers .ui-tabs-nav a {
+   padding: .5em .5em;
+}
+
 #rg2-info-panel-tab-body {
    overflow: auto; /* add scroll bars if needed */
    height: 95.5%
+}
+
+#rg2-event-list .ui-menu-item {
+  list-style-image: none;
+}
+
+#rg2-event-list .ui-menu-item a {
+  text-decoration: none;
+}
+
+#rg2-event-list li:nth-child(odd) {
+  background: #eee;
+}
+
+.rg2-active-event {
+   border: 2px solid black;
+}
+   
+#rg2-hide-info-panel-control {
+  position:absolute;
+  left: 366px;
+  top: 4px;
+  z-index: 100;
+  color: black;
+  width: 20px;
+  text-align: center;
+  border: 1px solid #AAAAAA;
+  background: #E0E0E0;
 }
 
 #rg2-map-canvas {
@@ -198,8 +247,24 @@ html, body {
    z-index: 50;
 }
 
+#rg2-load-progress {
+   border: 1px solid darkgray;
+   background: rgb(204, 204, 204);
+   background: rgba(204, 204, 204, 1.0);
+   padding : 2px;
+   position: absolute;
+   font:1.0em/1.0em arial;
+   text-align:center;
+   top: 100px;
+   left: 400px;
+   height: auto;
+   width: 200px;
+   z-index: 90;
+}
+
 #rg2-track-names, #rg2-animation-names {
    border: 1px solid darkgray;
+   background: rgb(204, 204, 204);
    background: rgba(204, 204, 204, 0.75);
    padding : 2px;
    position: absolute;
@@ -208,7 +273,7 @@ html, body {
    right: 20px;
    height: auto;
    width: auto;
-   z-index: 100;
+   z-index: 90;
    max-height: 500px;
    overflow: auto;
 }
@@ -222,7 +287,7 @@ html, body {
 	float: right;
 }
 
-#rg2-manager-options .ui-button {
+#rg2-manage-edit .ui-button {
 	margin-top: 10px;
   margin-bottom: 10px;
 }
@@ -235,6 +300,7 @@ html, body {
 /* light green background*/
 .valid {
   background-color: #99ffcc;
+  border-radius: 3px;
 }
 
 .coursemenutable tr, td, th {
@@ -252,16 +318,19 @@ p.showcourse {
 */
 table.resulttable td, 
 table.resulttable th {
-	padding-left: 10px;
+	padding-left: 5px;
 	padding-right: 5px;
-	text-align: left;
-	width: 70%;
+	text-align: center;
 }
 
 table.resulttable td + td,
 table.resulttable th + th {
-	text-align: right;
-	width: 15%;
+	width: 80%;
+	text-align: left;
+}
+
+table.resulttable tbody tr:nth-child(odd) {
+  background: #eee;
 }
 
 #rg2-result-list .ui-accordion,
@@ -331,7 +400,7 @@ height: 20px;
 #rg2-event-comments {
 	margin-top: 10px;
 	margin-bottom: 10px;
-	width: 100%;
+	width: 95%;
 	height: 50px;
 }
 
@@ -382,12 +451,94 @@ display: none;
  * prevent selection of objects on the canvas
  */
 image, canvas {
-    user-select: none;
-    -ms-user-select: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -webkit-touch-callout: none;
-    -webkit-user-drag: none;
+  -ms-user-select: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
+  user-select: none;
 }
 
+.manage-input {
+  margin-top: 3px;
+  margin-right: 3px;
+  width: 200px;
+}
+
+.manage-label {
+  margin-left: 3px;
+}
+
+#rg2-draw label {
+  margin-left: 3px;
+}
+
+.no-top-margin {
+  margin-top: 0;
+  margin-bottom: 2px;
+}
+
+#rg2-manage-create {
+  padding-right: 5px;
+}
+
+#rg2-manage-create div, #rg2-manage-map div, #rg2-manage-edit div {
+  margin-top: 5px;
+}
+
+.manage-file-input {
+  margin-top: 4px;
+  margin-bottom: 4px;
+  width: 200px;
+}
+
+.manage-file-input-div {
+  height: 41px;
+}
+
+.manage-file-label {
+  margin-top: 9px;
+  margin-bottom: 9px;
+}
+
+.manage-event-edit-div {
+  height: 30px;
+  }
+
+.manage-event-edit-div label, .manage-event-edit-div input {
+  display: inline-block;
+}
+
+.manage-event-edit-div label {
+  width: 80px;
+}
+
+
+#manage-edit-options input {
+  width: 220px;
+}
+
+#manage-edit-options .ui-accordion-content {
+  padding: 1em 0.5em;
+}
+
+#rg2-option-controls input[type="checkbox"] {
+  margin-left: 10px;
+  margin-top: 10px;
+  float: right;
+}
+
+#rg2-draw .ui-button {
+  margin-left: 5px;
+  margin-top: 5px;
+}
+
+#rg2-edit-event-comments {
+  width: 95%;
+  height: 50px;
+}
+
+#rg2-event-selected {
+  width: 95%;
+}

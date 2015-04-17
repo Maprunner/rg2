@@ -1,77 +1,153 @@
-# Routegadget 2.0
+# Routegadget 2
 
 ## Latest news
-Version 0.4.3 was released on 30th January and now provides nearly all the user functionality of the original Routegadget. It has been installed on all sites managed through routegadget.co.uk, and I am working with Paul Frost to keep these sites up to date with future versions as they are released. Recent significant changes include:
-* Permalinks to allow direct access to a given event through a link ending #xx, where xx is the event number. For example, [http://www.happyherts.routegadget.co.uk/rg2/#149] (http://www.happyherts.routegadget.co.uk/rg2/#149) links directly to the HH event at Ashridge on 19th January.
-* Entry of names, times and routes for events that were added without results (typically low-key events such as evening street score events).
-* Ability to upload TCX files as well as GPX files.
+Version 1.1.3 was released on 13th March 2015 and has been installed on all routegadget.co.uk sites. This now provides enhanced information for the [RG2 statistics database] (http://www.maprunner.co.uk/rg2-stats). If your site is showing up with 0s in some of the totals column then you need to upgrade to at least version 1.0.2. If you have an RG2 site that you would like added to the database then please let me know.
 
-## Error reporting
-If you find a problem or want to suggest an enhancement then the first thing to do is check the [known issues list on Github] (https://github.com/Maprunner/rg2/issues).
-If your problem is not already there then you can add it directly (although I think you need a Github account to do this) or you can email me (simon at maprunner dot co dot uk) and I will add it.
+I would recommend using the RG2 manager to set up events rather than the original Routegadget Java version. This will give you some extra functionality (such as positions in the results), and it is also a lot easier to get the controls aligned.
+
+## User Guide and Introductory Videos
+
+[All RG2 videos.] (http://screencast-o-matic.com/channels/c2e22vhJZ)
+
+For a quick start try:
+
+1. The [User Guide] (https://github.com/Maprunner/rg2/wiki/User-guide) in the wiki.
+ 
+2. Video: [A quick introduction to RG2] (http://screencast-o-matic.com/u/VJsd/RG2-Quick-Introduction)
+
+3. Video: [Drawing a route] (http://screencast-o-matic.com/u/VJsd/RG2-Draw-A-Route)
+
+4. Video: [Uploading a GPS route] (http://screencast-o-matic.com/u/VJsd/RG2-GPS-Upload)
+
+## Manager Guide and Video
+
+* [Manager guide] (https://github.com/Maprunner/rg2/wiki/Manager-details)
+    * [Installation] (https://github.com/Maprunner/rg2/wiki/Installation)
+    * [Splitsbrowser integration] (https://github.com/Maprunner/rg2/wiki/Splitsbrowser integration)
+    * [Language configuration] (https://github.com/Maprunner/rg2/wiki/Language-configuration)
+    * [Georeferencing] (https://github.com/Maprunner/rg2/wiki/Georeferencing-maps)
+
+* Video: [A quick introduction to RG2 manager functions] (http://screencast-o-matic.com/u/VJsd/RG2-Cassiobury-Manager-Demo)
+
+* Video: [Georeferencing your map in RG2] (http://screencast-o-matic.com/u/VJsd/Georeferencing) 
 
 ## What is RouteGadget?
-Routegadget is a Web application for drawing and comparing orienteering routes. The original version was developed by Jarkko Ryyppö, and
-it is now used by [orienteering clubs around the world] (http://www.routegadget.net). This includes a very big user base
-in [Great Britain] (http://www.routegadget.co.uk/). 
+Routegadget is a Web application for drawing and comparing orienteering routes. The original version was developed by Jarkko Ryyppö, and it is now used by orienteering clubs around the world.
 
-If you are still lost then try:
-
-* The original [Hertfordshire Orienteering Club Routegadget site] (http://www.happyherts.routegadget.co.uk/cgi-bin/reitti.cgi).
-* The new [Hertfordshire Orientering Club Routegadget 2.0 site] (http://www.happyherts.routegadget.co.uk/rg2/index.php).
-
-## Why Routegadget 2.0?
+## Why Routegadget 2?
 The original Routegadget makes extensive use of Java, and this has caused increasing difficulties.
-Routegadget 2.0 allows you to view existing Routegadget information in any modern (HTML5-compliant) browser without the need for Java.
-It also adds a modern user interface as well as updated functionality for analysis.
+Routegadget 2 allows you to view existing Routegadget information in any modern (HTML5-compliant) browser without the need for Java. It also adds a modern user interface as well as updated functionality for analysis.
 
-##Status
-The user interface now includes all core functionality and should be fairly stable. You can draw a route and upload a recorded GPS file (GPX and TCX formats only at present).
+## RG2 Installations
 
-Later versions will allow you to create new events (as a replacement of the original Manager), but for now it only works on events that have been set up in the
-original Routegadget.
+This is a list of known RG2 installations. You might find it easier to access via the [RG2 statistics database] (http://www.maprunner.co.uk/rg2-stats).
 
-It does not currently work properly on iPads, tablets and phones because of problems with the touch interface and screen size. This is
-on the list of things to be looked at.
+### Great Britain
 
-## GPS file adjustment
-When you upload a file it is initially fitted to the course as closely as possible. There are limited functions to adjust the route.
-You can drag the whole route, and you can lock a point on it and then stretch and rotate the whole course around the locked point. There is no option to edit
-parts of a route (as in RG1), and at the moment there is no intention to add this. The plan is to georeference maps and courses when they are added to
-RG2, and no adjustment will then be needed. 
+ * [Airienteers] (http://www.aire.routegadget.co.uk/rg2)
+ * [Badenoch &amp; Strathspey OC] (http://www.basoc.routegadget.co.uk/rg2)
+ * [Basingstoke Andover DO] (http://www.bado.routegadget.co.uk/rg2)
+ * [Berkshire Orienteers] (http://www.bko.routegadget.co.uk/rg2)
+ * [Border Liners] (http://www.bl.routegadget.co.uk/rg2)
+ * [British Army OC] (http://www.baoc.routegadget.co.uk/rg2)
+ * [British Champs] (http://www.boc.routegadget.co.uk/rg2)
+ * [Bristol OK] (http://www.bok.routegadget.co.uk/rg2)
+ * [Calder Valley Fell Runners] (http://www.cvfr.routegadget.co.uk/rg2)
+ * [Cambridge University OC] (http://www.cuoc.routegadget.co.uk/rg2)
+ * [Chigwell &amp; Epping Forest OC] (http://www.chig.routegadget.co.uk/rg2)
+ * [Claro] (http://www.claro.routegadget.co.uk/rg2)
+ * [Cleveland Orienteering Klub] (http://www.clok.routegadget.co.uk/gadget/rg2)
+ * [Clydeside OC] (http://www.clyde.routegadget.co.uk/rg2)
+ * [Cornwall OC (Kerno)] (http://www.kerno.routegadget.co.uk/rg2)
+ * [Dark &amp; White Events] (http://www.darkandwhite.routegadget.co.uk/rg2)
+ * [Deeside OC] (http://www.dee.routegadget.co.uk/rg2)
+ * [Derwent Valley Orienteers] (http://www.derwentvalleyorienteers.org.uk/results/rg2)
+ * [Devon OC] (http://www.devonoc.routegadget.co.uk/rg2)
+ * [EckO - Loch Eck Orienteers] (http://www.ecko.routegadget.co.uk/rg2)
+ * [EBOR] (http://www.ebor.routegadget.co.uk/rg2)
+ * [East Lothian Orienteers] (http://www.elo.routegadget.co.uk/rg2)
+ * [East Pennine OC] (http://www.epoc.routegadget.co.uk/rg2)
+ * [Edinburgh Southern OC] (http://www.esoc.routegadget.co.uk/rg2)
+ * [Edinburgh University OC] (http://www.euoc.routegadget.co.uk/rg2)
+ * [Forth Valley Orienteers] (http://routegadget.fvo.org.uk/rg2)
+ * [Guildford Orienteers] (http://www.go.routegadget.co.uk/rg2)
+ * [Grampian Orienteers] (http://www.gramp.routegadget.co.uk/rg2)
+ * [Happy Herts] (http://www.happyherts.routegadget.co.uk/rg2)
+ * [Harlequins OC] (http://www.hoc.routegadget.co.uk/rg2)
+ * [Havering &amp; South Essex OC] (http://www.havoc.routegadget.co.uk/rg2)
+ * [Interl&oslash;pers] (http://www.interlopers.routegadget.co.uk/rg2)
+ * [Invoc] (http://www.invoc.routegadget.co.uk/rg2)
+ * [JK] (http://www.jk.routegadget.co.uk/rg2)
+ * [Kingdom of Fife KFO] (http://www.kfo.routegadget.co.uk/rg2)
+ * [Leicester OC] (http://www.leioc.routegadget.co.uk/rg2)
+ * [Lakeland OC] (http://www.loc.routegadget.co.uk/rg2)
+ * [LAMM - Mountain Marathon] (http://www.lamm.routegadget.co.uk/rg2)
+ * [Lincoln OG] (http://www.log.routegadget.co.uk/rg2)
+ * [London O Klub] (http://www.lok.routegadget.co.uk/rg2)
+ * [LVO Lagan Valley] (http://www.lvo.routegadget.co.uk/rg2)
+ * [Maroc] (http://www.maroc.routegadget.co.uk/rg2)
+ * [Manchester &amp; District OC] (http://www.mdoc.routegadget.co.uk/rg2)
+ * [Mid Wales Orienteers] (http://www.pow.routegadget.co.uk/rg2)
+ * [Mole Valley OC] (http://www.mvoc.routegadget.co.uk/rg2)
+ * [Newcastle &amp; Tyneside OC] (http://www.nato.routegadget.co.uk/rg2)
+ * [North Gloucestershire OC] (http://www.ngoc.routegadget.co.uk/rg2)
+ * [Norfolk OC] (http://www.noroc.routegadget.co.uk/rg2)
+ * [North Wilts O] (http://www.nwo.routegadget.co.uk/rg2)
+ * [Nottingham OC](http://www.noc-uk.org/gadget/rg2)
+ * [Octavian Droobers] (http://www.od.routegadget.co.uk/rg2)
+ * [OMM - Mountain Marathon] (http://www.omm.routegadget.co.uk/rg2)
+ * [Oxford University OC] (http://www.ouoc.routegadget.co.uk/rg2)
+ * [Pendle Forest Orienteers] (http://www.pfo.routegadget.co.uk/rg2)
+ * [Quantock Orienteers] (http://www.quantock.routegadget.co.uk/rg2)
+ * [RAFO] (http://www.rafo.routegadget.co.uk/rg2)
+ * [Roxburgh Reivers] (http://www.roxburghreivers.routegadget.co.uk/rg2)
+ * [Sarum OC] (http://www.sarum.routegadget.co.uk/rg2)
+ * [Scottish 6 Days] (http://www.scottish6days.routegadget.co.uk/rg2)
+ * [Scottish MBO] (http://www.smbo.routegadget.co.uk/rg2)
+ * [SE Lancs OC] (http://www.seloc.routegadget.co.uk/rg2)
+ * [Solway OC](http://www.solway.routegadget.co.uk/rg2)
+ * [Southdowns OC](http://www.so.routegadget.co.uk/rg2)
+ * [South London OC] (http://www.slow.routegadget.co.uk/rg2)
+ * [South Midlands OC](http://www.smoc.routegadget.co.uk/rg2)
+ * [Southampton OC](http://www.soc.routegadget.co.uk/rg2)
+ * [Southern Navigators] (http://www.sn.routegadget.co.uk/rg2)
+ * [South Ribble OC] (http://www.sroc.routegadget.co.uk/rg2)
+ * [South Wales OC] (http://www.swoc.routegadget.co.uk/rg2)
+ * [South Yorkshire Orienteers] (http://www.syo.routegadget.co.uk/rg2)
+ * [Stag](http://www.stag.routegadget.co.uk/rg2)
+ * [Start Squad](http://www.start.routegadget.co.uk/rg2)
+ * [Suffolk OC](http://www.suffoc.routegadget.co.uk/rg2)
+ * [Tayside Orienteers](http://www.tay.routegadget.co.uk/rg2)
+ * [Thames Valley OC] (http://www.tvoc.routegadget.co.uk/rg2)
+ * [Tinto] (http://www.tinto.routegadget.co.uk/rg2)
+ * [Walton Chasers] (http://www.walton.routegadget.co.uk/rg2)
+ * [Wessex OC] (http://www.wsx.routegadget.co.uk/rg2)
+ * [West Cumbria OC] (http://www.wcoc.routegadget.co.uk/rg2)
+ * [Wimborne Orienteers] (http://www.wim.routegadget.co.uk/rg2)
+ * [Wrekin Orienteers] (http://www.wrekin.routegadget.co.uk/rg2)
 
-##Installation
-To use Routegadget 2.0 you need to install it in an existing Routegadget installation. This will require ftp access to your server. If this makes
-no sense  then the following information is not for you.
+## Australia
 
-1. Download the [files] (https://github.com/Maprunner/rg2/archive/master.zip) and extract them. Note that this will extract
-them to a directory called rg-master, which needs to be renamed to rg2.
+* [Garingal Orienteers, Sydney] (http://garingal.com.au/gadget2014/rg2)
 
-2. Use ftp to transfer them to your Routegadget server. Everything sits in or below a new directory called rg2 which is in the main Routegadget
-directory, at the same level as the kartat directory where the data files are stored. You should end up with a structure similar to:
+## Brazil
 
-         www.club.routegadget.co.uk
-             /cgi-bin
-             /images
-             /kartat
-             /rg2
-                 /css
-                 /img
-                 /lock
-                 /log
-                 /js
-                     /vendor
+* [World Masters Orienteering Championships 2014] (http://www.wmoc.routegadget.co.uk/rg2)
 
-3. Edit the rg2-config.php file in the /rg2 directory and enter the URL for your existing Routegadget installation. Change other configuration options as necessary.
+### Norway
 
-4. Your data should now be available at e.g. http://www.club.routegadget.co.uk/rg2/index.php
+* [STMBK Orientering, Trondheim] (http://orientering.stbik.no/rg2)
 
-##Known installation problems
-We have had two examples of a problem when creating the configuration file. Certain text editors (and it is not obvious which, or even if it always happens) can add three invisible bytes at the start of a file when saving it and this gives error when the file is read in. You will get a blank Events tab, and will possibly see a message starting "Events request failed: parsererror, SyntaxError: JSON Parse error:
-Unrecognized token '<'".
+### South Africa
 
-The easiest solution is to recreate the config file in a different editor starting from the github version. 
+* [Rand Orienteering Club] (http://www.rocroutegadget.co.za/gadget/rg2)
 
-For a full technical explanation see [UTF8 BOM in this article] (http://stackoverflow.com/questions/8028957/headers-already-sent-by-php). You can see the problem if you upload the config file to [http://en.webhex.net/] (http://en.webhex.net/).
+### United States
+
+* [Rocky Mountain Orienteering Club] (http://www.rmoc.org/gadget/rg2)
+
+
+
+
 
 

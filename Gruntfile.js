@@ -1,10 +1,20 @@
 module.exports = function(grunt) {
-  var jsFileList = ['js/rg2.js', 'js/animation.js', 'js/controls.js', 'js/courses.js', 'js/draw.js', 'js/events.js', 'js/gpstrack.js',
-   'js/manager.js', 'js/plugins.js', 'js/results.js', 'js/runner.js'];
+  var jsFileList = ['js/rg2.js', 'js/animation.js', 'js/canvas.js', 'js/config.js', 'js/control.js', 'js/controls.js', 'js/course.js', 'js/courseparser.js', 'js/courses.js', 'js/draw.js', 'js/event.js',
+    'js/events.js', 'js/gpstrack.js', 'js/handles.js', 'js/map.js', 'js/plugins.js', 'js/result.js', 'js/resultparser.js', 'js/resultparsercsv.js', 'js/resultparseriofv2.js','js/resultparseriofv3.js',
+    'js/results.js', 'js/rg2getjson.js', 'js/rg2input.js', 'js/rg2ui.js', 'js/runner.js', 'js/utils.js', 'js/lib/he.js'];
+
+  var cssFileList = ['css/rg2.css'];
+  
+  // don't jsHint he.js, plugins.js
+  var jsHintList = ['js/rg2.js', 'js/animation.js', 'js/canvas.js', 'js/config.js', 'js/control.js', 'js/controls.js', 'js/course.js', 'js/courseparser.js', 'js/courses.js', 'js/draw.js', 'js/event.js',
+    'js/events.js', 'js/gpstrack.js', 'js/handles.js', 'js/map.js', 'js/result.js', 'js/resultparser.js', 'js/results.js', 'js/rg2getjson.js', 'js/rg2input.js', 'js/rg2ui.js', 'js/runner.js', 'js/utils.js'];
+   
+  var jsManagerSrc = ['js/manager.js', 'js/resultparseriofv2.js', 'js/resultparseriofv3.js', 'js/resultparsercsv.js', 'js/resultparser.js', 'js/courseparser.js', 'js/managerui.js'];
 
   var jsConcatFile = 'js/rg2all.js';
-
+  
   var jsMinFile = 'js/rg2all.min.js';
+  var jsManagerMinFile = 'js/rg2manager.min.js';
 
   var relDir = 'ftpsite/';
 
@@ -12,10 +22,10 @@ module.exports = function(grunt) {
   
   var clubs = ['aire', 'bado', 'baoc', 'basoc', 'bko', 'boc', 'bok', 'bl', 'chig', 'claro', 'clok', 'clyde', 'cuoc', 'cvfr', 'darkandwhite', 'dee',
    'devonoc', 'ebor', 'ecko', 'elo', 'epoc', 'esoc', 'euoc', 'gmoa', 'gramp', 'go', 'happyherts', 'havoc', 'hoc', 'interlopers', 'invoc', 'jk',
-   'kerno', 'kfo', 'lamm', 'leioc', 'loc', 'log', 'lok', 'lvo', 'maroc', 'mdoc', 'mvoc', 'nato', 'ngoc', 'noroc', 'nwo', 'od', 'omm', 'ouoc',
-   'pfo', 'pow', 'quantock', 'rafo', 'roxburghreivers', 'sa', 'sarum', 'scottish6days', 'seloc', 'slow', 'smbo', 'smoc', 'sn', 'soc', 'solway',
-   'sportident', 'sroc', 'stag', 'start', 'suffoc', 'swoc', 'syo', 'tay', 'test', 'purple-thistle', 'tinto', 'tvoc', 'walton', 'wcoc', 'wim',
-   'wsco', 'wsoe', 'wsx'];
+   'kerno', 'kfo', 'lamm', 'leioc', 'loc', 'log', 'lok', 'lvo', 'maroc', 'mdoc', 'moravian', 'mvoc', 'nato', 'ngoc', 'noroc', 'nwo', 'od', 'omm', 'ouoc',
+   'pfo', 'pow', 'quantock', 'rafo', 'roxburghreivers', 'sa', 'sarum', 'scottish6days', 'seloc', 'slow', 'smbo', 'smoc', 'sn', 'so', 'soa', 'soc', 'solway',
+   'sportident', 'sroc', 'stag', 'start', 'suffoc', 'swoc', 'syo', 'tay', 'test', 'purple-thistle', 'tinto', 'tvoc', 'walton', 'waoc', 'wcoc', 'wim', 'wmoc',
+   'wrekin', 'wsco', 'wsoe', 'wsx'];
 
   // Project configuration.
   grunt.initConfig({
@@ -41,7 +51,7 @@ module.exports = function(grunt) {
         es3 : true,
         //strict: true,
         undef : true,
-        //unused: true,
+        unused: true,
         trailing : true,
         globals : {
           $ : false,
@@ -52,9 +62,26 @@ module.exports = function(grunt) {
           console : false
         }
       },
+      manager : {
+        src: jsManagerSrc
+      },
       all : {
-        src : jsFileList
+        src : jsHintList
       }
+    },
+    
+    csslint: {
+      options: {
+      	// 2 means treat as an error
+        'import': 2,
+        // false means ignore rule
+        // TODO: rewrite CSS to allow these to be removed, but for now it works
+        'ids': false,
+        'box-model': false,
+        'duplicate-background-images': false,
+        'outline-none': false
+      },
+      src: cssFileList
     },
 
     uglify : {
@@ -64,6 +91,10 @@ module.exports = function(grunt) {
       build : {
         src : jsConcatFile,
         dest : jsMinFile
+      },
+      manager : {
+        src : jsManagerSrc,
+        dest : jsManagerMinFile
       }
     },
 
@@ -81,7 +112,7 @@ module.exports = function(grunt) {
     },
     sync : {
       rel : {
-        src : ['js/**', 'css/**', 'img/**', 'rg2api.php', 'index.php', 'lib/hammer.min.js'],
+        src : ['js/**', 'css/**', 'img/**', 'rg2api.php', 'index.php', 'html/**', 'lang/**'],
         dest : 'rel/'
       },
       aire : {
@@ -142,7 +173,7 @@ module.exports = function(grunt) {
         cwd : 'rel/',
         expand : true,
         src : '**',
-        dest : 'ftpsite/clok/rg2/'
+        dest : 'ftpsite/clok/gadget/rg2/'
       },
       claro : {
         cwd : 'rel/',
@@ -208,7 +239,7 @@ module.exports = function(grunt) {
         cwd : 'rel/',
         expand : true,
         src : '**',
-        dest : 'ftpsite/epoc/gadget/rg2/'
+        dest : 'ftpsite/epoc/rg2/'
       },
       esoc : {
         cwd : 'rel/',
@@ -336,6 +367,12 @@ module.exports = function(grunt) {
         src : '**',
         dest : 'ftpsite/mdoc/rg2/'
       },
+      moravian : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/moravian/rg2/'
+      },
       mvoc : {
         cwd : 'rel/',
         expand : true,
@@ -432,6 +469,12 @@ module.exports = function(grunt) {
         src : '**',
         dest : 'ftpsite/scottish6days/rg2/'
       },
+      sboc : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/sboc/rg2/'
+      },
       seloc : {
         cwd : 'rel/',
         expand : true,
@@ -461,6 +504,18 @@ module.exports = function(grunt) {
         expand : true,
         src : '**',
         dest : 'ftpsite/sn/rg2/'
+      },
+      so : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/soa/rg2/'
+      },
+      soa : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/soa/rg2/'
       },
       soc : {
         cwd : 'rel/',
@@ -552,6 +607,12 @@ module.exports = function(grunt) {
         src : '**',
         dest : 'ftpsite/walton/rg2/'
       },
+      waoc : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/waoc/rg2/'
+      },
       wcoc : {
         cwd : 'rel/',
         expand : true,
@@ -563,6 +624,18 @@ module.exports = function(grunt) {
         expand : true,
         src : '**',
         dest : 'ftpsite/wim/rg2/'
+      },
+      wmoc : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/wmoc/rg2/'
+      },
+      wrekin : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/wrekin/rg2/'
       },
       wsco : {
         cwd : 'rel/',
@@ -595,16 +668,67 @@ module.exports = function(grunt) {
           to : '<%= ftp.club %>'
         }]
       },
-      version : {
-        src : 'js/rg2.js',
+      jsversion : {
+        src : 'js/config.js',
         overwrite : true,
         replacements : [{
           from : /RG2VERSION.*\'/,
           to : "RG2VERSION: '<%= pkg.version %>'"
         }]
+      },
+      phpversion : {
+        src : ['rg2api.php', 'index.php'],
+        overwrite : true,
+        replacements : [{
+          from : /\(\'RG2VERSION\'.*\)/,
+          to : "('RG2VERSION', '<%= pkg.version %>')"
+        }]
       }
+    },
+    
+    jslint: {
+      all: {
+        src: jsHintList,
+        exclude: [],
+        directives: {
+          indent: 2,
+          // allow browser variables (window...)
+          browser: true,
+          // don't require use strict
+          sloppy: true,
+          // allow TODO comments
+          todo: true,
+          // allow console and alert
+          //devel: true,
+          predef: ['$', 'FileReader']
+        },
+        options: {
+          failOnError: false
+        }
+      },
+      manager: {
+        src: jsManagerSrc,
+        exclude: [],
+        directives: {
+          indent: 2,
+          // allow browser variables (window...)
+          browser: true,
+          // don't require use strict
+          sloppy: true,
+          // allow TODO comments
+          todo: true,
+          predef: ['$', 'FileReader']
+        },
+        options: {
+          failOnError: false
+        }
+      }
+    },
 
+   clean: {
+      minified: ['js/rg2all.js', 'js/rg2all.min.js', 'js/rg2manager.min.js']
     }
+
   });
 
   // Load all the grunt tasks
@@ -612,35 +736,13 @@ module.exports = function(grunt) {
 
   grunt.registerTask('default', ['build']);
 
+  // increment minor version number: do anything else by editting package.json by hand
   grunt.registerTask('bump', ['bumpup']);
-  grunt.registerTask('bump-minor', ['bumpup:minor']);
-  grunt.registerTask('bump-major', ['bumpup:major']);
 
-  grunt.registerTask('build', ['newer:jshint:all', 'newer:concat', 'newer:uglify' ]);
+  grunt.registerTask('build', ['clean:minified', 'csslint', 'jslint:all', 'jshint:all', 'concat:js', 'uglify', 'build-manager' ]);
+  
+  grunt.registerTask('build-manager', ['jslint:manager', 'jshint:manager', 'uglify:manager' ]);
 
-  grunt.registerTask('deploy', ['replace:version', 'build', 'sync:rel']);
-
-  //old example task: one-off to generate config files
-  grunt.registerTask('config', 'Generate config files', function() {
-
-    // clubs that didn't have a config already
-    var clubs = ['aire', 'baoc', 'bko', 'boc', 'bok', 'border', 'chig', 'claro', 'clyde', 'cuoc', 'cvfr', 'darkandwhite', 'devonoc', 'ebor', 'ecko', 'elo', 'esoc', 'euoc', 'gmoa', 'gramp', 'guildford', 'happyherts', 'havoc', 'hoc', 'interlopers', 'jk', 'kerno', 'kfo', 'lamm', 'log', 'lok', 'lvo', 'mdoc', 'mvoc', 'nato', 'ngoc', 'noroc', 'nwo', 'od', 'ouoc', 'pfo', 'pow', 'quantock', 'rafo', 'sa', 'sarum', 'scottish6days', 'seloc', 'smbo', 'smoc', 'sn', 'soc', 'solway', 'sportident', 'stag', 'start', 'swoc', 'syo', 'tay', 'test', 'thistle', 'tinto', 'tvoc', 'walton', 'wcoc', 'wim', 'wsco', 'wsoe', 'wsx'];
-
-    var i;
-    var obj = '';
-    for ( i = 0; i < clubs.length; i += 1) {
-      obj += clubs[i] + ": {\n";
-      obj += "src: ['rel/rg2-config-template.php'],\n";
-      obj += "dest: 'ftpsite/" + clubs[i] + "/rg2/rg2-config.php',\n";
-      obj += "replacements: [{ \n";
-      obj += "from: '<club>',\n";
-      obj += "to: '" + clubs[i] + "'\n";
-      obj += "}]\n";
-      obj += "},\n";
-    }
-
-    grunt.file.write('config.js', obj);
-
-  });
+  grunt.registerTask('deploy', ['replace:jsversion', 'replace:phpversion', 'build', 'sync:rel']);
 
 };
