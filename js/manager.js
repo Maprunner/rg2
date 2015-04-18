@@ -334,6 +334,8 @@
           self.user.y = data.keksi;
           if (data.ok) {
             rg2.utils.showWarningDialog("Event created", self.eventName + " has been added with id " + data.newid + ".");
+            rg2.getEvents();
+            rg2.managerUI.setEvent();
           } else {
             rg2.utils.showWarningDialog("Save failed", data.status_msg + " Failed to create event. Please try again.");
           }
@@ -702,6 +704,9 @@
       format = format.toUpperCase();
       if ((format === 'XML') || (format === 'CSV')) {
         this.resultsFileFormat = format;
+        //
+        // TODO: input charset should be set based on RG_INPUT_ENCODING variable
+        //reader.readAsText(evt.target.files[0], 'ISO-8859-1');
         reader.readAsText(evt.target.files[0]);
       } else {
         rg2.utils.showWarningDialog("File type error", "Results file type is not recognised. Please select a valid file.");
@@ -731,6 +736,9 @@
       reader.onload = function (evt) {
         self.processCourseFile(evt);
       };
+      //
+      // TODO: input charset should be set based on RG_INPUT_ENCODING variable
+      // reader.readAsText(evt.target.files[0], 'ISO-8859-1');
       reader.readAsText(evt.target.files[0]);
     },
 
