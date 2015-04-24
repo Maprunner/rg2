@@ -5,7 +5,7 @@
   if (file_exists(dirname(__FILE__) . '/rg2-override-config.php')) {
     require_once ( dirname(__FILE__) . '/rg2-override-config.php');
     define ('DEBUG', true);
-	}
+  }
   // enable logging by default
   if (!defined('RG_LOG_FILE')) {
     define("RG_LOG_FILE", dirname(__FILE__)."/log/rg2log.txt");
@@ -16,6 +16,19 @@
   } else {
     $url = "../kartat/";
   }
+
+  //
+  // The default encoding used by Route Gadget 2
+  define('RG2_ENCODING', 'UTF-8');
+
+  //
+  // The input encoding from files in kartat directory
+  // note: backward compatibility for old RG_INPUT_ENCODING configuration
+  if (defined('RG_INPUT_ENCODING')) {
+    //
+    define('RG_FILE_ENCODING', RG_INPUT_ENCODING);
+  }
+
   // version replaced by Gruntfile as part of release 
   define ('RG2VERSION', '1.1.4');
   define ('KARTAT_DIRECTORY', $url);
@@ -50,37 +63,42 @@
   }
 
 
-// Note: input refers to the app, so is the output from the API
-// Handle the encoding for input data if input encoding is not set to UTF-8
+// Note: convert encoding read from kartat files to encoding use in rg2 browser
+// Handle the encoding for input data if kartat directory files are not using UTF-8 encoding
 //
 function encode_rg_input($input_str) {
   $encoded = '';
-  if ( RG_INPUT_ENCODING != 'UTF-8' ) {
-    $temp = @iconv( RG_INPUT_ENCODING, RG_OUTPUT_ENCODING . '//TRANSLIT//IGNORE', $input_str);
-    // ENT_COMPAT is just a default flag: ENT_SUBSTITUTE is PHP 5.4.0+
-    $encoded = htmlentities($temp, ENT_COMPAT, RG_OUTPUT_ENCODING);
+  if ( RG_FILE_ENCODING != RG2_ENCODING ) {
+    //
+    $encoded = @iconv( RG_FILE_ENCODING, RG2_ENCODING . '//TRANSLIT//IGNORE', $input_str);
   } else {
     // this removes any non-UTF-8 characters that are stored locally, normally by an original Routegadget installation
-    $temp = mb_convert_encoding($input_str, 'UTF-8', 'UTF-8');
-    // ENT_COMPAT is just a default flag: ENT_SUBSTITUTE is PHP 5.4.0+
-    $encoded = htmlentities($temp, ENT_COMPAT, 'UTF-8');
+    $encoded = mb_convert_encoding($input_str, RG2_ENCODING, RG2_ENCODING);
   }
   if ( !$encoded ) {
+    //
     $encoded = "";
+  } else {
+    // ENT_COMPAT is just a default flag: ENT_SUBSTITUTE is PHP 5.4.0+
+    $encoded = htmlentities($encoded, ENT_COMPAT, RG2_ENCODING);
   }
   return $encoded;
 }
 
-// Note: output refers to the app, so is the input to the API
-// Handle the encoding for output data if output encoding is not set to UTF-8
+// Note: convert encoding from rg2 browser to encoding use for kartat files
+// Handle the encoding for output data if kartat directory files are not using UTF-8 encoding
+//
 function encode_rg_output($output_str) {
   $encoded = '';
-  if ( RG_INPUT_ENCODING != 'UTF-8' && mb_detect_encoding($output_str, 'UTF-8', true) ) {
-    $encoded = @iconv( RG_OUTPUT_ENCODING, RG_INPUT_ENCODING . '//TRANSLIT//IGNORE', $output_str);
+  if ( RG_FILE_ENCODING != RG2_ENCODING && mb_detect_encoding($output_str, RG2_ENCODING, true) ) {
+    // convert if kartat files doesn't use RG2_ENCODING and output_str is encoded using RG2_ENCODING
+    $encoded = @iconv( RG2_ENCODING, RG_FILE_ENCODING . '//TRANSLIT//IGNORE', $output_str);
   } else {
+    // write output as is, if kartat files are useing RG2_ENCODING or input couldn't not be converted from RG2_ENCODING to RG_FILE_ENCODING
     $encoded = $output_str;
   }
   if ( !$encoded ) {
+    //
     $encoded = "";
   }
   return $encoded;

@@ -705,7 +705,7 @@
       if ((format === 'XML') || (format === 'CSV')) {
         this.resultsFileFormat = format;
         //
-        // TODO: input charset should be set based on RG_INPUT_ENCODING variable
+        // TODO: input charset should be set based on RG_FILE_ENCODING variable
         //reader.readAsText(evt.target.files[0], 'ISO-8859-1');
         reader.readAsText(evt.target.files[0]);
       } else {
@@ -737,7 +737,7 @@
         self.processCourseFile(evt);
       };
       //
-      // TODO: input charset should be set based on RG_INPUT_ENCODING variable
+      // TODO: input charset should be set based on RG_FILE_ENCODING variable
       // reader.readAsText(evt.target.files[0], 'ISO-8859-1');
       reader.readAsText(evt.target.files[0]);
     },
