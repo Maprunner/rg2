@@ -64,7 +64,7 @@
 
 
 // Note: convert encoding read from kartat files to encoding use in rg2 browser
-// Handle the encoding for input data if kartat directory files are not using UTF-8 encoding
+// Handle the encoding for input data if kartat directory files are not using RG2_ENCODING encoding
 //
 function encode_rg_input($input_str) {
   $encoded = '';
@@ -72,7 +72,7 @@ function encode_rg_input($input_str) {
     //
     $encoded = @iconv( RG_FILE_ENCODING, RG2_ENCODING . '//TRANSLIT//IGNORE', $input_str);
   } else {
-    // this removes any non-UTF-8 characters that are stored locally, normally by an original Routegadget installation
+    // this removes any non-RG2_ENCODING characters that are stored locally, normally by an original Routegadget installation
     $encoded = mb_convert_encoding($input_str, RG2_ENCODING, RG2_ENCODING);
   }
   if ( !$encoded ) {
