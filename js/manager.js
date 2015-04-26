@@ -27,7 +27,16 @@
     this.mapWidth = 0;
     this.mapHeight = 0;
     this.mapFile = undefined;
+    this.resultsOrCourseFile = undefined;
     this.resultsFileFormat = "";
+    // list of possible encodings from results or course file: just add new ones to the array if needed
+    this.encodings = ['UTF-8', 'ISO-8859-1', 'windows-1251'];
+    // count of errors when parsing each encoding type
+    this.errorCount = [];
+    // current index into encodings
+    this.encodingIndex = 0;
+    // state flag showing we have found the least worst encoding so use anyway
+    this.useThisEncoding = false;
     this.backgroundLocked = false;
     this.handle = {x: null, y: null};
     this.maps = [];
@@ -120,7 +129,9 @@
           evt.preventDefault();
         }
       }).change(function (evt) {
-        self.readResults(evt);
+        self.resultsOrCourseFile = evt.target.files[0];
+        self.initialiseEncodings();
+        self.readResults();
       });
       $("#btn-move-map-and-controls").click(function (evt) {
         self.toggleMoveAll(evt.target.checked);
@@ -136,6 +147,12 @@
       }).change(function (evt) {
         self.readCourses(evt);
       });
+    },
+
+    initialiseEncodings : function () {
+      this.encodingIndex = 0;
+      this.errorCount = [];
+      this.useThisEncoding = false;
     },
 
     enableEventEdit : function () {
@@ -688,7 +705,7 @@
       });
     },
 
-    readResults : function (evt) {
+    readResults : function () {
       var format, reader, self;
       reader = new FileReader();
       self = this;
@@ -696,16 +713,46 @@
         rg2.utils.showWarningDialog('Results file error', 'The selected results file could not be read.');
       };
       reader.onload = function (evt) {
-        self.processResultFile(evt);
+        self.checkResultsFileEncoding(evt);
       };
-      format = evt.target.files[0].name.substr(-3, 3);
-      format = format.toUpperCase();
+      format = this.resultsOrCourseFile.name.substr(-3, 3).toUpperCase();
       if ((format === 'XML') || (format === 'CSV')) {
         this.resultsFileFormat = format;
-        reader.readAsText(evt.target.files[0]);
+        reader.readAsText(this.resultsOrCourseFile, this.encodings[this.encodingIndex]);
       } else {
         rg2.utils.showWarningDialog("File type error", "Results file type is not recognised. Please select a valid file.");
       }
+    },
+
+    checkResultsFileEncoding : function (evt) {
+      // not pretty but it works
+      // need to use the array of possible encodings that we want to try if the file is not UTF-8
+      // might be better to use a synchronous read, but that needs a worker thread
+      var errors, lowest, i;
+      errors = this.testForInvalidCharacters(evt.target.result);
+      // if this encoding is clean, or we have tried everything so this is the least worst case
+      if ((errors === 0) || (this.useThisEncoding)) {
+        // use this version of the results
+        this.processResultFile(evt);
+        return;
+      }
+      this.errorCount[this.encodingIndex] = errors;
+      this.encodingIndex += 1;
+      // have we tried all the encodings?
+      if (this.encodingIndex === this.encodings.length) {
+        lowest = 99999;
+        // no clean encodings found, since we would have escaped by now, so find least worst
+        for (i = 0; i < this.encodings.length; i += 1) {
+          if (lowest > this.errorCount[i]) {
+            this.encodingIndex = i;
+            lowest = this.errorCount[i];
+          }
+        }
+        // force this one to be used next time we get back here
+        this.useThisEncoding = true;
+      }
+      // try a new encoding
+      this.readResults();
     },
 
     processResultFile : function (evt) {
@@ -769,8 +816,7 @@
     getResultInfoAsHTML : function () {
       var info, i, runners, oldcourse;
       if (this.results.length) {
-        info = this.testForInvalidCharacters();
-        info += "<table><thead><tr><th>Course</th><th>Winner</th><th>Time</th><th>Runners</th></tr></thead><tbody>";
+        info = "<table><thead><tr><th>Course</th><th>Winner</th><th>Time</th><th>Runners</th></tr></thead><tbody>";
         runners = 0;
         oldcourse = null;
         for (i = 0; i < this.results.length; i += 1) {
@@ -786,23 +832,24 @@
         }
         info += "<td>" + runners + "</td></tr></tbody></table>";
       } else {
-        info = "";
+        info = "No valid results found.";
       }
 
       return info;
     },
 
-    testForInvalidCharacters : function () {
-      var i, j;
-      for (i = 0; i < this.results.length; i += 1) {
-        for (j = 0; j < this.results[i].name.length; j += 1) {
-          // not strictly the correct test but it does what we need
-          if (this.results[i].name.charCodeAt(j) > 255) {
-            return '<p><strong>Warning:</strong> Results contain non-UTF-8 characters. Open original results file in Notepad and "Save as..Encoding..UTF-8.".';
-          }
+    testForInvalidCharacters : function (rawtext) {
+      // takes in text read from a results file and checks it is valid UTF-8
+      var i, count;
+      count = 0;
+      for (i = 0; i < rawtext.length; i += 1) {
+        // test not strictly correct for UTF-8 but it does what we need
+        if (rawtext.charCodeAt(i) > 255) {
+          count += 1;
         }
       }
-      return "";
+      console.log("Encoding: " + this.encodings[this.encodingIndex] + ", Invalid characters: " + count);
+      return count;
     },
 
     readMapFile : function (evt) {
@@ -812,8 +859,7 @@
       reader.onload = function (event) {
         self.processMap(event);
       };
-      format = evt.target.files[0].name.substr(-3, 3);
-      format = format.toUpperCase();
+      format = evt.target.files[0].name.substr(-3, 3).toUpperCase();
       if ((format === 'JPG') || (format === 'GIF')) {
         this.mapFile = evt.target.files[0];
         reader.readAsDataURL(evt.target.files[0]);
