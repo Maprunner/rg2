@@ -839,12 +839,13 @@
     },
 
     testForInvalidCharacters : function (rawtext) {
-      // takes in text read from a results file and checks it is valid UTF-8
+      // takes in text read from a results file and checks it has converted to UTF-8 correctly
       var i, count;
       count = 0;
       for (i = 0; i < rawtext.length; i += 1) {
-        // test not strictly correct for UTF-8 but it does what we need
-        if (rawtext.charCodeAt(i) > 255) {
+        // Unicode U+FFFD (65533) is the replacement character used to replace an incoming character whose value is unknown or unrepresentable
+        // see http://www.fileformat.info/info/unicode/char/0fffd/index.htm
+        if (rawtext.charCodeAt(i) === 65533) {
           count += 1;
         }
       }
