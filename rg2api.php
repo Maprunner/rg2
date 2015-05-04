@@ -30,7 +30,7 @@
   }
 
   // version replaced by Gruntfile as part of release 
-  define ('RG2VERSION', '1.1.4');
+  define ('RG2VERSION', '1.1.5');
   define ('KARTAT_DIRECTORY', $url);
   define ('LOCK_DIRECTORY', dirname(__FILE__)."/lock/saving/");
   define ('CACHE_DIRECTORY', $url."cache/");
@@ -1260,8 +1260,10 @@ function getLanguage($lang) {
 			// split into two bits
       $temp = explode(":", trim($line));
 			// remove trailing comma
-			$temp[1] = rtrim($temp[1], ',');
-			$dict[trim($temp[0])] = trim($temp[1]);
+			if (count($temp) == 2) {
+			  $temp[1] = rtrim($temp[1], ',');
+			  $dict[trim($temp[0])] = trim($temp[1]);
+      }
 		}
   }
   return addVersion('dict', $dict);
