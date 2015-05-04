@@ -74,7 +74,7 @@
       var i;
       dropdown.options.add(rg2.utils.generateOption(null, 'No event selected'));
       for (i = (this.events.length - 1); i > -1; i -= 1) {
-        dropdown.options.add(rg2.utils.generateOption(this.events[i].kartatid, this.events[i].kartatid + ": " + this.events[i].date + ": " + this.events[i].name));
+        dropdown.options.add(rg2.utils.generateOption(this.events[i].kartatid, this.events[i].kartatid + ": " + this.events[i].date + ": " + rg2.he.decode(this.events[i].name)));
       }
       return dropdown;
     },
