@@ -509,7 +509,7 @@ module.exports = function(grunt) {
         cwd : 'rel/',
         expand : true,
         src : '**',
-        dest : 'ftpsite/soa/rg2/'
+        dest : 'ftpsite/so/rg2/'
       },
       soa : {
         cwd : 'rel/',

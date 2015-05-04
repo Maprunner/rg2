@@ -1,4 +1,4 @@
-// Version 1.1.4 2015-03-19T19:09:59;
+// Version 1.1.5 2015-05-04T13:40:45;
 /*
  * Routegadget 2
  * https://github.com/Maprunner/rg2
@@ -898,7 +898,7 @@ var rg2 = (function (window, $) {
     EVENT_WITHOUT_RESULTS : 2,
     SCORE_EVENT : 3,
     // version gets set automatically by grunt file during build process
-    RG2VERSION: '1.1.4',
+    RG2VERSION: '1.1.5',
     TIME_NOT_FOUND : 9999,
     // values for evt.which
     RIGHT_CLICK : 3,
@@ -2636,7 +2636,7 @@ var rg2 = (function (window, $) {
       var i;
       dropdown.options.add(rg2.utils.generateOption(null, 'No event selected'));
       for (i = (this.events.length - 1); i > -1; i -= 1) {
-        dropdown.options.add(rg2.utils.generateOption(this.events[i].kartatid, this.events[i].kartatid + ": " + this.events[i].date + ": " + this.events[i].name));
+        dropdown.options.add(rg2.utils.generateOption(this.events[i].kartatid, this.events[i].kartatid + ": " + this.events[i].date + ": " + rg2.he.decode(this.events[i].name)));
       }
       return dropdown;
     },
@@ -2713,6 +2713,7 @@ var rg2 = (function (window, $) {
     this.lat = [];
     this.lon = [];
     this.time = [];
+    this.startOffset = 0;
     this.baseX = [];
     this.baseY = [];
     this.handles = new rg2.Handles();
@@ -2732,6 +2733,7 @@ var rg2 = (function (window, $) {
       this.lat.length = 0;
       this.lon.length = 0;
       this.time.length = 0;
+      this.startOffset = 0;
       this.baseX.length = 0;
       this.baseY.length = 0;
       this.handles.deleteAllHandles();
@@ -2781,6 +2783,7 @@ var rg2 = (function (window, $) {
       trksegs = xml.getElementsByTagName('trkseg');
       for (i = 0; i < trksegs.length; i += 1) {
         trkpts = trksegs[i].getElementsByTagName('trkpt');
+        this.startOffset = this.getStartOffset(trkpts[0].getElementsByTagName('time')[0].textContent);
         for (j = 0; j < trkpts.length; j += 1) {
           this.lat.push(trkpts[j].getAttribute('lat'));
           this.lon.push(trkpts[j].getAttribute('lon'));
@@ -2790,12 +2793,12 @@ var rg2 = (function (window, $) {
     },
 
     processTCX : function (xml) {
-      var trksegs, trkpts, i, j, len, position;
+      var trksegs, trkpts, i, j, position;
       trksegs = xml.getElementsByTagName('Track');
       for (i = 0; i < trksegs.length; i += 1) {
         trkpts = trksegs[i].getElementsByTagName('Trackpoint');
-        len = trkpts.length;
-        for (j = 0; j < len; j += 1) {
+        this.startOffset = this.getStartOffset(trkpts[0].getElementsByTagName('Time')[0].textContent);
+        for (j = 0; j < trkpts.length; j += 1) {
           // allow for <trackpoint> with no position: see #199
           if (trkpts[j].getElementsByTagName('Position').length > 0) {
             position = trkpts[j].getElementsByTagName('Position');
@@ -2807,14 +2810,26 @@ var rg2 = (function (window, $) {
       }
     },
 
-    getSecsFromTrackpoint : function (timestring) {
+    getStartOffset : function (timestring) {
       var secs;
+      // needs to be set to midnight for supplied timestring
       // input is 2013-12-03T12:34:56Z (or 56.000Z)
-      secs = (parseInt(timestring.substr(11, 2), 10) * 3600) + (parseInt(timestring.substr(14, 2), 10) * 60) + parseInt(timestring.substr(17, 2), 10);
+      secs = parseInt(Date.parse(timestring.substr(0, 11) + "00:00:00Z") / 1000, 10);
       if (isNaN(secs)) {
         return 0;
       }
       return secs;
+    },
+
+    getSecsFromTrackpoint : function (timestring) {
+      var secs;
+      // input is 2013-12-03T12:34:56Z (or 56.000Z)
+      // needs to offset from midnight to allow replays, and alos needs to handle date (and year!) rollover
+      secs = parseInt(Date.parse(timestring) / 1000, 10);
+      if (isNaN(secs)) {
+        return 0;
+      }
+      return secs - this.startOffset;
     },
 
     processGPSTrack : function () {

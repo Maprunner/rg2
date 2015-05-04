@@ -71,7 +71,7 @@
       dropdown = document.getElementById("rg2-map-selected");
       dropdown.options.add(rg2.utils.generateOption(rg2.config.INVALID_MAP_ID, 'Select map'));
       for (i = (maps.length - 1); i > -1; i -= 1) {
-        dropdown.options.add(rg2.utils.generateOption(i, maps[i].mapid + ": " + maps[i].name));
+        dropdown.options.add(rg2.utils.generateOption(i, maps[i].mapid + ": " + rg2.he.decode(maps[i].name)));
       }
     },
 
@@ -95,7 +95,7 @@
       dropdown = document.getElementById("rg2-route-selected");
       routes = rg2.results.getRoutesForEvent(id);
       for (i = 0; i < routes.length; i += 1) {
-        dropdown.options.add(rg2.utils.generateOption(routes[i].resultid, routes[i].resultid + ": " + routes[i].name + " on " + routes[i].coursename));
+        dropdown.options.add(rg2.utils.generateOption(routes[i].resultid, routes[i].resultid + ": " + rg2.he.decode(routes[i].name) + " on " + rg2.he.decode(routes[i].coursename)));
       }
     },
 
@@ -132,11 +132,11 @@
       // called once the requested event has loaded
       // copy event details to edit-form
       // you tell me why this needs parseInt but the same call above doesn't
-      $("#rg2-event-name-edit").empty().val(event.name);
-      $("#rg2-club-name-edit").empty().val(event.club);
+      $("#rg2-event-name-edit").empty().val(rg2.he.decode(event.name));
+      $("#rg2-club-name-edit").empty().val(rg2.he.decode(event.club));
       $("#rg2-event-date-edit").empty().val(event.date);
       $("#rg2-event-level-edit").val(event.rawtype);
-      $("#rg2-edit-event-comments").empty().val(event.comment);
+      $("#rg2-edit-event-comments").empty().val(rg2.he.decode(event.comment));
       rg2.utils.setButtonState("enable", ["#btn-delete-event", "#btn-update-event", "#btn-delete-route"]);
       this.createRouteDeleteDropdown(event.id);
     },

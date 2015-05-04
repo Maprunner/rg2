@@ -27,7 +27,16 @@
     this.mapWidth = 0;
     this.mapHeight = 0;
     this.mapFile = undefined;
+    this.resultsOrCourseFile = undefined;
     this.resultsFileFormat = "";
+    // list of possible encodings from results or course file: just add new ones to the array if needed
+    this.encodings = ['UTF-8', 'ISO-8859-1', 'windows-1251'];
+    // count of errors when parsing each encoding type
+    this.errorCount = [];
+    // current index into encodings
+    this.encodingIndex = 0;
+    // state flag showing we have found the least worst encoding so use anyway
+    this.useThisEncoding = false;
     this.backgroundLocked = false;
     this.handle = {x: null, y: null};
     this.maps = [];
@@ -120,7 +129,9 @@
           evt.preventDefault();
         }
       }).change(function (evt) {
-        self.readResults(evt);
+        self.resultsOrCourseFile = evt.target.files[0];
+        self.initialiseEncodings();
+        self.readResults();
       });
       $("#btn-move-map-and-controls").click(function (evt) {
         self.toggleMoveAll(evt.target.checked);
@@ -136,6 +147,12 @@
       }).change(function (evt) {
         self.readCourses(evt);
       });
+    },
+
+    initialiseEncodings : function () {
+      this.encodingIndex = 0;
+      this.errorCount = [];
+      this.useThisEncoding = false;
     },
 
     enableEventEdit : function () {
@@ -334,6 +351,8 @@
           self.user.y = data.keksi;
           if (data.ok) {
             rg2.utils.showWarningDialog("Event created", self.eventName + " has been added with id " + data.newid + ".");
+            rg2.getEvents();
+            rg2.managerUI.setEvent();
           } else {
             rg2.utils.showWarningDialog("Save failed", data.status_msg + " Failed to create event. Please try again.");
           }
@@ -688,7 +707,7 @@
       });
     },
 
-    readResults : function (evt) {
+    readResults : function () {
       var format, reader, self;
       reader = new FileReader();
       self = this;
@@ -696,16 +715,46 @@
         rg2.utils.showWarningDialog('Results file error', 'The selected results file could not be read.');
       };
       reader.onload = function (evt) {
-        self.processResultFile(evt);
+        self.checkResultsFileEncoding(evt);
       };
-      format = evt.target.files[0].name.substr(-3, 3);
-      format = format.toUpperCase();
+      format = this.resultsOrCourseFile.name.substr(-3, 3).toUpperCase();
       if ((format === 'XML') || (format === 'CSV')) {
         this.resultsFileFormat = format;
-        reader.readAsText(evt.target.files[0]);
+        reader.readAsText(this.resultsOrCourseFile, this.encodings[this.encodingIndex]);
       } else {
         rg2.utils.showWarningDialog("File type error", "Results file type is not recognised. Please select a valid file.");
       }
+    },
+
+    checkResultsFileEncoding : function (evt) {
+      // not pretty but it works
+      // need to use the array of possible encodings that we want to try if the file is not UTF-8
+      // might be better to use a synchronous read, but that needs a worker thread
+      var errors, lowest, i;
+      errors = this.testForInvalidCharacters(evt.target.result);
+      // if this encoding is clean, or we have tried everything so this is the least worst case
+      if ((errors === 0) || (this.useThisEncoding)) {
+        // use this version of the results
+        this.processResultFile(evt);
+        return;
+      }
+      this.errorCount[this.encodingIndex] = errors;
+      this.encodingIndex += 1;
+      // have we tried all the encodings?
+      if (this.encodingIndex === this.encodings.length) {
+        lowest = 99999;
+        // no clean encodings found, since we would have escaped by now, so find least worst
+        for (i = 0; i < this.encodings.length; i += 1) {
+          if (lowest > this.errorCount[i]) {
+            this.encodingIndex = i;
+            lowest = this.errorCount[i];
+          }
+        }
+        // force this one to be used next time we get back here
+        this.useThisEncoding = true;
+      }
+      // try a new encoding
+      this.readResults();
     },
 
     processResultFile : function (evt) {
@@ -731,6 +780,9 @@
       reader.onload = function (evt) {
         self.processCourseFile(evt);
       };
+      //
+      // TODO: input charset should be set based on RG_FILE_ENCODING variable
+      // reader.readAsText(evt.target.files[0], 'ISO-8859-1');
       reader.readAsText(evt.target.files[0]);
     },
 
@@ -785,10 +837,25 @@
         }
         info += "<td>" + runners + "</td></tr></tbody></table>";
       } else {
-        info = "";
+        info = "No valid results found.";
       }
 
       return info;
+    },
+
+    testForInvalidCharacters : function (rawtext) {
+      // takes in text read from a results file and checks it has converted to UTF-8 correctly
+      var i, count;
+      count = 0;
+      for (i = 0; i < rawtext.length; i += 1) {
+        // Unicode U+FFFD (65533) is the replacement character used to replace an incoming character whose value is unknown or unrepresentable
+        // see http://www.fileformat.info/info/unicode/char/0fffd/index.htm
+        if (rawtext.charCodeAt(i) === 65533) {
+          count += 1;
+        }
+      }
+      console.log("Encoding: " + this.encodings[this.encodingIndex] + ", Invalid characters: " + count);
+      return count;
     },
 
     readMapFile : function (evt) {
@@ -798,8 +865,7 @@
       reader.onload = function (event) {
         self.processMap(event);
       };
-      format = evt.target.files[0].name.substr(-3, 3);
-      format = format.toUpperCase();
+      format = evt.target.files[0].name.substr(-3, 3).toUpperCase();
       if ((format === 'JPG') || (format === 'GIF')) {
         this.mapFile = evt.target.files[0];
         reader.readAsDataURL(evt.target.files[0]);

@@ -5,7 +5,7 @@
   if (file_exists(dirname(__FILE__) . '/rg2-override-config.php')) {
     require_once ( dirname(__FILE__) . '/rg2-override-config.php');
     define ('DEBUG', true);
-	}
+  }
   // enable logging by default
   if (!defined('RG_LOG_FILE')) {
     define("RG_LOG_FILE", dirname(__FILE__)."/log/rg2log.txt");
@@ -16,8 +16,21 @@
   } else {
     $url = "../kartat/";
   }
+
+  //
+  // The default encoding used by Route Gadget 2
+  define('RG2_ENCODING', 'UTF-8');
+
+  //
+  // The input encoding from files in kartat directory
+  // note: backward compatibility for old RG_INPUT_ENCODING configuration
+  if (defined('RG_INPUT_ENCODING')) {
+    //
+    define('RG_FILE_ENCODING', RG_INPUT_ENCODING);
+  }
+
   // version replaced by Gruntfile as part of release 
-  define ('RG2VERSION', '1.1.4');
+  define ('RG2VERSION', '1.1.5');
   define ('KARTAT_DIRECTORY', $url);
   define ('LOCK_DIRECTORY', dirname(__FILE__)."/lock/saving/");
   define ('CACHE_DIRECTORY', $url."cache/");
@@ -50,37 +63,42 @@
   }
 
 
-// Note: input refers to the app, so is the output from the API
-// Handle the encoding for input data if input encoding is not set to UTF-8
+// Note: convert encoding read from kartat files to encoding use in rg2 browser
+// Handle the encoding for input data if kartat directory files are not using RG2_ENCODING encoding
 //
 function encode_rg_input($input_str) {
   $encoded = '';
-  if ( RG_INPUT_ENCODING != 'UTF-8' ) {
-    $temp = @iconv( RG_INPUT_ENCODING, RG_OUTPUT_ENCODING, $input_str);
-    // ENT_COMPAT is just a default flag: ENT_SUBSTITUTE is PHP 5.4.0+
-    $encoded = htmlentities($temp, ENT_COMPAT, RG_INPUT_ENCODING);
+  if ( RG_FILE_ENCODING != RG2_ENCODING ) {
+    //
+    $encoded = @iconv( RG_FILE_ENCODING, RG2_ENCODING . '//TRANSLIT//IGNORE', $input_str);
   } else {
-    // this removes any non-UTF-8 characters that are stored locally, normally by an original Routegadget installation
-    $temp = mb_convert_encoding($input_str, 'UTF-8', 'UTF-8');
-    // ENT_COMPAT is just a default flag: ENT_SUBSTITUTE is PHP 5.4.0+
-    $encoded = htmlentities($temp, ENT_COMPAT, 'UTF-8');
+    // this removes any non-RG2_ENCODING characters that are stored locally, normally by an original Routegadget installation
+    $encoded = mb_convert_encoding($input_str, RG2_ENCODING, RG2_ENCODING);
   }
   if ( !$encoded ) {
+    //
     $encoded = "";
+  } else {
+    // ENT_COMPAT is just a default flag: ENT_SUBSTITUTE is PHP 5.4.0+
+    $encoded = htmlentities($encoded, ENT_COMPAT, RG2_ENCODING);
   }
   return $encoded;
 }
 
-// Note: output refers to the app, so is the input to the API
-// Handle the encoding for output data if output encoding is not set to UTF-8
+// Note: convert encoding from rg2 browser to encoding use for kartat files
+// Handle the encoding for output data if kartat directory files are not using UTF-8 encoding
+//
 function encode_rg_output($output_str) {
   $encoded = '';
-  if ( RG_INPUT_ENCODING != 'UTF-8' ) {
-    $encoded = @iconv( RG_OUTPUT_ENCODING, RG_INPUT_ENCODING, $output_str);
+  if ( RG_FILE_ENCODING != RG2_ENCODING && mb_detect_encoding($output_str, RG2_ENCODING, true) ) {
+    // convert if kartat files doesn't use RG2_ENCODING and output_str is encoded using RG2_ENCODING
+    $encoded = @iconv( RG2_ENCODING, RG_FILE_ENCODING . '//TRANSLIT//IGNORE', $output_str);
   } else {
+    // write output as is, if kartat files are useing RG2_ENCODING or input couldn't not be converted from RG2_ENCODING to RG_FILE_ENCODING
     $encoded = $output_str;
   }
   if ( !$encoded ) {
+    //
     $encoded = "";
   }
   return $encoded;
@@ -990,8 +1008,10 @@ function addNewMap($data) {
   if (($handle = @fopen(KARTAT_DIRECTORY."kartat.txt", "r+")) !== FALSE) {
     // read to end of file to find last entry
     $oldid = 0;
-    while (($olddata = fgetcsv($handle, 0, "|")) !== FALSE) {  
-      $oldid = intval($olddata[0]);
+    while (($olddata = fgetcsv($handle, 0, "|")) !== FALSE) {
+      if (count($olddata) > 0) {
+        $oldid = intval($olddata[0]);
+      }
     }
     $newid = $oldid + 1;
   } else {
@@ -1240,8 +1260,10 @@ function getLanguage($lang) {
 			// split into two bits
       $temp = explode(":", trim($line));
 			// remove trailing comma
-			$temp[1] = rtrim($temp[1], ',');
-			$dict[trim($temp[0])] = trim($temp[1]);
+			if (count($temp) == 2) {
+			  $temp[1] = rtrim($temp[1], ',');
+			  $dict[trim($temp[0])] = trim($temp[1]);
+      }
 		}
   }
   return addVersion('dict', $dict);
@@ -1534,36 +1556,37 @@ function getMaps() {
   if (($handle = @fopen(KARTAT_DIRECTORY."kartat.txt", "r")) !== FALSE) {
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
       $detail = array();
-      $detail["mapid"] = intval($data[0]);
-      $detail["name"] = encode_rg_input($data[1]);
-      // defaults to jpg so only need to say if we have something else as well
-      if (file_exists(KARTAT_DIRECTORY.$detail['mapid'].'.gif')) {
-        $detail["mapfilename"] = $detail['mapid'].'.gif';
-      }
-      $detail["georeferenced"] = FALSE;
-      if (count($data) == 14) {
-        list($A, $B, $C, $D, $E, $F) = generateWorldFile($data);
-        $detail["A"] = $A;
-        $detail["B"] = $B;
-        $detail["C"] = $C;
-        $detail["D"] = $D;
-        $detail["E"] = $E;
-        $detail["F"] = $F;
-        list($localA, $localB, $localC, $localD, $localE, $localF) = generateLocalWorldFile($data);
-        $detail["localA"] = $localA;
-        $detail["localB"] = $localB;
-        $detail["localC"] = $localC;
-        $detail["localD"] = $localD;
-        $detail["localE"] = $localE;
-        $detail["localF"] = $localF;
-
-        // make sure it worked OK
-        if (($E != 0) && ($F != 0)) {
-          $detail["georeferenced"] = TRUE;
+      if (count($data) > 1) {
+        $detail["mapid"] = intval($data[0]);
+        $detail["name"] = encode_rg_input($data[1]);
+        // defaults to jpg so only need to say if we have something else as well
+        if (file_exists(KARTAT_DIRECTORY.$detail['mapid'].'.gif')) {
+          $detail["mapfilename"] = $detail['mapid'].'.gif';
         }
-      }
+        $detail["georeferenced"] = FALSE;
+        if (count($data) == 14) {
+          list($A, $B, $C, $D, $E, $F) = generateWorldFile($data);
+          $detail["A"] = $A;
+          $detail["B"] = $B;
+          $detail["C"] = $C;
+          $detail["D"] = $D;
+          $detail["E"] = $E;
+          $detail["F"] = $F;
+          list($localA, $localB, $localC, $localD, $localE, $localF) = generateLocalWorldFile($data);
+          $detail["localA"] = $localA;
+          $detail["localB"] = $localB;
+          $detail["localC"] = $localC;
+          $detail["localD"] = $localD;
+          $detail["localE"] = $localE;
+          $detail["localF"] = $localF;
+          // make sure it worked OK
+          if (($E != 0) && ($F != 0)) {
+            $detail["georeferenced"] = TRUE;
+          }
+        }
       $output[$row] = $detail;
       $row++;
+      }
     }
     fclose($handle);
     }
@@ -1796,8 +1819,14 @@ function getCoursesForEvent($eventid) {
       } else {
         $detail["codes"] = $dummycontrols[$row];
       }
-      $detail["xpos"] = $xpos[$row];
-      $detail["ypos"] = $ypos[$row];
+      // some RG1 events seem to have unused courses which cause trouble
+      if (count($xpos) > $row) {
+        $detail["xpos"] = $xpos[$row];
+        $detail["ypos"] = $ypos[$row];
+      } else {
+        $detail["xpos"] = array();
+        $detail["ypos"] = array();
+      }
       $output[$row] = $detail;
       $row++;
     }
@@ -1917,7 +1946,6 @@ function formatCommentsForOutput($inputComments) {
   $comments = str_replace("#cr##nl#", "\n", $comments);
   $comments = str_replace("#nl#", "\n", $comments);
   $comments = str_replace("<br>", "\n", $comments);
-  $comments = encode_rg_input($comments);
   return $comments;
 }
 
