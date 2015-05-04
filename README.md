@@ -1,7 +1,15 @@
 # Routegadget 2
 
 ## Latest news
-Version 1.1.3 was released on 13th March 2015 and has been installed on all routegadget.co.uk sites. This now provides enhanced information for the [RG2 statistics database] (http://www.maprunner.co.uk/rg2-stats). If your site is showing up with 0s in some of the totals column then you need to upgrade to at least version 1.0.2. If you have an RG2 site that you would like added to the database then please let me know.
+Version 1.1.5 was released on 4th May 2015 and has been installed on all routegadget.co.uk sites. This provides enhanced information for the [RG2 statistics database] (http://www.maprunner.co.uk/rg2-stats). If your site is showing up with 0s in some of the totals column then you need to upgrade to at least version 1.0.2. If you have an RG2 site that you would like added to the database then please let me know.
+
+Latest improvements:
+
+* Kartat file encoding now simplified for old installations not using UTF-8 text files (thanks to Mikko K)
+* Finnish translation added (thanks to Mikko K)
+* Invalid character handling in results files improved
+* GPS files that span midnight should now import correctly
+* Various minor bug fixes.
 
 I would recommend using the RG2 manager to set up events rather than the original Routegadget Java version. This will give you some extra functionality (such as positions in the results), and it is also a lot easier to get the controls aligned.
 
