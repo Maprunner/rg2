@@ -4,6 +4,7 @@
     this.lat = [];
     this.lon = [];
     this.time = [];
+    this.startOffset = 0;
     this.baseX = [];
     this.baseY = [];
     this.handles = new rg2.Handles();
@@ -23,6 +24,7 @@
       this.lat.length = 0;
       this.lon.length = 0;
       this.time.length = 0;
+      this.startOffset = 0;
       this.baseX.length = 0;
       this.baseY.length = 0;
       this.handles.deleteAllHandles();
@@ -72,6 +74,7 @@
       trksegs = xml.getElementsByTagName('trkseg');
       for (i = 0; i < trksegs.length; i += 1) {
         trkpts = trksegs[i].getElementsByTagName('trkpt');
+        this.startOffset = this.getStartOffset(trkpts[0].getElementsByTagName('time')[0].textContent);
         for (j = 0; j < trkpts.length; j += 1) {
           this.lat.push(trkpts[j].getAttribute('lat'));
           this.lon.push(trkpts[j].getAttribute('lon'));
@@ -81,12 +84,12 @@
     },
 
     processTCX : function (xml) {
-      var trksegs, trkpts, i, j, len, position;
+      var trksegs, trkpts, i, j, position;
       trksegs = xml.getElementsByTagName('Track');
       for (i = 0; i < trksegs.length; i += 1) {
         trkpts = trksegs[i].getElementsByTagName('Trackpoint');
-        len = trkpts.length;
-        for (j = 0; j < len; j += 1) {
+        this.startOffset = this.getStartOffset(trkpts[0].getElementsByTagName('Time')[0].textContent);
+        for (j = 0; j < trkpts.length; j += 1) {
           // allow for <trackpoint> with no position: see #199
           if (trkpts[j].getElementsByTagName('Position').length > 0) {
             position = trkpts[j].getElementsByTagName('Position');
@@ -98,14 +101,26 @@
       }
     },
 
-    getSecsFromTrackpoint : function (timestring) {
+    getStartOffset : function (timestring) {
       var secs;
+      // needs to be set to midnight for supplied timestring
       // input is 2013-12-03T12:34:56Z (or 56.000Z)
-      secs = (parseInt(timestring.substr(11, 2), 10) * 3600) + (parseInt(timestring.substr(14, 2), 10) * 60) + parseInt(timestring.substr(17, 2), 10);
+      secs = parseInt(Date.parse(timestring.substr(0, 11) + "00:00:00Z") / 1000, 10);
       if (isNaN(secs)) {
         return 0;
       }
       return secs;
+    },
+
+    getSecsFromTrackpoint : function (timestring) {
+      var secs;
+      // input is 2013-12-03T12:34:56Z (or 56.000Z)
+      // needs to offset from midnight to allow replays, and alos needs to handle date (and year!) rollover
+      secs = parseInt(Date.parse(timestring) / 1000, 10);
+      if (isNaN(secs)) {
+        return 0;
+      }
+      return secs - this.startOffset;
     },
 
     processGPSTrack : function () {
