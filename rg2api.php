@@ -1302,7 +1302,11 @@ function getResultsCSV($eventid) {
       fclose($handle);
     }
   }
-  $results = file(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt");
+  // shouldn't get a request for non-existent event but it seems to happen...#266
+  $results = array();
+  if (file_exists(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt")) {
+    $results = file(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt");
+  }
   foreach ($results as $result) {
     $data = explode("|", $result);
     // extract time
