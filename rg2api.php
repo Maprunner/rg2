@@ -2000,7 +2000,7 @@ function generateWorldFile($data) {
   // assumes various things about the three points
   // works for RG2, may not work for the original, but we can live with that
   // idealy we would have saved the world file rather than three points
-  if (($x[0]!= 0) || ($y[0] != 0) || ($y[2] != 0)|| ($x[2] == 0) || ($y[2] == 0)) {
+  if (($x[0]!== 0) || ($y[0] !== 0) || ($y[2] !== 0) || ($x[2] === 0)) {
     return array(0, 0, 0, 0, 0, 0);
   }
 
