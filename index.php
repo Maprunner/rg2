@@ -99,7 +99,7 @@ $languages = "languages: {".PHP_EOL;
 foreach(glob($langdir.'??.txt') as $file) {
   // xx is a dummy file to hold the master list of terms
   if ($file != $langdir.'xx.txt') {
-    $lines = explode(PHP_EOL, file_get_contents($file));
+    $lines = file($file);
     $code = "";
     $name = "";
     foreach ($lines as $line) {
