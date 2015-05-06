@@ -76,14 +76,25 @@
     Constructor : Worldfile,
 
     // use worldfile to generate X value
-    getX : function (x, y) {
-      return Math.round(((this.E * x) - (this.B * y) + this.xCorrection) / this.AEDB);
+    getX : function (lng, lat) {
+      return Math.round(((this.E * lng) - (this.B * lat) + this.xCorrection) / this.AEDB);
     },
 
     // use worldfile to generate y value
-    getY : function (x, y) {
-      return Math.round(((-1 * this.D * x) + (this.A * y) + this.yCorrection) / this.AEDB);
+    getY : function (lng, lat) {
+      return Math.round(((-1 * this.D * lng) + (this.A * lat) + this.yCorrection) / this.AEDB);
+    },
+
+    // use worldfile to generate longitude
+    getLon : function (x, y) {
+      return Math.round((this.A * x) + (this.B * y) + this.C);
+    },
+
+    // use worldfile to generate latitude
+    getLat : function (x, y) {
+      return Math.round((this.D * x) + (this.E * y) + this.F);
     }
+
   };
 
   function Map(data) {

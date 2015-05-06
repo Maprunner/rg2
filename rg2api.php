@@ -1997,35 +1997,26 @@ function generateWorldFile($data) {
     $lat[$i] = floatval($data[5 + ($i * 4)]);
     //rg2log($data[0].", ".$lat[$i].", ".$lon[$i].", ".$x[$i].", ".$y[$i]);
   }
-  $hypot = getLatLonDistance($lat[0], $lon[0], $lat[2], $lon[2]);
-  $adj = getLatLonDistance($lat[0], $lon[0], $lat[0], $lon[2]);
-  //rg2log($hypot.", ".$adj);
-  if ($hypot == 0) {
+  // assumes various things about the three points
+  // works for RG2, may not work for the original, but we can live with that
+  // idealy we would have saved the world file rather than three points
+  if (($x[0]!= 0) || ($y[0] != 0) || ($y[2] != 0)) {
     return array(0, 0, 0, 0, 0, 0);
   }
-  $angle1 = acos($adj / $hypot);
-  
-  $hypot2 = getLatLonDistance($lat[2], $lon[2], $lat[1], $lon[1]);
-  $adj2 = getLatLonDistance($lat[2], $lon[2], $lat[1], $lon[2]);
-  //rg2log($hypot2.", ".$adj2);
-  if ($hypot2 == 0) {
-    return array(0, 0, 0, 0, 0, 0);
-  }
-  $angle2 = acos($adj2 / $hypot2);
 
-  if ((($x[2] - $x[0]) == 0) || (($y[1] - $y[0]) == 0)) {
-    return array(0, 0, 0, 0, 0, 0);
-  }
-  $angle = ($angle1 + $angle2) / 2;
-  $pixResX = ($lon[2] - $lon[0]) / ($x[2] - $x[0]);
-  $pixResY = ($lat[2] - $lat[1]) / ($y[1] - $y[2]);
-  //rg2log($pixResX.", ".$pixResY);
-  $A = $pixResX * cos($angle);
-  $D = $pixResY * sin($angle);
-  $B = $pixResX * sin($angle);
-  $E = -1 * $pixResY * cos($angle);
+  // X = Ax + By + C, Y = Dx + Ey + F
+  // C = X - Ax - By, where x and y are 0
   $C = $lon[0];
+  // F = Y - Dx - Ey, where X and Y are 0
   $F = $lat[0];
+  // A = (X - By - C) / x where y = 0
+  $A = ($lon[2] - $C) / $x[2];
+  // B = (X - Ax - C) / y
+  $B = ($lon[1] - ($A * $x[1]) - $C) / $y[1];
+  // D = (Y - Ey - F) / x where y = 0
+  $D = ($lat[2] - $F) / $x[2];
+  // E = (Y - Dx - F) / y
+  $E = ($lat[1] - ($D * $x[1]) -  $F) / $y[1];
 
   return array($A, $B, $C, $D, $E, $F);
 }

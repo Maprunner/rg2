@@ -101,8 +101,8 @@
     getXYFromLatLng : function (latLng) {
       var lat, lng, pt;
       pt = {x: 0, y: 0};
-      lat = latLng[0].getAttribute('lat');
-      lng = latLng[0].getAttribute('lng');
+      lat = parseFloat(latLng[0].getAttribute('lat'));
+      lng = parseFloat(latLng[0].getAttribute('lng'));
       // handle Condes-specific georeferencing
       if (this.fromCondes) {
         // use original map worldfile

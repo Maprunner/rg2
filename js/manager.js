@@ -1228,8 +1228,7 @@
     convertWorldFile : function (type) {
       // takes in a World file for the map image and translates it to WGS84 (GPS)
       try {
-        var i, size, source, dest, xScale, yScale, xSkew, ySkew, xsrc, ysrc, xpx, ypx, p, pt,
-          angle, pixResX, pixResY;
+        var i, size, source, dest, xsrc, ysrc, xpx, ypx, p, pt, wf;
         size = rg2.getMapSize();
         this.mapWidth = size.width;
         this.mapHeight = size.height;
@@ -1242,27 +1241,21 @@
         source = new Proj4js.Proj(type);
         // dest is WGS84 as used by GPS: included by default in Proj4js.defs
         dest = new Proj4js.Proj("EPSG:4326");
-
-        xScale = this.localworldfile.A;
-        ySkew = this.localworldfile.D;
-        xSkew = this.localworldfile.B;
-        yScale = this.localworldfile.E;
-
-        // calculation based on three fixed points on map
-        // x0, y0 is top left, x1, y1 is bottom right, x2, y2 is top right
+        // calculation based on fixed points on map
+        // x0, y0 is top left, x1, y1 is bottom right, x2, y2 is top right, x3, y3 is bottom left
+        // 0, 1 and 2 are saved by the API, and must have these settings
+        // 4 is just used here
         // save pixel values of these locations for map image
         xpx = [0, this.mapWidth, this.mapWidth, 0];
         ypx = [0, this.mapHeight, 0, this.mapHeight];
 
-        // calculate same locations using worldfile for the map
+        // calculate the same locations using worldfile for the map
         xsrc = [];
         ysrc = [];
-        xsrc[0] = this.localworldfile.C;
-        ysrc[0] = this.localworldfile.F;
-        xsrc[1] = (xScale * xpx[1]) + (xSkew * ypx[1]) + xsrc[0];
-        ysrc[1] = (yScale * ypx[1]) + (ySkew * xpx[1]) + ysrc[0];
-        xsrc[2] = (xScale * xpx[2]) + (xSkew * ypx[2]) + xsrc[0];
-        ysrc[2] = (yScale * ypx[2]) + (ySkew * xpx[2]) + ysrc[0];
+        for (i = 0; i < 4; i += 1) {
+          xsrc[i] = this.localworldfile.getLon(xpx[i], ypx[i]);
+          ysrc[i] = this.localworldfile.getLat(xpx[i], ypx[i]);
+        }
 
         this.newMap.xpx.length = 0;
         this.newMap.ypx.length = 0;
@@ -1271,7 +1264,7 @@
         // translate source georef to WGS84 (as in GPS file) and store with newMap details
         // Careful: p[] has x = lon and y = lat
         p = [];
-        for (i = 0; i < 3; i += 1) {
+        for (i = 0; i < 4; i += 1) {
           pt = {};
           pt.x = parseInt(xsrc[i] + 0.5, 10);
           pt.y = parseInt(ysrc[i] + 0.5, 10);
@@ -1283,12 +1276,25 @@
           this.newMap.lon.push(p[i].x);
           //console.log(p[i].x, p[i].y);
         }
-        // now need to create the worldfile for WGS84 to map image
-        angle = this.getAdjustmentAngle(p);
-        pixResX = (p[2].x - p[0].x) / this.mapWidth;
-        pixResY = (p[2].y - p[1].y) / this.mapHeight;
+
+        wf = {};
+        // X = Ax + By + C, Y = Dx + Ey + F
+        // C = X - Ax - By, where x and y are 0
+        wf.C = p[0].x;
+        // F = Y - Dx - Ey, where X and Y are 0
+        wf.F = p[0].y;
+        // A = (X - By - C) / x where y = 0
+        wf.A = (p[2].x - wf.C) / xpx[2];
+        // B = (X - Ax - C) / y where x = 0
+        wf.B = (p[3].x - wf.C) / ypx[3];
+        // D = (Y - Ey - F) / x where y = 0
+        wf.D = (p[2].y - wf.F) / xpx[2];
+        // E = (Y - Dx - F) / y where x = 0
+        wf.E = (p[3].y - wf.F) / ypx[3];
+        //console.log("Calculated lon diff = " + (((wf.A * xpx[1]) + (wf.B * ypx[1]) + wf.C) - p[1].x));
+        //console.log("Calculated lat diff = " + (((wf.D * xpx[1]) + (wf.E * ypx[1]) + wf.F) - p[1].y));
         delete this.newMap.worldfile;
-        this.newMap.worldfile = new rg2.Worldfile({A: pixResX * Math.cos(angle), B: pixResX * Math.sin(angle), C: p[0].x, D: pixResY * Math.sin(angle), E: -1 * pixResY * Math.cos(angle), F: p[0].y});
+        this.newMap.worldfile = new rg2.Worldfile(wf);
         this.updateGeorefDisplay();
       } catch (err) {
         delete this.newMap.worldfile;
@@ -1296,22 +1302,6 @@
         this.updateGeorefDisplay();
         return;
       }
-    },
-
-    getAdjustmentAngle : function (p) {
-      var angle1, angle2;
-      // calculates the angle adjustment needed based on an average of two values
-      angle1 = this.getAngle([p[0].y, p[0].x, p[2].y, p[2].x, p[0].y, p[2].x]);
-      angle2 = this.getAngle([p[2].y, p[2].x, p[1].y, p[1].x, p[1].y, p[2].x]);
-      return (angle1 + angle2) / 2;
-    },
-
-    getAngle : function (p) {
-      var hypot, adj;
-      // draw it on paper and it makes sense!
-      hypot = rg2.utils.getLatLonDistance(p[0], p[1], p[2], p[3]);
-      adj = rg2.utils.getLatLonDistance(p[0], p[1], p[4], p[5]);
-      return Math.acos(adj / hypot);
     },
 
     updateGeorefDisplay : function () {
