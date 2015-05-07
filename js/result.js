@@ -64,7 +64,7 @@
         //this.name = data.name;
         this.isGPSTrack = false;
       }
-      if (data.gpsx.length > 0) {
+      if (data.gpsx !== "") {
         this.addTrack(data);
       }
     },
@@ -83,8 +83,12 @@
 
     addTrack : function (data, format) {
       var trackOK;
-      this.trackx = data.gpsx;
-      this.tracky = data.gpsy;
+      this.trackx = data.gpsx.split(",").map(function(n) {
+        return parseInt(n, 10);
+      });
+      this.tracky = data.gpsy.split(",").map(function(n) {
+        return parseInt(n, 10);
+      });
       if (this.isGPSTrack) {
         trackOK = this.expandGPSTrack();
       } else {

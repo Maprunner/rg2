@@ -1114,7 +1114,7 @@ function handleGetRequest($type, $id) {
   validateCache($id);
   $output = array();
   //rg2log("Type ".$type."|ID ".$id);
-  switch ($type) {  
+  switch ($type) {
   case 'events':
     if (file_exists(CACHE_DIRECTORY."events.json")) {
       $output = file_get_contents(CACHE_DIRECTORY."events.json");
@@ -1503,20 +1503,20 @@ function getAllEvents($includeStats) {
       }
       
       if ($includeStats) {
-        if (file_exists(KARTAT_DIRECTORY."kilpailijat_".$detail["id"].".txt")) {
+        // avoid reading big results file into memory: has been seen to cause trouble
+        if (($resulthandle = @fopen(KARTAT_DIRECTORY."kilpailijat_".$detail["id"].".txt", "r")) !== FALSE) {
           $count = 0;
-          $results = file(KARTAT_DIRECTORY."kilpailijat_".$detail["id"].".txt");
-          // don't double-count GPS results
-          foreach ($results as $r) {
-            $d = explode("|", $r);
-            if (count($d) > 0) {
-              if ($d[0] < GPS_RESULT_OFFSET) {
+          while (($data = fgetcsv($resulthandle, 0, "|")) !== FALSE) {
+            // don't double-count GPS results
+            if (count($data) > 0) {
+              if ($data[0] < GPS_RESULT_OFFSET) {
                 $count++;
               } else {
                 continue;
               }
             }
           }
+          fclose($resulthandle);
           $detail["results"] = $count;
         } else {
           $detail["results"] = 0;
@@ -1840,30 +1840,31 @@ function getCoursesForEvent($eventid) {
 function expandCoords($coords) {
   // Split Nxx;-yy,0Nxxx;-yy,0N.. into x,y arrays
   // but note that sometimes you don't get the ,0
-  $x = array();
-  $y = array();
+  $x = "";
+  $y = "";
   // handle empty coord string: found some examples in Jukola files
   // 5 is enough for one coordinate set, but the problem files just had "0"
   if (strlen($coords) < 5) {
-    return array(array_map('intval', $x), array_map('intval', $y));
+    return array($x, $y);
   }
   $xy = explode("N", $coords);
   foreach ($xy as $point) {
     $temp = explode(";", $point);
     if (count($temp) == 2) {
-      $x[] = $temp[0];
+      $x .= ",".$temp[0];
       // strip off trailing ,0 if it exists
-      $pos = strpos(',', $temp[1]);
-      if ($pos) {
+      $pos = strpos($temp[1], ",");
+      if ($pos !== FALSE) {
         // remove leading - by starting at 1
-        $y[] = substr($temp[1], 1, $pos - 2);
+        $y .= ",".substr($temp[1], 1, $pos - 1);
       } else {
-        $y[] = substr($temp[1], 1);
+        $y .= ",".substr($temp[1], 1);
       }
     }
   }
-  // return the two arrays converted to integer values
-  return array(array_map('intval', $x), array_map('intval', $y));
+  // return the two strings, minus first , in each
+  // used to return as integer arrays, but this caused memory problems in json_encode
+  return array(substr($x, 1), substr($y,1));
 }
 
 function getDummyCode($code) {
@@ -1957,8 +1958,7 @@ function rg2log($msg) {
      date_default_timezone_set('GMT');
     }
     error_log(date("c", time())."|".$msg.PHP_EOL, 3, RG_LOG_FILE);
-  
-    if (filesize(RG_LOG_FILE) > 100000) {
+    if (filesize(RG_LOG_FILE) > 500000) {
       rename(RG_LOG_FILE, RG_LOG_FILE."-".date("Y-m-d-His", time()));
     }
   }
