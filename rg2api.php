@@ -1252,7 +1252,7 @@ function getLanguage($lang) {
   $dict = array();
   if (file_exists($langdir.$lang.'.txt')) {
     // generate the necessary php array from the txt file
-    $lines = explode(PHP_EOL, file_get_contents($langdir.$lang.'.txt'));
+    $lines = file($langdir.$lang.'.txt');
     // extract each string pair into php array
     foreach ($lines as $line) {
       // remove all quotation marks
