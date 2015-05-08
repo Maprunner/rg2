@@ -45,7 +45,7 @@
       var i, baseresult;
       for (i = 0; i < this.results.length; i += 1) {
         if (this.results[i].resultid >= rg2.config.GPS_RESULT_OFFSET) {
-          baseresult = this.getFullResult(this.results[i].rawid);
+          baseresult = this.getFullResultForRawID(this.results[i].rawid);
           if (baseresult !== undefined) {
             if (baseresult.scorex !== undefined) {
               this.results[i].scorex = baseresult.scorex;
@@ -242,6 +242,16 @@
 
     getFullResult : function (resultid) {
       return this.results[resultid];
+    },
+
+    getFullResultForRawID : function (rawid) {
+      var i;
+      for (i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].resultid === rawid) {
+          return this.results[i];
+        }
+      }
+      return undefined;
     },
 
     drawTracks : function () {

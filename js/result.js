@@ -83,10 +83,10 @@
 
     addTrack : function (data, format) {
       var trackOK;
-      this.trackx = data.gpsx.split(",").map(function(n) {
+      this.trackx = data.gpsx.split(",").map(function (n) {
         return parseInt(n, 10);
       });
-      this.tracky = data.gpsy.split(",").map(function(n) {
+      this.tracky = data.gpsy.split(",").map(function (n) {
         return parseInt(n, 10);
       });
       if (this.isGPSTrack) {
