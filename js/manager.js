@@ -425,9 +425,14 @@
       newCourses = [];
       courseid = 1;
       for (i = 0; i < this.courses.length; i += 1) {
-        selector = "#rg2-alloc-" + i;
-        // comes back as NaN if selector doesn't exist when we have no results, which works OK
-        id = parseInt($(selector).val(), 10);
+        if (this.drawingCourses) {
+          // only handles one course at present, so it is always 0
+          id = 0;
+        } else {
+          selector = "#rg2-alloc-" + i;
+          // comes back as NaN if selector doesn't exist when we have no results, which works OK
+          id = parseInt($(selector).val(), 10);
+        }
         if (id !== rg2.config.DO_NOT_SAVE_COURSE) {
           this.courses[i].courseid = courseid;
           // handle case where we have courses but no results

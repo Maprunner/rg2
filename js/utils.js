@@ -39,7 +39,8 @@
         return 0;
       }
       secs = 0;
-      bits = time.split(":");
+      // force format to use : if it came in with .
+      bits = time.replace(/\./g, ":").split(":");
       if (bits.length === 2) {
         secs = (parseInt(bits[0], 10) * 60) + parseInt(bits[1], 10);
       } else {
