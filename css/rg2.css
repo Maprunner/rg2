@@ -262,15 +262,15 @@ html, body {
    z-index: 90;
 }
 
-#rg2-track-names, #rg2-animation-names {
+#rg2-track-names {
    border: 1px solid darkgray;
    background: rgb(204, 204, 204);
    background: rgba(204, 204, 204, 0.75);
    padding : 2px;
    position: absolute;
    font:0.75em/0.4em arial;
-   top: 50px;
-   right: 20px;
+   top: 0px;
+   right: 0px;
    height: auto;
    width: auto;
    z-index: 90;
