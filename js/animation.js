@@ -93,7 +93,7 @@
         return html;
       }
       for (i = 0; i < this.runners.length; i += 1) {
-        html += "<p style='color:" + this.runners[i].colour + ";'>" + this.runners[i].coursename + " " + this.runners[i].name + "</p>";
+        html += "<p style='color:" + this.runners[i].colour + ";'>" + this.runners[i].coursename + "&nbsp;" + this.runners[i].name + "</p>";
       }
       return html;
     },

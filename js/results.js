@@ -268,8 +268,7 @@
       $("#rg2-track-names").empty();
       html = this.getDisplayedTrackNames();
       if (html !== "") {
-        $("#rg2-track-names").append(html);
-        $("#rg2-track-names").show();
+        $("#rg2-track-names").append(html).show();
       } else {
         $("#rg2-track-names").hide();
       }
