@@ -1,50 +1,50 @@
 <?php
 if (file_exists( dirname(__FILE__) . '/rg2-config.php')) {
-	require_once( dirname(__FILE__) . '/rg2-config.php' );
+  require_once( dirname(__FILE__) . '/rg2-config.php' );
 } else {
-	echo "Routegadget 2: Configuration file " . dirname(__FILE__) . "/rg2-config.php not found.";
+  echo "Routegadget 2: Configuration file " . dirname(__FILE__) . "/rg2-config.php not found.";
   return;
 }
 
 // override allows testing of a local configuration such as c:/xampp/htdocs/rg2
 if (file_exists( dirname(__FILE__) . '/rg2-override-config.php')) {
-	$override = true;
-	require_once ( dirname(__FILE__) . '/rg2-override-config.php');
+  $override = true;
+  require_once ( dirname(__FILE__) . '/rg2-override-config.php');
 } else {
-	$override = false;
+  $override = false;
 }
 
 if (defined('OVERRIDE_UI_THEME')) {
-	$ui_theme = OVERRIDE_UI_THEME;
+  $ui_theme = OVERRIDE_UI_THEME;
 } else {
-	$ui_theme = UI_THEME;
+  $ui_theme = UI_THEME;
 }
 
 if (defined('HEADER_COLOUR')) {
-	$header_colour = HEADER_COLOUR;
+  $header_colour = HEADER_COLOUR;
 } else {
-	$header_colour = '#002bd9';
+  $header_colour = '#002bd9';
 }
 if (defined('HEADER_TEXT_COLOUR')) {
-	$header_text_colour = HEADER_TEXT_COLOUR;
+  $header_text_colour = HEADER_TEXT_COLOUR;
 } else {
-	$header_text_colour = '#ffffff';
+  $header_text_colour = '#ffffff';
 }
 
 if (defined('OVERRIDE_BASE_DIRECTORY')) {
-	$json_url = OVERRIDE_BASE_DIRECTORY . "/rg2/rg2api.php";
-	if (defined('OVERRIDE_SOURCE_DIRECTORY')) {
-		$source_url = OVERRIDE_SOURCE_DIRECTORY . "/rg2";
-	} else {
-		$source_url = OVERRIDE_BASE_DIRECTORY . "/rg2";
-	}
+  $json_url = OVERRIDE_BASE_DIRECTORY . "/rg2/rg2api.php";
+  if (defined('OVERRIDE_SOURCE_DIRECTORY')) {
+    $source_url = OVERRIDE_SOURCE_DIRECTORY . "/rg2";
+  } else {
+    $source_url = OVERRIDE_BASE_DIRECTORY . "/rg2";
+  }
 } else {
-	$json_url = RG_BASE_DIRECTORY . "/rg2/rg2api.php";
-	if (defined('OVERRIDE_SOURCE_DIRECTORY')) {
-		$source_url = OVERRIDE_SOURCE_DIRECTORY . "/rg2";
-	} else {
-		$source_url = RG_BASE_DIRECTORY . "/rg2";
-	}
+  $json_url = RG_BASE_DIRECTORY . "/rg2/rg2api.php";
+  if (defined('OVERRIDE_SOURCE_DIRECTORY')) {
+    $source_url = OVERRIDE_SOURCE_DIRECTORY . "/rg2";
+  } else {
+    $source_url = RG_BASE_DIRECTORY . "/rg2";
+  }
 }
 
 if (defined('OVERRIDE_KARTAT_DIRECTORY')) {
@@ -55,7 +55,7 @@ if (defined('OVERRIDE_KARTAT_DIRECTORY')) {
 
 // include manager function as parameter for now until we decide the best way forward
 if (isset($_GET['manage'])) {
-	$manager = TRUE;
+  $manager = TRUE;
   if (defined('OVERRIDE_KARTAT_DIRECTORY')) {
     $manager_url = OVERRIDE_KARTAT_DIRECTORY;
   } else {
@@ -65,65 +65,65 @@ if (isset($_GET['manage'])) {
   $keksi = substr(str_shuffle("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"), 0, 20);
   file_put_contents($manager_url."keksi.txt", $keksi.PHP_EOL); 
 } else {
-	$manager=  FALSE;
+  $manager=  FALSE;
 }
 
 // include debug function as parameter for now until we decide the best way forward
 if (isset($_GET['debug']) || $override) {
-	$debug = TRUE;
+  $debug = TRUE;
 } else {
-	$debug = FALSE;
+  $debug = FALSE;
 }
 
 // include language file if requested
 if (isset($_GET['lang'])) {
-	$lang = $_GET['lang'];
+  $lang = $_GET['lang'];
 } else {
-	if ((defined('START_LANGUAGE'))) {
-		$lang = START_LANGUAGE;
-	} else {
-		$lang = "";
-	}
+  if ((defined('START_LANGUAGE'))) {
+    $lang = START_LANGUAGE;
+  } else {
+    $lang = "";
+  }
 }
 $langdir = dirname(__FILE__) . '/lang/';
 if (file_exists($langdir.$lang.'.txt')) {
-	$dictionary = 'dictionary: {'.PHP_EOL;
-	$dictionary .= file_get_contents($langdir.$lang.'.txt').PHP_EOL;
-	$dictionary .= '}'.PHP_EOL; 
+  $dictionary = 'dictionary: {'.PHP_EOL;
+  $dictionary .= file_get_contents($langdir.$lang.'.txt').PHP_EOL;
+  $dictionary .= '}'.PHP_EOL; 
 } else {
-	$dictionary = "dictionary: {}".PHP_EOL;
+  $dictionary = "dictionary: {}".PHP_EOL;
 }
 
 // create list of available languages
 $languages = "languages: {".PHP_EOL;
 foreach(glob($langdir.'??.txt') as $file) {
-	// xx is a dummy file to hold the master list of terms
+  // xx is a dummy file to hold the master list of terms
   if ($file != $langdir.'xx.txt') {
-    $lines = explode(PHP_EOL, file_get_contents($file));
+    $lines = file($file);
     $code = "";
-		$name = "";
+    $name = "";
     foreach ($lines as $line) {
-    	$line = trim($line);
+      $line = trim($line);
       if (strpos($line, 'code') !== FALSE) {
-      	$codepos = strpos($line, "'") + 1;
-				$code = substr($line, $codepos, 2);
-				if ($name !== "") {
-					break;
-				}
-			}
-      if (strpos($line, 'language') !== FALSE) {
-      	$namepos = strpos($line, "'");
-				$name = substr($line, $namepos);
-				if ($code !== "") {
-					break;
-				}
+        $codepos = strpos($line, "'") + 1;
+        $code = substr($line, $codepos, 2);
+        if ($name !== "") {
+          break;
+        }
       }
-		}
-		
-	  if (($code != "") && ($name != "")) {
-	    $languages .= $code.': '.$name.PHP_EOL;
-	  }
-	}
+      if (strpos($line, 'language') !== FALSE) {
+        $namepos = strpos($line, "'");
+        $name = substr($line, $namepos);
+        if ($code !== "") {
+          break;
+        }
+      }
+    }
+    
+    if (($code != "") && ($name != "")) {
+      $languages .= $code.': '.$name.PHP_EOL;
+    }
+  }
 }
 
 $languages .= '},'.PHP_EOL;
@@ -176,16 +176,16 @@ header('Content-type: text/html; charset=utf-8');
             <a href="#rg2-manage-login">Login</a>
           </li>
           <li id="rg2-create-tab">
-          	<a href="#rg2-manage-create">Add event</a>
+            <a href="#rg2-manage-create">Add event</a>
           </li>
           <li id="rg2-edit-tab">
-          	<a href="#rg2-manage-edit">Edit event</a>
+            <a href="#rg2-manage-edit">Edit event</a>
           </li>
           <li id="rg2-map-tab">
             <a href="#rg2-manage-map">Add map</a>
           </li>
           <?php } ?>
-   			</ul>
+         </ul>
         </div>
         <div id="rg2-info-panel-tab-body">
         <div id="rg2-event-list"></div>
@@ -205,11 +205,11 @@ header('Content-type: text/html; charset=utf-8');
           </div>
           <div id="rg2-enter-name">
            <div>
-           	 <label for='rg2-name'>Enter name: </label>
+              <label for='rg2-name'>Enter name: </label>
              <span id = "rg2-name"><input id="rg2-name-entry" class="pushright" type="text"></span>
            </div>
            <div>
-           	 <label for='rg2-time'>Enter time (mm:ss): </label>
+              <label for='rg2-time'>Enter time (mm:ss): </label>
              <span id = "rg2-time"><input  id="rg2-time-entry" class="pushright" type="text"></span>
            </div>
           </div>
@@ -228,8 +228,8 @@ header('Content-type: text/html; charset=utf-8');
        <input type=checkbox id="btn-move-all"><label for="btn-move-all">Move track and map together (or right click-drag)</label>
        <ul>
         <li><span id="draw-text-1">Left click to add/lock/unlock a handle></span>
-        	<ul><li><span id="draw-text-2">Green: draggable</span></li>
-        		<li><span id="draw-text-3">Red: locked</span></li></ul>
+          <ul><li><span id="draw-text-2">Green: draggable</span></li>
+            <li><span id="draw-text-3">Red: locked</span></li></ul>
         </li>
         <li id="draw-text-4">Right click to delete a handle</li>
         <li id="draw-text-5">Drag a handle to adjust track around locked point(s)</li>

@@ -72,7 +72,10 @@
       info = this.extractSISplits(fields, result.controls);
       result.splits = info.splits;
       // add finish split
-      result.splits += ";" + rg2.utils.getSecsFromHHMMSS(result.time);
+      if (result.splits !== "") {
+        result.splits += ";";
+      }
+      result.splits += rg2.utils.getSecsFromHHMMSS(result.time);
       result.codes = info.codes;
       return result;
     },

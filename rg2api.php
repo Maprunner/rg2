@@ -161,8 +161,8 @@ function handlePostRequest($type, $eventid) {
       switch ($type) {
       case 'addroute':
         $write = addNewRoute($eventid, $data);
-	      @unlink(CACHE_DIRECTORY."results_".$eventid.".json");
-	      @unlink(CACHE_DIRECTORY."tracks_".$eventid.".json");
+        @unlink(CACHE_DIRECTORY."results_".$eventid.".json");
+        @unlink(CACHE_DIRECTORY."tracks_".$eventid.".json");
         @unlink(CACHE_DIRECTORY."stats.json");
         break;
 
@@ -172,7 +172,7 @@ function handlePostRequest($type, $eventid) {
 
       case 'createevent':
         $write = addNewEvent($data);
-	      @unlink(CACHE_DIRECTORY."events.json");
+        @unlink(CACHE_DIRECTORY."events.json");
         @unlink(CACHE_DIRECTORY."stats.json");
         break;
  
@@ -185,24 +185,24 @@ function handlePostRequest($type, $eventid) {
       case 'deleteevent':
         $write = deleteEvent($eventid);
         @unlink(CACHE_DIRECTORY."events.json");
-	      @unlink(CACHE_DIRECTORY."results_".$eventid.".json");
-	      @unlink(CACHE_DIRECTORY."courses_".$eventid.".json");
-	      @unlink(CACHE_DIRECTORY."tracks_".$eventid.".json");
+        @unlink(CACHE_DIRECTORY."results_".$eventid.".json");
+        @unlink(CACHE_DIRECTORY."courses_".$eventid.".json");
+        @unlink(CACHE_DIRECTORY."tracks_".$eventid.".json");
         @unlink(CACHE_DIRECTORY."stats.json");
        break;
 
       case 'deleteroute':
         $write = deleteRoute($eventid);
-	      @unlink(CACHE_DIRECTORY."results_".$eventid.".json");
-	      @unlink(CACHE_DIRECTORY."tracks_".$eventid.".json");
+        @unlink(CACHE_DIRECTORY."results_".$eventid.".json");
+        @unlink(CACHE_DIRECTORY."tracks_".$eventid.".json");
         @unlink(CACHE_DIRECTORY."stats.json");
         break;
         
       case 'deletecourse':
         $write = deleteCourse($eventid);
-	      @unlink(CACHE_DIRECTORY."results_".$eventid.".json");
-	      @unlink(CACHE_DIRECTORY."courses_".$eventid.".json");
-	      @unlink(CACHE_DIRECTORY."tracks_".$eventid.".json");
+        @unlink(CACHE_DIRECTORY."results_".$eventid.".json");
+        @unlink(CACHE_DIRECTORY."courses_".$eventid.".json");
+        @unlink(CACHE_DIRECTORY."tracks_".$eventid.".json");
         @unlink(CACHE_DIRECTORY."stats.json");
         break;
       
@@ -295,11 +295,11 @@ function addNewEvent($data) {
       $oldid = intval($olddata[0]);
     }
     $newid = $oldid + 1;
-	} else {
-		// create new kisat file
-		$newid = 1;
-		$handle = @fopen(KARTAT_DIRECTORY."kisat.txt", "w+");
-	}
+  } else {
+    // create new kisat file
+    $newid = 1;
+    $handle = @fopen(KARTAT_DIRECTORY."kisat.txt", "w+");
+  }
   $name = encode_rg_output($data->name);
   $club = encode_rg_output($data->club);
   $comments = tidyNewComments($data->comments);
@@ -312,7 +312,7 @@ function addNewEvent($data) {
   }
   @fflush($handle);
   @fclose($handle);
-	
+  
   // create new sarjat file: course names
   $courses = "";
   for ($i = 0; $i < count($data->courses); $i++) {
@@ -970,7 +970,7 @@ function addNewRoute($eventid, $data) {
         $updatedfile[] = $row;
       }
     }
-	}
+  }
   // add new track at end of file
   $updatedfile[] = $newtrackdata;
   
@@ -1015,9 +1015,9 @@ function addNewMap($data) {
     }
     $newid = $oldid + 1;
   } else {
-	// create empty kartat file
-	$newid = 1;
-	$handle = @fopen(KARTAT_DIRECTORY."kartat.txt", "w+");
+  // create empty kartat file
+  $newid = 1;
+  $handle = @fopen(KARTAT_DIRECTORY."kartat.txt", "w+");
   }
   // may not have a GIF
   if (file_exists(KARTAT_DIRECTORY."temp.gif")) {
@@ -1114,15 +1114,15 @@ function handleGetRequest($type, $id) {
   validateCache($id);
   $output = array();
   //rg2log("Type ".$type."|ID ".$id);
-  switch ($type) {  
+  switch ($type) {
   case 'events':
-	  if (file_exists(CACHE_DIRECTORY."events.json")) {
-	    $output = file_get_contents(CACHE_DIRECTORY."events.json");
-	  } else {
-	    // FALSE = don't include stats in output
+    if (file_exists(CACHE_DIRECTORY."events.json")) {
+      $output = file_get_contents(CACHE_DIRECTORY."events.json");
+    } else {
+      // FALSE = don't include stats in output
       $output = getAllEvents(FALSE);
-		  @file_put_contents(CACHE_DIRECTORY."events.json", $output);
-		}	
+      @file_put_contents(CACHE_DIRECTORY."events.json", $output);
+    }  
     break;
   case 'stats':
     if (file_exists(CACHE_DIRECTORY."stats.json")) {
@@ -1134,35 +1134,35 @@ function handleGetRequest($type, $id) {
     } 
     break;
   case 'courses':
-	  if (file_exists(CACHE_DIRECTORY."courses_".$id.".json")) {
-	    $output = file_get_contents(CACHE_DIRECTORY."courses_".$id.".json");
-	  } else {
+    if (file_exists(CACHE_DIRECTORY."courses_".$id.".json")) {
+      $output = file_get_contents(CACHE_DIRECTORY."courses_".$id.".json");
+    } else {
       $output = getCoursesForEvent($id);
-		  @file_put_contents(CACHE_DIRECTORY."courses_".$id.".json", $output);
-		}		
+      @file_put_contents(CACHE_DIRECTORY."courses_".$id.".json", $output);
+    }    
     break;
   case 'results':
-	  if (file_exists(CACHE_DIRECTORY."results_".$id.".json")) {
-	    $output = file_get_contents(CACHE_DIRECTORY."results_".$id.".json");
-	  } else {
+    if (file_exists(CACHE_DIRECTORY."results_".$id.".json")) {
+      $output = file_get_contents(CACHE_DIRECTORY."results_".$id.".json");
+    } else {
       $output = getResultsForEvent($id);
-		  @file_put_contents(CACHE_DIRECTORY."results_".$id.".json", $output);
-		}
+      @file_put_contents(CACHE_DIRECTORY."results_".$id.".json", $output);
+    }
     break;
   case 'maps':
     $output = getMaps();
     break;
   case 'tracks':
-	  if (file_exists(CACHE_DIRECTORY."tracks_".$id.".json")) {
-	    $output = file_get_contents(CACHE_DIRECTORY."tracks_".$id.".json");
-	  } else {
+    if (file_exists(CACHE_DIRECTORY."tracks_".$id.".json")) {
+      $output = file_get_contents(CACHE_DIRECTORY."tracks_".$id.".json");
+    } else {
       $output = getTracksForEvent($id);
-		  @file_put_contents(CACHE_DIRECTORY."tracks_".$id.".json", $output);
-		}			
+      @file_put_contents(CACHE_DIRECTORY."tracks_".$id.".json", $output);
+    }      
     break;
-	case 'lang':
-		$output = getLanguage($id);
-		break;
+  case 'lang':
+    $output = getLanguage($id);
+    break;
   case 'splitsbrowser':
     $output = getSplitsbrowser($id);
     break;
@@ -1172,12 +1172,12 @@ function handleGetRequest($type, $id) {
     break;
   }
   if ($type == 'splitsbrowser') {
-  	echo $output;
+    echo $output;
   } else {
     // output JSON data
     header("Content-type: application/json");
     echo "{\"data\":" .$output. "}";
-	}
+  }
 }
 
 function validateCache($id) {
@@ -1227,44 +1227,44 @@ function validateCache($id) {
 }
 
 function getSplitsbrowser($eventid) {
-	  $page = file_get_contents("html/splitsbrowser.html");
-		$eventname = getEventName($eventid);
-		$page = str_replace('<EVENT_NAME>', $eventname, $page);
-		if (defined('DEBUG')) {
-		  $page = str_replace('DEBUG_CLOSE', "", $page);
-		  $page = str_replace('DEBUG', "", $page);
-		  $page = str_replace('MINIFIED_CLOSE', "--", $page);
-		  $page = str_replace('MINIFIED', "!--", $page);
-		} else {
-		  $page = str_replace('DEBUG_CLOSE', "--", $page);
-		  $page = str_replace('DEBUG', "!--", $page);
-		  $page = str_replace('MINIFIED_CLOSE', "", $page);
-		  $page = str_replace('MINIFIED', "", $page);
-		}
-		$page = str_replace('<SPLITSBROWSER_DIRECTORY>', SPLITSBROWSER_DIRECTORY, $page);
-		$result_data = getResultsCSV($eventid);
-		$page = str_replace('<SPLITSBROWSER_DATA>', $result_data, $page);
-		return $page;
+    $page = file_get_contents("html/splitsbrowser.html");
+    $eventname = getEventName($eventid);
+    $page = str_replace('<EVENT_NAME>', $eventname, $page);
+    if (defined('DEBUG')) {
+      $page = str_replace('DEBUG_CLOSE', "", $page);
+      $page = str_replace('DEBUG', "", $page);
+      $page = str_replace('MINIFIED_CLOSE', "--", $page);
+      $page = str_replace('MINIFIED', "!--", $page);
+    } else {
+      $page = str_replace('DEBUG_CLOSE', "--", $page);
+      $page = str_replace('DEBUG', "!--", $page);
+      $page = str_replace('MINIFIED_CLOSE', "", $page);
+      $page = str_replace('MINIFIED', "", $page);
+    }
+    $page = str_replace('<SPLITSBROWSER_DIRECTORY>', SPLITSBROWSER_DIRECTORY, $page);
+    $result_data = getResultsCSV($eventid);
+    $page = str_replace('<SPLITSBROWSER_DATA>', $result_data, $page);
+    return $page;
 }
 
 function getLanguage($lang) {
-	$langdir = dirname(__FILE__) . '/lang/';
+  $langdir = dirname(__FILE__) . '/lang/';
   $dict = array();
   if (file_exists($langdir.$lang.'.txt')) {
     // generate the necessary php array from the txt file
-    $lines = explode(PHP_EOL, file_get_contents($langdir.$lang.'.txt'));
-		// extract each string pair into php array
-		foreach ($lines as $line) {
-			// remove all quotation marks
-			$line = str_replace("'", "", $line);
-			// split into two bits
+    $lines = file($langdir.$lang.'.txt');
+    // extract each string pair into php array
+    foreach ($lines as $line) {
+      // remove all quotation marks
+      $line = str_replace("'", "", $line);
+      // split into two bits
       $temp = explode(":", trim($line));
-			// remove trailing comma
-			if (count($temp) == 2) {
-			  $temp[1] = rtrim($temp[1], ',');
-			  $dict[trim($temp[0])] = trim($temp[1]);
+      // remove trailing comma
+      if (count($temp) == 2) {
+        $temp[1] = rtrim($temp[1], ',');
+        $dict[trim($temp[0])] = trim($temp[1]);
       }
-		}
+    }
   }
   return addVersion('dict', $dict);
 }
@@ -1272,7 +1272,7 @@ function getLanguage($lang) {
 // formats results as needed for Splitsbrowser
 function getResultsCSV($eventid) {
   $result_data = "\n'Headers;\\n' + \n";
-	$first_line = true;
+  $first_line = true;
   $coursecount = 0;
   $courses = array();
   $controls = array();
@@ -1302,19 +1302,22 @@ function getResultsCSV($eventid) {
       fclose($handle);
     }
   }
-  
-	$results = file(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt");
+  // shouldn't get a request for non-existent event but it seems to happen...#266
+  $results = array();
+  if (file_exists(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt")) {
+    $results = file(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt");
+  }
   foreach ($results as $result) {
     $data = explode("|", $result);
-		// extract time
-		$t = tidyTime($data[7]);
+    // extract time
+    $t = tidyTime($data[7]);
     if (intval($data[0]) < GPS_RESULT_OFFSET) {
       if ($first_line) {
-      	$first_line = false;
-			} else {
-				$result_data .= " +\n";
+        $first_line = false;
+      } else {
+        $result_data .= " +\n";
       }
-			// 0-based column indexes
+      // 0-based column indexes
       // 0: startno, so use resultid
       $result_data .= "'".intval($data[0]).";;;";
       // 3: surname
@@ -1328,9 +1331,9 @@ function getResultsCSV($eventid) {
         $result_data .= "---;;;;;;;";
       } else {
         $result_data .= $t.";;;;;;;";
-			}
-			// 18: course name
-			$result_data .= encode_rg_input($data[2]).";;;;;;;;;;;;;;;;;;;;";
+      }
+      // 18: course name
+      $result_data .= encode_rg_input($data[2]).";;;;;;;;;;;;;;;;;;;;";
       // find codes for this course
       if ($data[6] !== '') {
         $variant = $data[6];
@@ -1345,7 +1348,7 @@ function getResultsCSV($eventid) {
         }
       }
       // 38: course number, 39: course name
-			$result_data .= intval($data[1]).";".$data[2].";;;";
+      $result_data .= intval($data[1]).";".$data[2].";;;";
       // trim trailing ; which create null fields when expanded
       $temp = rtrim($data[8], ";");
       // split array at ; and force to integers
@@ -1356,14 +1359,14 @@ function getResultsCSV($eventid) {
       $result_data .= $split_count.";;".convertSecondsToHHMMSS(intval($data[4])).";";
       // 45: finish time
       if ($split_count > 0) {
-      	$finish_secs = intval($splits[$split_count - 1]) + intval($data[4]);
+        $finish_secs = intval($splits[$split_count - 1]) + intval($data[4]);
       } else {
-      	$finish_secs = intval($data[4]);
+        $finish_secs = intval($data[4]);
       }
-			if ($finish_secs == 0) {
-			  // #155: send invalid rather than 0 times to Splitsbrowser
-				$result_data .= "---;";
-			} else {
+      if ($finish_secs == 0) {
+        // #155: send invalid rather than 0 times to Splitsbrowser
+        $result_data .= "---;";
+      } else {
         $result_data .= convertSecondsToHHMMSS($finish_secs).";";
       }
       if ($courseindex > -1) {
@@ -1371,36 +1374,35 @@ function getResultsCSV($eventid) {
       } else {
         $controlcount = 0;
       }
-
       for ($i = 0; $i < $split_count; $i++) {
-      	// 46: control 1 number
-      	if ($courseindex > -1) {
-      	  if ($i < $controlcount) {
-      	    $result_data .= $controls[$courseindex][$i].";";
-          } else {
-            $result_data .= "XXX;";
-          }
-      	} else {
-      	  $result_data .= ($i + 1).";";
-      	}
+        // 46: control 1 number
+        if ($courseindex > -1) {
+          if ($i < $controlcount) {
+            $result_data .= $controls[$courseindex][$i].";";
+           } else {
+             $result_data .= "XXX;";
+           }
+        } else {
+          $result_data .= ($i + 1).";";
+        }
         // 47: control 1 split
         // #155: send invalid rather than 0 times to Splitsbrowser
-      	if ($splits[$i] == 0) {
-					$result_data .= "---;";
-				} else {
-      	  $result_data .= convertSecondsToMMSS($splits[$i]).";";
-				}
-			}
+        if ($splits[$i] == 0) {
+          $result_data .= "---;";
+        } else {
+          $result_data .= convertSecondsToMMSS($splits[$i]).";";
+        }
+      }
       $result_data .= "\\n'";
     }
- 	}
-	$result_data .= ";";
-	$result_data = str_replace("&amp;", "\&", $result_data);
-	if ($first_line) {
-		// we didn't find any results
-		$results_data = "";
-	}
- 	return $result_data;
+  }
+  $result_data .= ";";
+  $result_data = str_replace("&amp;", "\&", $result_data);
+  if ($first_line) {
+    // we didn't find any results
+    $results_data = "";
+  }
+  return $result_data;
 }
 
 function convertSecondsToHHMMSS($seconds) {
@@ -1418,14 +1420,14 @@ function convertSecondsToMMSS($seconds) {
 
 function getEventName($eventid) {
   $event_name = "Unknown event";
-	$events = file(KARTAT_DIRECTORY."kisat.txt");
+  $events = file(KARTAT_DIRECTORY."kisat.txt");
   foreach ($events as $event) {
     $data = explode("|", $event);
     if (intval($data[0]) == $eventid) {
       $event_name = encode_rg_input($data[3])." on ".$data[4];
     };
- 	}
- 	return $event_name;
+  }
+  return $event_name;
 }
 
 function getAllEvents($includeStats) {
@@ -1501,20 +1503,20 @@ function getAllEvents($includeStats) {
       }
       
       if ($includeStats) {
-        if (file_exists(KARTAT_DIRECTORY."kilpailijat_".$detail["id"].".txt")) {
+        // avoid reading big results file into memory: has been seen to cause trouble
+        if (($resulthandle = @fopen(KARTAT_DIRECTORY."kilpailijat_".$detail["id"].".txt", "r")) !== FALSE) {
           $count = 0;
-          $results = file(KARTAT_DIRECTORY."kilpailijat_".$detail["id"].".txt");
-          // don't double-count GPS results
-          foreach ($results as $r) {
-            $d = explode("|", $r);
-            if (count($d) > 0) {
-              if ($d[0] < GPS_RESULT_OFFSET) {
+          while (($data = fgetcsv($resulthandle, 0, "|")) !== FALSE) {
+            // don't double-count GPS results
+            if (count($data) > 0) {
+              if ($data[0] < GPS_RESULT_OFFSET) {
                 $count++;
               } else {
                 continue;
               }
             }
           }
+          fclose($resulthandle);
           $detail["results"] = $count;
         } else {
           $detail["results"] = 0;
@@ -1611,7 +1613,7 @@ function isScoreEvent($eventid) {
 function getResultsForEvent($eventid) {
   rg2log("Get results for event ".$eventid);
   $output = array();
-	$comments = 0;
+  $comments = 0;
   $text = array();
   // @ suppresses error report if file does not exist
   if (($handle = @fopen(KARTAT_DIRECTORY."kommentit_".$eventid.".txt", "r")) !== FALSE) {
@@ -1628,7 +1630,7 @@ function getResultsForEvent($eventid) {
     fclose($handle);
   }
   $codes = array();
-	// initialise empty to deal with corrupt results files that occur sometimes
+  // initialise empty to deal with corrupt results files that occur sometimes
   $variant = array();
   if (isScoreEvent($eventid)) {
     // read control locations visited: this includes start and finish
@@ -1637,7 +1639,7 @@ function getResultsForEvent($eventid) {
       while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
         $x = array();
         $y = array();
-				$tempcodes = array();
+        $tempcodes = array();
         // field is N separated and then comma separated
         $pairs = explode("N", $data[1]);
         for ($j = 0; $j < count($pairs); $j++) {
@@ -1647,14 +1649,14 @@ function getResultsForEvent($eventid) {
             $x[$j] = 1 * $xy[0];
             // make it easier to draw map
             $y[$j] = -1 * $xy[1];
-						// needs to be a string for javascript
-						$tempcodes[$j] = strval($j);
+            // needs to be a string for javascript
+            $tempcodes[$j] = strval($j);
           }
          }
         $variant[$row] = $data[0];
         $xpos[$row] = $x;
         $ypos[$row] = $y;
-				$codes[$row] = $tempcodes;
+        $codes[$row] = $tempcodes;
         $sentalready[$row] = false;
         $row++;
       }
@@ -1685,13 +1687,13 @@ function getResultsForEvent($eventid) {
     $row = 0;
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
       $detail = array();
-			$resultid = intval($data[0]);
-			$courseid = intval($data[1]);
-			// protect against corrupt/invalid files
-			// skip this record and go to next line
-			if (($resultid < 1) || ($courseid < 1)) {
-				continue;	
-			}
+      $resultid = intval($data[0]);
+      $courseid = intval($data[1]);
+      // protect against corrupt/invalid files
+      // skip this record and go to next line
+      if (($resultid < 1) || ($courseid < 1)) {
+        continue;  
+      }
       $detail["resultid"] = $resultid;
       $detail["courseid"] = $courseid;
       $detail["coursename"] = encode_rg_input($data[2]);
@@ -1711,7 +1713,7 @@ function getResultsForEvent($eventid) {
       }
       
       $detail["variant"] = intval($data[6]);
-			// score event check should be redundant but see issue #159
+      // score event check should be redundant but see issue #159
       if (($data[6] != "") && isScoreEvent($eventid)) {
         for ($i = 0; $i < count($variant); $i++) {
           // only send course details the first time they occur: makes response a lot smaller for big (Jukola!) relays
@@ -1838,30 +1840,31 @@ function getCoursesForEvent($eventid) {
 function expandCoords($coords) {
   // Split Nxx;-yy,0Nxxx;-yy,0N.. into x,y arrays
   // but note that sometimes you don't get the ,0
-  $x = array();
-  $y = array();
+  $x = "";
+  $y = "";
   // handle empty coord string: found some examples in Jukola files
   // 5 is enough for one coordinate set, but the problem files just had "0"
   if (strlen($coords) < 5) {
-    return array(array_map('intval', $x), array_map('intval', $y));
+    return array($x, $y);
   }
   $xy = explode("N", $coords);
   foreach ($xy as $point) {
     $temp = explode(";", $point);
     if (count($temp) == 2) {
-      $x[] = $temp[0];
+      $x .= ",".$temp[0];
       // strip off trailing ,0 if it exists
-      $pos = strpos(',', $temp[1]);
-      if ($pos) {
+      $pos = strpos($temp[1], ",");
+      if ($pos !== FALSE) {
         // remove leading - by starting at 1
-        $y[] = substr($temp[1], 1, $pos - 2);
+        $y .= ",".substr($temp[1], 1, $pos - 1);
       } else {
-        $y[] = substr($temp[1], 1);
+        $y .= ",".substr($temp[1], 1);
       }
     }
   }
-  // return the two arrays converted to integer values
-  return array(array_map('intval', $x), array_map('intval', $y));
+  // return the two strings, minus first , in each
+  // used to return as integer arrays, but this caused memory problems in json_encode
+  return array(substr($x, 1), substr($y,1));
 }
 
 function getDummyCode($code) {
@@ -1892,19 +1895,19 @@ function getTracksForEvent($eventid) {
   if (($handle = @fopen(KARTAT_DIRECTORY."merkinnat_".$eventid.".txt", "r")) !== FALSE) {
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
       $detail = array();
-			$courseid = intval($data[0]);
-			$resultid = intval($data[1]);
-			// protect against corrupt/invalid files
-			// GPS tracks are better in the results then here so don't bother sending
-			if (($resultid > 0) && ($resultid < GPS_RESULT_OFFSET) && ($courseid > 0)) {
-      	$detail["courseid"] = $courseid;
-      	$detail["resultid"] = $resultid;
-      	$detail["name"] = encode_rg_input($data[2]);
-      	$detail["mystery"] = $data[3];
-      	list($detail["gpsx"], $detail["gpsy"]) = expandCoords($data[4]);
-      	$output[$row] = $detail;
-      	$row++;
-			}
+      $courseid = intval($data[0]);
+      $resultid = intval($data[1]);
+      // protect against corrupt/invalid files
+      // GPS tracks are better in the results then here so don't bother sending
+      if (($resultid > 0) && ($resultid < GPS_RESULT_OFFSET) && ($courseid > 0)) {
+        $detail["courseid"] = $courseid;
+        $detail["resultid"] = $resultid;
+        $detail["name"] = encode_rg_input($data[2]);
+        $detail["mystery"] = $data[3];
+        list($detail["gpsx"], $detail["gpsy"]) = expandCoords($data[4]);
+        $output[$row] = $detail;
+        $row++;
+      }
     }
     fclose($handle);
   }
@@ -1955,8 +1958,7 @@ function rg2log($msg) {
      date_default_timezone_set('GMT');
     }
     error_log(date("c", time())."|".$msg.PHP_EOL, 3, RG_LOG_FILE);
-  
-    if (filesize(RG_LOG_FILE) > 100000) {
+    if (filesize(RG_LOG_FILE) > 500000) {
       rename(RG_LOG_FILE, RG_LOG_FILE."-".date("Y-m-d-His", time()));
     }
   }
@@ -1995,35 +1997,26 @@ function generateWorldFile($data) {
     $lat[$i] = floatval($data[5 + ($i * 4)]);
     //rg2log($data[0].", ".$lat[$i].", ".$lon[$i].", ".$x[$i].", ".$y[$i]);
   }
-  $hypot = getLatLonDistance($lat[0], $lon[0], $lat[2], $lon[2]);
-  $adj = getLatLonDistance($lat[0], $lon[0], $lat[0], $lon[2]);
-  //rg2log($hypot.", ".$adj);
-  if ($hypot == 0) {
+  // assumes various things about the three points
+  // works for RG2, may not work for the original, but we can live with that
+  // idealy we would have saved the world file rather than three points
+  if (($x[0]!== 0) || ($y[0] !== 0) || ($y[2] !== 0) || ($x[2] === 0)) {
     return array(0, 0, 0, 0, 0, 0);
   }
-  $angle1 = acos($adj / $hypot);
-  
-  $hypot2 = getLatLonDistance($lat[2], $lon[2], $lat[1], $lon[1]);
-  $adj2 = getLatLonDistance($lat[2], $lon[2], $lat[1], $lon[2]);
-  //rg2log($hypot2.", ".$adj2);
-  if ($hypot2 == 0) {
-    return array(0, 0, 0, 0, 0, 0);
-  }
-  $angle2 = acos($adj2 / $hypot2);
 
-  if ((($x[2] - $x[0]) == 0) || (($y[1] - $y[0]) == 0)) {
-    return array(0, 0, 0, 0, 0, 0);
-  }
-  $angle = ($angle1 + $angle2) / 2;
-  $pixResX = ($lon[2] - $lon[0]) / ($x[2] - $x[0]);
-  $pixResY = ($lat[2] - $lat[1]) / ($y[1] - $y[2]);
-  //rg2log($pixResX.", ".$pixResY);
-  $A = $pixResX * cos($angle);
-  $D = $pixResY * sin($angle);
-  $B = $pixResX * sin($angle);
-  $E = -1 * $pixResY * cos($angle);
+  // X = Ax + By + C, Y = Dx + Ey + F
+  // C = X - Ax - By, where x and y are 0
   $C = $lon[0];
+  // F = Y - Dx - Ey, where X and Y are 0
   $F = $lat[0];
+  // A = (X - By - C) / x where y = 0
+  $A = ($lon[2] - $C) / $x[2];
+  // B = (X - Ax - C) / y
+  $B = ($lon[1] - ($A * $x[1]) - $C) / $y[1];
+  // D = (Y - Ey - F) / x where y = 0
+  $D = ($lat[2] - $F) / $x[2];
+  // E = (Y - Dx - F) / y
+  $E = ($lat[1] - ($D * $x[1]) -  $F) / $y[1];
 
   return array($A, $B, $C, $D, $E, $F);
 }
