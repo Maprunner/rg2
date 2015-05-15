@@ -1,4 +1,4 @@
-// Version 1.1.5 2015-05-04T13:40:45;
+// Version 1.1.6 2015-05-15T08:38:25;
 /*
  * Routegadget 2
  * https://github.com/Maprunner/rg2
@@ -236,7 +236,7 @@ var rg2 = (function (window, $) {
         return html;
       }
       for (i = 0; i < this.runners.length; i += 1) {
-        html += "<p style='color:" + this.runners[i].colour + ";'>" + this.runners[i].coursename + " " + this.runners[i].name + "</p>";
+        html += "<p style='color:" + this.runners[i].colour + ";'>" + this.runners[i].coursename + "&nbsp;" + this.runners[i].name + "</p>";
       }
       return html;
     },
@@ -898,7 +898,7 @@ var rg2 = (function (window, $) {
     EVENT_WITHOUT_RESULTS : 2,
     SCORE_EVENT : 3,
     // version gets set automatically by grunt file during build process
-    RG2VERSION: '1.1.5',
+    RG2VERSION: '1.1.6',
     TIME_NOT_FOUND : 9999,
     // values for evt.which
     RIGHT_CLICK : 3,
@@ -1536,8 +1536,8 @@ var rg2 = (function (window, $) {
     getXYFromLatLng : function (latLng) {
       var lat, lng, pt;
       pt = {x: 0, y: 0};
-      lat = latLng[0].getAttribute('lat');
-      lng = latLng[0].getAttribute('lng');
+      lat = parseFloat(latLng[0].getAttribute('lat'));
+      lng = parseFloat(latLng[0].getAttribute('lng'));
       // handle Condes-specific georeferencing
       if (this.fromCondes) {
         // use original map worldfile
@@ -3249,14 +3249,25 @@ var rg2 = (function (window, $) {
     Constructor : Worldfile,
 
     // use worldfile to generate X value
-    getX : function (x, y) {
-      return Math.round(((this.E * x) - (this.B * y) + this.xCorrection) / this.AEDB);
+    getX : function (lng, lat) {
+      return Math.round(((this.E * lng) - (this.B * lat) + this.xCorrection) / this.AEDB);
     },
 
     // use worldfile to generate y value
-    getY : function (x, y) {
-      return Math.round(((-1 * this.D * x) + (this.A * y) + this.yCorrection) / this.AEDB);
+    getY : function (lng, lat) {
+      return Math.round(((-1 * this.D * lng) + (this.A * lat) + this.yCorrection) / this.AEDB);
+    },
+
+    // use worldfile to generate longitude
+    getLon : function (x, y) {
+      return Math.round((this.A * x) + (this.B * y) + this.C);
+    },
+
+    // use worldfile to generate latitude
+    getLat : function (x, y) {
+      return Math.round((this.D * x) + (this.E * y) + this.F);
     }
+
   };
 
   function Map(data) {
@@ -3376,7 +3387,7 @@ var rg2 = (function (window, $) {
         //this.name = data.name;
         this.isGPSTrack = false;
       }
-      if (data.gpsx.length > 0) {
+      if (data.gpsx !== "") {
         this.addTrack(data);
       }
     },
@@ -3395,8 +3406,12 @@ var rg2 = (function (window, $) {
 
     addTrack : function (data, format) {
       var trackOK;
-      this.trackx = data.gpsx;
-      this.tracky = data.gpsy;
+      this.trackx = data.gpsx.split(",").map(function (n) {
+        return parseInt(n, 10);
+      });
+      this.tracky = data.gpsy.split(",").map(function (n) {
+        return parseInt(n, 10);
+      });
       if (this.isGPSTrack) {
         trackOK = this.expandGPSTrack();
       } else {
@@ -3878,7 +3893,10 @@ var rg2 = (function (window, $) {
       info = this.extractSISplits(fields, result.controls);
       result.splits = info.splits;
       // add finish split
-      result.splits += ";" + rg2.utils.getSecsFromHHMMSS(result.time);
+      if (result.splits !== "") {
+        result.splits += ";";
+      }
+      result.splits += rg2.utils.getSecsFromHHMMSS(result.time);
       result.codes = info.codes;
       return result;
     },
@@ -4328,7 +4346,7 @@ var rg2 = (function (window, $) {
       var i, baseresult;
       for (i = 0; i < this.results.length; i += 1) {
         if (this.results[i].resultid >= rg2.config.GPS_RESULT_OFFSET) {
-          baseresult = this.getFullResult(this.results[i].rawid);
+          baseresult = this.getFullResultForRawID(this.results[i].rawid);
           if (baseresult !== undefined) {
             if (baseresult.scorex !== undefined) {
               this.results[i].scorex = baseresult.scorex;
@@ -4527,6 +4545,16 @@ var rg2 = (function (window, $) {
       return this.results[resultid];
     },
 
+    getFullResultForRawID : function (rawid) {
+      var i;
+      for (i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].resultid === rawid) {
+          return this.results[i];
+        }
+      }
+      return undefined;
+    },
+
     drawTracks : function () {
       var i, opt;
       opt = rg2.getReplayDetails();
@@ -4541,8 +4569,7 @@ var rg2 = (function (window, $) {
       $("#rg2-track-names").empty();
       html = this.getDisplayedTrackNames();
       if (html !== "") {
-        $("#rg2-track-names").append(html);
-        $("#rg2-track-names").show();
+        $("#rg2-track-names").append(html).show();
       } else {
         $("#rg2-track-names").hide();
       }
@@ -5772,7 +5799,8 @@ var rg2 = (function (window, $) {
         return 0;
       }
       secs = 0;
-      bits = time.split(":");
+      // force format to use : if it came in with .
+      bits = time.replace(/\./g, ":").split(":");
       if (bits.length === 2) {
         secs = (parseInt(bits[0], 10) * 60) + parseInt(bits[1], 10);
       } else {
