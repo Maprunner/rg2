@@ -111,7 +111,7 @@
 
     getSplitsTableHeader: function (controls) {
       var html, i;
-      html = "<table class='splitstable'><tr><th>Course</th><th>Name</th>";
+      html = "<table class='splitstable'><tr><th>" + rg2.t("Course") + "</th><th>" + rg2.t("Name") + "</th>";
       for (i = 1; i <= controls; i += 1) {
         html += "<th>" + i + "</th>";
       }
@@ -121,7 +121,7 @@
     getSplitsTable : function () {
       var html, i, j, run, metresPerPixel, units, maxControls, legSplit, prevControlSecs, info;
       if (this.runners.length < 1) {
-        return "<p>Select runners on Results tab.</p>";
+        return "<p>" + rg2.t("Select runners on Results tab") + ".</p>";
       }
       legSplit = [];
       prevControlSecs = 0;

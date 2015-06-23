@@ -25,7 +25,7 @@ module.exports = function(grunt) {
    'kerno', 'kfo', 'lamm', 'leioc', 'loc', 'log', 'lok', 'lvo', 'maroc', 'mdoc', 'moravian', 'mvoc', 'nato', 'ngoc', 'noroc', 'nwo', 'od', 'omm', 'ouoc',
    'pfo', 'pow', 'quantock', 'rafo', 'roxburghreivers', 'sa', 'sarum', 'scottish6days', 'seloc', 'slow', 'smbo', 'smoc', 'sn', 'so', 'soa', 'soc', 'solway',
    'sportident', 'sroc', 'stag', 'start', 'suffoc', 'swoc', 'syo', 'tay', 'test', 'purple-thistle', 'tinto', 'tvoc', 'walton', 'waoc', 'wcoc', 'wim', 'wmoc',
-   'wrekin', 'wsco', 'wsoe', 'wsx'];
+   'wrekin', 'wsco', 'wsco2008', 'wsoe', 'wsx'];
 
   // Project configuration.
   grunt.initConfig({
@@ -642,6 +642,12 @@ module.exports = function(grunt) {
         expand : true,
         src : '**',
         dest : 'ftpsite/wsco/rg2/'
+      },
+      wsco2008 : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/wsco2008/rg2/'
       },
       wsoe : {
         cwd : 'rel/',

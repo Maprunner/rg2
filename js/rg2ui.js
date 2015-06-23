@@ -409,7 +409,7 @@
     createEventMenu : function () {
       //loads menu from populated events array
       var html = rg2.events.formatEventsAsMenu();
-      $("#rg2-event-list").append(html).menu({
+      $("#rg2-event-list").empty().append(html).menu({
         select : function (event, ui) {
           /*jslint unparam:true*/
           rg2.loadEvent(ui.item[0].id);

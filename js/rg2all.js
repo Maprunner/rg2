@@ -1,4 +1,4 @@
-// Version 1.1.6 2015-05-15T08:38:25;
+// Version 1.1.7 2015-06-23T16:45:17;
 /*
  * Routegadget 2
  * https://github.com/Maprunner/rg2
@@ -254,7 +254,7 @@ var rg2 = (function (window, $) {
 
     getSplitsTableHeader: function (controls) {
       var html, i;
-      html = "<table class='splitstable'><tr><th>Course</th><th>Name</th>";
+      html = "<table class='splitstable'><tr><th>" + rg2.t("Course") + "</th><th>" + rg2.t("Name") + "</th>";
       for (i = 1; i <= controls; i += 1) {
         html += "<th>" + i + "</th>";
       }
@@ -264,7 +264,7 @@ var rg2 = (function (window, $) {
     getSplitsTable : function () {
       var html, i, j, run, metresPerPixel, units, maxControls, legSplit, prevControlSecs, info;
       if (this.runners.length < 1) {
-        return "<p>Select runners on Results tab.</p>";
+        return "<p>" + rg2.t("Select runners on Results tab") + ".</p>";
       }
       legSplit = [];
       prevControlSecs = 0;
@@ -898,7 +898,7 @@ var rg2 = (function (window, $) {
     EVENT_WITHOUT_RESULTS : 2,
     SCORE_EVENT : 3,
     // version gets set automatically by grunt file during build process
-    RG2VERSION: '1.1.6',
+    RG2VERSION: '1.1.7',
     TIME_NOT_FOUND : 9999,
     // values for evt.which
     RIGHT_CLICK : 3,
@@ -5529,7 +5529,7 @@ var rg2 = (function (window, $) {
     createEventMenu : function () {
       //loads menu from populated events array
       var html = rg2.events.formatEventsAsMenu();
-      $("#rg2-event-list").append(html).menu({
+      $("#rg2-event-list").empty().append(html).menu({
         select : function (event, ui) {
           /*jslint unparam:true*/
           rg2.loadEvent(ui.item[0].id);

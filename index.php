@@ -53,6 +53,11 @@ if (defined('OVERRIDE_KARTAT_DIRECTORY')) {
   $maps_url = RG_BASE_DIRECTORY . "/kartat/";
 }
 
+if (!is_dir($maps_url)) {
+  echo "Routegadget 2: Kartat directory " . $maps_url . " not found.";
+  return;
+}
+
 // include manager function as parameter for now until we decide the best way forward
 if (isset($_GET['manage'])) {
   $manager = TRUE;
@@ -147,7 +152,7 @@ header('Content-type: text/html; charset=utf-8');
     <link rel="stylesheet" href='<?php echo $source_url ."/css/rg2.css'>"; ?>
     <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/themes/<?php echo $ui_theme; ?>/jquery-ui.min.css">
     <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css">
-    <!-- ('RG2VERSION', '1.1.6') -->
+    <!-- ('RG2VERSION', '1.1.7') -->
   </head>
   <body>
     <!--[if lt IE 7]>
