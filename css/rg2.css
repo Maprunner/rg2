@@ -269,8 +269,8 @@ html, body {
    padding : 2px;
    position: absolute;
    font:0.75em/0.4em arial;
-   top: 0px;
-   right: 0px;
+   top: 0;
+   right: 0;
    height: auto;
    width: auto;
    z-index: 90;
