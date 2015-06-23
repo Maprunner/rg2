@@ -53,6 +53,11 @@ if (defined('OVERRIDE_KARTAT_DIRECTORY')) {
   $maps_url = RG_BASE_DIRECTORY . "/kartat/";
 }
 
+if (!is_dir($maps_url)) {
+  echo "Routegadget 2: Kartat directory " . $maps_url . " not found.";
+  return;
+}
+
 // include manager function as parameter for now until we decide the best way forward
 if (isset($_GET['manage'])) {
   $manager = TRUE;
