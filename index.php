@@ -150,7 +150,7 @@ header('Content-type: text/html; charset=utf-8');
     <link rel="shortcut icon" href="img/favicon.ico"/>
     <link rel="stylesheet" href='<?php echo $source_url ."/css/normalize.min.css'>"; ?>  
     <link rel="stylesheet" href='<?php echo $source_url ."/css/rg2.css'>"; ?>
-    <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/themes/<?php echo $ui_theme; ?>/jquery-ui.min.css">
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.11.3/themes/<?php echo $ui_theme; ?>/jquery-ui.min.css">
     <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css">
     <!-- ('RG2VERSION', '1.1.7') -->
   </head>
@@ -249,8 +249,8 @@ header('Content-type: text/html; charset=utf-8');
       <?php include 'html/options.html'; ?>
       <?php include 'html/misc.html'; ?>
     </div>
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
-<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
+<script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+<script src="//code.jquery.com/ui/1.11.3/jquery-ui.min.js"></script>
 <?php if ($debug) { ?>
 <script src='<?php echo $source_url . "/js/rg2.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/rg2ui.js"; ?>'></script>
