@@ -34,6 +34,7 @@
     // reset everything back to initial size/state/orientation
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     // fill canvas to erase things: clearRect doesn't work on Android (?) and leaves the old map as background when changing
+    ctx.globalAlpha = rg2.config.FULL_INTENSITY;
     ctx.fillStyle = rg2.config.WHITE;
     ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     // go back to where we started
