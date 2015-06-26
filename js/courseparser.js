@@ -209,7 +209,8 @@
     },
 
     getXYFromMapPosition : function (mapPosition) {
-      return {x: mapPosition[0].getAttribute('x'), y: mapPosition[0].getAttribute('y')};
+      // #269 allow for getting a comma instead of a decimal point
+      return {x: mapPosition[0].getAttribute('x').replace(",", "."), y: mapPosition[0].getAttribute('y').replace(",", ".")};
     },
 
     // check if a given control code is in the list of known controls
