@@ -1,4 +1,4 @@
-// Version 1.1.7 2015-06-23T16:45:17;
+// Version 1.2.0 2015-06-27T12:36:39;
 /*
  * Routegadget 2
  * https://github.com/Maprunner/rg2
@@ -80,8 +80,6 @@ var rg2 = (function (window, $) {
       rg2.managerUI.initialiseUI();
     } else {
       rg2.config.managing = false;
-      // translated when displayed
-      rg2.setMapLoadingText("Select an event");
     }
   }
 
@@ -594,23 +592,20 @@ var rg2 = (function (window, $) {
   canvas = $("#rg2-map-canvas")[0];
   ctx = canvas.getContext('2d');
   map = new Image();
-  map.loadingText = "";
 
   function loadNewMap(mapFile) {
-    // translated when displayed
-    map.loadingText = "Loading map";
+    $("#rg2-map-load-progress-label").text(rg2.t("Loading map"));
+    $("#rg2-map-load-progress").show();
     map.src = mapFile;
   }
 
-  function setMapLoadingText(text) {
-    map.loadingText = text;
-  }
-
-  function drawMapLoadingText() {
-    ctx.font = '30pt Arial';
-    ctx.textAlign = 'center';
-    ctx.fillStyle = rg2.config.BLACK;
-    ctx.fillText(rg2.t(map.loadingText), rg2.canvas.width / 2, rg2.canvas.height / 2);
+  function drawSelectEventText() {
+    if (!rg2.config.managing) {
+      ctx.font = '30pt Arial';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = rg2.config.BLACK;
+      ctx.fillText(rg2.t("Select an event"), rg2.canvas.width / 2, rg2.canvas.height / 2);
+    }
   }
 
   /* called whenever anything changes enough to need screen redraw
@@ -623,6 +618,7 @@ var rg2 = (function (window, $) {
     // reset everything back to initial size/state/orientation
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     // fill canvas to erase things: clearRect doesn't work on Android (?) and leaves the old map as background when changing
+    ctx.globalAlpha = rg2.config.FULL_INTENSITY;
     ctx.fillStyle = rg2.config.WHITE;
     ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     // go back to where we started
@@ -655,7 +651,7 @@ var rg2 = (function (window, $) {
         }
       }
     } else {
-      drawMapLoadingText();
+      drawSelectEventText();
     }
   }
 
@@ -812,6 +808,7 @@ var rg2 = (function (window, $) {
   }
 
   function mapLoadedCallback() {
+    $("#rg2-map-load-progress").hide();
     resetMapState();
     if (rg2.config.managing) {
       rg2.manager.mapLoadCallback();
@@ -847,7 +844,6 @@ var rg2 = (function (window, $) {
   rg2.resetMapState = resetMapState;
   rg2.getMapSize = getMapSize;
   rg2.loadNewMap = loadNewMap;
-  rg2.setMapLoadingText = setMapLoadingText;
   rg2.resizeInfoDisplay = resizeInfoDisplay;
 }());
 
@@ -898,7 +894,7 @@ var rg2 = (function (window, $) {
     EVENT_WITHOUT_RESULTS : 2,
     SCORE_EVENT : 3,
     // version gets set automatically by grunt file during build process
-    RG2VERSION: '1.1.7',
+    RG2VERSION: '1.2.0',
     TIME_NOT_FOUND : 9999,
     // values for evt.which
     RIGHT_CLICK : 3,
@@ -965,8 +961,8 @@ var rg2 = (function (window, $) {
 
   function translateButtons() {
     var i, selector, text;
-    selector = ['#btn-undo', '#btn-undo-gps-adjust', '#btn-save-route', '#btn-reset-drawing', '#btn-three-seconds', '#btn-save-gps-route'];
-    text = ['Undo', 'Undo', 'Save', 'Reset', '+3 sec', 'Save GPS route'];
+    selector = ['#btn-undo', '#btn-undo-gps-adjust', '#btn-save-route', '#btn-reset-drawing', '#btn-three-seconds', '#btn-save-gps-route', '#btn-autofit-gps'];
+    text = ['Undo', 'Undo', 'Save', 'Reset', '+3 sec', 'Save GPS route', 'Autofit'];
     for (i = 0; i < selector.length; i += 1) {
       $(selector[i]).button('option', 'label', t(text[i]));
     }
@@ -1644,7 +1640,8 @@ var rg2 = (function (window, $) {
     },
 
     getXYFromMapPosition : function (mapPosition) {
-      return {x: mapPosition[0].getAttribute('x'), y: mapPosition[0].getAttribute('y')};
+      // #269 allow for getting a comma instead of a decimal point
+      return {x: mapPosition[0].getAttribute('x').replace(",", "."), y: mapPosition[0].getAttribute('y').replace(",", ".")};
     },
 
     // check if a given control code is in the list of known controls
@@ -1907,6 +1904,10 @@ var rg2 = (function (window, $) {
       return this.gpstrack.fileLoaded;
     },
 
+    autofitGPSTrack : function () {
+      this.gpstrack.autofitTrack();
+    },
+
     uploadGPS : function (evt) {
       this.gpstrack.uploadGPS(evt);
     },
@@ -1976,6 +1977,7 @@ var rg2 = (function (window, $) {
         trk.savedBaseY = trk.baseY.slice(0);
         trk.baseX = trk.routeData.x.slice(0);
         trk.baseY = trk.routeData.y.slice(0);
+        trk.handles.saveForUndo();
         trk.handles.rebaselineXY();
         $("#btn-undo-gps-adjust").button("enable");
       }
@@ -2056,6 +2058,8 @@ var rg2 = (function (window, $) {
         this.gpstrack.routeData.y.length = 0;
         this.gpstrack.routeData.x[0] = this.controlx[0];
         this.gpstrack.routeData.y[0] = this.controly[0];
+        this.gpstrack.routeData.controlx = this.controlx;
+        this.gpstrack.routeData.controly = this.controly;
         this.nextControl = 1;
       }
       rg2.results.createNameDropdown(courseid);
@@ -2066,6 +2070,10 @@ var rg2 = (function (window, $) {
 
     doDrawingReset : function () {
       $('#rg2-drawing-reset-dialog').dialog("destroy");
+      rg2.courses.removeFromDisplay(this.gpstrack.routeData.courseid);
+      if (this.gpstrack.routeData.resultid !== null) {
+        rg2.results.putScoreCourseOnDisplay(this.gpstrack.routeData.resultid, false);
+      }
       this.pendingCourseid = null;
       this.initialiseDrawing();
     },
@@ -2127,11 +2135,12 @@ var rg2 = (function (window, $) {
 
     setName : function (resultid) {
       // callback from select box when we have results
-      var res;
+      var res, msg;
       if (!isNaN(resultid)) {
         res = rg2.results.getFullResult(resultid);
         if (res.hasValidTrack) {
-          rg2.utils.showWarningDialog("Route already drawn", "If you draw a new route it will overwrite the old route for this runner. GPS routes are saved separately and will not be overwritten.");
+          msg = rg2.t("If you draw a new route it will overwrite the old route for this runner.") + " " + rg2.t("GPS routes are saved separately and will not be overwritten.");
+          rg2.utils.showWarningDialog(rg2.t("Route already drawn"), msg);
         }
         // remove old course from display just in case we missed it somewhere else
         if (this.gpstrack.routeData.resultid !== null) {
@@ -2139,6 +2148,7 @@ var rg2 = (function (window, $) {
         }
         this.gpstrack.routeData.resultid = res.resultid;
         this.gpstrack.routeData.name = res.name;
+        this.gpstrack.routeData.splits = res.splits;
         // set up individual course if this is a score event
         if (this.isScoreCourse) {
           rg2.results.putScoreCourseOnDisplay(res.resultid, true);
@@ -2708,11 +2718,11 @@ var rg2 = (function (window, $) {
 }());
 
 /*global rg2:false */
+/*global console:false */
 (function () {
   function GPSTrack() {
     this.lat = [];
     this.lon = [];
-    this.time = [];
     this.startOffset = 0;
     this.baseX = [];
     this.baseY = [];
@@ -2732,7 +2742,6 @@ var rg2 = (function (window, $) {
     initialiseGPS : function () {
       this.lat.length = 0;
       this.lon.length = 0;
-      this.time.length = 0;
       this.startOffset = 0;
       this.baseX.length = 0;
       this.baseY.length = 0;
@@ -2740,6 +2749,7 @@ var rg2 = (function (window, $) {
       this.savedBaseX.length = 0;
       this.savedBaseY.length = 0;
       this.fileLoaded = false;
+      this.routeData = new rg2.RouteData();
     },
 
     uploadGPS : function (evt) {
@@ -2787,7 +2797,7 @@ var rg2 = (function (window, $) {
         for (j = 0; j < trkpts.length; j += 1) {
           this.lat.push(trkpts[j].getAttribute('lat'));
           this.lon.push(trkpts[j].getAttribute('lon'));
-          this.time.push(this.getSecsFromTrackpoint(trkpts[j].getElementsByTagName('time')[0].textContent));
+          this.routeData.time.push(this.getSecsFromTrackpoint(trkpts[j].getElementsByTagName('time')[0].textContent));
         }
       }
     },
@@ -2804,7 +2814,7 @@ var rg2 = (function (window, $) {
             position = trkpts[j].getElementsByTagName('Position');
             this.lat.push(position[0].getElementsByTagName('LatitudeDegrees')[0].textContent);
             this.lon.push(position[0].getElementsByTagName('LongitudeDegrees')[0].textContent);
-            this.time.push(this.getSecsFromTrackpoint(trkpts[j].getElementsByTagName('Time')[0].textContent));
+            this.routeData.time.push(this.getSecsFromTrackpoint(trkpts[j].getElementsByTagName('Time')[0].textContent));
           }
         }
       }
@@ -2846,13 +2856,142 @@ var rg2 = (function (window, $) {
       } else {
         this.fitTrackInsideCourse();
       }
+      // finished with lat and lon so they can go just in case
+      this.lat.length = 0;
+      this.lon.length = 0;
+      this.expandToOneSecondInterval();
       this.baseX = this.routeData.x.slice(0);
       this.baseY = this.routeData.y.slice(0);
       this.addStartAndFinishHandles();
-      this.routeData.time = this.time;
       this.fileLoaded = true;
+      if (this.routeData.splits.length > 0) {
+        $("#btn-autofit-gps").show().button("enable");
+      }
       $("#btn-save-gps-route").button("enable");
       rg2.redraw(false);
+    },
+
+    expandToOneSecondInterval : function () {
+      // convert to one second intervals to make what follows a bit easier since we can index x and y directly
+      // time from GPX has already been converted to integer seconds so we don't need to worry about sub-seconds in the expansion
+      // gets reset to 3 second intervals on server when saved
+      var i, x, y, time, oldtime, nexttime, oldx, oldy, difftime, xpersec, ypersec, trk, secs;
+      x = [];
+      y = [];
+      time = [];
+      trk = this.routeData;
+      oldtime = trk.time[0];
+      oldx = trk.x[0];
+      oldy = trk.y[0];
+      x[0] = oldx;
+      y[0] = oldy;
+      time[0] = trk.time[0];
+      nexttime = time[0] + 1;
+      for (i = 1; i < trk.x.length; i += 1) {
+        difftime = trk.time[i] - oldtime;
+        // shouldn't have 0 intervals, but discard them if we do
+        if (difftime > 0) {
+          xpersec = (trk.x[i] - oldx) / difftime;
+          ypersec = (trk.y[i] - oldy) / difftime;
+          secs = 1;
+          while (secs <= difftime) {
+            x.push(oldx + (xpersec * secs));
+            y.push(oldy + (ypersec * secs));
+            // 
+            time.push(nexttime);
+            nexttime += 1;
+            secs += 1;
+          }
+          oldx = trk.x[i];
+          oldy = trk.y[i];
+          oldtime = nexttime - 1;
+        }
+      }
+      this.routeData.x = x.slice(0);
+      this.routeData.y = y.slice(0);
+      this.routeData.time = time.slice(0);
+    },
+
+    autofitTrack : function () {
+      // fits a GPS track to the course based on split times at control locations 
+      var i, split, offset;
+      // unlock map to allow adjustment
+      $('#btn-move-all').prop('checked', false);
+      // save unadjusted track
+      this.savedBaseX = this.baseX.slice(0);
+      this.savedBaseY = this.baseY.slice(0);
+      this.handles.saveForUndo();
+      offset = this.getOffset();
+      // adjust for each control in turn
+      for (i = 1; i < (this.routeData.splits.length - 1); i += 1) {
+        // move track to control location
+        split = this.routeData.splits[i] + offset;
+        if ((split < this.baseX.length) && (split >= 0)) {
+          // add handle at control on track
+          this.handles.addHandle(this.routeData.x[split], this.routeData.y[split], split);
+          // drag handle to correct place on map
+          rg2.drawing.adjustTrack({x: this.routeData.x[split], y: this.routeData.y[split]}, {x: this.routeData.controlx[i], y: this.routeData.controly[i]});
+          // lock handle at control
+          this.handles.lockHandleByTime(split);
+          // rebaseline everything
+          this.baseX = this.routeData.x.slice(0);
+          this.baseY = this.routeData.y.slice(0);
+          this.handles.rebaselineXY();
+        }
+      }
+      $("#btn-undo-gps-adjust").button("enable");
+      $("#btn-autofit-gps").button("disable");
+      rg2.redraw(false);
+    },
+
+    getOffset : function () {
+      // calculates an offset to split times based on lowest average speed summed across all controls
+      var i, j, split, speedAverage, speedAtControl, speedExtract, range, bestGuess, offset;
+      speedAverage = this.getSpeedAverage();
+      speedAtControl = [];
+      // range of seconds either side to check for "minimum speed" at control
+      range = 10;
+      for (i = 0; i <= (2 * range); i += 1) {
+        speedAtControl[i] = 0;
+      }
+      for (i = 1; i < (this.routeData.splits.length - 1); i += 1) {
+        split = this.routeData.splits[i];
+        if ((split >= range) && ((split + range) < speedAverage.length)) {
+          speedExtract = speedAverage.slice(split - range, split + range + 1);
+          for (j = 0; j <= (2 * range); j += 1) {
+            speedAtControl[j] += speedExtract[j];
+          }
+        }
+      }
+      bestGuess = 0;
+      for (i = 1; i < speedAtControl.length; i += 1) {
+        if (speedAtControl[i] < speedAtControl[bestGuess]) {
+          bestGuess = i;
+        }
+      }
+      // convert index in bestGuess into offset in x, y, time
+      offset = bestGuess - range;
+      console.log("Offset = " + offset);
+      return offset;
+    },
+
+    getSpeedAverage : function () {
+      var i, speed, speedAverage;
+      speed = [];
+      speedAverage = [];
+      speed[0] = 0;
+      for (i = 1; i < this.routeData.x.length; i += 1) {
+        // stored at second intervals so don't need to divide by time'
+        speed[i] = rg2.utils.getDistanceBetweenPoints(this.routeData.x[i], this.routeData.y[i], this.routeData.x[i - 1], this.routeData.y[i - 1]);
+      }
+      // average over 3 seconds to smooth things out
+      for (i = 1; i < this.routeData.x.length - 1; i += 1) {
+        speedAverage[i] = (speed[i - 1] + speed[i] + speed[i + 1]) / 3;
+      }
+      // not really worried about these but set to a sensible value
+      speedAverage[0] = speed[0];
+      speedAverage[this.routeData.x.length - 1] = speed[this.routeData.x.length - 1];
+      return speedAverage;
     },
 
     trackMatchesMapCoordinates : function () {
@@ -2954,13 +3093,18 @@ var rg2 = (function (window, $) {
 /*global rg2:false */
 (function () {
   function Handle(x, y, time, index) {
+    // current position of handles
     this.x = x;
     this.y = y;
+    // positions before start of adjustment
     this.basex = x;
     this.basey = y;
+    // saved positions to allow undo
     this.undox = x;
     this.undoy = y;
     this.locked = false;
+    // not really a time: instead an index into the GPX data
+    // this is "time" for 1s intervals, but not if in a different recording mode
     this.time = time;
     this.index = index;
   }
@@ -3002,6 +3146,22 @@ var rg2 = (function (window, $) {
       this.handles[index].locked = true;
     },
 
+    lockHandleByTime : function (time) {
+      var i;
+      for (i = 0; i < this.handles.length; i += 1) {
+        if (this.handles[i].time === time) {
+          this.handles[i].locked = true;
+        }
+      }
+    },
+
+    unlockAllHandles : function () {
+      var i;
+      for (i = 0; i < this.handles.length; i += 1) {
+        this.handles[i].locked = false;
+      }
+    },
+
     unlockHandle : function (index) {
       this.handles[index].locked = false;
     },
@@ -3023,8 +3183,11 @@ var rg2 = (function (window, $) {
 
     rebaselineXY : function () {
       // save new locations at end of drag
-      this.copyHandleFields('base', 'undo');
       this.copyHandleFields('', 'base');
+    },
+
+    saveForUndo : function () {
+      this.copyHandleFields('base', 'undo');
     },
 
     undo : function () {
@@ -4791,6 +4954,7 @@ var rg2 = (function (window, $) {
 (function () {
   function reportJSONFail(errorText) {
     $("#rg2-load-progress").hide();
+    $("#rg2-map-load-progress").hide();
     $('body').css('cursor', 'auto');
     rg2.utils.showWarningDialog('Configuration error', errorText);
   }
@@ -5274,6 +5438,9 @@ var rg2 = (function (window, $) {
       $("#btn-undo-gps-adjust").button().button("disable").click(function () {
         rg2.drawing.undoGPSAdjust();
       });
+      $("#btn-autofit-gps").button().button("disable").hide().click(function () {
+        rg2.drawing.autofitGPSTrack();
+      });
       $("#btn-zoom-in").click(function () {
         rg2.zoom(1);
       });
@@ -5634,6 +5801,11 @@ var rg2 = (function (window, $) {
       });
       $("#rg2-load-progress-label").text("");
       $("#rg2-load-progress").hide();
+      $("#rg2-map-load-progress-bar").progressbar({
+        value : false
+      });
+      $("#rg2-map-load-progress-label").text("");
+      $("#rg2-map-load-progress").hide();
       $("#rg2-option-controls").hide();
       $("#rg2-animation-controls").hide();
       $("#rg2-splitsbrowser").hide();
@@ -6005,6 +6177,7 @@ var rg2 = (function (window, $) {
     this.time = [];
     this.startsecs = 0;
     this.totaltime = 0;
+    this.splits = [];
   }
 
   function RequestedHash() {
