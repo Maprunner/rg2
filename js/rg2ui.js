@@ -517,6 +517,11 @@
       });
       $("#rg2-load-progress-label").text("");
       $("#rg2-load-progress").hide();
+      $("#rg2-map-load-progress-bar").progressbar({
+        value : false
+      });
+      $("#rg2-map-load-progress-label").text("");
+      $("#rg2-map-load-progress").hide();
       $("#rg2-option-controls").hide();
       $("#rg2-animation-controls").hide();
       $("#rg2-splitsbrowser").hide();

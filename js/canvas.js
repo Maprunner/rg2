@@ -5,23 +5,20 @@
   canvas = $("#rg2-map-canvas")[0];
   ctx = canvas.getContext('2d');
   map = new Image();
-  map.loadingText = "";
 
   function loadNewMap(mapFile) {
-    // translated when displayed
-    map.loadingText = "Loading map";
+    $("#rg2-map-load-progress-label").text(rg2.t("Loading map"));
+    $("#rg2-map-load-progress").show();
     map.src = mapFile;
   }
 
-  function setMapLoadingText(text) {
-    map.loadingText = text;
-  }
-
-  function drawMapLoadingText() {
-    ctx.font = '30pt Arial';
-    ctx.textAlign = 'center';
-    ctx.fillStyle = rg2.config.BLACK;
-    ctx.fillText(rg2.t(map.loadingText), rg2.canvas.width / 2, rg2.canvas.height / 2);
+  function drawSelectEventText() {
+    if (!rg2.config.managing) {
+      ctx.font = '30pt Arial';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = rg2.config.BLACK;
+      ctx.fillText(rg2.t("Select an event"), rg2.canvas.width / 2, rg2.canvas.height / 2);
+    }
   }
 
   /* called whenever anything changes enough to need screen redraw
@@ -67,7 +64,7 @@
         }
       }
     } else {
-      drawMapLoadingText();
+      drawSelectEventText();
     }
   }
 
@@ -224,6 +221,7 @@
   }
 
   function mapLoadedCallback() {
+    $("#rg2-map-load-progress").hide();
     resetMapState();
     if (rg2.config.managing) {
       rg2.manager.mapLoadCallback();
@@ -259,6 +257,5 @@
   rg2.resetMapState = resetMapState;
   rg2.getMapSize = getMapSize;
   rg2.loadNewMap = loadNewMap;
-  rg2.setMapLoadingText = setMapLoadingText;
   rg2.resizeInfoDisplay = resizeInfoDisplay;
 }());

@@ -79,8 +79,6 @@ var rg2 = (function (window, $) {
       rg2.managerUI.initialiseUI();
     } else {
       rg2.config.managing = false;
-      // translated when displayed
-      rg2.setMapLoadingText("Select an event");
     }
   }
 
