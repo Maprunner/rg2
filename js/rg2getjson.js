@@ -4,6 +4,7 @@
 (function () {
   function reportJSONFail(errorText) {
     $("#rg2-load-progress").hide();
+    $("#rg2-map-load-progress").hide();
     $('body').css('cursor', 'auto');
     rg2.utils.showWarningDialog('Configuration error', errorText);
   }

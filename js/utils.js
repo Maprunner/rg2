@@ -245,6 +245,7 @@
     this.time = [];
     this.startsecs = 0;
     this.totaltime = 0;
+    this.splits = [];
   }
 
   function RequestedHash() {

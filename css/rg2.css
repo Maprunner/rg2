@@ -247,19 +247,27 @@ html, body {
    z-index: 50;
 }
 
-#rg2-load-progress {
+.rg2-progress-display {
    border: 1px solid darkgray;
    background: rgb(204, 204, 204);
    background: rgba(204, 204, 204, 1.0);
    padding : 2px;
-   position: absolute;
    font:1.0em/1.0em arial;
    text-align:center;
-   top: 100px;
-   left: 400px;
    height: auto;
    width: 200px;
    z-index: 90;
+   position: absolute;
+}
+
+#rg2-map-load-progress {
+   top: 100px;
+   left: 400px;
+}
+
+#rg2-load-progress {
+   top: 200px;
+   left: 400px;
 }
 
 #rg2-track-names {

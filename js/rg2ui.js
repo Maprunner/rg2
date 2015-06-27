@@ -154,6 +154,9 @@
       $("#btn-undo-gps-adjust").button().button("disable").click(function () {
         rg2.drawing.undoGPSAdjust();
       });
+      $("#btn-autofit-gps").button().button("disable").hide().click(function () {
+        rg2.drawing.autofitGPSTrack();
+      });
       $("#btn-zoom-in").click(function () {
         rg2.zoom(1);
       });
@@ -514,6 +517,11 @@
       });
       $("#rg2-load-progress-label").text("");
       $("#rg2-load-progress").hide();
+      $("#rg2-map-load-progress-bar").progressbar({
+        value : false
+      });
+      $("#rg2-map-load-progress-label").text("");
+      $("#rg2-map-load-progress").hide();
       $("#rg2-option-controls").hide();
       $("#rg2-animation-controls").hide();
       $("#rg2-splitsbrowser").hide();

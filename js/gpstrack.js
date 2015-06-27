@@ -1,9 +1,9 @@
 /*global rg2:false */
+/*global console:false */
 (function () {
   function GPSTrack() {
     this.lat = [];
     this.lon = [];
-    this.time = [];
     this.startOffset = 0;
     this.baseX = [];
     this.baseY = [];
@@ -23,7 +23,6 @@
     initialiseGPS : function () {
       this.lat.length = 0;
       this.lon.length = 0;
-      this.time.length = 0;
       this.startOffset = 0;
       this.baseX.length = 0;
       this.baseY.length = 0;
@@ -31,6 +30,7 @@
       this.savedBaseX.length = 0;
       this.savedBaseY.length = 0;
       this.fileLoaded = false;
+      this.routeData = new rg2.RouteData();
     },
 
     uploadGPS : function (evt) {
@@ -78,7 +78,7 @@
         for (j = 0; j < trkpts.length; j += 1) {
           this.lat.push(trkpts[j].getAttribute('lat'));
           this.lon.push(trkpts[j].getAttribute('lon'));
-          this.time.push(this.getSecsFromTrackpoint(trkpts[j].getElementsByTagName('time')[0].textContent));
+          this.routeData.time.push(this.getSecsFromTrackpoint(trkpts[j].getElementsByTagName('time')[0].textContent));
         }
       }
     },
@@ -95,7 +95,7 @@
             position = trkpts[j].getElementsByTagName('Position');
             this.lat.push(position[0].getElementsByTagName('LatitudeDegrees')[0].textContent);
             this.lon.push(position[0].getElementsByTagName('LongitudeDegrees')[0].textContent);
-            this.time.push(this.getSecsFromTrackpoint(trkpts[j].getElementsByTagName('Time')[0].textContent));
+            this.routeData.time.push(this.getSecsFromTrackpoint(trkpts[j].getElementsByTagName('Time')[0].textContent));
           }
         }
       }
@@ -137,13 +137,142 @@
       } else {
         this.fitTrackInsideCourse();
       }
+      // finished with lat and lon so they can go just in case
+      this.lat.length = 0;
+      this.lon.length = 0;
+      this.expandToOneSecondInterval();
       this.baseX = this.routeData.x.slice(0);
       this.baseY = this.routeData.y.slice(0);
       this.addStartAndFinishHandles();
-      this.routeData.time = this.time;
       this.fileLoaded = true;
+      if (this.routeData.splits.length > 0) {
+        $("#btn-autofit-gps").show().button("enable");
+      }
       $("#btn-save-gps-route").button("enable");
       rg2.redraw(false);
+    },
+
+    expandToOneSecondInterval : function () {
+      // convert to one second intervals to make what follows a bit easier since we can index x and y directly
+      // time from GPX has already been converted to integer seconds so we don't need to worry about sub-seconds in the expansion
+      // gets reset to 3 second intervals on server when saved
+      var i, x, y, time, oldtime, nexttime, oldx, oldy, difftime, xpersec, ypersec, trk, secs;
+      x = [];
+      y = [];
+      time = [];
+      trk = this.routeData;
+      oldtime = trk.time[0];
+      oldx = trk.x[0];
+      oldy = trk.y[0];
+      x[0] = oldx;
+      y[0] = oldy;
+      time[0] = trk.time[0];
+      nexttime = time[0] + 1;
+      for (i = 1; i < trk.x.length; i += 1) {
+        difftime = trk.time[i] - oldtime;
+        // shouldn't have 0 intervals, but discard them if we do
+        if (difftime > 0) {
+          xpersec = (trk.x[i] - oldx) / difftime;
+          ypersec = (trk.y[i] - oldy) / difftime;
+          secs = 1;
+          while (secs <= difftime) {
+            x.push(oldx + (xpersec * secs));
+            y.push(oldy + (ypersec * secs));
+            // 
+            time.push(nexttime);
+            nexttime += 1;
+            secs += 1;
+          }
+          oldx = trk.x[i];
+          oldy = trk.y[i];
+          oldtime = nexttime - 1;
+        }
+      }
+      this.routeData.x = x.slice(0);
+      this.routeData.y = y.slice(0);
+      this.routeData.time = time.slice(0);
+    },
+
+    autofitTrack : function () {
+      // fits a GPS track to the course based on split times at control locations 
+      var i, split, offset;
+      // unlock map to allow adjustment
+      $('#btn-move-all').prop('checked', false);
+      // save unadjusted track
+      this.savedBaseX = this.baseX.slice(0);
+      this.savedBaseY = this.baseY.slice(0);
+      this.handles.saveForUndo();
+      offset = this.getOffset();
+      // adjust for each control in turn
+      for (i = 1; i < (this.routeData.splits.length - 1); i += 1) {
+        // move track to control location
+        split = this.routeData.splits[i] + offset;
+        if ((split < this.baseX.length) && (split >= 0)) {
+          // add handle at control on track
+          this.handles.addHandle(this.routeData.x[split], this.routeData.y[split], split);
+          // drag handle to correct place on map
+          rg2.drawing.adjustTrack({x: this.routeData.x[split], y: this.routeData.y[split]}, {x: this.routeData.controlx[i], y: this.routeData.controly[i]});
+          // lock handle at control
+          this.handles.lockHandleByTime(split);
+          // rebaseline everything
+          this.baseX = this.routeData.x.slice(0);
+          this.baseY = this.routeData.y.slice(0);
+          this.handles.rebaselineXY();
+        }
+      }
+      $("#btn-undo-gps-adjust").button("enable");
+      $("#btn-autofit-gps").button("disable");
+      rg2.redraw(false);
+    },
+
+    getOffset : function () {
+      // calculates an offset to split times based on lowest average speed summed across all controls
+      var i, j, split, speedAverage, speedAtControl, speedExtract, range, bestGuess, offset;
+      speedAverage = this.getSpeedAverage();
+      speedAtControl = [];
+      // range of seconds either side to check for "minimum speed" at control
+      range = 10;
+      for (i = 0; i <= (2 * range); i += 1) {
+        speedAtControl[i] = 0;
+      }
+      for (i = 1; i < (this.routeData.splits.length - 1); i += 1) {
+        split = this.routeData.splits[i];
+        if ((split >= range) && ((split + range) < speedAverage.length)) {
+          speedExtract = speedAverage.slice(split - range, split + range + 1);
+          for (j = 0; j <= (2 * range); j += 1) {
+            speedAtControl[j] += speedExtract[j];
+          }
+        }
+      }
+      bestGuess = 0;
+      for (i = 1; i < speedAtControl.length; i += 1) {
+        if (speedAtControl[i] < speedAtControl[bestGuess]) {
+          bestGuess = i;
+        }
+      }
+      // convert index in bestGuess into offset in x, y, time
+      offset = bestGuess - range;
+      console.log("Offset = " + offset);
+      return offset;
+    },
+
+    getSpeedAverage : function () {
+      var i, speed, speedAverage;
+      speed = [];
+      speedAverage = [];
+      speed[0] = 0;
+      for (i = 1; i < this.routeData.x.length; i += 1) {
+        // stored at second intervals so don't need to divide by time'
+        speed[i] = rg2.utils.getDistanceBetweenPoints(this.routeData.x[i], this.routeData.y[i], this.routeData.x[i - 1], this.routeData.y[i - 1]);
+      }
+      // average over 3 seconds to smooth things out
+      for (i = 1; i < this.routeData.x.length - 1; i += 1) {
+        speedAverage[i] = (speed[i - 1] + speed[i] + speed[i + 1]) / 3;
+      }
+      // not really worried about these but set to a sensible value
+      speedAverage[0] = speed[0];
+      speedAverage[this.routeData.x.length - 1] = speed[this.routeData.x.length - 1];
+      return speedAverage;
     },
 
     trackMatchesMapCoordinates : function () {

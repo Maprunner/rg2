@@ -30,7 +30,7 @@
   }
 
   // version replaced by Gruntfile as part of release 
-  define ('RG2VERSION', '1.1.7');
+  define ('RG2VERSION', '1.2.0');
   define ('KARTAT_DIRECTORY', $url);
   define ('LOCK_DIRECTORY', dirname(__FILE__)."/lock/saving/");
   define ('CACHE_DIRECTORY', $url."cache/");
@@ -1620,7 +1620,7 @@ function getResultsForEvent($eventid) {
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
       if (count($data) >= 5) {
         // remove null comments
-        if (strncmp($data[4], "Type your comment", 17) != 0) {
+        if (!isDefaultComment($data[4])) {
            $text[$comments]["resultid"] = $data[1];
            $text[$comments]["comments"] = formatCommentsForOutput($data[4]);
            $comments++;
@@ -1940,6 +1940,18 @@ function tidyNewComments($inputComments) {
   $comments = str_replace("\n", "#cr##nl#", $comments);
   $comments = encode_rg_output($comments);
   return $comments;
+}
+
+function isDefaultComment($comment) {
+  // returns true if the comment matches a list of possible default comments
+  // add new strings as necessary
+  $defaults = array('Type your comment', 'Dein Kommentar', 'Kirjoita kommentti', 'Kirjoita kommentit tähän', 'Votre commentaire', 'Kommenter');
+  for ($i = 0; $i < count($defaults); $i++) {
+    if (strcmp($defaults[$i], $comment) == 0) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function formatCommentsForOutput($inputComments) {

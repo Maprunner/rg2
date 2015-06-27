@@ -145,9 +145,9 @@ header('Content-type: text/html; charset=utf-8');
     <link rel="shortcut icon" href="img/favicon.ico"/>
     <link rel="stylesheet" href='<?php echo $source_url ."/css/normalize.min.css'>"; ?>  
     <link rel="stylesheet" href='<?php echo $source_url ."/css/rg2.css'>"; ?>
-    <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/themes/<?php echo $ui_theme; ?>/jquery-ui.min.css">
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.11.3/themes/<?php echo $ui_theme; ?>/jquery-ui.min.css">
     <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css">
-    <!-- ('RG2VERSION', '1.1.7') -->
+    <!-- ('RG2VERSION', '1.2.0') -->
   </head>
   <body>
     <!--[if lt IE 7]>
@@ -234,6 +234,7 @@ header('Content-type: text/html; charset=utf-8');
         <li id="draw-text-4">Right click to delete a handle</li>
         <li id="draw-text-5">Drag a handle to adjust track around locked point(s)</li>
        </ul>
+       <button id="btn-autofit-gps">Autofit</button>
        <button id="btn-undo-gps-adjust">Undo</button>
        <button class="pushright" id="btn-save-gps-route">Save GPS route</button> 
     </div>
@@ -244,8 +245,8 @@ header('Content-type: text/html; charset=utf-8');
       <?php include 'html/options.html'; ?>
       <?php include 'html/misc.html'; ?>
     </div>
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
-<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
+<script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+<script src="//code.jquery.com/ui/1.11.3/jquery-ui.min.js"></script>
 <?php if ($debug) { ?>
 <script src='<?php echo $source_url . "/js/rg2.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/rg2ui.js"; ?>'></script>

@@ -15,6 +15,10 @@
       return this.gpstrack.fileLoaded;
     },
 
+    autofitGPSTrack : function () {
+      this.gpstrack.autofitTrack();
+    },
+
     uploadGPS : function (evt) {
       this.gpstrack.uploadGPS(evt);
     },
@@ -84,6 +88,7 @@
         trk.savedBaseY = trk.baseY.slice(0);
         trk.baseX = trk.routeData.x.slice(0);
         trk.baseY = trk.routeData.y.slice(0);
+        trk.handles.saveForUndo();
         trk.handles.rebaselineXY();
         $("#btn-undo-gps-adjust").button("enable");
       }
@@ -164,6 +169,8 @@
         this.gpstrack.routeData.y.length = 0;
         this.gpstrack.routeData.x[0] = this.controlx[0];
         this.gpstrack.routeData.y[0] = this.controly[0];
+        this.gpstrack.routeData.controlx = this.controlx;
+        this.gpstrack.routeData.controly = this.controly;
         this.nextControl = 1;
       }
       rg2.results.createNameDropdown(courseid);
@@ -174,6 +181,10 @@
 
     doDrawingReset : function () {
       $('#rg2-drawing-reset-dialog').dialog("destroy");
+      rg2.courses.removeFromDisplay(this.gpstrack.routeData.courseid);
+      if (this.gpstrack.routeData.resultid !== null) {
+        rg2.results.putScoreCourseOnDisplay(this.gpstrack.routeData.resultid, false);
+      }
       this.pendingCourseid = null;
       this.initialiseDrawing();
     },
@@ -235,11 +246,12 @@
 
     setName : function (resultid) {
       // callback from select box when we have results
-      var res;
+      var res, msg;
       if (!isNaN(resultid)) {
         res = rg2.results.getFullResult(resultid);
         if (res.hasValidTrack) {
-          rg2.utils.showWarningDialog("Route already drawn", "If you draw a new route it will overwrite the old route for this runner. GPS routes are saved separately and will not be overwritten.");
+          msg = rg2.t("If you draw a new route it will overwrite the old route for this runner.") + " " + rg2.t("GPS routes are saved separately and will not be overwritten.");
+          rg2.utils.showWarningDialog(rg2.t("Route already drawn"), msg);
         }
         // remove old course from display just in case we missed it somewhere else
         if (this.gpstrack.routeData.resultid !== null) {
@@ -247,6 +259,7 @@
         }
         this.gpstrack.routeData.resultid = res.resultid;
         this.gpstrack.routeData.name = res.name;
+        this.gpstrack.routeData.splits = res.splits;
         // set up individual course if this is a score event
         if (this.isScoreCourse) {
           rg2.results.putScoreCourseOnDisplay(res.resultid, true);

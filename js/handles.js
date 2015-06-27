@@ -1,13 +1,18 @@
 /*global rg2:false */
 (function () {
   function Handle(x, y, time, index) {
+    // current position of handles
     this.x = x;
     this.y = y;
+    // positions before start of adjustment
     this.basex = x;
     this.basey = y;
+    // saved positions to allow undo
     this.undox = x;
     this.undoy = y;
     this.locked = false;
+    // not really a time: instead an index into the GPX data
+    // this is "time" for 1s intervals, but not if in a different recording mode
     this.time = time;
     this.index = index;
   }
@@ -49,6 +54,22 @@
       this.handles[index].locked = true;
     },
 
+    lockHandleByTime : function (time) {
+      var i;
+      for (i = 0; i < this.handles.length; i += 1) {
+        if (this.handles[i].time === time) {
+          this.handles[i].locked = true;
+        }
+      }
+    },
+
+    unlockAllHandles : function () {
+      var i;
+      for (i = 0; i < this.handles.length; i += 1) {
+        this.handles[i].locked = false;
+      }
+    },
+
     unlockHandle : function (index) {
       this.handles[index].locked = false;
     },
@@ -70,8 +91,11 @@
 
     rebaselineXY : function () {
       // save new locations at end of drag
-      this.copyHandleFields('base', 'undo');
       this.copyHandleFields('', 'base');
+    },
+
+    saveForUndo : function () {
+      this.copyHandleFields('base', 'undo');
     },
 
     undo : function () {
