@@ -239,6 +239,7 @@ header('Content-type: text/html; charset=utf-8');
         <li id="draw-text-4">Right click to delete a handle</li>
         <li id="draw-text-5">Drag a handle to adjust track around locked point(s)</li>
        </ul>
+       <button id="btn-autofit-gps">Autofit</button>
        <button id="btn-undo-gps-adjust">Undo</button>
        <button class="pushright" id="btn-save-gps-route">Save GPS route</button> 
     </div>

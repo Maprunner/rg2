@@ -112,8 +112,8 @@
 
   function translateButtons() {
     var i, selector, text;
-    selector = ['#btn-undo', '#btn-undo-gps-adjust', '#btn-save-route', '#btn-reset-drawing', '#btn-three-seconds', '#btn-save-gps-route'];
-    text = ['Undo', 'Undo', 'Save', 'Reset', '+3 sec', 'Save GPS route'];
+    selector = ['#btn-undo', '#btn-undo-gps-adjust', '#btn-save-route', '#btn-reset-drawing', '#btn-three-seconds', '#btn-save-gps-route', '#btn-autofit-gps'];
+    text = ['Undo', 'Undo', 'Save', 'Reset', '+3 sec', 'Save GPS route', 'Autofit'];
     for (i = 0; i < selector.length; i += 1) {
       $(selector[i]).button('option', 'label', t(text[i]));
     }

@@ -154,6 +154,9 @@
       $("#btn-undo-gps-adjust").button().button("disable").click(function () {
         rg2.drawing.undoGPSAdjust();
       });
+      $("#btn-autofit-gps").button().button("disable").hide().click(function () {
+        rg2.drawing.autofitGPSTrack();
+      });
       $("#btn-zoom-in").click(function () {
         rg2.zoom(1);
       });
