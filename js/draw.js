@@ -246,11 +246,12 @@
 
     setName : function (resultid) {
       // callback from select box when we have results
-      var res;
+      var res, msg;
       if (!isNaN(resultid)) {
         res = rg2.results.getFullResult(resultid);
         if (res.hasValidTrack) {
-          rg2.utils.showWarningDialog("Route already drawn", "If you draw a new route it will overwrite the old route for this runner. GPS routes are saved separately and will not be overwritten.");
+          msg = rg2.t("If you draw a new route it will overwrite the old route for this runner.") + " " + rg2.t("GPS routes are saved separately and will not be overwritten.");
+          rg2.utils.showWarningDialog(rg2.t("Route already drawn"), msg);
         }
         // remove old course from display just in case we missed it somewhere else
         if (this.gpstrack.routeData.resultid !== null) {

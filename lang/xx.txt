@@ -93,4 +93,7 @@ translation: 'name',
 'Red - locked': 'Red - lcked',
 'Right click to delete a handle': 'Right click to delete a hndle',
 'Drag a handle to adjust track around locked point(s)': 'Drag a hndle to adjust track around locked point(s)',
-'Autofit': 'Autoft'
+'Autofit': 'Autoft',
+'Route already drawn': 'Rte already drawn',
+'If you draw a new route it will overwrite the old route for this runner.': 'If you draw a new route it will overwrite the old route for this rnner.',
+'GPS routes are saved separately and will not be overwritten.': 'GPS routes are saved separately and will not be overwrittn.'
