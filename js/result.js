@@ -106,6 +106,10 @@
     drawTrack : function (opt) {
       var i, l, oldx, oldy, stopCount;
       if (this.displayTrack) {
+        if (this.isGPSTrack && opt.showGPSSpeed && (this.speedColour.length === 0)) {
+          // set speed colours if we haven't done it yet
+          this.setSpeedColours();
+        }
         rg2.ctx.lineWidth = opt.routeWidth;
         rg2.ctx.strokeStyle = this.trackColour;
         rg2.ctx.globalAlpha = rg2.options.routeIntensity;
@@ -136,6 +140,7 @@
           oldx = this.trackx[i];
           oldy = this.tracky[i];
           if (this.isGPSTrack && opt.showGPSSpeed) {
+            // draw partial track since we need to keep changing colour
             rg2.ctx.strokeStyle = this.speedColour[i];
             rg2.ctx.stroke();
             rg2.ctx.beginPath();
@@ -327,40 +332,51 @@
     },
 
     expandGPSTrack : function () {
-      var t, dist, oldx, oldy, x, y, delta, maxSpeed, oldDelta, sum, POWER_FACTOR, l;
+      var t, dist, oldx, oldy, delta, len;
       dist = 0;
       oldx = this.trackx[0];
       oldy = this.tracky[0];
-      x = 0;
-      y = 0;
+      len = this.trackx.length;
+      // in theory we get one point every three seconds
+      for (t = 0; t < len; t += 1) {
+        this.xysecs[t] = 3 * t;
+        delta = rg2.utils.getDistanceBetweenPoints(this.trackx[t], this.tracky[t], oldx, oldy);
+        dist += delta;
+        this.cumulativeDistance[t] = Math.round(dist);
+        oldx = this.trackx[t];
+        oldy = this.tracky[t];
+      }
+      // colours now set the first time we try to draw the track: major time saving on initial event load
+      this.setSpeedColours.length = 0;
+      this.hasValidTrack = true;
+      return this.hasValidTrack;
+    },
+
+    setSpeedColours : function () {
+      var t, oldx, oldy, delta, maxSpeed, oldDelta, sum, len;
+      oldx = this.trackx[0];
+      oldy = this.tracky[0];
       maxSpeed = 0;
       oldDelta = 0;
-      POWER_FACTOR = 1;
-      l = this.trackx.length;
-      // in theory we get one point every three seconds
-      for (t = 0; t < l; t += 1) {
-        this.xysecs[t] = 3 * t;
-        x = this.trackx[t];
-        y = this.tracky[t];
-        delta = rg2.utils.getDistanceBetweenPoints(x, y, oldx, oldy);
-        dist += delta;
+      len = this.trackx.length;
+      //calculate "speed" at each point as sum of distance travelled for two points
+      for (t = 0; t < len; t += 1) {
+        delta = rg2.utils.getDistanceBetweenPoints(this.trackx[t], this.tracky[t], oldx, oldy);
         sum = delta + oldDelta;
         if (maxSpeed < sum) {
           maxSpeed = sum;
         }
-        this.speedColour[t] = Math.pow(sum, POWER_FACTOR);
-        this.cumulativeDistance[t] = Math.round(dist);
-        oldx = x;
-        oldy = y;
+        this.speedColour[t] = sum;
+        oldx = this.trackx[t];
+        oldy = this.tracky[t];
         oldDelta = delta;
       }
-      this.setSpeedColours(Math.pow(maxSpeed, POWER_FACTOR));
-      this.hasValidTrack = true;
-      return this.hasValidTrack;
+      this.mapSpeedColours(maxSpeed);
 
     },
 
-    setSpeedColours : function (maxspeed) {
+    mapSpeedColours : function (maxspeed) {
+      // converts speed to RGB value
       var i, red, green, halfmax;
       //console.log("'Max speed = " + maxspeed);
       halfmax = maxspeed / 2;
