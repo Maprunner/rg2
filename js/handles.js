@@ -191,12 +191,14 @@
     drawHandles : function () {
       var i;
       for (i = 0; i < this.handles.length; i += 1) {
+        rg2.ctx.lineWidth = 1;
         if (this.handles[i].locked === true) {
-          rg2.ctx.fillStyle = rg2.config.RED;
+          rg2.ctx.fillStyle = rg2.config.RED_30;
+          rg2.ctx.strokeStyle = rg2.config.RED;
         } else {
-          rg2.ctx.fillStyle = rg2.config.GREEN;
+          rg2.ctx.fillStyle = rg2.config.GREEN_30;
+          rg2.ctx.strokeStyle = rg2.config.GREEN;
         }
-        rg2.ctx.strokestyle = rg2.config.PURPLE;
         rg2.ctx.beginPath();
         rg2.ctx.arc(this.handles[i].x, this.handles[i].y, rg2.config.HANDLE_DOT_RADIUS, 0, 2 * Math.PI, false);
         rg2.ctx.fill();

@@ -172,7 +172,7 @@ html, body {
 }
 
 
-#spn-map-intensity, #spn-course-width, #spn-route-width, #spn-name-font-size, #spn-route-intensity, #spn-control-circle {
+#spn-map-intensity, #spn-course-width, #spn-route-width, #spn-name-font-size, #spn-route-intensity, #spn-control-circle, #spn-offset {
   width: 40px;
 }
 
@@ -288,11 +288,23 @@ html, body {
 
 #rg2-replay-start-control {
   float: left;
-  padding-left: 5px;    
+  padding-left: 5px;
 }
 
 .pushright {
 	float: right;
+}
+
+.singlerow {
+  display: table;
+  margin: auto;
+  width: 99%;
+  padding: 0.5em;
+  text-align: center;
+}
+
+.singlerowitem {
+  display: table-cell;
 }
 
 #rg2-manage-edit .ui-button {

@@ -216,16 +216,30 @@ header('Content-type: text/html; charset=utf-8');
           <div>
            <textarea id="rg2-new-comments"></textarea>
           </div>
-       <button id="btn-three-seconds">+3 sec</button>
-       <button id="btn-undo">Undo</button>
-       <button id="btn-save-route">Save</button>
-       <button id="btn-reset-drawing">Reset</button>
-          <hr class="rg2-hr">
-          <h3 id='rg2-load-gps-title'>Load GPS file (GPX or TCX)</h3>
-          <div id="rg2-select-gps-file">
-           <input type='file' accept='.gpx, .tcx' id='rg2-load-gps-file'>
-          </div>
-       <input type=checkbox id="btn-move-all"><label for="btn-move-all">Move track and map together (or right click-drag)</label>
+       <div class="singlerow">
+         <button class="singlerowitem" id="btn-three-seconds">+3 sec</button>
+         <button class="singlerowitem" id="btn-undo">Undo</button>
+         <button class="singlerowitem" id="btn-save-route">Save</button>
+         <button class="singlerowitem" id="btn-reset-drawing">Reset</button>
+       </div>
+       <hr class="rg2-hr">
+       <h3 id='rg2-load-gps-title'>Load GPS file (GPX or TCX)</h3>
+       <div id="rg2-select-gps-file">
+         <input type='file' accept='.gpx, .tcx' id='rg2-load-gps-file'>
+       </div>
+       <div class="singlerow">
+         <button class = "singlerowitem" id="btn-autofit-gps">Autofit</button>
+         <div id="rg2-offset-spinner" class="singlerowitem">
+           <input id="spn-offset" />
+         </div>
+         <button  class = "singlerowitem" id="btn-undo-gps-adjust">Undo</button>
+       </div>
+       <div class="singlerow">
+         <button id="btn-save-gps-route">Save GPS route</button>
+       </div>
+       <div>
+         <input type=checkbox id="btn-move-all"><label for="btn-move-all">Move track and map together (or right click-drag)</label>
+       </div>
        <ul>
         <li><span id="draw-text-1">Left click to add/lock/unlock a handle></span>
           <ul><li><span id="draw-text-2">Green: draggable</span></li>
@@ -234,9 +248,6 @@ header('Content-type: text/html; charset=utf-8');
         <li id="draw-text-4">Right click to delete a handle</li>
         <li id="draw-text-5">Drag a handle to adjust track around locked point(s)</li>
        </ul>
-       <button id="btn-autofit-gps">Autofit</button>
-       <button id="btn-undo-gps-adjust">Undo</button>
-       <button class="pushright" id="btn-save-gps-route">Save GPS route</button> 
     </div>
     <?php if ($manager) {include  'html/manager.html'; } ?>     
        </div>

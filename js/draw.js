@@ -19,6 +19,10 @@
       this.gpstrack.autofitTrack();
     },
 
+    adjustOffset : function (offset) {
+      this.gpstrack.adjustOffset(offset);
+    },
+
     uploadGPS : function (evt) {
       this.gpstrack.uploadGPS(evt);
     },
@@ -120,7 +124,7 @@
       $("#rg2-name-select").prop('disabled', true);
       $("#rg2-undo").prop('disabled', true);
       $("#btn-reset-drawing").button("enable");
-      rg2.utils.setButtonState("disable", ["#btn-save-route", "#btn-save-gps-route", "#btn-undo", "#btn-three-seconds", "#rg2-load-gps-file"]);
+      rg2.utils.setButtonState("disable", ["#btn-save-route", "#btn-save-gps-route", "#btn-undo", "#btn-three-seconds", "#rg2-load-gps-file", "#rg2-autofit-gps"]);
       $("#rg2-name-select").empty();
       $("#rg2-new-comments").empty().val(rg2.t(rg2.config.DEFAULT_NEW_COMMENT));
       $("#rg2-event-comments").empty().val(rg2.t(rg2.config.DEFAULT_EVENT_COMMENT));
@@ -584,11 +588,8 @@
       var opt;
       opt = rg2.getOverprintDetails();
       rg2.ctx.lineWidth = opt.overprintWidth;
-      rg2.ctx.strokeStyle = this.trackColor;
-      rg2.ctx.fillStyle = this.trackColour;
-      rg2.ctx.font = '10pt Arial';
-      rg2.ctx.textAlign = "left";
-      rg2.ctx.globalAlpha = 1.0;
+      rg2.ctx.strokeStyle = rg2.config.RED;
+      rg2.ctx.fillStyle = rg2.config.RED_30;
       // highlight next control if we have a course selected
       if ((this.nextControl > 0) && (!this.gpstrack.fileLoaded)) {
         rg2.ctx.beginPath();
@@ -606,12 +607,19 @@
         rg2.ctx.fillRect(this.controlx[this.nextControl] - 1, this.controly[this.nextControl] - 1, 3, 3);
         rg2.ctx.stroke();
       }
+      rg2.ctx.strokeStyle = this.trackColor;
+      rg2.ctx.fillStyle = this.trackColour;
+      rg2.ctx.font = '10pt Arial';
+      rg2.ctx.textAlign = "left";
+      rg2.ctx.globalAlpha = 0.6;
       this.drawRoute();
       this.gpstrack.handles.drawHandles();
     },
 
     drawCircle : function (radius) {
       rg2.ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], radius, 0, 2 * Math.PI, false);
+      // fill in with transparent colour to highlight control better
+      rg2.ctx.fill();
     },
 
     drawRoute : function () {
