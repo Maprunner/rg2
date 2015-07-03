@@ -12,7 +12,11 @@
     this.position = data.position;
     this.status = data.status;
     // get round iconv problem in API for now: unescape special characters to get sensible text
-    this.comments = rg2.he.decode(data.comments);
+    if (data.comments) {
+      this.comments = rg2.he.decode(data.comments);
+    } else {
+      this.comments = "";
+    }
     this.coursename = data.coursename;
     if (this.coursename === "") {
       this.coursename = data.courseid;
@@ -21,7 +25,7 @@
     this.splits = data.splits;
     // insert a 0 split at the start to make life much easier elsewhere
     this.splits.splice(0, 0, 0);
-    if (data.variant !== "") {
+    if (isScoreEvent) {
       // save control locations for score course result
       this.scorex = scorex;
       this.scorey = scorey;
@@ -64,9 +68,6 @@
         //this.name = data.name;
         this.isGPSTrack = false;
       }
-      if (data.gpsx !== "") {
-        this.addTrack(data);
-      }
     },
 
     putTrackOnDisplay : function () {
@@ -82,13 +83,18 @@
     },
 
     addTrack : function (data, format) {
-      var trackOK;
-      this.trackx = data.gpsx.split(",").map(function (n) {
+      var i, trackOK;
+      this.trackx = data.x.split(",").map(function (n) {
         return parseInt(n, 10);
       });
-      this.tracky = data.gpsy.split(",").map(function (n) {
+      this.tracky = data.y.split(",").map(function (n) {
         return parseInt(n, 10);
       });
+      // co-ords sent as differences, so recreate absolute values
+      for (i = 1; i < this.trackx.length; i += 1) {
+        this.trackx[i] = this.trackx[i - 1] + this.trackx[i];
+        this.tracky[i] = this.tracky[i - 1] + this.tracky[i];
+      }
       if (this.isGPSTrack) {
         trackOK = this.expandGPSTrack();
       } else {

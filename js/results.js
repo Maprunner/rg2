@@ -349,9 +349,8 @@
       // for each track
       l = tracks.length;
       for (i = 0; i < l; i += 1) {
-        resultIndex = tracks[i].resultid;
+        resultIndex = tracks[i].id;
         j = 0;
-        // API filters out GPS results since we get a better track in the original results
         // loop through all results and add it against the correct id
         while (j < this.results.length) {
           if (resultIndex === this.results[j].resultid) {
