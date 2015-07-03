@@ -13,7 +13,7 @@ html, body {
 
 #rg2-header-container {
     background: #002bd9;
-    color: white;	
+    color: white;
     position: relative;
     height: 30px;
     border-bottom: 4px solid black;
@@ -41,7 +41,7 @@ html, body {
 
 .rg2-ani-row {
     background: silver;
-    color: white;	
+    color: white;
     position: absolute;
     vertical-align: middle;
     height: 36px;
@@ -68,13 +68,13 @@ html, body {
 
 .row-4 {
     bottom: 0;
-    color: black;   
+    color: black;
 }
 
 #rg2-resize-info {
 	position: absolute;
   vertical-align: middle;
-  padding-right: 10px;   
+  padding-right: 10px;
 }
 
 #rg2-header {
@@ -102,7 +102,7 @@ html, body {
 }
 
 #rg2-about {
-   position: absolute;	
+   position: absolute;
    right: 0;
    padding-right: 20px;
 }
@@ -142,7 +142,7 @@ html, body {
 }
 
 .allitemsrow {
-  font-weight: bold;  
+  font-weight: bold;
 }
 
 .rg2-hr {
@@ -170,7 +170,6 @@ html, body {
   float: right;
   padding-right: 5px;
 }
-
 
 #spn-map-intensity, #spn-course-width, #spn-route-width, #spn-name-font-size, #spn-route-intensity, #spn-control-circle, #spn-offset {
   width: 40px;
@@ -270,13 +269,23 @@ html, body {
    left: 400px;
 }
 
+.rg2-gps-text {
+  line-height: 1.75em;
+}
+
+.rg2-gps-text ul {
+  list-style-position: inside;
+  margin: 0 0 0 15px;
+  padding: 0;
+}
+
 #rg2-track-names {
    border: 1px solid darkgray;
    background: rgb(204, 204, 204);
    background: rgba(204, 204, 204, 0.75);
    padding : 2px;
    position: absolute;
-   font:0.75em/0.4em arial;
+   font:0.75em arial;
    top: 0;
    right: 0;
    height: auto;
@@ -284,6 +293,10 @@ html, body {
    z-index: 90;
    max-height: 500px;
    overflow: auto;
+}
+
+#rg2-track-names p {
+   margin: 0;
 }
 
 #rg2-replay-start-control {
@@ -468,9 +481,9 @@ display: none;
 }
 
 /*
- * prevent selection of objects on the canvas
+ * prevent selection of objects everywhere
  */
-image, canvas {
+body {
   -ms-user-select: none;
   -webkit-user-select: none;
   -khtml-user-select: none;

@@ -409,7 +409,8 @@
       if (name === null) {
         return "??";
       }
-      name.trim();
+      // replace GPS with * so that we get *SE rather than GSE for initials
+      name = name.trim().replace(/GPS/g, '*');
       len = name.length;
       initials = "";
       addNext = true;
