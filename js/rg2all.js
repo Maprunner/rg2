@@ -1,4 +1,4 @@
-// Version 1.2.0 2015-06-27T12:36:39;
+// Version 1.2.1 2015-07-04T14:13:35;
 /*
  * Routegadget 2
  * https://github.com/Maprunner/rg2
@@ -234,7 +234,7 @@ var rg2 = (function (window, $) {
         return html;
       }
       for (i = 0; i < this.runners.length; i += 1) {
-        html += "<p style='color:" + this.runners[i].colour + ";'>" + this.runners[i].coursename + "&nbsp;" + this.runners[i].name + "</p>";
+        html += "<p style='color:" + this.runners[i].colour + ";'>" + this.runners[i].coursename + ":&nbsp;" + this.runners[i].name.trim() + "</p>";
       }
       return html;
     },
@@ -639,7 +639,7 @@ var rg2 = (function (window, $) {
         if (active === rg2.config.TAB_CREATE) {
           rg2.manager.drawControls();
         } else {
-          rg2.courses.drawCourses(rg2.config.FULL_INTENSITY);
+          rg2.courses.drawCourses(rg2.config.DIM);
           rg2.results.drawTracks();
           rg2.controls.drawControls(false);
           // parameter determines if animation time is updated or not
@@ -881,6 +881,8 @@ var rg2 = (function (window, $) {
     PURPLE : '#b300ff',
     RED : '#ff0000',
     GREEN : '#00ff00',
+    RED_30 : 'rgba(255,0,0,0.3)',
+    GREEN_30 : 'rgba(0,255,0,0.3)',
     WHITE : '#ffffff',
     BLACK : '#ffoooo',
     RUNNER_DOT_RADIUS : 6,
@@ -894,7 +896,7 @@ var rg2 = (function (window, $) {
     EVENT_WITHOUT_RESULTS : 2,
     SCORE_EVENT : 3,
     // version gets set automatically by grunt file during build process
-    RG2VERSION: '1.2.0',
+    RG2VERSION: '1.2.1',
     TIME_NOT_FOUND : 9999,
     // values for evt.which
     RIGHT_CLICK : 3,
@@ -1908,6 +1910,10 @@ var rg2 = (function (window, $) {
       this.gpstrack.autofitTrack();
     },
 
+    adjustOffset : function (offset) {
+      this.gpstrack.adjustOffset(offset);
+    },
+
     uploadGPS : function (evt) {
       this.gpstrack.uploadGPS(evt);
     },
@@ -2009,7 +2015,7 @@ var rg2 = (function (window, $) {
       $("#rg2-name-select").prop('disabled', true);
       $("#rg2-undo").prop('disabled', true);
       $("#btn-reset-drawing").button("enable");
-      rg2.utils.setButtonState("disable", ["#btn-save-route", "#btn-save-gps-route", "#btn-undo", "#btn-three-seconds", "#rg2-load-gps-file"]);
+      rg2.utils.setButtonState("disable", ["#btn-save-route", "#btn-save-gps-route", "#btn-undo", "#btn-three-seconds", "#rg2-load-gps-file", "#rg2-autofit-gps"]);
       $("#rg2-name-select").empty();
       $("#rg2-new-comments").empty().val(rg2.t(rg2.config.DEFAULT_NEW_COMMENT));
       $("#rg2-event-comments").empty().val(rg2.t(rg2.config.DEFAULT_EVENT_COMMENT));
@@ -2473,11 +2479,8 @@ var rg2 = (function (window, $) {
       var opt;
       opt = rg2.getOverprintDetails();
       rg2.ctx.lineWidth = opt.overprintWidth;
-      rg2.ctx.strokeStyle = this.trackColor;
-      rg2.ctx.fillStyle = this.trackColour;
-      rg2.ctx.font = '10pt Arial';
-      rg2.ctx.textAlign = "left";
-      rg2.ctx.globalAlpha = 1.0;
+      rg2.ctx.strokeStyle = rg2.config.RED;
+      rg2.ctx.fillStyle = rg2.config.RED_30;
       // highlight next control if we have a course selected
       if ((this.nextControl > 0) && (!this.gpstrack.fileLoaded)) {
         rg2.ctx.beginPath();
@@ -2495,12 +2498,19 @@ var rg2 = (function (window, $) {
         rg2.ctx.fillRect(this.controlx[this.nextControl] - 1, this.controly[this.nextControl] - 1, 3, 3);
         rg2.ctx.stroke();
       }
+      rg2.ctx.strokeStyle = this.trackColor;
+      rg2.ctx.fillStyle = this.trackColour;
+      rg2.ctx.font = '10pt Arial';
+      rg2.ctx.textAlign = "left";
+      rg2.ctx.globalAlpha = 0.6;
       this.drawRoute();
       this.gpstrack.handles.drawHandles();
     },
 
     drawCircle : function (radius) {
       rg2.ctx.arc(this.controlx[this.nextControl], this.controly[this.nextControl], radius, 0, 2 * Math.PI, false);
+      // fill in with transparent colour to highlight control better
+      rg2.ctx.fill();
     },
 
     drawRoute : function () {
@@ -2589,9 +2599,10 @@ var rg2 = (function (window, $) {
       this.events.push(eventObject);
     },
 
-    getEventInfo : function (id) {
+    getEventInfo : function (kartatid) {
       var realid, info;
-      realid = this.getEventIDForKartatID(id);
+      kartatid = kartatid || this.getKartatEventID();
+      realid = this.getEventIDForKartatID(kartatid);
       info = this.events[realid];
       info.id = realid;
       info.controls = rg2.controls.getControlCount();
@@ -2730,8 +2741,11 @@ var rg2 = (function (window, $) {
     this.savedBaseX = [];
     this.savedBaseY = [];
     this.fileLoaded = false;
-    this.fileName = '';
+    this.fileName = "";
+    this.fileType = "";
     this.routeData = new rg2.RouteData();
+    this.xml = "";
+    this.autofitOffset = null;
   }
 
 
@@ -2749,12 +2763,14 @@ var rg2 = (function (window, $) {
       this.savedBaseX.length = 0;
       this.savedBaseY.length = 0;
       this.fileLoaded = false;
-      this.routeData = new rg2.RouteData();
+      this.routeData.x.length = 0;
+      this.routeData.y.length = 0;
+      this.routeData.time.length = 0;
     },
 
     uploadGPS : function (evt) {
       //console.log ("File" + evt.target.files[0].name);
-      var reader, self, xml, fileType;
+      var reader, self;
       reader = new FileReader();
       this.fileName = evt.target.files[0].name;
 
@@ -2763,34 +2779,37 @@ var rg2 = (function (window, $) {
       };
       self = this;
       reader.onload = function (evt) {
-        fileType = self.fileName.slice(-3).toLowerCase();
-        if ((fileType !== 'gpx') && (fileType !== 'tcx')) {
-          rg2.utils.showWarningDialog('GPS file problem', 'File type not recognised. Please check you have selected the correct file.');
-          return;
-        }
         try {
-          xml = $.parseXML(evt.target.result);
-          if (fileType === "gpx") {
-            self.processGPX(xml);
-          } else {
-            self.processTCX(xml);
+          self.fileType = self.fileName.slice(-3).toLowerCase();
+          if ((self.fileType !== 'gpx') && (self.fileType !== 'tcx')) {
+            rg2.utils.showWarningDialog('GPS file problem', 'File type not recognised. Please check you have selected the correct file.');
+            return;
           }
-          self.processGPSTrack();
+          $("#rg2-load-gps-file").button('disable');
+          self.xml = $.parseXML(evt.target.result);
+          self.processGPSFile();
         } catch (err) {
           rg2.utils.showWarningDialog('GPS file problem', 'File is not valid XML. Please check you have selected the correct file.');
           return;
         }
-        $("#rg2-load-gps-file").button('disable');
       };
-
       // read the selected file
       reader.readAsText(evt.target.files[0]);
-
     },
 
-    processGPX : function (xml) {
+    processGPSFile : function () {
+      this.initialiseGPS();
+      if (this.fileType === "gpx") {
+        this.processGPX();
+      } else {
+        this.processTCX();
+      }
+      this.processGPSTrack();
+    },
+
+    processGPX : function () {
       var trksegs, trkpts, i, j;
-      trksegs = xml.getElementsByTagName('trkseg');
+      trksegs = this.xml.getElementsByTagName('trkseg');
       for (i = 0; i < trksegs.length; i += 1) {
         trkpts = trksegs[i].getElementsByTagName('trkpt');
         this.startOffset = this.getStartOffset(trkpts[0].getElementsByTagName('time')[0].textContent);
@@ -2802,9 +2821,9 @@ var rg2 = (function (window, $) {
       }
     },
 
-    processTCX : function (xml) {
+    processTCX : function () {
       var trksegs, trkpts, i, j, position;
-      trksegs = xml.getElementsByTagName('Track');
+      trksegs = this.xml.getElementsByTagName('Track');
       for (i = 0; i < trksegs.length; i += 1) {
         trkpts = trksegs[i].getElementsByTagName('Trackpoint');
         this.startOffset = this.getStartOffset(trkpts[0].getElementsByTagName('Time')[0].textContent);
@@ -2865,11 +2884,18 @@ var rg2 = (function (window, $) {
       this.addStartAndFinishHandles();
       this.fileLoaded = true;
       if (this.routeData.splits.length > 0) {
-        $("#btn-autofit-gps").show().button("enable");
+        $("#btn-autofit-gps").button("enable");
       }
       $("#btn-save-gps-route").button("enable");
       rg2.redraw(false);
     },
+
+    adjustOffset : function (offset) {
+      this.autofitOffset = offset;
+      this.processGPSFile();
+      this.autofitTrack();
+    },
+
 
     expandToOneSecondInterval : function () {
       // convert to one second intervals to make what follows a bit easier since we can index x and y directly
@@ -2914,18 +2940,19 @@ var rg2 = (function (window, $) {
 
     autofitTrack : function () {
       // fits a GPS track to the course based on split times at control locations 
-      var i, split, offset;
+      var i, split;
       // unlock map to allow adjustment
       $('#btn-move-all').prop('checked', false);
-      // save unadjusted track
-      this.savedBaseX = this.baseX.slice(0);
-      this.savedBaseY = this.baseY.slice(0);
-      this.handles.saveForUndo();
-      offset = this.getOffset();
+      this.handles.deleteAllHandles();
+      this.addStartAndFinishHandles();
+      if (this.autofitOffset === null) {
+        this.autofitOffset = this.getOffset();
+        rg2.ui.setAutofitSpinner(this.autofitOffset);
+      }
       // adjust for each control in turn
       for (i = 1; i < (this.routeData.splits.length - 1); i += 1) {
         // move track to control location
-        split = this.routeData.splits[i] + offset;
+        split = this.routeData.splits[i] + this.autofitOffset;
         if ((split < this.baseX.length) && (split >= 0)) {
           // add handle at control on track
           this.handles.addHandle(this.routeData.x[split], this.routeData.y[split], split);
@@ -2939,8 +2966,8 @@ var rg2 = (function (window, $) {
           this.handles.rebaselineXY();
         }
       }
-      $("#btn-undo-gps-adjust").button("enable");
       $("#btn-autofit-gps").button("disable");
+      $("#btn-undo-gps-adjust").button("disable");
       rg2.redraw(false);
     },
 
@@ -3017,7 +3044,7 @@ var rg2 = (function (window, $) {
     },
 
     addStartAndFinishHandles : function () {
-      // add handles at start and finish of route: will always be index 0 and 1
+      // add handles at start and finish of route
       this.handles.addHandle(this.baseX[0], this.baseY[0], 0);
       this.handles.addHandle(this.baseX[this.baseX.length - 1], this.baseY[this.baseY.length - 1], this.baseY.length - 1);
     },
@@ -3283,12 +3310,14 @@ var rg2 = (function (window, $) {
     drawHandles : function () {
       var i;
       for (i = 0; i < this.handles.length; i += 1) {
+        rg2.ctx.lineWidth = 1;
         if (this.handles[i].locked === true) {
-          rg2.ctx.fillStyle = rg2.config.RED;
+          rg2.ctx.fillStyle = rg2.config.RED_30;
+          rg2.ctx.strokeStyle = rg2.config.RED;
         } else {
-          rg2.ctx.fillStyle = rg2.config.GREEN;
+          rg2.ctx.fillStyle = rg2.config.GREEN_30;
+          rg2.ctx.strokeStyle = rg2.config.GREEN;
         }
-        rg2.ctx.strokestyle = rg2.config.PURPLE;
         rg2.ctx.beginPath();
         rg2.ctx.arc(this.handles[i].x, this.handles[i].y, rg2.config.HANDLE_DOT_RADIUS, 0, 2 * Math.PI, false);
         rg2.ctx.fill();
@@ -3498,7 +3527,11 @@ var rg2 = (function (window, $) {
     this.position = data.position;
     this.status = data.status;
     // get round iconv problem in API for now: unescape special characters to get sensible text
-    this.comments = rg2.he.decode(data.comments);
+    if (data.comments) {
+      this.comments = rg2.he.decode(data.comments);
+    } else {
+      this.comments = "";
+    }
     this.coursename = data.coursename;
     if (this.coursename === "") {
       this.coursename = data.courseid;
@@ -3507,7 +3540,7 @@ var rg2 = (function (window, $) {
     this.splits = data.splits;
     // insert a 0 split at the start to make life much easier elsewhere
     this.splits.splice(0, 0, 0);
-    if (data.variant !== "") {
+    if (isScoreEvent) {
       // save control locations for score course result
       this.scorex = scorex;
       this.scorey = scorey;
@@ -3550,9 +3583,6 @@ var rg2 = (function (window, $) {
         //this.name = data.name;
         this.isGPSTrack = false;
       }
-      if (data.gpsx !== "") {
-        this.addTrack(data);
-      }
     },
 
     putTrackOnDisplay : function () {
@@ -3568,13 +3598,18 @@ var rg2 = (function (window, $) {
     },
 
     addTrack : function (data, format) {
-      var trackOK;
-      this.trackx = data.gpsx.split(",").map(function (n) {
+      var i, trackOK;
+      this.trackx = data.x.split(",").map(function (n) {
         return parseInt(n, 10);
       });
-      this.tracky = data.gpsy.split(",").map(function (n) {
+      this.tracky = data.y.split(",").map(function (n) {
         return parseInt(n, 10);
       });
+      // co-ords sent as differences, so recreate absolute values
+      for (i = 1; i < this.trackx.length; i += 1) {
+        this.trackx[i] = this.trackx[i - 1] + this.trackx[i];
+        this.tracky[i] = this.tracky[i - 1] + this.tracky[i];
+      }
       if (this.isGPSTrack) {
         trackOK = this.expandGPSTrack();
       } else {
@@ -3592,6 +3627,10 @@ var rg2 = (function (window, $) {
     drawTrack : function (opt) {
       var i, l, oldx, oldy, stopCount;
       if (this.displayTrack) {
+        if (this.isGPSTrack && opt.showGPSSpeed && (this.speedColour.length === 0)) {
+          // set speed colours if we haven't done it yet
+          this.setSpeedColours();
+        }
         rg2.ctx.lineWidth = opt.routeWidth;
         rg2.ctx.strokeStyle = this.trackColour;
         rg2.ctx.globalAlpha = rg2.options.routeIntensity;
@@ -3622,6 +3661,7 @@ var rg2 = (function (window, $) {
           oldx = this.trackx[i];
           oldy = this.tracky[i];
           if (this.isGPSTrack && opt.showGPSSpeed) {
+            // draw partial track since we need to keep changing colour
             rg2.ctx.strokeStyle = this.speedColour[i];
             rg2.ctx.stroke();
             rg2.ctx.beginPath();
@@ -3813,40 +3853,51 @@ var rg2 = (function (window, $) {
     },
 
     expandGPSTrack : function () {
-      var t, dist, oldx, oldy, x, y, delta, maxSpeed, oldDelta, sum, POWER_FACTOR, l;
+      var t, dist, oldx, oldy, delta, len;
       dist = 0;
       oldx = this.trackx[0];
       oldy = this.tracky[0];
-      x = 0;
-      y = 0;
+      len = this.trackx.length;
+      // in theory we get one point every three seconds
+      for (t = 0; t < len; t += 1) {
+        this.xysecs[t] = 3 * t;
+        delta = rg2.utils.getDistanceBetweenPoints(this.trackx[t], this.tracky[t], oldx, oldy);
+        dist += delta;
+        this.cumulativeDistance[t] = Math.round(dist);
+        oldx = this.trackx[t];
+        oldy = this.tracky[t];
+      }
+      // colours now set the first time we try to draw the track: major time saving on initial event load
+      this.setSpeedColours.length = 0;
+      this.hasValidTrack = true;
+      return this.hasValidTrack;
+    },
+
+    setSpeedColours : function () {
+      var t, oldx, oldy, delta, maxSpeed, oldDelta, sum, len;
+      oldx = this.trackx[0];
+      oldy = this.tracky[0];
       maxSpeed = 0;
       oldDelta = 0;
-      POWER_FACTOR = 1;
-      l = this.trackx.length;
-      // in theory we get one point every three seconds
-      for (t = 0; t < l; t += 1) {
-        this.xysecs[t] = 3 * t;
-        x = this.trackx[t];
-        y = this.tracky[t];
-        delta = rg2.utils.getDistanceBetweenPoints(x, y, oldx, oldy);
-        dist += delta;
+      len = this.trackx.length;
+      //calculate "speed" at each point as sum of distance travelled for two points
+      for (t = 0; t < len; t += 1) {
+        delta = rg2.utils.getDistanceBetweenPoints(this.trackx[t], this.tracky[t], oldx, oldy);
         sum = delta + oldDelta;
         if (maxSpeed < sum) {
           maxSpeed = sum;
         }
-        this.speedColour[t] = Math.pow(sum, POWER_FACTOR);
-        this.cumulativeDistance[t] = Math.round(dist);
-        oldx = x;
-        oldy = y;
+        this.speedColour[t] = sum;
+        oldx = this.trackx[t];
+        oldy = this.tracky[t];
         oldDelta = delta;
       }
-      this.setSpeedColours(Math.pow(maxSpeed, POWER_FACTOR));
-      this.hasValidTrack = true;
-      return this.hasValidTrack;
+      this.mapSpeedColours(maxSpeed);
 
     },
 
-    setSpeedColours : function (maxspeed) {
+    mapSpeedColours : function (maxspeed) {
+      // converts speed to RGB value
       var i, red, green, halfmax;
       //console.log("'Max speed = " + maxspeed);
       halfmax = maxspeed / 2;
@@ -3879,7 +3930,8 @@ var rg2 = (function (window, $) {
       if (name === null) {
         return "??";
       }
-      name.trim();
+      // replace GPS with * so that we get *SE rather than GSE for initials
+      name = name.trim().replace(/GPS/g, '*');
       len = name.length;
       initials = "";
       addNext = true;
@@ -4629,12 +4681,13 @@ var rg2 = (function (window, $) {
     },
 
     countResultsByCourseID : function (courseid) {
-      var i, count;
+      var i, count, info;
+      info = rg2.events.getEventInfo();
       count = 0;
       for (i = 0; i < this.results.length; i += 1) {
         if (this.results[i].courseid === courseid) {
-          // don't double-count GPS tracks
-          if (this.results[i].resultid < rg2.config.GPS_RESULT_OFFSET) {
+          // don't double-count GPS tracks, unless no initial results (#284)
+          if ((this.results[i].resultid < rg2.config.GPS_RESULT_OFFSET) || (info.format === rg2.config.EVENT_WITHOUT_RESULTS)) {
             count += 1;
           }
         }
@@ -4807,15 +4860,13 @@ var rg2 = (function (window, $) {
 
     addTracks : function (tracks) {
       // this gets passed the json data array
-      var resultIndex, i, j, l, eventid, eventinfo;
-      eventid = rg2.events.getKartatEventID();
-      eventinfo = rg2.events.getEventInfo(eventid);
+      var resultIndex, i, j, l, eventinfo;
+      eventinfo = rg2.events.getEventInfo();
       // for each track
       l = tracks.length;
       for (i = 0; i < l; i += 1) {
-        resultIndex = tracks[i].resultid;
+        resultIndex = tracks[i].id;
         j = 0;
-        // API filters out GPS results since we get a better track in the original results
         // loop through all results and add it against the correct id
         while (j < this.results.length) {
           if (resultIndex === this.results[j].resultid) {
@@ -5438,7 +5489,7 @@ var rg2 = (function (window, $) {
       $("#btn-undo-gps-adjust").button().button("disable").click(function () {
         rg2.drawing.undoGPSAdjust();
       });
-      $("#btn-autofit-gps").button().button("disable").hide().click(function () {
+      $("#btn-autofit-gps").button().button("disable").click(function () {
         rg2.drawing.autofitGPSTrack();
       });
       $("#btn-zoom-in").click(function () {
@@ -5691,6 +5742,19 @@ var rg2 = (function (window, $) {
           rg2.animation.setTailLength(ui.value);
         }
       }).val(0);
+      $("#spn-offset").spinner({
+        max : 600,
+        min : -600,
+        disabled: true,
+        spin : function (event, ui) {
+          /*jslint unparam:true*/
+          rg2.drawing.adjustOffset(ui.value);
+        }
+      }).val(0);
+    },
+
+    setAutofitSpinner : function (offset) {
+      $("#spn-offset").spinner("value", offset).spinner("enable");
     },
 
     createEventMenu : function () {
