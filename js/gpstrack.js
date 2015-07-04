@@ -11,8 +11,11 @@
     this.savedBaseX = [];
     this.savedBaseY = [];
     this.fileLoaded = false;
-    this.fileName = '';
+    this.fileName = "";
+    this.fileType = "";
     this.routeData = new rg2.RouteData();
+    this.xml = "";
+    this.autofitOffset = null;
   }
 
 
@@ -30,12 +33,14 @@
       this.savedBaseX.length = 0;
       this.savedBaseY.length = 0;
       this.fileLoaded = false;
-      this.routeData = new rg2.RouteData();
+      this.routeData.x.length = 0;
+      this.routeData.y.length = 0;
+      this.routeData.time.length = 0;
     },
 
     uploadGPS : function (evt) {
       //console.log ("File" + evt.target.files[0].name);
-      var reader, self, xml, fileType;
+      var reader, self;
       reader = new FileReader();
       this.fileName = evt.target.files[0].name;
 
@@ -44,34 +49,37 @@
       };
       self = this;
       reader.onload = function (evt) {
-        fileType = self.fileName.slice(-3).toLowerCase();
-        if ((fileType !== 'gpx') && (fileType !== 'tcx')) {
-          rg2.utils.showWarningDialog('GPS file problem', 'File type not recognised. Please check you have selected the correct file.');
-          return;
-        }
         try {
-          xml = $.parseXML(evt.target.result);
-          if (fileType === "gpx") {
-            self.processGPX(xml);
-          } else {
-            self.processTCX(xml);
+          self.fileType = self.fileName.slice(-3).toLowerCase();
+          if ((self.fileType !== 'gpx') && (self.fileType !== 'tcx')) {
+            rg2.utils.showWarningDialog('GPS file problem', 'File type not recognised. Please check you have selected the correct file.');
+            return;
           }
-          self.processGPSTrack();
+          $("#rg2-load-gps-file").button('disable');
+          self.xml = $.parseXML(evt.target.result);
+          self.processGPSFile();
         } catch (err) {
           rg2.utils.showWarningDialog('GPS file problem', 'File is not valid XML. Please check you have selected the correct file.');
           return;
         }
-        $("#rg2-load-gps-file").button('disable');
       };
-
       // read the selected file
       reader.readAsText(evt.target.files[0]);
-
     },
 
-    processGPX : function (xml) {
+    processGPSFile : function () {
+      this.initialiseGPS();
+      if (this.fileType === "gpx") {
+        this.processGPX();
+      } else {
+        this.processTCX();
+      }
+      this.processGPSTrack();
+    },
+
+    processGPX : function () {
       var trksegs, trkpts, i, j;
-      trksegs = xml.getElementsByTagName('trkseg');
+      trksegs = this.xml.getElementsByTagName('trkseg');
       for (i = 0; i < trksegs.length; i += 1) {
         trkpts = trksegs[i].getElementsByTagName('trkpt');
         this.startOffset = this.getStartOffset(trkpts[0].getElementsByTagName('time')[0].textContent);
@@ -83,9 +91,9 @@
       }
     },
 
-    processTCX : function (xml) {
+    processTCX : function () {
       var trksegs, trkpts, i, j, position;
-      trksegs = xml.getElementsByTagName('Track');
+      trksegs = this.xml.getElementsByTagName('Track');
       for (i = 0; i < trksegs.length; i += 1) {
         trkpts = trksegs[i].getElementsByTagName('Trackpoint');
         this.startOffset = this.getStartOffset(trkpts[0].getElementsByTagName('Time')[0].textContent);
@@ -146,11 +154,18 @@
       this.addStartAndFinishHandles();
       this.fileLoaded = true;
       if (this.routeData.splits.length > 0) {
-        $("#btn-autofit-gps").show().button("enable");
+        $("#btn-autofit-gps").button("enable");
       }
       $("#btn-save-gps-route").button("enable");
       rg2.redraw(false);
     },
+
+    adjustOffset : function (offset) {
+      this.autofitOffset = offset;
+      this.processGPSFile();
+      this.autofitTrack();
+    },
+
 
     expandToOneSecondInterval : function () {
       // convert to one second intervals to make what follows a bit easier since we can index x and y directly
@@ -195,18 +210,19 @@
 
     autofitTrack : function () {
       // fits a GPS track to the course based on split times at control locations 
-      var i, split, offset;
+      var i, split;
       // unlock map to allow adjustment
       $('#btn-move-all').prop('checked', false);
-      // save unadjusted track
-      this.savedBaseX = this.baseX.slice(0);
-      this.savedBaseY = this.baseY.slice(0);
-      this.handles.saveForUndo();
-      offset = this.getOffset();
+      this.handles.deleteAllHandles();
+      this.addStartAndFinishHandles();
+      if (this.autofitOffset === null) {
+        this.autofitOffset = this.getOffset();
+        rg2.ui.setAutofitSpinner(this.autofitOffset);
+      }
       // adjust for each control in turn
       for (i = 1; i < (this.routeData.splits.length - 1); i += 1) {
         // move track to control location
-        split = this.routeData.splits[i] + offset;
+        split = this.routeData.splits[i] + this.autofitOffset;
         if ((split < this.baseX.length) && (split >= 0)) {
           // add handle at control on track
           this.handles.addHandle(this.routeData.x[split], this.routeData.y[split], split);
@@ -220,8 +236,8 @@
           this.handles.rebaselineXY();
         }
       }
-      $("#btn-undo-gps-adjust").button("enable");
       $("#btn-autofit-gps").button("disable");
+      $("#btn-undo-gps-adjust").button("disable");
       rg2.redraw(false);
     },
 
@@ -298,7 +314,7 @@
     },
 
     addStartAndFinishHandles : function () {
-      // add handles at start and finish of route: will always be index 0 and 1
+      // add handles at start and finish of route
       this.handles.addHandle(this.baseX[0], this.baseY[0], 0);
       this.handles.addHandle(this.baseX[this.baseX.length - 1], this.baseY[this.baseY.length - 1], this.baseY.length - 1);
     },

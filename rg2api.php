@@ -30,7 +30,7 @@
   }
 
   // version replaced by Gruntfile as part of release 
-  define ('RG2VERSION', '1.2.0');
+  define ('RG2VERSION', '1.2.1');
   define ('KARTAT_DIRECTORY', $url);
   define ('LOCK_DIRECTORY', dirname(__FILE__)."/lock/saving/");
   define ('CACHE_DIRECTORY', $url."cache/");
@@ -1679,9 +1679,7 @@ function getResultsForEvent($eventid) {
       }
       fclose($handle);
     }
-
   }
-
   // @ suppresses error report if file does not exist
   if (($handle = @fopen(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt", "r")) !== FALSE) {
     $row = 0;
@@ -1697,24 +1695,23 @@ function getResultsForEvent($eventid) {
       $detail["resultid"] = $resultid;
       $detail["courseid"] = $courseid;
       $detail["coursename"] = encode_rg_input($data[2]);
-      $detail["name"] = encode_rg_input($data[3]);
+      $detail["name"] = trim(encode_rg_input($data[3]));
       $detail["starttime"] = intval($data[4]);
-      $detail["databaseid"] = encode_rg_input($data[5]);
       $detail["position"] = '';
       $detail["status"] = '';
       // look for RG2 extra fields in dbid
-      $pos = strpos($detail["databaseid"], "_#");
+      $databaseid = encode_rg_input($data[5]);
+      $pos = strpos($databaseid, "_#");
       if ($pos) {
-        $extras = explode("#", substr($detail["databaseid"], $pos + 2));
+        $extras = explode("#", substr($databaseid, $pos + 2));
         if (count($extras) == 2) {
           $detail["position"] = $extras[0];
           $detail["status"] = $extras[1];
         }
       }
-      
-      $detail["variant"] = intval($data[6]);
       // score event check should be redundant but see issue #159
       if (($data[6] != "") && isScoreEvent($eventid)) {
+        $detail["variant"] = intval($data[6]);
         for ($i = 0; $i < count($variant); $i++) {
           // only send course details the first time they occur: makes response a lot smaller for big (Jukola!) relays
           if ($variant[$i] == $data[6]) {
@@ -1732,16 +1729,7 @@ function getResultsForEvent($eventid) {
       $temp = rtrim($data[8], ";");
       // split array at ;and force to integers
       $detail["splits"] = array_map('intval', explode(";", $temp));
-      
-      if (sizeof($data) > 9) {
-        // list allocates return values in an array to the specified variables 
-        list($detail["gpsx"], $detail["gpsy"]) = expandCoords($data[9]);
-      } else {
-        $detail["gpsx"] = "";
-        $detail["gpsy"] = "";
-      }
-      
-      $detail["comments"] = "";
+      //$detail["comments"] = "";
       for ($i = 0; $i < $comments; $i++) {
         if ($detail["resultid"] == $text[$i]["resultid"]) {
           $detail["comments"] = $text[$i]["comments"];
@@ -1840,31 +1828,38 @@ function getCoursesForEvent($eventid) {
 function expandCoords($coords) {
   // Split Nxx;-yy,0Nxxx;-yy,0N.. into x,y arrays
   // but note that sometimes you don't get the ,0
-  $x = "";
-  $y = "";
+
   // handle empty coord string: found some examples in Jukola files
   // 5 is enough for one coordinate set, but the problem files just had "0"
   if (strlen($coords) < 5) {
-    return array($x, $y);
+    return array("", "");
   }
   $xy = explode("N", $coords);
+  $x = array();
+  $y = array();
   foreach ($xy as $point) {
     $temp = explode(";", $point);
     if (count($temp) == 2) {
-      $x .= ",".$temp[0];
+      $x[] = $temp[0];
       // strip off trailing ,0 if it exists
       $pos = strpos($temp[1], ",");
       if ($pos !== FALSE) {
         // remove leading - by starting at 1
-        $y .= ",".substr($temp[1], 1, $pos - 1);
+        $y[] = substr($temp[1], 1, $pos - 1);
       } else {
-        $y .= ",".substr($temp[1], 1);
+        $y[] = substr($temp[1], 1);
       }
     }
   }
-  // return the two strings, minus first , in each
+  // send as differences rather than absolute values: provides almost 50% reduction in size of json file
+  for ($i = (count($x) - 1); $i > 0; $i--) {
+    $x[$i] = $x[$i] - $x[$i - 1];
+    $y[$i] = $y[$i] - $y[$i - 1];
+  }
+  
+  // return the two arrays as comma-separated strings
   // used to return as integer arrays, but this caused memory problems in json_encode
-  return array(substr($x, 1), substr($y,1));
+  return array(implode(",", $x), implode(",", $y));
 }
 
 function getDummyCode($code) {
@@ -1890,23 +1885,38 @@ function getDummyCode($code) {
 
 function getTracksForEvent($eventid) {
   $output = array();
-  $row = 0;
-  // @ suppresses error report if file does not exist
+  // read drawn tracks from merkinnat file
   if (($handle = @fopen(KARTAT_DIRECTORY."merkinnat_".$eventid.".txt", "r")) !== FALSE) {
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
-      $detail = array();
       $courseid = intval($data[0]);
       $resultid = intval($data[1]);
       // protect against corrupt/invalid files
-      // GPS tracks are better in the results then here so don't bother sending
+      // GPS tracks are taken from another file so don't add them here
       if (($resultid > 0) && ($resultid < GPS_RESULT_OFFSET) && ($courseid > 0)) {
-        $detail["courseid"] = $courseid;
-        $detail["resultid"] = $resultid;
-        $detail["name"] = encode_rg_input($data[2]);
-        $detail["mystery"] = $data[3];
-        list($detail["gpsx"], $detail["gpsy"]) = expandCoords($data[4]);
-        $output[$row] = $detail;
-        $row++;
+        $detail = array();
+        $detail["id"] = $resultid;
+        list($detail["x"], $detail["y"]) = expandCoords($data[4]);
+        $output[] = $detail;
+      }
+    }
+    fclose($handle);
+  }
+  // send GPS tracks from kilpailijat file, where they are correctly stored at 3 second intervals
+  if (($handle = @fopen(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt", "r")) !== FALSE) {
+    while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
+      // only need to do this if the result includes GPS details
+      $resultid = intval($data[0]);
+      if ((count($data) > 9) && ($resultid >= GPS_RESULT_OFFSET)) {
+        $courseid = intval($data[1]);
+        // protect against corrupt/invalid files
+        // skip this record and go to next line
+        if (($resultid > 0) && ($courseid > 0)) {
+          $detail = array();
+          $detail["id"] = $resultid;
+          // list allocates return values in an array to the specified variables 
+          list($detail["x"], $detail["y"]) = expandCoords($data[9]);
+          $output[] = $detail;
+        }
       }
     }
     fclose($handle);
@@ -1993,7 +2003,7 @@ function generateLocalWorldFile($data) {
     $wf = trim(file_get_contents($file));
     $temp = explode(",", $wf);
   }
-  if (sizeof($temp) == 6) {
+  if (count($temp) == 6) {
     return array($temp[0], $temp[1], $temp[2], $temp[3], $temp[4], $temp[5]);
   } else {
     return array(0, 0, 0, 0, 0, 0);

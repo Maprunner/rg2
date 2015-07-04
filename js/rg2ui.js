@@ -154,7 +154,7 @@
       $("#btn-undo-gps-adjust").button().button("disable").click(function () {
         rg2.drawing.undoGPSAdjust();
       });
-      $("#btn-autofit-gps").button().button("disable").hide().click(function () {
+      $("#btn-autofit-gps").button().button("disable").click(function () {
         rg2.drawing.autofitGPSTrack();
       });
       $("#btn-zoom-in").click(function () {
@@ -407,6 +407,19 @@
           rg2.animation.setTailLength(ui.value);
         }
       }).val(0);
+      $("#spn-offset").spinner({
+        max : 600,
+        min : -600,
+        disabled: true,
+        spin : function (event, ui) {
+          /*jslint unparam:true*/
+          rg2.drawing.adjustOffset(ui.value);
+        }
+      }).val(0);
+    },
+
+    setAutofitSpinner : function (offset) {
+      $("#spn-offset").spinner("value", offset).spinner("enable");
     },
 
     createEventMenu : function () {

@@ -12,7 +12,11 @@
     this.position = data.position;
     this.status = data.status;
     // get round iconv problem in API for now: unescape special characters to get sensible text
-    this.comments = rg2.he.decode(data.comments);
+    if (data.comments) {
+      this.comments = rg2.he.decode(data.comments);
+    } else {
+      this.comments = "";
+    }
     this.coursename = data.coursename;
     if (this.coursename === "") {
       this.coursename = data.courseid;
@@ -21,7 +25,7 @@
     this.splits = data.splits;
     // insert a 0 split at the start to make life much easier elsewhere
     this.splits.splice(0, 0, 0);
-    if (data.variant !== "") {
+    if (isScoreEvent) {
       // save control locations for score course result
       this.scorex = scorex;
       this.scorey = scorey;
@@ -64,9 +68,6 @@
         //this.name = data.name;
         this.isGPSTrack = false;
       }
-      if (data.gpsx !== "") {
-        this.addTrack(data);
-      }
     },
 
     putTrackOnDisplay : function () {
@@ -82,13 +83,18 @@
     },
 
     addTrack : function (data, format) {
-      var trackOK;
-      this.trackx = data.gpsx.split(",").map(function (n) {
+      var i, trackOK;
+      this.trackx = data.x.split(",").map(function (n) {
         return parseInt(n, 10);
       });
-      this.tracky = data.gpsy.split(",").map(function (n) {
+      this.tracky = data.y.split(",").map(function (n) {
         return parseInt(n, 10);
       });
+      // co-ords sent as differences, so recreate absolute values
+      for (i = 1; i < this.trackx.length; i += 1) {
+        this.trackx[i] = this.trackx[i - 1] + this.trackx[i];
+        this.tracky[i] = this.tracky[i - 1] + this.tracky[i];
+      }
       if (this.isGPSTrack) {
         trackOK = this.expandGPSTrack();
       } else {
@@ -106,6 +112,10 @@
     drawTrack : function (opt) {
       var i, l, oldx, oldy, stopCount;
       if (this.displayTrack) {
+        if (this.isGPSTrack && opt.showGPSSpeed && (this.speedColour.length === 0)) {
+          // set speed colours if we haven't done it yet
+          this.setSpeedColours();
+        }
         rg2.ctx.lineWidth = opt.routeWidth;
         rg2.ctx.strokeStyle = this.trackColour;
         rg2.ctx.globalAlpha = rg2.options.routeIntensity;
@@ -136,6 +146,7 @@
           oldx = this.trackx[i];
           oldy = this.tracky[i];
           if (this.isGPSTrack && opt.showGPSSpeed) {
+            // draw partial track since we need to keep changing colour
             rg2.ctx.strokeStyle = this.speedColour[i];
             rg2.ctx.stroke();
             rg2.ctx.beginPath();
@@ -327,40 +338,51 @@
     },
 
     expandGPSTrack : function () {
-      var t, dist, oldx, oldy, x, y, delta, maxSpeed, oldDelta, sum, POWER_FACTOR, l;
+      var t, dist, oldx, oldy, delta, len;
       dist = 0;
       oldx = this.trackx[0];
       oldy = this.tracky[0];
-      x = 0;
-      y = 0;
+      len = this.trackx.length;
+      // in theory we get one point every three seconds
+      for (t = 0; t < len; t += 1) {
+        this.xysecs[t] = 3 * t;
+        delta = rg2.utils.getDistanceBetweenPoints(this.trackx[t], this.tracky[t], oldx, oldy);
+        dist += delta;
+        this.cumulativeDistance[t] = Math.round(dist);
+        oldx = this.trackx[t];
+        oldy = this.tracky[t];
+      }
+      // colours now set the first time we try to draw the track: major time saving on initial event load
+      this.setSpeedColours.length = 0;
+      this.hasValidTrack = true;
+      return this.hasValidTrack;
+    },
+
+    setSpeedColours : function () {
+      var t, oldx, oldy, delta, maxSpeed, oldDelta, sum, len;
+      oldx = this.trackx[0];
+      oldy = this.tracky[0];
       maxSpeed = 0;
       oldDelta = 0;
-      POWER_FACTOR = 1;
-      l = this.trackx.length;
-      // in theory we get one point every three seconds
-      for (t = 0; t < l; t += 1) {
-        this.xysecs[t] = 3 * t;
-        x = this.trackx[t];
-        y = this.tracky[t];
-        delta = rg2.utils.getDistanceBetweenPoints(x, y, oldx, oldy);
-        dist += delta;
+      len = this.trackx.length;
+      //calculate "speed" at each point as sum of distance travelled for two points
+      for (t = 0; t < len; t += 1) {
+        delta = rg2.utils.getDistanceBetweenPoints(this.trackx[t], this.tracky[t], oldx, oldy);
         sum = delta + oldDelta;
         if (maxSpeed < sum) {
           maxSpeed = sum;
         }
-        this.speedColour[t] = Math.pow(sum, POWER_FACTOR);
-        this.cumulativeDistance[t] = Math.round(dist);
-        oldx = x;
-        oldy = y;
+        this.speedColour[t] = sum;
+        oldx = this.trackx[t];
+        oldy = this.tracky[t];
         oldDelta = delta;
       }
-      this.setSpeedColours(Math.pow(maxSpeed, POWER_FACTOR));
-      this.hasValidTrack = true;
-      return this.hasValidTrack;
+      this.mapSpeedColours(maxSpeed);
 
     },
 
-    setSpeedColours : function (maxspeed) {
+    mapSpeedColours : function (maxspeed) {
+      // converts speed to RGB value
       var i, red, green, halfmax;
       //console.log("'Max speed = " + maxspeed);
       halfmax = maxspeed / 2;
@@ -393,7 +415,8 @@
       if (name === null) {
         return "??";
       }
-      name.trim();
+      // replace GPS with * so that we get *SE rather than GSE for initials
+      name = name.trim().replace(/GPS/g, '*');
       len = name.length;
       initials = "";
       addNext = true;

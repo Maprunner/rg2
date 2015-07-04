@@ -32,6 +32,8 @@
     PURPLE : '#b300ff',
     RED : '#ff0000',
     GREEN : '#00ff00',
+    RED_30 : 'rgba(255,0,0,0.3)',
+    GREEN_30 : 'rgba(0,255,0,0.3)',
     WHITE : '#ffffff',
     BLACK : '#ffoooo',
     RUNNER_DOT_RADIUS : 6,
@@ -45,7 +47,7 @@
     EVENT_WITHOUT_RESULTS : 2,
     SCORE_EVENT : 3,
     // version gets set automatically by grunt file during build process
-    RG2VERSION: '1.2.0',
+    RG2VERSION: '1.2.1',
     TIME_NOT_FOUND : 9999,
     // values for evt.which
     RIGHT_CLICK : 3,

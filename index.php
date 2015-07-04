@@ -147,7 +147,7 @@ header('Content-type: text/html; charset=utf-8');
     <link rel="stylesheet" href='<?php echo $source_url ."/css/rg2.css'>"; ?>
     <link rel="stylesheet" href="//code.jquery.com/ui/1.11.3/themes/<?php echo $ui_theme; ?>/jquery-ui.min.css">
     <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css">
-    <!-- ('RG2VERSION', '1.2.0') -->
+    <!-- ('RG2VERSION', '1.2.1') -->
   </head>
   <body>
     <!--[if lt IE 7]>
@@ -216,32 +216,44 @@ header('Content-type: text/html; charset=utf-8');
           <div>
            <textarea id="rg2-new-comments"></textarea>
           </div>
-       <button id="btn-three-seconds">+3 sec</button>
-       <button id="btn-undo">Undo</button>
-       <button id="btn-save-route">Save</button>
-       <button id="btn-reset-drawing">Reset</button>
-          <hr class="rg2-hr">
-          <h3 id='rg2-load-gps-title'>Load GPS file (GPX or TCX)</h3>
-          <div id="rg2-select-gps-file">
-           <input type='file' accept='.gpx, .tcx' id='rg2-load-gps-file'>
-          </div>
-       <input type=checkbox id="btn-move-all"><label for="btn-move-all">Move track and map together (or right click-drag)</label>
-       <ul>
-        <li><span id="draw-text-1">Left click to add/lock/unlock a handle></span>
-          <ul><li><span id="draw-text-2">Green: draggable</span></li>
-            <li><span id="draw-text-3">Red: locked</span></li></ul>
-        </li>
-        <li id="draw-text-4">Right click to delete a handle</li>
-        <li id="draw-text-5">Drag a handle to adjust track around locked point(s)</li>
-       </ul>
-       <button id="btn-autofit-gps">Autofit</button>
-       <button id="btn-undo-gps-adjust">Undo</button>
-       <button class="pushright" id="btn-save-gps-route">Save GPS route</button> 
+       <div class="singlerow">
+         <button class="singlerowitem" id="btn-three-seconds">+3 sec</button>
+         <button class="singlerowitem" id="btn-undo">Undo</button>
+         <button class="singlerowitem" id="btn-save-route">Save</button>
+         <button class="singlerowitem" id="btn-reset-drawing">Reset</button>
+       </div>
+       <hr class="rg2-hr">
+       <h3 id='rg2-load-gps-title'>Load GPS file (GPX or TCX)</h3>
+       <div id="rg2-select-gps-file">
+         <input type='file' accept='.gpx, .tcx' id='rg2-load-gps-file'>
+       </div>
+       <div class="singlerow">
+         <button class = "singlerowitem" id="btn-autofit-gps">Autofit</button>
+         <div id="rg2-offset-spinner" class="singlerowitem">
+           <input id="spn-offset" />
+         </div>
+         <button  class = "singlerowitem" id="btn-undo-gps-adjust">Undo</button>
+       </div>
+       <div class="singlerow">
+         <button id="btn-save-gps-route">Save GPS route</button>
+       </div>
+       <hr class="rg2-hr">
+       <div>
+         <input type=checkbox id="btn-move-all"><label for="btn-move-all">Move track and map together (or right click-drag)</label>
+       </div>
+       <hr class="rg2-hr">
+       <div class="rg2-gps-text">
+        <span id="draw-text-1">Left click to add/lock/unlock a handle.></span>
+        <ul><li id="draw-text-2">Green: draggable</li>
+        <li id="draw-text-3">Red: locked</li></ul>
+        <span id="draw-text-4">Right click to delete a handle.</span>
+        <br><span id="draw-text-5">Drag a handle to adjust track around locked point(s).</span>
+       </div>
     </div>
-    <?php if ($manager) {include  'html/manager.html'; } ?>     
+    <?php if ($manager) {include  'html/manager.html'; } ?>
        </div>
       </div>
-      <?php include 'html/animation.html'; ?>   
+      <?php include 'html/animation.html'; ?>
       <?php include 'html/options.html'; ?>
       <?php include 'html/misc.html'; ?>
     </div>

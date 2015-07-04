@@ -17,9 +17,10 @@
       this.events.push(eventObject);
     },
 
-    getEventInfo : function (id) {
+    getEventInfo : function (kartatid) {
       var realid, info;
-      realid = this.getEventIDForKartatID(id);
+      kartatid = kartatid || this.getKartatEventID();
+      realid = this.getEventIDForKartatID(kartatid);
       info = this.events[realid];
       info.id = realid;
       info.controls = rg2.controls.getControlCount();

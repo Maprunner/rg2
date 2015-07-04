@@ -165,12 +165,13 @@
     },
 
     countResultsByCourseID : function (courseid) {
-      var i, count;
+      var i, count, info;
+      info = rg2.events.getEventInfo();
       count = 0;
       for (i = 0; i < this.results.length; i += 1) {
         if (this.results[i].courseid === courseid) {
-          // don't double-count GPS tracks
-          if (this.results[i].resultid < rg2.config.GPS_RESULT_OFFSET) {
+          // don't double-count GPS tracks, unless no initial results (#284)
+          if ((this.results[i].resultid < rg2.config.GPS_RESULT_OFFSET) || (info.format === rg2.config.EVENT_WITHOUT_RESULTS)) {
             count += 1;
           }
         }
@@ -343,15 +344,13 @@
 
     addTracks : function (tracks) {
       // this gets passed the json data array
-      var resultIndex, i, j, l, eventid, eventinfo;
-      eventid = rg2.events.getKartatEventID();
-      eventinfo = rg2.events.getEventInfo(eventid);
+      var resultIndex, i, j, l, eventinfo;
+      eventinfo = rg2.events.getEventInfo();
       // for each track
       l = tracks.length;
       for (i = 0; i < l; i += 1) {
-        resultIndex = tracks[i].resultid;
+        resultIndex = tracks[i].id;
         j = 0;
-        // API filters out GPS results since we get a better track in the original results
         // loop through all results and add it against the correct id
         while (j < this.results.length) {
           if (resultIndex === this.results[j].resultid) {

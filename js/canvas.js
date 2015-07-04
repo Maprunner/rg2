@@ -52,7 +52,7 @@
         if (active === rg2.config.TAB_CREATE) {
           rg2.manager.drawControls();
         } else {
-          rg2.courses.drawCourses(rg2.config.FULL_INTENSITY);
+          rg2.courses.drawCourses(rg2.config.DIM);
           rg2.results.drawTracks();
           rg2.controls.drawControls(false);
           // parameter determines if animation time is updated or not
