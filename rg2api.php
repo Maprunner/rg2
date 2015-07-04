@@ -1851,6 +1851,7 @@ function expandCoords($coords) {
       }
     }
   }
+  // send as differences rather than absolute values: provides almost 50% reduction in size of json file
   for ($i = (count($x) - 1); $i > 0; $i--) {
     $x[$i] = $x[$i] - $x[$i - 1];
     $y[$i] = $y[$i] - $y[$i - 1];
@@ -1884,7 +1885,6 @@ function getDummyCode($code) {
 
 function getTracksForEvent($eventid) {
   $output = array();
-  $row = 0;
   // read drawn tracks from merkinnat file
   if (($handle = @fopen(KARTAT_DIRECTORY."merkinnat_".$eventid.".txt", "r")) !== FALSE) {
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
@@ -1896,8 +1896,7 @@ function getTracksForEvent($eventid) {
         $detail = array();
         $detail["id"] = $resultid;
         list($detail["x"], $detail["y"]) = expandCoords($data[4]);
-        $output[$row] = $detail;
-        $row++;
+        $output[] = $detail;
       }
     }
     fclose($handle);
@@ -1906,8 +1905,8 @@ function getTracksForEvent($eventid) {
   if (($handle = @fopen(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt", "r")) !== FALSE) {
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
       // only need to do this if the result includes GPS details
-      if (sizeof($data) > 9) {
-        $resultid = intval($data[0]);
+      $resultid = intval($data[0]);
+      if ((count($data) > 9) && ($resultid >= GPS_RESULT_OFFSET)) {
         $courseid = intval($data[1]);
         // protect against corrupt/invalid files
         // skip this record and go to next line
@@ -1916,8 +1915,7 @@ function getTracksForEvent($eventid) {
           $detail["id"] = $resultid;
           // list allocates return values in an array to the specified variables 
           list($detail["x"], $detail["y"]) = expandCoords($data[9]);
-          $output[$row] = $detail;
-          $row++;
+          $output[] = $detail;
         }
       }
     }
@@ -2005,7 +2003,7 @@ function generateLocalWorldFile($data) {
     $wf = trim(file_get_contents($file));
     $temp = explode(",", $wf);
   }
-  if (sizeof($temp) == 6) {
+  if (count($temp) == 6) {
     return array($temp[0], $temp[1], $temp[2], $temp[3], $temp[4], $temp[5]);
   } else {
     return array(0, 0, 0, 0, 0, 0);
