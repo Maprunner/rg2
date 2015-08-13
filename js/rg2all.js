@@ -1,4 +1,4 @@
-// Version 1.2.1 2015-07-04T14:13:35;
+// Version 1.2.2 2015-08-13T08:19:53;
 /*
  * Routegadget 2
  * https://github.com/Maprunner/rg2
@@ -120,7 +120,9 @@ var rg2 = (function (window, $) {
   function init() {
     $("#rg2-container").hide();
     $.ajaxSetup({
-      cache : false
+      cache : false,
+      // suppress jQuery jsonp handling problem: see issue #291 
+      jsonp: false
     });
     rg2.loadConfigOptions();
     rg2.ui.configureUI();
@@ -4990,7 +4992,7 @@ var rg2 = (function (window, $) {
         // only use original results, not GPS results
         if (this.results[i].courseid === courseid) {
           if (this.results[i].resultid < rg2.config.GPS_RESULT_OFFSET) {
-            dropdown.options.add(rg2.utils.generateOption(i, this.results[i].name));
+            dropdown.options.add(rg2.utils.generateOption(i, this.results[i].time + " " + this.results[i].name));
           }
         }
       }
