@@ -1,4 +1,4 @@
-// Version 1.2.1 2015-08-10T15:51:16;
+// Version 1.2.2 2015-08-13T08:19:53;
 /*
  * Routegadget 2
  * https://github.com/Maprunner/rg2
@@ -120,7 +120,9 @@ var rg2 = (function (window, $) {
   function init() {
     $("#rg2-container").hide();
     $.ajaxSetup({
-      cache : false
+      cache : false,
+      // suppress jQuery jsonp handling problem: see issue #291 
+      jsonp: false
     });
     rg2.loadConfigOptions();
     rg2.ui.configureUI();
