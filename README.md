@@ -1,14 +1,13 @@
 # Routegadget 2
 
 ## Latest news
-Version 1.1.5 was released on 4th May 2015 and has been installed on all routegadget.co.uk sites. This provides enhanced information for the [RG2 statistics database] (http://www.maprunner.co.uk/rg2-stats). If your site is showing up with 0s in some of the totals column then you need to upgrade to at least version 1.0.2. If you have an RG2 site that you would like added to the database then please let me know.
+Version 1.2.0 was released on 27th June 2015 and has been installed on all routegadget.co.uk sites.
 
 Latest improvements:
 
-* Kartat file encoding now simplified for old installations not using UTF-8 text files (thanks to Mikko K)
-* Finnish translation added (thanks to Mikko K)
-* Invalid character handling in results files improved
-* GPS files that span midnight should now import correctly
+* Autofit for GPS files. Once you have loaded a GPS file you can click the "Autofit" button and it will fit the track to the controls. This is a first attempt, and will probably need some fine tuning but it seems reasonable from the testing I have done so far. It relies on you starting your watch within about 10 seconds of the actual start time. I may be able to add a bit more adjustment in the future.
+* Map loading progress indicator.
+* French translation (thanks to Robert Marique)
 * Various minor bug fixes.
 
 I would recommend using the RG2 manager to set up events rather than the original Routegadget Java version. This will give you some extra functionality (such as positions in the results), and it is also a lot easier to get the controls aligned.
