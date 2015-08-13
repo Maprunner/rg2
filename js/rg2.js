@@ -119,7 +119,9 @@ var rg2 = (function (window, $) {
   function init() {
     $("#rg2-container").hide();
     $.ajaxSetup({
-      cache : false
+      cache : false,
+      // suppress jQuery jsonp handling problem: see issue #291 
+      jsonp: false
     });
     rg2.loadConfigOptions();
     rg2.ui.configureUI();
