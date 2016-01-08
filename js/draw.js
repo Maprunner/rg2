@@ -273,6 +273,8 @@
           this.gpstrack.routeData.y.length = 0;
           this.gpstrack.routeData.x[0] = this.controlx[0];
           this.gpstrack.routeData.y[0] = this.controly[0];
+          this.gpstrack.routeData.controlx = this.controlx;
+          this.gpstrack.routeData.controly = this.controly;
           this.nextControl = 1;
           rg2.redraw(false);
         }
