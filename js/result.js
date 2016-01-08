@@ -46,7 +46,7 @@
       this.hasValidTrack = false;
       this.displayTrack = false;
       this.displayScoreCourse = false;
-      this.trackColour = rg2.colours.getNextColour();
+      this.trackColour = null;
       // raw track data
       this.trackx = [];
       this.tracky = [];
@@ -72,12 +72,14 @@
 
     putTrackOnDisplay : function () {
       if (this.hasValidTrack) {
+        this.trackColour = rg2.colours.getNextColour()
         this.displayTrack = true;
       }
     },
 
     removeTrackFromDisplay : function () {
       if (this.hasValidTrack) {
+        this.trackColour = null;
         this.displayTrack = false;
       }
     },
