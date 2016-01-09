@@ -72,7 +72,7 @@
 
     putTrackOnDisplay : function () {
       if (this.hasValidTrack) {
-        this.trackColour = rg2.colours.getNextColour()
+        this.trackColour = rg2.colours.getNextColour();
         this.displayTrack = true;
       }
     },
