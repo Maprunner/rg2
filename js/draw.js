@@ -114,6 +114,7 @@
     },
 
     initialiseUI : function () {
+      rg2.courses.updateCourseDropdown();
       if (this.hasResults) {
         $("#rg2-select-name").show();
         $("#rg2-enter-name").hide();
