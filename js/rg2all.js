@@ -1,4 +1,4 @@
-// Version 1.2.2 2015-08-13T08:19:53;
+// Version 1.2.3 2016-01-09T17:03:12;
 /*
  * Routegadget 2
  * https://github.com/Maprunner/rg2
@@ -898,7 +898,7 @@ var rg2 = (function (window, $) {
     EVENT_WITHOUT_RESULTS : 2,
     SCORE_EVENT : 3,
     // version gets set automatically by grunt file during build process
-    RG2VERSION: '1.2.1',
+    RG2VERSION: '1.2.3',
     TIME_NOT_FOUND : 9999,
     // values for evt.which
     RIGHT_CLICK : 3,
@@ -2007,6 +2007,7 @@ var rg2 = (function (window, $) {
     },
 
     initialiseUI : function () {
+      rg2.courses.updateCourseDropdown();
       if (this.hasResults) {
         $("#rg2-select-name").show();
         $("#rg2-enter-name").hide();
@@ -2166,6 +2167,8 @@ var rg2 = (function (window, $) {
           this.gpstrack.routeData.y.length = 0;
           this.gpstrack.routeData.x[0] = this.controlx[0];
           this.gpstrack.routeData.y[0] = this.controly[0];
+          this.gpstrack.routeData.controlx = this.controlx;
+          this.gpstrack.routeData.controly = this.controly;
           this.nextControl = 1;
           rg2.redraw(false);
         }
@@ -2531,6 +2534,7 @@ var rg2 = (function (window, $) {
   };
   rg2.Draw = Draw;
 }());
+
 /*global rg2:false */
 (function () {
   function Event(data) {
@@ -3563,7 +3567,7 @@ var rg2 = (function (window, $) {
       this.hasValidTrack = false;
       this.displayTrack = false;
       this.displayScoreCourse = false;
-      this.trackColour = rg2.colours.getNextColour();
+      this.trackColour = null;
       // raw track data
       this.trackx = [];
       this.tracky = [];
@@ -3589,12 +3593,14 @@ var rg2 = (function (window, $) {
 
     putTrackOnDisplay : function () {
       if (this.hasValidTrack) {
+        this.trackColour = rg2.colours.getNextColour();
         this.displayTrack = true;
       }
     },
 
     removeTrackFromDisplay : function () {
       if (this.hasValidTrack) {
+        this.trackColour = null;
         this.displayTrack = false;
       }
     },
@@ -5896,7 +5902,7 @@ var rg2 = (function (window, $) {
     this.starttime = res.starttime;
     this.splits = res.splits;
     this.legpos = res.legpos;
-    this.colour = res.trackColour;
+    this.colour = rg2.colours.getNextColour();
     // get course details
     if (res.isScoreEvent) {
       course = {};

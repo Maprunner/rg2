@@ -147,7 +147,7 @@ header('Content-type: text/html; charset=utf-8');
     <link rel="stylesheet" href='<?php echo $source_url ."/css/rg2.css'>"; ?>
     <link rel="stylesheet" href="//code.jquery.com/ui/1.11.3/themes/<?php echo $ui_theme; ?>/jquery-ui.min.css">
     <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css">
-    <!-- ('RG2VERSION', '1.2.1') -->
+    <!-- ('RG2VERSION', '1.2.3') -->
   </head>
   <body>
     <!--[if lt IE 7]>
