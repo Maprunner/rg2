@@ -1,4 +1,4 @@
-// Version 1.2.3 2016-01-09T17:03:12;
+// Version 1.2.4 2016-02-01T19:38:39;
 /*
  * Routegadget 2
  * https://github.com/Maprunner/rg2
@@ -898,7 +898,7 @@ var rg2 = (function (window, $) {
     EVENT_WITHOUT_RESULTS : 2,
     SCORE_EVENT : 3,
     // version gets set automatically by grunt file during build process
-    RG2VERSION: '1.2.3',
+    RG2VERSION: '1.2.4',
     TIME_NOT_FOUND : 9999,
     // values for evt.which
     RIGHT_CLICK : 3,
@@ -4500,28 +4500,35 @@ var rg2 = (function (window, $) {
         result.splits = "";
         result.codes = [];
         splitlist = resultlist[k].getElementsByTagName('SplitTime');
-        result.controls = splitlist.length;
         this.extractIOFV3Splits(splitlist, result);
         finishtime = this.getStartFinishTimeAsSeconds(rg2.utils.extractTextContentZero(resultlist[k].getElementsByTagName('FinishTime'), 0));
-        result.splits += finishtime - result.starttime;
+        if (finishtime > 0) {
+          result.splits += finishtime - result.starttime;
+        } else {
+          result.splits += 0;
+        }
       }
     },
 
     extractIOFV3Splits : function (splitlist, result) {
-      var x;
+      var x, codes;
+      codes = [];
       for (x = 0; x < splitlist.length; x += 1) {
-        if (x > 0) {
+        // only possible attributes are "Missing" and "Additional" so
+        // if splitlist has attributes it is invalid and needs to be ignored
+        if (splitlist[x].attributes.length === 0) {
+          result.splits += rg2.utils.extractTextContentZero(splitlist[x].getElementsByTagName('Time'), 0);
+          codes.push(rg2.utils.extractTextContentZero(splitlist[x].getElementsByTagName('ControlCode'), 'X' + x));
           result.splits += ";";
         }
-        result.splits += rg2.utils.extractTextContentZero(splitlist[x].getElementsByTagName('Time'), 0);
-        result.codes[x] = rg2.utils.extractTextContentZero(splitlist[x].getElementsByTagName('ControlCode'), 'X' + x);
       }
-      // add finish split
-      result.splits += ";";
+      result.codes = codes;
+      result.controls = result.codes.length;
     }
   };
   rg2.ResultParserIOFV3 = ResultParserIOFV3;
 }());
+
 /*global rg2:false */
 (function () {
   function Results() {

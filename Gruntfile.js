@@ -4,23 +4,23 @@ module.exports = function(grunt) {
     'js/results.js', 'js/rg2getjson.js', 'js/rg2input.js', 'js/rg2ui.js', 'js/runner.js', 'js/utils.js', 'js/lib/he.js'];
 
   var cssFileList = ['css/rg2.css'];
-  
+
   // don't jsHint he.js, plugins.js
   var jsHintList = ['js/rg2.js', 'js/animation.js', 'js/canvas.js', 'js/config.js', 'js/control.js', 'js/controls.js', 'js/course.js', 'js/courseparser.js', 'js/courses.js', 'js/draw.js', 'js/event.js',
     'js/events.js', 'js/gpstrack.js', 'js/handles.js', 'js/map.js', 'js/result.js', 'js/resultparser.js', 'js/results.js', 'js/rg2getjson.js', 'js/rg2input.js', 'js/rg2ui.js', 'js/runner.js', 'js/utils.js'];
-   
+
   var jsManagerSrc = ['js/manager.js', 'js/resultparseriofv2.js', 'js/resultparseriofv3.js', 'js/resultparsercsv.js', 'js/resultparser.js', 'js/courseparser.js', 'js/managerui.js'];
 
   var jsConcatFile = 'js/rg2all.js';
-  
+
   var jsMinFile = 'js/rg2all.min.js';
   var jsManagerMinFile = 'js/rg2manager.min.js';
 
   var relDir = 'ftpsite/';
 
   var ftpHost = 'ftp.routegadget.co.uk';
-  
-  var clubs = ['aire', 'bado', 'baoc', 'basoc', 'bko', 'boc', 'bok', 'bl', 'chig', 'claro', 'clok', 'clyde', 'cuoc', 'cvfr', 'darkandwhite', 'dee',
+
+  var clubs = ['aire', 'bado', 'baoc', 'basoc', 'bko', 'boc', 'bok', 'bl', 'chig', 'claro', 'clok', 'clyde', 'coboc', 'cuoc', 'cvfr', 'darkandwhite', 'dee',
    'devonoc', 'ebor', 'ecko', 'elo', 'epoc', 'esoc', 'euoc', 'gmoa', 'gramp', 'go', 'happyherts', 'havoc', 'hoc', 'interlopers', 'invoc', 'jk',
    'kerno', 'kfo', 'lamm', 'leioc', 'loc', 'log', 'lok', 'lvo', 'maroc', 'mdoc', 'moravian', 'mvoc', 'nato', 'ngoc', 'noroc', 'nwo', 'od', 'omm', 'ouoc',
    'pfo', 'pow', 'quantock', 'rafo', 'roxburghreivers', 'sa', 'sarum', 'scottish6days', 'seloc', 'slow', 'smbo', 'smoc', 'sn', 'so', 'soa', 'soc', 'solway',
@@ -69,7 +69,7 @@ module.exports = function(grunt) {
         src : jsHintList
       }
     },
-    
+
     csslint: {
       options: {
       	// 2 means treat as an error
@@ -186,6 +186,12 @@ module.exports = function(grunt) {
         expand : true,
         src : '**',
         dest : 'ftpsite/clyde/rg2/'
+      },
+      coboc : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/coboc/rg2/'
       },
       cuoc : {
         cwd : 'rel/',
@@ -691,7 +697,7 @@ module.exports = function(grunt) {
         }]
       }
     },
-    
+
     jslint: {
       all: {
         src: jsHintList,
@@ -746,7 +752,7 @@ module.exports = function(grunt) {
   grunt.registerTask('bump', ['bumpup']);
 
   grunt.registerTask('build', ['clean:minified', 'csslint', 'jslint:all', 'jshint:all', 'concat:js', 'uglify', 'build-manager' ]);
-  
+
   grunt.registerTask('build-manager', ['jslint:manager', 'jshint:manager', 'uglify:manager' ]);
 
   grunt.registerTask('deploy', ['replace:jsversion', 'replace:phpversion', 'build', 'sync:rel']);
