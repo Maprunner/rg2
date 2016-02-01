@@ -86,24 +86,30 @@
         result.splits = "";
         result.codes = [];
         splitlist = resultlist[k].getElementsByTagName('SplitTime');
-        result.controls = splitlist.length;
         this.extractIOFV3Splits(splitlist, result);
         finishtime = this.getStartFinishTimeAsSeconds(rg2.utils.extractTextContentZero(resultlist[k].getElementsByTagName('FinishTime'), 0));
-        result.splits += finishtime - result.starttime;
+        if (finishtime > 0) {
+          result.splits += finishtime - result.starttime;
+        } else {
+          result.splits += 0;
+        }
       }
     },
 
     extractIOFV3Splits : function (splitlist, result) {
-      var x;
+      var x, codes;
+      codes = [];
       for (x = 0; x < splitlist.length; x += 1) {
-        if (x > 0) {
+        // only possible attributes are "Missing" and "Additional" so
+        // if splitlist has attributes it is invalid and needs to be ignored
+        if (splitlist[x].attributes.length === 0) {
+          result.splits += rg2.utils.extractTextContentZero(splitlist[x].getElementsByTagName('Time'), 0);
+          codes.push(rg2.utils.extractTextContentZero(splitlist[x].getElementsByTagName('ControlCode'), 'X' + x));
           result.splits += ";";
         }
-        result.splits += rg2.utils.extractTextContentZero(splitlist[x].getElementsByTagName('Time'), 0);
-        result.codes[x] = rg2.utils.extractTextContentZero(splitlist[x].getElementsByTagName('ControlCode'), 'X' + x);
       }
-      // add finish split
-      result.splits += ";";
+      result.codes = codes;
+      result.controls = result.codes.length;
     }
   };
   rg2.ResultParserIOFV3 = ResultParserIOFV3;
