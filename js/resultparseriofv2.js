@@ -42,10 +42,9 @@
             result.club = rg2.utils.extractTextContentZero(personlist[j].getElementsByTagName('ShortName'), '');
             resultlist = personlist[j].getElementsByTagName('Result');
             this.extractIOFV2Results(resultlist, result);
-            if (result.status === 'DidNotStart') {
-              break;
+            if (result.status !== 'DidNotStart') {
+              this.results.push(result);
             }
-            this.results.push(result);
           }
         }
       } catch (err) {
