@@ -254,18 +254,17 @@
       this.resetAnimationTime(0);
     },
 
-    setReplayType : function (type) {
-      if (type === rg2.config.MASS_START_REPLAY) {
+    setReplayType : function () {
+      // toggles between mass start and real time
+      if (this.realTime) {
         this.realTime = false;
-        $("#btn-mass-start").addClass('active');
-        $("#btn-real-time").removeClass('active');
+        $("#btn-real-time").removeClass().addClass('fa fa-users').prop('title', rg2.t('Mass start'));
         if (rg2.courses.getHighestControlNumber() > 0) {
           $("#rg2-control-select").prop('disabled', false);
         }
       } else {
         this.realTime = true;
-        $("#btn-mass-start").removeClass('active');
-        $("#btn-real-time").addClass('active');
+        $("#btn-real-time").removeClass().addClass('fa fa-clock-o').prop('title', rg2.t('Real time'));
         $("#rg2-control-select").prop('disabled', true);
       }
       // go back to start

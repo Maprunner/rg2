@@ -95,8 +95,8 @@
   function translateTitleProperties() {
     var i, selector, text;
     selector = ["#rg2-hide-info-panel-icon", '#btn-about', '#btn-options', '#btn-zoom-out', '#btn-zoom-in', '#btn-reset', '#btn-show-splits', '#rg2-splits-table', '#btn-slower',
-      '#btn-faster', '#btn-real-time', '#btn-mass-start'];
-    text = ["Hide info panel", 'Help', 'Options', 'Zoom out', 'Zoom in', 'Reset', 'Splits', 'Splits table', 'Slower', 'Faster', 'Real time', 'Mass start'];
+      '#btn-faster'];
+    text = ["Hide info panel", 'Help', 'Options', 'Zoom out', 'Zoom in', 'Reset', 'Splits', 'Splits table', 'Slower', 'Faster'];
     for (i = 0; i < selector.length; i += 1) {
       $(selector[i]).prop('title', t(text[i]));
     }

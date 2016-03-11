@@ -98,15 +98,12 @@
           $("#spn-tail-length").spinner("enable");
         }
       });
-      $("#btn-mass-start").addClass('active').click(function () {
-        rg2.animation.setReplayType(rg2.config.MASS_START_REPLAY);
-      });
       $("#btn-move-all").prop('checked', false);
       $("#btn-options").click(function () {
         self.displayOptionsDialog();
       });
-      $("#btn-real-time").removeClass('active').click(function () {
-        rg2.animation.setReplayType(rg2.config.REAL_TIME_REPLAY);
+      $("#btn-real-time").click(function () {
+        rg2.animation.setReplayType();
       });
       $("#btn-reset").click(function () {
         rg2.resetMapState();
