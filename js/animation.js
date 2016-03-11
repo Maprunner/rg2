@@ -328,7 +328,14 @@
         } else {
           text = runner.name;
         }
-        rg2.ctx.fillText(text, runner.x[time] + 15, runner.y[time] + 7);
+        rg2.ctx.save();
+        // centre map on runner location
+        rg2.ctx.translate(runner.x[time], runner.y[time]);
+        // rotate map so that text stays horizontal
+        rg2.ctx.rotate(-1 * rg2.options.displayAngle);
+        // no real science: offsets just look OK
+        rg2.ctx.fillText(text, 12, 6);
+        rg2.ctx.restore();
       }
     },
 

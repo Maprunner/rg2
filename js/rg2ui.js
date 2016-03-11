@@ -160,6 +160,12 @@
       $("#btn-zoom-out").click(function () {
         rg2.zoom(-1);
       });
+      $("#btn-rotate-left").click(function () {
+        rg2.rotateMap(-1);
+      });
+      $("#btn-rotate-right").click(function () {
+        rg2.rotateMap(1);
+      });
       $("#rg2-load-gps-file").button().button("disable");
     },
 

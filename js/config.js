@@ -95,8 +95,8 @@
   function translateTitleProperties() {
     var i, selector, text;
     selector = ["#rg2-hide-info-panel-icon", '#btn-about', '#btn-options', '#btn-zoom-out', '#btn-zoom-in', '#btn-reset', '#btn-show-splits', '#rg2-splits-table', '#btn-slower',
-      '#btn-faster'];
-    text = ["Hide info panel", 'Help', 'Options', 'Zoom out', 'Zoom in', 'Reset', 'Splits', 'Splits table', 'Slower', 'Faster'];
+      '#btn-faster', '#btn-rotate-right', '#btn-rotate-left'];
+    text = ["Hide info panel", 'Help', 'Options', 'Zoom out', 'Zoom in', 'Reset', 'Splits', 'Splits table', 'Slower', 'Faster', 'Rotate right', 'Rotate-left'];
     for (i = 0; i < selector.length; i += 1) {
       $(selector[i]).prop('title', t(text[i]));
     }
@@ -197,6 +197,7 @@
           this.options = JSON.parse(localStorage.getItem('rg2-options'));
           // best to keep these at default?
           this.options.circleSize = 20;
+          this.options.displayAngle = 0;
           if (this.options.mapIntensity === 0) {
             rg2.utils.showWarningDialog("Warning", "Your saved settings have 0% map intensity so the map is invisible. You can adjust this on the configuration menu");
           }

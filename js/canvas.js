@@ -38,7 +38,14 @@
     ctx.restore();
     // set transparency of map
     ctx.globalAlpha = rg2.options.mapIntensity;
-
+    // save state before we play around with rotation
+    ctx.save();
+    // reset centre of map
+    ctx.translate(ctx.canvas.width / 2, ctx.canvas.height / 2);
+    // rotate around centre
+    ctx.rotate(rg2.options.displayAngle);
+    // move back to where it was before we rotated
+    ctx.translate(-1 * (ctx.canvas.width / 2), -1 * (ctx.canvas.height / 2));
     if (map.height > 0) {
       // using non-zero map height to show we have a map loaded
       ctx.drawImage(map, 0, 0);
@@ -66,6 +73,8 @@
     } else {
       drawSelectEventText();
     }
+    // forget about rotation
+    ctx.restore();
   }
 
   function resetMapState() {
@@ -92,6 +101,7 @@
       ctx.setTransform(mapscale, 0, 0, mapscale, 0, 0);
     }
     ctx.save();
+    rg2.setConfigOption("displayAngle", 0);
     redraw(false);
   }
 
@@ -122,6 +132,14 @@
     resetMapState();
   }
 
+  function rotateMap(direction) {
+    // direction is -1 for left and 1 for right
+    var newAngle;
+    newAngle = rg2.options.displayAngle + (direction * (Math.PI / 36));
+    rg2.setConfigOption("displayAngle", newAngle);
+    redraw(false);
+  }
+
   function zoom(zoomDirection) {
     var pt, factor, tempZoom;
     factor = Math.pow(rg2.input.scaleFactor, zoomDirection);
@@ -139,10 +157,8 @@
     }
   }
 
-  // Adds ctx.getTransform() - returns an SVGMatrix
-  // Adds ctx.transformedPoint(x,y) - returns an SVGPoint
   function trackTransforms(ctx) {
-    var xform, svg, savedTransforms, save, restore, scale, translate, setTransform, pt;
+    var xform, svg, savedTransforms, save, restore, scale, translate, setTransform, pt, rotate;
     svg = document.createElementNS("http://www.w3.org/2000/svg", 'svg');
     xform = svg.createSVGMatrix();
     savedTransforms = [];
@@ -198,11 +214,11 @@
     //  xform = xform.multiply(m2);
     //  return transform.call(ctx, a, b, c, d, e, f);
     //};
-    //rotate = ctx.rotate;
-    //ctx.rotate = function (radians) {
-    //  xform = xform.rotate(radians * 180 / Math.PI);
-    //  return rotate.call(ctx, radians);
-    //};
+    rotate = ctx.rotate;
+    ctx.rotate = function (radians) {
+      xform = xform.rotate(radians * 180 / Math.PI);
+      return rotate.call(ctx, radians);
+    };
   }
 
   function getMapSize() {
@@ -249,6 +265,7 @@
     resizeCanvas();
   }
   rg2.zoom = zoom;
+  rg2.rotateMap = rotateMap;
   rg2.redraw =  redraw;
   rg2.canvas = canvas;
   rg2.setUpCanvas = setUpCanvas;

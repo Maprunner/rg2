@@ -63,7 +63,7 @@ if (isset($_GET['manage'])) {
   }
   // simple cookie generator! Don't need unique, just need something vaguely random
   $keksi = substr(str_shuffle("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"), 0, 20);
-  file_put_contents($manager_url."keksi.txt", $keksi.PHP_EOL); 
+  file_put_contents($manager_url."keksi.txt", $keksi.PHP_EOL);
 } else {
   $manager=  FALSE;
 }
@@ -89,7 +89,7 @@ $langdir = dirname(__FILE__) . '/lang/';
 if (file_exists($langdir.$lang.'.txt')) {
   $dictionary = 'dictionary: {'.PHP_EOL;
   $dictionary .= file_get_contents($langdir.$lang.'.txt').PHP_EOL;
-  $dictionary .= '}'.PHP_EOL; 
+  $dictionary .= '}'.PHP_EOL;
 } else {
   $dictionary = "dictionary: {}".PHP_EOL;
 }
@@ -119,7 +119,7 @@ foreach(glob($langdir.'??.txt') as $file) {
         }
       }
     }
-    
+
     if (($code != "") && ($name != "")) {
       $languages .= $code.': '.$name.PHP_EOL;
     }
@@ -143,10 +143,10 @@ header('Content-type: text/html; charset=utf-8');
     <meta name="description" content="View and save route choices for orienteering events">
     <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
     <link rel="shortcut icon" href="img/favicon.ico"/>
-    <link rel="stylesheet" href='<?php echo $source_url ."/css/normalize.min.css'>"; ?>  
+    <link rel="stylesheet" href='<?php echo $source_url ."/css/normalize.min.css'>"; ?>
     <link rel="stylesheet" href='<?php echo $source_url ."/css/rg2.css'>"; ?>
     <link rel="stylesheet" href="//code.jquery.com/ui/1.11.3/themes/<?php echo $ui_theme; ?>/jquery-ui.min.css">
-    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
     <!-- ('RG2VERSION', '1.2.4') -->
   </head>
   <body>
@@ -198,7 +198,7 @@ header('Content-type: text/html; charset=utf-8');
           <div id="rg2-select-course">
            <label for='rg2-course-select'>Select course: </label>
            <select  id="rg2-course-select"></select>
-          </div>     
+          </div>
           <div id="rg2-select-name">
            <label for='rg2-name-select'>Select name: </label>
            <select id="rg2-name-select"></select>
