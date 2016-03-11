@@ -360,8 +360,7 @@
       $("#rg2-clock-slider").slider("value", this.animationSecs);
       $("#rg2-clock").text(rg2.utils.formatSecsAsHHMMSS(this.animationSecs));
       rg2.ctx.lineWidth = rg2.options.routeWidth;
-      t = rg2.options.routeWidth;
-      rg2.ctx.globalAlpha = 1.0;
+      rg2.ctx.globalAlpha = rg2.config.FULL_INTENSITY;
       for (i = 0; i < this.runners.length; i += 1) {
         runner = this.runners[i];
         if (this.realTime) {
@@ -388,14 +387,19 @@
           }
         }
         rg2.ctx.stroke();
-        rg2.ctx.fillStyle = runner.colour;
+
         rg2.ctx.beginPath();
         if ((t - timeOffset) < runner.nextStopTime) {
           t = t - timeOffset;
         } else {
           t = runner.nextStopTime;
         }
-        rg2.ctx.arc(runner.x[t] + (rg2.config.RUNNER_DOT_RADIUS / 2), runner.y[t], rg2.config.RUNNER_DOT_RADIUS, 0, 2 * Math.PI, false);
+        rg2.ctx.arc(runner.x[t], runner.y[t], rg2.config.RUNNER_DOT_RADIUS,
+          0, 2 * Math.PI, false);
+        rg2.ctx.globalAlpha = rg2.config.FULL_INTENSITY;
+        rg2.ctx.strokeStyle = rg2.config.BLACK;
+        rg2.ctx.stroke();
+        rg2.ctx.fillStyle = runner.colour;
         rg2.ctx.fill();
         this.displayName(runner, t);
       }

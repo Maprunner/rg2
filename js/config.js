@@ -35,7 +35,7 @@
     RED_30 : 'rgba(255,0,0,0.3)',
     GREEN_30 : 'rgba(0,255,0,0.3)',
     WHITE : '#ffffff',
-    BLACK : '#ffoooo',
+    BLACK : '#000000',
     RUNNER_DOT_RADIUS : 6,
     HANDLE_DOT_RADIUS : 7,
     HANDLE_COLOUR: '#ff0000',
@@ -68,7 +68,9 @@
     circleSize : 20,
     snap : true,
     showThreeSeconds : false,
-    showGPSSpeed : false
+    showGPSSpeed : false,
+    // rotation of canvas from north
+    displayAngle: 0
   };
 
   // translation function
