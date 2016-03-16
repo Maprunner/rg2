@@ -1,14 +1,11 @@
 # Routegadget 2
 
 ## Latest news
-Version 1.2.0 was released on 27th June 2015 and has been installed on all routegadget.co.uk sites.
+Version 1.2.5 was released on 16th March 2016 and has been installed on all routegadget.co.uk sites.
 
-Latest improvements:
+The main change is that you can now rotate the map, using the icons at the top left of the screen. This means you can orientate the map as you would when racing.
 
-* Autofit for GPS files. Once you have loaded a GPS file you can click the "Autofit" button and it will fit the track to the controls. This is a first attempt, and will probably need some fine tuning but it seems reasonable from the testing I have done so far. It relies on you starting your watch within about 10 seconds of the actual start time. I may be able to add a bit more adjustment in the future.
-* Map loading progress indicator.
-* French translation (thanks to Robert Marique)
-* Various minor bug fixes.
+There is also a new option to align the map when drawing your route. Just tick the "Align map to next control" checkbox on the 'Draw' tab . 
 
 I would recommend using the RG2 manager to set up events rather than the original Routegadget Java version. This will give you some extra functionality (such as positions in the results), and it is also a lot easier to get the controls aligned.
 
