@@ -68,9 +68,7 @@
     circleSize : 20,
     snap : true,
     showThreeSeconds : false,
-    showGPSSpeed : false,
-    // rotation of canvas from north
-    displayAngle: 0
+    showGPSSpeed : false
   };
 
   // translation function
@@ -197,7 +195,6 @@
           this.options = JSON.parse(localStorage.getItem('rg2-options'));
           // best to keep these at default?
           this.options.circleSize = 20;
-          this.options.displayAngle = 0;
           if (this.options.mapIntensity === 0) {
             rg2.utils.showWarningDialog("Warning", "Your saved settings have 0% map intensity so the map is invisible. You can adjust this on the configuration menu");
           }

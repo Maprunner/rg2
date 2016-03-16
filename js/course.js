@@ -44,9 +44,9 @@
           this.textAngle[i] = rg2.utils.getAngle(c3x, c3y, c1x, c1y);
         }
       }
-      // not worried about angle for finish
-      this.angle[this.x.length - 1] = 0;
-      this.textAngle[this.x.length - 1] = 0;
+      // angle for finish aligns to north
+      this.angle[this.x.length - 1] = Math.PI * 1.5;
+      this.textAngle[this.x.length - 1] = Math.PI * 1.5;
     },
 
     drawCourse : function (intensity) {

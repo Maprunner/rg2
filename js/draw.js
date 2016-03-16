@@ -5,6 +5,7 @@
   function Draw() {
     this.trackColor = '#ff0000';
     this.hasResults = false;
+    this.alignMap = true;
     this.initialiseDrawing();
   }
 
@@ -105,6 +106,7 @@
       // the RouteData versions of these have the start control removed for saving
       this.controlx = [];
       this.controly = [];
+      this.angles = [];
       this.nextControl = 0;
       this.isScoreCourse = false;
       this.gpstrack.initialiseGPS();
@@ -176,6 +178,7 @@
         this.gpstrack.routeData.y[0] = this.controly[0];
         this.gpstrack.routeData.controlx = this.controlx;
         this.gpstrack.routeData.controly = this.controly;
+        this.angles = course.angle;
         this.nextControl = 1;
       }
       rg2.results.createNameDropdown(courseid);
@@ -279,6 +282,9 @@
           this.nextControl = 1;
           rg2.redraw(false);
         }
+        // resetting it here avoids trying to start drawing before selecting
+        // a name, which is always what happened when testing the prototype
+        this.alignMapToAngle(0);
         this.startDrawing();
       }
     },
@@ -317,9 +323,18 @@
       $("#rg2-load-gps-file").button('enable');
     },
 
+    alignMapToAngle : function (control) {
+      if (this.alignMap && !this.isScoreCourse) {
+        // course angles are based on horizontal as 0: need to reset to north
+        rg2.alignMap(this.angles[control] + (Math.PI / 2),
+          this.controlx[control], this.controly[control]);
+      }
+    },
+
     addNewPoint : function (x, y) {
       if (this.closeEnough(x, y)) {
         this.addRouteDataPoint(this.controlx[this.nextControl], this.controly[this.nextControl]);
+        this.alignMapToAngle(this.nextControl);
         this.nextControl += 1;
         if (this.nextControl === this.controlx.length) {
           $("#btn-save-route").button("enable");
@@ -363,6 +378,7 @@
           if (this.nextControl > 1) {
             this.nextControl -= 1;
           }
+          this.alignMapToAngle(this.nextControl - 1);
         }
         this.gpstrack.routeData.x.pop();
         this.gpstrack.routeData.y.pop();
