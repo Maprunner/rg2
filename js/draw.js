@@ -5,7 +5,6 @@
   function Draw() {
     this.trackColor = '#ff0000';
     this.hasResults = false;
-    this.alignMap = true;
     this.initialiseDrawing();
   }
 
@@ -167,6 +166,9 @@
       this.gpstrack.routeData.courseid = courseid;
       course = rg2.courses.getCourseDetails(courseid);
       this.isScoreCourse = course.isScoreCourse;
+      // save details for normal courses
+      // can't do this here for score courses since you need to know the
+      // variant for a given runner
       if (!this.isScoreCourse) {
         rg2.courses.putOnDisplay(courseid);
         this.gpstrack.routeData.coursename = course.name;
@@ -324,10 +326,18 @@
     },
 
     alignMapToAngle : function (control) {
-      if (this.alignMap && !this.isScoreCourse) {
+      var angle;
+      if (rg2.options.alignMap) {
+        if (this.isScoreCourse) {
+          // need to calculate this here since score courses use variants for
+          // each person, not single courses
+          angle = rg2.utils.getAngle(this.controlx[control], this.controly[control],
+            this.controlx[control + 1], this.controly[control + 1]);
+        } else {
+          angle = this.angles[control];
+        }
         // course angles are based on horizontal as 0: need to reset to north
-        rg2.alignMap(this.angles[control] + (Math.PI / 2),
-          this.controlx[control], this.controly[control]);
+        rg2.alignMap(angle  + (Math.PI / 2), this.controlx[control], this.controly[control]);
       }
     },
 

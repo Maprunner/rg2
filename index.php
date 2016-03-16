@@ -216,6 +216,9 @@ header('Content-type: text/html; charset=utf-8');
           <div>
            <textarea id="rg2-new-comments"></textarea>
           </div>
+        <div>
+          <input type=checkbox id="btn-align-map"><label for="btn-align-map">Align map to next control</label>
+        </div>
        <div class="singlerow">
          <button class="singlerowitem" id="btn-three-seconds">+3 sec</button>
          <button class="singlerowitem" id="btn-undo">Undo</button>

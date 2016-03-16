@@ -99,6 +99,14 @@
         }
       });
       $("#btn-move-all").prop('checked', false);
+      $("#btn-align-map").prop('checked', rg2.options.alignMap).click(function (event) {
+        if (event.target.checked) {
+          rg2.options.alignMap = true;
+        } else {
+          rg2.options.alignMap = false;
+        }
+        rg2.saveConfigOptions();
+      });
       $("#btn-options").click(function () {
         self.displayOptionsDialog();
       });
@@ -474,10 +482,20 @@
           rg2.options.snap = false;
         }
       });
-      $("#chk-show-three-seconds").prop('checked', rg2.options.showThreeSeconds).click(function () {
+      $("#chk-show-three-seconds").prop('checked', rg2.options.showThreeSeconds).click(function (event) {
+        if (event.target.checked) {
+          rg2.options.showThreeSeconds = true;
+        } else {
+          rg2.options.showThreeSeconds = false;
+        }
         rg2.redraw(false);
       });
-      $("#chk-show-GPS-speed").prop('checked', rg2.options.showGPSSpeed).click(function () {
+      $("#chk-show-GPS-speed").prop('checked', rg2.options.showGPSSpeed).click(function (event) {
+        if (event.target.checked) {
+          rg2.options.showGPSSpeed = true;
+        } else {
+          rg2.options.showGPSSpeed = false;
+        }
         rg2.redraw(false);
       });
       $("#rg2-select-language").click(function () {
