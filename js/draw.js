@@ -328,16 +328,19 @@
     alignMapToAngle : function (control) {
       var angle;
       if (rg2.options.alignMap) {
-        if (this.isScoreCourse) {
-          // need to calculate this here since score courses use variants for
-          // each person, not single courses
-          angle = rg2.utils.getAngle(this.controlx[control], this.controly[control],
-            this.controlx[control + 1], this.controly[control + 1]);
-        } else {
-          angle = this.angles[control];
+        // don't adjust after we have got to the finish
+        if (control < (this.controlx.length - 1)) {
+          if (this.isScoreCourse) {
+            // need to calculate this here since score courses use variants for
+            // each person, not single courses
+            angle = rg2.utils.getAngle(this.controlx[control], this.controly[control],
+              this.controlx[control + 1], this.controly[control + 1]);
+          } else {
+            angle = this.angles[control];
+          }
+          // course angles are based on horizontal as 0: need to reset to north
+          rg2.alignMap(angle  + (Math.PI / 2), this.controlx[control], this.controly[control]);
         }
-        // course angles are based on horizontal as 0: need to reset to north
-        rg2.alignMap(angle  + (Math.PI / 2), this.controlx[control], this.controly[control]);
       }
     },
 

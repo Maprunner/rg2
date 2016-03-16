@@ -319,23 +319,26 @@
     displayName : function (runner, time) {
       var text;
       if (this.displayNames) {
-        rg2.ctx.fillStyle = "black";
-        rg2.ctx.font = rg2.options.replayFontSize + 'pt Arial';
-        rg2.ctx.globalAlpha = rg2.config.FULL_INTENSITY;
-        rg2.ctx.textAlign = "left";
-        if (this.displayInitials) {
-          text = runner.initials;
-        } else {
-          text = runner.name;
+        // make sure we have a valid position to display
+        if ((time < runner.x.length) && (time >= 0)) {
+          rg2.ctx.fillStyle = "black";
+          rg2.ctx.font = rg2.options.replayFontSize + 'pt Arial';
+          rg2.ctx.globalAlpha = rg2.config.FULL_INTENSITY;
+          rg2.ctx.textAlign = "left";
+          if (this.displayInitials) {
+            text = runner.initials;
+          } else {
+            text = runner.name;
+          }
+          rg2.ctx.save();
+          // centre map on runner location
+          rg2.ctx.translate(runner.x[time], runner.y[time]);
+          // rotate map so that text stays horizontal
+          rg2.ctx.rotate(rg2.ctx.displayAngle);
+          // no real science: offsets just look OK
+          rg2.ctx.fillText(text, 12, 6);
+          rg2.ctx.restore();
         }
-        rg2.ctx.save();
-        // centre map on runner location
-        rg2.ctx.translate(runner.x[time], runner.y[time]);
-        // rotate map so that text stays horizontal
-        rg2.ctx.rotate(-1 * rg2.ctx.displayAngle);
-        // no real science: offsets just look OK
-        rg2.ctx.fillText(text, 12, 6);
-        rg2.ctx.restore();
       }
     },
 
