@@ -1,4 +1,4 @@
-// Version 1.2.4 2016-02-01T19:38:39;
+// Version 1.2.5 2016-03-16T18:43:27;
 /*
  * Routegadget 2
  * https://github.com/Maprunner/rg2
@@ -397,18 +397,17 @@ var rg2 = (function (window, $) {
       this.resetAnimationTime(0);
     },
 
-    setReplayType : function (type) {
-      if (type === rg2.config.MASS_START_REPLAY) {
+    setReplayType : function () {
+      // toggles between mass start and real time
+      if (this.realTime) {
         this.realTime = false;
-        $("#btn-mass-start").addClass('active');
-        $("#btn-real-time").removeClass('active');
+        $("#btn-real-time").removeClass().addClass('fa fa-users').prop('title', rg2.t('Mass start'));
         if (rg2.courses.getHighestControlNumber() > 0) {
           $("#rg2-control-select").prop('disabled', false);
         }
       } else {
         this.realTime = true;
-        $("#btn-mass-start").removeClass('active');
-        $("#btn-real-time").addClass('active');
+        $("#btn-real-time").removeClass().addClass('fa fa-clock-o').prop('title', rg2.t('Real time'));
         $("#rg2-control-select").prop('disabled', true);
       }
       // go back to start
@@ -463,16 +462,26 @@ var rg2 = (function (window, $) {
     displayName : function (runner, time) {
       var text;
       if (this.displayNames) {
-        rg2.ctx.fillStyle = "black";
-        rg2.ctx.font = rg2.options.replayFontSize + 'pt Arial';
-        rg2.ctx.globalAlpha = rg2.config.FULL_INTENSITY;
-        rg2.ctx.textAlign = "left";
-        if (this.displayInitials) {
-          text = runner.initials;
-        } else {
-          text = runner.name;
+        // make sure we have a valid position to display
+        if ((time < runner.x.length) && (time >= 0)) {
+          rg2.ctx.fillStyle = "black";
+          rg2.ctx.font = rg2.options.replayFontSize + 'pt Arial';
+          rg2.ctx.globalAlpha = rg2.config.FULL_INTENSITY;
+          rg2.ctx.textAlign = "left";
+          if (this.displayInitials) {
+            text = runner.initials;
+          } else {
+            text = runner.name;
+          }
+          rg2.ctx.save();
+          // centre map on runner location
+          rg2.ctx.translate(runner.x[time], runner.y[time]);
+          // rotate map so that text stays horizontal
+          rg2.ctx.rotate(rg2.ctx.displayAngle);
+          // no real science: offsets just look OK
+          rg2.ctx.fillText(text, 12, 6);
+          rg2.ctx.restore();
         }
-        rg2.ctx.fillText(text, runner.x[time] + 15, runner.y[time] + 7);
       }
     },
 
@@ -503,8 +512,7 @@ var rg2 = (function (window, $) {
       $("#rg2-clock-slider").slider("value", this.animationSecs);
       $("#rg2-clock").text(rg2.utils.formatSecsAsHHMMSS(this.animationSecs));
       rg2.ctx.lineWidth = rg2.options.routeWidth;
-      t = rg2.options.routeWidth;
-      rg2.ctx.globalAlpha = 1.0;
+      rg2.ctx.globalAlpha = rg2.config.FULL_INTENSITY;
       for (i = 0; i < this.runners.length; i += 1) {
         runner = this.runners[i];
         if (this.realTime) {
@@ -531,14 +539,19 @@ var rg2 = (function (window, $) {
           }
         }
         rg2.ctx.stroke();
-        rg2.ctx.fillStyle = runner.colour;
+
         rg2.ctx.beginPath();
         if ((t - timeOffset) < runner.nextStopTime) {
           t = t - timeOffset;
         } else {
           t = runner.nextStopTime;
         }
-        rg2.ctx.arc(runner.x[t] + (rg2.config.RUNNER_DOT_RADIUS / 2), runner.y[t], rg2.config.RUNNER_DOT_RADIUS, 0, 2 * Math.PI, false);
+        rg2.ctx.arc(runner.x[t], runner.y[t], rg2.config.RUNNER_DOT_RADIUS,
+          0, 2 * Math.PI, false);
+        rg2.ctx.globalAlpha = rg2.config.FULL_INTENSITY;
+        rg2.ctx.strokeStyle = rg2.config.BLACK;
+        rg2.ctx.stroke();
+        rg2.ctx.fillStyle = runner.colour;
         rg2.ctx.fill();
         this.displayName(runner, t);
       }
@@ -587,6 +600,7 @@ var rg2 = (function (window, $) {
   };
   rg2.Animation = Animation;
 }());
+
 /*global rg2:false */
 /*global Image:false */
 (function () {
@@ -594,6 +608,7 @@ var rg2 = (function (window, $) {
   canvas = $("#rg2-map-canvas")[0];
   ctx = canvas.getContext('2d');
   map = new Image();
+  ctx.displayAngle = 0;
 
   function loadNewMap(mapFile) {
     $("#rg2-map-load-progress-label").text(rg2.t("Loading map"));
@@ -627,7 +642,6 @@ var rg2 = (function (window, $) {
     ctx.restore();
     // set transparency of map
     ctx.globalAlpha = rg2.options.mapIntensity;
-
     if (map.height > 0) {
       // using non-zero map height to show we have a map loaded
       ctx.drawImage(map, 0, 0);
@@ -657,6 +671,40 @@ var rg2 = (function (window, $) {
     }
   }
 
+  function applyMapRotation(angle, x, y, moveMap) {
+    var pt;
+    // save new absolute angle
+    ctx.displayAngle = (ctx.displayAngle - angle) % (Math.PI * 2);
+    // rotate around given co-ordinates
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    if (moveMap) {
+      // move map so that given point is centre-bottom of screen
+      pt = ctx.transformedPoint((canvas.width / 2), (canvas.height * 0.9));
+      ctx.translate(pt.x - x, pt.y - y);
+    } else {
+      // put map back where it started
+      ctx.translate(-1 * x, -1 * y);
+    }
+    ctx.save();
+    redraw(false);
+  }
+
+  function rotateMap(direction) {
+    // rotate a little bit from UI control input
+    // direction is -1 for left and 1 for right
+    var angle;
+    angle = direction * (Math.PI / 36);
+    // rotate around centre of map
+    applyMapRotation(angle, (map.width / 2), (map.height / 2), false);
+  }
+
+  function alignMap(angle, x, y) {
+    // align to an absolute angle: 0 is up/north
+    // rotate around defined x, y
+    applyMapRotation((ctx.displayAngle - angle) % (Math.PI * 2), x, y, true);
+  }
+
   function resetMapState() {
     // place map in centre of canvas and scale it down to fit
     var mapscale, heightscale;
@@ -680,6 +728,8 @@ var rg2 = (function (window, $) {
     } else {
       ctx.setTransform(mapscale, 0, 0, mapscale, 0, 0);
     }
+    // don't need to rotate here since the call to setTransform above does that for us
+    ctx.displayAngle = 0;
     ctx.save();
     redraw(false);
   }
@@ -728,10 +778,8 @@ var rg2 = (function (window, $) {
     }
   }
 
-  // Adds ctx.getTransform() - returns an SVGMatrix
-  // Adds ctx.transformedPoint(x,y) - returns an SVGPoint
   function trackTransforms(ctx) {
-    var xform, svg, savedTransforms, save, restore, scale, translate, setTransform, pt;
+    var xform, svg, savedTransforms, save, restore, scale, translate, setTransform, pt, rotate;
     svg = document.createElementNS("http://www.w3.org/2000/svg", 'svg');
     xform = svg.createSVGMatrix();
     savedTransforms = [];
@@ -767,11 +815,11 @@ var rg2 = (function (window, $) {
     };
     pt = svg.createSVGPoint();
     ctx.transformedPoint = function (x, y) {
+      // converts x, y screen co-ords to x, y in map image
       pt.x = x;
       pt.y = y;
       return pt.matrixTransform(xform.inverse());
     };
-    // don't need these functions at present
     //ctx.getTransform = function () {
     //  return xform;
     //};
@@ -787,11 +835,11 @@ var rg2 = (function (window, $) {
     //  xform = xform.multiply(m2);
     //  return transform.call(ctx, a, b, c, d, e, f);
     //};
-    //rotate = ctx.rotate;
-    //ctx.rotate = function (radians) {
-    //  xform = xform.rotate(radians * 180 / Math.PI);
-    //  return rotate.call(ctx, radians);
-    //};
+    rotate = ctx.rotate;
+    ctx.rotate = function (radians) {
+      xform = xform.rotate(radians * 180 / Math.PI);
+      return rotate.call(ctx, radians);
+    };
   }
 
   function getMapSize() {
@@ -838,6 +886,8 @@ var rg2 = (function (window, $) {
     resizeCanvas();
   }
   rg2.zoom = zoom;
+  rg2.rotateMap = rotateMap;
+  rg2.alignMap = alignMap;
   rg2.redraw =  redraw;
   rg2.canvas = canvas;
   rg2.setUpCanvas = setUpCanvas;
@@ -886,7 +936,7 @@ var rg2 = (function (window, $) {
     RED_30 : 'rgba(255,0,0,0.3)',
     GREEN_30 : 'rgba(0,255,0,0.3)',
     WHITE : '#ffffff',
-    BLACK : '#ffoooo',
+    BLACK : '#000000',
     RUNNER_DOT_RADIUS : 6,
     HANDLE_DOT_RADIUS : 7,
     HANDLE_COLOUR: '#ff0000',
@@ -898,7 +948,7 @@ var rg2 = (function (window, $) {
     EVENT_WITHOUT_RESULTS : 2,
     SCORE_EVENT : 3,
     // version gets set automatically by grunt file during build process
-    RG2VERSION: '1.2.4',
+    RG2VERSION: '1.2.5',
     TIME_NOT_FOUND : 9999,
     // values for evt.which
     RIGHT_CLICK : 3,
@@ -919,7 +969,9 @@ var rg2 = (function (window, $) {
     circleSize : 20,
     snap : true,
     showThreeSeconds : false,
-    showGPSSpeed : false
+    showGPSSpeed : false,
+    // align map with next control at top when drawing route
+    alignMap: false
   };
 
   // translation function
@@ -944,8 +996,8 @@ var rg2 = (function (window, $) {
   function translateTitleProperties() {
     var i, selector, text;
     selector = ["#rg2-hide-info-panel-icon", '#btn-about', '#btn-options', '#btn-zoom-out', '#btn-zoom-in', '#btn-reset', '#btn-show-splits', '#rg2-splits-table', '#btn-slower',
-      '#btn-faster', '#btn-real-time', '#btn-mass-start'];
-    text = ["Hide info panel", 'Help', 'Options', 'Zoom out', 'Zoom in', 'Reset', 'Splits', 'Splits table', 'Slower', 'Faster', 'Real time', 'Mass start'];
+      '#btn-faster', '#btn-rotate-right', '#btn-rotate-left'];
+    text = ["Hide info panel", 'Help', 'Options', 'Zoom out', 'Zoom in', 'Reset', 'Splits', 'Splits table', 'Slower', 'Faster', 'Rotate right', 'Rotate-left'];
     for (i = 0; i < selector.length; i += 1) {
       $(selector[i]).prop('title', t(text[i]));
     }
@@ -955,9 +1007,11 @@ var rg2 = (function (window, $) {
     var i, selector, text;
     selector = ['label[for=rg2-control-select]', 'label[for=btn-full-tails]', 'label[for=spn-tail-length]', 'label[for=rg2-select-language]', 'label[for=spn-map-intensity]',
       'label[for=spn-route-intensity]', 'label[for=spn-route-width]', 'label[for=spn-name-font-size]', 'label[for=spn-course-width]', 'label[for=spn-control-circle]',
-      'label[for=chk-snap-toggle]', 'label[for=chk-show-three-seconds]', 'label[for=chk-show-GPS-speed]', 'label[for=rg2-course-select]', 'label[for=rg2-name-select]', 'label[for=btn-move-all]'];
+      'label[for=chk-snap-toggle]', 'label[for=chk-show-three-seconds]', 'label[for=chk-show-GPS-speed]', 'label[for=rg2-course-select]', 'label[for=rg2-name-select]',
+      'label[for=btn-move-all]', 'label[for=btn-align-map]'];
     text = ['Start at', 'Full tails', 'Length', 'Language', 'Map intensity %', 'Route intensity %', 'Route width', 'Replay label font size', 'Course overprint width', 'Control circle size',
-      'Snap to control when drawing', 'Show +3 time loss for GPS routes', 'Show GPS speed colours', 'Select course', 'Select name', 'Move track and map together (or right click-drag)'];
+      'Snap to control when drawing', 'Show +3 time loss for GPS routes', 'Show GPS speed colours', 'Select course', 'Select name', 'Move track and map together (or right click-drag)',
+      'Align map to next control'];
     for (i = 0; i < selector.length; i += 1) {
       $(selector[i]).prop('textContent', t(text[i]));
     }
@@ -1028,9 +1082,6 @@ var rg2 = (function (window, $) {
   function saveConfigOptions() {
     try {
       if ((window.hasOwnProperty('localStorage')) && (window.localStorage !== null)) {
-        this.options.snap = $("#chk-snap-toggle").prop('checked');
-        this.options.showThreeSeconds = $("#chk-show-three-seconds").prop('checked');
-        this.options.showGPSSpeed = $("#chk-show-GPS-speed").prop('checked');
         localStorage.setItem('rg2-options', JSON.stringify(this.options));
       }
     } catch (e) {
@@ -1081,23 +1132,12 @@ var rg2 = (function (window, $) {
     return opt;
   }
 
-  function getReplayDetails() {
-    var opt;
-    opt = {};
-    opt.routeWidth = this.options.routeWidth;
-    opt.routeIntensity = this.options.routeIntensity;
-    opt.replayFontSize = this.options.replayFontSize;
-    opt.showThreeSeconds = $("#chk-show-three-seconds").prop('checked');
-    opt.showGPSSpeed = $("#chk-show-GPS-speed").prop('checked');
-    return opt;
-  }
   rg2.t = t;
   rg2.options = options;
   rg2.config = config;
   rg2.saveConfigOptions = saveConfigOptions;
   rg2.setConfigOption = setConfigOption;
   rg2.loadConfigOptions = loadConfigOptions;
-  rg2.getReplayDetails = getReplayDetails;
   rg2.getOverprintDetails = getOverprintDetails;
   rg2.setDictionary = setDictionary;
   rg2.getDictionaryCode = getDictionaryCode;
@@ -1374,9 +1414,9 @@ var rg2 = (function (window, $) {
           this.textAngle[i] = rg2.utils.getAngle(c3x, c3y, c1x, c1y);
         }
       }
-      // not worried about angle for finish
-      this.angle[this.x.length - 1] = 0;
-      this.textAngle[this.x.length - 1] = 0;
+      // angle for finish aligns to north
+      this.angle[this.x.length - 1] = Math.PI * 1.5;
+      this.textAngle[this.x.length - 1] = Math.PI * 1.5;
     },
 
     drawCourse : function (intensity) {
@@ -1433,6 +1473,7 @@ var rg2 = (function (window, $) {
   };
   rg2.Course = Course;
 }());
+
 /*global rg2:false */
 (function () {
   function CourseParser(evt, worldfile, localWorldfile) {
@@ -1998,6 +2039,7 @@ var rg2 = (function (window, $) {
       // the RouteData versions of these have the start control removed for saving
       this.controlx = [];
       this.controly = [];
+      this.angles = [];
       this.nextControl = 0;
       this.isScoreCourse = false;
       this.gpstrack.initialiseGPS();
@@ -2058,6 +2100,9 @@ var rg2 = (function (window, $) {
       this.gpstrack.routeData.courseid = courseid;
       course = rg2.courses.getCourseDetails(courseid);
       this.isScoreCourse = course.isScoreCourse;
+      // save details for normal courses
+      // can't do this here for score courses since you need to know the
+      // variant for a given runner
       if (!this.isScoreCourse) {
         rg2.courses.putOnDisplay(courseid);
         this.gpstrack.routeData.coursename = course.name;
@@ -2069,6 +2114,7 @@ var rg2 = (function (window, $) {
         this.gpstrack.routeData.y[0] = this.controly[0];
         this.gpstrack.routeData.controlx = this.controlx;
         this.gpstrack.routeData.controly = this.controly;
+        this.angles = course.angle;
         this.nextControl = 1;
       }
       rg2.results.createNameDropdown(courseid);
@@ -2172,6 +2218,9 @@ var rg2 = (function (window, $) {
           this.nextControl = 1;
           rg2.redraw(false);
         }
+        // resetting it here avoids trying to start drawing before selecting
+        // a name, which is always what happened when testing the prototype
+        this.alignMapToAngle(0);
         this.startDrawing();
       }
     },
@@ -2210,9 +2259,29 @@ var rg2 = (function (window, $) {
       $("#rg2-load-gps-file").button('enable');
     },
 
+    alignMapToAngle : function (control) {
+      var angle;
+      if (rg2.options.alignMap) {
+        // don't adjust after we have got to the finish
+        if (control < (this.controlx.length - 1)) {
+          if (this.isScoreCourse) {
+            // need to calculate this here since score courses use variants for
+            // each person, not single courses
+            angle = rg2.utils.getAngle(this.controlx[control], this.controly[control],
+              this.controlx[control + 1], this.controly[control + 1]);
+          } else {
+            angle = this.angles[control];
+          }
+          // course angles are based on horizontal as 0: need to reset to north
+          rg2.alignMap(angle  + (Math.PI / 2), this.controlx[control], this.controly[control]);
+        }
+      }
+    },
+
     addNewPoint : function (x, y) {
       if (this.closeEnough(x, y)) {
         this.addRouteDataPoint(this.controlx[this.nextControl], this.controly[this.nextControl]);
+        this.alignMapToAngle(this.nextControl);
         this.nextControl += 1;
         if (this.nextControl === this.controlx.length) {
           $("#btn-save-route").button("enable");
@@ -2256,6 +2325,7 @@ var rg2 = (function (window, $) {
           if (this.nextControl > 1) {
             this.nextControl -= 1;
           }
+          this.alignMapToAngle(this.nextControl - 1);
         }
         this.gpstrack.routeData.x.pop();
         this.gpstrack.routeData.y.pop();
@@ -3632,14 +3702,14 @@ var rg2 = (function (window, $) {
       }
     },
 
-    drawTrack : function (opt) {
+    drawTrack : function () {
       var i, l, oldx, oldy, stopCount;
       if (this.displayTrack) {
-        if (this.isGPSTrack && opt.showGPSSpeed && (this.speedColour.length === 0)) {
+        if (this.isGPSTrack && rg2.options.showGPSSpeed && (this.speedColour.length === 0)) {
           // set speed colours if we haven't done it yet
           this.setSpeedColours();
         }
-        rg2.ctx.lineWidth = opt.routeWidth;
+        rg2.ctx.lineWidth = rg2.options.routeWidth;
         rg2.ctx.strokeStyle = this.trackColour;
         rg2.ctx.globalAlpha = rg2.options.routeIntensity;
         rg2.ctx.fillStyle = this.trackColour;
@@ -3660,7 +3730,7 @@ var rg2 = (function (window, $) {
           } else {
             // we have started moving again
             if (stopCount > 0) {
-              if (!this.isGPSTrack || (this.isGPSTrack && opt.showThreeSeconds)) {
+              if (!this.isGPSTrack || (this.isGPSTrack && rg2.options.showThreeSeconds)) {
                 rg2.ctx.fillText("+" + (3 * stopCount), oldx + 5, oldy + 5);
               }
               stopCount = 0;
@@ -3668,7 +3738,7 @@ var rg2 = (function (window, $) {
           }
           oldx = this.trackx[i];
           oldy = this.tracky[i];
-          if (this.isGPSTrack && opt.showGPSSpeed) {
+          if (this.isGPSTrack && rg2.options.showGPSSpeed) {
             // draw partial track since we need to keep changing colour
             rg2.ctx.strokeStyle = this.speedColour[i];
             rg2.ctx.stroke();
@@ -4332,10 +4402,9 @@ var rg2 = (function (window, $) {
             result.club = rg2.utils.extractTextContentZero(personlist[j].getElementsByTagName('ShortName'), '');
             resultlist = personlist[j].getElementsByTagName('Result');
             this.extractIOFV2Results(resultlist, result);
-            if (result.status === 'DidNotStart') {
-              break;
+            if (result.status !== 'DidNotStart') {
+              this.results.push(result);
             }
-            this.results.push(result);
           }
         }
       } catch (err) {
@@ -4412,6 +4481,7 @@ var rg2 = (function (window, $) {
   };
   rg2.ResultParserIOFV2 = ResultParserIOFV2;
 }());
+
 /*global rg2:false */
 (function () {
   function ResultParserIOFV3(xml) {
@@ -4462,7 +4532,9 @@ var rg2 = (function (window, $) {
             result.club = this.getClub(personlist[j].getElementsByTagName('Organisation'));
             resultlist = personlist[j].getElementsByTagName('Result');
             this.extractIOFV3Results(resultlist, result);
-            this.results.push(result);
+            if (result.status !== 'DidNotStart') {
+              this.results.push(result);
+            }
           }
         }
       } catch (err) {
@@ -4787,10 +4859,9 @@ var rg2 = (function (window, $) {
     },
 
     drawTracks : function () {
-      var i, opt;
-      opt = rg2.getReplayDetails();
+      var i;
       for (i = 0; i < this.results.length; i += 1) {
-        this.results[i].drawTrack(opt);
+        this.results[i].drawTrack();
         this.results[i].drawScoreCourse();
       }
     },
@@ -5448,15 +5519,20 @@ var rg2 = (function (window, $) {
           $("#spn-tail-length").spinner("enable");
         }
       });
-      $("#btn-mass-start").addClass('active').click(function () {
-        rg2.animation.setReplayType(rg2.config.MASS_START_REPLAY);
-      });
       $("#btn-move-all").prop('checked', false);
+      $("#btn-align-map").prop('checked', rg2.options.alignMap).click(function (event) {
+        if (event.target.checked) {
+          rg2.options.alignMap = true;
+        } else {
+          rg2.options.alignMap = false;
+        }
+        rg2.saveConfigOptions();
+      });
       $("#btn-options").click(function () {
         self.displayOptionsDialog();
       });
-      $("#btn-real-time").removeClass('active').click(function () {
-        rg2.animation.setReplayType(rg2.config.REAL_TIME_REPLAY);
+      $("#btn-real-time").click(function () {
+        rg2.animation.setReplayType();
       });
       $("#btn-reset").click(function () {
         rg2.resetMapState();
@@ -5512,6 +5588,12 @@ var rg2 = (function (window, $) {
       });
       $("#btn-zoom-out").click(function () {
         rg2.zoom(-1);
+      });
+      $("#btn-rotate-left").click(function () {
+        rg2.rotateMap(-1);
+      });
+      $("#btn-rotate-right").click(function () {
+        rg2.rotateMap(1);
       });
       $("#rg2-load-gps-file").button().button("disable");
     },
@@ -5821,10 +5903,20 @@ var rg2 = (function (window, $) {
           rg2.options.snap = false;
         }
       });
-      $("#chk-show-three-seconds").prop('checked', rg2.options.showThreeSeconds).click(function () {
+      $("#chk-show-three-seconds").prop('checked', rg2.options.showThreeSeconds).click(function (event) {
+        if (event.target.checked) {
+          rg2.options.showThreeSeconds = true;
+        } else {
+          rg2.options.showThreeSeconds = false;
+        }
         rg2.redraw(false);
       });
-      $("#chk-show-GPS-speed").prop('checked', rg2.options.showGPSSpeed).click(function () {
+      $("#chk-show-GPS-speed").prop('checked', rg2.options.showGPSSpeed).click(function (event) {
+        if (event.target.checked) {
+          rg2.options.showGPSSpeed = true;
+        } else {
+          rg2.options.showGPSSpeed = false;
+        }
         rg2.redraw(false);
       });
       $("#rg2-select-language").click(function () {
@@ -5895,6 +5987,7 @@ var rg2 = (function (window, $) {
   };
   rg2.ui = ui;
 }());
+
 /*global rg2:false */
 /*exported Runner */
 // animated runner details
