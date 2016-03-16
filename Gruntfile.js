@@ -23,7 +23,7 @@ module.exports = function(grunt) {
   var clubs = ['aire', 'bado', 'baoc', 'basoc', 'bko', 'boc', 'bok', 'bl', 'chig', 'claro', 'clok', 'clyde', 'coboc', 'cuoc', 'cvfr', 'darkandwhite', 'dee',
    'devonoc', 'ebor', 'ecko', 'elo', 'epoc', 'esoc', 'euoc', 'gmoa', 'gramp', 'go', 'happyherts', 'havoc', 'hoc', 'interlopers', 'invoc', 'jk',
    'kerno', 'kfo', 'lamm', 'leioc', 'loc', 'log', 'lok', 'lvo', 'maroc', 'mdoc', 'moravian', 'mvoc', 'nato', 'ngoc', 'noroc', 'nwo', 'od', 'omm', 'ouoc',
-   'pfo', 'pow', 'quantock', 'rafo', 'roxburghreivers', 'sa', 'sarum', 'scottish6days', 'seloc', 'slow', 'smbo', 'smoc', 'sn', 'so', 'soa', 'soc', 'solway',
+   'pfo', 'pow', 'quantock', 'rafo', 'roxburghreivers', 'sa', 'sarum', 'saxons', 'scottish6days', 'seloc', 'slow', 'smbo', 'smoc', 'sn', 'so', 'soa', 'soc', 'solway',
    'sportident', 'sroc', 'stag', 'start', 'suffoc', 'swoc', 'syo', 'tay', 'test', 'purple-thistle', 'tinto', 'tvoc', 'walton', 'waoc', 'wcoc', 'wim', 'wmoc',
    'wrekin', 'wsco', 'wsco2008', 'wsoe', 'wsx'];
 
@@ -468,6 +468,12 @@ module.exports = function(grunt) {
         expand : true,
         src : '**',
         dest : 'ftpsite/sarum/rg2/'
+      },
+      saxons : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/saxons/rg2/'
       },
       scottish6days : {
         cwd : 'rel/',

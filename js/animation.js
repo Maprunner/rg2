@@ -254,18 +254,17 @@
       this.resetAnimationTime(0);
     },
 
-    setReplayType : function (type) {
-      if (type === rg2.config.MASS_START_REPLAY) {
+    setReplayType : function () {
+      // toggles between mass start and real time
+      if (this.realTime) {
         this.realTime = false;
-        $("#btn-mass-start").addClass('active');
-        $("#btn-real-time").removeClass('active');
+        $("#btn-real-time").removeClass().addClass('fa fa-users').prop('title', rg2.t('Mass start'));
         if (rg2.courses.getHighestControlNumber() > 0) {
           $("#rg2-control-select").prop('disabled', false);
         }
       } else {
         this.realTime = true;
-        $("#btn-mass-start").removeClass('active');
-        $("#btn-real-time").addClass('active');
+        $("#btn-real-time").removeClass().addClass('fa fa-clock-o').prop('title', rg2.t('Real time'));
         $("#rg2-control-select").prop('disabled', true);
       }
       // go back to start
@@ -320,16 +319,26 @@
     displayName : function (runner, time) {
       var text;
       if (this.displayNames) {
-        rg2.ctx.fillStyle = "black";
-        rg2.ctx.font = rg2.options.replayFontSize + 'pt Arial';
-        rg2.ctx.globalAlpha = rg2.config.FULL_INTENSITY;
-        rg2.ctx.textAlign = "left";
-        if (this.displayInitials) {
-          text = runner.initials;
-        } else {
-          text = runner.name;
+        // make sure we have a valid position to display
+        if ((time < runner.x.length) && (time >= 0)) {
+          rg2.ctx.fillStyle = "black";
+          rg2.ctx.font = rg2.options.replayFontSize + 'pt Arial';
+          rg2.ctx.globalAlpha = rg2.config.FULL_INTENSITY;
+          rg2.ctx.textAlign = "left";
+          if (this.displayInitials) {
+            text = runner.initials;
+          } else {
+            text = runner.name;
+          }
+          rg2.ctx.save();
+          // centre map on runner location
+          rg2.ctx.translate(runner.x[time], runner.y[time]);
+          // rotate map so that text stays horizontal
+          rg2.ctx.rotate(rg2.ctx.displayAngle);
+          // no real science: offsets just look OK
+          rg2.ctx.fillText(text, 12, 6);
+          rg2.ctx.restore();
         }
-        rg2.ctx.fillText(text, runner.x[time] + 15, runner.y[time] + 7);
       }
     },
 
@@ -360,8 +369,7 @@
       $("#rg2-clock-slider").slider("value", this.animationSecs);
       $("#rg2-clock").text(rg2.utils.formatSecsAsHHMMSS(this.animationSecs));
       rg2.ctx.lineWidth = rg2.options.routeWidth;
-      t = rg2.options.routeWidth;
-      rg2.ctx.globalAlpha = 1.0;
+      rg2.ctx.globalAlpha = rg2.config.FULL_INTENSITY;
       for (i = 0; i < this.runners.length; i += 1) {
         runner = this.runners[i];
         if (this.realTime) {
@@ -388,14 +396,19 @@
           }
         }
         rg2.ctx.stroke();
-        rg2.ctx.fillStyle = runner.colour;
+
         rg2.ctx.beginPath();
         if ((t - timeOffset) < runner.nextStopTime) {
           t = t - timeOffset;
         } else {
           t = runner.nextStopTime;
         }
-        rg2.ctx.arc(runner.x[t] + (rg2.config.RUNNER_DOT_RADIUS / 2), runner.y[t], rg2.config.RUNNER_DOT_RADIUS, 0, 2 * Math.PI, false);
+        rg2.ctx.arc(runner.x[t], runner.y[t], rg2.config.RUNNER_DOT_RADIUS,
+          0, 2 * Math.PI, false);
+        rg2.ctx.globalAlpha = rg2.config.FULL_INTENSITY;
+        rg2.ctx.strokeStyle = rg2.config.BLACK;
+        rg2.ctx.stroke();
+        rg2.ctx.fillStyle = runner.colour;
         rg2.ctx.fill();
         this.displayName(runner, t);
       }

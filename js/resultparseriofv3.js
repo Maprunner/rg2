@@ -48,7 +48,9 @@
             result.club = this.getClub(personlist[j].getElementsByTagName('Organisation'));
             resultlist = personlist[j].getElementsByTagName('Result');
             this.extractIOFV3Results(resultlist, result);
-            this.results.push(result);
+            if (result.status !== 'DidNotStart') {
+              this.results.push(result);
+            }
           }
         }
       } catch (err) {

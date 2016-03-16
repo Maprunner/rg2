@@ -111,14 +111,14 @@
       }
     },
 
-    drawTrack : function (opt) {
+    drawTrack : function () {
       var i, l, oldx, oldy, stopCount;
       if (this.displayTrack) {
-        if (this.isGPSTrack && opt.showGPSSpeed && (this.speedColour.length === 0)) {
+        if (this.isGPSTrack && rg2.options.showGPSSpeed && (this.speedColour.length === 0)) {
           // set speed colours if we haven't done it yet
           this.setSpeedColours();
         }
-        rg2.ctx.lineWidth = opt.routeWidth;
+        rg2.ctx.lineWidth = rg2.options.routeWidth;
         rg2.ctx.strokeStyle = this.trackColour;
         rg2.ctx.globalAlpha = rg2.options.routeIntensity;
         rg2.ctx.fillStyle = this.trackColour;
@@ -139,7 +139,7 @@
           } else {
             // we have started moving again
             if (stopCount > 0) {
-              if (!this.isGPSTrack || (this.isGPSTrack && opt.showThreeSeconds)) {
+              if (!this.isGPSTrack || (this.isGPSTrack && rg2.options.showThreeSeconds)) {
                 rg2.ctx.fillText("+" + (3 * stopCount), oldx + 5, oldy + 5);
               }
               stopCount = 0;
@@ -147,7 +147,7 @@
           }
           oldx = this.trackx[i];
           oldy = this.tracky[i];
-          if (this.isGPSTrack && opt.showGPSSpeed) {
+          if (this.isGPSTrack && rg2.options.showGPSSpeed) {
             // draw partial track since we need to keep changing colour
             rg2.ctx.strokeStyle = this.speedColour[i];
             rg2.ctx.stroke();

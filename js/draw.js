@@ -105,6 +105,7 @@
       // the RouteData versions of these have the start control removed for saving
       this.controlx = [];
       this.controly = [];
+      this.angles = [];
       this.nextControl = 0;
       this.isScoreCourse = false;
       this.gpstrack.initialiseGPS();
@@ -165,6 +166,9 @@
       this.gpstrack.routeData.courseid = courseid;
       course = rg2.courses.getCourseDetails(courseid);
       this.isScoreCourse = course.isScoreCourse;
+      // save details for normal courses
+      // can't do this here for score courses since you need to know the
+      // variant for a given runner
       if (!this.isScoreCourse) {
         rg2.courses.putOnDisplay(courseid);
         this.gpstrack.routeData.coursename = course.name;
@@ -176,6 +180,7 @@
         this.gpstrack.routeData.y[0] = this.controly[0];
         this.gpstrack.routeData.controlx = this.controlx;
         this.gpstrack.routeData.controly = this.controly;
+        this.angles = course.angle;
         this.nextControl = 1;
       }
       rg2.results.createNameDropdown(courseid);
@@ -279,6 +284,9 @@
           this.nextControl = 1;
           rg2.redraw(false);
         }
+        // resetting it here avoids trying to start drawing before selecting
+        // a name, which is always what happened when testing the prototype
+        this.alignMapToAngle(0);
         this.startDrawing();
       }
     },
@@ -317,9 +325,29 @@
       $("#rg2-load-gps-file").button('enable');
     },
 
+    alignMapToAngle : function (control) {
+      var angle;
+      if (rg2.options.alignMap) {
+        // don't adjust after we have got to the finish
+        if (control < (this.controlx.length - 1)) {
+          if (this.isScoreCourse) {
+            // need to calculate this here since score courses use variants for
+            // each person, not single courses
+            angle = rg2.utils.getAngle(this.controlx[control], this.controly[control],
+              this.controlx[control + 1], this.controly[control + 1]);
+          } else {
+            angle = this.angles[control];
+          }
+          // course angles are based on horizontal as 0: need to reset to north
+          rg2.alignMap(angle  + (Math.PI / 2), this.controlx[control], this.controly[control]);
+        }
+      }
+    },
+
     addNewPoint : function (x, y) {
       if (this.closeEnough(x, y)) {
         this.addRouteDataPoint(this.controlx[this.nextControl], this.controly[this.nextControl]);
+        this.alignMapToAngle(this.nextControl);
         this.nextControl += 1;
         if (this.nextControl === this.controlx.length) {
           $("#btn-save-route").button("enable");
@@ -363,6 +391,7 @@
           if (this.nextControl > 1) {
             this.nextControl -= 1;
           }
+          this.alignMapToAngle(this.nextControl - 1);
         }
         this.gpstrack.routeData.x.pop();
         this.gpstrack.routeData.y.pop();

@@ -256,10 +256,9 @@
     },
 
     drawTracks : function () {
-      var i, opt;
-      opt = rg2.getReplayDetails();
+      var i;
       for (i = 0; i < this.results.length; i += 1) {
-        this.results[i].drawTrack(opt);
+        this.results[i].drawTrack();
         this.results[i].drawScoreCourse();
       }
     },

@@ -5,6 +5,7 @@
   canvas = $("#rg2-map-canvas")[0];
   ctx = canvas.getContext('2d');
   map = new Image();
+  ctx.displayAngle = 0;
 
   function loadNewMap(mapFile) {
     $("#rg2-map-load-progress-label").text(rg2.t("Loading map"));
@@ -38,7 +39,6 @@
     ctx.restore();
     // set transparency of map
     ctx.globalAlpha = rg2.options.mapIntensity;
-
     if (map.height > 0) {
       // using non-zero map height to show we have a map loaded
       ctx.drawImage(map, 0, 0);
@@ -68,6 +68,40 @@
     }
   }
 
+  function applyMapRotation(angle, x, y, moveMap) {
+    var pt;
+    // save new absolute angle
+    ctx.displayAngle = (ctx.displayAngle - angle) % (Math.PI * 2);
+    // rotate around given co-ordinates
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    if (moveMap) {
+      // move map so that given point is centre-bottom of screen
+      pt = ctx.transformedPoint((canvas.width / 2), (canvas.height * 0.9));
+      ctx.translate(pt.x - x, pt.y - y);
+    } else {
+      // put map back where it started
+      ctx.translate(-1 * x, -1 * y);
+    }
+    ctx.save();
+    redraw(false);
+  }
+
+  function rotateMap(direction) {
+    // rotate a little bit from UI control input
+    // direction is -1 for left and 1 for right
+    var angle;
+    angle = direction * (Math.PI / 36);
+    // rotate around centre of map
+    applyMapRotation(angle, (map.width / 2), (map.height / 2), false);
+  }
+
+  function alignMap(angle, x, y) {
+    // align to an absolute angle: 0 is up/north
+    // rotate around defined x, y
+    applyMapRotation((ctx.displayAngle - angle) % (Math.PI * 2), x, y, true);
+  }
+
   function resetMapState() {
     // place map in centre of canvas and scale it down to fit
     var mapscale, heightscale;
@@ -91,6 +125,8 @@
     } else {
       ctx.setTransform(mapscale, 0, 0, mapscale, 0, 0);
     }
+    // don't need to rotate here since the call to setTransform above does that for us
+    ctx.displayAngle = 0;
     ctx.save();
     redraw(false);
   }
@@ -139,10 +175,8 @@
     }
   }
 
-  // Adds ctx.getTransform() - returns an SVGMatrix
-  // Adds ctx.transformedPoint(x,y) - returns an SVGPoint
   function trackTransforms(ctx) {
-    var xform, svg, savedTransforms, save, restore, scale, translate, setTransform, pt;
+    var xform, svg, savedTransforms, save, restore, scale, translate, setTransform, pt, rotate;
     svg = document.createElementNS("http://www.w3.org/2000/svg", 'svg');
     xform = svg.createSVGMatrix();
     savedTransforms = [];
@@ -178,11 +212,11 @@
     };
     pt = svg.createSVGPoint();
     ctx.transformedPoint = function (x, y) {
+      // converts x, y screen co-ords to x, y in map image
       pt.x = x;
       pt.y = y;
       return pt.matrixTransform(xform.inverse());
     };
-    // don't need these functions at present
     //ctx.getTransform = function () {
     //  return xform;
     //};
@@ -198,11 +232,11 @@
     //  xform = xform.multiply(m2);
     //  return transform.call(ctx, a, b, c, d, e, f);
     //};
-    //rotate = ctx.rotate;
-    //ctx.rotate = function (radians) {
-    //  xform = xform.rotate(radians * 180 / Math.PI);
-    //  return rotate.call(ctx, radians);
-    //};
+    rotate = ctx.rotate;
+    ctx.rotate = function (radians) {
+      xform = xform.rotate(radians * 180 / Math.PI);
+      return rotate.call(ctx, radians);
+    };
   }
 
   function getMapSize() {
@@ -249,6 +283,8 @@
     resizeCanvas();
   }
   rg2.zoom = zoom;
+  rg2.rotateMap = rotateMap;
+  rg2.alignMap = alignMap;
   rg2.redraw =  redraw;
   rg2.canvas = canvas;
   rg2.setUpCanvas = setUpCanvas;
