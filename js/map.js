@@ -87,12 +87,12 @@
 
     // use worldfile to generate longitude
     getLon : function (x, y) {
-      return Math.round((this.A * x) + (this.B * y) + this.C);
+      return (this.A * x) + (this.B * y) + this.C;
     },
 
     // use worldfile to generate latitude
     getLat : function (x, y) {
-      return Math.round((this.D * x) + (this.E * y) + this.F);
+      return (this.D * x) + (this.E * y) + this.F;
     }
 
   };

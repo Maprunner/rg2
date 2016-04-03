@@ -1271,8 +1271,8 @@
         p = [];
         for (i = 0; i < 4; i += 1) {
           pt = {};
-          pt.x = parseInt(xsrc[i] + 0.5, 10);
-          pt.y = parseInt(ysrc[i] + 0.5, 10);
+          pt.x = xsrc[i];
+          pt.y = ysrc[i];
           p.push(pt);
           Proj4js.transform(source, dest, p[i]);
           this.newMap.xpx.push(xpx[i]);
