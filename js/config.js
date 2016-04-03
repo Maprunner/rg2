@@ -32,6 +32,7 @@
     PURPLE : '#b300ff',
     RED : '#ff0000',
     GREEN : '#00ff00',
+    GREY : '#e0e0e0',
     RED_30 : 'rgba(255,0,0,0.3)',
     GREEN_30 : 'rgba(0,255,0,0.3)',
     WHITE : '#ffffff',
