@@ -404,6 +404,8 @@
         }
         html += '<tr><td>' + res.position + '</td>';
         if (res.comments !== "") {
+          // #304 make sure double quotes show up
+          res.comments = res.comments.replace(/"/g, '&quot;');
           html += '<td><a href="#" title="' + res.comments + '">' + this.getNameHTML(res, i) + "</a></td><td>" + res.time + "</td>";
         } else {
           html += "<td>" + this.getNameHTML(res, i) + "</td><td>" + res.time + "</td>";
