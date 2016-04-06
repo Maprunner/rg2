@@ -1,4 +1,4 @@
-// Version 1.2.5 2016-03-16T18:43:27;
+// Version 1.2.6 2016-04-06T18:20:54;
 /*
  * Routegadget 2
  * https://github.com/Maprunner/rg2
@@ -636,7 +636,7 @@ var rg2 = (function (window, $) {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     // fill canvas to erase things: clearRect doesn't work on Android (?) and leaves the old map as background when changing
     ctx.globalAlpha = rg2.config.FULL_INTENSITY;
-    ctx.fillStyle = rg2.config.WHITE;
+    ctx.fillStyle = rg2.config.GREY;
     ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     // go back to where we started
     ctx.restore();
@@ -933,6 +933,7 @@ var rg2 = (function (window, $) {
     PURPLE : '#b300ff',
     RED : '#ff0000',
     GREEN : '#00ff00',
+    GREY : '#e0e0e0',
     RED_30 : 'rgba(255,0,0,0.3)',
     GREEN_30 : 'rgba(0,255,0,0.3)',
     WHITE : '#ffffff',
@@ -948,7 +949,7 @@ var rg2 = (function (window, $) {
     EVENT_WITHOUT_RESULTS : 2,
     SCORE_EVENT : 3,
     // version gets set automatically by grunt file during build process
-    RG2VERSION: '1.2.5',
+    RG2VERSION: '1.2.6',
     TIME_NOT_FOUND : 9999,
     // values for evt.which
     RIGHT_CLICK : 3,
@@ -3528,12 +3529,12 @@ var rg2 = (function (window, $) {
 
     // use worldfile to generate longitude
     getLon : function (x, y) {
-      return Math.round((this.A * x) + (this.B * y) + this.C);
+      return (this.A * x) + (this.B * y) + this.C;
     },
 
     // use worldfile to generate latitude
     getLat : function (x, y) {
-      return Math.round((this.D * x) + (this.E * y) + this.F);
+      return (this.D * x) + (this.E * y) + this.F;
     }
 
   };
@@ -5007,6 +5008,8 @@ var rg2 = (function (window, $) {
         }
         html += '<tr><td>' + res.position + '</td>';
         if (res.comments !== "") {
+          // #304 make sure double quotes show up
+          res.comments = res.comments.replace(/"/g, '&quot;');
           html += '<td><a href="#" title="' + res.comments + '">' + this.getNameHTML(res, i) + "</a></td><td>" + res.time + "</td>";
         } else {
           html += "<td>" + this.getNameHTML(res, i) + "</td><td>" + res.time + "</td>";
