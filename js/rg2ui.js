@@ -522,9 +522,9 @@
         $('#rg2-event-ul').empty();
         var valThis = $(this).val().toLowerCase();
         if (valThis === "") {
-          this.event_list_li.appendTo("#rg2-event-ul");
+          rg2.ui.event_list_li.appendTo("#rg2-event-ul");
         } else {
-          this.event_list_li.each(function () {
+          rg2.ui.event_list_li.each(function () {
             text = $(this).text().toLowerCase();
             if (text.indexOf(valThis) >= 0) {
               $(this).appendTo('#rg2-event-ul');
@@ -598,6 +598,7 @@
       this.setUIEventHandlers();
       this.initialiseButtons();
       this.initialiseSpinners();
+
     }
   };
   rg2.ui = ui;
