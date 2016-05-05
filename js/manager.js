@@ -53,8 +53,8 @@
       var self;
       self = this;
       $("#btn-login").button();
-      $("rg2-manager-courses").hide();
-      $("rg2-manager-results").hide();
+      $("#rg2-manage-courses").hide();
+      $("#rg2-manage-results").hide();
       $("#rg2-manager-login-form").submit(function () {
         var validUser;
         validUser = self.user.setDetails($("#rg2-user-name").val(), $("#rg2-password").val());
@@ -117,13 +117,13 @@
       $("#btn-draw-courses").button().click(function () {
         self.startDrawingCourses();
       });
-      $("#rg2-load-georef-file").button().change(function (evt) {
+      $("#rg2-load-georef-file").val("").button().change(function (evt) {
         self.readGeorefFile(evt);
       });
-      $("#rg2-load-map-file").button().change(function (evt) {
+      $("#rg2-load-map-file").val("").button().change(function (evt) {
         self.readMapFile(evt);
       });
-      $("#rg2-load-results-file").button().click(function (evt) {
+      $("#rg2-load-results-file").val("").button().click(function (evt) {
         if (!self.mapLoaded) {
           rg2.utils.showWarningDialog("No map loaded", "Please load a map file before adding results.");
           evt.preventDefault();
@@ -139,7 +139,7 @@
       $("#btn-no-results").click(function (evt) {
         self.toggleResultsRequired(evt.target.checked);
       });
-      $("#rg2-load-course-file").button().click(function (evt) {
+      $("#rg2-load-course-file").val("").button().click(function (evt) {
         if (!self.mapLoaded) {
           rg2.utils.showWarningDialog("No map loaded", "Please load a map file before adding courses.");
           evt.preventDefault();
@@ -199,6 +199,10 @@
 
       $("#rg2-map-name").on("change", function () {
         self.setMapName();
+      });
+
+      $("#rg2-map-copyright").on("change", function () {
+        self.setMapCopyright();
       });
 
       $("#rg2-club-name").on("change", function () {
@@ -370,7 +374,7 @@
       data.mapid = this.maps[this.mapIndex].mapid;
       data.eventdate = this.eventDate;
       text = $("#rg2-event-comments").val();
-      if (text === rg2.config.DEFAULT_EVENT_COMMENT) {
+      if (text === rg2.t(rg2.config.DEFAULT_EVENT_COMMENT)) {
         data.comments = "";
       } else {
         data.comments = text;
@@ -658,6 +662,9 @@
           self.user.y = data.keksi;
           if (data.ok) {
             rg2.utils.showWarningDialog("Route deleted", "Route " + routeid + " has been deleted.");
+            // delete route from the list
+            rg2.results.deleteResult(parseInt(routeid, 10));
+            rg2.managerUI.createRouteDeleteDropdown(id);
           } else {
             rg2.utils.showWarningDialog("Delete failed", data.status_msg + ". Delete failed. Please try again.");
           }
@@ -1000,6 +1007,10 @@
       } else {
         $("#rg2-select-map-name").removeClass('valid');
       }
+    },
+
+    setMapCopyright : function () {
+      this.newMap.copyright = $("#rg2-map-copyright").val();
     },
 
     setDate : function (date) {

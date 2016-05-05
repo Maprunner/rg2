@@ -14,7 +14,7 @@
 
     initialiseUI : function () {
       var items;
-      items = ["#rg2-animation-controls", "#rg2-create-tab", "#rg2-edit-tab", "#rg2-map-tab", "#rg2-draw-tab", "#rg2-results-tab", "#rg2-courses-tab", "#rg2-events-tab"];
+      items = ["#rg2-animation-controls", "#rg2-create-tab", "#rg2-edit-tab", "#rg2-map-tab", "#rg2-draw-tab", "#rg2-results-tab", "#rg2-courses-tab", "#rg2-events-tab", "#rg2-hide-info-panel-control"];
       this.showItems(items, false);
       $("#rg2-manage-login").show();
       $("#rg2-info-panel").tabs("disable", rg2.config.TAB_EVENTS).tabs("option", "active", rg2.config.TAB_LOGIN);
@@ -24,7 +24,7 @@
       var items;
       items = ["#rg2-draw-courses", "#rg2-manage-login", "#rg2-login-tab"];
       this.showItems(items, false);
-      items = ["#rg2-manage-create", "#rg2-create-tab", "#rg2-edit-tab", "#rg2-map-tab"];
+      items = ["#rg2-manage-create", "#rg2-create-tab", "#rg2-edit-tab", "#rg2-map-tab", "#rg2-hide-info-panel-control"];
       this.showItems(items, true);
       $("#rg2-event-date-edit").datepicker({
         dateFormat : 'yy-mm-dd'
@@ -32,7 +32,7 @@
       $('#rg2-event-comments').focus(function () {
         // Clear comment box if user focuses on it and it still contains default text
         var text = $("#rg2-event-comments").val();
-        if (text === rg2.config.DEFAULT_EVENT_COMMENT) {
+        if (text === rg2.t(rg2.config.EFAULT_EVENT_COMMENT)) {
           $('#rg2-event-comments').val("");
         }
       });

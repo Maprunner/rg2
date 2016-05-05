@@ -45,7 +45,7 @@
       cache : false
     }).done(function (json) {
       var active, i, event, routes, crs;
-      $("#rg2-load-progress-label").text(rg2.t("Saving routes"));
+      $("#rg2-load-progress-label").text(rg2.t("Loading routes"));
       console.log("Tracks: " + json.data.routes.length);
       // TODO remove temporary (?) fix to get round RG1 events with no courses defined: see #179
       if (rg2.courses.getNumberOfCourses() > 0) {
@@ -122,7 +122,7 @@
         rg2.results.generateScoreCourses();
         rg2.courses.generateControlList(rg2.controls);
       }
-      $("#rg2-result-list").accordion("refresh");
+      $("#rg2-result-table").accordion("refresh");
       getGPSTracks();
     }).fail(function (jqxhr, textStatus, error) {
       /*jslint unparam:true*/

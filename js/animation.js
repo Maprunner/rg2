@@ -368,6 +368,8 @@
       tailStartTimeSecs = this.setAnimationTime(fromTimer);
       $("#rg2-clock-slider").slider("value", this.animationSecs);
       $("#rg2-clock").text(rg2.utils.formatSecsAsHHMMSS(this.animationSecs));
+      rg2.ctx.lineCap = "round";
+      rg2.ctx.lineJoin = "round";
       rg2.ctx.lineWidth = rg2.options.routeWidth;
       rg2.ctx.globalAlpha = rg2.config.FULL_INTENSITY;
       for (i = 0; i < this.runners.length; i += 1) {

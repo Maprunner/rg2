@@ -55,7 +55,7 @@
             rg2.utils.showWarningDialog('GPS file problem', 'File type not recognised. Please check you have selected the correct file.');
             return;
           }
-          $("#rg2-load-gps-file").button('disable');
+          //$("#rg2-load-gps-file").button('disable');
           self.xml = $.parseXML(evt.target.result);
           self.processGPSFile();
         } catch (err) {
@@ -237,7 +237,7 @@
         }
       }
       $("#btn-autofit-gps").button("disable");
-      $("#btn-undo-gps-adjust").button("disable");
+      $("#btn-undo-gps-adjust").button("enable");
       rg2.redraw(false);
     },
 
@@ -260,8 +260,9 @@
           }
         }
       }
-      bestGuess = 0;
-      for (i = 1; i < speedAtControl.length; i += 1) {
+      bestGuess = range; // in the middle of the range
+      speedAtControl[bestGuess] = speedAtControl[bestGuess] * 0.7; // higher rate for initial middle range value
+      for (i = 0; i < speedAtControl.length; i += 1) {
         if (speedAtControl[i] < speedAtControl[bestGuess]) {
           bestGuess = i;
         }

@@ -82,6 +82,14 @@
     return str;
   }
 
+  function setTextContents($elem, text) {
+    $elem.contents().filter(function () {
+      if (this.nodeType === 3) {
+        this.nodeValue = text;
+      }
+    });
+    //$elem.contents().filter(function () { return this.nodeType === 3; })[0].nodeValue = text;
+  }
   function translateTextFields() {
     var i, selector, text;
     selector = ["#rg2-events-tab a", "#rg2-courses-tab a", "#rg2-results-tab a", "#rg2-draw-tab a", '#rg2-draw-title', '#draw-text-1', '#draw-text-2', '#draw-text-3',
@@ -89,7 +97,7 @@
     text = ['Events', 'Courses', 'Results', 'Draw', 'Draw route', 'Left click to add/lock/unlock a handle', 'Green - draggable', 'Red - locked', 'Right click to delete a handle',
       'Drag a handle to adjust track around locked point(s)', 'Load GPS file (GPX or TCX)', 'Configuration options'];
     for (i = 0; i < selector.length; i += 1) {
-      $(selector[i]).text(t(text[i]));
+      setTextContents($(selector[i]), t(text[i]));
     }
   }
 

@@ -365,6 +365,17 @@
       this.results.length = 0;
     },
 
+    deleteResult : function (resultid) {
+      var i;
+      for (i = 0; i < this.results.length; i += 1) {
+        if (resultid === this.results[i].resultid) {
+          this.results.splice(i, 1);
+          return true;
+        }
+      }
+      return false;
+    },
+
     sortByCourseIDThenResultID : function (a, b) {
       // sorts GPS results to be immediately after the associated main id
       if (a.courseid > b.courseid) {
@@ -438,7 +449,8 @@
     getCourseHeader : function (result) {
       var html;
       html = "<h3>" + result.coursename + "<input class='showcourse' id=" + result.courseid + " type=checkbox name=course title='Show course'></input></h3><div>";
-      html += "<table class='resulttable'><tr><th></th><th>" + rg2.t("Name") + "</th><th>" + rg2.t("Time") + "</th><th><i class='fa fa-pencil'></i></th><th><i class='fa fa-play'></i></th></tr>";
+      html += "<table class='resulttable' data-role='table' id='movie-table'>";
+      html += "<tr><th></th><th>" + rg2.t("Name") + "</th><th>" + rg2.t("Time") + "</th><th><i class='fa fa-pencil'></i></th><th><i class='fa fa-play'></i></th></tr>";
       return html;
     },
 
