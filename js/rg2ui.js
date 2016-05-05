@@ -23,7 +23,7 @@
 
     setNewLanguage : function (dict) {
       var eventid;
-      $("#rg2-event-list").menu("destroy");
+      $("#rg2-event-ul").menu("destroy");
       rg2.setDictionary(dict);
       this.createEventMenu();
       eventid = rg2.events.getActiveEventID();
@@ -76,6 +76,11 @@
         dialogClass : "rg2-options-dialog",
         close : function () {
           rg2.saveConfigOptions();
+        },
+        buttons : {
+          Ok : function () {
+            $(this).dialog("close");
+          }
         }
       });
     },
@@ -174,7 +179,7 @@
       $("#btn-rotate-right").click(function () {
         rg2.rotateMap(1);
       });
-      $("#rg2-load-gps-file").button().button("disable");
+      $("#rg2-load-gps-file").val('').button().button("disable");
     },
 
     setResultCheckboxes : function () {
@@ -264,8 +269,8 @@
       var html = rg2.results.formatResultListAsAccordion();
       // #177 not pretty but gets round problems of double encoding
       html = html.replace(/&amp;/g, '&');
-      $("#rg2-result-list").empty().append(html);
-      $("#rg2-result-list").accordion("refresh");
+      $("#rg2-result-table").empty().append(html);
+      $("#rg2-result-table").accordion("refresh");
       $("#rg2-info-panel").tabs("refresh");
       this.setResultCheckboxes();
       // disable control dropdown if we have no controls
@@ -433,16 +438,18 @@
       $("#spn-offset").spinner("value", offset).spinner("enable");
     },
 
+    event_list_li : [],
     createEventMenu : function () {
       //loads menu from populated events array
       var html = rg2.events.formatEventsAsMenu();
-      $("#rg2-event-list").empty().append(html).menu({
+      $("#rg2-event-ul").empty().append(html).menu({
         select : function (event, ui) {
           /*jslint unparam:true*/
           rg2.loadEvent(ui.item[0].id);
           rg2.requestedHash.setNewEvent(rg2.events.getKartatEventID());
         }
       });
+      this.event_list_li = $('#rg2-event-ul > li').clone();
     },
 
     setUIEventHandlers : function () {
@@ -511,6 +518,35 @@
       $("#rg2-load-gps-file").change(function (evt) {
         rg2.drawing.uploadGPS(evt);
       });
+      $('#filter-events-input').keyup(function () {
+        $('#rg2-event-ul').empty();
+        var valThis = $(this).val().toLowerCase();
+        if (valThis === "") {
+          this.event_list_li.appendTo("#rg2-event-ul");
+        } else {
+          this.event_list_li.each(function () {
+            text = $(this).text().toLowerCase();
+            if (text.indexOf(valThis) >= 0) {
+              $(this).appendTo('#rg2-event-ul');
+            }
+          });
+        }
+      });
+      $('#filter-result-input').keyup(function () {
+        var valThis = $(this).val().toLowerCase();
+        if (valThis === "") {
+          $('#rg2-result-table tr').show();
+        } else {
+          $('#rg2-result-table tr').each(function () {
+            text = $(this).find('td').eq(1).text().toLowerCase();
+            if (text.indexOf(valThis) >= 0) {
+              $(this).show();
+            } else {
+              $(this).hide();
+            }
+          });
+        }
+      });
     },
 
     configureUI : function () {
@@ -529,7 +565,7 @@
           self.tabActivated();
         }
       });
-      $("#rg2-result-list").accordion({
+      $("#rg2-result-table").accordion({
         collapsible : true,
         heightStyle : "content"
       });

@@ -57,6 +57,8 @@
       var scale, metrics, xoffset, yoffset;
       //Draw the white halo around the controls
       rg2.ctx.beginPath();
+      rg2.ctx.lineCap = "round";
+      rg2.ctx.lineJoin = "miter";
       rg2.ctx.strokeStyle = "white";
       rg2.ctx.lineWidth = opt.overprintWidth + 2;
       rg2.ctx.arc(x, y, opt.controlRadius, 0, 2 * Math.PI, false);
@@ -67,7 +69,6 @@
       rg2.ctx.font = opt.font;
       rg2.ctx.strokeStyle = "white";
       rg2.ctx.miterLimit = 2;
-      rg2.ctx.lineJoin = "circle";
       rg2.ctx.lineWidth = 1.5;
       rg2.ctx.textBaseline = "middle";
       metrics = rg2.ctx.measureText(code);
@@ -100,6 +101,8 @@
 
     drawFinish : function (x, y, code, opt) {
       //Draw the white halo around the finish control
+      rg2.ctx.lineCap = "round";
+      rg2.ctx.lineJoin = "miter";
       rg2.ctx.strokeStyle = "white";
       rg2.ctx.lineWidth = opt.overprintWidth + 2;
       rg2.ctx.beginPath();
@@ -114,7 +117,6 @@
       rg2.ctx.textAlign = "left";
       rg2.ctx.strokeStyle = "white";
       rg2.ctx.miterLimit = 2;
-      rg2.ctx.lineJoin = "circle";
       rg2.ctx.lineWidth = 1.5;
       rg2.ctx.strokeText(code, x + (opt.controlRadius * 1.5), y + opt.controlRadius);
       rg2.ctx.stroke();
@@ -137,7 +139,8 @@
       y = [];
       DEGREES_120 = (2 * Math.PI / 3);
       angle = angle + (Math.PI / 2);
-      rg2.ctx.lineCap = 'round';
+      rg2.ctx.lineCap = "round";
+      rg2.ctx.lineJoin = "round"; //miter
       rg2.ctx.strokeStyle = "white";
       rg2.ctx.lineWidth = opt.overprintWidth + 2;
       rg2.ctx.beginPath();
@@ -164,7 +167,7 @@
       rg2.ctx.textAlign = "left";
       rg2.ctx.strokeStyle = "white";
       rg2.ctx.miterLimit = 2;
-      rg2.ctx.lineJoin = "circle";
+      rg2.ctx.lineJoin = "round";
       rg2.ctx.lineWidth = 1.5;
       rg2.ctx.strokeText(code, x[0] + (opt.controlRadius * 1.25), y[0] + (opt.controlRadius * 1.25));
       rg2.ctx.stroke();

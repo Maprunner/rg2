@@ -118,6 +118,8 @@
           // set speed colours if we haven't done it yet
           this.setSpeedColours();
         }
+        rg2.ctx.lineCap = "round";
+        rg2.ctx.lineJoin = "round";
         rg2.ctx.lineWidth = rg2.options.routeWidth;
         rg2.ctx.strokeStyle = this.trackColour;
         rg2.ctx.globalAlpha = rg2.options.routeIntensity;

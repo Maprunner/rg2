@@ -185,6 +185,10 @@
       }
       rg2.results.createNameDropdown(courseid);
       $("#rg2-name-select").prop('disabled', false);
+      $("#rg2-load-gps-file").val('').button("disable");
+      $("#btn-autofit-gps").button("disable");
+      this.gpstrack.autofitOffset = null;
+      $("#spn-offset").spinner("value", 0).spinner("disable");
       $("#btn-undo-gps-adjust").button("disable");
       rg2.redraw(false);
     },
@@ -373,6 +377,9 @@
       trk.routeData.x = trk.savedBaseX.slice(0);
       trk.routeData.y = trk.savedBaseY.slice(0);
       trk.handles.undo();
+      $("#btn-autofit-gps").button("enable");
+      this.gpstrack.autofitOffset = null;
+      $("#spn-offset").spinner("value", 0).spinner("disable");
       $("#btn-undo-gps-adjust").button("disable");
       rg2.redraw(false);
     },
@@ -408,22 +415,49 @@
     saveGPSRoute : function () {
       // called to save GPS file route
       // tidy up route details
-      var i, l, t, date, offset;
-      t = this.gpstrack.routeData.time[this.gpstrack.routeData.time.length - 1] - this.gpstrack.routeData.time[0];
+      var i, l, t, date, offset, text, fitidx, fitoffset;
+
+      // set start time by auto fit offset
+      fitidx = this.gpstrack.autofitOffset;
+      if (fitidx === undefined || fitidx === null) {
+        fitidx = 0;
+      }
+      if (fitidx < 0) {
+        // calculate time offset from autofit position
+        fitoffset = this.gpstrack.routeData.time[0] + fitidx;
+      } else {
+        fitoffset = this.gpstrack.routeData.time[fitidx];
+      }
+      t = this.gpstrack.routeData.time[this.gpstrack.routeData.time.length - 1] - fitoffset;
+
       this.gpstrack.routeData.totaltime = rg2.utils.formatSecsAsMMSS(t);
       // GPS uses UTC: adjust to local time based on local user setting
       // only affects replay in real time
       date = new Date();
       // returns offset in minutes, so convert to seconds
       offset = date.getTimezoneOffset() * 60;
-      this.gpstrack.routeData.startsecs = this.gpstrack.routeData.time[0] - offset;
+      this.gpstrack.routeData.startsecs = fitoffset - offset;
 
-      l = this.gpstrack.routeData.x.length;
+      l = this.gpstrack.routeData.x.length - fitidx;
+      if (fitidx > 0) {
+        // delete auto fit amount from the begining of the route
+        this.gpstrack.routeData.x.splice(0, fitidx);
+        this.gpstrack.routeData.y.splice(0, fitidx);
+        this.gpstrack.routeData.time.splice(0, fitidx);
+      } else if (fitidx < 0) {
+        // add start point from course data to route and calculated start time
+        //TODO zero point against start control
+        this.gpstrack.routeData.x.unshift(rg2.courses.getCourseDetails(this.gpstrack.routeData.courseid).x[0]);
+        this.gpstrack.routeData.y.unshift(rg2.courses.getCourseDetails(this.gpstrack.routeData.courseid).y[0]);
+        // convert real time seconds to offset seconds from start time
+        this.gpstrack.routeData.time.unshift(fitoffset);
+      }
+      // loop thru routedata and round values + times
       for (i = 0; i < l; i += 1) {
         this.gpstrack.routeData.x[i] = Math.round(this.gpstrack.routeData.x[i]);
         this.gpstrack.routeData.y[i] = Math.round(this.gpstrack.routeData.y[i]);
         // convert real time seconds to offset seconds from start time
-        this.gpstrack.routeData.time[i] -= this.gpstrack.routeData.startsecs;
+        this.gpstrack.routeData.time[i] = this.gpstrack.routeData.time[i] - fitoffset;
       }
       // allow for already having a GPS route for this runner
       this.gpstrack.routeData.resultid += rg2.config.GPS_RESULT_OFFSET;
@@ -432,15 +466,26 @@
         // add marker(s) to name to show it is a duplicate
         this.gpstrack.routeData.name += '*';
       }
-      this.gpstrack.routeData.comments = $("#rg2-new-comments").val();
+      text = $("#rg2-new-comments").val();
+      if (text === rg2.t(rg2.config.DEFAULT_NEW_COMMENT)) {
+        this.gpstrack.routeData.comments = "";
+      } else {
+        this.gpstrack.routeData.comments = text;
+      }
 
       $("#btn-undo-gps-adjust").button("disable");
       this.postRoute();
     },
 
     saveRoute : function () {
+      var text;
       // called to save manually entered route
-      this.gpstrack.routeData.comments = $("#rg2-new-comments").val();
+      text = $("#rg2-new-comments").val();
+      if (text === rg2.t(rg2.config.DEFAULT_NEW_COMMENT)) {
+        this.gpstrack.routeData.comments = "";
+      } else {
+        this.gpstrack.routeData.comments = text;
+      }
       this.gpstrack.routeData.controlx = this.controlx;
       this.gpstrack.routeData.controly = this.controly;
       // don't need start control so remove it
@@ -639,6 +684,8 @@
         rg2.ctx.fillRect(this.controlx[this.nextControl] - 1, this.controly[this.nextControl] - 1, 3, 3);
         rg2.ctx.stroke();
       }
+      rg2.ctx.lineCap = "round";
+      rg2.ctx.lineJoin = "round";
       rg2.ctx.strokeStyle = this.trackColor;
       rg2.ctx.fillStyle = this.trackColour;
       rg2.ctx.font = '10pt Arial';

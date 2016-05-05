@@ -102,6 +102,7 @@
       // existing map from database
       this.mapid = data.mapid;
       this.name = data.name;
+      this.copyright = data.copyright;
       // worldfile for GPS to map image conversion (for GPS files)
       this.worldfile = new Worldfile(data);
       // worldfile for local co-ords to map image conversion (for georeferenced courses)
@@ -116,6 +117,7 @@
       // new map to be added
       this.mapid = 0;
       this.name = "";
+      this.copyright = "";
       this.worldfile = new Worldfile(0);
       this.localworldfile = new Worldfile(0);
     }

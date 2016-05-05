@@ -114,6 +114,11 @@
         dialogClass : "rg2-warning-dialog",
         close : function () {
           $('#rg2-warning-dialog').dialog('destroy').remove();
+        },
+        buttons : {
+          Ok : function () {
+            $(this).dialog("close");
+          }
         }
       });
     },
