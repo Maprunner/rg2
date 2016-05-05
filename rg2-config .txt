@@ -33,6 +33,10 @@
   // text shown here is required for routegadget.co.uk sites but can be deleted otherwise
   define('ADDITIONAL_INFO_TEXT', 'Maps published on this web site that contain OS data by permission of Ordnance Survey® Licence Number 100046745.');
   
+  // text displayed at top header bar. Use '' to leave blank.
+  define('HEADER_CLUB_TEXT', 'HappyHearts');
+  define('HEADER_CLUB_URL', 'http://www.happyherts.routegadget.co.uk');
+  
   // proj4 co-ordinate reference system for new maps
   // see http://spatialreference.org/ref/epsg/ for master list
   // see http://spatialreference.org/ref/epsg/27700/ for example of UK National Grid

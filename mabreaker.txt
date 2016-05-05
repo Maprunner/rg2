@@ -1,0 +1,18 @@
+Changes comparing to main
+- Map Copyright
+- Remove hide button from Manager login page
+- Fixed Loading routes process bar text
+- Added OK button into warning and options dialog for easier closing
+- Added club name into the header bar
+- Compare comment to translated default comment
+- Search option for Events and Results
+- Remove route right away from the drop down list without a need to page/result file reloading
+- Ability to read new routegadget version kartat.txt files
+- Ability to read original routegadget kartat.txt georeferencing points on random locations (beside three corner points)
+- Fixed translations to work with items which have multiple sibling objects inside
+- Fixed animation routes to always have rounded line endings
+- By default set autofit value to 0 instead of -10 when not detected
+- Fill/Crop GPS track by Autofit value (when not zero), to get its time aligned with course results
+
+
+Upcoming features:
