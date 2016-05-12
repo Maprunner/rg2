@@ -93,6 +93,11 @@
         dist = dist + rg2.utils.getDistanceBetweenPoints(tox, toy, fromx, fromy);
         diffdist = dist - fromdist;
         timeatitem = itemstime[item];
+        // allow for 0 splits indicating a missed control
+        // just assume a 1 second split for now: probably harmless
+        if (timeatitem === 0) {
+          timeatitem = timeatprevitem + 1;
+        }
         difft = timeatitem - timeatprevitem;
         for (t = timeatprevitem + 1; t < timeatitem; t += 1) {
           this.x[t] = Math.round(fromx + ((t - timeatprevitem) * diffx / difft));
