@@ -403,7 +403,8 @@
           oldCourseID = res.courseid;
         }
         html += '<tr><td>' + res.position + '</td>';
-        if (res.comments !== "") {
+        // #310 filter default comments in local language just in case
+        if ((res.comments !== "") && (res.comments !== rg2.t('Type your comment'))) {
           // #304 make sure double quotes show up
           res.comments = res.comments.replace(/"/g, '&quot;');
           html += '<td><a href="#" title="' + res.comments + '">' + this.getNameHTML(res, i) + "</a></td><td>" + res.time + "</td>";
