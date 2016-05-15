@@ -5,7 +5,9 @@ Version 1.2.7 was released on 12th May 2016. It includes updated Finnish transla
 
 The main recent change is that you can now rotate the map, using the icons at the top left of the screen. This means you can orientate the map as you would when racing.
 
-There is also a new option to align the map when drawing your route. Just tick the "Align map to next control" checkbox on the 'Draw' tab . 
+There is also a new option to align the map when drawing your route. Just tick the "Align map to next control" checkbox on the 'Draw' tab.
+
+[Guidance on creating map files] (https://github.com/Maprunner/rg2/wiki/Map-files) has also been added.
 
 I would recommend using the RG2 manager to set up events rather than the original Routegadget Java version. This will give you some extra functionality (such as positions in the results), and it is also a lot easier to get the controls aligned.
 
@@ -29,6 +31,7 @@ For a quick start try:
     * [Installation] (https://github.com/Maprunner/rg2/wiki/Installation)
     * [Splitsbrowser integration] (https://github.com/Maprunner/rg2/wiki/Splitsbrowser integration)
     * [Language configuration] (https://github.com/Maprunner/rg2/wiki/Language-configuration)
+    * [Map files] (https://github.com/Maprunner/rg2/wiki/Map-files)
     * [Georeferencing] (https://github.com/Maprunner/rg2/wiki/Georeferencing-maps)
 
 * Video: [A quick introduction to RG2 manager functions] (http://screencast-o-matic.com/u/VJsd/RG2-Cassiobury-Manager-Demo)
