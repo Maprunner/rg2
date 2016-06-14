@@ -16,6 +16,7 @@ lang/xx.js
 coords.html
 coverage
 cache/*.json
+pack.bat
 #################
 ## Eclipse
 #################
