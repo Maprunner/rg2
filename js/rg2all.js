@@ -1,4 +1,4 @@
-// Version 1.2.7 2016-06-14T22:58:03;
+// Version 1.2.7 2016-06-14T23:35:25;
 /*
  * Routegadget 2
  * https://github.com/Maprunner/rg2
@@ -85,7 +85,7 @@ var rg2 = (function (window, $) {
 
   function updateUIForNewEvent(eventid) {
     // highlight the selected event
-    $('#rg2-event-list > li').removeClass('rg2-active-event').filter('#' + eventid).addClass('rg2-active-event');
+    $('#rg2-event-ul > li').removeClass('rg2-active-event').filter('#' + eventid).addClass('rg2-active-event');
     // show we are waiting
     $('body').css('cursor', 'wait');
     $("#rg2-load-progress-label").text(rg2.t("Loading courses"));
@@ -5925,8 +5925,8 @@ var rg2 = (function (window, $) {
         }
       }).val(0);
       $("#spn-offset").spinner({
-        max : 600,
-        min : -600,
+        max : 900,
+        min : -900,
         disabled: true,
         spin : function (event, ui) {
           /*jslint unparam:true*/
@@ -5979,7 +5979,7 @@ var rg2 = (function (window, $) {
       $('#rg2-new-comments').focus(function () {
         // Clear comment box if user focuses on it and it still contains default text
         text = $("#rg2-new-comments").val();
-        if (text ===  rg2.t(rg2.config.DEFAULT_NEW_COMMENT)) {
+        if (text === rg2.t(rg2.config.DEFAULT_NEW_COMMENT)) {
           $('#rg2-new-comments').val("");
         }
       });

@@ -57,7 +57,7 @@
       $("#rg2-manage-results").hide();
       $("#rg2-manager-login-form").submit(function () {
         var validUser;
-        validUser = self.user.setDetails($("#rg2-user-name").val(), $("#rg2-password").val());
+        validUser = self.user.setDetails($("#rg2-user-name").val().toLowerCase(), $("#rg2-password").val());
         // check we have user name and password
         if (validUser) {
           self.logIn();
@@ -1177,6 +1177,7 @@
         error : function (jqXHR, textStatus) {
           /*jslint unparam:true*/
           console.log(textStatus);
+          rg2.utils.showWarningDialog("Upload failed", "Failed to upload data to server.");
         }
       });
     },

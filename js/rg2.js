@@ -84,7 +84,7 @@ var rg2 = (function (window, $) {
 
   function updateUIForNewEvent(eventid) {
     // highlight the selected event
-    $('#rg2-event-list > li').removeClass('rg2-active-event').filter('#' + eventid).addClass('rg2-active-event');
+    $('#rg2-event-ul > li').removeClass('rg2-active-event').filter('#' + eventid).addClass('rg2-active-event');
     // show we are waiting
     $('body').css('cursor', 'wait');
     $("#rg2-load-progress-label").text(rg2.t("Loading courses"));

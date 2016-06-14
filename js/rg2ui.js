@@ -424,8 +424,8 @@
         }
       }).val(0);
       $("#spn-offset").spinner({
-        max : 600,
-        min : -600,
+        max : 900,
+        min : -900,
         disabled: true,
         spin : function (event, ui) {
           /*jslint unparam:true*/
@@ -478,7 +478,7 @@
       $('#rg2-new-comments').focus(function () {
         // Clear comment box if user focuses on it and it still contains default text
         text = $("#rg2-new-comments").val();
-        if (text ===  rg2.t(rg2.config.DEFAULT_NEW_COMMENT)) {
+        if (text === rg2.t(rg2.config.DEFAULT_NEW_COMMENT)) {
           $('#rg2-new-comments').val("");
         }
       });
