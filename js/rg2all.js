@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-// Version 1.2.6 2016-06-14T22:34:02;
-=======
-// Version 1.2.7 2016-05-12T21:05:15;
->>>>>>> refs/remotes/Maprunner/master
+// Version 1.2.7 2016-06-14T22:58:03;
 /*
  * Routegadget 2
  * https://github.com/Maprunner/rg2
