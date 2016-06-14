@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 // Version 1.2.6 2016-06-14T22:34:02;
+=======
+// Version 1.2.7 2016-05-12T21:05:15;
+>>>>>>> refs/remotes/Maprunner/master
 /*
  * Routegadget 2
  * https://github.com/Maprunner/rg2
@@ -951,7 +955,7 @@ var rg2 = (function (window, $) {
     EVENT_WITHOUT_RESULTS : 2,
     SCORE_EVENT : 3,
     // version gets set automatically by grunt file during build process
-    RG2VERSION: '1.2.6',
+    RG2VERSION: '1.2.7',
     TIME_NOT_FOUND : 9999,
     // values for evt.which
     RIGHT_CLICK : 3,
@@ -6200,6 +6204,11 @@ var rg2 = (function (window, $) {
         dist = dist + rg2.utils.getDistanceBetweenPoints(tox, toy, fromx, fromy);
         diffdist = dist - fromdist;
         timeatitem = itemstime[item];
+        // allow for 0 splits indicating a missed control
+        // just assume a 1 second split for now: probably harmless
+        if (timeatitem === 0) {
+          timeatitem = timeatprevitem + 1;
+        }
         difft = timeatitem - timeatprevitem;
         for (t = timeatprevitem + 1; t < timeatitem; t += 1) {
           this.x[t] = Math.round(fromx + ((t - timeatprevitem) * diffx / difft));
