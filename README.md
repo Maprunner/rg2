@@ -1,7 +1,7 @@
 # Routegadget 2
 
 ## Latest news
-Version 1.2.7 was released on 12th May 2016. It includes updated Finnish translations and some minor enhancements.
+Version 1.2.8 was released on 9th July 2016. It includes Italian and Japanese translations and some minor enhancements.
 
 The main recent change is that you can now rotate the map, using the icons at the top left of the screen. This means you can orientate the map as you would when racing.
 
