@@ -440,7 +440,6 @@
         select : function (event, ui) {
           /*jslint unparam:true*/
           rg2.loadEvent(ui.item[0].id);
-          rg2.requestedHash.setNewEvent(rg2.events.getKartatEventID());
         }
       });
     },

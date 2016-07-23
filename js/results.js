@@ -285,6 +285,16 @@
       return tracks;
     },
 
+    removeAllTracksFromDisplay : function () {
+      var i;
+      for (i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].displayTrack) {
+          this.results[i].removeTrackFromDisplay();
+        }
+      }
+      this.updateTrackNames();
+    },
+
     putOneTrackOnDisplay : function (resultid) {
       this.results[resultid].putTrackOnDisplay();
       this.updateTrackNames();
