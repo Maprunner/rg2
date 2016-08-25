@@ -45,11 +45,20 @@
       exit;
   }
 
+function sortJsonEventsByDate($a, $b) {
+  return strcmp($a->date, $b->date);
+}
+function sortJsonEventsByDateDesc($a, $b) {
+  return strcmp($b->date, $a->date);
+}
+
   // RG index interface
   if ( isset($_GET['info']) && $_GET['info'] == 'csv' )
   {
-    $events = json_decode(getAllEvents(TRUE));
-    foreach($events->events as $detail)
+    $json = json_decode(getAllEvents(TRUE));
+    $events = $json->events;
+    usort($events, "sortJsonEventsByDateDesc");
+    foreach($events as $detail)
     {
       print $detail->id.'|'.$detail->format.'|'.$detail->name.'|'.$detail->date.'|'.$detail->club.'|'.$detail->type.'|'.$detail->routes.PHP_EOL;
     }
