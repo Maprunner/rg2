@@ -44,8 +44,13 @@
       type : "tracks",
       cache : false
     }).done(function (json) {
+<<<<<<< HEAD
       var active, i, event, routes, crs;
       $("#rg2-load-progress-label").text(rg2.t("Loading routes"));
+=======
+      var active;
+      $("#rg2-load-progress-label").text(rg2.t("Saving routes"));
+>>>>>>> refs/remotes/Maprunner/dev
       console.log("Tracks: " + json.data.routes.length);
       // TODO remove temporary (?) fix to get round RG1 events with no courses defined: see #179
       if (rg2.courses.getNumberOfCourses() > 0) {
@@ -77,20 +82,7 @@
         } else {
           $("#rg2-splitsbrowser").off().hide();
         }
-        // set up screen as requested in hash
-        event = $.Event('click');
-        event.target = {};
-        event.target.checked = true;
-        routes = rg2.requestedHash.getRoutes();
-        for (i = 0; i < routes.length; i += 1) {
-          event.target.id = routes[i];
-          $(".showtrack").filter("#" + routes[i]).trigger(event).prop('checked', true);
-        }
-        crs = rg2.requestedHash.getCourses();
-        for (i = 0; i < crs.length; i += 1) {
-          event.target.id = crs[i];
-          $(".showcourse").filter("#" + crs[i]).trigger(event).prop('checked', true);
-        }
+        rg2.requestedHash.setUIToHash();
       }
       $("#rg2-load-progress-label").text("");
       $("#rg2-load-progress").hide();

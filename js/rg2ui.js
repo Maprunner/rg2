@@ -446,7 +446,6 @@
         select : function (event, ui) {
           /*jslint unparam:true*/
           rg2.loadEvent(ui.item[0].id);
-          rg2.requestedHash.setNewEvent(rg2.events.getKartatEventID());
         }
       });
       this.event_list_li = $('#rg2-event-ul > li').clone();

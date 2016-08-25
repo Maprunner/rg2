@@ -262,39 +262,60 @@
   RequestedHash.prototype = {
     Constructor : RequestedHash,
 
+    handleNavigation : function (event) {
+      console.log(event);
+      var parsedHash;
+      if (event.state !== null) {
+        parsedHash = this.parseHash(event.state);
+        if (parsedHash.id !== this.id) {
+          // need to load a new event
+          // hash value is the kartatid
+          rg2.loadEvent(rg2.events.getEventIDForKartatID(parsedHash.id));
+        } else {
+          // need to set up UI for existing event
+          this.saveHash(event.state);
+          this.setUIToHash();
+        }
+      }
+    },
+
+    saveHash : function (hash) {
+      var parsedHash;
+      parsedHash = this.parseHash(hash);
+      this.id = parsedHash.id;
+      this.courses = parsedHash.courses;
+      this.routes = parsedHash.routes;
+    },
+
     parseHash : function (hash) {
-      var fields, i;
+      var fields, i, id, courses, routes;
+      id = 0;
+      courses = [];
+      routes = [];
       // input looks like #id&course=a,b,c&result=x,y,z
       fields = hash.split('&');
       for (i = 0; i < fields.length; i += 1) {
         fields[i] = fields[i].toLowerCase();
         if (fields[i].search('#') !== -1) {
-          this.id = parseInt(fields[i].replace("#", ""), 10);
+          id = parseInt(fields[i].replace("#", ""), 10);
         }
         if (fields[i].search('course=') !== -1) {
-          this.courses = fields[i].replace("course=", "").split(',');
+          courses = fields[i].replace("course=", "").split(',');
         }
         if (fields[i].search('route=') !== -1) {
-          this.routes = fields[i].replace("route=", "").split(',');
+          routes = fields[i].replace("route=", "").split(',');
         }
       }
       // convert to integers: NaNs sort themselves out on display so don't check here
-      this.courses = this.courses.map(Number);
-      this.routes = this.routes.map(Number);
+      courses = courses.map(Number);
+      routes = routes.map(Number);
 
       if (isNaN(this.id)) {
-        this.id = 0;
-        this.courses.length = 0;
-        this.routes.length = 0;
+        id = 0;
+        courses.length = 0;
+        routes.length = 0;
       }
-    },
-
-    getRoutes : function () {
-      return this.routes;
-    },
-
-    getCourses : function () {
-      return this.courses;
+      return ({id: id, courses: courses, routes: routes});
     },
 
     getID : function () {
@@ -310,19 +331,27 @@
 
     setCourses : function () {
       this.courses = rg2.courses.getCoursesOnDisplay();
-      window.history.pushState('', '', this.getHash());
+      this.pushNewState();
     },
 
     setRoutes : function () {
       this.routes = rg2.results.getTracksOnDisplay();
-      window.history.pushState('', '', this.getHash());
+      this.pushNewState();
     },
 
     setNewEvent : function (id) {
       this.id = id;
       this.courses.length = 0;
       this.routes.length = 0;
-      window.history.pushState('', '', this.getHash());
+      this.pushNewState();
+    },
+
+    pushNewState : function () {
+      var hash;
+      hash = this.getHash();
+      console.log("New hash: " + hash);
+      window.history.pushState(hash, '', hash);
+      window.document.title = "RG2:" + hash;
     },
 
     getHash : function () {
@@ -349,6 +378,35 @@
         }
       }
       return extrahash;
+    },
+
+    setUIToHash : function () {
+      //sets check boxes etc. to match current saved hash
+      var i, routes, courses;
+      // start by removing everything
+      rg2.courses.removeAllFromDisplay();
+      rg2.results.removeAllTracksFromDisplay();
+      // courses tab checkboxes
+      $(".courselist").prop('checked', false);
+      $(".allcourses").prop('checked', false);
+      // results tab checkboxes
+      $(".showcourse").prop('checked', false);
+      $(".showtrack").prop('checked', false);
+      $(".allcoursetracks").prop('checked', false);
+      // set up requested routes
+      routes = this.routes;
+      for (i = 0; i < routes.length; i += 1) {
+        rg2.results.putOneTrackOnDisplay(routes[i]);
+        $(".showtrack").filter("#" + routes[i]).prop('checked', true);
+      }
+      // set up requested courses
+      courses = this.courses;
+      for (i = 0; i < courses.length; i += 1) {
+        rg2.courses.putOnDisplay(courses[i]);
+        $(".courselist").filter("#" + courses[i]).prop('checked', true);
+        $(".showcourse").filter("#" + courses[i]).prop('checked', true);
+      }
+      rg2.redraw(false);
     }
   };
   rg2.utils = utils;
