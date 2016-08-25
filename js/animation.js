@@ -24,7 +24,7 @@
       this.realTime = false;
       this.earliestStartSecs = 0;
       this.latestFinishSecs = 0;
-      this.tailLength = 0;
+      this.tailLength = 60 * rg2.config.DEFAULT_TAIL_LENGTH;
       this.useFullTails = false;
       // control to start from if this option selected
       this.massStartControl = 0;
@@ -201,10 +201,10 @@
           this.earliestStartSecs = this.runners[i].starttime;
         }
         if ((this.runners[i].starttime + this.runners[i].x.length) > this.latestFinishSecs) {
-          this.latestFinishSecs = this.runners[i].starttime + this.runners[i].x.length;
+          this.latestFinishSecs = this.runners[i].starttime + this.runners[i].x.length + this.tailLength;
         }
         if ((this.runners[i].x.length) > this.slowestTimeSecs) {
-          this.slowestTimeSecs = this.runners[i].x.length;
+          this.slowestTimeSecs = this.runners[i].x.length + this.tailLength;
         }
       }
       this.resetAnimationTime(0);
@@ -363,7 +363,7 @@
     },
 
     runAnimation : function (fromTimer) {
-      var runner, timeOffset, i, t, tailStartTimeSecs;
+      var runner, timeOffset, i, t, tailStartTimeSecs, activeRunners;
       tailStartTimeSecs = this.setAnimationTime(fromTimer);
       $("#rg2-clock-slider").slider("value", this.animationSecs);
       $("#rg2-clock").text(rg2.utils.formatSecsAsHHMMSS(this.animationSecs));
@@ -371,6 +371,7 @@
       rg2.ctx.lineJoin = "round";
       rg2.ctx.lineWidth = rg2.options.routeWidth;
       rg2.ctx.globalAlpha = rg2.config.FULL_INTENSITY;
+      activeRunners = 0;
       for (i = 0; i < this.runners.length; i += 1) {
         runner = this.runners[i];
         if (this.realTime) {
@@ -393,7 +394,10 @@
         //runner.x[] is always indexed in 0-based time so needs to be adjusted for starttime offset
         for (t = tailStartTimeSecs; t <= this.animationSecs; t += 1) {
           if ((t > timeOffset) && ((t - timeOffset) < runner.nextStopTime)) {
-            rg2.ctx.lineTo(runner.x[t - timeOffset], runner.y[t - timeOffset]);
+            if (t - timeOffset < runner.x.length) {
+              rg2.ctx.lineTo(runner.x[t - timeOffset], runner.y[t - timeOffset]);
+              activeRunners += 1;
+            }
           }
         }
         rg2.ctx.stroke();
@@ -404,17 +408,25 @@
         } else {
           t = runner.nextStopTime;
         }
-        rg2.ctx.arc(runner.x[t], runner.y[t], rg2.config.RUNNER_DOT_RADIUS,
-          0, 2 * Math.PI, false);
-        rg2.ctx.globalAlpha = rg2.config.FULL_INTENSITY;
-        rg2.ctx.strokeStyle = rg2.config.BLACK;
-        rg2.ctx.stroke();
-        rg2.ctx.fillStyle = runner.colour;
-        rg2.ctx.fill();
-        this.displayName(runner, t);
+        if (t < runner.x.length) {
+          rg2.ctx.arc(runner.x[t], runner.y[t], rg2.config.RUNNER_DOT_RADIUS,
+            0, 2 * Math.PI, false);
+          rg2.ctx.globalAlpha = rg2.config.FULL_INTENSITY;
+          rg2.ctx.strokeStyle = rg2.config.BLACK;
+          rg2.ctx.stroke();
+          rg2.ctx.fillStyle = runner.colour;
+          rg2.ctx.fill();
+          this.displayName(runner, t);
+          activeRunners += 1;
+        }
       }
       if (this.massStartByControl) {
         this.checkForStopControl(this.animationSecs);
+      } else if (fromTimer && activeRunners === 0) {
+        //this.resetAnimation();
+        this.toggleAnimation();
+        this.resetAnimationTime(0);
+        rg2.redraw(false);
       }
     },
 

@@ -79,7 +79,8 @@ module.exports = function(grunt) {
         'ids': false,
         'box-model': false,
         'duplicate-background-images': false,
-        'outline-none': false
+        'outline-none': false,
+        'box-sizing': false,
       },
       src: cssFileList
     },

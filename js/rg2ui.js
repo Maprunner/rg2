@@ -422,7 +422,7 @@
           /*jslint unparam:true*/
           rg2.animation.setTailLength(ui.value);
         }
-      }).val(0);
+      }).val(rg2.config.DEFAULT_TAIL_LENGTH);
       $("#spn-offset").spinner({
         max : 900,
         min : -900,
@@ -568,6 +568,12 @@
         collapsible : true,
         heightStyle : "content"
       });
+      // accordion icons were lost in ranslations before fix
+      //$("#rg2-draw").accordion("refresh");
+      $("#rg2-draw").accordion({
+        collapsible : false,
+        heightStyle : "content"
+      });
       $("#rg2-clock").text("00:00:00");
       $("#rg2-clock-slider").slider({
         slide : function (event, ui) {
@@ -594,10 +600,10 @@
       $("#rg2-option-controls").hide();
       $("#rg2-animation-controls").hide();
       $("#rg2-splitsbrowser").hide();
-      this.setUIEventHandlers();
+
       this.initialiseButtons();
       this.initialiseSpinners();
-
+      this.setUIEventHandlers();
     }
   };
   rg2.ui = ui;

@@ -94,7 +94,7 @@ translation: 'mki@iki.fi',
 'Right click to delete a handle': 'Poista piste hiiren oikealla',
 'Drag a handle to adjust track around locked point(s)': 'Kohdista reitti siirtämällä lukitsemattomia pisteitä',
 'Align map to next control': 'Kohdista kartta seuraavaa rastiin',
-'Autofit': 'Automaattinen kohdistus',
+'Autofit': 'Kohdista',
 'Route already drawn': 'Reitti on jo piirretty',
 'If you draw a new route it will overwrite the old route for this runner.': 'Jos piirrät uuden reitin poistetaan kilpailijan vanha reitti.',
 'GPS routes are saved separately and will not be overwritten.': 'GPS reitit tallennetaan erikseen eikä niitä ylikirjoiteta.'

@@ -135,6 +135,7 @@
     var chevronRemove, chevronAdd;
     rg2.input.infoPanelMaximised = show;
     $("#rg2-resize-info").prop("title",  rg2.t(title));
+    //MaB remove static values to use floats
     $("#rg2-hide-info-panel-control").css("left", position);
     if (show) {
       $("#rg2-info-panel").show();

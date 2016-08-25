@@ -1,4 +1,5 @@
 /*global rg2:false */
+/*global console:false */
 (function () {
   var utils =  {
     rotatePoint : function (x, y, angle) {
@@ -239,6 +240,7 @@
     this.courseid = null;
     this.coursename = null;
     this.resultid = null;
+    this.variant = null;
     this.isScoreCourse = false;
     this.eventid = null;
     this.name = null;

@@ -37,6 +37,24 @@
   define ('GPS_RESULT_OFFSET', 50000);
   define ('GPS_INTERVAL', 3);
   define ('SCORE_EVENT_FORMAT', 3);
+  
+  // Version
+  if ( isset($_GET['act']) && $_GET['act'] == 'version' )
+  {
+      print ('20150827');
+      exit;
+  }
+
+  // RG index interface
+  if ( isset($_GET['info']) && $_GET['info'] == 'csv' )
+  {
+    $events = json_decode(getAllEvents(TRUE));
+    foreach($events->events as $detail)
+    {
+      print $detail->id.'|'.$detail->format.'|'.$detail->name.'|'.$detail->date.'|'.$detail->club.'|'.$detail->type.'|'.$detail->routes.PHP_EOL;
+    }
+    exit;
+  }
 
   if (isset($_GET['type'])) {
     $type = $_GET['type'];
@@ -111,7 +129,7 @@ function uploadMapFile() {
   $data = new stdClass();
   $data->x = $_POST["x"];
   $data->y = $_POST["y"];
-  if (!logIn($data)) {
+  if (logIn($data) !== TRUE) {
     $write["status_msg"] = "Login failed.";
   } else {
     $filename = $_POST["name"];
@@ -156,7 +174,7 @@ function handlePostRequest($type, $eventid) {
       // don't need to log in to add a route
       $loggedIn = TRUE;
     }
-    if ($loggedIn) {
+    if ($loggedIn === TRUE) {
       //rg2log($type);
       switch ($type) {
       case 'addroute':
@@ -905,8 +923,8 @@ function addNewRoute($eventid, $data) {
   for ($i = 0; $i < count($data->controlx); $i++) {
     $controls .= 'N'.$data->controlx[$i].';-'.$data->controly[$i];
   }
-
-  $newtrackdata = $data->courseid."|".$id."|".$name."|null|".$track."|".$controls.PHP_EOL;
+  
+  $newtrackdata = $data->courseid."|".$id."|".$name."|".$data->variant."|".$track."|".$controls.PHP_EOL;
 
   $newresultdata = "";
   if (($newresult === TRUE) || ($id >= GPS_RESULT_OFFSET)) {
@@ -1281,6 +1299,7 @@ function getResultsCSV($eventid) {
   if (($handle = @fopen(KARTAT_DIRECTORY."hajontakanta_".$eventid.".txt", "r")) !== FALSE) {
     while (($data = fgetcsv($handle, 0, "|")) !== FALSE) {
      $courses[$coursecount] = $data[0];
+     // $data[1]; variant name
      $codes =  explode("_", $data[2]);
      $controls[$coursecount] = $codes;
      $coursecount++;
@@ -1337,9 +1356,9 @@ function getResultsCSV($eventid) {
       $result_data .= encode_rg_input($data[2]).";;;;;;;;;;;;;;;;;;;;";
       // find codes for this course
       if ($data[6] !== '') {
-        $variant = $data[6];
+        $variant = $data[6]; // variant
       } else {
-        $variant = $data[1];
+        $variant = $data[1]; // course
       }
       $courseindex = -1;
       for ($i = 0; $i < $coursecount; $i++) {
@@ -1704,10 +1723,10 @@ function getResultsForEvent($eventid) {
       $detail["position"] = '';
       $detail["status"] = '';
       // look for RG2 extra fields in dbid
-      $databaseid = encode_rg_input($data[5]);
-      $pos = strpos($databaseid, "_#");
+      $detail["databaseid"] = encode_rg_input($data[5]);
+      $pos = strpos($detail["databaseid"], "_#");
       if ($pos) {
-        $extras = explode("#", substr($databaseid, $pos + 2));
+        $extras = explode("#", substr($detail["databaseid"], $pos + 2));
         if (count($extras) == 2) {
           $detail["position"] = $extras[0];
           $detail["status"] = $extras[1];
@@ -1829,6 +1848,13 @@ function getCoursesForEvent($eventid) {
   return addVersion('courses', $output);
 }
 
+function get_numeric($val) {
+  if (is_numeric($val)) {
+    return $val + 0;
+  }
+  return 0;
+}
+
 function expandCoords($coords) {
   // Split Nxx;-yy,0Nxxx;-yy,0N.. into x,y arrays
   // but note that sometimes you don't get the ,0
@@ -1842,17 +1868,12 @@ function expandCoords($coords) {
   $x = array();
   $y = array();
   foreach ($xy as $point) {
-    $temp = explode(";", $point);
-    if (count($temp) == 2) {
-      $x[] = $temp[0];
-      // strip off trailing ,0 if it exists
-      $pos = strpos($temp[1], ",");
-      if ($pos !== FALSE) {
-        // remove leading - by starting at 1
-        $y[] = substr($temp[1], 1, $pos - 1);
-      } else {
-        $y[] = substr($temp[1], 1);
-      }
+    $tstr = str_replace(',', ';', $point);
+    $temp = explode(";", $tstr, 3);
+    if (count($temp) >= 2) {
+      // added rounding as GPS route view was corrupted because of decimal points on coordinate values and in PHP float 0 == 0.00000000000001
+      $x[] = round(get_numeric($temp[0]));
+      $y[] = round(abs(get_numeric($temp[1])));
     }
   }
   // send as differences rather than absolute values: provides almost 50% reduction in size of json file
@@ -1896,10 +1917,12 @@ function getTracksForEvent($eventid) {
       $resultid = intval($data[1]);
       // protect against corrupt/invalid files
       // GPS tracks are taken from another file so don't add them here
+      // NOTICE ! Original RG builds an array of x,y coordinates and puts countrol points in it also for splits routers between control points.
       if (($resultid > 0) && ($resultid < GPS_RESULT_OFFSET) && ($courseid > 0)) {
         $detail = array();
         $detail["id"] = $resultid;
-        list($detail["x"], $detail["y"]) = expandCoords($data[4]);
+        $detail["variant"] = $data[3]; // variable name aika
+        list($detail["x"], $detail["y"]) = expandCoords($data[4]); // route
         $output[] = $detail;
       }
     }
@@ -2145,6 +2168,7 @@ function getLatLonDistance($lat1, $lon1, $lat2, $lon2) {
   $a = sin($dLat/2) * sin($dLat/2) + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLon/2) * sin($dLon/2);
   $c = 2 * asin(sqrt($a));
   // multiply by IUUG earth mean radius (http://en.wikipedia.org/wiki/Earth_radius) in metres
+  // this is used in some cases 6378137
   return 6371009 * $c;
 }
 

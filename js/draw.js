@@ -439,6 +439,12 @@
       this.gpstrack.routeData.startsecs = fitoffset - offset;
 
       l = this.gpstrack.routeData.x.length - fitidx;
+      /* Help
+      points: 20-30 -> idx +20
+      l: = 30 - 20 = 10
+      i: 0 -> 10
+      routeData: move 20-30 -> 0-10, delete 10-30
+      */
       if (fitidx > 0) {
         // delete auto fit amount from the begining of the route
         this.gpstrack.routeData.x.splice(0, fitidx);

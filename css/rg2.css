@@ -245,8 +245,12 @@ html, body {
   background: #eee;
 }
 
-.rg2-active-event {
+#rg2-event-list li.rg2-active-event {
    border: 2px solid black;
+	/* background: #dadada url("http://code.jquery.com/ui/1.11.3/themes/smoothness/images/ui-bg_glass_75_dadada_1x400.png") 50% 50% repeat-x; */
+	-webkit-border-radius: inherit;
+	-moz-border-radius: inherit;
+	border-radius: inherit;
 }
 
 #rg2-hide-info-panel-control {
@@ -355,13 +359,13 @@ html, body {
   background-color: #99ffcc;
   border-radius: 3px;
 }
-
+/*
 .coursemenutable tr, td, th {
 	padding-left: 5px;
 	padding-right: 5px;
 	text-align: center;
 }
-
+*/
 p.showcourse {
 	padding-left: 5px;
 }
@@ -370,31 +374,42 @@ p.showcourse {
 / which is Name in this case
 */
 table.resulttable td,
-table.resulttable th {
+table.resulttable th,
+table.coursemenutable td,
+table.coursemenutable th {
 	padding-left: 5px;
 	padding-right: 5px;
 	text-align: center;
 }
 
-table.resulttable td + td,
-table.resulttable th + th {
+table.resulttable td:first-child + td,
+table.resulttable th:first-child + th,
+table.coursemenutable td:first-child,
+table.coursemenutable th:first-child {
 	width: 80%;
 	text-align: left;
 }
 
-table.resulttable tbody tr:nth-child(odd) {
-  background: #eee;
+table.resulttable tbody tr:nth-child(odd),
+table.coursemenutable tbody tr:nth-child(odd) {
+	/* background: #eee; */
+	background: #808080; /* Fallback */
+	background: rgba(128, 128, 128, 0.1);
 }
 
 #rg2-result-list .ui-accordion,
 #rg2-result-list .ui-accordion-content {
-padding: 0;
+	padding: 0;
 }
 
 
 #rg2-select-gps-file .ui-button {
-	width: 300px;
+	width: 100%;
 	margin-bottom: 10px;
+}
+
+#rg2-load-gps-file {
+	box-sizing: border-box;
 }
 
 #rg2-button-bar .ui-button-text-icon-primary,
@@ -583,19 +598,24 @@ body {
 }
 
 #rg2-draw .ui-button {
-  margin-left: 5px;
-  margin-top: 5px;
+  margin: 2px 5px;
 }
 
 #rg2-edit-event-comments {
-  width: 95%;
+  width: 100%;
   height: 50px;
 }
 
 #rg2-event-selected {
-  width: 95%;
+  width: 100%;
 }
 
+#rg2-event-list li.ui-state-focus {
+	background:#dadada url("http://code.jquery.com/ui/1.11.3/themes/smoothness/images/ui-bg_glass_75_dadada_1x400.png") 50% 50% repeat-x;
+	-webkit-border-radius: inherit;
+	-moz-border-radius: inherit;
+	border-radius: inherit;
+}
 /* Search Filter */
 span.filter-input-group-addon:first-child {
 	border-right: 0;
@@ -625,7 +645,7 @@ span.filter-input-group-addon {
 	display: table-cell;
 	border-collapse: separate;
 }
-div.filter-input-group {
+.filter-input-group {
 	margin: 0 0 5px 0;
 	display: table;
 }
@@ -646,3 +666,16 @@ input.filter-form-control {
 	border-radius: 4px;
 }
 
+#rg2-select-course, #rg2-select-name, #rg2-enter-name {
+	width: 100%;
+	display: inline-block;
+}
+
+#rg2-enter-name div {
+	width: 100%;
+	display: inline-block;
+}
+
+#rg2-enter-name div label {
+	display: block;
+}

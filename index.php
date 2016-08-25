@@ -143,8 +143,8 @@ header('Content-type: text/html; charset=utf-8');
     <meta name="description" content="View and save route choices for orienteering events">
     <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
     <link rel="shortcut icon" href="img/favicon.ico"/>
-    <link rel="stylesheet" href='<?php echo $source_url ."/css/normalize.min.css'>"; ?>
-    <link rel="stylesheet" href='<?php echo $source_url ."/css/rg2.css'>"; ?>
+    <link rel="stylesheet" href="<?php echo $source_url ."/css/normalize.min.css"; ?>">
+    <link rel="stylesheet" href="<?php echo $source_url ."/css/rg2.css"; ?>">
     <link rel="stylesheet" href="//code.jquery.com/ui/1.11.3/themes/<?php echo $ui_theme; ?>/jquery-ui.min.css">
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
     <!-- ('RG2VERSION', '1.2.8') -->
@@ -196,7 +196,7 @@ header('Content-type: text/html; charset=utf-8');
           <ul id="rg2-event-ul" class="ui-corner-all" data-role="listview"></ul>
         </div>
         <div id="rg2-course-list">
-          <div id="rg2-course-table"></div>
+          <div id="rg2-course-table" class="ui-corner-all ui-widget ui-widget-content"></div>
         </div>
         <div id="rg2-result-list">
           <div class="filter-input-group">
@@ -205,76 +205,82 @@ header('Content-type: text/html; charset=utf-8');
           </div>
           <div id="rg2-result-table"></div>
         </div>
-      <div id="rg2-draw">
+        <div id="rg2-draw">
           <h3 class="no-top-margin" id='rg2-draw-title'>Draw route</h3>
-          <div id="rg2-select-course">
-           <label for='rg2-course-select'>Select course: </label>
-           <select  id="rg2-course-select"></select>
-          </div>
-          <div id="rg2-select-name">
-           <label for='rg2-name-select'>Select name: </label>
-           <select id="rg2-name-select"></select>
-          </div>
-          <div id="rg2-enter-name">
-           <div>
-              <label for='rg2-name'>Enter name: </label>
-             <span id = "rg2-name"><input id="rg2-name-entry" class="pushright" type="text"></span>
-           </div>
-           <div>
-              <label for='rg2-time'>Enter time (mm:ss): </label>
-             <span id = "rg2-time"><input  id="rg2-time-entry" class="pushright" type="text"></span>
-           </div>
-          </div>
           <div>
-           <textarea id="rg2-new-comments"></textarea>
+            <div id="rg2-select-course">
+              <label for='rg2-course-select'>Select course: </label>
+              <select id="rg2-course-select"></select>
+            </div>
+            <div id="rg2-select-name">
+              <label for='rg2-name-select'>Select name: </label>
+              <select id="rg2-name-select"></select>
+            </div>
+            <div id="rg2-enter-name">
+              <div>
+                <label for='rg2-name'>Enter name: </label>
+                <span id = "rg2-name"><input id="rg2-name-entry" class="pushright" type="text"></span>
+              </div>
+              <div>
+                <label for='rg2-time'>Enter time (mm:ss): </label>
+                <span id = "rg2-time"><input  id="rg2-time-entry" class="pushright" type="text"></span>
+              </div>
+            </div>
+            <div>
+              <textarea id="rg2-new-comments"></textarea>
+            </div>
+            <div>
+              <input type=checkbox id="btn-align-map"><label for="btn-align-map">Align map to next control</label>
+            </div>
+            <div class="singlerow">
+              <button class="singlerowitem" id="btn-three-seconds">+3 sec</button>
+              <button class="singlerowitem" id="btn-undo">Undo</button>
+              <button class="singlerowitem" id="btn-save-route">Save</button>
+              <button class="singlerowitem" id="btn-reset-drawing">Reset</button>
+            </div>
           </div>
-        <div>
-          <input type=checkbox id="btn-align-map"><label for="btn-align-map">Align map to next control</label>
+          <!-- <hr class="rg2-hr"> -->
+          <h3 id='rg2-load-gps-title'>Load GPS file (GPX or TCX)</h3>
+          <div>
+            <div id="rg2-select-gps-file">
+              <input type='file' accept='.gpx, .tcx' id='rg2-load-gps-file' class="manage-file-input">
+            </div>
+            <div class="singlerow">
+              <button class="singlerowitem" id="btn-autofit-gps">Autofit</button>
+              <div class="singlerowitem" id="rg2-offset-spinner">
+                <input id="spn-offset" />
+              </div>
+              <button  class="singlerowitem" id="btn-undo-gps-adjust">Undo</button>
+            </div>
+            <div class="singlerow">
+              <button id="btn-save-gps-route">Save GPS route</button>
+            </div>
+          </div>
+          <!-- <hr class="rg2-hr"> -->
+          <h3 id="rg2-draw-options">Options</h3>
+          <div>
+            <input type=checkbox id="btn-move-all"><label for="btn-move-all">Move track and map together (or right click-drag)</label>
+          </div>
+          <!-- <hr class="rg2-hr"> -->
+          <h3 id="rg2-draw-help">Help</h3>
+          <div class="rg2-gps-text">
+            <span id="draw-text-1">Left click to add/lock/unlock a handle.></span>
+            <ul><li id="draw-text-2">Green: draggable</li>
+            <li id="draw-text-3">Red: locked</li></ul>
+            <span id="draw-text-4">Right click to delete a handle.</span>
+            <br><span id="draw-text-5">Drag a handle to adjust track around locked point(s).</span>
+          </div>
         </div>
-       <div class="singlerow">
-         <button class="singlerowitem" id="btn-three-seconds">+3 sec</button>
-         <button class="singlerowitem" id="btn-undo">Undo</button>
-         <button class="singlerowitem" id="btn-save-route">Save</button>
-         <button class="singlerowitem" id="btn-reset-drawing">Reset</button>
-       </div>
-       <hr class="rg2-hr">
-       <h3 id='rg2-load-gps-title'>Load GPS file (GPX or TCX)</h3>
-       <div id="rg2-select-gps-file">
-         <input type='file' accept='.gpx, .tcx' id='rg2-load-gps-file'>
-       </div>
-       <div class="singlerow">
-         <button class = "singlerowitem" id="btn-autofit-gps">Autofit</button>
-         <div id="rg2-offset-spinner" class="singlerowitem">
-           <input id="spn-offset" />
-         </div>
-         <button  class = "singlerowitem" id="btn-undo-gps-adjust">Undo</button>
-       </div>
-       <div class="singlerow">
-         <button id="btn-save-gps-route">Save GPS route</button>
-       </div>
-       <hr class="rg2-hr">
-       <div>
-         <input type=checkbox id="btn-move-all"><label for="btn-move-all">Move track and map together (or right click-drag)</label>
-       </div>
-       <hr class="rg2-hr">
-       <div class="rg2-gps-text">
-        <span id="draw-text-1">Left click to add/lock/unlock a handle.></span>
-        <ul><li id="draw-text-2">Green: draggable</li>
-        <li id="draw-text-3">Red: locked</li></ul>
-        <span id="draw-text-4">Right click to delete a handle.</span>
-        <br><span id="draw-text-5">Drag a handle to adjust track around locked point(s).</span>
-       </div>
-    </div>
-    <?php if ($manager) {include  'html/manager.html'; } ?>
-       </div>
+        <?php if ($manager) {include  'html/manager.html'; } ?>     
+      </div>
       </div>
       <?php include 'html/animation.html'; ?>
       <?php include 'html/options.html'; ?>
       <?php include 'html/misc.html'; ?>
     </div>
-<script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
-<script src="//code.jquery.com/ui/1.11.3/jquery-ui.min.js"></script>
 <?php if ($debug) { ?>
+<script src="//code.jquery.com/jquery-1.11.3.js"></script>
+<script src="//code.jquery.com/ui/1.11.3/jquery-ui.js"></script>
 <script src='<?php echo $source_url . "/js/rg2.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/rg2ui.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/rg2input.js"; ?>'></script>
@@ -298,6 +304,8 @@ header('Content-type: text/html; charset=utf-8');
 <script src='<?php echo $source_url . "/js/plugins.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/handles.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/lib/he.js"; ?>'></script><?php } else { ?>
+<script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+<script src="//code.jquery.com/ui/1.11.3/jquery-ui.min.js"></script>
 <script src='<?php echo $source_url . "/js/rg2all.min.js"; ?>'></script><?php } ?>
 <?php if ($manager) { ?><?php if ($debug) { ?>
 <script src='<?php echo $source_url . "/js/resultparser.js"; ?>'></script>

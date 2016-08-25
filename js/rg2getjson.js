@@ -44,13 +44,8 @@
       type : "tracks",
       cache : false
     }).done(function (json) {
-<<<<<<< HEAD
-      var active, i, event, routes, crs;
-      $("#rg2-load-progress-label").text(rg2.t("Loading routes"));
-=======
       var active;
-      $("#rg2-load-progress-label").text(rg2.t("Saving routes"));
->>>>>>> refs/remotes/Maprunner/dev
+      $("#rg2-load-progress-label").text(rg2.t("Loading routes"));
       console.log("Tracks: " + json.data.routes.length);
       // TODO remove temporary (?) fix to get round RG1 events with no courses defined: see #179
       if (rg2.courses.getNumberOfCourses() > 0) {

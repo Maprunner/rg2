@@ -215,6 +215,7 @@
       $('#btn-move-all').prop('checked', false);
       this.handles.deleteAllHandles();
       this.addStartAndFinishHandles();
+      //TODO adjust autofit offset by difference between "user time" and "gps route time"
       if (this.autofitOffset === null) {
         this.autofitOffset = this.getOffset();
         rg2.ui.setAutofitSpinner(this.autofitOffset);
