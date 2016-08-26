@@ -1,1 +1,2 @@
 allow_url_fopen = ON
+extension=php_mbstring.dll

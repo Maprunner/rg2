@@ -185,6 +185,7 @@
       }
       rg2.results.createNameDropdown(courseid);
       $("#rg2-name-select").prop('disabled', false);
+      //TODO clear GPS selections
       $("#rg2-load-gps-file").val('').button("disable");
       $("#btn-autofit-gps").button("disable");
       this.gpstrack.autofitOffset = null;

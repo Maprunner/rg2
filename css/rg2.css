@@ -1,124 +1,124 @@
 /*
-  Routegadget RG2 Custom CSS
-  */
+   Routegadget RG2 Custom CSS
+   */
 
 html, body {
-	width: 100%;
-  height: 100%;
-  margin: 0;
-  border: 0;
-  display: block;
-  font: 16px/26px Helvetica, Helvetica Neue, Arial;
+   width: 100%;
+   height: 100%;
+   margin: 0;
+   border: 0;
+   display: block;
+   font: 16px/26px Helvetica, Helvetica Neue, Arial;
 }
 
 #rg2-header-container {
-    background: #002bd9;
-    color: white;
-    position: relative;
-    height: 30px;
-    border-bottom: 4px solid black;
-    font-size: 20px;
-    line-height: 30px;
+   background: #002bd9;
+   color: white;
+   position: relative;
+   height: 30px;
+   border-bottom: 4px solid black;
+   font-size: 20px;
+   line-height: 30px;
 }
 
 #rg2-course-select, #rg2-name-select {
-  float: right;
-  min-width: 200px;
-  max-width: 200px;
+   float: right;
+   min-width: 200px;
+   max-width: 200px;
 }
 
 #rg2-manager-event-select {
-  /*margin-top:100px;*/
-  width: 100%;
+   /*margin-top:100px;*/
+   width: 100%;
 }
 
 #rg2-new-comments {
-	margin-top:10px;
-	margin-bottom: 10px;
-	width: 100%;
-	height: 50px;
+   margin: 4px 0;
+   width: 100%;
+   height: 50px;
+   max-width: 260px;
 }
 
 .rg2-ani-row {
-    background: silver;
-    color: white;
-    position: absolute;
-    vertical-align: middle;
-    height: 36px;
-	  width: 280px;
-    right: 0;
-	  border: 4px solid darkgray;
-  	z-index: 100;
-    line-height: 36px;
+   background: silver;
+   color: white;
+   position: absolute;
+   vertical-align: middle;
+   height: 36px;
+   width: 280px;
+   right: 0;
+   border: 4px solid darkgray;
+   z-index: 100;
+   line-height: 36px;
 }
 
 .row-1 {
-    bottom: 120px;
-    font-size: 20px;
+   bottom: 120px;
+   font-size: 20px;
 }
 
 .row-2 {
-    bottom: 80px;
+   bottom: 80px;
 }
 
 .row-3 {
-    bottom: 40px;
-    color: black;
+   bottom: 40px;
+   color: black;
 }
 
 .row-4 {
-    bottom: 0;
-    color: black;
+   bottom: 0;
+   color: black;
 }
 
 #rg2-resize-info {
-	position: absolute;
-  vertical-align: middle;
-  padding-right: 10px;
+   position: absolute;
+   vertical-align: middle;
+   padding-right: 10px;
 }
 
 #rg2-header {
-	position: absolute;
-  vertical-align: middle;
-  left: 35px;
+   position: absolute;
+   vertical-align: middle;
+   left: 35px;
 }
 
 .rg2-header-text {
-	/* float: right; */
-	text-align: right;
+   /* float: right; */
+   text-align: right;
 }
 
 .rg2-header-text a, 
 .rg2-header-text a:link,
 .rg2-header-text a:active {
-	color: inherit;
-	text-decoration: none;
-	cursor: pointer;
-	margin-right: 5px;
+   color: inherit;
+   text-decoration: none;
+   cursor: pointer;
+   margin-right: 5px;
 }
 
 .rg2-header-text a:hover {
-	/* color: inherit; */
-	color: darkgray;
-	/* cursor: pointer; */
+   /* color: inherit; */
+   color: darkgray;
+   /* cursor: pointer; */
 }
 
 .rg2-button {
-  background: silver;
-  color: white;
-	float: right;
-	width: 30px;
-	text-align: center;
-	border-left: 4px solid darkgray;
+   background: silver;
+   color: white;
+   float: right;
+   width: 30px;
+   text-align: center;
+   border-left: 4px solid darkgray;
 }
 
 .rg2-button:hover {
-  color: darkgray;
+   color: darkgray;
 }
 
 #btn-edit-delete-event, #btn-add-event {
-    margin:0 auto;
-    display:block;
+   margin:0 auto;
+   display:block;
 }
 
 #rg2-about {
@@ -128,82 +128,82 @@ html, body {
 }
 
 #rg2-about-dialog {
-	 font-size: 0.75em;
+   font-size: 0.75em;
    display: none;
 }
 
 .splitstable {
-	 font-size: 0.75em;
+   font-size: 0.75em;
 }
 
 .splitstable th {
-  font-weight: bold;
-  background-color: white;
+   font-weight: bold;
+   background-color: white;
 }
 
 .splitsname-row {
-  background-color: #C0C0C0;
+   background-color: #C0C0C0;
 }
 
 .splitstime-row {
-  background-color: #E0E0E0;
+   background-color: #E0E0E0;
 }
 
 
 .splitsdistance-row {
-  background-color: white;
+   background-color: white;
 }
 
 .showcourse {
-	float: right;
+   float: right;
 }
 .event-info-icon {
-	float: right;
+   float: right;
 }
 
 .allitemsrow {
-  font-weight: bold;
+   font-weight: bold;
 }
 
 .rg2-hr {
-	margin-top: 10px;
-	margin-bottom: 10px;
+   margin-top: 10px;
+   margin-bottom: 10px;
 }
 #rg2-clock {
    font-weight: bold;
    font-size: 26px;
    color: black;
- 	 text-align: center;
+   text-align: center;
 }
 
 #rg2-tails-type {
-	padding-left: 5px;
-	border-right: 4px solid darkgray;
-	width: 100px;
+   padding-left: 5px;
+   border-right: 4px solid darkgray;
+   width: 100px;
 }
 
 #spn-tail-length {
-  width: 30px;
+   width: 30px;
 }
 
 #rg2-tails-spinner {
-  float: right;
-  padding-right: 5px;
+   float: right;
+   padding-right: 5px;
 }
 
 #spn-map-intensity, #spn-course-width, #spn-route-width, #spn-name-font-size, #spn-route-intensity, #spn-control-circle, #spn-offset {
-  width: 40px;
+   width: 40px;
 }
 
 .options {
-  float: right;
-  padding-right: 5px;
-  margin-top: 5px;
-  clear:both;
+   float: right;
+   padding-right: 5px;
+   margin-top: 5px;
+   clear:both;
 }
 
 #rg2-container {
-	 height: 100%;
+   height: 100%;
    width: 100%;
    position: relative;
    background: white;
@@ -213,10 +213,10 @@ html, body {
 
 #rg2-info-panel {
    font-size: 0.75em;
-	 width: 360px;
+   width: 360px;
    position: absolute;
-	 z-index: 100;
-	 height: 99%;
+   z-index: 100;
+   height: 99%;
 }
 
 #rg2-info-panel-tab-headers {
@@ -234,35 +234,50 @@ html, body {
 }
 
 #rg2-event-list .ui-menu-item {
-  list-style-image: none;
+   list-style-image: none;
 }
 
 #rg2-event-list .ui-menu-item a {
-  text-decoration: none;
+   text-decoration: none;
 }
 
 #rg2-event-list li:nth-child(odd) {
-  background: #eee;
+   background: #eee;
 }
-
+#rg2-event-list li:first-child {
+   border-top-left-radius: inherit;
+   border-top-right-radius: inherit;
+}
+#rg2-event-list li:last-child {
+   border-bottom-left-radius: inherit;
+   border-bottom-right-radius: inherit;
+}
 #rg2-event-list li.rg2-active-event {
    border: 2px solid black;
-	/* background: #dadada url("http://code.jquery.com/ui/1.11.3/themes/smoothness/images/ui-bg_glass_75_dadada_1x400.png") 50% 50% repeat-x; */
-	-webkit-border-radius: inherit;
-	-moz-border-radius: inherit;
-	border-radius: inherit;
+   margin: 0 -1px;
+   -webkit-border-radius: inherit;
+   -moz-border-radius: inherit;
+   border-radius: inherit;
+}
+
+#rg2-event-list li.ui-state-focus {
+   border:1px solid #444444;
+   background:#dadada url("http://code.jquery.com/ui/1.11.3/themes/smoothness/images/ui-bg_glass_75_dadada_1x400.png") 50% 50% repeat-x;
+   -webkit-border-radius: inherit;
+   -moz-border-radius: inherit;
+   border-radius: inherit;
 }
 
 #rg2-hide-info-panel-control {
-  position:absolute;
-  left: 366px;
-  top: 4px;
-  z-index: 100;
-  color: black;
-  width: 20px;
-  text-align: center;
-  border: 1px solid #AAAAAA;
-  background: #E0E0E0;
+   position:absolute;
+   left: 366px;
+   top: 4px;
+   z-index: 100;
+   color: black;
+   width: 20px;
+   text-align: center;
+   border: 1px solid #AAAAAA;
+   background: #E0E0E0;
 }
 
 #rg2-map-canvas {
@@ -294,13 +309,13 @@ html, body {
 }
 
 .rg2-gps-text {
-  line-height: 1.75em;
+   line-height: 1.75em;
 }
 
 .rg2-gps-text ul {
-  list-style-position: inside;
-  margin: 0 0 0 15px;
-  padding: 0;
+   list-style-position: inside;
+   margin: 0 0 0 15px;
+   padding: 0;
 }
 
 #rg2-track-names {
@@ -324,50 +339,50 @@ html, body {
 }
 
 #rg2-replay-start-control {
-  float: left;
-  padding-left: 5px;
+   float: left;
+   padding-left: 5px;
 }
 
 .pushright {
-	float: right;
+   float: right;
 }
 
 .singlerow {
-  display: table;
-  margin: auto;
-  width: 99%;
-  padding: 0.5em;
-  text-align: center;
+   display: table;
+   margin: auto;
+   width: 99%;
+   padding: 0.5em 0;
+   text-align: center;
 }
 
 .singlerowitem {
-  display: table-cell;
+   display: table-cell;
 }
 
 #rg2-manage-edit .ui-button {
-	margin-top: 10px;
-  margin-bottom: 10px;
+   margin-top: 10px;
+   margin-bottom: 10px;
 }
 
 /* mass start/real time icon colour */
 .active {
-	color: green;
+   color: green;
 }
 
 /* light green background*/
 .valid {
-  background-color: #99ffcc;
-  border-radius: 3px;
+   background-color: #99ffcc;
+   border-radius: 3px;
 }
 /*
 .coursemenutable tr, td, th {
-	padding-left: 5px;
-	padding-right: 5px;
-	text-align: center;
+   padding-left: 5px;
+   padding-right: 5px;
+   text-align: center;
 }
 */
 p.showcourse {
-	padding-left: 5px;
+   padding-left: 5px;
 }
 
 /* apply style to first td or th element in table
@@ -377,65 +392,65 @@ table.resulttable td,
 table.resulttable th,
 table.coursemenutable td,
 table.coursemenutable th {
-	padding-left: 5px;
-	padding-right: 5px;
-	text-align: center;
+   padding-left: 5px;
+   padding-right: 5px;
+   text-align: center;
 }
 
 table.resulttable td:first-child + td,
 table.resulttable th:first-child + th,
 table.coursemenutable td:first-child,
 table.coursemenutable th:first-child {
-	width: 80%;
-	text-align: left;
+   width: 80%;
+   text-align: left;
 }
 
 table.resulttable tbody tr:nth-child(odd),
 table.coursemenutable tbody tr:nth-child(odd) {
-	/* background: #eee; */
-	background: #808080; /* Fallback */
-	background: rgba(128, 128, 128, 0.1);
+   /* background: #eee; */
+   background: #808080; /* Fallback */
+   background: rgba(128, 128, 128, 0.1);
 }
 
 #rg2-result-list .ui-accordion,
 #rg2-result-list .ui-accordion-content {
-	padding: 0;
+   padding: 0;
 }
 
 
 #rg2-select-gps-file .ui-button {
-	width: 100%;
-	margin-bottom: 10px;
+   width: 100%;
+   margin-bottom: 10px;
 }
 
 #rg2-load-gps-file {
-	box-sizing: border-box;
+   box-sizing: border-box;
 }
 
 #rg2-button-bar .ui-button-text-icon-primary,
 #rg2-button-bar .ui-button-text,
 #rg2-button-bar .ui-button-text-icons,
 #rg2-button-bar .ui-button-text {
-	font-size: 0.75em;
-	padding: .2em .2em .2em 1em;
+   font-size: 0.75em;
+   padding: .2em .2em .2em 1em;
 
 }
 
 #rg2-clock-slider {
-  margin: 10px 15px;
+   margin: 10px 15px;
 }
 
 #rg2-clock-slider .ui-state-default {
-	background: silver;
-	border: 4px solid darkgray;
+   background: silver;
+   border: 4px solid darkgray;
 }
 
 #rg2-clock-slider .ui-state-focus {
-	outline: none;
+   outline: none;
 }
 
 #rg2-clock-slider .ui-state-hover {
-	background: darkgray;
+   background: darkgray;
 }
 
 #rg2-clock-slider .ui-slider-handle {
@@ -444,68 +459,68 @@ height: 20px;
 }
 
 #rg2-tails-spinner .ui-widget-content {
-  border: 2px solid darkgray;
+   border: 2px solid darkgray;
 }
 
 #rg2-tails-spinner .ui-spinner {
-	display: inline;
+   display: inline;
 }
 
 #rg2-tails-spinner .ui-state-default {
-	background: silver;
-	color: darkgray;
+   background: silver;
+   color: darkgray;
 }
 
 #rg2-tails-spinner .ui-state-active {
-	color: silver;
+   color: silver;
 }
 
 #rg2-tails-spinner .ui-spinner input {
-  font: 16px Helvetica, Helvetica Neue, Arial;
-  margin-bottom: 9px
+   font: 16px Helvetica, Helvetica Neue, Arial;
+   margin-bottom: 9px
 }
 
 #rg2-event-comments {
-	margin-top: 10px;
-	margin-bottom: 10px;
-	width: 95%;
-	height: 50px;
+   margin-top: 10px;
+   margin-bottom: 10px;
+   width: 95%;
+   height: 50px;
 }
 
 #rg2-add-new-event .ui-button {
-  margin-top: 10px;
-  margin-bottom: 10px;
+   margin-top: 10px;
+   margin-bottom: 10px;
 }
 
 #rg2-new-event-details input {
-  margin-top: 5px;
-  margin-bottom: 5px;
+   margin-top: 5px;
+   margin-bottom: 5px;
 }
 /* spinner icons */
 #rg2-tails-spinner .ui-icon,
 #rg2-tails-spinner .ui-widget-content .ui-icon {
-	background-image: url(../img/ui-icons_222222_256x240.png);
+   background-image: url(../img/ui-icons_222222_256x240.png);
 }
 #rg2-tails-spinner .ui-widget-header .ui-icon {
-	background-image: url(../img/ui-icons_222222_256x240.png);
+   background-image: url(../img/ui-icons_222222_256x240.png);
 }
 #rg2-tails-spinner .ui-state-default .ui-icon {
-	background-image: url(../img/ui-icons_888888_256x240.png);
+   background-image: url(../img/ui-icons_888888_256x240.png);
 }
 #rg2-tails-spinner .ui-state-hover .ui-icon,
 #rg2-tails-spinner .ui-state-focus .ui-icon {
-	background-image: url(../img/ui-icons_454545_256x240.png);
+   background-image: url(../img/ui-icons_454545_256x240.png);
 }
 #rg2-tails-spinner .ui-state-active .ui-icon {
-	background-image: url(../img/ui-icons_454545_256x240.png);
+   background-image: url(../img/ui-icons_454545_256x240.png);
 }
 #rg2-tails-spinner .ui-state-highlight .ui-icon {
-	background-image: url(../img/ui-icons_2e83ff_256x240.png);
+   background-image: url(../img/ui-icons_2e83ff_256x240.png);
 }
 
 #rg2-tails-spinner .ui-state-error .ui-icon,
 .ui-state-error-text .ui-icon {
-	background-image: url(../img/ui-icons_cd0a0a_256x240.png);
+   background-image: url(../img/ui-icons_cd0a0a_256x240.png);
 }
 
 /* allow close button on dialog to be hidden
@@ -519,163 +534,160 @@ display: none;
  * prevent selection of objects everywhere
  */
 body {
-  -ms-user-select: none;
-  -webkit-user-select: none;
-  -khtml-user-select: none;
-  -moz-user-select: none;
-  -webkit-touch-callout: none;
-  -webkit-user-drag: none;
-  user-select: none;
+   -ms-user-select: none;
+   -webkit-user-select: none;
+   -khtml-user-select: none;
+   -moz-user-select: none;
+   -webkit-touch-callout: none;
+   -webkit-user-drag: none;
+   user-select: none;
 }
 
 .manage-input {
-  margin-top: 3px;
-  margin-right: 3px;
-  width: 200px;
+   margin-top: 3px;
+   margin-right: 3px;
+   width: 200px;
 }
 
 .manage-label {
-  margin-left: 3px;
+   margin-left: 3px;
 }
 
 #rg2-draw label {
-  margin-left: 3px;
+   margin-left: 3px;
 }
 
 .no-top-margin {
-  margin-top: 0;
-  margin-bottom: 2px;
+   margin-top: 0;
+   margin-bottom: 2px;
 }
 
 #rg2-manage-create {
-  padding-right: 5px;
+   padding-right: 5px;
 }
 
 #rg2-manage-create div, #rg2-manage-map div, #rg2-manage-edit div {
-  margin-top: 5px;
+   margin-top: 5px;
 }
 
 .manage-file-input {
-  margin-top: 4px;
-  margin-bottom: 4px;
-  width: 200px;
+   margin-top: 4px;
+   margin-bottom: 4px;
+   width: 200px;
 }
 
 .manage-file-input-div {
-  height: 41px;
+   height: 41px;
 }
 
 .manage-file-label {
-  margin-top: 9px;
-  margin-bottom: 9px;
+   margin-top: 9px;
+   margin-bottom: 9px;
 }
 
 .manage-event-edit-div {
-  height: 30px;
-  }
+   height: 30px;
+   }
 
 .manage-event-edit-div label, .manage-event-edit-div input {
-  display: inline-block;
+   display: inline-block;
 }
 
 .manage-event-edit-div label {
-  width: 80px;
+   width: 80px;
 }
 
 
 #manage-edit-options input {
-  width: 220px;
+   width: 220px;
 }
 
 #manage-edit-options .ui-accordion-content {
-  padding: 1em 0.5em;
+   padding: 1em 0.5em;
 }
 
 #rg2-option-controls input[type="checkbox"] {
-  margin-left: 10px;
-  margin-top: 10px;
-  float: right;
+   margin-left: 10px;
+   margin-top: 10px;
+   float: right;
 }
 
 #rg2-draw .ui-button {
-  margin: 2px 5px;
+   margin: 2px 1px;
 }
 
 #rg2-edit-event-comments {
-  width: 100%;
-  height: 50px;
+   width: 95%;
+   height: 50px;
 }
 
 #rg2-event-selected {
-  width: 100%;
+   width: 95%;
 }
 
-#rg2-event-list li.ui-state-focus {
-	background:#dadada url("http://code.jquery.com/ui/1.11.3/themes/smoothness/images/ui-bg_glass_75_dadada_1x400.png") 50% 50% repeat-x;
-	-webkit-border-radius: inherit;
-	-moz-border-radius: inherit;
-	border-radius: inherit;
-}
 /* Search Filter */
 span.filter-input-group-addon:first-child {
-	border-right: 0;
-	border-bottom-right-radius: 0;
-	border-top-right-radius: 0;
+   border-right: 0;
+   border-bottom-right-radius: 0;
+   border-top-right-radius: 0;
 }
 input.filter-form-control:last-child,
 span.filter-input-group-addon:last-child {
-	border-bottom-left-radius: 0;
-	border-top-left-radius: 0;
+   border-bottom-left-radius: 0;
+   border-top-left-radius: 0;
 }
 span.filter-input-group-addon {
-	padding: 5px 12px;
-	font-size: 14px;
-	font-weight: normal;
-	line-height: 1;
-	color: #555555;
-	text-align: center;
-	background-color: #eeeeee;
-	border: 1px solid #cccccc;
-	-webkit-border-radius: 4px;
-	-moz-border-radius: 4px;
-	border-radius: 4px;
-	width: 1%;
-	white-space: nowrap;
-	vertical-align: middle;
-	display: table-cell;
-	border-collapse: separate;
+   padding: 5px 12px;
+   font-size: 14px;
+   font-weight: normal;
+   line-height: 1;
+   color: #555555;
+   text-align: center;
+   background-color: #eeeeee;
+   border: 1px solid #cccccc;
+   -webkit-border-radius: 4px;
+   -moz-border-radius: 4px;
+   border-radius: 4px;
+   width: 1%;
+   white-space: nowrap;
+   vertical-align: middle;
+   display: table-cell;
+   border-collapse: separate;
 }
 .filter-input-group {
-	margin: 0 0 5px 0;
-	display: table;
+   margin: 0 0 5px 0;
+   display: table;
 }
 input.filter-form-control {
-	z-index: 2;
-	float: left;
-	width: 100%;
-	line-height: normal;
-	margin: 0;
-	box-sizing: border-box;
-	padding: 5px 12px;
-	color: #555555;
-	background-color: #ffffff;
-	background-image: none;
-	border: 1px solid #cccccc;
-	-webkit-border-radius: 4px;
-	-moz-border-radius: 4px;
-	border-radius: 4px;
+   z-index: 2;
+   float: left;
+   width: 100%;
+   line-height: normal;
+   margin: 0;
+   box-sizing: border-box;
+   padding: 5px 12px;
+   color: #555555;
+   background-color: #ffffff;
+   background-image: none;
+   border: 1px solid #cccccc;
+   -webkit-border-radius: 4px;
+   -moz-border-radius: 4px;
+   border-radius: 4px;
 }
 
-#rg2-select-course, #rg2-select-name, #rg2-enter-name {
-	width: 100%;
-	display: inline-block;
+#rg2-select-course, #rg2-select-name, #rg2-enter-name, #rg2-enter-name div, #rg2-enter-comment {
+   width: 100%;
+   line-height: 1.5em;
+   vertical-align: middle;
+   margin: 2px 0;
+   display: inline-block;
 }
-
-#rg2-enter-name div {
-	width: 100%;
-	display: inline-block;
+#rg2-course-select, #rg2-name-select {
+   float: right;
+   min-width: 160px;
+   max-width: 160px;
 }
-
-#rg2-enter-name div label {
-	display: block;
+#rg2-enter-name input {
+   min-width: 120px;
+   max-width: 120px;
 }

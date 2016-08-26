@@ -14,8 +14,7 @@ var rg2 = (function (window, $) {
   function startDisplayingInfo() {
     // check if a specific event has been requested
     if ((window.location.hash) && (!rg2.config.managing)) {
-      rg2.requestedHash.saveHash(window.location.hash);
-      window.history.replaceState(window.location.hash, null, window.location.hash);
+      rg2.requestedHash.parseHash(window.location.hash);
     }
     // load event details
     rg2.getEvents();
@@ -102,7 +101,6 @@ var rg2 = (function (window, $) {
     rg2.drawing.initialiseDrawing(rg2.events.hasResults(eventid));
     rg2.loadNewMap(rg2Config.maps_url + rg2.events.getMapFileName());
     rg2.ui.setTitleBar();
-    rg2.requestedHash.setNewEvent(rg2.events.getKartatEventID(eventid));
     rg2.redraw(false);
     rg2.getCourses();
   }
@@ -131,9 +129,6 @@ var rg2 = (function (window, $) {
     createObjects();
     setManagerOptions();
     rg2.setUpCanvas();
-    window.addEventListener("popstate", function (event) {
-      rg2.requestedHash.handleNavigation(event);
-    });
     startDisplayingInfo();
   }
 

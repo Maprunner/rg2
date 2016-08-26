@@ -81,6 +81,7 @@ module.exports = function(grunt) {
         'duplicate-background-images': false,
         'outline-none': false,
         'box-sizing': false,
+        'star-property-hack': false
       },
       src: cssFileList
     },

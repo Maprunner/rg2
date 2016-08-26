@@ -1,4 +1,4 @@
-// Version 1.2.8 2016-08-26T00:55:29;
+// Version 1.2.8 2016-08-26T19:40:34;
 /*
  * Routegadget 2
  * https://github.com/Maprunner/rg2
@@ -15,8 +15,7 @@ var rg2 = (function (window, $) {
   function startDisplayingInfo() {
     // check if a specific event has been requested
     if ((window.location.hash) && (!rg2.config.managing)) {
-      rg2.requestedHash.saveHash(window.location.hash);
-      window.history.replaceState(window.location.hash, null, window.location.hash);
+      rg2.requestedHash.parseHash(window.location.hash);
     }
     // load event details
     rg2.getEvents();
@@ -103,7 +102,6 @@ var rg2 = (function (window, $) {
     rg2.drawing.initialiseDrawing(rg2.events.hasResults(eventid));
     rg2.loadNewMap(rg2Config.maps_url + rg2.events.getMapFileName());
     rg2.ui.setTitleBar();
-    rg2.requestedHash.setNewEvent(rg2.events.getKartatEventID(eventid));
     rg2.redraw(false);
     rg2.getCourses();
   }
@@ -132,9 +130,6 @@ var rg2 = (function (window, $) {
     createObjects();
     setManagerOptions();
     rg2.setUpCanvas();
-    window.addEventListener("popstate", function (event) {
-      rg2.requestedHash.handleNavigation(event);
-    });
     startDisplayingInfo();
   }
 
@@ -2152,6 +2147,7 @@ var rg2 = (function (window, $) {
       }
       rg2.results.createNameDropdown(courseid);
       $("#rg2-name-select").prop('disabled', false);
+      //TODO clear GPS selections
       $("#rg2-load-gps-file").val('').button("disable");
       $("#btn-autofit-gps").button("disable");
       this.gpstrack.autofitOffset = null;
@@ -5248,7 +5244,7 @@ var rg2 = (function (window, $) {
       type : "tracks",
       cache : false
     }).done(function (json) {
-      var active;
+      var active, i, event, routes, crs;
       $("#rg2-load-progress-label").text(rg2.t("Loading routes"));
       console.log("Tracks: " + json.data.routes.length);
       // TODO remove temporary (?) fix to get round RG1 events with no courses defined: see #179
@@ -5281,7 +5277,20 @@ var rg2 = (function (window, $) {
         } else {
           $("#rg2-splitsbrowser").off().hide();
         }
-        rg2.requestedHash.setUIToHash();
+        // set up screen as requested in hash
+        event = $.Event('click');
+        event.target = {};
+        event.target.checked = true;
+        routes = rg2.requestedHash.getRoutes();
+        for (i = 0; i < routes.length; i += 1) {
+          event.target.id = routes[i];
+          $(".showtrack").filter("#" + routes[i]).trigger(event).prop('checked', true);
+        }
+        crs = rg2.requestedHash.getCourses();
+        for (i = 0; i < crs.length; i += 1) {
+          event.target.id = crs[i];
+          $(".showcourse").filter("#" + crs[i]).trigger(event).prop('checked', true);
+        }
       }
       $("#rg2-load-progress-label").text("");
       $("#rg2-load-progress").hide();
@@ -5971,6 +5980,7 @@ var rg2 = (function (window, $) {
         select : function (event, ui) {
           /*jslint unparam:true*/
           rg2.loadEvent(ui.item[0].id);
+          rg2.requestedHash.setNewEvent(rg2.events.getKartatEventID());
         }
       });
       this.event_list_li = $('#rg2-event-ul > li').clone();
@@ -6254,7 +6264,7 @@ var rg2 = (function (window, $) {
 }());
 
 /*global rg2:false */
-/*global console:false */
+// /*global console:false */
 (function () {
   var utils =  {
     rotatePoint : function (x, y, angle) {
@@ -6519,60 +6529,39 @@ var rg2 = (function (window, $) {
   RequestedHash.prototype = {
     Constructor : RequestedHash,
 
-    handleNavigation : function (event) {
-      console.log(event);
-      var parsedHash;
-      if (event.state !== null) {
-        parsedHash = this.parseHash(event.state);
-        if (parsedHash.id !== this.id) {
-          // need to load a new event
-          // hash value is the kartatid
-          rg2.loadEvent(rg2.events.getEventIDForKartatID(parsedHash.id));
-        } else {
-          // need to set up UI for existing event
-          this.saveHash(event.state);
-          this.setUIToHash();
-        }
-      }
-    },
-
-    saveHash : function (hash) {
-      var parsedHash;
-      parsedHash = this.parseHash(hash);
-      this.id = parsedHash.id;
-      this.courses = parsedHash.courses;
-      this.routes = parsedHash.routes;
-    },
-
     parseHash : function (hash) {
-      var fields, i, id, courses, routes;
-      id = 0;
-      courses = [];
-      routes = [];
+      var fields, i;
       // input looks like #id&course=a,b,c&result=x,y,z
       fields = hash.split('&');
       for (i = 0; i < fields.length; i += 1) {
         fields[i] = fields[i].toLowerCase();
         if (fields[i].search('#') !== -1) {
-          id = parseInt(fields[i].replace("#", ""), 10);
+          this.id = parseInt(fields[i].replace("#", ""), 10);
         }
         if (fields[i].search('course=') !== -1) {
-          courses = fields[i].replace("course=", "").split(',');
+          this.courses = fields[i].replace("course=", "").split(',');
         }
         if (fields[i].search('route=') !== -1) {
-          routes = fields[i].replace("route=", "").split(',');
+          this.routes = fields[i].replace("route=", "").split(',');
         }
       }
       // convert to integers: NaNs sort themselves out on display so don't check here
-      courses = courses.map(Number);
-      routes = routes.map(Number);
+      this.courses = this.courses.map(Number);
+      this.routes = this.routes.map(Number);
 
       if (isNaN(this.id)) {
-        id = 0;
-        courses.length = 0;
-        routes.length = 0;
+        this.id = 0;
+        this.courses.length = 0;
+        this.routes.length = 0;
       }
-      return ({id: id, courses: courses, routes: routes});
+    },
+
+    getRoutes : function () {
+      return this.routes;
+    },
+
+    getCourses : function () {
+      return this.courses;
     },
 
     getID : function () {
@@ -6588,27 +6577,19 @@ var rg2 = (function (window, $) {
 
     setCourses : function () {
       this.courses = rg2.courses.getCoursesOnDisplay();
-      this.pushNewState();
+      window.history.pushState('', '', this.getHash());
     },
 
     setRoutes : function () {
       this.routes = rg2.results.getTracksOnDisplay();
-      this.pushNewState();
+      window.history.pushState('', '', this.getHash());
     },
 
     setNewEvent : function (id) {
       this.id = id;
       this.courses.length = 0;
       this.routes.length = 0;
-      this.pushNewState();
-    },
-
-    pushNewState : function () {
-      var hash;
-      hash = this.getHash();
-      console.log("New hash: " + hash);
-      window.history.pushState(hash, '', hash);
-      window.document.title = "RG2:" + hash;
+      window.history.pushState('', '', this.getHash());
     },
 
     getHash : function () {
@@ -6635,35 +6616,6 @@ var rg2 = (function (window, $) {
         }
       }
       return extrahash;
-    },
-
-    setUIToHash : function () {
-      //sets check boxes etc. to match current saved hash
-      var i, routes, courses;
-      // start by removing everything
-      rg2.courses.removeAllFromDisplay();
-      rg2.results.removeAllTracksFromDisplay();
-      // courses tab checkboxes
-      $(".courselist").prop('checked', false);
-      $(".allcourses").prop('checked', false);
-      // results tab checkboxes
-      $(".showcourse").prop('checked', false);
-      $(".showtrack").prop('checked', false);
-      $(".allcoursetracks").prop('checked', false);
-      // set up requested routes
-      routes = this.routes;
-      for (i = 0; i < routes.length; i += 1) {
-        rg2.results.putOneTrackOnDisplay(routes[i]);
-        $(".showtrack").filter("#" + routes[i]).prop('checked', true);
-      }
-      // set up requested courses
-      courses = this.courses;
-      for (i = 0; i < courses.length; i += 1) {
-        rg2.courses.putOnDisplay(courses[i]);
-        $(".courselist").filter("#" + courses[i]).prop('checked', true);
-        $(".showcourse").filter("#" + courses[i]).prop('checked', true);
-      }
-      rg2.redraw(false);
     }
   };
   rg2.utils = utils;

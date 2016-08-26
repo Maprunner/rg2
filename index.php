@@ -226,7 +226,7 @@ header('Content-type: text/html; charset=utf-8');
                 <span id = "rg2-time"><input  id="rg2-time-entry" class="pushright" type="text"></span>
               </div>
             </div>
-            <div>
+            <div id="rg2-enter-comment">
               <textarea id="rg2-new-comments"></textarea>
             </div>
             <div>
@@ -235,8 +235,8 @@ header('Content-type: text/html; charset=utf-8');
             <div class="singlerow">
               <button class="singlerowitem" id="btn-three-seconds">+3 sec</button>
               <button class="singlerowitem" id="btn-undo">Undo</button>
-              <button class="singlerowitem" id="btn-save-route">Save</button>
               <button class="singlerowitem" id="btn-reset-drawing">Reset</button>
+              <button class="singlerowitem" id="btn-save-route">Save</button>
             </div>
           </div>
           <!-- <hr class="rg2-hr"> -->
