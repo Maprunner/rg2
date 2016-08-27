@@ -79,9 +79,10 @@
   // translation function
   function t(str) {
     if (dictionary.hasOwnProperty(str)) {
-      return dictionary[str];
+      // hack to get decoded html entities
+      return $('<div/>').html(dictionary[str]).text();
     }
-    return str;
+    return $('<div/>').html(str).text();
   }
 
   function setTextContents($elem, text) {
@@ -117,10 +118,10 @@
     var i, selector, text;
     selector = ['label[for=rg2-control-select]', 'label[for=btn-full-tails]', 'label[for=spn-tail-length]', 'label[for=rg2-select-language]', 'label[for=spn-map-intensity]',
       'label[for=spn-route-intensity]', 'label[for=spn-route-width]', 'label[for=spn-name-font-size]', 'label[for=spn-course-width]', 'label[for=spn-control-circle]',
-      'label[for=chk-snap-toggle]', 'label[for=chk-show-three-seconds]', 'label[for=chk-show-GPS-speed]', 'label[for=rg2-course-select]', 'label[for=rg2-name-select]',
+      'label[for=chk-snap-toggle]', 'label[for=chk-show-three-seconds]', 'label[for=chk-show-GPS-speed]', 'label[for=rg2-course-select]', 'label[for=rg2-name-select]', 'label[for=rg2-name]', 'label[for=rg2-time]',
       'label[for=btn-move-all]', 'label[for=btn-align-map]'];
     text = ['Start at', 'Full tails', 'Length', 'Language', 'Map intensity %', 'Route intensity %', 'Route width', 'Replay label font size', 'Course overprint width', 'Control circle size',
-      'Snap to control when drawing', 'Show +3 time loss for GPS routes', 'Show GPS speed colours', 'Select course', 'Select name', 'Move track and map together (or right click-drag)',
+      'Snap to control when drawing', 'Show +3 time loss for GPS routes', 'Show GPS speed colours', 'Select course', 'Select name', 'Enter name', 'Enter time (mm&colon;ss)', 'Move track and map together (or right click-drag)',
       'Align map to next control'];
     for (i = 0; i < selector.length; i += 1) {
       $(selector[i]).prop('textContent', t(text[i]));
