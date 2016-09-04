@@ -48,7 +48,7 @@ module.exports = function(grunt) {
       options : {
         curly : true,
         plusplus : true,
-        es3 : true,
+        esversion : 3,
         //strict: true,
         undef : true,
         unused: true,
@@ -59,7 +59,8 @@ module.exports = function(grunt) {
           document : false,
           alert : false,
           FileReader : false,
-          console : false
+          console : false,
+          JSON: true
         }
       },
       manager : {
@@ -98,18 +99,6 @@ module.exports = function(grunt) {
       }
     },
 
-    'ftp-deploy' : {
-      toweb : {
-        auth : {
-          host : ftpHost,
-          port : 21,
-          authKey : 'rg'
-        },
-        src : 'ftpsite/',
-        dest : 'public_html/',
-        exclusions : []
-      }
-    },
     sync : {
       rel : {
         src : ['js/**', 'css/**', 'img/**', 'rg2api.php', 'index.php', 'html/**', 'lang/**'],
