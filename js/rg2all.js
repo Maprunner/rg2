@@ -1,4 +1,4 @@
-// Version 1.2.8 2016-07-09T18:55:50;
+// Version 1.2.9 2016-09-04T09:43:46+0100;
 /*
  * Routegadget 2
  * https://github.com/Maprunner/rg2
@@ -148,23 +148,9 @@ var rg2 = (function (window, $) {
   function Animation() {
     'use strict';
     this.runners = [];
-    this.timer = null;
-    this.animationSecs = 0;
-    this.deltaSecs = 5;
     // value in milliseconds
     this.timerInterval = 100;
-    // if not real time then mass start
-    this.realTime = false;
-    this.earliestStartSecs = 0;
-    this.latestFinishSecs = 0;
-    this.tailLength = 0;
-    this.useFullTails = false;
-    // control to start from if this option selected
-    this.massStartControl = 0;
-    // run each leg as a mass start if true
-    this.massStartByControl = false;
-    this.displayNames = true;
-    this.displayInitials = false;
+    this.resetAnimation();
   }
 
 
@@ -175,11 +161,24 @@ var rg2 = (function (window, $) {
       this.runners.length = 0;
       clearInterval(this.timer);
       this.timer = null;
+      this.animationSecs = 0;
+      this.deltaSecs = 5;
+      // if not real time then mass start
+      this.realTime = false;
+      this.earliestStartSecs = 0;
+      this.latestFinishSecs = 0;
+      this.tailLength = 0;
+      this.useFullTails = false;
+      // control to start from if this option selected
       this.massStartControl = 0;
+      // run each leg as a mass start if true
       this.massStartByControl = false;
+      this.displayNames = true;
+      this.displayInitials = false;
       this.updateAnimationDetails();
-      $("#btn-start-stop").removeClass("fa-pause").addClass("fa-play");
-      $("#btn-start-stop").prop("title", rg2.t("Run"));
+      $("#btn-start-stop").removeClass('fa-pause').addClass('fa-play').prop('title', rg2.t('Run'));
+      $("#btn-real-time").removeClass().addClass('fa fa-users').prop('title', rg2.t('Real time'));
+      $("#btn-toggle-names").prop('title', rg2.t('Show initials'));
     },
 
     // @@param courseresults: array of results to be removed
@@ -401,13 +400,13 @@ var rg2 = (function (window, $) {
       // toggles between mass start and real time
       if (this.realTime) {
         this.realTime = false;
-        $("#btn-real-time").removeClass().addClass('fa fa-users').prop('title', rg2.t('Mass start'));
+        $("#btn-real-time").removeClass().addClass('fa fa-users').prop('title', rg2.t('Real time'));
         if (rg2.courses.getHighestControlNumber() > 0) {
           $("#rg2-control-select").prop('disabled', false);
         }
       } else {
         this.realTime = true;
-        $("#btn-real-time").removeClass().addClass('fa fa-clock-o').prop('title', rg2.t('Real time'));
+        $("#btn-real-time").removeClass().addClass('fa fa-clock-o').prop('title', rg2.t('Mass start'));
         $("#rg2-control-select").prop('disabled', true);
       }
       // go back to start
@@ -949,7 +948,7 @@ var rg2 = (function (window, $) {
     EVENT_WITHOUT_RESULTS : 2,
     SCORE_EVENT : 3,
     // version gets set automatically by grunt file during build process
-    RG2VERSION: '1.2.8',
+    RG2VERSION: '1.2.9',
     TIME_NOT_FOUND : 9999,
     // values for evt.which
     RIGHT_CLICK : 3,
@@ -1028,17 +1027,17 @@ var rg2 = (function (window, $) {
   }
 
   function translateFixedText() {
-    var temp;
     translateTextFields();
     translateTitleProperties();
     translateTextContentProperties();
     translateButtons();
-    temp = $('#btn-toggle-controls').prop('title');
-    $('#btn-toggle-controls').prop('title', t(temp));
-    temp = $('#btn-toggle-names').prop('title');
-    $('#btn-toggle-names').prop('title', t(temp));
-    temp = $('#btn-start-stop').prop('title');
-    $('#btn-start-stop').prop('title', t(temp));
+    // #316 missing translation on language change
+    // animation controls are done in resetAnimation fora new language so don't need to do them here
+    if ($('#btn-toggle-controls').hasClass('fa-circle-o')) {
+      $('#btn-toggle-controls').prop('title', t('Show controls'));
+    } else {
+      $('#btn-toggle-controls').prop('title', t('Hide controls'));
+    }
   }
 
   function createLanguageDropdown() {
@@ -2885,21 +2884,27 @@ var rg2 = (function (window, $) {
     },
 
     processGPX : function () {
-      var trksegs, trkpts, i, j;
+      var trksegs, trkpts, i, j, lat, lon;
       trksegs = this.xml.getElementsByTagName('trkseg');
       for (i = 0; i < trksegs.length; i += 1) {
         trkpts = trksegs[i].getElementsByTagName('trkpt');
         this.startOffset = this.getStartOffset(trkpts[0].getElementsByTagName('time')[0].textContent);
+        // #319 allow for GPS files with (lat 0, lon 0)
         for (j = 0; j < trkpts.length; j += 1) {
-          this.lat.push(trkpts[j].getAttribute('lat'));
-          this.lon.push(trkpts[j].getAttribute('lon'));
-          this.routeData.time.push(this.getSecsFromTrackpoint(trkpts[j].getElementsByTagName('time')[0].textContent));
+          lat = trkpts[j].getAttribute('lat');
+          lon = trkpts[j].getAttribute('lon');
+        // getAttribute returns strings
+          if ((lat !== "0") && (lon !== "0")) {
+            this.lat.push(lat);
+            this.lon.push(lon);
+            this.routeData.time.push(this.getSecsFromTrackpoint(trkpts[j].getElementsByTagName('time')[0].textContent));
+          }
         }
       }
     },
 
     processTCX : function () {
-      var trksegs, trkpts, i, j, position;
+      var trksegs, trkpts, i, j, position, lat, lon;
       trksegs = this.xml.getElementsByTagName('Track');
       for (i = 0; i < trksegs.length; i += 1) {
         trkpts = trksegs[i].getElementsByTagName('Trackpoint');
@@ -2908,9 +2913,15 @@ var rg2 = (function (window, $) {
           // allow for <trackpoint> with no position: see #199
           if (trkpts[j].getElementsByTagName('Position').length > 0) {
             position = trkpts[j].getElementsByTagName('Position');
-            this.lat.push(position[0].getElementsByTagName('LatitudeDegrees')[0].textContent);
-            this.lon.push(position[0].getElementsByTagName('LongitudeDegrees')[0].textContent);
-            this.routeData.time.push(this.getSecsFromTrackpoint(trkpts[j].getElementsByTagName('Time')[0].textContent));
+            // #319 allow for GPS files with (lat 0, lon 0)
+            lat = position[0].getElementsByTagName('LatitudeDegrees')[0].textContent;
+            lon = position[0].getElementsByTagName('LongitudeDegrees')[0].textContent;
+            // textContent returns strings
+            if ((lat !== "0") && (lon !== "0")) {
+              this.lat.push(lat);
+              this.lon.push(lon);
+              this.routeData.time.push(this.getSecsFromTrackpoint(trkpts[j].getElementsByTagName('Time')[0].textContent));
+            }
           }
         }
       }
@@ -3000,7 +3011,7 @@ var rg2 = (function (window, $) {
           while (secs <= difftime) {
             x.push(oldx + (xpersec * secs));
             y.push(oldy + (ypersec * secs));
-            // 
+            //
             time.push(nexttime);
             nexttime += 1;
             secs += 1;
@@ -3016,7 +3027,7 @@ var rg2 = (function (window, $) {
     },
 
     autofitTrack : function () {
-      // fits a GPS track to the course based on split times at control locations 
+      // fits a GPS track to the course based on split times at control locations
       var i, split;
       // unlock map to allow adjustment
       $('#btn-move-all').prop('checked', false);
@@ -3194,6 +3205,7 @@ var rg2 = (function (window, $) {
   };
   rg2.GPSTrack = GPSTrack;
 }());
+
 /*global rg2:false */
 (function () {
   function Handle(x, y, time, index) {

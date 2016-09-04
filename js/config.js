@@ -48,7 +48,7 @@
     EVENT_WITHOUT_RESULTS : 2,
     SCORE_EVENT : 3,
     // version gets set automatically by grunt file during build process
-    RG2VERSION: '1.2.8',
+    RG2VERSION: '1.2.9',
     TIME_NOT_FOUND : 9999,
     // values for evt.which
     RIGHT_CLICK : 3,
@@ -127,17 +127,17 @@
   }
 
   function translateFixedText() {
-    var temp;
     translateTextFields();
     translateTitleProperties();
     translateTextContentProperties();
     translateButtons();
-    temp = $('#btn-toggle-controls').prop('title');
-    $('#btn-toggle-controls').prop('title', t(temp));
-    temp = $('#btn-toggle-names').prop('title');
-    $('#btn-toggle-names').prop('title', t(temp));
-    temp = $('#btn-start-stop').prop('title');
-    $('#btn-start-stop').prop('title', t(temp));
+    // #316 missing translation on language change
+    // animation controls are done in resetAnimation fora new language so don't need to do them here
+    if ($('#btn-toggle-controls').hasClass('fa-circle-o')) {
+      $('#btn-toggle-controls').prop('title', t('Show controls'));
+    } else {
+      $('#btn-toggle-controls').prop('title', t('Hide controls'));
+    }
   }
 
   function createLanguageDropdown() {

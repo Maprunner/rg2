@@ -5,23 +5,9 @@
   function Animation() {
     'use strict';
     this.runners = [];
-    this.timer = null;
-    this.animationSecs = 0;
-    this.deltaSecs = 5;
     // value in milliseconds
     this.timerInterval = 100;
-    // if not real time then mass start
-    this.realTime = false;
-    this.earliestStartSecs = 0;
-    this.latestFinishSecs = 0;
-    this.tailLength = 0;
-    this.useFullTails = false;
-    // control to start from if this option selected
-    this.massStartControl = 0;
-    // run each leg as a mass start if true
-    this.massStartByControl = false;
-    this.displayNames = true;
-    this.displayInitials = false;
+    this.resetAnimation();
   }
 
 
@@ -32,11 +18,24 @@
       this.runners.length = 0;
       clearInterval(this.timer);
       this.timer = null;
+      this.animationSecs = 0;
+      this.deltaSecs = 5;
+      // if not real time then mass start
+      this.realTime = false;
+      this.earliestStartSecs = 0;
+      this.latestFinishSecs = 0;
+      this.tailLength = 0;
+      this.useFullTails = false;
+      // control to start from if this option selected
       this.massStartControl = 0;
+      // run each leg as a mass start if true
       this.massStartByControl = false;
+      this.displayNames = true;
+      this.displayInitials = false;
       this.updateAnimationDetails();
-      $("#btn-start-stop").removeClass("fa-pause").addClass("fa-play");
-      $("#btn-start-stop").prop("title", rg2.t("Run"));
+      $("#btn-start-stop").removeClass('fa-pause').addClass('fa-play').prop('title', rg2.t('Run'));
+      $("#btn-real-time").removeClass().addClass('fa fa-users').prop('title', rg2.t('Real time'));
+      $("#btn-toggle-names").prop('title', rg2.t('Show initials'));
     },
 
     // @@param courseresults: array of results to be removed
@@ -258,13 +257,13 @@
       // toggles between mass start and real time
       if (this.realTime) {
         this.realTime = false;
-        $("#btn-real-time").removeClass().addClass('fa fa-users').prop('title', rg2.t('Mass start'));
+        $("#btn-real-time").removeClass().addClass('fa fa-users').prop('title', rg2.t('Real time'));
         if (rg2.courses.getHighestControlNumber() > 0) {
           $("#rg2-control-select").prop('disabled', false);
         }
       } else {
         this.realTime = true;
-        $("#btn-real-time").removeClass().addClass('fa fa-clock-o').prop('title', rg2.t('Real time'));
+        $("#btn-real-time").removeClass().addClass('fa fa-clock-o').prop('title', rg2.t('Mass start'));
         $("#rg2-control-select").prop('disabled', true);
       }
       // go back to start

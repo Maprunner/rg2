@@ -23,7 +23,7 @@ module.exports = function(grunt) {
   var clubs = ['aire', 'bado', 'baoc', 'basoc', 'bko', 'boc', 'bok', 'bl', 'chig', 'claro', 'clok', 'clyde', 'coboc', 'cuoc', 'cvfr', 'darkandwhite', 'dee',
    'devonoc', 'ebor', 'ecko', 'elo', 'epoc', 'esoc', 'euoc', 'gmoa', 'gramp', 'go', 'happyherts', 'havoc', 'hoc', 'interlopers', 'invoc', 'jk',
    'kerno', 'kfo', 'lamm', 'leioc', 'loc', 'log', 'lok', 'lvo', 'maroc', 'mdoc', 'moravian', 'mvoc', 'nato', 'ngoc', 'noroc', 'nwo', 'od', 'omm', 'ouoc',
-   'pfo', 'pow', 'quantock', 'rafo', 'roxburghreivers', 'sa', 'sarum', 'saxons', 'scottish6days', 'seloc', 'slow', 'smbo', 'smoc', 'sn', 'so', 'soa', 'soc', 'solway',
+   'pfo', 'potoc', 'pow', 'quantock', 'rafo', 'roxburghreivers', 'sa', 'sarum', 'saxons', 'scottish6days', 'seloc', 'slow', 'smbo', 'smoc', 'sn', 'so', 'soa', 'soc', 'solway',
    'sportident', 'sroc', 'stag', 'start', 'suffoc', 'swoc', 'syo', 'tay', 'test', 'purple-thistle', 'tinto', 'tvoc', 'walton', 'waoc', 'wcoc', 'wim', 'wmoc',
    'wrekin', 'wsco', 'wsco2008', 'wsoe', 'wsx'];
 
@@ -48,7 +48,7 @@ module.exports = function(grunt) {
       options : {
         curly : true,
         plusplus : true,
-        es3 : true,
+        esversion : 3,
         //strict: true,
         undef : true,
         unused: true,
@@ -59,7 +59,8 @@ module.exports = function(grunt) {
           document : false,
           alert : false,
           FileReader : false,
-          console : false
+          console : false,
+          JSON: true
         }
       },
       manager : {
@@ -98,18 +99,6 @@ module.exports = function(grunt) {
       }
     },
 
-    'ftp-deploy' : {
-      toweb : {
-        auth : {
-          host : ftpHost,
-          port : 21,
-          authKey : 'rg'
-        },
-        src : 'ftpsite/',
-        dest : 'public_html/',
-        exclusions : []
-      }
-    },
     sync : {
       rel : {
         src : ['js/**', 'css/**', 'img/**', 'rg2api.php', 'index.php', 'html/**', 'lang/**'],
@@ -432,6 +421,12 @@ module.exports = function(grunt) {
         expand : true,
         src : '**',
         dest : 'ftpsite/pfo/rg2/'
+      },
+      potoc : {
+        cwd : 'rel/',
+        expand : true,
+        src : '**',
+        dest : 'ftpsite/potoc/rg2/'
       },
       pow : {
         cwd : 'rel/',
