@@ -1,4 +1,4 @@
-// Version 1.2.8 2016-08-27T23:39:10;
+// Version 1.2.9 2016-09-12T19:27:52+0300;
 /*
  * Routegadget 2
  * https://github.com/Maprunner/rg2
@@ -121,7 +121,7 @@ var rg2 = (function (window, $) {
     $("#rg2-container").hide();
     $.ajaxSetup({
       cache : false,
-      // suppress jQuery jsonp handling problem: see issue #291
+      // suppress jQuery jsonp handling problem: see issue #291 
       jsonp: false
     });
     rg2.loadConfigOptions();
@@ -965,7 +965,7 @@ var rg2 = (function (window, $) {
     EVENT_WITHOUT_RESULTS : 2,
     SCORE_EVENT : 3,
     // version gets set automatically by grunt file during build process
-    RG2VERSION: '1.2.8',
+    RG2VERSION: '1.2.9',
     TIME_NOT_FOUND : 9999,
     // values for evt.which
     RIGHT_CLICK : 3,
@@ -2967,21 +2967,27 @@ var rg2 = (function (window, $) {
     },
 
     processGPX : function () {
-      var trksegs, trkpts, i, j;
+      var trksegs, trkpts, i, j, lat, lon;
       trksegs = this.xml.getElementsByTagName('trkseg');
       for (i = 0; i < trksegs.length; i += 1) {
         trkpts = trksegs[i].getElementsByTagName('trkpt');
         this.startOffset = this.getStartOffset(trkpts[0].getElementsByTagName('time')[0].textContent);
+        // #319 allow for GPS files with (lat 0, lon 0)
         for (j = 0; j < trkpts.length; j += 1) {
-          this.lat.push(trkpts[j].getAttribute('lat'));
-          this.lon.push(trkpts[j].getAttribute('lon'));
-          this.routeData.time.push(this.getSecsFromTrackpoint(trkpts[j].getElementsByTagName('time')[0].textContent));
+          lat = trkpts[j].getAttribute('lat');
+          lon = trkpts[j].getAttribute('lon');
+        // getAttribute returns strings
+          if ((lat !== "0") && (lon !== "0")) {
+            this.lat.push(lat);
+            this.lon.push(lon);
+            this.routeData.time.push(this.getSecsFromTrackpoint(trkpts[j].getElementsByTagName('time')[0].textContent));
+          }
         }
       }
     },
 
     processTCX : function () {
-      var trksegs, trkpts, i, j, position;
+      var trksegs, trkpts, i, j, position, lat, lon;
       trksegs = this.xml.getElementsByTagName('Track');
       for (i = 0; i < trksegs.length; i += 1) {
         trkpts = trksegs[i].getElementsByTagName('Trackpoint');
@@ -2990,9 +2996,15 @@ var rg2 = (function (window, $) {
           // allow for <trackpoint> with no position: see #199
           if (trkpts[j].getElementsByTagName('Position').length > 0) {
             position = trkpts[j].getElementsByTagName('Position');
-            this.lat.push(position[0].getElementsByTagName('LatitudeDegrees')[0].textContent);
-            this.lon.push(position[0].getElementsByTagName('LongitudeDegrees')[0].textContent);
-            this.routeData.time.push(this.getSecsFromTrackpoint(trkpts[j].getElementsByTagName('Time')[0].textContent));
+            // #319 allow for GPS files with (lat 0, lon 0)
+            lat = position[0].getElementsByTagName('LatitudeDegrees')[0].textContent;
+            lon = position[0].getElementsByTagName('LongitudeDegrees')[0].textContent;
+            // textContent returns strings
+            if ((lat !== "0") && (lon !== "0")) {
+              this.lat.push(lat);
+              this.lon.push(lon);
+              this.routeData.time.push(this.getSecsFromTrackpoint(trkpts[j].getElementsByTagName('Time')[0].textContent));
+            }
           }
         }
       }
@@ -3082,7 +3094,7 @@ var rg2 = (function (window, $) {
           while (secs <= difftime) {
             x.push(oldx + (xpersec * secs));
             y.push(oldy + (ypersec * secs));
-            // 
+            //
             time.push(nexttime);
             nexttime += 1;
             secs += 1;
@@ -3098,7 +3110,7 @@ var rg2 = (function (window, $) {
     },
 
     autofitTrack : function () {
-      // fits a GPS track to the course based on split times at control locations 
+      // fits a GPS track to the course based on split times at control locations
       var i, split;
       // unlock map to allow adjustment
       $('#btn-move-all').prop('checked', false);
@@ -3278,6 +3290,7 @@ var rg2 = (function (window, $) {
   };
   rg2.GPSTrack = GPSTrack;
 }());
+
 /*global rg2:false */
 (function () {
   function Handle(x, y, time, index) {
@@ -4975,16 +4988,6 @@ var rg2 = (function (window, $) {
         }
       }
       return tracks;
-    },
-
-    removeAllTracksFromDisplay : function () {
-      var i;
-      for (i = 0; i < this.results.length; i += 1) {
-        if (this.results[i].displayTrack) {
-          this.results[i].removeTrackFromDisplay();
-        }
-      }
-      this.updateTrackNames();
     },
 
     putOneTrackOnDisplay : function (resultid) {

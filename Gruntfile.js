@@ -752,12 +752,12 @@ module.exports = function(grunt) {
   grunt.registerTask('default', ['build']);
 
   // increment minor version number: do anything else by editting package.json by hand
-  grunt.registerTask('bump', ['bumpup']);
+  //grunt.registerTask('bump', ['bumpup']);
 
   grunt.registerTask('build', ['clean:minified', 'csslint', 'jslint:all', 'jshint:all', 'concat:js', 'uglify', 'build-manager' ]);
 
   grunt.registerTask('build-manager', ['jslint:manager', 'jshint:manager', 'uglify:manager' ]);
 
-  grunt.registerTask('deploy', ['replace:jsversion', 'replace:phpversion', 'build', 'sync:rel']);
+  grunt.registerTask('deploy', ['replace:jsversion', 'replace:phpversion', 'build', /*'sync:rel'*/]);
 
 };

@@ -252,7 +252,7 @@ html, body {
    border-bottom-left-radius: inherit;
    border-bottom-right-radius: inherit;
 }
-#rg2-event-list li.rg2-active-event {
+#rg2-event-list .rg2-active-event {
    border: 2px solid black;
    margin: 0 -1px;
    -webkit-border-radius: inherit;
