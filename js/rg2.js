@@ -120,7 +120,7 @@ var rg2 = (function (window, $) {
     $("#rg2-container").hide();
     $.ajaxSetup({
       cache : false,
-      // suppress jQuery jsonp handling problem: see issue #291
+      // suppress jQuery jsonp handling problem: see issue #291 
       jsonp: false
     });
     rg2.loadConfigOptions();

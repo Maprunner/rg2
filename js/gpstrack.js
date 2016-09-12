@@ -78,21 +78,27 @@
     },
 
     processGPX : function () {
-      var trksegs, trkpts, i, j;
+      var trksegs, trkpts, i, j, lat, lon;
       trksegs = this.xml.getElementsByTagName('trkseg');
       for (i = 0; i < trksegs.length; i += 1) {
         trkpts = trksegs[i].getElementsByTagName('trkpt');
         this.startOffset = this.getStartOffset(trkpts[0].getElementsByTagName('time')[0].textContent);
+        // #319 allow for GPS files with (lat 0, lon 0)
         for (j = 0; j < trkpts.length; j += 1) {
-          this.lat.push(trkpts[j].getAttribute('lat'));
-          this.lon.push(trkpts[j].getAttribute('lon'));
-          this.routeData.time.push(this.getSecsFromTrackpoint(trkpts[j].getElementsByTagName('time')[0].textContent));
+          lat = trkpts[j].getAttribute('lat');
+          lon = trkpts[j].getAttribute('lon');
+        // getAttribute returns strings
+          if ((lat !== "0") && (lon !== "0")) {
+            this.lat.push(lat);
+            this.lon.push(lon);
+            this.routeData.time.push(this.getSecsFromTrackpoint(trkpts[j].getElementsByTagName('time')[0].textContent));
+          }
         }
       }
     },
 
     processTCX : function () {
-      var trksegs, trkpts, i, j, position;
+      var trksegs, trkpts, i, j, position, lat, lon;
       trksegs = this.xml.getElementsByTagName('Track');
       for (i = 0; i < trksegs.length; i += 1) {
         trkpts = trksegs[i].getElementsByTagName('Trackpoint');
@@ -101,9 +107,15 @@
           // allow for <trackpoint> with no position: see #199
           if (trkpts[j].getElementsByTagName('Position').length > 0) {
             position = trkpts[j].getElementsByTagName('Position');
-            this.lat.push(position[0].getElementsByTagName('LatitudeDegrees')[0].textContent);
-            this.lon.push(position[0].getElementsByTagName('LongitudeDegrees')[0].textContent);
-            this.routeData.time.push(this.getSecsFromTrackpoint(trkpts[j].getElementsByTagName('Time')[0].textContent));
+            // #319 allow for GPS files with (lat 0, lon 0)
+            lat = position[0].getElementsByTagName('LatitudeDegrees')[0].textContent;
+            lon = position[0].getElementsByTagName('LongitudeDegrees')[0].textContent;
+            // textContent returns strings
+            if ((lat !== "0") && (lon !== "0")) {
+              this.lat.push(lat);
+              this.lon.push(lon);
+              this.routeData.time.push(this.getSecsFromTrackpoint(trkpts[j].getElementsByTagName('Time')[0].textContent));
+            }
           }
         }
       }
@@ -193,7 +205,7 @@
           while (secs <= difftime) {
             x.push(oldx + (xpersec * secs));
             y.push(oldy + (ypersec * secs));
-            // 
+            //
             time.push(nexttime);
             nexttime += 1;
             secs += 1;
@@ -209,7 +221,7 @@
     },
 
     autofitTrack : function () {
-      // fits a GPS track to the course based on split times at control locations 
+      // fits a GPS track to the course based on split times at control locations
       var i, split;
       // unlock map to allow adjustment
       $('#btn-move-all').prop('checked', false);

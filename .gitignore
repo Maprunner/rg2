@@ -469,3 +469,5 @@ pip-log.txt
 #Mr Developer
 .mr.developer.cfg
 >>>>>>> origin/master
+js/rg2all.js
+js/rg2all.min.js
