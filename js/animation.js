@@ -5,6 +5,8 @@
   function Animation() {
     'use strict';
     this.runners = [];
+    // possible time increment values in milliseconds when timer expires
+    this.deltas = [100, 200, 500, 1000, 2000, 3000, 5000, 7500, 10000, 15000, 20000, 50000, 100000];
     // value in milliseconds
     this.timerInterval = 100;
     this.resetAnimation();
@@ -18,8 +20,13 @@
       this.runners.length = 0;
       clearInterval(this.timer);
       this.timer = null;
+      // current time of animation
       this.animationSecs = 0;
-      this.deltaSecs = 5;
+      // animation time in millisecs to avoid rounding problems at very slow speed
+      // animationSecs is always int(milliSecs/1000)
+      this.milliSecs = 0;
+      this.deltaIndex = 3;
+      $("#rg2-animation-speed").empty().text("x " + (this.deltas[this.deltaIndex] / 100));
       // if not real time then mass start
       this.realTime = false;
       this.earliestStartSecs = 0;
@@ -217,6 +224,7 @@
 
     // extra function level in for test purposes
     timerExpired : function () {
+      // a bit convoluted, but time expiry calls redraw, and redraw then calls runAnimation
       rg2.redraw(true);
     },
 
@@ -293,6 +301,7 @@
         $("#rg2-clock-slider").slider("option", "max", this.slowestTimeSecs);
         $("#rg2-clock-slider").slider("option", "min", 0);
       }
+      this.milliSecs = this.animationSecs * 1000;
       $("#rg2-clock-slider").slider("value", this.animationSecs);
       $("#rg2-clock").text(rg2.utils.formatSecsAsHHMMSS(this.animationSecs));
     },
@@ -343,19 +352,19 @@
 
     setAnimationTime : function (fromTimer) {
       // only increment time if called from the timer and we haven't got to the end already
-      if (this.realTime) {
-        if (this.animationSecs < this.latestFinishSecs) {
-          if (fromTimer) {
-            this.animationSecs += this.deltaSecs;
+      if (fromTimer) {
+        if (this.realTime) {
+          if (this.animationSecs < this.latestFinishSecs) {
+            this.milliSecs += this.deltas[this.deltaIndex];
           }
-        }
-      } else {
-        if (this.animationSecs < this.slowestTimeSecs) {
-          if (fromTimer) {
-            this.animationSecs += this.deltaSecs;
+        } else {
+          if (this.animationSecs < this.slowestTimeSecs) {
+            this.milliSecs += this.deltas[this.deltaIndex];
           }
         }
       }
+      this.animationSecs = parseInt((this.milliSecs / 1000), 10);
+      // return value is earliest time we need to worry about when drawing screen
       if (this.useFullTails) {
         return (this.startSecs + 1);
       }
@@ -363,6 +372,8 @@
     },
 
     runAnimation : function (fromTimer) {
+      // This function draws the current state of the animation.
+      // It also advances the animation time if it is called as a result of a timer expiry.
       var runner, timeOffset, i, t, tailStartTimeSecs;
       tailStartTimeSecs = this.setAnimationTime(fromTimer);
       $("#rg2-clock-slider").slider("value", this.animationSecs);
@@ -445,13 +456,17 @@
     },
 
     goSlower : function () {
-      if (this.deltaSecs > 0) {
-        this.deltaSecs -= 1;
+      if (this.deltaIndex > 0) {
+        this.deltaIndex -= 1;
       }
+      $("#rg2-animation-speed").empty().text("x " + (this.deltas[this.deltaIndex] / 100));
     },
 
     goFaster : function () {
-      this.deltaSecs += 1;
+      if (this.deltaIndex < (this.deltas.length - 1)) {
+        this.deltaIndex += 1;
+      }
+      $("#rg2-animation-speed").empty().text("x " + (this.deltas[this.deltaIndex] / 100));
     }
   };
   rg2.Animation = Animation;
