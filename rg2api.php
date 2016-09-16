@@ -1333,7 +1333,9 @@ function getResultsCSV($eventid) {
         $result_data .= $t.";;;;;;;";
       }
       // 18: course name
-      $result_data .= encode_rg_input($data[2]).";;;;;;;;;;;;;;;;;;;;";
+      // escape apostrophe in course name
+      $name = str_replace("'", "\'", $data[2]);
+      $result_data .= $name.";;;;;;;;;;;;;;;;;;;;";
       // find codes for this course
       if ($data[6] !== '') {
         $variant = $data[6];
@@ -1348,7 +1350,9 @@ function getResultsCSV($eventid) {
         }
       }
       // 38: course number, 39: course name
-      $result_data .= intval($data[1]).";".$data[2].";;;";
+      // escape apostrophe in course name
+      $name = str_replace("'", "\'", $data[2]);
+      $result_data .= intval($data[1]).";".$name.";;;";
       // trim trailing ; which create null fields when expanded
       $temp = rtrim($data[8], ";");
       // split array at ; and force to integers
