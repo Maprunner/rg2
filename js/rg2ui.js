@@ -19,6 +19,11 @@
       } else {
         $("#rg2-event-title-icon").removeClass("fa fa-globe");
       }
+      if (rg2.events.eventIsLocked()) {
+        $("#rg2-event-lock-icon").addClass("fa fa-lock");
+      } else {
+        $("#rg2-event-lock-icon").removeClass("fa fa-lock");
+      }
     },
 
     setNewLanguage : function (dict) {

@@ -29,6 +29,7 @@
       break;
     }
     this.comment = data.comment;
+    this.locked = data.locked;
     this.courses = 0;
     this.setMapDetails(data);
   }
