@@ -55,6 +55,7 @@
       $("#btn-login").button();
       $("rg2-manager-courses").hide();
       $("rg2-manager-results").hide();
+      $("#chk-read-only").prop("checked", false);
       $("#rg2-manager-login-form").submit(function () {
         var validUser;
         validUser = self.user.setDetails($("#rg2-user-name").val(), $("#rg2-password").val());
@@ -351,6 +352,8 @@
           self.user.y = data.keksi;
           if (data.ok) {
             rg2.utils.showWarningDialog("Event created", self.eventName + " has been added with id " + data.newid + ".");
+            // open newly created event in a separate window
+            window.open(rg2Config.json_url.replace("rg2api.php", "") + "#" + data.newid);
             rg2.getEvents();
             rg2.managerUI.setEvent();
           } else {
@@ -375,6 +378,7 @@
       } else {
         data.comments = text;
       }
+      data.locked = $("#chk-read-only").prop("checked");
       data.club = this.club;
       data.format = this.format;
       // assume we can just overwrite 1 or 2 at this point
@@ -598,6 +602,7 @@
       $url = rg2Config.json_url + "?type=editevent&id=" + id;
       data = {};
       data.comments = $("#rg2-edit-event-comments").val();
+      data.locked = $("#chk-edit-read-only").prop("checked");
       data.name = $("#rg2-event-name-edit").val();
       data.type = $("#rg2-event-level-edit").val();
       data.eventdate = $("#rg2-event-date-edit").val();
@@ -617,6 +622,10 @@
           self.user.y = data.keksi;
           if (data.ok) {
             rg2.utils.showWarningDialog("Event updated", "Event " + id + " has been updated.");
+            rg2.events.setActiveEventID(null);
+            rg2.ui.setTitleBar();
+            rg2.getEvents();
+            rg2.managerUI.setEvent();
           } else {
             rg2.utils.showWarningDialog("Update failed", data.status_msg + ". Event update failed. Please try again.");
           }
@@ -1119,7 +1128,6 @@
       } else {
         this.format = rg2.config.FORMAT_NORMAL;
       }
-
     },
 
     confirmAddMap : function () {
