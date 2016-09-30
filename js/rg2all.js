@@ -1,4 +1,4 @@
-// Version 1.2.9 2016-09-12T19:27:52+0300;
+// Version 1.3.0 2016-09-30T15:40:30+0300;
 /*
  * Routegadget 2
  * https://github.com/Maprunner/rg2
@@ -148,6 +148,8 @@ var rg2 = (function (window, $) {
   function Animation() {
     'use strict';
     this.runners = [];
+    // possible time increment values in milliseconds when timer expires
+    this.deltas = [100, 200, 500, 1000, 2000, 3000, 5000, 7500, 10000, 15000, 20000, 50000, 100000];
     // value in milliseconds
     this.timerInterval = 100;
     this.resetAnimation();
@@ -161,8 +163,13 @@ var rg2 = (function (window, $) {
       this.runners.length = 0;
       clearInterval(this.timer);
       this.timer = null;
+      // current time of animation
       this.animationSecs = 0;
-      this.deltaSecs = 5;
+      // animation time in millisecs to avoid rounding problems at very slow speed
+      // animationSecs is always int(milliSecs/1000)
+      this.milliSecs = 0;
+      this.deltaIndex = 3;
+      $("#rg2-animation-speed").empty().text("x " + (this.deltas[this.deltaIndex] / 100));
       // if not real time then mass start
       this.realTime = false;
       this.earliestStartSecs = 0;
@@ -360,6 +367,7 @@ var rg2 = (function (window, $) {
 
     // extra function level in for test purposes
     timerExpired : function () {
+      // a bit convoluted, but time expiry calls redraw, and redraw then calls runAnimation
       rg2.redraw(true);
     },
 
@@ -436,6 +444,7 @@ var rg2 = (function (window, $) {
         $("#rg2-clock-slider").slider("option", "max", this.slowestTimeSecs);
         $("#rg2-clock-slider").slider("option", "min", 0);
       }
+      this.milliSecs = this.animationSecs * 1000;
       $("#rg2-clock-slider").slider("value", this.animationSecs);
       $("#rg2-clock").text(rg2.utils.formatSecsAsHHMMSS(this.animationSecs));
     },
@@ -486,19 +495,19 @@ var rg2 = (function (window, $) {
 
     setAnimationTime : function (fromTimer) {
       // only increment time if called from the timer and we haven't got to the end already
-      if (this.realTime) {
-        if (this.animationSecs < this.latestFinishSecs) {
-          if (fromTimer) {
-            this.animationSecs += this.deltaSecs;
+      if (fromTimer) {
+        if (this.realTime) {
+          if (this.animationSecs < this.latestFinishSecs) {
+            this.milliSecs += this.deltas[this.deltaIndex];
           }
-        }
-      } else {
-        if (this.animationSecs < this.slowestTimeSecs) {
-          if (fromTimer) {
-            this.animationSecs += this.deltaSecs;
+        } else {
+          if (this.animationSecs < this.slowestTimeSecs) {
+            this.milliSecs += this.deltas[this.deltaIndex];
           }
         }
       }
+      this.animationSecs = parseInt((this.milliSecs / 1000), 10);
+      // return value is earliest time we need to worry about when drawing screen
       if (this.useFullTails) {
         return (this.startSecs + 1);
       }
@@ -506,6 +515,8 @@ var rg2 = (function (window, $) {
     },
 
     runAnimation : function (fromTimer) {
+      // This function draws the current state of the animation.
+      // It also advances the animation time if it is called as a result of a timer expiry.
       var runner, timeOffset, i, t, tailStartTimeSecs, activeRunners;
       tailStartTimeSecs = this.setAnimationTime(fromTimer);
       $("#rg2-clock-slider").slider("value", this.animationSecs);
@@ -602,13 +613,17 @@ var rg2 = (function (window, $) {
     },
 
     goSlower : function () {
-      if (this.deltaSecs > 0) {
-        this.deltaSecs -= 1;
+      if (this.deltaIndex > 0) {
+        this.deltaIndex -= 1;
       }
+      $("#rg2-animation-speed").empty().text("x " + (this.deltas[this.deltaIndex] / 100));
     },
 
     goFaster : function () {
-      this.deltaSecs += 1;
+      if (this.deltaIndex < (this.deltas.length - 1)) {
+        this.deltaIndex += 1;
+      }
+      $("#rg2-animation-speed").empty().text("x " + (this.deltas[this.deltaIndex] / 100));
     }
   };
   rg2.Animation = Animation;
@@ -965,7 +980,7 @@ var rg2 = (function (window, $) {
     EVENT_WITHOUT_RESULTS : 2,
     SCORE_EVENT : 3,
     // version gets set automatically by grunt file during build process
-    RG2VERSION: '1.2.9',
+    RG2VERSION: '1.3.0',
     TIME_NOT_FOUND : 9999,
     // values for evt.which
     RIGHT_CLICK : 3,
@@ -2719,6 +2734,7 @@ var rg2 = (function (window, $) {
       break;
     }
     this.comment = data.comment;
+    this.locked = data.locked;
     this.courses = 0;
     this.setMapDetails(data);
   }
@@ -2781,7 +2797,11 @@ var rg2 = (function (window, $) {
     },
 
     setActiveEventID : function (eventid) {
-      this.activeEventID = parseInt(eventid, 10);
+      if (eventid === null) {
+        this.activeEventID = null;
+      } else {
+        this.activeEventID = parseInt(eventid, 10);
+      }
     },
 
     getActiveEventID : function () {
@@ -2839,6 +2859,13 @@ var rg2 = (function (window, $) {
       return this.events[this.activeEventID].worldfile.valid;
     },
 
+    eventIsLocked : function () {
+      if (this.activeEventID === null) {
+        return false;
+      }
+      return this.events[this.activeEventID].locked;
+    },
+
     getMetresPerPixel : function () {
       var lat1, lat2, lon1, lon2, size, pixels, w;
       if ((this.activeEventID === null) || (!this.mapIsGeoreferenced())) {
@@ -2877,6 +2904,9 @@ var rg2 = (function (window, $) {
         }
         if (this.events[i].worldfile.valid) {
           html += "<i class='fa fa-globe event-info-icon' id='info-" + i + "'>&nbsp</i>";
+        }
+        if (this.events[i].locked) {
+          html += "<i class='fa fa-lock event-info-icon' id='info-" + i + "'>&nbsp</i>";
         }
         html += this.events[i].date + ": " + this.events[i].name + "</a></li>";
       }
@@ -2976,7 +3006,7 @@ var rg2 = (function (window, $) {
         for (j = 0; j < trkpts.length; j += 1) {
           lat = trkpts[j].getAttribute('lat');
           lon = trkpts[j].getAttribute('lon');
-        // getAttribute returns strings
+          // getAttribute returns strings
           if ((lat !== "0") && (lon !== "0")) {
             this.lat.push(lat);
             this.lon.push(lon);
@@ -3710,7 +3740,8 @@ var rg2 = (function (window, $) {
     }
     this.coursename = data.coursename;
     if (this.coursename === "") {
-      this.coursename = data.courseid;
+      // need to force this to be a string for use elsewhere
+      this.coursename = data.courseid.toString();
     }
     this.courseid = data.courseid;
     this.splits = data.splits;
@@ -5264,7 +5295,11 @@ var rg2 = (function (window, $) {
       } else {
         $("#rg2-info-panel").tabs("enable", rg2.config.TAB_COURSES);
         $("#rg2-info-panel").tabs("enable", rg2.config.TAB_RESULTS);
-        $("#rg2-info-panel").tabs("enable", rg2.config.TAB_DRAW);
+        if (rg2.events.eventIsLocked()) {
+          $("#rg2-info-panel").tabs("disable", rg2.config.TAB_DRAW);
+        } else {
+          $("#rg2-info-panel").tabs("enable", rg2.config.TAB_DRAW);
+        }
         // open courses tab for new event: else stay on draw tab
         active = $("#rg2-info-panel").tabs("option", "active");
         // don't change tab if we have come from DRAW since it means
@@ -5556,6 +5591,11 @@ var rg2 = (function (window, $) {
         $("#rg2-event-title-icon").addClass("fa fa-globe");
       } else {
         $("#rg2-event-title-icon").removeClass("fa fa-globe");
+      }
+      if (rg2.events.eventIsLocked()) {
+        $("#rg2-event-lock-icon").addClass("fa fa-lock");
+      } else {
+        $("#rg2-event-lock-icon").removeClass("fa fa-lock");
       }
     },
 

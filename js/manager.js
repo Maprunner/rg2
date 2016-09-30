@@ -53,14 +53,9 @@
       var self;
       self = this;
       $("#btn-login").button();
-<<<<<<< HEAD
       $("#rg2-manage-courses").hide();
       $("#rg2-manage-results").hide();
-=======
-      $("rg2-manager-courses").hide();
-      $("rg2-manager-results").hide();
       $("#chk-read-only").prop("checked", false);
->>>>>>> refs/remotes/Maprunner/master
       $("#rg2-manager-login-form").submit(function () {
         var validUser;
         validUser = self.user.setDetails($("#rg2-user-name").val().toLowerCase(), $("#rg2-password").val());

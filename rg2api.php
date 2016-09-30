@@ -37,7 +37,6 @@
   define ('GPS_RESULT_OFFSET', 50000);
   define ('GPS_INTERVAL', 3);
   define ('SCORE_EVENT_FORMAT', 3);
-<<<<<<< HEAD
   
   // Version
   if ( isset($_GET['act']) && $_GET['act'] == 'version' )
@@ -65,10 +64,9 @@ function sortJsonEventsByDateDesc($a, $b) {
     }
     exit;
   }
-=======
+
   // added to end of event comments to show event is read-only
   define ('EVENT_LOCKED_INDICATOR', '_');
->>>>>>> refs/remotes/Maprunner/master
 
   if (isset($_GET['type'])) {
     $type = $_GET['type'];

@@ -372,13 +372,9 @@
     },
 
     runAnimation : function (fromTimer) {
-<<<<<<< HEAD
-      var runner, timeOffset, i, t, tailStartTimeSecs, activeRunners;
-=======
       // This function draws the current state of the animation.
       // It also advances the animation time if it is called as a result of a timer expiry.
-      var runner, timeOffset, i, t, tailStartTimeSecs;
->>>>>>> refs/remotes/Maprunner/master
+      var runner, timeOffset, i, t, tailStartTimeSecs, activeRunners;
       tailStartTimeSecs = this.setAnimationTime(fromTimer);
       $("#rg2-clock-slider").slider("value", this.animationSecs);
       $("#rg2-clock").text(rg2.utils.formatSecsAsHHMMSS(this.animationSecs));

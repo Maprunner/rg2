@@ -446,12 +446,8 @@ table.coursemenutable tbody tr:nth-child(odd) {
 }
 
 #rg2-clock-slider {
-<<<<<<< HEAD
-   margin: 10px 15px;
-=======
   margin: 10px 15px;
   width: 180px;
->>>>>>> refs/remotes/Maprunner/master
 }
 
 #rg2-clock-slider .ui-state-default {
@@ -612,7 +608,7 @@ body {
 }
 
 
-#manage-edit-options input {
+#manage-edit-options input[type="text"] {
    width: 220px;
 }
 
@@ -638,7 +634,10 @@ body {
 #rg2-event-selected {
    width: 95%;
 }
-
+#rg2-info-panel input[type="checkbox"] {
+	margin: 2px 5px 2px 5px;
+	vertical-align: middle;
+}
 /* Search Filter */
 span.filter-input-group-addon:first-child {
    border-right: 0;

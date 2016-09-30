@@ -17,7 +17,7 @@ lang/xx.js
 coords.html
 coverage
 cache/*.json
-pack.bat
+*.bat
 #################
 ## Eclipse
 #################
@@ -470,7 +470,4 @@ pip-log.txt
 .mr.developer.cfg
 >>>>>>> origin/master
 js/rg2all.js
-js/rg2all.min.js
-js/rg2manager.min.js
-js/rg2all.js
-js/rg2all.min.js
+js/*.min.js
