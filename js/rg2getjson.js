@@ -60,7 +60,11 @@
       } else {
         $("#rg2-info-panel").tabs("enable", rg2.config.TAB_COURSES);
         $("#rg2-info-panel").tabs("enable", rg2.config.TAB_RESULTS);
-        $("#rg2-info-panel").tabs("enable", rg2.config.TAB_DRAW);
+        if (rg2.events.eventIsLocked()) {
+          $("#rg2-info-panel").tabs("disable", rg2.config.TAB_DRAW);
+        } else {
+          $("#rg2-info-panel").tabs("enable", rg2.config.TAB_DRAW);
+        }
         // open courses tab for new event: else stay on draw tab
         active = $("#rg2-info-panel").tabs("option", "active");
         // don't change tab if we have come from DRAW since it means

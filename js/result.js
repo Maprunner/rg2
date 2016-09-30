@@ -19,7 +19,8 @@
     }
     this.coursename = data.coursename;
     if (this.coursename === "") {
-      this.coursename = data.courseid;
+      // need to force this to be a string for use elsewhere
+      this.coursename = data.courseid.toString();
     }
     this.courseid = data.courseid;
     this.splits = data.splits;

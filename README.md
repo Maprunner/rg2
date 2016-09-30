@@ -1,11 +1,10 @@
 # Routegadget 2
 
 ## Latest news
-Version 1.2.8 was released on 9th July 2016. It includes Italian and Japanese translations and some minor enhancements.
-
-The main recent change is that you can now rotate the map, using the icons at the top left of the screen. This means you can orientate the map as you would when racing.
-
-There is also a new option to align the map when drawing your route. Just tick the "Align map to next control" checkbox on the 'Draw' tab.
+Version 1.3.0 was released on 19th September 2016. This includes:
+* Enhanced replay facilities, with better control of the replay speed.
+* A fix for GPX files with spurious (Latitude:0, Longitude: 0) positions in them. This caused your route to include points just off the west coast of Africa, so looked like vertical lines down the screen for GB events.
+* A function to make an event read-only. This will show up as a lock icon in the title bar, and the "Draw" tab will be disabled. This will allow events to be set up and checked before people start adding routes.
 
 [Guidance on creating map files] (https://github.com/Maprunner/rg2/wiki/Map-files) has also been added.
 

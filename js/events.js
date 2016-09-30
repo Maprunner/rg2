@@ -40,7 +40,11 @@
     },
 
     setActiveEventID : function (eventid) {
-      this.activeEventID = parseInt(eventid, 10);
+      if (eventid === null) {
+        this.activeEventID = null;
+      } else {
+        this.activeEventID = parseInt(eventid, 10);
+      }
     },
 
     getActiveEventID : function () {
@@ -98,6 +102,13 @@
       return this.events[this.activeEventID].worldfile.valid;
     },
 
+    eventIsLocked : function () {
+      if (this.activeEventID === null) {
+        return false;
+      }
+      return this.events[this.activeEventID].locked;
+    },
+
     getMetresPerPixel : function () {
       var lat1, lat2, lon1, lon2, size, pixels, w;
       if ((this.activeEventID === null) || (!this.mapIsGeoreferenced())) {
@@ -136,6 +147,9 @@
         }
         if (this.events[i].worldfile.valid) {
           html += "<i class='fa fa-globe event-info-icon' id='info-" + i + "'>&nbsp</i>";
+        }
+        if (this.events[i].locked) {
+          html += "<i class='fa fa-lock event-info-icon' id='info-" + i + "'>&nbsp</i>";
         }
         html += this.events[i].date + ": " + this.events[i].name + "</a></li>";
       }

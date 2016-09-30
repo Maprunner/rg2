@@ -55,6 +55,9 @@
   </div>
   <div id="rg2-course-allocations"></div>
   <hr class="rg2-hr">
+  <div>
+    <span>Read-only (enable drawing via "Edit event" tab) <input type="checkbox" id="chk-read-only"></span>
+  </div>
   <button type="button" id="btn-create-event">Create Event</button>
 </div>
 <div id="rg2-manage-edit">
@@ -78,7 +81,10 @@
     <div id="rg2-edit-event-level" class="manage-event-edit-div">
       <span>Level:<select class="pushright manage-event-edit-form" id="rg2-event-level-edit"></select></span>
     </div>
-    <textarea id="rg2-edit-event-comments"></textarea> 
+    <textarea id="rg2-edit-event-comments"></textarea>
+    <div>
+      <span>Read-only<input type="checkbox" id="chk-edit-read-only"></span>
+    </div>
     <button type="button" class="manage-file-label" id="btn-update-event">Update event details</button>
     </div>
     <hr class="rg2-hr">

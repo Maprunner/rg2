@@ -112,6 +112,14 @@ html, body {
    border-left: 4px solid darkgray;
 }
 
+.rg2-wide-button {
+  background: silver;
+  color: white;
+	float: right;
+	width: 64px;
+	text-align: center;
+	border-left: 4px solid darkgray;
+}
 .rg2-button:hover {
    color: darkgray;
 }
@@ -169,6 +177,7 @@ html, body {
    margin-top: 10px;
    margin-bottom: 10px;
 }
+
 #rg2-clock {
    font-weight: bold;
    font-size: 26px;
@@ -437,7 +446,12 @@ table.coursemenutable tbody tr:nth-child(odd) {
 }
 
 #rg2-clock-slider {
+<<<<<<< HEAD
    margin: 10px 15px;
+=======
+  margin: 10px 15px;
+  width: 180px;
+>>>>>>> refs/remotes/Maprunner/master
 }
 
 #rg2-clock-slider .ui-state-default {

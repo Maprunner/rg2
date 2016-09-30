@@ -30,13 +30,14 @@
   }
 
   // version replaced by Gruntfile as part of release
-  define ('RG2VERSION', '1.2.9');
+  define ('RG2VERSION', '1.3.0');
   define ('KARTAT_DIRECTORY', $url);
   define ('LOCK_DIRECTORY', dirname(__FILE__)."/lock/saving/");
   define ('CACHE_DIRECTORY', $url."cache/");
   define ('GPS_RESULT_OFFSET', 50000);
   define ('GPS_INTERVAL', 3);
   define ('SCORE_EVENT_FORMAT', 3);
+<<<<<<< HEAD
   
   // Version
   if ( isset($_GET['act']) && $_GET['act'] == 'version' )
@@ -64,6 +65,10 @@ function sortJsonEventsByDateDesc($a, $b) {
     }
     exit;
   }
+=======
+  // added to end of event comments to show event is read-only
+  define ('EVENT_LOCKED_INDICATOR', '_');
+>>>>>>> refs/remotes/Maprunner/master
 
   if (isset($_GET['type'])) {
     $type = $_GET['type'];
@@ -330,6 +335,10 @@ function addNewEvent($data) {
   $name = encode_rg_output($data->name);
   $club = encode_rg_output($data->club);
   $comments = tidyNewComments($data->comments);
+  // Add trailing character to show event is locked
+  if ($data->locked) {
+    $comments = $comments.EVENT_LOCKED_INDICATOR;
+  }
   $newevent = $newid."|".$data->mapid."|".$data->format."|".$name."|".$data->eventdate."|".$club."|".$data->level."|".$comments;
   $newevent .= PHP_EOL;
   $write["newid"] = $newid;
@@ -576,6 +585,9 @@ function editEvent($eventid, $newdata) {
       $data[5] = encode_rg_output($newdata->club);
       $data[6] = $newdata->type;
       $data[7] = tidyNewComments($newdata->comments);
+      if ($newdata->locked) {
+        $data[7] = $data[7].EVENT_LOCKED_INDICATOR;
+      }
       $row = "";
       // reconstruct |-separated row
       for ($i = 0; $i < count($data); $i++) {
@@ -1362,7 +1374,9 @@ function getResultsCSV($eventid) {
         $result_data .= $t.";;;;;;;";
       }
       // 18: course name
-      $result_data .= encode_rg_input($data[2]).";;;;;;;;;;;;;;;;;;;;";
+      // escape apostrophe in course name
+      $name = str_replace("'", "\'", $data[2]);
+      $result_data .= $name.";;;;;;;;;;;;;;;;;;;;";
       // find codes for this course
       if ($data[6] !== '') {
         $variant = $data[6]; // variant
@@ -1377,7 +1391,9 @@ function getResultsCSV($eventid) {
         }
       }
       // 38: course number, 39: course name
-      $result_data .= intval($data[1]).";".$data[2].";;;";
+      // escape apostrophe in course name
+      $name = str_replace("'", "\'", $data[2]);
+      $result_data .= intval($data[1]).";".$name.";;;";
       // trim trailing ; which create null fields when expanded
       $temp = rtrim($data[8], ";");
       // split array at ; and force to integers
@@ -1525,12 +1541,16 @@ function getAllEvents($includeStats) {
       } else {
         $detail["type"] = "X";
       }
+      $detail["locked"] = false;
       if ($fields > 7) {
-        $detail["comment"] = formatCommentsForOutput($data[7]);
+        // Trailing character indicates event is locked: remove before displaying comments.
+        $detail["comment"] = rtrim(formatCommentsForOutput($data[7]), EVENT_LOCKED_INDICATOR);
+        if (substr($data[7], -1) == EVENT_LOCKED_INDICATOR) {
+          $detail["locked"] = true;
+        }
       } else {
         $detail["comment"] = "";
       }
-
       if ($includeStats) {
         // avoid reading big results file into memory: has been seen to cause trouble
         if (($resulthandle = @fopen(KARTAT_DIRECTORY."kilpailijat_".$detail["id"].".txt", "r")) !== FALSE) {

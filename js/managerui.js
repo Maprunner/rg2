@@ -125,18 +125,18 @@
         $("#rg2-event-level-edit").val("");
         $("#rg2-edit-event-comments").val("");
         $("#rg2-route-selected").empty();
+        $("#chk-edit-read-only").prop("checked", false);
       }
     },
 
     eventFinishedLoading : function (event) {
       // called once the requested event has loaded
-      // copy event details to edit-form
-      // you tell me why this needs parseInt but the same call above doesn't
       $("#rg2-event-name-edit").empty().val(rg2.he.decode(event.name));
       $("#rg2-club-name-edit").empty().val(rg2.he.decode(event.club));
       $("#rg2-event-date-edit").empty().val(event.date);
       $("#rg2-event-level-edit").val(event.rawtype);
       $("#rg2-edit-event-comments").empty().val(rg2.he.decode(event.comment));
+      $("#chk-edit-read-only").prop("checked", event.locked);
       rg2.utils.setButtonState("enable", ["#btn-delete-event", "#btn-update-event", "#btn-delete-route"]);
       this.createRouteDeleteDropdown(event.id);
     },
