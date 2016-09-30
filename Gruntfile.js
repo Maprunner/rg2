@@ -758,6 +758,6 @@ module.exports = function(grunt) {
 
   grunt.registerTask('build-manager', ['jslint:manager', 'jshint:manager', 'uglify:manager' ]);
 
-  grunt.registerTask('deploy', ['replace:jsversion', 'replace:phpversion', 'build', /*'sync:rel'*/]);
+  grunt.registerTask('deploy', ['replace:jsversion', 'replace:phpversion', 'build' /*, 'sync:rel'*/]);
 
 };
