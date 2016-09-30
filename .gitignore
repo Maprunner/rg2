@@ -252,7 +252,7 @@ lang/xx.js
 coords.html
 coverage
 cache/*.json
-pack.bat
+*.bat
 #################
 ## Eclipse
 #################
@@ -471,4 +471,3 @@ pip-log.txt
 >>>>>>> origin/master
 js/rg2all.js
 js/rg2all.min.js
-install_grunt.bat
