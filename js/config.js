@@ -56,7 +56,9 @@
     FORMAT_NORMAL: 1,
     FORMAT_NO_RESULTS: 2,
     FORMAT_SCORE_EVENT: 3,
-    DISPLAY_ALL_COURSES: 99999
+    DISPLAY_ALL_COURSES: 99999,
+    //number of drawn routes that can be saved for possible later deletion
+    MAX_DRAWN_ROUTES: 10
   };
 
   options = {
@@ -71,7 +73,10 @@
     showThreeSeconds : false,
     showGPSSpeed : false,
     // align map with next control at top when drawing route
-    alignMap: false
+    alignMap: false,
+    // array of up to MAX_DRAWN_ROUTES entries with details to allow deletion
+    // stored in order they are added, so first entry is most recent and gets deleted if necessary
+    drawnRoutes: []
   };
 
   // translation function
@@ -179,6 +184,30 @@
     this.options[option] = value;
   }
 
+  function saveDrawnRouteDetails(route) {
+    // this allows for deletion later
+    var routes;
+    routes = this.options.drawnRoutes;
+    if (routes.length >= rg2.config.MAX_DRAWN_ROUTES) {
+      // array is full so delete oldest (=first) entry
+      routes.shift();
+    }
+    routes.push(route);
+    this.options.drawnRoutes = routes;
+    this.saveConfigOptions();
+  }
+
+  function removeDrawnRouteDetails(route) {
+    var routes, i;
+    routes = [];
+    for (i = 0; i < this.options.drawnRoutes.length; i += 1) {
+      if ((this.options.drawnRoutes[i].id !== route.id) || (this.options.drawnRoutes[i].eventid !== route.eventid)) {
+        routes.push(this.options.drawnRoutes[i]);
+      }
+    }
+    this.options.drawnRoutes = routes;
+    this.saveConfigOptions();
+  }
   function saveConfigOptions() {
     try {
       if ((window.hasOwnProperty('localStorage')) && (window.localStorage !== null)) {
@@ -192,9 +221,18 @@
 
   function loadConfigOptions() {
     try {
+      var prop, storedOptions;
       if ((window.hasOwnProperty('localStorage')) && (window.localStorage !== null)) {
         if (localStorage.getItem('rg2-options') !== null) {
-          this.options = JSON.parse(localStorage.getItem('rg2-options'));
+          storedOptions = JSON.parse(localStorage.getItem('rg2-options'));
+          // overwrite the options array with saved options from local storage
+          // need to do this to allow for new options that people don't yet have
+          for (prop in storedOptions) {
+            // probably a redundant check but it prevents lint from complaining
+            if (storedOptions.hasOwnProperty(prop)) {
+              this.options[prop] = storedOptions[prop];
+            }
+          }
           // best to keep these at default?
           this.options.circleSize = 20;
           if (this.options.mapIntensity === 0) {
@@ -236,6 +274,8 @@
   rg2.options = options;
   rg2.config = config;
   rg2.saveConfigOptions = saveConfigOptions;
+  rg2.saveDrawnRouteDetails = saveDrawnRouteDetails;
+  rg2.removeDrawnRouteDetails = removeDrawnRouteDetails;
   rg2.setConfigOption = setConfigOption;
   rg2.loadConfigOptions = loadConfigOptions;
   rg2.getOverprintDetails = getOverprintDetails;

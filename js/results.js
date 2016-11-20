@@ -36,6 +36,7 @@
         }
         this.results.push(result);
       }
+      this.setDeletionInfo();
       this.setScoreCourseInfo();
       this.generateLegPositions();
     },
@@ -55,6 +56,31 @@
           }
         }
       }
+    },
+
+    setDeletionInfo : function () {
+      var i, r, eventid, deletionInfo, opt;
+      eventid = rg2.events.getKartatEventID();
+      deletionInfo = [];
+      opt = rg2.options.drawnRoutes;
+      // find routes that can be deleted for this event
+      for (i = 0; i < opt.length; i += 1) {
+        if (opt[i].eventid === eventid) {
+          deletionInfo.push(opt[i]);
+        }
+      }
+      for (i = 0; i < deletionInfo.length; i += 1) {
+        for (r = 0; r < this.results.length; r += 1) {
+          if (this.results[r].resultid === deletionInfo[i].id) {
+            this.results[r].canDelete = true;
+            this.results[r].token = deletionInfo[i].token;
+          }
+        }
+      }
+    },
+
+    getDeletionInfo : function (id) {
+      return ({id: this.results[id].resultid, token: this.results[id].token});
     },
 
     // lists all runners on a given course
@@ -417,7 +443,13 @@
         } else {
           html += "<td></td>";
         }
-        html += "<td><input class='showreplay showreplay-" + oldCourseID + "' id=" + i + " type=checkbox name=replay></input></td></tr>";
+        html += "<td><input class='showreplay showreplay-" + oldCourseID + "' id=" + i + " type=checkbox name=replay></input></td>";
+        if (res.canDelete) {
+          html += "<td><a class='deleteroute'><i class='fa fa-trash' id=" + i + "></i></a></td>";
+        } else {
+          html += "<td></td>";
+        }
+        html += "</tr>";
       }
       html += this.getBottomRow(tracksForThisCourse, oldCourseID) + "</table></div></div>";
       return html;
@@ -439,7 +471,7 @@
     getCourseHeader : function (result) {
       var html;
       html = "<h3>" + result.coursename + "<input class='showcourse' id=" + result.courseid + " type=checkbox name=course title='Show course'></input></h3><div>";
-      html += "<table class='resulttable'><tr><th></th><th>" + rg2.t("Name") + "</th><th>" + rg2.t("Time") + "</th><th><i class='fa fa-pencil'></i></th><th><i class='fa fa-play'></i></th></tr>";
+      html += "<table class='resulttable'><tr><th></th><th>" + rg2.t("Name") + "</th><th>" + rg2.t("Time") + "</th><th><i class='fa fa-pencil'></i></th><th><i class='fa fa-play'></i></th><th><i class='fa fa-trash'></i></th></tr>";
       return html;
     },
 
@@ -452,7 +484,7 @@
       } else {
         html += "<td></td>";
       }
-      html += "<td><input class='allcoursereplay' id=" + oldCourseID + " type=checkbox name=replay></input></td></tr>";
+      html += "<td><input class='allcoursereplay' id=" + oldCourseID + " type=checkbox name=replay></input></td><td></td></tr>";
       return html;
     },
 

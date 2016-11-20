@@ -5,6 +5,7 @@
   function Draw() {
     this.trackColor = '#ff0000';
     this.hasResults = false;
+    this.routeToDelete = null;
     this.initialiseDrawing();
   }
 
@@ -462,7 +463,7 @@
         dataType : 'json',
         success : function (data) {
           if (data.ok) {
-            self.routeSaved(data.status_msg);
+            self.routeSaved(data);
           } else {
             rg2.utils.showWarningDialog(self.gpstrack.routeData.name, rg2.t('Your route was not saved. Please try again'));
           }
@@ -473,9 +474,55 @@
       });
     },
 
-    routeSaved : function () {
+    routeSaved : function (data) {
       rg2.utils.showWarningDialog(this.gpstrack.routeData.name, rg2.t('Your route has been saved') + '.');
+      rg2.saveDrawnRouteDetails({eventid: parseInt(data.eventid, 10), id: data.newid, token: data.token});
       rg2.loadEvent(rg2.events.getActiveEventID());
+    },
+
+    confirmDeleteRoute : function (id) {
+      var dlg;
+      this.routeToDelete = id;
+      dlg = {};
+      dlg.selector = "<div id='route-delete-dialog'>This route will be permanently deleted. Are you sure?</div>";
+      dlg.title = "Confirm route delete";
+      dlg.classes = "rg2-confirm-route-delete-dialog";
+      dlg.doText = "Delete route";
+      dlg.onDo = this.doDeleteRoute.bind(this);
+      dlg.onCancel = this.doCancelDeleteRoute.bind(this);
+      rg2.utils.createModalDialog(dlg);
+    },
+
+    doCancelDeleteRoute : function () {
+      $("#route-delete-dialog").dialog("destroy");
+    },
+
+    doDeleteRoute : function () {
+      var $url, json, info;
+      $("#route-delete-dialog").dialog("destroy");
+      info = rg2.results.getDeletionInfo(this.routeToDelete);
+      $url = rg2Config.json_url + "?type=deletemyroute&id=" + rg2.events.getKartatEventID() + "&routeid=" + info.id;
+      json = JSON.stringify({token: info.token});
+      $.ajax({
+        data : json,
+        type : "POST",
+        url : $url,
+        dataType : "json",
+        success : function (data) {
+          if (data.ok) {
+            rg2.utils.showWarningDialog(rg2.t("Route deleted"), rg2.t("Route has been deleted"));
+            rg2.removeDrawnRouteDetails({eventid: parseInt(data.eventid, 10), id: parseInt(data.routeid, 10)});
+            rg2.getEvents();
+          } else {
+            rg2.utils.showWarningDialog(rg2.t("Delete failed"), rg2.t("Delete failed"));
+          }
+        },
+        error : function (jqXHR, textStatus) {
+          /*jslint unparam:true*/
+          /* jshint unused:vars */
+          rg2.utils.showWarningDialog(rg2.t("Delete failed"), rg2.t("Delete failed"));
+        }
+      });
     },
 
     waitThreeSeconds : function () {

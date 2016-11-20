@@ -218,6 +218,10 @@
         rg2.requestedHash.setRoutes();
         rg2.redraw(false);
       });
+      // checkbox to delete a route
+      $(".deleteroute").click(function (event) {
+        rg2.drawing.confirmDeleteRoute(parseInt(event.target.id, 10));
+      });
       // checkbox to animate a result
       $(".showreplay").click(function (event) {
         if (event.target.checked) {
