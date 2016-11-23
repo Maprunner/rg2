@@ -1,4 +1,4 @@
-﻿language: 'Deutsch',
+language: 'Deutsch',
 code: 'de',
 translation: 'Simon@Harston.de',
 'Events' : 'Wettkämpfe',

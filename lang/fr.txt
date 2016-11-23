@@ -1,4 +1,4 @@
-﻿code: 'fr',
+code: 'fr',
 language: 'Français',
 translation: 'rma@helga-o.com',
 'Events' : 'Compétition',

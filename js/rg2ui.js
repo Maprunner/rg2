@@ -28,7 +28,9 @@
 
     setNewLanguage : function (dict) {
       var eventid;
-      $("#rg2-event-list").menu("destroy");
+      if ($("#rg2-event-list").menu("instance") !== undefined) {
+        $("#rg2-event-list").menu("destroy");
+      }
       rg2.setDictionary(dict);
       this.createEventMenu();
       eventid = rg2.events.getActiveEventID();

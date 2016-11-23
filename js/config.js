@@ -145,17 +145,15 @@
     }
   }
 
-  function createLanguageDropdown() {
+  function createLanguageDropdown(languages) {
     var i, selected, dropdown;
     $("#rg2-select-language").empty();
     dropdown = document.getElementById("rg2-select-language");
     selected = (dictionary.code === "en");
     dropdown.options.add(rg2.utils.generateOption('en', 'en: English', selected));
-    for (i in rg2Config.languages) {
-      if (rg2Config.languages.hasOwnProperty(i)) {
-        selected = (dictionary.code === i);
-        dropdown.options.add(rg2.utils.generateOption(i, i + ": " + rg2Config.languages[i], selected));
-      }
+    for (i = 0; i < languages.length; i = i + 1) {
+      selected = (dictionary.code === languages[i].code);
+      dropdown.options.add(rg2.utils.generateOption(languages[i].code, languages[i].code + ": " + languages[i].language, selected));
     }
   }
 
@@ -169,15 +167,12 @@
   }
 
   function setLanguageOptions() {
-    // use English unless a dictionary was passed in
-    if (rg2Config.dictionary.code === undefined) {
-      dictionary = {};
-      dictionary.code = 'en';
-    } else {
-      dictionary = rg2Config.dictionary;
-    }
-    translateFixedText();
-    createLanguageDropdown();
+    // use English until we load something else
+    dictionary = {};
+    dictionary.code = 'en';
+    createLanguageDropdown([]);
+    // load available languages and set start language if requested
+    rg2.getLanguages(rg2Config.start_language);
   }
 
   function setConfigOption(option, value) {
@@ -282,4 +277,5 @@
   rg2.setDictionary = setDictionary;
   rg2.getDictionaryCode = getDictionaryCode;
   rg2.setLanguageOptions = setLanguageOptions;
+  rg2.createLanguageDropdown =  createLanguageDropdown;
 }());

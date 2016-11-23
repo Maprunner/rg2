@@ -82,52 +82,9 @@ if (isset($_GET['lang'])) {
   if ((defined('START_LANGUAGE'))) {
     $lang = START_LANGUAGE;
   } else {
-    $lang = "";
+    $lang = "en";
   }
 }
-$langdir = dirname(__FILE__) . '/lang/';
-if (file_exists($langdir.$lang.'.txt')) {
-  $dictionary = 'dictionary: {'.PHP_EOL;
-  $dictionary .= file_get_contents($langdir.$lang.'.txt').PHP_EOL;
-  $dictionary .= '}'.PHP_EOL;
-} else {
-  $dictionary = "dictionary: {}".PHP_EOL;
-}
-
-// create list of available languages
-$languages = "languages: {".PHP_EOL;
-foreach(glob($langdir.'??.txt') as $file) {
-  // xx is a dummy file to hold the master list of terms
-  if ($file != $langdir.'xx.txt') {
-    $lines = file($file);
-    $code = "";
-    $name = "";
-    foreach ($lines as $line) {
-      $line = trim($line);
-      if (strpos($line, 'code') !== FALSE) {
-        $codepos = strpos($line, "'") + 1;
-        $code = substr($line, $codepos, 2);
-        if ($name !== "") {
-          break;
-        }
-      }
-      if (strpos($line, 'language') !== FALSE) {
-        $namepos = strpos($line, "'");
-        $name = substr($line, $namepos);
-        if ($code !== "") {
-          break;
-        }
-      }
-    }
-
-    if (($code != "") && ($name != "")) {
-      $languages .= $code.': '.$name.PHP_EOL;
-    }
-  }
-}
-
-$languages .= '},'.PHP_EOL;
-
 header('Content-type: text/html; charset=utf-8');
 ?>
 <!DOCTYPE html>
@@ -315,8 +272,8 @@ epsg_code: "<?php echo EPSG_CODE; ?>",
 epsg_params: "<?php echo EPSG_PARAMS; ?>",
 <?php } ?>
 <?php } ?>
-<?php echo $languages; ?>
-<?php echo $dictionary; ?>
+languages: {},
+start_language: "<?php echo $lang; ?>"
 };
 <?php echo "$(document).ready(rg2.init);" ?>
 </script>

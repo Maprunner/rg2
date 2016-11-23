@@ -170,9 +170,26 @@
     });
   }
 
+  // called at start-up to load list of available languages
+  function getLanguages(startLang) {
+    $.getJSON(rg2Config.json_url, {
+      type : 'languages',
+      cache : false
+    }).done(function (json) {
+      rg2.createLanguageDropdown(json.data.languages);
+      if (startLang !== "en") {
+        getNewLanguage(startLang);
+      }
+    }).fail(function (jqxhr, textStatus, error) {
+      /*jslint unparam:true*/
+      reportJSONFail("Language request failed: " + error);
+    });
+  }
+
   rg2.getEvents = getEvents;
   rg2.getCourses = getCourses;
   rg2.getResults = getResults;
   rg2.getGPSTracks = getGPSTracks;
   rg2.getNewLanguage = getNewLanguage;
+  rg2.getLanguages = getLanguages;
 }());

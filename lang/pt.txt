@@ -1,4 +1,4 @@
-code: 'pt-BR',
+code: 'pt',
 language: 'Português - Brasil',
 translation: 'Jouderian Nobre + Josias Cavalcanti',
 'Events' : 'Eventos',
