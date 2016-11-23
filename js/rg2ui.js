@@ -444,8 +444,13 @@
 
     createEventMenu : function () {
       //loads menu from populated events array
-      var html = rg2.events.formatEventsAsMenu();
-      $("#rg2-event-list").empty().append(html).menu({
+      var html, $select;
+      html = rg2.events.formatEventsAsMenu();
+      $select = $("#rg2-event-list");
+      if ($select.menu("instance") !== undefined) {
+        $select.menu("destroy");
+      }
+      $select.empty().append(html).menu({
         select : function (event, ui) {
           /*jslint unparam:true*/
           rg2.loadEvent(ui.item[0].id);

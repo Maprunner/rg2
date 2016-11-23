@@ -433,10 +433,14 @@
         if ((res.comments !== "") && (res.comments !== rg2.t('Type your comment'))) {
           // #304 make sure double quotes show up
           res.comments = res.comments.replace(/"/g, '&quot;');
-          html += '<td><a href="#" title="' + res.comments + '">' + this.getNameHTML(res, i) + "</a></td><td>" + res.time + "</td>";
+          html += '<td><a href="#" title="' + res.comments + '">' + this.getNameHTML(res, i) + "</a>";
         } else {
-          html += "<td>" + this.getNameHTML(res, i) + "</td><td>" + res.time + "</td>";
+          html += "<td>" + this.getNameHTML(res, i);
         }
+        if (res.canDelete) {
+          html += " <i class='deleteroute fa fa-trash' id=" + i + "></i>";
+        }
+        html += "</td><td>" + res.time + "</td>";
         if (res.hasValidTrack) {
           tracksForThisCourse += 1;
           html += "<td><input class='showtrack showtrack-" + oldCourseID + "' id=" + i + " type=checkbox name=result></input></td>";
@@ -444,11 +448,6 @@
           html += "<td></td>";
         }
         html += "<td><input class='showreplay showreplay-" + oldCourseID + "' id=" + i + " type=checkbox name=replay></input></td>";
-        if (res.canDelete) {
-          html += "<td><a class='deleteroute'><i class='fa fa-trash' id=" + i + "></i></a></td>";
-        } else {
-          html += "<td></td>";
-        }
         html += "</tr>";
       }
       html += this.getBottomRow(tracksForThisCourse, oldCourseID) + "</table></div></div>";
@@ -471,7 +470,7 @@
     getCourseHeader : function (result) {
       var html;
       html = "<h3>" + result.coursename + "<input class='showcourse' id=" + result.courseid + " type=checkbox name=course title='Show course'></input></h3><div>";
-      html += "<table class='resulttable'><tr><th></th><th>" + rg2.t("Name") + "</th><th>" + rg2.t("Time") + "</th><th><i class='fa fa-pencil'></i></th><th><i class='fa fa-play'></i></th><th><i class='fa fa-trash'></i></th></tr>";
+      html += "<table class='resulttable'><tr><th></th><th>" + rg2.t("Name") + "</th><th>" + rg2.t("Time") + "</th><th><i class='fa fa-pencil'></i></th><th><i class='fa fa-play'></i></th></tr>";
       return html;
     },
 
@@ -484,7 +483,7 @@
       } else {
         html += "<td></td>";
       }
-      html += "<td><input class='allcoursereplay' id=" + oldCourseID + " type=checkbox name=replay></input></td><td></td></tr>";
+      html += "<td><input class='allcoursereplay' id=" + oldCourseID + " type=checkbox name=replay></input></td></tr>";
       return html;
     },
 
