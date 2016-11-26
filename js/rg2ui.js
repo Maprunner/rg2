@@ -276,7 +276,8 @@
       // #177 not pretty but gets round problems of double encoding
       html = html.replace(/&amp;/g, '&');
       $("#rg2-result-list").empty().append(html);
-      $("#rg2-result-list").accordion("refresh");
+      // force all panels to start closed: don't know why this is needed after a recreate but...
+      $("#rg2-result-list").accordion("option", "active", false).accordion("refresh");
       $("#rg2-info-panel").tabs("refresh");
       this.setResultCheckboxes();
       // disable control dropdown if we have no controls
