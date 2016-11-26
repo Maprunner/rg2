@@ -1,3 +1,5 @@
+/*global rg2:false */
+rg2.setDictionary({
 code: 'ja',
 language: '日本語',
 translation: 'tojo masaya',
@@ -100,3 +102,4 @@ translation: 'tojo masaya',
 'Route already drawn': 'ルートがすでに記入されています',
 'If you draw a new route it will overwrite the old route for this runner.': '新しくルートを記入するとこの走者の古いルートが上書きされます',
 'GPS routes are saved separately and will not be overwritten.': 'GPSルートは別途保存され、上書きさません。'
+});

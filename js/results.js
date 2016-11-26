@@ -36,6 +36,7 @@
         }
         this.results.push(result);
       }
+      this.setDeletionInfo();
       this.setScoreCourseInfo();
       this.generateLegPositions();
     },
@@ -55,6 +56,31 @@
           }
         }
       }
+    },
+
+    setDeletionInfo : function () {
+      var i, r, eventid, deletionInfo, opt;
+      eventid = rg2.events.getKartatEventID();
+      deletionInfo = [];
+      opt = rg2.options.drawnRoutes;
+      // find routes that can be deleted for this event
+      for (i = 0; i < opt.length; i += 1) {
+        if (opt[i].eventid === eventid) {
+          deletionInfo.push(opt[i]);
+        }
+      }
+      for (i = 0; i < deletionInfo.length; i += 1) {
+        for (r = 0; r < this.results.length; r += 1) {
+          if (this.results[r].resultid === deletionInfo[i].id) {
+            this.results[r].canDelete = true;
+            this.results[r].token = deletionInfo[i].token;
+          }
+        }
+      }
+    },
+
+    getDeletionInfo : function (id) {
+      return ({id: this.results[id].resultid, token: this.results[id].token});
     },
 
     // lists all runners on a given course
@@ -407,17 +433,22 @@
         if ((res.comments !== "") && (res.comments !== rg2.t('Type your comment'))) {
           // #304 make sure double quotes show up
           res.comments = res.comments.replace(/"/g, '&quot;');
-          html += '<td><a href="#" title="' + res.comments + '">' + this.getNameHTML(res, i) + "</a></td><td>" + res.time + "</td>";
+          html += '<td><a href="#" title="' + res.comments + '">' + this.getNameHTML(res, i) + "</a>";
         } else {
-          html += "<td>" + this.getNameHTML(res, i) + "</td><td>" + res.time + "</td>";
+          html += "<td>" + this.getNameHTML(res, i);
         }
+        if (res.canDelete) {
+          html += " <i class='deleteroute fa fa-trash' id=" + i + "></i>";
+        }
+        html += "</td><td>" + res.time + "</td>";
         if (res.hasValidTrack) {
           tracksForThisCourse += 1;
           html += "<td><input class='showtrack showtrack-" + oldCourseID + "' id=" + i + " type=checkbox name=result></input></td>";
         } else {
           html += "<td></td>";
         }
-        html += "<td><input class='showreplay showreplay-" + oldCourseID + "' id=" + i + " type=checkbox name=replay></input></td></tr>";
+        html += "<td><input class='showreplay showreplay-" + oldCourseID + "' id=" + i + " type=checkbox name=replay></input></td>";
+        html += "</tr>";
       }
       html += this.getBottomRow(tracksForThisCourse, oldCourseID) + "</table></div></div>";
       return html;

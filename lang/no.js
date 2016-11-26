@@ -1,3 +1,5 @@
+/*global rg2:false */
+rg2.setDictionary({
 code: 'no',
 language: 'Norsk',
 translation: 'olav@kvittem.no',
@@ -92,3 +94,4 @@ translation: 'olav@kvittem.no',
 'Red - locked': 'Rød - festet',
 'Right click to delete a handle': 'Høyreklikk for å fjerne et håndtak',
 'Drag a handle to adjust track around locked point(s)': 'Dra et håndtak for å justere et spor mellom festepunkter'
+});

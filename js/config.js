@@ -48,7 +48,7 @@
     EVENT_WITHOUT_RESULTS : 2,
     SCORE_EVENT : 3,
     // version gets set automatically by grunt file during build process
-    RG2VERSION: '1.3.0',
+    RG2VERSION: '1.3.1',
     TIME_NOT_FOUND : 9999,
     // values for evt.which
     RIGHT_CLICK : 3,
@@ -56,7 +56,19 @@
     FORMAT_NORMAL: 1,
     FORMAT_NO_RESULTS: 2,
     FORMAT_SCORE_EVENT: 3,
-    DISPLAY_ALL_COURSES: 99999
+    DISPLAY_ALL_COURSES: 99999,
+    //number of drawn routes that can be saved for possible later deletion
+    MAX_DRAWN_ROUTES: 10,
+    // array of available languages: not great to do it like this but it helps for routegadget.co.uk set-up
+    languages: [
+      {language: "Deutsch", code: "de"},
+      {language: "Suomi", code: "fi"},
+      {language: "Français", code: "fr"},
+      {language: "Italiano", code: "it"},
+      {language: "日本語", code: "ja"},
+      {language: "Norsk", code: "no"},
+      {language: "Português - Brasil", code: "pt"}
+    ]
   };
 
   options = {
@@ -71,7 +83,10 @@
     showThreeSeconds : false,
     showGPSSpeed : false,
     // align map with next control at top when drawing route
-    alignMap: false
+    alignMap: false,
+    // array of up to MAX_DRAWN_ROUTES entries with details to allow deletion
+    // stored in order they are added, so first entry is most recent and gets deleted if necessary
+    drawnRoutes: []
   };
 
   // translation function
@@ -140,17 +155,15 @@
     }
   }
 
-  function createLanguageDropdown() {
+  function createLanguageDropdown(languages) {
     var i, selected, dropdown;
     $("#rg2-select-language").empty();
     dropdown = document.getElementById("rg2-select-language");
     selected = (dictionary.code === "en");
     dropdown.options.add(rg2.utils.generateOption('en', 'en: English', selected));
-    for (i in rg2Config.languages) {
-      if (rg2Config.languages.hasOwnProperty(i)) {
-        selected = (dictionary.code === i);
-        dropdown.options.add(rg2.utils.generateOption(i, i + ": " + rg2Config.languages[i], selected));
-      }
+    for (i = 0; i < languages.length; i = i + 1) {
+      selected = (dictionary.code === languages[i].code);
+      dropdown.options.add(rg2.utils.generateOption(languages[i].code, languages[i].code + ": " + languages[i].language, selected));
     }
   }
 
@@ -164,21 +177,44 @@
   }
 
   function setLanguageOptions() {
-    // use English unless a dictionary was passed in
-    if (rg2Config.dictionary.code === undefined) {
-      dictionary = {};
-      dictionary.code = 'en';
-    } else {
-      dictionary = rg2Config.dictionary;
+    // use English until we load something else
+    dictionary = {};
+    dictionary.code = 'en';
+    // set available languages and set start language if requested
+    rg2.createLanguageDropdown(rg2.config.languages);
+    if (rg2Config.start_language !== "en") {
+      rg2.getNewLanguage(rg2Config.start_language);
     }
-    translateFixedText();
-    createLanguageDropdown();
   }
 
   function setConfigOption(option, value) {
     this.options[option] = value;
   }
 
+  function saveDrawnRouteDetails(route) {
+    // this allows for deletion later
+    var routes;
+    routes = this.options.drawnRoutes;
+    if (routes.length >= rg2.config.MAX_DRAWN_ROUTES) {
+      // array is full so delete oldest (=first) entry
+      routes.shift();
+    }
+    routes.push(route);
+    this.options.drawnRoutes = routes;
+    this.saveConfigOptions();
+  }
+
+  function removeDrawnRouteDetails(route) {
+    var routes, i;
+    routes = [];
+    for (i = 0; i < this.options.drawnRoutes.length; i += 1) {
+      if ((this.options.drawnRoutes[i].id !== route.id) || (this.options.drawnRoutes[i].eventid !== route.eventid)) {
+        routes.push(this.options.drawnRoutes[i]);
+      }
+    }
+    this.options.drawnRoutes = routes;
+    this.saveConfigOptions();
+  }
   function saveConfigOptions() {
     try {
       if ((window.hasOwnProperty('localStorage')) && (window.localStorage !== null)) {
@@ -192,9 +228,18 @@
 
   function loadConfigOptions() {
     try {
+      var prop, storedOptions;
       if ((window.hasOwnProperty('localStorage')) && (window.localStorage !== null)) {
         if (localStorage.getItem('rg2-options') !== null) {
-          this.options = JSON.parse(localStorage.getItem('rg2-options'));
+          storedOptions = JSON.parse(localStorage.getItem('rg2-options'));
+          // overwrite the options array with saved options from local storage
+          // need to do this to allow for new options that people don't yet have
+          for (prop in storedOptions) {
+            // probably a redundant check but it prevents lint from complaining
+            if (storedOptions.hasOwnProperty(prop)) {
+              this.options[prop] = storedOptions[prop];
+            }
+          }
           // best to keep these at default?
           this.options.circleSize = 20;
           if (this.options.mapIntensity === 0) {
@@ -236,10 +281,13 @@
   rg2.options = options;
   rg2.config = config;
   rg2.saveConfigOptions = saveConfigOptions;
+  rg2.saveDrawnRouteDetails = saveDrawnRouteDetails;
+  rg2.removeDrawnRouteDetails = removeDrawnRouteDetails;
   rg2.setConfigOption = setConfigOption;
   rg2.loadConfigOptions = loadConfigOptions;
   rg2.getOverprintDetails = getOverprintDetails;
   rg2.setDictionary = setDictionary;
   rg2.getDictionaryCode = getDictionaryCode;
   rg2.setLanguageOptions = setLanguageOptions;
+  rg2.createLanguageDropdown =  createLanguageDropdown;
 }());

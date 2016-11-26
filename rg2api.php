@@ -30,7 +30,7 @@
   }
 
   // version replaced by Gruntfile as part of release
-  define ('RG2VERSION', '1.3.0');
+  define ('RG2VERSION', '1.3.1');
   define ('KARTAT_DIRECTORY', $url);
   define ('LOCK_DIRECTORY', dirname(__FILE__)."/lock/saving/");
   define ('CACHE_DIRECTORY', $url."cache/");
@@ -152,10 +152,10 @@ function handlePostRequest($type, $eventid) {
   $data = json_decode(file_get_contents('php://input'));
   $write = array();
   if (lockDatabase() !== FALSE) {
-    if ($type != 'addroute') {
+    if (($type != 'addroute') && ($type != 'deletemyroute')) {
       $loggedIn = logIn($data);
     } else {
-      // don't need to log in to add a route
+      // don't need to log in to add a route or delete your own
       $loggedIn = TRUE;
     }
     if ($loggedIn) {
@@ -194,11 +194,26 @@ function handlePostRequest($type, $eventid) {
        break;
 
       case 'deleteroute':
-        $write = deleteRoute($eventid);
+          // this is the manager delete function
+        $write = deleteMyRoute($eventid, $data);
         @unlink(CACHE_DIRECTORY."results_".$eventid.".json");
         @unlink(CACHE_DIRECTORY."tracks_".$eventid.".json");
         @unlink(CACHE_DIRECTORY."stats.json");
         break;
+
+        case 'deletemyroute':
+        // this is the user delete function
+        if (canDeleteMyRoute($eventid, $data)) {
+          $write = deleteRoute($eventid);
+          @unlink(CACHE_DIRECTORY."results_".$eventid.".json");
+          @unlink(CACHE_DIRECTORY."tracks_".$eventid.".json");
+          @unlink(CACHE_DIRECTORY."stats.json");            
+        } else {
+          $write["status_msg"] = "Delete failed";
+          $write["ok"] = FALSE;            
+        }
+        break;
+
 
       case 'deletecourse':
         $write = deleteCourse($eventid);
@@ -860,6 +875,8 @@ function deleteRoute($eventid) {
 
   if ($write["status_msg"] == "") {
     $write["ok"] = TRUE;
+    $write["eventid"] = $eventid;
+    $write["routeid"] = $routeid;
     $write["status_msg"] = "Route deleted";
     rg2log("Route deleted|".$eventid."|".$routeid);
   } else {
@@ -869,24 +886,56 @@ function deleteRoute($eventid) {
   return($write);
 }
 
+function canDeleteMyRoute($eventid, $data) {
+  if (isset($_GET['routeid'])) {
+    $routeid = $_GET['routeid'];
+    $token = $data->token;
+    $filename = KARTAT_DIRECTORY."merkinnat_".$eventid.".txt";
+    $oldfile = file($filename);
+    $validrequest = false;
+    foreach ($oldfile as $row) {
+      $data = explode("|", $row);
+      if ($data[1] == $routeid) {
+        $hash = md5(serialize($row));
+        if ($hash == $token) {
+          $validrequest = true;
+        }
+      }
+    }
+  }
+  return $validrequest;
+}
+
 function addNewRoute($eventid, $data) {
   //rg2log("Add new route for eventid ".$eventid);
   $newresult = FALSE;
   $id = $data->resultid;
+  $lastid = 0;
   if (($data->resultid == 0) || ($data->resultid == GPS_RESULT_OFFSET)) {
-    // result needs to be allocated a new id
+    // result needs to be allocated a new id: happens when event has no initial results
     $newresult = TRUE;
     // allow for this being the first entry for an event with no results
-    if (file_exists(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt")) {
-      $rows = count(file(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt"));
+    // can't use row counts to generate ids any more since results can be deleted
+    if (($handle = @fopen(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt", "r+")) !== FALSE) {
+      // read to end of file to find last id in use
+      while (($olddata = fgetcsv($handle, 0, "|")) !== FALSE) {
+        if (count($olddata) > 0) {
+          $lastid = intval($olddata[0]);
+        }
+      }
+      // take off any existing GPS offset
+      // messy and probably unnecessary since you should only get one route per result for this format
+      // but safest for now
+      while ($lastid > GPS_RESULT_OFFSET) {
+        $lastid = $lastid - GPS_RESULT_OFFSET;
+      }
+      $id = $lastid + 1;
     } else {
-      $rows = 0;
+      // first result for event with no initial results
+      $id = 1;
     }
-    $rows++;
-    if ($data->resultid == 0) {
-      $id = $rows;
-    } else {
-      $id = $rows + GPS_RESULT_OFFSET;
+    if ($data->resultid == GPS_RESULT_OFFSET) {
+      $id = GPS_RESULT_OFFSET + $id;
     }
   }
 
@@ -916,6 +965,8 @@ function addNewRoute($eventid, $data) {
   }
 
   $newtrackdata = $data->courseid."|".$id."|".$name."|null|".$track."|".$controls.PHP_EOL;
+  // calculate a hash to allow deletion
+  $token = md5(serialize($newtrackdata));
 
   $newresultdata = "";
   if (($newresult === TRUE) || ($id >= GPS_RESULT_OFFSET)) {
@@ -1003,6 +1054,8 @@ function addNewRoute($eventid, $data) {
   if ($write["status_msg"] == "") {
     $write["ok"] = TRUE;
     $write["status_msg"] = "Record saved";
+    $write["token"] = $token;
+    $write["eventid"] = $eventid;
     //rg2log("Route saved|".$eventid."|".$id);
   } else {
     $write["ok"] = FALSE;
@@ -1257,7 +1310,7 @@ function getSplitsbrowser($eventid) {
 }
 
 function getLanguage($lang) {
-  $langdir = dirname(__FILE__) . '/lang/';
+  $langdir = dirname(__FILE__).'/lang/';
   $dict = array();
   if (file_exists($langdir.$lang.'.txt')) {
     // generate the necessary php array from the txt file

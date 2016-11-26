@@ -1,4 +1,4 @@
-// Version 1.3.0 2016-09-19T19:27:25+0100;
+// Version 1.3.1 2016-11-26T18:52:29+0000;
 /*
  * Routegadget 2
  * https://github.com/Maprunner/rg2
@@ -963,7 +963,7 @@ var rg2 = (function (window, $) {
     EVENT_WITHOUT_RESULTS : 2,
     SCORE_EVENT : 3,
     // version gets set automatically by grunt file during build process
-    RG2VERSION: '1.3.0',
+    RG2VERSION: '1.3.1',
     TIME_NOT_FOUND : 9999,
     // values for evt.which
     RIGHT_CLICK : 3,
@@ -971,7 +971,19 @@ var rg2 = (function (window, $) {
     FORMAT_NORMAL: 1,
     FORMAT_NO_RESULTS: 2,
     FORMAT_SCORE_EVENT: 3,
-    DISPLAY_ALL_COURSES: 99999
+    DISPLAY_ALL_COURSES: 99999,
+    //number of drawn routes that can be saved for possible later deletion
+    MAX_DRAWN_ROUTES: 10,
+    // array of available languages: not great to do it like this but it helps for routegadget.co.uk set-up
+    languages: [
+      {language: "Deutsch", code: "de"},
+      {language: "Suomi", code: "fi"},
+      {language: "Français", code: "fr"},
+      {language: "Italiano", code: "it"},
+      {language: "日本語", code: "ja"},
+      {language: "Norsk", code: "no"},
+      {language: "Português - Brasil", code: "pt"}
+    ]
   };
 
   options = {
@@ -986,7 +998,10 @@ var rg2 = (function (window, $) {
     showThreeSeconds : false,
     showGPSSpeed : false,
     // align map with next control at top when drawing route
-    alignMap: false
+    alignMap: false,
+    // array of up to MAX_DRAWN_ROUTES entries with details to allow deletion
+    // stored in order they are added, so first entry is most recent and gets deleted if necessary
+    drawnRoutes: []
   };
 
   // translation function
@@ -1055,17 +1070,15 @@ var rg2 = (function (window, $) {
     }
   }
 
-  function createLanguageDropdown() {
+  function createLanguageDropdown(languages) {
     var i, selected, dropdown;
     $("#rg2-select-language").empty();
     dropdown = document.getElementById("rg2-select-language");
     selected = (dictionary.code === "en");
     dropdown.options.add(rg2.utils.generateOption('en', 'en: English', selected));
-    for (i in rg2Config.languages) {
-      if (rg2Config.languages.hasOwnProperty(i)) {
-        selected = (dictionary.code === i);
-        dropdown.options.add(rg2.utils.generateOption(i, i + ": " + rg2Config.languages[i], selected));
-      }
+    for (i = 0; i < languages.length; i = i + 1) {
+      selected = (dictionary.code === languages[i].code);
+      dropdown.options.add(rg2.utils.generateOption(languages[i].code, languages[i].code + ": " + languages[i].language, selected));
     }
   }
 
@@ -1079,21 +1092,44 @@ var rg2 = (function (window, $) {
   }
 
   function setLanguageOptions() {
-    // use English unless a dictionary was passed in
-    if (rg2Config.dictionary.code === undefined) {
-      dictionary = {};
-      dictionary.code = 'en';
-    } else {
-      dictionary = rg2Config.dictionary;
+    // use English until we load something else
+    dictionary = {};
+    dictionary.code = 'en';
+    // set available languages and set start language if requested
+    rg2.createLanguageDropdown(rg2.config.languages);
+    if (rg2Config.start_language !== "en") {
+      rg2.getNewLanguage(rg2Config.start_language);
     }
-    translateFixedText();
-    createLanguageDropdown();
   }
 
   function setConfigOption(option, value) {
     this.options[option] = value;
   }
 
+  function saveDrawnRouteDetails(route) {
+    // this allows for deletion later
+    var routes;
+    routes = this.options.drawnRoutes;
+    if (routes.length >= rg2.config.MAX_DRAWN_ROUTES) {
+      // array is full so delete oldest (=first) entry
+      routes.shift();
+    }
+    routes.push(route);
+    this.options.drawnRoutes = routes;
+    this.saveConfigOptions();
+  }
+
+  function removeDrawnRouteDetails(route) {
+    var routes, i;
+    routes = [];
+    for (i = 0; i < this.options.drawnRoutes.length; i += 1) {
+      if ((this.options.drawnRoutes[i].id !== route.id) || (this.options.drawnRoutes[i].eventid !== route.eventid)) {
+        routes.push(this.options.drawnRoutes[i]);
+      }
+    }
+    this.options.drawnRoutes = routes;
+    this.saveConfigOptions();
+  }
   function saveConfigOptions() {
     try {
       if ((window.hasOwnProperty('localStorage')) && (window.localStorage !== null)) {
@@ -1107,9 +1143,18 @@ var rg2 = (function (window, $) {
 
   function loadConfigOptions() {
     try {
+      var prop, storedOptions;
       if ((window.hasOwnProperty('localStorage')) && (window.localStorage !== null)) {
         if (localStorage.getItem('rg2-options') !== null) {
-          this.options = JSON.parse(localStorage.getItem('rg2-options'));
+          storedOptions = JSON.parse(localStorage.getItem('rg2-options'));
+          // overwrite the options array with saved options from local storage
+          // need to do this to allow for new options that people don't yet have
+          for (prop in storedOptions) {
+            // probably a redundant check but it prevents lint from complaining
+            if (storedOptions.hasOwnProperty(prop)) {
+              this.options[prop] = storedOptions[prop];
+            }
+          }
           // best to keep these at default?
           this.options.circleSize = 20;
           if (this.options.mapIntensity === 0) {
@@ -1151,12 +1196,15 @@ var rg2 = (function (window, $) {
   rg2.options = options;
   rg2.config = config;
   rg2.saveConfigOptions = saveConfigOptions;
+  rg2.saveDrawnRouteDetails = saveDrawnRouteDetails;
+  rg2.removeDrawnRouteDetails = removeDrawnRouteDetails;
   rg2.setConfigOption = setConfigOption;
   rg2.loadConfigOptions = loadConfigOptions;
   rg2.getOverprintDetails = getOverprintDetails;
   rg2.setDictionary = setDictionary;
   rg2.getDictionaryCode = getDictionaryCode;
   rg2.setLanguageOptions = setLanguageOptions;
+  rg2.createLanguageDropdown =  createLanguageDropdown;
 }());
 
 /*global rg2:false */
@@ -1954,6 +2002,7 @@ var rg2 = (function (window, $) {
   function Draw() {
     this.trackColor = '#ff0000';
     this.hasResults = false;
+    this.routeToDelete = null;
     this.initialiseDrawing();
   }
 
@@ -2411,7 +2460,7 @@ var rg2 = (function (window, $) {
         dataType : 'json',
         success : function (data) {
           if (data.ok) {
-            self.routeSaved(data.status_msg);
+            self.routeSaved(data);
           } else {
             rg2.utils.showWarningDialog(self.gpstrack.routeData.name, rg2.t('Your route was not saved. Please try again'));
           }
@@ -2422,9 +2471,55 @@ var rg2 = (function (window, $) {
       });
     },
 
-    routeSaved : function () {
+    routeSaved : function (data) {
       rg2.utils.showWarningDialog(this.gpstrack.routeData.name, rg2.t('Your route has been saved') + '.');
+      rg2.saveDrawnRouteDetails({eventid: parseInt(data.eventid, 10), id: data.newid, token: data.token});
       rg2.loadEvent(rg2.events.getActiveEventID());
+    },
+
+    confirmDeleteRoute : function (id) {
+      var dlg;
+      this.routeToDelete = id;
+      dlg = {};
+      dlg.selector = "<div id='route-delete-dialog'>This route will be permanently deleted. Are you sure?</div>";
+      dlg.title = "Confirm route delete";
+      dlg.classes = "rg2-confirm-route-delete-dialog";
+      dlg.doText = "Delete route";
+      dlg.onDo = this.doDeleteRoute.bind(this);
+      dlg.onCancel = this.doCancelDeleteRoute.bind(this);
+      rg2.utils.createModalDialog(dlg);
+    },
+
+    doCancelDeleteRoute : function () {
+      $("#route-delete-dialog").dialog("destroy");
+    },
+
+    doDeleteRoute : function () {
+      var $url, json, info;
+      $("#route-delete-dialog").dialog("destroy");
+      info = rg2.results.getDeletionInfo(this.routeToDelete);
+      $url = rg2Config.json_url + "?type=deletemyroute&id=" + rg2.events.getKartatEventID() + "&routeid=" + info.id;
+      json = JSON.stringify({token: info.token});
+      $.ajax({
+        data : json,
+        type : "POST",
+        url : $url,
+        dataType : "json",
+        success : function (data) {
+          if (data.ok) {
+            rg2.utils.showWarningDialog(rg2.t("Route deleted"), rg2.t("Route has been deleted"));
+            rg2.removeDrawnRouteDetails({eventid: parseInt(data.eventid, 10), id: parseInt(data.routeid, 10)});
+            rg2.getEvents();
+          } else {
+            rg2.utils.showWarningDialog(rg2.t("Delete failed"), rg2.t("Delete failed"));
+          }
+        },
+        error : function (jqXHR, textStatus) {
+          /*jslint unparam:true*/
+          /* jshint unused:vars */
+          rg2.utils.showWarningDialog(rg2.t("Delete failed"), rg2.t("Delete failed"));
+        }
+      });
     },
 
     waitThreeSeconds : function () {
@@ -3645,6 +3740,8 @@ var rg2 = (function (window, $) {
     this.time = data.time;
     this.position = data.position;
     this.status = data.status;
+    this.canDelete = false;
+    this.token = 0;
     // get round iconv problem in API for now: unescape special characters to get sensible text
     if (data.comments) {
       this.comments = rg2.he.decode(data.comments);
@@ -4683,6 +4780,7 @@ var rg2 = (function (window, $) {
         }
         this.results.push(result);
       }
+      this.setDeletionInfo();
       this.setScoreCourseInfo();
       this.generateLegPositions();
     },
@@ -4702,6 +4800,31 @@ var rg2 = (function (window, $) {
           }
         }
       }
+    },
+
+    setDeletionInfo : function () {
+      var i, r, eventid, deletionInfo, opt;
+      eventid = rg2.events.getKartatEventID();
+      deletionInfo = [];
+      opt = rg2.options.drawnRoutes;
+      // find routes that can be deleted for this event
+      for (i = 0; i < opt.length; i += 1) {
+        if (opt[i].eventid === eventid) {
+          deletionInfo.push(opt[i]);
+        }
+      }
+      for (i = 0; i < deletionInfo.length; i += 1) {
+        for (r = 0; r < this.results.length; r += 1) {
+          if (this.results[r].resultid === deletionInfo[i].id) {
+            this.results[r].canDelete = true;
+            this.results[r].token = deletionInfo[i].token;
+          }
+        }
+      }
+    },
+
+    getDeletionInfo : function (id) {
+      return ({id: this.results[id].resultid, token: this.results[id].token});
     },
 
     // lists all runners on a given course
@@ -5054,17 +5177,22 @@ var rg2 = (function (window, $) {
         if ((res.comments !== "") && (res.comments !== rg2.t('Type your comment'))) {
           // #304 make sure double quotes show up
           res.comments = res.comments.replace(/"/g, '&quot;');
-          html += '<td><a href="#" title="' + res.comments + '">' + this.getNameHTML(res, i) + "</a></td><td>" + res.time + "</td>";
+          html += '<td><a href="#" title="' + res.comments + '">' + this.getNameHTML(res, i) + "</a>";
         } else {
-          html += "<td>" + this.getNameHTML(res, i) + "</td><td>" + res.time + "</td>";
+          html += "<td>" + this.getNameHTML(res, i);
         }
+        if (res.canDelete) {
+          html += " <i class='deleteroute fa fa-trash' id=" + i + "></i>";
+        }
+        html += "</td><td>" + res.time + "</td>";
         if (res.hasValidTrack) {
           tracksForThisCourse += 1;
           html += "<td><input class='showtrack showtrack-" + oldCourseID + "' id=" + i + " type=checkbox name=result></input></td>";
         } else {
           html += "<td></td>";
         }
-        html += "<td><input class='showreplay showreplay-" + oldCourseID + "' id=" + i + " type=checkbox name=replay></input></td></tr>";
+        html += "<td><input class='showreplay showreplay-" + oldCourseID + "' id=" + i + " type=checkbox name=replay></input></td>";
+        html += "</tr>";
       }
       html += this.getBottomRow(tracksForThisCourse, oldCourseID) + "</table></div></div>";
       return html;
@@ -5292,16 +5420,15 @@ var rg2 = (function (window, $) {
   }
 
   function getNewLanguage(lang) {
-    $.getJSON(rg2Config.json_url, {
-      id : lang,
-      type : 'lang',
-      cache : false
-    }).done(function (json) {
-      rg2.ui.setNewLanguage(json.data.dict);
-    }).fail(function (jqxhr, textStatus, error) {
-      /*jslint unparam:true*/
-      reportJSONFail("Language request failed: " + error);
-    });
+    $.getScript(rg2Config.lang_url + lang + ".js")
+      .done(function (lang) {
+        // script sets rg2.dictionary to new language
+        rg2.ui.setNewLanguage(lang);
+      }).fail(function (jqxhr, settings, exception) {
+        /*jslint unparam:true*/
+        /* jshint unused:vars */
+        reportJSONFail("Language request failed.");
+      });
   }
 
   rg2.getEvents = getEvents;
@@ -5498,10 +5625,15 @@ var rg2 = (function (window, $) {
       }
     },
 
-    setNewLanguage : function (dict) {
+    setNewLanguage : function (lang) {
       var eventid;
-      $("#rg2-event-list").menu("destroy");
-      rg2.setDictionary(dict);
+      if ($("#rg2-event-list").menu("instance") !== undefined) {
+        $("#rg2-event-list").menu("destroy");
+      }
+      // non-english dictionary is already installed by script that has loaded
+      if (lang === "en") {
+        rg2.setDictionary({code: "en"});
+      }
       this.createEventMenu();
       eventid = rg2.events.getActiveEventID();
       if (eventid !== null) {
@@ -5690,6 +5822,10 @@ var rg2 = (function (window, $) {
         rg2.requestedHash.setRoutes();
         rg2.redraw(false);
       });
+      // checkbox to delete a route
+      $(".deleteroute").click(function (event) {
+        rg2.drawing.confirmDeleteRoute(parseInt(event.target.id, 10));
+      });
       // checkbox to animate a result
       $(".showreplay").click(function (event) {
         if (event.target.checked) {
@@ -5742,7 +5878,8 @@ var rg2 = (function (window, $) {
       // #177 not pretty but gets round problems of double encoding
       html = html.replace(/&amp;/g, '&');
       $("#rg2-result-list").empty().append(html);
-      $("#rg2-result-list").accordion("refresh");
+      // force all panels to start closed: don't know why this is needed after a recreate but...
+      $("#rg2-result-list").accordion("option", "active", false).accordion("refresh");
       $("#rg2-info-panel").tabs("refresh");
       this.setResultCheckboxes();
       // disable control dropdown if we have no controls
@@ -5912,8 +6049,13 @@ var rg2 = (function (window, $) {
 
     createEventMenu : function () {
       //loads menu from populated events array
-      var html = rg2.events.formatEventsAsMenu();
-      $("#rg2-event-list").empty().append(html).menu({
+      var html, $select;
+      html = rg2.events.formatEventsAsMenu();
+      $select = $("#rg2-event-list");
+      if ($select.menu("instance") !== undefined) {
+        $select.menu("destroy");
+      }
+      $select.empty().append(html).menu({
         select : function (event, ui) {
           /*jslint unparam:true*/
           rg2.loadEvent(ui.item[0].id);
@@ -5979,7 +6121,7 @@ var rg2 = (function (window, $) {
         newlang = $("#rg2-select-language").val();
         if (newlang !== rg2.getDictionaryCode()) {
           if (newlang === 'en') {
-            self.setNewLanguage({code: "en"});
+            self.setNewLanguage('en');
           } else {
             rg2.getNewLanguage(newlang);
           }

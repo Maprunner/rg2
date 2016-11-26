@@ -26,10 +26,15 @@
       }
     },
 
-    setNewLanguage : function (dict) {
+    setNewLanguage : function (lang) {
       var eventid;
-      $("#rg2-event-list").menu("destroy");
-      rg2.setDictionary(dict);
+      if ($("#rg2-event-list").menu("instance") !== undefined) {
+        $("#rg2-event-list").menu("destroy");
+      }
+      // non-english dictionary is already installed by script that has loaded
+      if (lang === "en") {
+        rg2.setDictionary({code: "en"});
+      }
       this.createEventMenu();
       eventid = rg2.events.getActiveEventID();
       if (eventid !== null) {
@@ -218,6 +223,10 @@
         rg2.requestedHash.setRoutes();
         rg2.redraw(false);
       });
+      // checkbox to delete a route
+      $(".deleteroute").click(function (event) {
+        rg2.drawing.confirmDeleteRoute(parseInt(event.target.id, 10));
+      });
       // checkbox to animate a result
       $(".showreplay").click(function (event) {
         if (event.target.checked) {
@@ -270,7 +279,8 @@
       // #177 not pretty but gets round problems of double encoding
       html = html.replace(/&amp;/g, '&');
       $("#rg2-result-list").empty().append(html);
-      $("#rg2-result-list").accordion("refresh");
+      // force all panels to start closed: don't know why this is needed after a recreate but...
+      $("#rg2-result-list").accordion("option", "active", false).accordion("refresh");
       $("#rg2-info-panel").tabs("refresh");
       this.setResultCheckboxes();
       // disable control dropdown if we have no controls
@@ -440,8 +450,13 @@
 
     createEventMenu : function () {
       //loads menu from populated events array
-      var html = rg2.events.formatEventsAsMenu();
-      $("#rg2-event-list").empty().append(html).menu({
+      var html, $select;
+      html = rg2.events.formatEventsAsMenu();
+      $select = $("#rg2-event-list");
+      if ($select.menu("instance") !== undefined) {
+        $select.menu("destroy");
+      }
+      $select.empty().append(html).menu({
         select : function (event, ui) {
           /*jslint unparam:true*/
           rg2.loadEvent(ui.item[0].id);
@@ -507,7 +522,7 @@
         newlang = $("#rg2-select-language").val();
         if (newlang !== rg2.getDictionaryCode()) {
           if (newlang === 'en') {
-            self.setNewLanguage({code: "en"});
+            self.setNewLanguage('en');
           } else {
             rg2.getNewLanguage(newlang);
           }

@@ -11,6 +11,8 @@
     this.time = data.time;
     this.position = data.position;
     this.status = data.status;
+    this.canDelete = false;
+    this.token = 0;
     // get round iconv problem in API for now: unescape special characters to get sensible text
     if (data.comments) {
       this.comments = rg2.he.decode(data.comments);
