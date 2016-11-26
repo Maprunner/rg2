@@ -26,12 +26,15 @@
       }
     },
 
-    setNewLanguage : function (dict) {
+    setNewLanguage : function (lang) {
       var eventid;
       if ($("#rg2-event-list").menu("instance") !== undefined) {
         $("#rg2-event-list").menu("destroy");
       }
-      rg2.setDictionary(dict);
+      // non-english dictionary is already installed by script that has loaded
+      if (lang === "en") {
+        rg2.setDictionary({code: "en"});
+      }
       this.createEventMenu();
       eventid = rg2.events.getActiveEventID();
       if (eventid !== null) {
@@ -519,7 +522,7 @@
         newlang = $("#rg2-select-language").val();
         if (newlang !== rg2.getDictionaryCode()) {
           if (newlang === 'en') {
-            self.setNewLanguage({code: "en"});
+            self.setNewLanguage('en');
           } else {
             rg2.getNewLanguage(newlang);
           }

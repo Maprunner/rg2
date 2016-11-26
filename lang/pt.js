@@ -1,3 +1,5 @@
+/*global rg2:false */
+rg2.setDictionary({
 code: 'pt',
 language: 'Português - Brasil',
 translation: 'Jouderian Nobre + Josias Cavalcanti',
@@ -100,3 +102,4 @@ translation: 'Jouderian Nobre + Josias Cavalcanti',
 'Route already drawn': 'Rota já desenhada',
 'If you draw a new route it will overwrite the old route for this runner.': 'Se você desenhar uma nova rota isto irá substituir a rota anterior para este corredor.',
 'GPS routes are saved separately and will not be overwritten.': 'Rotas do GPS são salvas separadamente e não serão substituídas.'
+});

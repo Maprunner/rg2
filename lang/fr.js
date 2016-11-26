@@ -1,3 +1,5 @@
+/*global rg2:false */
+rg2.setDictionary({
 code: 'fr',
 language: 'Français',
 translation: 'rma@helga-o.com',
@@ -97,3 +99,4 @@ translation: 'rma@helga-o.com',
 'Route already drawn': 'Tracé déjà dessiné',
 'If you draw a new route it will overwrite the old route for this runner.': 'Si vous dessinez un nouveau tracé pour ce coureur, il remplacera l&apos;original.',
 'GPS routes are saved separately and will not be overwritten.': 'Les traces GPS sont enregistrées séparément et ne sont pas remplacées.'
+});

@@ -58,7 +58,17 @@
     FORMAT_SCORE_EVENT: 3,
     DISPLAY_ALL_COURSES: 99999,
     //number of drawn routes that can be saved for possible later deletion
-    MAX_DRAWN_ROUTES: 10
+    MAX_DRAWN_ROUTES: 10,
+    // array of available languages: not great to do it like this but it helps for routegadget.co.uk set-up
+    languages: [
+      {language: "Deutsch", code: "de"},
+      {language: "Suomi", code: "fi"},
+      {language: "Français", code: "fr"},
+      {language: "Italiano", code: "it"},
+      {language: "日本語", code: "ja"},
+      {language: "Norsk", code: "no"},
+      {language: "Português - Brasil", code: "pt"}
+    ]
   };
 
   options = {
@@ -170,9 +180,11 @@
     // use English until we load something else
     dictionary = {};
     dictionary.code = 'en';
-    createLanguageDropdown([]);
-    // load available languages and set start language if requested
-    rg2.getLanguages(rg2Config.start_language);
+    // set available languages and set start language if requested
+    rg2.createLanguageDropdown(rg2.config.languages);
+    if (rg2Config.start_language !== "en") {
+      rg2.getNewLanguage(rg2Config.start_language);
+    }
   }
 
   function setConfigOption(option, value) {

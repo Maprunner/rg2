@@ -158,32 +158,15 @@
   }
 
   function getNewLanguage(lang) {
-    $.getJSON(rg2Config.json_url, {
-      id : lang,
-      type : 'lang',
-      cache : false
-    }).done(function (json) {
-      rg2.ui.setNewLanguage(json.data.dict);
-    }).fail(function (jqxhr, textStatus, error) {
-      /*jslint unparam:true*/
-      reportJSONFail("Language request failed: " + error);
-    });
-  }
-
-  // called at start-up to load list of available languages
-  function getLanguages(startLang) {
-    $.getJSON(rg2Config.json_url, {
-      type : 'languages',
-      cache : false
-    }).done(function (json) {
-      rg2.createLanguageDropdown(json.data.languages);
-      if (startLang !== "en") {
-        getNewLanguage(startLang);
-      }
-    }).fail(function (jqxhr, textStatus, error) {
-      /*jslint unparam:true*/
-      reportJSONFail("Language request failed: " + error);
-    });
+    $.getScript(rg2Config.lang_url + lang + ".js")
+      .done(function (lang) {
+        // script sets rg2.dictionary to new language
+        rg2.ui.setNewLanguage(lang);
+      }).fail(function (jqxhr, settings, exception) {
+        /*jslint unparam:true*/
+        /* jshint unused:vars */
+        reportJSONFail("Language request failed.");
+      });
   }
 
   rg2.getEvents = getEvents;
@@ -191,5 +174,4 @@
   rg2.getResults = getResults;
   rg2.getGPSTracks = getGPSTracks;
   rg2.getNewLanguage = getNewLanguage;
-  rg2.getLanguages = getLanguages;
 }());

@@ -258,6 +258,7 @@ header('Content-type: text/html; charset=utf-8');
 var rg2Config = {
 json_url: "<?php echo $json_url; ?>",
 maps_url: "<?php echo $maps_url; ?>",
+lang_url: "<?php echo $source_url.'/lang/'; ?>",
 header_colour: "<?php echo $header_colour; ?>",
 header_text_colour: "<?php echo $header_text_colour; ?>",
 <?php if (defined('SPLITSBROWSER_DIRECTORY')) { ?>

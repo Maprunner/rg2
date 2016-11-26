@@ -1225,14 +1225,6 @@ function handleGetRequest($type, $id) {
   case 'lang':
     $output = getLanguage($id);
     break;
-  case 'languages':
-    if (file_exists(CACHE_DIRECTORY."languages.json")) {
-      $output = file_get_contents(CACHE_DIRECTORY."languages.json");
-    } else {
-      $output = getLanguages();
-      @file_put_contents(CACHE_DIRECTORY."languages.json", $output);
-    }
-    break;
   case 'splitsbrowser':
     $output = getSplitsbrowser($id);
     break;
@@ -1315,32 +1307,6 @@ function getSplitsbrowser($eventid) {
     $result_data = getResultsCSV($eventid);
     $page = str_replace('<SPLITSBROWSER_DATA>', $result_data, $page);
     return $page;
-}
-
-function getLanguages() {
-  $langdir = dirname(__FILE__).'/lang/';
-  // get list of language files
-  $files = array_diff(scandir($langdir), array('..', '.'));
-  $languages = array();
-  foreach ($files as $file) {
-    if ($file == "xx.txt") {
-      break;
-    }
-    $lines = file($langdir.$file);
-    $detail = array();
-    foreach ($lines as $line) {
-      $bits = explode(":", str_replace("'", "", trim($line)));
-      if ($bits[0] == "language") {
-        $detail["language"] = rtrim(trim($bits[1]), ",");
-      }
-      if ($bits[0] == "code") {
-        $detail["code"] = rtrim(trim($bits[1]), ",");
-      }
-      // could break here if both set but since we cache the json it isn't going to save much
-    }
-    array_push($languages, $detail);
-  }  
-  return addVersion('languages', $languages);
 }
 
 function getLanguage($lang) {
