@@ -1,4 +1,4 @@
-// Version 1.3.0 2016-11-26T08:45:53+0000;
+// Version 1.3.1 2016-11-26T18:52:29+0000;
 /*
  * Routegadget 2
  * https://github.com/Maprunner/rg2
@@ -963,7 +963,7 @@ var rg2 = (function (window, $) {
     EVENT_WITHOUT_RESULTS : 2,
     SCORE_EVENT : 3,
     // version gets set automatically by grunt file during build process
-    RG2VERSION: '1.3.0',
+    RG2VERSION: '1.3.1',
     TIME_NOT_FOUND : 9999,
     // values for evt.which
     RIGHT_CLICK : 3,
@@ -973,7 +973,17 @@ var rg2 = (function (window, $) {
     FORMAT_SCORE_EVENT: 3,
     DISPLAY_ALL_COURSES: 99999,
     //number of drawn routes that can be saved for possible later deletion
-    MAX_DRAWN_ROUTES: 10
+    MAX_DRAWN_ROUTES: 10,
+    // array of available languages: not great to do it like this but it helps for routegadget.co.uk set-up
+    languages: [
+      {language: "Deutsch", code: "de"},
+      {language: "Suomi", code: "fi"},
+      {language: "Français", code: "fr"},
+      {language: "Italiano", code: "it"},
+      {language: "日本語", code: "ja"},
+      {language: "Norsk", code: "no"},
+      {language: "Português - Brasil", code: "pt"}
+    ]
   };
 
   options = {
@@ -1085,9 +1095,11 @@ var rg2 = (function (window, $) {
     // use English until we load something else
     dictionary = {};
     dictionary.code = 'en';
-    createLanguageDropdown([]);
-    // load available languages and set start language if requested
-    rg2.getLanguages(rg2Config.start_language);
+    // set available languages and set start language if requested
+    rg2.createLanguageDropdown(rg2.config.languages);
+    if (rg2Config.start_language !== "en") {
+      rg2.getNewLanguage(rg2Config.start_language);
+    }
   }
 
   function setConfigOption(option, value) {
@@ -5408,32 +5420,15 @@ var rg2 = (function (window, $) {
   }
 
   function getNewLanguage(lang) {
-    $.getJSON(rg2Config.json_url, {
-      id : lang,
-      type : 'lang',
-      cache : false
-    }).done(function (json) {
-      rg2.ui.setNewLanguage(json.data.dict);
-    }).fail(function (jqxhr, textStatus, error) {
-      /*jslint unparam:true*/
-      reportJSONFail("Language request failed: " + error);
-    });
-  }
-
-  // called at start-up to load list of available languages
-  function getLanguages(startLang) {
-    $.getJSON(rg2Config.json_url, {
-      type : 'languages',
-      cache : false
-    }).done(function (json) {
-      rg2.createLanguageDropdown(json.data.languages);
-      if (startLang !== "en") {
-        getNewLanguage(startLang);
-      }
-    }).fail(function (jqxhr, textStatus, error) {
-      /*jslint unparam:true*/
-      reportJSONFail("Language request failed: " + error);
-    });
+    $.getScript(rg2Config.lang_url + lang + ".js")
+      .done(function (lang) {
+        // script sets rg2.dictionary to new language
+        rg2.ui.setNewLanguage(lang);
+      }).fail(function (jqxhr, settings, exception) {
+        /*jslint unparam:true*/
+        /* jshint unused:vars */
+        reportJSONFail("Language request failed.");
+      });
   }
 
   rg2.getEvents = getEvents;
@@ -5441,7 +5436,6 @@ var rg2 = (function (window, $) {
   rg2.getResults = getResults;
   rg2.getGPSTracks = getGPSTracks;
   rg2.getNewLanguage = getNewLanguage;
-  rg2.getLanguages = getLanguages;
 }());
 
 /*global rg2:false */
@@ -5631,12 +5625,15 @@ var rg2 = (function (window, $) {
       }
     },
 
-    setNewLanguage : function (dict) {
+    setNewLanguage : function (lang) {
       var eventid;
       if ($("#rg2-event-list").menu("instance") !== undefined) {
         $("#rg2-event-list").menu("destroy");
       }
-      rg2.setDictionary(dict);
+      // non-english dictionary is already installed by script that has loaded
+      if (lang === "en") {
+        rg2.setDictionary({code: "en"});
+      }
       this.createEventMenu();
       eventid = rg2.events.getActiveEventID();
       if (eventid !== null) {
@@ -6124,7 +6121,7 @@ var rg2 = (function (window, $) {
         newlang = $("#rg2-select-language").val();
         if (newlang !== rg2.getDictionaryCode()) {
           if (newlang === 'en') {
-            self.setNewLanguage({code: "en"});
+            self.setNewLanguage('en');
           } else {
             rg2.getNewLanguage(newlang);
           }
