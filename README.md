@@ -1,10 +1,9 @@
 # Routegadget 2
 
 ## Latest news
-Version 1.3.0 was released on 19th September 2016. This includes:
-* Enhanced replay facilities, with better control of the replay speed.
-* A fix for GPX files with spurious (Latitude:0, Longitude: 0) positions in them. This caused your route to include points just off the west coast of Africa, so looked like vertical lines down the screen for GB events.
-* A function to make an event read-only. This will show up as a lock icon in the title bar, and the "Draw" tab will be disabled. This will allow events to be set up and checked before people start adding routes.
+Version 1.3.1 was released on 26th November 2016. The main change is a new function that will allow you to delete a route that you have drawn. This will only be allowed from the PC (or tablet or phone) on which you drew the route. This is a balance between providing a useful function (probably the most requested) and preventing abuse of the system. It is limited to the last 10 routes drawn, they must have been drawn in RG2 version 1.3.1 or later, and it will only work on "modern" browsers (meaning it will be fine for the vast majority of people).
+
+If all those conditions are OK then you should see a small dustbin icon next to your name when you have drawn or uploaded a route. Click on the dustbin and you will be asked to confirm deletion.
 
 [Guidance on creating map files] (https://github.com/Maprunner/rg2/wiki/Map-files) has also been added.
 
