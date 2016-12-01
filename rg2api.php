@@ -2445,3 +2445,4 @@ function exp_to_dec($float_str)
   // otherwise, assume already in decimal notation and return
   else return $float_str;
 }
+?>
