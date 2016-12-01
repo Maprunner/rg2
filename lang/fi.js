@@ -1,3 +1,5 @@
+/*global rg2:false */
+rg2.setDictionary({
 language: 'Suomi',
 code: 'fi',
 translation: 'mki@iki.fi',
@@ -103,3 +105,4 @@ translation: 'mki@iki.fi',
 'Route already drawn': 'Reitti on jo piirretty',
 'If you draw a new route it will overwrite the old route for this runner.': 'Jos piirrät uuden reitin poistetaan kilpailijan vanha reitti.',
 'GPS routes are saved separately and will not be overwritten.': 'GPS reitit tallennetaan erikseen eikä niitä ylikirjoiteta.'
+});

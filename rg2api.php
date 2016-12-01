@@ -901,20 +901,32 @@ function addNewRoute($eventid, $data) {
   //rg2log("Add new route for eventid ".$eventid);
   $newresult = FALSE;
   $id = $data->resultid;
+  $lastid = 0;
   if (($data->resultid == 0) || ($data->resultid == GPS_RESULT_OFFSET)) {
-    // result needs to be allocated a new id
+    // result needs to be allocated a new id: happens when event has no initial results
     $newresult = TRUE;
     // allow for this being the first entry for an event with no results
-    if (file_exists(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt")) {
-      $rows = count(file(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt"));
+    // can't use row counts to generate ids any more since results can be deleted
+    if (($handle = @fopen(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt", "r+")) !== FALSE) {
+      // read to end of file to find last id in use
+      while (($olddata = fgetcsv($handle, 0, "|")) !== FALSE) {
+        if (count($olddata) > 0) {
+          $lastid = intval($olddata[0]);
+        }
+      }
+      // take off any existing GPS offset
+      // messy and probably unnecessary since you should only get one route per result for this format
+      // but safest for now
+      while ($lastid > GPS_RESULT_OFFSET) {
+        $lastid = $lastid - GPS_RESULT_OFFSET;
+      }
+      $id = $lastid + 1;
     } else {
-      $rows = 0;
+      // first result for event with no initial results
+      $id = 1;
     }
-    $rows++;
-    if ($data->resultid == 0) {
-      $id = $rows;
-    } else {
-      $id = $rows + GPS_RESULT_OFFSET;
+    if ($data->resultid == GPS_RESULT_OFFSET) {
+      $id = GPS_RESULT_OFFSET + $id;
     }
   }
 
@@ -944,6 +956,8 @@ function addNewRoute($eventid, $data) {
   }
   
   $newtrackdata = $data->courseid."|".$id."|".$name."|".$data->variant."|".$track."|".$controls.PHP_EOL;
+  // calculate a hash to allow deletion
+  $token = md5(serialize($newtrackdata));
 
   $newresultdata = "";
   if (($newresult === TRUE) || ($id >= GPS_RESULT_OFFSET)) {

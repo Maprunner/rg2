@@ -1,4 +1,6 @@
-﻿language: 'Deutsch',
+﻿/*global rg2:false */
+rg2.setDictionary({
+language: 'Deutsch',
 code: 'de',
 translation: 'Simon@Harston.de',
 'Events' : 'Wettkämpfe',
@@ -84,3 +86,4 @@ translation: 'Simon@Harston.de',
 'Red - locked': 'Rot - Gesperrt',
 'Right click to delete a handle': 'Rechts-Klick zum Löschen eines Bearbeitungspunkts',
 'Drag a handle to adjust track around locked point(s)': 'Ziehe einen Bearbeitungspunkt, um die Route anzupassen' 
+});
