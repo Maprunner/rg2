@@ -1,4 +1,7 @@
 <?php
+// version replaced by Gruntfile as part of release
+define ('RG2VERSION', '1.3.1');
+
 if (file_exists( dirname(__FILE__) . '/rg2-config.php')) {
   require_once( dirname(__FILE__) . '/rg2-config.php' );
 } else {
@@ -100,11 +103,14 @@ header('Content-type: text/html; charset=utf-8');
     <meta name="description" content="View and save route choices for orienteering events">
     <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
     <link rel="shortcut icon" href="img/favicon.ico"/>
-    <link rel="stylesheet" href='<?php echo $source_url ."/css/normalize.min.css'>"; ?>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css"; ?>
+  <?php if ($debug) { ?>
     <link rel="stylesheet" href='<?php echo $source_url ."/css/rg2.css'>"; ?>
+  <?php } else { ?>
+    <link rel="stylesheet" href='<?php echo $source_url ."/css/rg2-".RG2VERSION.".min.css'>"; ?>
+  <?php } ?>
     <link rel="stylesheet" href="//code.jquery.com/ui/1.11.3/themes/<?php echo $ui_theme; ?>/jquery-ui.min.css">
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
-    <!-- ('RG2VERSION', '1.3.1') -->
   </head>
   <body>
     <!--[if lt IE 7]>
@@ -219,7 +225,7 @@ header('Content-type: text/html; charset=utf-8');
     </div>
 <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
 <script src="//code.jquery.com/ui/1.11.3/jquery-ui.min.js"></script>
-<?php if ($debug) { ?>
+<?php if (!$debug) { ?>
 <script src='<?php echo $source_url . "/js/rg2.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/rg2ui.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/rg2input.js"; ?>'></script>
@@ -242,18 +248,24 @@ header('Content-type: text/html; charset=utf-8');
 <script src='<?php echo $source_url . "/js/utils.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/plugins.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/handles.js"; ?>'></script>
-<script src='<?php echo $source_url . "/js/lib/he.js"; ?>'></script><?php } else { ?>
-<script src='<?php echo $source_url . "/js/rg2all.min.js"; ?>'></script><?php } ?>
-<?php if ($manager) { ?><?php if ($debug) { ?>
+<script src='<?php echo $source_url . "/js/lib/he.js"; ?>'></script>
+<?php } else { ?>
+<script src='<?php echo $source_url . "/js/rg2-".RG2VERSION.".min.js"; ?>'></script>
+<?php } ?>
+<?php if ($manager) { ?>
+  <?php if ($debug) { ?>
 <script src='<?php echo $source_url . "/js/resultparser.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/resultparsercsv.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/resultparseriofv2.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/resultparseriofv3.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/courseparser.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/managerui.js"; ?>'></script>
-<script src='<?php echo $source_url . "/js/manager.js"; ?>'></script><?php } else {?>
-<script src='<?php echo $source_url . "/js/rg2manager.min.js"; ?>'></script><?php } ?>
-<script src='<?php echo $source_url . "/js/lib/proj4js-compressed.js"; ?>'></script><?php } ?>
+<script src='<?php echo $source_url . "/js/manager.js"; ?>'></script>
+  <?php } else {?>
+<script src='<?php echo $source_url . "/js/rg2manager-".RG2VERSION.".min.js"; ?>'></script>
+  <?php } ?>
+<script src='<?php echo $source_url . "/js/lib/proj4js-compressed.js"; ?>'></script>
+  <?php } ?>
 <script type="text/javascript">
 var rg2Config = {
 json_url: "<?php echo $json_url; ?>",

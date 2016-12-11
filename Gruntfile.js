@@ -6,18 +6,14 @@ module.exports = function(grunt) {
   
   var langFileList = ['lang/de.js', 'lang/fi.js', 'lang/fr.js', 'lang/it.js', 'lang/ja.js', 'lang/no.js', 'lang/pt.js', 'lang/xx.js'];
 
-  var cssFileList = ['css/rg2.css'];
-
   // don't jsHint he.js, plugins.js
   var jsHintList = ['js/rg2.js', 'js/animation.js', 'js/canvas.js', 'js/config.js', 'js/control.js', 'js/controls.js', 'js/course.js', 'js/courseparser.js', 'js/courses.js', 'js/draw.js', 'js/event.js',
     'js/events.js', 'js/gpstrack.js', 'js/handles.js', 'js/map.js', 'js/result.js', 'js/resultparser.js', 'js/results.js', 'js/rg2getjson.js', 'js/rg2input.js', 'js/rg2ui.js', 'js/runner.js', 'js/utils.js'];
 
   var jsManagerSrc = ['js/manager.js', 'js/resultparseriofv2.js', 'js/resultparseriofv3.js', 'js/resultparsercsv.js', 'js/resultparser.js', 'js/courseparser.js', 'js/managerui.js'];
 
-  var jsConcatFile = 'js/rg2all.js';
-
-  var jsMinFile = 'js/rg2all.min.js';
-  var jsManagerMinFile = 'js/rg2manager.min.js';
+  var jsMinFile = 'js/rg2-<%= pkg.version %>.min.js';
+  var jsManagerMinFile = 'js/rg2manager-<%= pkg.version %>.min.js';
 
   var relDir = 'ftpsite/';
 
@@ -35,19 +31,6 @@ module.exports = function(grunt) {
   // Project configuration.
   grunt.initConfig({
     pkg : grunt.file.readJSON('package.json'),
-
-    concat : {
-      js : {
-        src : jsFileList,
-
-        dest : jsConcatFile,
-
-        options : {
-          banner : '// Version <%= pkg.version %> <%= grunt.template.today("isoDateTime") %>;\n'
-
-        }
-      }
-    },
 
     jshint : {
       options : {
@@ -90,15 +73,16 @@ module.exports = function(grunt) {
         'duplicate-background-images': false,
         'outline-none': false
       },
-      src: cssFileList
+      src: 'css/rg2.css'
     },
 
     uglify : {
       options : {
-        banner : '// Version <%= pkg.version %> <%= grunt.template.today("isoDateTime") %>;\n'
+        banner : '// Version <%= pkg.version %> <%= grunt.template.today("isoDateTime") %>;\n',
+        sourceMap: true
       },
       build : {
-        src : jsConcatFile,
+        src : jsFileList,
         dest : jsMinFile
       },
       manager : {
@@ -107,10 +91,22 @@ module.exports = function(grunt) {
       }
     },
 
+    cssmin: {
+      options: {
+        shorthandCompacting: false,
+        roundingPrecision: -1
+     },
+     target: {
+       files: {
+        'css/rg2-<%= pkg.version %>.min.css': 'css/rg2.css'
+       }
+     }
+    },
+
     sync : {
       rel : {
         files: [{
-          src : ['js/**', 'css/**', 'img/**', 'rg2api.php', 'index.php', 'html/**', 'lang/**'],
+          src : ['rg2api.php', 'index.php', 'html/**'],
           dest : 'rel/'
         }],
         verbose: true, // Default: false 
@@ -123,14 +119,6 @@ module.exports = function(grunt) {
     bumpup : 'package.json',
 
     replace : {
-      config : {
-        src : ['rel/rg2-config-template.php'],
-        dest : 'rel/<%= ftp.club %>/rg2-config.php',
-        replacements : [{
-          from : '<club>',
-          to : '<%= ftp.club %>'
-        }]
-      },
       jsversion : {
         src : 'js/config.js',
         overwrite : true,
@@ -189,7 +177,7 @@ module.exports = function(grunt) {
     },
 
    clean: {
-      minified: ['js/rg2all.js', 'js/rg2all.min.js', 'js/rg2manager.min.js']
+      minified: ['js/*.min.js', 'js/*.js.map', 'css/*.min.css']
     }
 
   });
@@ -209,6 +197,7 @@ module.exports = function(grunt) {
       verbose: true, // Default: false 
       pretend: false, // Don't do any disk operations - just write log. Default: false 
       failOnError: true, // Fail the task when copying is not possible. Default: false 
+      ignoreInDest: "rg2-config.php",
       updateAndDelete: true
     });
   };
@@ -224,6 +213,7 @@ module.exports = function(grunt) {
     verbose: true, // Default: false 
     pretend: false, // Don't do any disk operations - just write log. Default: false 
     failOnError: true, // Fail the task when copying is not possible. Default: false 
+    ignoreInDest: "rg2-config.php",
     updateAndDelete: true
   });
   
@@ -232,7 +222,7 @@ module.exports = function(grunt) {
   // increment minor version number: do anything else by editting package.json by hand
   grunt.registerTask('bump', ['bumpup']);
 
-  grunt.registerTask('build', ['clean:minified', 'csslint', 'jslint:all', 'jshint:all', 'jshint:lang', 'concat:js', 'uglify', 'build-manager' ]);
+  grunt.registerTask('build', ['clean:minified', 'csslint', 'cssmin', 'jslint:all', 'jshint:all', 'jshint:lang', 'uglify', 'build-manager' ]);
 
   grunt.registerTask('build-manager', ['jslint:manager', 'jshint:manager', 'uglify:manager' ]);
 
