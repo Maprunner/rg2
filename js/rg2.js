@@ -28,22 +28,24 @@ var rg2 = (function (window, $) {
     var stats, resultsinfo, coursearray;
     resultsinfo = rg2.results.getResultsInfo();
     coursearray = rg2.courses.getCoursesForEvent();
-    stats = "<p><strong>" +  rg2.t("Courses") + ":</strong> " + coursearray.length + ". <strong>" +  rg2.t("Controls") + ":</strong> " + controls;
-    stats += ". <strong> " +  rg2.t("Results") + ":</strong> " + resultsinfo.results + ".</p>";
-    stats += "<p><strong>" +  rg2.t("Routes") + ":</strong> " + resultsinfo.totalroutes + " (" + resultsinfo.percent + "%). ";
-    stats += "<strong>" +  rg2.t("Drawn routes") + ":</strong> " + resultsinfo.drawnroutes + ". <strong>" +  rg2.t("GPS routes") + ":</strong> " + resultsinfo.gpsroutes + ".</p>";
-    stats += "<p><strong>" +  rg2.t("Total time") + ":</strong> " + resultsinfo.time + ".</p>";
+    stats = "<tr><td><strong>" + rg2.t("Courses") + "</strong></td><td>" + coursearray.length + "</td></tr>";
+    stats += "<tr><td><strong>" + rg2.t("Controls") + "</strong></td><td>" + controls + "</td></tr>";
+    stats += "<tr><td><strong>" + rg2.t("Results") + "</strong></td><td>" + resultsinfo.results + "</td></tr>";
+    stats += "<tr><td><strong>" + rg2.t("Routes") + "</strong></td><td>" + resultsinfo.totalroutes + " (" + resultsinfo.percent + "%)</td></tr>";
+    stats += "<tr><td><strong>" + rg2.t("Drawn routes") + "</strong></td><td>" + resultsinfo.drawnroutes + "</td></tr>";
+    stats += "<tr><td><strong>" + rg2.t("GPS routes") + "</strong></td><td>" + resultsinfo.gpsroutes + "</td></tr>";
+    stats += "<tr><td><strong>" + rg2.t("Total time") + "</strong></td><td>" + resultsinfo.time + "</td></tr>";
     return stats;
   }
 
   function getMapStats(validWordlfile) {
     var stats, mapSize;
     mapSize = rg2.getMapSize();
-    stats = "<p><strong>" +  rg2.t("Map ") + ":</strong> ID " + rg2.events.getActiveMapID() + ", " + mapSize.width + " x " + mapSize.height + " pixels";
+    stats = "<tr><td><strong>" +  rg2.t("Map") + "</strong></td><td>ID " + rg2.events.getActiveMapID() + ", " + mapSize.width + " x " + mapSize.height + " pixels";
     if (validWordlfile) {
-      stats += ". " +  rg2.t("Map is georeferenced") + ".</p>";
+      stats += ". " +  rg2.t("Map is georeferenced") + ".</td></tr>";
     } else {
-      stats += ".</p>";
+      stats += ".</td></tr>";
     }
     return stats;
   }
@@ -58,14 +60,16 @@ var rg2 = (function (window, $) {
     id = rg2.events.getKartatEventID();
     eventinfo = rg2.events.getEventInfo(parseInt(id, 10));
     runnercomments = rg2.results.getComments();
-    stats = "<h3>" +  rg2.t("Event statistics") + ": " + eventinfo.name + ": " + eventinfo.date + "</h3>";
+    stats = "<div><table><thead><tr><th colspan='3'><h2>" + rg2.t("Event statistics") + ": " + eventinfo.name + ": " + eventinfo.date + "</h2></th></tr></thead><tbody>";
     stats += getResultsStats(eventinfo.controls);
     if (eventinfo.comment) {
-      stats += "<p>" + eventinfo.comment + "</p>";
+      stats += "<tr><td>" + rg2.t("Comments") + "</td><td>" + eventinfo.comment + "</td></tr>";
     }
     stats += getMapStats(eventinfo.worldfile.valid);
+    stats += "</tbody></table>";
     if (runnercomments) {
-      stats += "<p><strong>" +  rg2.t("Comments") + ":</strong></p>" + runnercomments;
+      stats += "<div><table><thead><tr><th>"  + rg2.t("Name") + "</th><th>" + rg2.t("Course") + "</th><th>" + rg2.t("Comments") + "</th></tr></thead><tbody>";
+      stats += runnercomments + "</tbody></table></div>";
     }
     // #177 not pretty but gets round problems of double encoding
     stats = stats.replace(/&amp;/g, '&');

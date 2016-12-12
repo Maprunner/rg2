@@ -8,7 +8,7 @@ html, body {
   margin: 0;
   border: 0;
   display: block;
-  font: 16px/26px Helvetica, Helvetica Neue, Arial;
+  font: 16px/26px -apple-system,"Roboto","Segoe UI","Helvetica Neue",Arial,sans-serif;
 }
 
 #rg2-header-container {
@@ -118,6 +118,36 @@ html, body {
 #rg2-about-dialog {
 	 font-size: 0.75em;
    display: none;
+}
+
+#rg2-about-dialog hr {
+	height: 10px;
+	border: 0;
+	box-shadow: 0 10px 10px -10px #8c8b8b inset;
+}
+
+#rg2-about-dialog table {
+  width: 100%;
+}
+
+#rg2-about-dialog thead tr {
+  background: #bbb;
+}
+
+#rg2-about-dialog thead th {
+  text-align: left;
+}
+
+#rg2-about-dialog tbody tr:nth-child(odd) {
+  background: #eee;
+}
+
+#rg2-about-dialog tbody td:first-child {
+  width: 15%;
+}
+
+#rg2-about-dialog tbody td {
+  text-align: left;
 }
 
 .splitstable {

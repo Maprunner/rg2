@@ -492,7 +492,7 @@
       comments = "";
       for (i = 0; i < this.results.length; i += 1) {
         if (this.results[i].comments !== "") {
-          comments += "<p><strong>" + this.results[i].name + "</strong>: " + this.results[i].coursename + ": " + this.results[i].comments + "</p>";
+          comments += "<tr><td><strong>" + this.results[i].name + "</strong></td><td>" + this.results[i].coursename + "</td><td>" + this.results[i].comments + "</td></tr>";
         }
       }
       return comments;
