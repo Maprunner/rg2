@@ -1,6 +1,6 @@
 <?php
 // version replaced by Gruntfile as part of release
-define ('RG2VERSION', '1.3.1');
+define ('RG2VERSION', '1.3.2');
 
 if (file_exists( dirname(__FILE__) . '/rg2-config.php')) {
   require_once( dirname(__FILE__) . '/rg2-config.php' );
@@ -225,7 +225,7 @@ header('Content-type: text/html; charset=utf-8');
     </div>
 <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
 <script src="//code.jquery.com/ui/1.11.3/jquery-ui.min.js"></script>
-<?php if (!$debug) { ?>
+<?php if ($debug) { ?>
 <script src='<?php echo $source_url . "/js/rg2.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/rg2ui.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/rg2input.js"; ?>'></script>

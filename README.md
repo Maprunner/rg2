@@ -1,7 +1,7 @@
 # Routegadget 2
 
 ## Latest news
-Version 1.3.1 was released on 26th November 2016. The main change is a new function that will allow you to delete a route that you have drawn. This will only be allowed from the PC (or tablet or phone) on which you drew the route. This is a balance between providing a useful function (probably the most requested) and preventing abuse of the system. It is limited to the last 10 routes drawn, they must have been drawn in RG2 version 1.3.1 or later, and it will only work on "modern" browsers (meaning it will be fine for the vast majority of people).
+Version 1.3.2 was released on 14th December 2016. The main recent change is a new function that will allow you to delete a route that you have drawn. This will only be allowed from the PC (or tablet or phone) on which you drew the route. This is a balance between providing a useful function (probably the most requested) and preventing abuse of the system. It is limited to the last 10 routes drawn, they must have been drawn in RG2 version 1.3.1 or later, and it will only work on "modern" browsers (meaning it will be fine for the vast majority of people).
 
 If all those conditions are OK then you should see a small dustbin icon next to your name when you have drawn or uploaded a route. Click on the dustbin and you will be asked to confirm deletion.
 
