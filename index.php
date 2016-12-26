@@ -109,8 +109,8 @@ header('Content-type: text/html; charset=utf-8');
   <?php } else { ?>
     <link rel="stylesheet" href='<?php echo $source_url ."/css/rg2-".RG2VERSION.".min.css'>"; ?>
   <?php } ?>
-    <link rel="stylesheet" href="//code.jquery.com/ui/1.11.3/themes/<?php echo $ui_theme; ?>/jquery-ui.min.css">
-    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.3/themes/<?php echo $ui_theme; ?>/jquery-ui.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
   </head>
   <body>
     <!--[if lt IE 7]>
@@ -223,8 +223,8 @@ header('Content-type: text/html; charset=utf-8');
       <?php include 'html/options.html'; ?>
       <?php include 'html/misc.html'; ?>
     </div>
-<script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
-<script src="//code.jquery.com/ui/1.11.3/jquery-ui.min.js"></script>
+<script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+<script src="https://code.jquery.com/ui/1.11.3/jquery-ui.min.js"></script>
 <?php if ($debug) { ?>
 <script src='<?php echo $source_url . "/js/rg2.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/rg2ui.js"; ?>'></script>
