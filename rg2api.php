@@ -1681,7 +1681,7 @@ function isScoreEvent($eventid) {
 }
 
 function getResultsForEvent($eventid) {
-  rg2log("Get results for event ".$eventid);
+  //rg2log("Get results for event ".$eventid);
   $output = array();
   $comments = 0;
   $text = array();
