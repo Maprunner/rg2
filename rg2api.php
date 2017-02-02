@@ -195,7 +195,7 @@ function handlePostRequest($type, $eventid) {
 
       case 'deleteroute':
           // this is the manager delete function
-        $write = deleteMyRoute($eventid, $data);
+        $write = deleteRoute($eventid, $data);
         @unlink(CACHE_DIRECTORY."results_".$eventid.".json");
         @unlink(CACHE_DIRECTORY."tracks_".$eventid.".json");
         @unlink(CACHE_DIRECTORY."stats.json");
