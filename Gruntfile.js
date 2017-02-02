@@ -26,7 +26,7 @@ module.exports = function(grunt) {
    'kerno', 'kfo', 'lamm', 'leioc', 'loc', 'log', 'lok', 'lvo', 'maroc', 'mdoc', 'moravian', 'mvoc', 'nato', 'ngoc', 'noroc', 'nwo', 'od', 'omm', 'ouoc',
    'pfo', 'potoc', 'pow', 'quantock', 'rafo', 'roxburghreivers', 'sa', 'sarum', 'saxons', 'sboc', 'scottish6days', 'seloc', 'slow', 'smbo', 'smoc', 'sn', 'so', 'soa', 'soc',
    'solway', 'sportident', 'sroc', 'stag', 'start', 'suffoc', 'swoc', 'syo', 'tay', 'test', 'purple-thistle', 'tinto', 'tvoc', 'walton', 'waoc', 'wcoc', 'wim', 'wmoc',
-   'wrekin', 'wsco', 'wsco2008', 'wsoe', 'wsx'];
+   'wrekin', 'wsco2008', 'wsx'];
   
   // Project configuration.
   grunt.initConfig({
@@ -106,7 +106,7 @@ module.exports = function(grunt) {
     sync : {
       rel : {
         files: [{
-          src : ['rg2api.php', 'index.php', 'html/**'],
+          src : ['rg2api.php', 'index.php', 'html/**', 'img/favicon.ico'],
           dest : 'rel/'
         }],
         verbose: true, // Default: false 
