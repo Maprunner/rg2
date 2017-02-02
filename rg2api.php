@@ -30,7 +30,7 @@
   }
 
   // version replaced by Gruntfile as part of release
-  define ('RG2VERSION', '1.3.2');
+  define ('RG2VERSION', '1.3.3');
   define ('KARTAT_DIRECTORY', $url);
   define ('LOCK_DIRECTORY', dirname(__FILE__)."/lock/saving/");
   define ('CACHE_DIRECTORY', $url."cache/");
@@ -195,7 +195,7 @@ function handlePostRequest($type, $eventid) {
 
       case 'deleteroute':
           // this is the manager delete function
-        $write = deleteMyRoute($eventid, $data);
+        $write = deleteRoute($eventid);
         @unlink(CACHE_DIRECTORY."results_".$eventid.".json");
         @unlink(CACHE_DIRECTORY."tracks_".$eventid.".json");
         @unlink(CACHE_DIRECTORY."stats.json");
@@ -806,6 +806,7 @@ function deleteRoute($eventid) {
 
   if (isset($_GET['routeid'])) {
     $routeid = $_GET['routeid'];
+    rg2log("Route to be deleted|".$routeid);
     // delete comments
     $filename = KARTAT_DIRECTORY."kommentit_".$eventid.".txt";
     $oldfile = file($filename);
@@ -824,6 +825,9 @@ function deleteRoute($eventid) {
     if ($status === FALSE) {
       $write["status_msg"] .= "Save error for kommentit. ";
     }
+    if (!$deleted) {
+      $write["status_msg"] .= "Route not found in comments file. ";
+    }
 
     // delete result if this event started with no results (format 2)
     // delete GPS details since these are always added as a new result
@@ -831,9 +835,9 @@ function deleteRoute($eventid) {
       $filename = KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt";
       $oldfile = file($filename);
       $updatedfile = array();
+      $deleted = FALSE;
       foreach ($oldfile as $row) {
         $data = explode("|", $row);
-        $deleted = FALSE;
         if ($data[0] == $routeid) {
           $deleted = TRUE;
         } else {
@@ -845,14 +849,16 @@ function deleteRoute($eventid) {
       if ($status === FALSE) {
         $write["status_msg"] .= "Save error for kilpailijat. ";
       }
-
+      if (!$deleted) {
+        $write["status_msg"] .= "Route not found in results file. ";
+      }
     }
 
     // delete route
-    $deleted = FALSE;
     $filename = KARTAT_DIRECTORY."merkinnat_".$eventid.".txt";
     $oldfile = file($filename);
     $updatedfile = array();
+    $deleted = FALSE;
     foreach ($oldfile as $row) {
       $data = explode("|", $row);
       if ($data[1] == $routeid) {
@@ -867,7 +873,7 @@ function deleteRoute($eventid) {
       $write["status_msg"] .= " Save error for merkinnat. ";
     }
     if (!$deleted) {
-      $write["status_msg"] .= "Invalid route id. ";
+      $write["status_msg"] .= "Route not found in routes file. ";
     }
   } else {
     $write["status_msg"] = "Invalid route id. ";
@@ -887,12 +893,12 @@ function deleteRoute($eventid) {
 }
 
 function canDeleteMyRoute($eventid, $data) {
+  $validrequest = false;
   if (isset($_GET['routeid'])) {
     $routeid = $_GET['routeid'];
     $token = $data->token;
     $filename = KARTAT_DIRECTORY."merkinnat_".$eventid.".txt";
     $oldfile = file($filename);
-    $validrequest = false;
     foreach ($oldfile as $row) {
       $data = explode("|", $row);
       if ($data[1] == $routeid) {
@@ -1681,7 +1687,7 @@ function isScoreEvent($eventid) {
 }
 
 function getResultsForEvent($eventid) {
-  rg2log("Get results for event ".$eventid);
+  //rg2log("Get results for event ".$eventid);
   $output = array();
   $comments = 0;
   $text = array();

@@ -1,6 +1,6 @@
 <?php
 // version replaced by Gruntfile as part of release
-define ('RG2VERSION', '1.3.2');
+define ('RG2VERSION', '1.3.3');
 
 if (file_exists( dirname(__FILE__) . '/rg2-config.php')) {
   require_once( dirname(__FILE__) . '/rg2-config.php' );
@@ -102,15 +102,21 @@ header('Content-type: text/html; charset=utf-8');
     <title>Routegadget 2</title>
     <meta name="description" content="View and save route choices for orienteering events">
     <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
-    <link rel="shortcut icon" href="img/favicon.ico"/>
+    <!-- favicon info -->
+    <link rel="apple-touch-icon" sizes="180x180" href='<?php echo $source_url ."/img/apple-touch-icon.png"; ?>'>
+    <link rel="icon" type="image/png" href='<?php echo $source_url ."/img/favicon-32x32.png"; ?>' sizes="32x32">
+    <link rel="icon" type="image/png" href='<?php echo $source_url ."/img/favicon-16x16.png"; ?>' sizes="16x16">
+    <link rel="manifest" href='<?php echo $source_url ."/img/manifest.json"; ?>'>
+    <link rel="mask-icon" href='<?php echo $source_url ."/img/safari-pinned-tab.svg"; ?>' color="#5bbad5">
+    <meta name="theme-color" content="#ffffff">    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css"; ?>
   <?php if ($debug) { ?>
     <link rel="stylesheet" href='<?php echo $source_url ."/css/rg2.css'>"; ?>
   <?php } else { ?>
     <link rel="stylesheet" href='<?php echo $source_url ."/css/rg2-".RG2VERSION.".min.css'>"; ?>
   <?php } ?>
-    <link rel="stylesheet" href="//code.jquery.com/ui/1.11.3/themes/<?php echo $ui_theme; ?>/jquery-ui.min.css">
-    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.3/themes/<?php echo $ui_theme; ?>/jquery-ui.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
   </head>
   <body>
     <!--[if lt IE 7]>
@@ -223,8 +229,8 @@ header('Content-type: text/html; charset=utf-8');
       <?php include 'html/options.html'; ?>
       <?php include 'html/misc.html'; ?>
     </div>
-<script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
-<script src="//code.jquery.com/ui/1.11.3/jquery-ui.min.js"></script>
+<script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+<script src="https://code.jquery.com/ui/1.11.3/jquery-ui.min.js"></script>
 <?php if ($debug) { ?>
 <script src='<?php echo $source_url . "/js/rg2.js"; ?>'></script>
 <script src='<?php echo $source_url . "/js/rg2ui.js"; ?>'></script>
