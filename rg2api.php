@@ -1298,17 +1298,6 @@ function getSplitsbrowser($eventid) {
     $page = file_get_contents("html/splitsbrowser.html");
     $eventname = getEventName($eventid);
     $page = str_replace('<EVENT_NAME>', $eventname, $page);
-    if (defined('DEBUG')) {
-      $page = str_replace('DEBUG_CLOSE', "", $page);
-      $page = str_replace('DEBUG', "", $page);
-      $page = str_replace('MINIFIED_CLOSE', "--", $page);
-      $page = str_replace('MINIFIED', "!--", $page);
-    } else {
-      $page = str_replace('DEBUG_CLOSE', "--", $page);
-      $page = str_replace('DEBUG', "!--", $page);
-      $page = str_replace('MINIFIED_CLOSE', "", $page);
-      $page = str_replace('MINIFIED', "", $page);
-    }
     $page = str_replace('<SPLITSBROWSER_DIRECTORY>', SPLITSBROWSER_DIRECTORY, $page);
     $result_data = getResultsCSV($eventid);
     $page = str_replace('<SPLITSBROWSER_DATA>', $result_data, $page);
