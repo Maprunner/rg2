@@ -122,6 +122,7 @@
         self.readGeorefFile(evt);
       });
       $("#rg2-load-map-file").button().change(function (evt) {
+        self.validateMapUpload(this.files[0]);
         self.readMapFile(evt);
       });
       $("#rg2-load-results-file").button().click(function (evt) {
@@ -148,6 +149,26 @@
       }).change(function (evt) {
         self.readCourses(evt);
       });
+    },
+
+    validateMapUpload : function (upload) {
+      var reader = new FileReader();
+      reader.readAsDataURL(upload);
+      reader.onload = function (e) {
+        var image = new Image();
+        image.src = e.target.result;
+        image.onload = function () {
+          var height = this.height;
+          var width = this.width;
+          var size = Math.round(upload.size/1024/1024);
+          if(size > rg2.config.FILE_SIZE_WARNING) {
+            rg2.utils.showWarningDialog("Oversized map upload" , "The uploaded map file is " 
+              + width + " x " + height + " and " + Math.round(upload.size/1024/1024) + 
+              "MB. It is recommended that you only use maps under 2MB. Please see <a href='https://github.com/Maprunner/rg2/wiki/Map-files'>this page</a>" +
+              " for more guidance.");
+          }
+        }
+      }
     },
 
     initialiseEncodings : function () {

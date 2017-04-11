@@ -69,7 +69,8 @@
       {language: "Norsk", code: "no"},
       {language: "Português - Brasil", code: "pt"},
       {language: "Русский", code: "ru"}
-    ]
+    ],
+    FILE_SIZE_WARNING: 2
   };
 
   options = {
