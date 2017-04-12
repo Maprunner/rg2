@@ -65,6 +65,7 @@
 
     displayAboutDialog : function () {
       $("#rg2-event-stats").empty().html(rg2.getEventStats());
+      $("#rg2-manager-link").empty().html(rg2.getManagerLink());
       $("#rg2-about-dialog").dialog({
         width : Math.min(1000, (rg2.canvas.width * 0.8)),
         maxHeight : Math.min(1000, (rg2.canvas.height * 0.9)),
