@@ -165,7 +165,7 @@
       var course;
       this.gpstrack.routeData.eventid = rg2.events.getKartatEventID();
       this.gpstrack.routeData.courseid = courseid;
-      course = rg2.courses.getCourse(courseid);
+      course = rg2.courses.getCourseDetails(courseid);
       this.isScoreCourse = course.isScoreCourse;
       // save details for normal courses
       // can't do this here for score courses since you need to know the
@@ -173,8 +173,8 @@
       if (!this.isScoreCourse) {
         rg2.courses.putOnDisplay(courseid);
         this.gpstrack.routeData.coursename = course.name;
-        this.controlx = course.getXArray();
-        this.controly = course.getYArray();
+        this.controlx = course.x;
+        this.controly = course.y;
         this.gpstrack.routeData.x.length = 0;
         this.gpstrack.routeData.y.length = 0;
         this.gpstrack.routeData.x[0] = this.controlx[0];

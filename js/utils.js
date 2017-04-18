@@ -9,26 +9,6 @@
       return pt;
     },
 
-    drawLine : function (x1, y1, x2, y2) {
-      rg2.ctx.beginPath();
-      rg2.ctx.moveTo(x1, y1);
-      rg2.ctx.lineTo(x2, y2);
-      rg2.ctx.stroke();
-    },
-
-    drawCircle : function (x, y, radius, opt, overprint) {
-      rg2.ctx.beginPath();
-      if (overprint) {
-        rg2.ctx.strokeStyle = rg2.config.PURPLE;
-        rg2.ctx.lineWidth = opt.overprintWidth;
-      } else {
-        rg2.ctx.strokeStyle = "white";
-        rg2.ctx.lineWidth = opt.overprintWidth + 2;
-      }
-      rg2.ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
-      rg2.ctx.stroke();
-    },
-
     getDistanceBetweenPoints : function (x1, y1, x2, y2) {
       // Pythagoras
       return Math.sqrt(Math.pow((x1 - x2), 2) + Math.pow((y1 - y2), 2));

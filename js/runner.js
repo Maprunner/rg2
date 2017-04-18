@@ -21,7 +21,7 @@
       course.y = res.scorey;
       course.codes = res.scorecodes;
     } else {
-      course = rg2.courses.getCourse(res.courseid);
+      course = rg2.courses.getCourseDetails(res.courseid);
     }
     this.coursename = course.name;
     // used to stop runners when doing replay by control
@@ -39,7 +39,7 @@
       this.expandTrack(res.trackx, res.tracky, res.xysecs);
     } else {
       // no track so use straight line between controls
-      this.expandTrack(course.getXArray(), course.getYArray(), res.splits);
+      this.expandTrack(course.x, course.y, res.splits);
     }
     this.addTrackDistances(course, res);
     res = 0;
