@@ -2,28 +2,102 @@
 (function () {
   function Course(data, isScoreCourse) {
     this.name = data.name;
+    this.isScoreCourse = isScoreCourse;
     this.trackcount = 0;
     this.display = false;
     this.courseid = data.courseid;
-    this.codes = data.codes;
-    this.x = data.xpos;
-    this.y = data.ypos;
-    this.isScoreCourse = isScoreCourse;
+    this.controls = this.generateControls(data);
     this.resultcount = 0;
-    // save angle to next control to simplify later calculations
-    this.angle = [];
-    // save angle to show control code text
-    this.textAngle = [];
-    this.setAngles();
   }
 
   Course.prototype = {
     Constructor : Course,
 
-    incrementTracksCount : function () {
-      this.trackcount += 1;
+    getCodes : function () {
+      var codes, i;
+      codes = [];
+      for (i = 0; i < this.controls.length; i++) {
+        codes[i] = this.controls[i].code;
+      }
+      return codes;
     },
 
+    getXArray : function () {
+      var xs, i;
+
+      xs = [];
+      for(i = 0; i < this.controls.length; i++) {
+        xs[i] = this.controls[i].x;
+      }
+      return xs;
+    },
+
+    getYArray : function () {
+      var ys, i;
+
+      ys = [];
+      for(i = 0; i < this.controls.length; i++) {
+        ys[i] = this.controls[i].y;
+      }
+      return ys;
+    },
+
+    generateControls : function (data) {
+      var controls, control, i, ang, textAng;
+      if (this.isScoreCourse) {
+        // align score event start triangle and controls upwards
+        ang = Math.PI * 1.5;
+        textAng = Math.PI * 0.25;
+      } else {
+        ang = 0;
+        textAng = 0;
+      }
+      controls = [];
+      // Set the x, y and code of the controls
+      if(data.xpos !== undefined) {
+        
+        for (i = 0; i < data.xpos.length; i++) {
+          control = {};
+          control.x = data.xpos[i];
+          control.y = data.ypos[i];
+          control.code = data.codes[i];
+          control.angle = ang;
+          control.textAngle = textAng;
+          controls.push(control);
+        }
+        // Set the actual angles
+        if (this.isScoreCourse !== true) {
+          controls = this.setAngles(controls);
+        }
+      }
+      return controls;
+    },
+     // TODO: Review this function
+    setAngles : function(controls) {
+      var i, control, prevControl, nextControl, c1x, c1y, c2x, c2y, c3x, c3y;
+      
+      // Calculate the start angle
+      controls[0].angle = rg2.utils.getAngle(controls[0].x, controls[0].y, controls[1].x, controls[1].y);
+      for (i = 1; i < controls.length; i++) {
+        prevControl = controls[i - 1];
+        nextControl = controls[i + 1];
+        if (prevControl !== undefined && nextControl !== undefined) {
+          control = controls[i];
+          // angle of line to next control
+          control.angle = rg2.utils.getAngle(control.x, control.y, nextControl.x, nextControl.y);
+          // create bisector of angle to position number
+          c1x = Math.sin(prevControl.angle);
+          c1y = Math.cos(prevControl.angle);
+          c2x = Math.sin(control.angle) + c1x;
+          c2y = Math.cos(control.angle) + c1y;
+          c3x = c2x / 2;
+          c3y = c2y / 2;
+          control.textAngle = rg2.utils.getAngle(c3x, c3y, c1x, c1y);
+        }
+      }
+      return controls;
+    },
+    /*
     setAngles : function () {
       var i, c1x, c1y, c2x, c2y, c3x, c3y;
       for (i = 0; i < (this.x.length - 1); i += 1) {
@@ -48,7 +122,52 @@
       this.angle[this.x.length - 1] = Math.PI * 1.5;
       this.textAngle[this.x.length - 1] = Math.PI * 1.5;
     },
-
+    */
+    drawCourse : function (intensity) {
+      var i, opt, control, startDraw, endDraw;
+      
+      if (this.display) {
+        opt = rg2.getOverprintDetails();
+        rg2.ctx.globalAlpha = intensity;
+        startDraw = 0;
+        endDraw = this.controls.length - 1;
+        for (i = startDraw; i <= endDraw; i++) {
+          control = this.controls[i];
+          if (i === 0) {
+            rg2.controls.drawStart(control, "", opt);
+          } else if (i === this.controls.length - 1) {
+            rg2.controls.drawFinish(control, "", opt);
+          } else {
+            rg2.controls.drawSingleControl(control, i, opt);
+          }
+        }
+        // Only link up controls on non-score courses
+        if (this.isScoreCourse !== true) {
+            this.drawLinesBetweenControls(opt);
+        }
+        /*
+        rg2.controls.drawStart(this.controls[0], "", opt);
+        if (this.isScoreCourse) {
+          for (i = 1; i < this.controls.length; i++) {
+            control = this.controls[i];
+            if(control.code === 'F' || control.code === 'M') {
+              // Draw finish
+            } else {
+              // Draw single control
+            }
+          }
+        } else {
+          this.drawLinesBetweenControls(opt);
+          for (i = 1; i < this.controls.length - 1; i++) {
+            control = this.controls[i];
+            rg2.controls.drawSingleControl(control, i, opt);
+          }
+          rg2.controls.drawFinish(this.controls[this.controls.length - 1], "", opt);
+        }
+        */
+      }
+    },
+    /*
     drawCourse : function (intensity) {
       var i, opt;
       if (this.display) {
@@ -67,7 +186,6 @@
               rg2.controls.drawSingleControl(this.x[i], this.y[i], this.codes[i], this.textAngle[i], opt);
             }
           }
-
         } else {
           for (i = 1; i < (this.x.length - 1); i += 1) {
             rg2.controls.drawSingleControl(this.x[i], this.y[i], i, this.textAngle[i], opt);
@@ -76,6 +194,35 @@
         }
       }
     },
+    */
+    drawLineFromControl : function (index, opt) {
+      var control, cos, sin, c1x, c1y, c2x, c2y, dist;
+      
+      dist = (index === 0) ? opt.startTriangleLength : opt.controlRadius;
+      control = this.controls[index];
+      cos = Math.cos(control.angle);
+      sin = Math.sin(control.angle);
+      
+      c1x = control.x + dist * cos;
+      c1y = control.y + dist * sin;
+      
+      dist = (index === this.controls.length - 2) ? opt.finishOuterRadius : opt.controlRadius;
+      control = this.controls[index + 1];
+      
+      c2x = control.x - dist * cos;
+      c2y = control.y - dist * sin;
+
+      rg2.utils.drawLine(c1x, c1y, c2x, c2y);
+    },
+
+    drawLinesBetweenControls : function (opt) {
+      var i;
+      
+      for (i = 0; i < this.controls.length - 1; i++) {
+        this.drawLineFromControl(i, opt);
+      }
+    },
+    /*
     drawLinesBetweenControls : function (pt, angle, opt) {
       var c1x, c1y, c2x, c2y, i, dist;
       for (i = 0; i < (pt.x.length - 1); i += 1) {
@@ -99,6 +246,10 @@
         rg2.ctx.lineTo(c2x, c2y);
         rg2.ctx.stroke();
       }
+    },
+    */
+    incrementTracksCount : function () {
+      this.trackcount += 1;
     }
   };
   rg2.Course = Course;

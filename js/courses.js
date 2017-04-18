@@ -4,6 +4,7 @@
     // indexed by the provided courseid which omits 0 and hence a sparse array
     // careful when iterating or getting length!
     this.courses = [];
+    
     this.totaltracks = 0;
     this.numberofcourses = 0;
     this.highestControlNumber = 0;
@@ -36,27 +37,30 @@
       return this.highestControlNumber;
     },
 
-    getCourseDetails : function (courseid) {
+    getCourse : function (courseid) {
       return this.courses[courseid];
     },
-
+    
     incrementTracksCount : function (courseid) {
       this.courses[courseid].incrementTracksCount();
       this.totaltracks += 1;
     },
 
     addCourse : function (courseObject) {
-      this.courses[courseObject.courseid] = courseObject;
-      this.numberofcourses += 1;
-      // allow for courses with no defined controls
-      // careful here: != catches null and undefined, but !== just catches undefined
-      if (this.courses[courseObject.courseid].codes !== undefined) {
-        if (this.courses[courseObject.courseid].codes.length > this.highestControlNumber) {
-          // the codes includes Start and Finish: we don't need F so subtract 1 to get controls
-          this.highestControlNumber = this.courses[courseObject.courseid].codes.length - 1;
-          this.updateControlDropdown();
+        var id, codes; 
+        id = courseObject.courseid;
+        this.courses[id] = courseObject;
+        this.numberofcourses += 1;
+        codes = this.courses[id].getCodes();
+        // allow for courses with no defined controls
+        // careful here: != catches null and undefined, but !== just catches undefined
+        if (codes !== undefined) {
+            if (codes.length > this.highestControlNumber) {
+                // the codes includes Start and Finish: we don't need F so subtract 1 to get controls
+                this.highestControlNumber = codes.length - 1;
+                this.updateControlDropdown();
+            }
         }
-      }
     },
 
     updateCourseDropdown : function () {
@@ -146,18 +150,16 @@
 
     // look through all courses and extract list of controls
     generateControlList : function (controls) {
-      var codes, x, y, i, j;
-      // for all courses
+      var codes, course, cntrls, i, j;
+      // Loop through the courses
       for (i = 0; i < this.courses.length; i += 1) {
-        if (this.courses[i] !== undefined) {
-          codes = this.courses[i].codes;
-          x = this.courses[i].x;
-          y = this.courses[i].y;
-          // for all controls on course
-          if (codes !== undefined) {
-            for (j = 0; j < codes.length; j += 1) {
-              controls.addControl(codes[j], x[j], y[j]);
-            }
+        // Get the next course
+        course  = this.courses[i];
+        if (course !== undefined) {
+          cntrls = course.controls;
+          // For every control on that course
+          for(j = 0; j < cntrls.length; j++) {
+            controls.addControl(cntrls[j]);
           }
         }
       }

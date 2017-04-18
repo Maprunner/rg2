@@ -200,8 +200,8 @@
         course.x = this.scorex;
         course.y = this.scorey;
       } else {
-        course.x = rg2.courses.getCourseDetails(this.courseid).x;
-        course.y = rg2.courses.getCourseDetails(this.courseid).y;
+        course.x = rg2.courses.getCourse(this.courseid).getXArray();
+        course.y = rg2.courses.getCourse(this.courseid).getYArray();
       }
       this.calculateTrackTimes(course);
       // treat all score tracks as valid for now

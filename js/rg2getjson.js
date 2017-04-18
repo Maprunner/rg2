@@ -121,11 +121,14 @@
         rg2.results.addResults(json.data.results, isScoreEvent);
       }
       rg2.courses.setResultsCount();
-      if (isScoreEvent) {
+      /*
+        if (isScoreEvent) {
         rg2.controls.deleteAllControls();
         rg2.results.generateScoreCourses();
         rg2.courses.generateControlList(rg2.controls);
       }
+      */
+      
       $("#rg2-result-list").accordion("refresh");
       getGPSTracks();
     }).fail(function (jqxhr, textStatus, error) {
