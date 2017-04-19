@@ -284,6 +284,36 @@
       $("#rg2-result-list").empty().append(html);
       // force all panels to start closed: don't know why this is needed after a recreate but...
       $("#rg2-result-list").accordion("option", "active", false).accordion("refresh");
+      // Add the search feature to the search bar
+      $(".rg2-result-search").keyup(function (event) {
+        var filter, tables, table, rows, data, i;
+        // Get the input from the search bar
+        filter = event.target.value.toUpperCase();
+        // Get a list of the result tables
+        tables = $(".resulttable");
+        // Find the correct table for this search
+        for (i = 0; i < tables.length; i++) {
+          if (tables[i].id === "table-" + event.target.id) {
+            table = tables[i];
+            break;
+          }
+        }
+        // Get all the rows of the table
+        rows = table.getElementsByTagName("tr");
+        // Loop through the rows
+        for (i = 1; i < rows.length; i++) {
+          // Get the data in the second column (the name)
+          data = rows[i].getElementsByTagName("td")[1];
+          if (data) {
+            // If the data doesn't match, hide the row
+            if (data.innerHTML.toUpperCase().indexOf(filter) > -1) {
+              rows[i].style.display = "";
+            } else {
+              rows[i].style.display = "none";
+            }
+          }
+        }
+      });
       $("#rg2-info-panel").tabs("refresh");
       this.setResultCheckboxes();
       // disable control dropdown if we have no controls
