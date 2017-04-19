@@ -7,6 +7,8 @@
       var title;
       if (window.innerWidth >= rg2.config.BIG_SCREEN_BREAK_POINT) {
         title = rg2.events.getActiveEventName() + " " + rg2.events.getActiveEventDate();
+        // set the tab title
+        document.title = title;
         $("#rg2-event-title").html(title).show();
       } else if (window.innerWidth > rg2.config.SMALL_SCREEN_BREAK_POINT) {
         title = rg2.events.getActiveEventName();
