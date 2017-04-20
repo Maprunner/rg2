@@ -77,11 +77,12 @@ var rg2 = (function (window, $) {
   }
 
   function getManagerLink() {
+    var link, html;
     // get json url and strip anything after the last / (so you're left with http://x.routegadget.co.uk/rg2/)
-    var link = rg2Config.json_url.replace(/\/[^\/]+$/, "/");
+    link = rg2Config.json_url.replace(/\/[^\/]+$/, "/");
     // Append the manage token
     link += "?manage";
-    var html = "<a href=" + link + ">Manager Login</a>";
+    html = "<a href=" + link + ">Manager Login</a>";
     return html;
   }
 
