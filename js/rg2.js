@@ -75,13 +75,6 @@ var rg2 = (function (window, $) {
     stats = stats.replace(/&amp;/g, '&');
     return stats;
   }
-
-  function getManagerLink() {
-    var link, html;
-    // replace the api link with the manage token
-    link = rg2Config.json_url.replace("rg2api.php", "?manage");
-    html = "<a href=" + link + ">Manager Login</a>";
-    return html;
   }
 
   function setManagerOptions() {
@@ -148,7 +141,6 @@ var rg2 = (function (window, $) {
     // functions and variables available elsewhere
     init : init,
     loadEvent : loadEvent,
-    getEventStats : getEventStats,
-    getManagerLink : getManagerLink,
+    getEventStats : getEventStats
   };
 }(window, window.jQuery));

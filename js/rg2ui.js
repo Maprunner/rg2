@@ -50,6 +50,14 @@
       $("#rg2-info-panel").tabs("refresh");
       rg2.redraw(false);
     },
+    
+    getManagerLink : function () {
+    var link, html;
+    // replace the api link with the manage token
+    link = rg2Config.json_url.replace("rg2api.php", "?manage");
+    html = "<a href=" + link + ">Manager Login</a>";
+    return html;
+  },
 
   // called whenever the active tab changes to tidy up as necessary
     tabActivated : function () {
