@@ -492,6 +492,9 @@
     createEventMenu : function () {
       //loads menu from populated events array
       var html, $select;
+      if (rg2.config.managing) {
+        return;
+      }
       // add the search bar
       html = "<span class='input-group-addon'><i class='fa fa-search fa-fw'></i></span><input type='text' class='form-control rg2-event-search' placeholder='" + rg2.t("Search") + "'>";
       $select = $("#rg2-event-search");
