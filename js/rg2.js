@@ -78,10 +78,8 @@ var rg2 = (function (window, $) {
 
   function getManagerLink() {
     var link, html;
-    // get json url and strip anything after the last / (so you're left with http://x.routegadget.co.uk/rg2/)
-    link = rg2Config.json_url.replace(/\/[^\/]+$/, "/");
-    // Append the manage token
-    link += "?manage";
+    // replace the api link with the manage token
+    link = rg2Config.json_url.replace("rg2api.php", "?manage");
     html = "<a href=" + link + ">Manager Login</a>";
     return html;
   }
@@ -151,6 +149,6 @@ var rg2 = (function (window, $) {
     init : init,
     loadEvent : loadEvent,
     getEventStats : getEventStats,
-    getManagerLink : getManagerLink
+    getManagerLink : getManagerLink,
   };
 }(window, window.jQuery));

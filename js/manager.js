@@ -152,23 +152,22 @@
     },
 
     validateMapUpload : function (upload) {
-      var reader = new FileReader();
-      reader.readAsDataURL(upload);
+      var reader, image, height, width, size
+      reader = new FileReader();
       reader.onload = function (e) {
-        var image = new Image();
+        image = new Image();
         image.src = e.target.result;
         image.onload = function () {
-          var height = this.height;
-          var width = this.width;
-          var size = Math.round(upload.size/1024/1024);
-          if(size > rg2.config.FILE_SIZE_WARNING) {
+          height = this.height;
+          width = this.width;
+          size = Math.round(upload.size/1024/1024);
+          if (size > rg2.config.FILE_SIZE_WARNING) {
             rg2.utils.showWarningDialog("Oversized map upload" , "The uploaded map file is " 
-              + width + " x " + height + " and " + Math.round(upload.size/1024/1024) + 
-              "MB. It is recommended that you only use maps under 2MB. Please see <a href='https://github.com/Maprunner/rg2/wiki/Map-files'>this page</a>" +
-              " for more guidance.");
+              + size + "MB. It is recommended that you only use maps under " + rg2.config.FILE_SIZE_WARNING + "MB. Please see the RG2 wiki for <a href='https://github.com/Maprunner/rg2/wiki/Map-files'>guidance on how to create map files.</a>");
           }
         }
       }
+      reader.readAsDataURL(upload);
     },
 
     initialiseEncodings : function () {
