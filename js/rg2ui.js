@@ -484,6 +484,9 @@
     createEventMenu : function () {
       //loads menu from populated events array
       var html, $select;
+      if (rg2.config.managing) {
+        return;
+      }
       html = rg2.events.formatEventsAsMenu();
       $select = $("#rg2-event-list");
       if ($select.menu("instance") !== undefined) {
