@@ -26,6 +26,12 @@ html, body {
     margin: 3px;
 }
 
+.rg2-event-search {
+    width: 97%;
+    margin: 3px;
+    font-size: 1em;
+}
+
 .input-group {
   margin-top: 5px;
 }

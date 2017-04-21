@@ -75,7 +75,7 @@
 
     displayAboutDialog : function () {
       $("#rg2-event-stats").empty().html(rg2.getEventStats());
-      $("#rg2-manager-link").empty().html(rg2.getManagerLink());
+      $("#rg2-manager-link").empty().html(this.getManagerLink());
       $("#rg2-about-dialog").dialog({
         width : Math.min(1000, (rg2.canvas.width * 0.8)),
         maxHeight : Math.min(1000, (rg2.canvas.height * 0.9)),
@@ -492,6 +492,23 @@
     createEventMenu : function () {
       //loads menu from populated events array
       var html, $select;
+      // add the search bar
+      html = "<span class='input-group-addon'><i class='fa fa-search fa-fw'></i></span><input type='text' class='form-control rg2-event-search' placeholder='" + rg2.t("Search") + "'>";
+      $select = $("#rg2-event-search");
+      $select.empty().append(html);
+      // set up the search function
+      $(".rg2-event-search").keyup(function (event) {
+        var filter, list, rows, i, data;
+        filter = event.target.value.toUpperCase();
+        rows = $("#rg2-event-list")[0].getElementsByTagName("a");
+        for (i = 0; i < rows.length; i += 1) {
+          if(rows[i].outerText.toUpperCase().indexOf(filter) > -1) {
+            rows[i].parentElement.style.display = "";
+          } else {
+            rows[i].parentElement.style.display = "none";
+          }
+        }
+      });
       html = rg2.events.formatEventsAsMenu();
       $select = $("#rg2-event-list");
       if ($select.menu("instance") !== undefined) {
