@@ -26,6 +26,13 @@ html, body {
     margin: 3px;
 }
 
+.input-group {
+  margin-top: 5px;
+}
+
+.form-control {
+  width: 90%;
+}
 #rg2-course-select, #rg2-name-select {
   float: right;
   min-width: 200px;

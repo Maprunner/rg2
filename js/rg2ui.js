@@ -292,7 +292,7 @@
         // Get a list of the result tables
         tables = $(".resulttable");
         // Find the correct table for this search
-        for (i = 0; i < tables.length; i++) {
+        for (i = 0; i < tables.length; i += 1) {
           if (tables[i].id === "table-" + event.target.id) {
             table = tables[i];
             break;
@@ -301,7 +301,7 @@
         // Get all the rows of the table
         rows = table.getElementsByTagName("tr");
         // Loop through the rows
-        for (i = 1; i < rows.length; i++) {
+        for (i = 1; i < rows.length; i += 1) {
           // Get the data in the second column (the name)
           data = rows[i].getElementsByTagName("td")[1];
           if (data) {
