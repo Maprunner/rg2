@@ -294,14 +294,15 @@
       $("#rg2-result-list").accordion("option", "active", false).accordion("refresh");
       // Add the search feature to the search bar
       $(".rg2-result-search").keyup(function (event) {
-        var filter, tables, table, rows, data, i;
+        var courseid, filter, tables, table, rows, data, i;
         // Get the input from the search bar
         filter = event.target.value.toUpperCase();
+        courseid = event.target.id.replace("search-", "");
         // Get a list of the result tables
         tables = $(".resulttable");
         // Find the correct table for this search
         for (i = 0; i < tables.length; i += 1) {
-          if (tables[i].id === "table-" + event.target.id) {
+          if (tables[i].id === "table-" + courseid) {
             table = tables[i];
             break;
           }
