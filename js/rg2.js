@@ -75,7 +75,6 @@ var rg2 = (function (window, $) {
     stats = stats.replace(/&amp;/g, '&');
     return stats;
   }
-  }
 
   function setManagerOptions() {
     if ($('#rg2-manage-login').length !== 0) {
