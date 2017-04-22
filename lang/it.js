@@ -98,5 +98,6 @@ translation: 'tona.edoardo',
 'Autofit': 'Adattamento automatico',
 'Route already drawn': 'Percorso già disegnato',
 'If you draw a new route it will overwrite the old route for this runner.': 'Se disegni un nuovo percorso, quello vecchio sarà sovrascritto.',
-'GPS routes are saved separately and will not be overwritten.': 'I percorsi GPS sono salvati separatamente e non saranno sovrascritti.'
+'GPS routes are saved separately and will not be overwritten.': 'I percorsi GPS sono salvati separatamente e non saranno sovrascritti.',
+'Search': 'Cerca'
 });
