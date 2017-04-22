@@ -85,5 +85,6 @@ rg2.setDictionary({
   'Green - draggable': 'Grün - Verschiebbar',
   'Red - locked': 'Rot - Gesperrt',
   'Right click to delete a handle': 'Rechts-Klick zum Löschen eines Bearbeitungspunkts',
-  'Drag a handle to adjust track around locked point(s)': 'Ziehe einen Bearbeitungspunkt, um die Route anzupassen'
+  'Drag a handle to adjust track around locked point(s)': 'Ziehe einen Bearbeitungspunkt, um die Route anzupassen',
+  'Search': 'Suchen'
 });

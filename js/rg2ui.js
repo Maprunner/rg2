@@ -50,16 +50,16 @@
       $("#rg2-info-panel").tabs("refresh");
       rg2.redraw(false);
     },
-    
-    getManagerLink : function () {
-    var link, html;
-    // replace the api link with the manage token
-    link = rg2Config.json_url.replace("rg2api.php", "?manage");
-    html = "<a href=" + link + ">Manager Login</a>";
-    return html;
-  },
 
-  // called whenever the active tab changes to tidy up as necessary
+    getManagerLink : function () {
+      var link, html;
+      // replace the api link with the manage token
+      link = rg2Config.json_url.replace("rg2api.php", "?manage");
+      html = "<a href=" + link + ">Manager Login</a>";
+      return html;
+    },
+
+    // called whenever the active tab changes to tidy up as necessary
     tabActivated : function () {
       var active = $("#rg2-info-panel").tabs("option", "active");
       switch (active) {
@@ -502,11 +502,11 @@
       $select.empty().append(html);
       // set up the search function
       $(".rg2-event-search").keyup(function (event) {
-        var filter, list, rows, i, data;
+        var filter, rows, i;
         filter = event.target.value.toUpperCase();
         rows = $("#rg2-event-list")[0].getElementsByTagName("a");
         for (i = 0; i < rows.length; i += 1) {
-          if(rows[i].outerText.toUpperCase().indexOf(filter) > -1) {
+          if (rows[i].outerText.toUpperCase().indexOf(filter) > -1) {
             rows[i].parentElement.style.display = "";
           } else {
             rows[i].parentElement.style.display = "none";

@@ -101,5 +101,6 @@ translation: 'tojo masaya',
 'Autofit': 'オートフィット',
 'Route already drawn': 'ルートがすでに記入されています',
 'If you draw a new route it will overwrite the old route for this runner.': '新しくルートを記入するとこの走者の古いルートが上書きされます',
-'GPS routes are saved separately and will not be overwritten.': 'GPSルートは別途保存され、上書きさません。'
+'GPS routes are saved separately and will not be overwritten.': 'GPSルートは別途保存され、上書きさません。',
+'Search': '検索'
 });

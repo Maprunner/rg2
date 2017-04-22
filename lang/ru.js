@@ -85,5 +85,6 @@ rg2.setDictionary({
   'Green - draggable': 'Зеленый - можно перемещать',
   'Red - locked': 'Красный - перемещение заблокировано',
   'Right click to delete a handle': 'Кликнуть правой кнопкой мыши для удаления линии',
-  'Drag a handle to adjust track around locked point(s)': 'Тянуть точку отметки для выравнивания трека по заблокированной точке'
+  'Drag a handle to adjust track around locked point(s)': 'Тянуть точку отметки для выравнивания трека по заблокированной точке',
+  'Search': 'Найти'
 });
