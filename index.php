@@ -129,7 +129,7 @@ header('Content-type: text/html; charset=utf-8');
         <div id="rg2-info-panel-tab-headers">
         <ul>
           <li id="rg2-events-tab">
-            <a href="#rg2-event-list">Events</a>
+            <a href="#rg2-event-tab-body">Events</a>
           </li>
           <li id="rg2-courses-tab">
             <a href="#rg2-course-list">Courses</a>
@@ -157,7 +157,10 @@ header('Content-type: text/html; charset=utf-8');
          </ul>
         </div>
         <div id="rg2-info-panel-tab-body">
-        <div id="rg2-event-list"></div>
+        <div id="rg2-event-tab-body">
+          <div id="rg2-event-search"></div>
+          <div id="rg2-event-list"></div>
+        </div>
         <div id="rg2-course-list">
           <div id="rg2-course-table"></div>
         </div>

@@ -7,6 +7,8 @@
       var title;
       if (window.innerWidth >= rg2.config.BIG_SCREEN_BREAK_POINT) {
         title = rg2.events.getActiveEventName() + " " + rg2.events.getActiveEventDate();
+        // set the tab title
+        document.title = title;
         $("#rg2-event-title").html(title).show();
       } else if (window.innerWidth > rg2.config.SMALL_SCREEN_BREAK_POINT) {
         title = rg2.events.getActiveEventName();
@@ -48,6 +50,14 @@
       $("#rg2-info-panel").tabs("refresh");
       rg2.redraw(false);
     },
+    
+    getManagerLink : function () {
+    var link, html;
+    // replace the api link with the manage token
+    link = rg2Config.json_url.replace("rg2api.php", "?manage");
+    html = "<a href=" + link + ">Manager Login</a>";
+    return html;
+  },
 
   // called whenever the active tab changes to tidy up as necessary
     tabActivated : function () {
@@ -65,6 +75,7 @@
 
     displayAboutDialog : function () {
       $("#rg2-event-stats").empty().html(rg2.getEventStats());
+      $("#rg2-manager-link").empty().html(this.getManagerLink());
       $("#rg2-about-dialog").dialog({
         width : Math.min(1000, (rg2.canvas.width * 0.8)),
         maxHeight : Math.min(1000, (rg2.canvas.height * 0.9)),
@@ -281,6 +292,37 @@
       $("#rg2-result-list").empty().append(html);
       // force all panels to start closed: don't know why this is needed after a recreate but...
       $("#rg2-result-list").accordion("option", "active", false).accordion("refresh");
+      // Add the search feature to the search bar
+      $(".rg2-result-search").keyup(function (event) {
+        var courseid, filter, tables, table, rows, data, i;
+        // Get the input from the search bar
+        filter = event.target.value.toUpperCase();
+        courseid = event.target.id.replace("search-", "");
+        // Get a list of the result tables
+        tables = $(".resulttable");
+        // Find the correct table for this search
+        for (i = 0; i < tables.length; i += 1) {
+          if (tables[i].id === "table-" + courseid) {
+            table = tables[i];
+            break;
+          }
+        }
+        // Get all the rows of the table
+        rows = table.getElementsByTagName("tr");
+        // Loop through the rows
+        for (i = 1; i < rows.length; i += 1) {
+          // Get the data in the second column (the name)
+          data = rows[i].getElementsByTagName("td")[1];
+          if (data) {
+            // If the data doesn't match, hide the row
+            if (data.innerHTML.toUpperCase().indexOf(filter) > -1) {
+              rows[i].style.display = "";
+            } else {
+              rows[i].style.display = "none";
+            }
+          }
+        }
+      });
       $("#rg2-info-panel").tabs("refresh");
       this.setResultCheckboxes();
       // disable control dropdown if we have no controls
@@ -454,6 +496,23 @@
       if (rg2.config.managing) {
         return;
       }
+      // add the search bar
+      html = "<span class='input-group-addon'><i class='fa fa-search fa-fw'></i></span><input type='text' class='form-control rg2-event-search' placeholder='" + rg2.t("Search") + "'>";
+      $select = $("#rg2-event-search");
+      $select.empty().append(html);
+      // set up the search function
+      $(".rg2-event-search").keyup(function (event) {
+        var filter, list, rows, i, data;
+        filter = event.target.value.toUpperCase();
+        rows = $("#rg2-event-list")[0].getElementsByTagName("a");
+        for (i = 0; i < rows.length; i += 1) {
+          if(rows[i].outerText.toUpperCase().indexOf(filter) > -1) {
+            rows[i].parentElement.style.display = "";
+          } else {
+            rows[i].parentElement.style.display = "none";
+          }
+        }
+      });
       html = rg2.events.formatEventsAsMenu();
       $select = $("#rg2-event-list");
       if ($select.menu("instance") !== undefined) {

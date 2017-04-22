@@ -69,7 +69,9 @@
       {language: "Norsk", code: "no"},
       {language: "Português - Brasil", code: "pt"},
       {language: "Русский", code: "ru"}
-    ]
+    ],
+    // Size of map upload in MB that triggers the warning dialog
+    FILE_SIZE_WARNING: 2
   };
 
   options = {
