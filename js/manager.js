@@ -3,6 +3,7 @@
 /*global FormData:false */
 /*global Proj4js:false */
 /*global console:false */
+/*global Image:false */
 (function () {
   function Manager(keksi) {
     this.user = new rg2.User(keksi);
@@ -122,6 +123,7 @@
         self.readGeorefFile(evt);
       });
       $("#rg2-load-map-file").button().change(function (evt) {
+        self.validateMapUpload(this.files[0]);
         self.readMapFile(evt);
       });
       $("#rg2-load-results-file").button().click(function (evt) {
@@ -148,6 +150,28 @@
       }).change(function (evt) {
         self.readCourses(evt);
       });
+    },
+
+    validateMapUpload : function (upload) {
+      var reader, image, size;
+      reader = new FileReader();
+      reader.onload = function (e) {
+        image = new Image();
+        image.src = e.target.result;
+        image.onload = function () {
+          var msg;
+          size = Math.round(upload.size / 1024 / 1024);
+          msg = "The uploaded map file is " + size + "MB (" + this.width;
+          msg += " x " + this.height + "). It is recommended that you only use maps under";
+          msg += " " + rg2.config.FILE_SIZE_WARNING + "MB. Please see the ";
+          msg += "<a href='https://github.com/Maprunner/rg2/wiki/Map-files'>RG2 wiki</a> for";
+          msg += "guidance on how to create map files.";
+          if (size > rg2.config.FILE_SIZE_WARNING) {
+            rg2.utils.showWarningDialog("Oversized map upload", msg);
+          }
+        };
+      };
+      reader.readAsDataURL(upload);
     },
 
     initialiseEncodings : function () {

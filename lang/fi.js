@@ -99,5 +99,6 @@ rg2.setDictionary({
   'Autofit': 'Automaattinen kohdistus',
   'Route already drawn': 'Reitti on jo piirretty',
   'If you draw a new route it will overwrite the old route for this runner.': 'Jos piirrät uuden reitin poistetaan kilpailijan vanha reitti.',
-  'GPS routes are saved separately and will not be overwritten.': 'GPS reitit tallennetaan erikseen eikä niitä ylikirjoiteta.'
+  'GPS routes are saved separately and will not be overwritten.': 'GPS reitit tallennetaan erikseen eikä niitä ylikirjoiteta.',
+  'Search': 'Hae'
 });

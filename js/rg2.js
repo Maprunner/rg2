@@ -106,7 +106,7 @@ var rg2 = (function (window, $) {
     rg2.loadNewMap(rg2Config.maps_url + rg2.events.getMapFileName());
     rg2.ui.setTitleBar();
     rg2.redraw(false);
-    rg2.getCourses();
+    rg2.getEvent(rg2.events.getKartatEventID());
   }
 
   function createObjects() {

@@ -93,5 +93,6 @@ translation: 'olav@kvittem.no',
 'Green - draggable': 'Grønn - flyttbar',
 'Red - locked': 'Rød - festet',
 'Right click to delete a handle': 'Høyreklikk for å fjerne et håndtak',
-'Drag a handle to adjust track around locked point(s)': 'Dra et håndtak for å justere et spor mellom festepunkter'
+'Drag a handle to adjust track around locked point(s)': 'Dra et håndtak for å justere et spor mellom festepunkter',
+  'Search': 'Søk'
 });
