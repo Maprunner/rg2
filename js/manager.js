@@ -3,6 +3,7 @@
 /*global FormData:false */
 /*global Proj4js:false */
 /*global console:false */
+/*global Image:false */
 (function () {
   function Manager(keksi) {
     this.user = new rg2.User(keksi);
@@ -152,21 +153,24 @@
     },
 
     validateMapUpload : function (upload) {
-      var reader, image, height, width, size
+      var reader, image, size;
       reader = new FileReader();
       reader.onload = function (e) {
         image = new Image();
         image.src = e.target.result;
         image.onload = function () {
-          height = this.height;
-          width = this.width;
-          size = Math.round(upload.size/1024/1024);
+          var msg;
+          size = Math.round(upload.size / 1024 / 1024);
+          msg = "The uploaded map file is " + size + "MB (" + this.width;
+          msg += " x " + this.height + "). It is recommended that you only use maps under";
+          msg += " " + rg2.config.FILE_SIZE_WARNING + "MB. Please see the ";
+          msg += "<a href='https://github.com/Maprunner/rg2/wiki/Map-files'>RG2 wiki</a> for";
+          msg += "guidance on how to create map files.";
           if (size > rg2.config.FILE_SIZE_WARNING) {
-            rg2.utils.showWarningDialog("Oversized map upload" , "The uploaded map file is " 
-              + size + "MB. It is recommended that you only use maps under " + rg2.config.FILE_SIZE_WARNING + "MB. Please see the RG2 wiki for <a href='https://github.com/Maprunner/rg2/wiki/Map-files'>guidance on how to create map files.</a>");
+            rg2.utils.showWarningDialog("Oversized map upload", msg);
           }
-        }
-      }
+        };
+      };
       reader.readAsDataURL(upload);
     },
 
