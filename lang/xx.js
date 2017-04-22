@@ -106,5 +106,5 @@ translation: 'name',
 'Route deleted': 'Route dleted',
 'Route has been deleted': 'Route has been dleted',
 'Delete failed': 'Dlete failed',
-'Search': 'Serch',
+'Search': 'Serch'
 });
