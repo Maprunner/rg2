@@ -27,7 +27,7 @@ For a quick start try:
 
 * [Manager guide](https://github.com/Maprunner/rg2/wiki/Manager-details)
     * [Installation](https://github.com/Maprunner/rg2/wiki/Installation)
-    * [Splitsbrowser integration](https://github.com/Maprunner/rg2/wiki/Splitsbrowser integration)
+    * [Splitsbrowser integration](https://github.com/Maprunner/rg2/wiki/Splitsbrowser-integration)
     * [Language configuration](https://github.com/Maprunner/rg2/wiki/Language-configuration)
     * [Map files](https://github.com/Maprunner/rg2/wiki/Map-files)
     * [Georeferencing](https://github.com/Maprunner/rg2/wiki/Georeferencing-maps)
