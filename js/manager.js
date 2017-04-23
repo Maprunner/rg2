@@ -164,7 +164,7 @@
           msg = "The uploaded map file is " + size + "MB (" + this.width;
           msg += " x " + this.height + "). It is recommended that you only use maps under";
           msg += " " + rg2.config.FILE_SIZE_WARNING + "MB. Please see the ";
-          msg += "<a href='https://github.com/Maprunner/rg2/wiki/Map-files'>RG2 wiki</a> for";
+          msg += "<a href='https://github.com/Maprunner/rg2/wiki/Map-files'>RG2 wiki</a> for ";
           msg += "guidance on how to create map files.";
           if (size > rg2.config.FILE_SIZE_WARNING) {
             rg2.utils.showWarningDialog("Oversized map upload", msg);
