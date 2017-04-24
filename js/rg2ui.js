@@ -506,7 +506,7 @@
         filter = event.target.value.toUpperCase();
         rows = $("#rg2-event-list")[0].getElementsByTagName("a");
         for (i = 0; i < rows.length; i += 1) {
-          if (rows[i].outerText.toUpperCase().indexOf(filter) > -1) {
+          if (rows[i].innerText.toUpperCase().indexOf(filter) > -1) {
             rows[i].parentElement.style.display = "";
           } else {
             rows[i].parentElement.style.display = "none";
