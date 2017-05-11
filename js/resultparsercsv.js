@@ -35,13 +35,18 @@
 
     // rows: array of raw lines from SI results csv file
     processCSVResults : function (rows) {
-      var i, fields;
+      var i, fields, newResult;
       // extract what we need: first row is headers so ignore
       for (i = 1; i < rows.length; i += 1) {
         fields = rows[i].split(this.separator);
         // need at least this many fields...
         if (fields.length >= this.CSVFormat.FIRST_SPLIT_IDX) {
-          this.results.push(this.extractSingleCSVResult(fields));
+          newResult = this.extractSingleCSVResult(fields);
+          if (newResult.valid) {
+            // don't need this field any more
+            delete newResult.valid;
+            this.results.push(newResult);
+          }
         }
       }
     },
@@ -58,6 +63,7 @@
     extractSingleCSVResult: function (fields) {
       var result, info;
       result = {};
+      result.valid = true;
       result.chipid = fields[this.CSVFormat.CHIP_IDX];
       // delete quotes from CSV file: output from MERCS
       result.name = (fields[this.CSVFormat.FIRST_NAME_IDX] + " " + fields[this.CSVFormat.SURNAME_IDX]).trim().replace(/\"/g, '');
@@ -68,6 +74,9 @@
       result.status = this.getSICSVStatus(fields[this.CSVFormat.NC_IDX], fields[this.CSVFormat.CLASSIFIER_IDX]);
       result.club = fields[this.CSVFormat.CLUB_IDX].trim().replace(/\"/g, '');
       result.course = fields[this.CSVFormat.COURSE_IDX];
+      if (result.course === '') {
+        result.valid = false;
+      }
       result.controls = parseInt(fields[this.CSVFormat.NUM_CONTROLS_IDX], 10);
       info = this.extractSISplits(fields, result.controls);
       result.splits = info.splits;
