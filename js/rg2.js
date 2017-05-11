@@ -15,6 +15,8 @@ var rg2 = (function (window, $) {
     // check if a specific event has been requested
     if ((window.location.hash) && (!rg2.config.managing)) {
       rg2.requestedHash.parseHash(window.location.hash);
+    } else {
+      window.history.pushState('', '', '');
     }
     // load event details
     rg2.getEvents();
@@ -133,6 +135,22 @@ var rg2 = (function (window, $) {
     createObjects();
     setManagerOptions();
     rg2.setUpCanvas();
+    window.onpopstate = function () {
+      var eventID;
+      if (!rg2.config.managing) {
+        rg2.requestedHash.parseHash(window.location.hash);
+        if (rg2.requestedHash.getID()) {
+          eventID = rg2.events.getEventIDForKartatID(rg2.requestedHash.getID());
+          if (eventID !== undefined) {
+            rg2.loadEvent(eventID);
+          }
+        } else {
+          // back to start so show event list
+          $('#rg2-info-panel').tabs('option', 'active', rg2.config.TAB_EVENTS)
+            .tabs('option', 'disabled', [rg2.config.TAB_COURSES, rg2.config.TAB_RESULTS, rg2.config.TAB_DRAW]);
+        }
+      }
+    };
     startDisplayingInfo();
   }
 

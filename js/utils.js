@@ -259,6 +259,9 @@
 
     parseHash : function (hash) {
       var fields, i;
+      this.id = 0;
+      this.courses.length = 0;
+      this.routes.length = 0;
       // input looks like #id&course=a,b,c&result=x,y,z
       fields = hash.split('&');
       for (i = 0; i < fields.length; i += 1) {
@@ -305,12 +308,12 @@
 
     setCourses : function () {
       this.courses = rg2.courses.getCoursesOnDisplay();
-      window.history.pushState('', '', this.getHash());
+      window.history.replaceState('', '', this.getHash());
     },
 
     setRoutes : function () {
       this.routes = rg2.results.getTracksOnDisplay();
-      window.history.pushState('', '', this.getHash());
+      window.history.replaceState('', '', this.getHash());
     },
 
     setNewEvent : function (id) {
