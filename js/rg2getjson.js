@@ -41,7 +41,6 @@
   function processGPSTracks(json) {
     var active, i, event, routes, crs;
     $("#rg2-load-progress-label").text(rg2.t("Saving routes"));
-    console.log("Tracks: " + json.data.routes.length);
     // TODO remove temporary (?) fix to get round RG1 events with no courses defined: see #179
     if (rg2.courses.getNumberOfCourses() > 0) {
       rg2.results.addTracks(json.data.routes);
@@ -98,7 +97,6 @@
 
   function processResults(json) {
     var isScoreEvent;
-    console.log("Results: " + json.data.results.length);
     $("#rg2-load-progress-label").text(rg2.t("Saving results"));
     isScoreEvent = rg2.events.isScoreEvent();
     // TODO remove temporary (?) fix to get round RG1 events with no courses defined: see #179
@@ -122,7 +120,7 @@
       cache : false
     }).done(function (json) {
       $("#rg2-load-progress-label").text(rg2.t("Saving courses"));
-      console.log("Courses: " + json.data.courses.length);
+      console.log("Event " + id + ": " + json.data.courses.length + " courses, " + json.data.results.length + " results, " + json.data.routes.length + " routes");
       $.each(json.data.courses, function () {
         rg2.courses.addCourse(new rg2.Course(this, rg2.events.isScoreEvent()));
       });

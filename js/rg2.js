@@ -122,6 +122,31 @@ var rg2 = (function (window, $) {
     rg2.requestedHash = new rg2.RequestedHash();
   }
 
+  function handleNavigation() {
+    var requestedEventID, activeEventID;
+    // console.log("popstate: " + window.location.hash);
+    // don't try to do anything clever in manager
+    if (!rg2.config.managing) {
+      // find out where we are trying to go
+      rg2.requestedHash.parseHash(window.location.hash);
+      if (rg2.requestedHash.getID()) {
+        requestedEventID = rg2.events.getEventIDForKartatID(rg2.requestedHash.getID());
+        activeEventID = rg2.events.getActiveEventID();
+        // prevent double loading of events for cases where we get popstate for a change
+        // triggered via RG2 interaction rather than browser navigation
+        // ... or something like that: at least this seems to work in FF, Chrome and Edge
+        // which is a start
+        if ((requestedEventID !== undefined) && (activeEventID !== requestedEventID)) {
+          rg2.loadEvent(requestedEventID);
+        }
+      } else {
+        // back to start so show event list
+        $('#rg2-info-panel').tabs('option', 'active', rg2.config.TAB_EVENTS)
+          .tabs('option', 'disabled', [rg2.config.TAB_COURSES, rg2.config.TAB_RESULTS, rg2.config.TAB_DRAW]);
+      }
+    }
+  }
+
   function init() {
     $("#rg2-container").hide();
     $.ajaxSetup({
@@ -135,22 +160,7 @@ var rg2 = (function (window, $) {
     createObjects();
     setManagerOptions();
     rg2.setUpCanvas();
-    window.onpopstate = function () {
-      var eventID;
-      if (!rg2.config.managing) {
-        rg2.requestedHash.parseHash(window.location.hash);
-        if (rg2.requestedHash.getID()) {
-          eventID = rg2.events.getEventIDForKartatID(rg2.requestedHash.getID());
-          if (eventID !== undefined) {
-            rg2.loadEvent(eventID);
-          }
-        } else {
-          // back to start so show event list
-          $('#rg2-info-panel').tabs('option', 'active', rg2.config.TAB_EVENTS)
-            .tabs('option', 'disabled', [rg2.config.TAB_COURSES, rg2.config.TAB_RESULTS, rg2.config.TAB_DRAW]);
-        }
-      }
-    };
+    window.onpopstate = handleNavigation;
     startDisplayingInfo();
   }
 

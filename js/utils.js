@@ -252,6 +252,7 @@
     this.id = 0;
     this.courses = [];
     this.routes = [];
+    this.hash = "";
   }
 
   RequestedHash.prototype = {
@@ -285,6 +286,7 @@
         this.courses.length = 0;
         this.routes.length = 0;
       }
+      this.setHash();
     },
 
     getRoutes : function () {
@@ -308,30 +310,35 @@
 
     setCourses : function () {
       this.courses = rg2.courses.getCoursesOnDisplay();
-      window.history.replaceState('', '', this.getHash());
+      this.setHash();
+      window.history.replaceState('', '', this.hash);
     },
 
     setRoutes : function () {
       this.routes = rg2.results.getTracksOnDisplay();
-      window.history.replaceState('', '', this.getHash());
+      this.setHash();
+      window.history.replaceState('', '', this.hash);
     },
 
     setNewEvent : function (id) {
       this.id = id;
       this.courses.length = 0;
       this.routes.length = 0;
-      window.history.pushState('', '', this.getHash());
+      this.setHash();
+      window.history.pushState('', '', this.hash);
     },
 
     getHash : function () {
-      var hash;
+      return this.hash;
+    },
+
+    setHash : function () {
       if (this.id === 0) {
-        return '#0';
+        this.hash = '#0';
+      } else {
+        this.hash = '#' + this.id + this.extractItems(this.courses, "&course=");
+        this.hash += this.extractItems(this.routes, "&route=");
       }
-      hash = '#' + this.id;
-      hash += this.extractItems(this.courses, "&course=");
-      hash += this.extractItems(this.routes, "&route=");
-      return hash;
     },
 
     extractItems : function (items, text) {
