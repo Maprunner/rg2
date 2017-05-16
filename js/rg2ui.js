@@ -597,7 +597,7 @@
 
     configureUI : function () {
       // disable right click menu: may add our own later
-      $(document).bind("contextmenu", function (evt) {
+      $(document).on("contextmenu", function (evt) {
         evt.preventDefault();
       });
       // disable tabs until we have loaded something
