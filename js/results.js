@@ -301,23 +301,34 @@
     },
 
     getTracksOnDisplay : function () {
-      var i, tracks;
+      var i, tracks, result;
       tracks = [];
       for (i = 0; i < this.results.length; i += 1) {
-        if (this.results[i].displayTrack) {
-          tracks.push(i);
+        result = this.results[i];
+        if (result.displayTrack) {
+          tracks.push(result.resultid);
         }
       }
       return tracks;
     },
 
     putOneTrackOnDisplay : function (resultid) {
-      this.results[resultid].putTrackOnDisplay();
+      var i;
+      for (i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].resultid === parseInt(resultid, 10)) {
+          this.results[i].putTrackOnDisplay();
+        }
+      }
       this.updateTrackNames();
     },
 
     removeOneTrackFromDisplay : function (resultid) {
-      this.results[resultid].removeTrackFromDisplay();
+      var i;
+      for (i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].resultid === parseInt(resultid, 10)) {
+          this.results[i].removeTrackFromDisplay();
+        }
+      }
       this.updateTrackNames();
     },
 
@@ -443,7 +454,7 @@
         html += "</td><td>" + res.time + "</td>";
         if (res.hasValidTrack) {
           tracksForThisCourse += 1;
-          html += "<td><input class='showtrack showtrack-" + oldCourseID + "' id=" + i + " type=checkbox name=result></input></td>";
+          html += "<td><input class='showtrack showtrack-" + oldCourseID + "' id=" + res.resultid + " type=checkbox name=result></input></td>";
         } else {
           html += "<td></td>";
         }
