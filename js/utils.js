@@ -287,6 +287,7 @@
         this.routes.length = 0;
       }
       this.setHash();
+      return this.id;
     },
 
     getRoutes : function () {
@@ -311,13 +312,13 @@
     setCourses : function () {
       this.courses = rg2.courses.getCoursesOnDisplay();
       this.setHash();
-      window.history.replaceState('', '', this.hash);
+      window.history.replaceState({hash: this.hash}, '', this.hash);
     },
 
     setRoutes : function () {
       this.routes = rg2.results.getTracksOnDisplay();
       this.setHash();
-      window.history.replaceState('', '', this.hash);
+      window.history.replaceState({hash: this.hash}, '', this.hash);
     },
 
     setNewEvent : function (id) {
@@ -325,7 +326,7 @@
       this.courses.length = 0;
       this.routes.length = 0;
       this.setHash();
-      window.history.pushState('', '', this.hash);
+      window.history.pushState({hash: this.hash}, '', this.hash);
     },
 
     getHash : function () {

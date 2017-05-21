@@ -250,14 +250,7 @@
       // checkbox to display all tracks for course
       $(".allcoursetracks").click(function (event) {
         var runners, selector, i;
-        runners = rg2.results.getAllRunnersForCourse(parseInt(event.target.id, 10));
-        for (i = 0; i < runners.length; i += 1) {
-          if (event.target.checked) {
-            rg2.results.putOneTrackOnDisplay(runners[i]);
-          } else {
-            rg2.results.removeOneTrackFromDisplay(runners[i]);
-          }
-        }
+        rg2.results.updateTrackDisplay(parseInt(event.target.id, 10), event.target.checked);
         selector = ".showtrack-" + event.target.id;
         if (event.target.checked) {
           // select all the individual checkboxes for the course

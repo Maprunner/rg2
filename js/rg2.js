@@ -16,7 +16,7 @@ var rg2 = (function (window, $) {
     if ((window.location.hash) && (!rg2.config.managing)) {
       rg2.requestedHash.parseHash(window.location.hash);
     } else {
-      window.history.pushState('', '', '');
+      window.history.pushState({hash: '#'}, '', '');
     }
     // load event details
     rg2.getEvents();
@@ -123,14 +123,14 @@ var rg2 = (function (window, $) {
   }
 
   function handleNavigation() {
-    var requestedEventID, activeEventID;
+    var requestedID, requestedEventID, activeEventID;
     // console.log("popstate: " + window.location.hash);
     // don't try to do anything clever in manager
     if (!rg2.config.managing) {
       // find out where we are trying to go
-      rg2.requestedHash.parseHash(window.location.hash);
-      if (rg2.requestedHash.getID()) {
-        requestedEventID = rg2.events.getEventIDForKartatID(rg2.requestedHash.getID());
+      requestedID = rg2.requestedHash.parseHash(window.location.hash);
+      if (requestedID) {
+        requestedEventID = rg2.events.getEventIDForKartatID(requestedID);
         activeEventID = rg2.events.getActiveEventID();
         // prevent double loading of events for cases where we get popstate for a change
         // triggered via RG2 interaction rather than browser navigation
@@ -139,10 +139,6 @@ var rg2 = (function (window, $) {
         if ((requestedEventID !== undefined) && (activeEventID !== requestedEventID)) {
           rg2.loadEvent(requestedEventID);
         }
-      } else {
-        // back to start so show event list
-        $('#rg2-info-panel').tabs('option', 'active', rg2.config.TAB_EVENTS)
-          .tabs('option', 'disabled', [rg2.config.TAB_COURSES, rg2.config.TAB_RESULTS, rg2.config.TAB_DRAW]);
       }
     }
   }
