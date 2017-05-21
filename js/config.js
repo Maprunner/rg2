@@ -48,7 +48,7 @@
     EVENT_WITHOUT_RESULTS : 2,
     SCORE_EVENT : 3,
     // version gets set automatically by grunt file during build process
-    RG2VERSION: '1.4.0',
+    RG2VERSION: '1.4.1',
     TIME_NOT_FOUND : 9999,
     // values for evt.which
     RIGHT_CLICK : 3,

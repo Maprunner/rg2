@@ -249,7 +249,7 @@
       });
       // checkbox to display all tracks for course
       $(".allcoursetracks").click(function (event) {
-        var runners, selector, i;
+        var selector;
         rg2.results.updateTrackDisplay(parseInt(event.target.id, 10), event.target.checked);
         selector = ".showtrack-" + event.target.id;
         if (event.target.checked) {
