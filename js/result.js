@@ -72,7 +72,7 @@
       }
     },
 
-    adjustRawSplits : function (rawSplits, time) {
+    adjustRawSplits : function (rawSplits) {
       var i;
       // insert a 0 split at the start to make life much easier elsewhere
       rawSplits.splice(0, 0, 0);
