@@ -66,7 +66,7 @@
       dropdown.options.add(rg2.utils.generateOption(null, rg2.t("Select course")));
       for (i = 0; i < this.courses.length; i += 1) {
         if (this.courses[i] !== undefined) {
-          dropdown.options.add(rg2.utils.generateOption(i, this.courses[i].name));
+          dropdown.options.add(rg2.utils.generateOption(i, rg2.he.decode(this.courses[i].name)));
         }
       }
     },
