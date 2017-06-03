@@ -165,7 +165,8 @@
       this.baseY = this.routeData.y.slice(0);
       this.addStartAndFinishHandles();
       this.fileLoaded = true;
-      if (this.routeData.splits.length > 0) {
+      // need more than a start and finish to autofit
+      if (this.routeData.splits.length > 2) {
         $("#btn-autofit-gps").button("enable");
       }
       $("#btn-save-gps-route").button("enable");
@@ -233,19 +234,22 @@
       }
       // adjust for each control in turn
       for (i = 1; i < (this.routeData.splits.length - 1); i += 1) {
-        // move track to control location
-        split = this.routeData.splits[i] + this.autofitOffset;
-        if ((split < this.baseX.length) && (split >= 0)) {
-          // add handle at control on track
-          this.handles.addHandle(this.routeData.x[split], this.routeData.y[split], split);
-          // drag handle to correct place on map
-          rg2.drawing.adjustTrack({x: this.routeData.x[split], y: this.routeData.y[split]}, {x: this.routeData.controlx[i], y: this.routeData.controly[i]});
-          // lock handle at control
-          this.handles.lockHandleByTime(split);
-          // rebaseline everything
-          this.baseX = this.routeData.x.slice(0);
-          this.baseY = this.routeData.y.slice(0);
-          this.handles.rebaselineXY();
+        // don't try to adjust missing controls
+        if (this.routeData.splits[i] !== this.routeData.splits[i - 1]) {
+          split = this.routeData.splits[i] + this.autofitOffset;
+          // move track to control location
+          if ((split < this.baseX.length) && (split >= 0)) {
+            // add handle at control on track
+            this.handles.addHandle(this.routeData.x[split], this.routeData.y[split], split);
+            // drag handle to correct place on map
+            rg2.drawing.adjustTrack({x: this.routeData.x[split], y: this.routeData.y[split]}, {x: this.routeData.controlx[i], y: this.routeData.controly[i]});
+            // lock handle at control
+            this.handles.lockHandleByTime(split);
+            // rebaseline everything
+            this.baseX = this.routeData.x.slice(0);
+            this.baseY = this.routeData.y.slice(0);
+            this.handles.rebaselineXY();
+          }
         }
       }
       $("#btn-autofit-gps").button("disable");
@@ -263,10 +267,15 @@
       for (i = 0; i <= (2 * range); i += 1) {
         speedAtControl[i] = 0;
       }
+      // read through each control
       for (i = 1; i < (this.routeData.splits.length - 1); i += 1) {
         split = this.routeData.splits[i];
-        if ((split >= range) && ((split + range) < speedAverage.length)) {
-          speedExtract = speedAverage.slice(split - range, split + range + 1);
+        // ignore missing splits
+        if (split !== this.routeData.splits[i - 1]) {
+          // avoid edge cases near start and finish
+          if ((split >= range) && ((split + range) < speedAverage.length)) {
+            speedExtract = speedAverage.slice(split - range, split + range + 1);
+          }
           for (j = 0; j <= (2 * range); j += 1) {
             speedAtControl[j] += speedExtract[j];
           }
@@ -285,6 +294,7 @@
     },
 
     getSpeedAverage : function () {
+      // returns an array showing average speed for each second of the run
       var i, speed, speedAverage;
       speed = [];
       speedAverage = [];
