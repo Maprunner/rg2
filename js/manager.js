@@ -6,6 +6,7 @@
 /*global Image:false */
 (function () {
   function Manager(keksi) {
+    var dummy;
     this.user = new rg2.User(keksi);
     this.newMap = new rg2.Map();
     this.georefsystems = new rg2.Georefs();
@@ -25,6 +26,10 @@
     this.results = [];
     this.variants = [];
     this.resultCourses = [];
+    // set dummy course in case we set up an event with no results
+    // gets overwritten if we load results from file
+    dummy = {courseid: 0, course: ""};
+    this.resultCourses.push(dummy);
     this.mapWidth = 0;
     this.mapHeight = 0;
     this.mapFile = undefined;
@@ -290,6 +295,7 @@
         this.drawnCourse.x = [];
         this.drawnCourse.y = [];
         this.drawnCourse.codes = [];
+        this.drawnCourse.courseid = 0;
         $('#rg2-new-course-name').val('Course');
         $('#rg2-draw-courses').show();
       } else {
@@ -302,9 +308,9 @@
       if ((this.courses.length) && (this.resultCourses.length)) {
         // create html for course allocation list
         // using a table to make it easier for now
-        html = "<div id='rg2-course-allocations'><table><thead><tr><th>Course file</th><th>Results</th></tr></thead><tbody>";
-        for (i = 0; i < this.courses.length; i += 1) {
-          html += "<tr><td>" + this.courses[i].name + "</td><td>" + this.createCourseDropdown(this.courses[i].name, i) + "</td></tr>";
+        html = "<div id='rg2-course-allocations'><table><thead><tr><th>Results</th><th>Course</th></tr></thead><tbody>";
+        for (i = 0; i < this.resultCourses.length; i += 1) {
+          html += "<tr><td>" + this.resultCourses[i].course + "</td><td>" + this.createCourseDropdown(this.resultCourses[i].course, i) + "</td></tr>";
         }
         html += "</tbody></table></div>";
         $("#rg2-course-allocations").empty().append(html);
@@ -429,14 +435,15 @@
     },
 
     renumberResults : function () {
-      // updates the course id when we know the mapping
+      // updates the course id and name when we know the mapping
       // and deletes results for courses not required
-      var i, id, newResults;
+      var i, newResults, id;
       newResults = [];
       for (i = 0; i < this.results.length; i += 1) {
         id = this.getCourseIDForResult(this.results[i].course);
         if (id !== rg2.config.DO_NOT_SAVE_COURSE) {
           this.results[i].courseid = id;
+          this.results[i].course = this.getCourseName(id);
           // set null here: overwritten later in extractVariants if this is a variant
           this.results[i].variantid = '';
           newResults.push(this.results[i]);
@@ -445,49 +452,54 @@
       this.results = newResults;
     },
 
+    getCourseName : function (id) {
+      var i;
+      for (i = 0; i < this.courses.length; i += 1) {
+        if (this.courses[i].courseid === id) {
+          return this.courses[i].name;
+        }
+      }
+      return 0;
+    },
+
     mapResultsToCourses : function () {
-      // called when saving courses
-      // generates the necessary course IDs for the results file
-      // deletes unwanted courses
+      // read through dropdowns and allocate courseid for each required course
+      // also delete unwanted courses
       var i, selector, id, newCourses, courseid;
       newCourses = [];
+      // courseid historically starts at 1 just to cause endless indexing problems
       courseid = 1;
-      for (i = 0; i < this.courses.length; i += 1) {
+      for (i = 0; i < this.resultCourses.length; i += 1) {
         if (this.drawingCourses) {
           // only handles one course at present, so it is always 0
           id = 0;
         } else {
+          // get dropdown value
           selector = "#rg2-alloc-" + i;
           // comes back as NaN if selector doesn't exist when we have no results, which works OK
           id = parseInt($(selector).val(), 10);
         }
         if (id !== rg2.config.DO_NOT_SAVE_COURSE) {
-          this.courses[i].courseid = courseid;
-          // handle case where we have courses but no results
-          if (this.resultCourses.length > 0) {
-            this.resultCourses[id].courseid = courseid;
-            // use results file course names
-            this.courses[i].course = this.resultCourses[id].course;
-            this.courses[i].name = this.resultCourses[id].course;
+          // check we haven't already saved this course
+          if (this.courses[id].courseid === 0) {
+            this.courses[id].courseid = courseid;
+            newCourses.push(this.courses[id]);
+            this.resultCourses[i].courseid = courseid;
+            courseid += 1;
+          } else {
+            this.resultCourses[i].courseid = this.courses[id].courseid;
           }
-          newCourses.push(this.courses[i]);
-          courseid += 1;
         }
       }
       this.courses = newCourses;
     },
 
     createCourseDropdown : function (course, courseidx) {
-      /*
-       * Input: course name to match
-       *
-       * Output: html select
-       */
       var i, idx, html;
       idx = -1;
-      // do results include this course name?
-      for (i = 0; i < this.resultCourses.length; i += 1) {
-        if (this.resultCourses[i].course === course) {
+      // do courses include this course name?
+      for (i = 0; i < this.courses.length; i += 1) {
+        if (this.courses[i].name === course) {
           idx = i;
           break;
         }
@@ -497,12 +509,12 @@
         html += " selected";
       }
       html += ">Do not save</option>";
-      for (i = 0; i < this.resultCourses.length; i += 1) {
+      for (i = 0; i < this.courses.length; i += 1) {
         html += "<option value=" + i;
         if (idx === i) {
           html += " selected";
         }
-        html += ">" + this.resultCourses[i].course + "</option>";
+        html += ">" + this.courses[i].name + "</option>";
       }
       html += "</select>";
       return html;

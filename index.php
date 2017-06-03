@@ -1,6 +1,6 @@
 <?php
 // version replaced by Gruntfile as part of release
-define ('RG2VERSION', '1.4.1');
+define ('RG2VERSION', '1.4.2');
 
 if (file_exists( dirname(__FILE__) . '/rg2-config.php')) {
   require_once( dirname(__FILE__) . '/rg2-config.php' );
@@ -227,8 +227,7 @@ header('Content-type: text/html; charset=utf-8');
       <?php include 'html/options.html'; ?>
       <?php include 'html/misc.html'; ?>
     </div>
-<script src="https://code.jquery.com/jquery-3.2.1.js"></script>
-<script src="https://code.jquery.com/jquery-migrate-3.0.0.js"></script>
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
 <?php if ($debug) { ?>
 <script src='<?php echo $source_url . "/js/rg2.js"; ?>'></script>
