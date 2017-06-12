@@ -150,6 +150,31 @@
       }
       return defaultValue;
     },
+    
+    generateRouteShareLink : function (id) {
+      var res, link;
+      res = rg2.results.getFullResultForRawID(id);
+      link = rg2Config.json_url.replace("rg2api.php", "#" + rg2.events.getKartatEventID());
+      link += "&route=" + id;
+      link += "&course=" + res.courseid;
+      return link;
+    },
+    
+    showShareDialog : function (id) {
+      var link, dlg;
+      link = this.generateRouteShareLink(id);
+      dlg = '<div id=rg2-share-dialog><p>Use this link to easily share your route</p>';
+      dlg += '<input autofocus onFocus="this.select()" readonly size=' + link.length + ' value=' + link + '></input></div>';
+      $(dlg).dialog({
+        title : "Share route",
+        dialogClass : "rg2-share-dialog",
+        width : "auto",
+        close : function () {
+          $('#rg2-share-dialog').dialog('destroy').remove();
+        }
+      })
+      //window.alert(link);
+    },
 
     createModalDialog : function (dlg) {
       var self;
