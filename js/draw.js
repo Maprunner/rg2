@@ -108,6 +108,7 @@
       this.controly = [];
       this.angles = [];
       this.nextControl = 0;
+      this.previousValidControlIndex = 0;
       this.isScoreCourse = false;
       this.gpstrack.initialiseGPS();
       this.hasResults = rg2.events.hasResults();
@@ -182,7 +183,6 @@
         this.gpstrack.routeData.controlx = this.controlx;
         this.gpstrack.routeData.controly = this.controly;
         this.angles = course.angle;
-        this.nextControl = 1;
       }
       rg2.results.createNameDropdown(courseid);
       $("#rg2-name-select").prop('disabled', false);
@@ -284,6 +284,9 @@
           this.gpstrack.routeData.controly = this.controly;
           this.nextControl = 1;
           rg2.redraw(false);
+        } else {
+          this.nextControl = this.getNextValidControl(0);
+          this.previousValidControlIndex = 0;
         }
         // resetting it here avoids trying to start drawing before selecting
         // a name, which is always what happened when testing the prototype
@@ -317,13 +320,18 @@
         this.gpstrack.routeData.startsecs = 0;
         this.gpstrack.routeData.time[0] = rg2.utils.getSecsFromHHMMSS(time);
         this.gpstrack.routeData.totalsecs = rg2.utils.getSecsFromHHMMSS(time);
+        this.nextControl = 1;
+        this.gpstrack.routeData.splits = [0, this.gpstrack.routeData.totalsecs];
+        this.previousValidControlIndex = 0;
+        rg2.redraw(false);
         this.startDrawing();
       }
     },
 
     startDrawing : function () {
       $("#btn-three-seconds").button('enable');
-      $("#rg2-load-gps-file").button('enable');
+      // setting value to null allows you to open the same file again if needed
+      $("#rg2-load-gps-file").val(null).button('enable');
     },
 
     alignMapToAngle : function (control) {
@@ -348,8 +356,11 @@
     addNewPoint : function (x, y) {
       if (this.closeEnough(x, y)) {
         this.addRouteDataPoint(this.controlx[this.nextControl], this.controly[this.nextControl]);
+        // angles will be wrong for missing splits since we don't know angles between non-consecutive controls and I 
+        // don't intend to start calculating them now...
         this.alignMapToAngle(this.nextControl);
-        this.nextControl += 1;
+        this.previousValidControlIndex = this.nextControl;
+        this.nextControl = this.getNextValidControl(this.nextControl);
         if (this.nextControl === this.controlx.length) {
           $("#btn-save-route").button("enable");
         }
@@ -358,6 +369,34 @@
       }
       $("#btn-undo").button("enable");
       rg2.redraw(false);
+    },
+
+    getNextValidControl : function (thisControl) {
+      // look through splits to find next control which has a split time
+      // to allow drawing for missed controls where the split time is 0
+      var i, splits;
+      splits = this.gpstrack.routeData.splits;
+      for (i = thisControl + 1; i < splits.length; i += 1) {
+        if (splits[i] !== splits[i - 1]) {
+          return i;
+        }
+      }
+      // implies we have no finish time which is unlikely but anyway...
+      return splits.length;
+    },
+
+    getPreviousValidControl : function (thisControl) {
+      // look through splits to find previous control which has a split time
+      // to allow drawing for missed controls where the split time is 0
+      var i, splits;
+      splits = this.gpstrack.routeData.splits;
+      for (i = thisControl - 1; i > 0; i -= 1) {
+        if (splits[i] !== splits[i - 1]) {
+          return i;
+        }
+      }
+      // got back to start...
+      return 0;
     },
 
     addRouteDataPoint : function (x, y) {
@@ -382,16 +421,14 @@
       // remove last point if we have one
       var points = this.gpstrack.routeData.x.length;
       if (points > 1) {
-        // are we undoing from a control?
-        if ((this.controlx[this.nextControl - 1] === this.gpstrack.routeData.x[points - 1]) && (this.controly[this.nextControl - 1] === this.gpstrack.routeData.y[points - 1])) {
+        // are we undoing from previous control?
+        if ((this.controlx[this.previousValidControlIndex] === this.gpstrack.routeData.x[points - 1]) && (this.controly[this.previousValidControlIndex] === this.gpstrack.routeData.y[points - 1])) {
           // are we undoing from the finish?
           if (this.nextControl === this.controlx.length) {
             $("#btn-save-route").button("disable");
           }
-          // don't go back past first control
-          if (this.nextControl > 1) {
-            this.nextControl -= 1;
-          }
+          this.nextControl = this.previousValidControlIndex;
+          this.previousValidControlIndex = this.getPreviousValidControl(this.nextControl);
           this.alignMapToAngle(this.nextControl - 1);
         }
         this.gpstrack.routeData.x.pop();

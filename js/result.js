@@ -25,9 +25,8 @@
       this.coursename = data.courseid.toString();
     }
     this.courseid = data.courseid;
-    this.splits = data.splits;
-    // insert a 0 split at the start to make life much easier elsewhere
-    this.splits.splice(0, 0, 0);
+    this.splits = this.adjustRawSplits(data.splits, this.time);
+
     if (isScoreEvent) {
       // save control locations for score course result
       this.scorex = scorex;
@@ -71,6 +70,20 @@
         //this.name = data.name;
         this.isGPSTrack = false;
       }
+    },
+
+    adjustRawSplits : function (rawSplits) {
+      var i;
+      // insert a 0 split at the start to make life much easier elsewhere
+      rawSplits.splice(0, 0, 0);
+      // splits are time in seconds at control, but may have 0 for missing controls
+      // make life easier elsewhere by replacing 0 with time at previous valid control
+      for (i = 1; i < rawSplits.length; i += 1) {
+        if (rawSplits[i] === 0) {
+          rawSplits[i] = rawSplits[i - 1];
+        }
+      }
+      return rawSplits;
     },
 
     putTrackOnDisplay : function () {
@@ -214,7 +227,7 @@
 
     calculateTrackTimes: function (course) {
       var nextcontrol, nextx, nexty, dist, oldx, oldy, i, x, y, previouscontrolindex;
-      nextcontrol = 1;
+      nextcontrol = this.getNextValidControl(0);
       nextx = course.x[nextcontrol];
       nexty = course.y[nextcontrol];
       dist = 0;
@@ -239,7 +252,7 @@
           this.xysecs[i] = this.splits[nextcontrol];
           this.addInterpolatedTimes(previouscontrolindex, i);
           previouscontrolindex = i;
-          nextcontrol += 1;
+          nextcontrol = this.getNextValidControl(nextcontrol);
           if (nextcontrol === course.x.length) {
             // we have found all the controls
             this.hasValidTrack = true;
@@ -249,6 +262,19 @@
           nexty = course.y[nextcontrol];
         }
       }
+    },
+
+    getNextValidControl : function (thisControl) {
+      // look through splits to find next control which has a split time
+      // to allow drawing for missed controls where the split time is 0
+      var i;
+      for (i = thisControl + 1; i < this.splits.length; i += 1) {
+        if (this.splits[i] !== this.splits[i - 1]) {
+          return i;
+        }
+      }
+      // implies we have no finish time which is unlikely but anyway...
+      return this.splits.length;
     },
 
     expandTrackWithNoSplits : function () {

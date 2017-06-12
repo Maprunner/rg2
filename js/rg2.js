@@ -15,6 +15,8 @@ var rg2 = (function (window, $) {
     // check if a specific event has been requested
     if ((window.location.hash) && (!rg2.config.managing)) {
       rg2.requestedHash.parseHash(window.location.hash);
+    } else {
+      window.history.pushState({hash: '#'}, '', '');
     }
     // load event details
     rg2.getEvents();
@@ -120,6 +122,27 @@ var rg2 = (function (window, $) {
     rg2.requestedHash = new rg2.RequestedHash();
   }
 
+  function handleNavigation() {
+    var requestedID, requestedEventID, activeEventID;
+    // console.log("popstate: " + window.location.hash);
+    // don't try to do anything clever in manager
+    if (!rg2.config.managing) {
+      // find out where we are trying to go
+      requestedID = rg2.requestedHash.parseHash(window.location.hash);
+      if (requestedID) {
+        requestedEventID = rg2.events.getEventIDForKartatID(requestedID);
+        activeEventID = rg2.events.getActiveEventID();
+        // prevent double loading of events for cases where we get popstate for a change
+        // triggered via RG2 interaction rather than browser navigation
+        // ... or something like that: at least this seems to work in FF, Chrome and Edge
+        // which is a start
+        if ((requestedEventID !== undefined) && (activeEventID !== requestedEventID)) {
+          rg2.loadEvent(requestedEventID);
+        }
+      }
+    }
+  }
+
   function init() {
     $("#rg2-container").hide();
     $.ajaxSetup({
@@ -133,6 +156,7 @@ var rg2 = (function (window, $) {
     createObjects();
     setManagerOptions();
     rg2.setUpCanvas();
+    window.onpopstate = handleNavigation;
     startDisplayingInfo();
   }
 

@@ -1,13 +1,13 @@
 # Routegadget 2
 
 ## Latest news
-Version 1.4.0 was released on 22nd April 2017.
+Version 1.4.2 was released on 3rd June 2017.
 
-It includes various minor enhancements, including the facility to search the events and results lists.
+It includes two significant changes:
 
-[Guidance on creating map files](https://github.com/Maprunner/rg2/wiki/Map-files) has also been added.
+1. Handling of results with missing controls has been modified. It is now possible to draw and save your route even if you didn't go to all of the controls on the course. Previously you could draw the route but not save it, which was a little frustrating. This change also means that the GPS autofit function will work properly with missing splits.
 
-I would recommend using the RG2 manager to set up events rather than the original Routegadget Java version. This will give you some extra functionality (such as positions in the results), and it is also a lot easier to get the controls aligned.
+2. The manager interface now accepts results lists by class as well as by course. For most managers this will make no difference, since they can continue to use results by course. If you do have results by class you can now map several classes to a single course, as required. The results will be consolidated into a single course result, which will use the course name as defined in the course file.
 
 ## User Guide and Introductory Videos
 

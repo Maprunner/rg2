@@ -314,8 +314,8 @@
 
     putOneTrackOnDisplay : function (resultid) {
       var i;
-      for(i = 0; i < this.results.length; i += 1) {
-        if(this.results[i].resultid === parseInt(resultid, 10)) {
+      for (i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].resultid === parseInt(resultid, 10)) {
           this.results[i].putTrackOnDisplay();
         }
       }
@@ -324,8 +324,8 @@
 
     removeOneTrackFromDisplay : function (resultid) {
       var i;
-      for(i = 0; i < this.results.length; i += 1) {
-        if(this.results[i].resultid === parseInt(resultid, 10)) {
+      for (i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].resultid === parseInt(resultid, 10)) {
           this.results[i].removeTrackFromDisplay();
         }
       }
