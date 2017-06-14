@@ -162,9 +162,12 @@
     
     showShareDialog : function (id) {
       var link, dlg;
-      link = this.generateRouteShareLink(id);
-      dlg = '<div id=rg2-share-dialog><p>Use this link to easily share your route</p>';
-      dlg += '<input autofocus onFocus="this.select()" readonly size=' + link.length + ' value=' + link + '></input></div>';
+      //link = this.generateRouteShareLink(id);
+      link = "http://www.happyherts.routegadget.co.uk/rg2/#205";
+      dlg = '<div id=rg2-share-dialog><p>Copy and paste this link to easily share your route</p>';
+      dlg += '<input autofocus onFocus="this.select()" readonly size=' + link.length + ' value=' + link + '></input><br>';
+      dlg += '<div id="share-buttons-div" class="social-buttons-div"><a class="twitter-share-button" href="https://twitter.com/intent/tweet" data-size="large" data-url="' + link + '" data-hashtags="routegadget2" data-related="MaprunnerGB">Tweet</a><script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>';
+      dlg += '<div class="fb-share-button" data-href="' + link + '" data-layout="button" data-size="large"></div></div></div>';
       $(dlg).dialog({
         title : "Share route",
         dialogClass : "rg2-share-dialog",
@@ -173,7 +176,8 @@
           $('#rg2-share-dialog').dialog('destroy').remove();
         }
       })
-      //window.alert(link);
+      twttr.widgets.load(document.getElementById("share-buttons-div"));
+      FB.XFBML.parse(); 
     },
 
     createModalDialog : function (dlg) {

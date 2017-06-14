@@ -633,3 +633,19 @@ body {
 #rg2-event-selected {
   width: 95%;
 }
+
+.social-buttons-div {
+  text-align: center;
+  position: relative;
+  padding: 10px;
+  line-height: 12px;
+}
+
+.fb-share-button {
+  margin-left: 10%;
+}
+
+.twitter-follow-button {
+  margin-bottom: 18px;
+  margin-right: 5%;
+}
