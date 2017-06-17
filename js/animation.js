@@ -125,15 +125,13 @@
     },
 
     getSplitsTable : function () {
-      var html, i, j, run, metresPerPixel, units, maxControls, legSplit, prevControlSecs, info;
+      var html, i, j, info, run, maxControls, legSplit, prevControlSecs;
       if (this.runners.length < 1) {
         return "<p>" + rg2.t("Select runners on Results tab") + ".</p>";
       }
+      info = rg2.events.getMetresPerPixel();
       legSplit = [];
       prevControlSecs = 0;
-      info = rg2.events.getMetresPerPixel();
-      metresPerPixel = info.metresPerPixel;
-      units = info.units;
       maxControls = this.getMaxControls();
       html = this.getSplitsTableHeader(maxControls);
       for (i = 0; i < this.runners.length; i += 1) {
@@ -152,14 +150,14 @@
         if (isNaN(run.cumulativeTrackDistance[run.cumulativeTrackDistance.length - 1])) {
           html += "</tr><tr class='splitsdistance-row'><td></td><td>--</td>";
         } else {
-          html += "</tr><tr class='splitsdistance-row'><td></td><td>" + Math.round(metresPerPixel * run.cumulativeTrackDistance[run.cumulativeTrackDistance.length - 1]) + " " + units + "</td>";
+          html += "</tr><tr class='splitsdistance-row'><td></td><td>" + run.cumulativeTrackDistance[run.cumulativeTrackDistance.length - 1] + " " + info.units + "</td>";
         }
         for (j = 1; j < run.splits.length; j += 1) {
           if (isNaN(run.legTrackDistance[j])) {
             // handle various problems with missing splits
             html += "<td>--</td>";
           } else {
-            html += "<td>" + Math.round(metresPerPixel * run.legTrackDistance[j]) + "</td>";
+            html += "<td>" + run.legTrackDistance[j] + "</td>";
           }
         }
       }
@@ -324,7 +322,7 @@
       $("#btn-toggle-names").prop("title", rg2.t(title));
     },
 
-    displayName : function (runner, time) {
+    displayName : function (runner, time, units) {
       var text;
       if (this.displayNames) {
         // make sure we have a valid position to display
@@ -338,6 +336,7 @@
           } else {
             text = runner.name;
           }
+          text += " " + runner.cumulativeDistance[time] + " " + units;
           rg2.ctx.save();
           // centre map on runner location
           rg2.ctx.translate(runner.x[time], runner.y[time]);
@@ -374,12 +373,13 @@
     runAnimation : function (fromTimer) {
       // This function draws the current state of the animation.
       // It also advances the animation time if it is called as a result of a timer expiry.
-      var runner, timeOffset, i, t, tailStartTimeSecs;
+      var runner, timeOffset, i, t, tailStartTimeSecs, info;
       tailStartTimeSecs = this.setAnimationTime(fromTimer);
       $("#rg2-clock-slider").slider("value", this.animationSecs);
       $("#rg2-clock").text(rg2.utils.formatSecsAsHHMMSS(this.animationSecs));
       rg2.ctx.lineWidth = rg2.options.routeWidth;
       rg2.ctx.globalAlpha = rg2.config.FULL_INTENSITY;
+      info = rg2.events.getMetresPerPixel();
       for (i = 0; i < this.runners.length; i += 1) {
         runner = this.runners[i];
         if (this.realTime) {
@@ -420,7 +420,7 @@
         rg2.ctx.stroke();
         rg2.ctx.fillStyle = runner.colour;
         rg2.ctx.fill();
-        this.displayName(runner, t);
+        this.displayName(runner, t, info.units);
       }
       if (this.massStartByControl) {
         this.checkForStopControl(this.animationSecs);

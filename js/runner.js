@@ -50,9 +50,10 @@
 
     addTrackDistances : function (course, res) {
       // add track distances for each leg
-      var control, ind, lastPointIndex;
+      var control, ind, lastPointIndex, info;
       lastPointIndex = this.cumulativeDistance.length - 1;
       if (course.codes !== undefined) {
+        info = rg2.events.getMetresPerPixel();
         // if we got no splits then there will just be a finish time
         if (res.splits.length > 1) {
           for (control = 1; control < course.codes.length; control += 1) {
@@ -62,12 +63,12 @@
             } else {
               ind = lastPointIndex;
             }
-            this.cumulativeTrackDistance[control] = Math.round(this.cumulativeDistance[ind]);
+            this.cumulativeTrackDistance[control] = Math.round(info.metresPerPixel * this.cumulativeDistance[ind]);
             this.legTrackDistance[control] = this.cumulativeTrackDistance[control] - this.cumulativeTrackDistance[control - 1];
           }
         } else {
           // allows for tracks at events with no results so no splits: just use start and finish
-          this.legTrackDistance[1] = Math.round(this.cumulativeDistance[lastPointIndex]);
+          this.legTrackDistance[1] = Math.round(info.metresPerPixel * this.cumulativeDistance[lastPointIndex]);
           this.cumulativeTrackDistance[1] = Math.round(this.cumulativeDistance[lastPointIndex]);
         }
       }
@@ -106,7 +107,7 @@
         }
         this.x[timeatitem] = tox;
         this.y[timeatitem] = toy;
-        this.cumulativeDistance[timeatitem] = dist;
+        this.cumulativeDistance[timeatitem] = Math.round(dist);
         fromx = tox;
         fromy = toy;
         fromdist = dist;
