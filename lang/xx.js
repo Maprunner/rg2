@@ -106,5 +106,7 @@ translation: 'name',
 'Route deleted': 'Route dleted',
 'Route has been deleted': 'Route has been dleted',
 'Delete failed': 'Dlete failed',
-'Search': 'Serch'
+'Search': 'Serch',
+'Share route': 'Shre route',
+'Copy and paste this link to share your route': 'Cpy and paste this link to share your route'
 });
