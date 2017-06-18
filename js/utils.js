@@ -154,24 +154,21 @@
       return defaultValue;
     },
 
-    generateRouteShareLink : function (id) {
+    generateRouteShareLink : function (routeid) {
       var res, link;
-      res = rg2.results.getFullResultForRawID(id);
+      res = rg2.results.getFullResultForRawID(routeid);
       link = rg2Config.json_url.replace("rg2api.php", "#" + rg2.events.getKartatEventID());
-      link += "&route=" + id;
+      link += "&route=" + routeid;
       link += "&course=" + res.courseid;
       return link;
     },
 
-    showShareDialog : function (routeid) {
-      var link, dlg;
-      link = this.generateRouteShareLink(routeid);
-      dlg = '<div id=rg2-share-dialog><p>' + rg2.t("Copy and paste this link to share your route") + '</p>';
-      dlg += '<input autofocus onFocus="this.select()" readonly size=' + link.length + ' value=' + link + '></input><br>';
-      dlg += '<div id="share-buttons-div" class="social-buttons-div"><a class="twitter-share-button" href="https://twitter.com/intent/tweet" data-size="large" data-url="' + link + '" data-hashtags="routegadget2" data-related="MaprunnerGB">Tweet</a><script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>';
-      dlg += '<div class="fb-share-button" data-href="' + link + '" data-layout="button" data-size="large"></div></div></div>';
+    showShareDialog : function (title, routeid, text) {
+      var dlg;
+      dlg = this.getShareDialog(routeid, text);
       $(dlg).dialog({
-        title : rg2.t("Share route"),
+        // title has been translated before we get here if needed
+        title : title,
         dialogClass : "rg2-share-dialog",
         width : "auto",
         close : function () {
@@ -180,6 +177,16 @@
       });
       twttr.widgets.load(document.getElementById("share-buttons-div"));
       FB.XFBML.parse();
+    },
+
+    getShareDialog : function (routeid, text) {
+      var link, dlg;
+      link = this.generateRouteShareLink(routeid);
+      dlg = '<div id=rg2-share-dialog><p>' + rg2.t(text) + '</p>';
+      dlg += '<input autofocus onFocus="this.select()" readonly size=' + link.length + ' value=' + link + '></input><br>';
+      dlg += '<div id="share-buttons-div" class="social-buttons-div"><a class="twitter-share-button" href="https://twitter.com/intent/tweet" data-size="large" data-url="' + link + '" data-hashtags="routegadget2" data-related="MaprunnerGB">Tweet</a><script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>';
+      dlg += '<div class="fb-share-button" data-href="' + link + '" data-layout="button" data-size="large"></div></div></div>';
+      return dlg;
     },
 
     createModalDialog : function (dlg) {
