@@ -89,11 +89,6 @@ if (isset($_GET['lang'])) {
   }
 }
 
-// values for meta tags
-$meta_params = $_GET;
-if($meta_params['title'] == "") $meta_params['title'] = "Default Title";
-if($meta_params['description'] == "") $meta_params['description'] = "Default Description"; 
-
 header('Content-type: text/html; charset=utf-8');
 ?>
 <!DOCTYPE html>
@@ -105,8 +100,8 @@ header('Content-type: text/html; charset=utf-8');
     <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:site" content="@MaprunnerGB" />
-    <meta property="og:title" content="<?php echo $meta_params['title']; ?>" />
-    <meta property="og:description" content="<?php echo $meta_params['description']; ?>" />
+    <meta property="og:title" content="<?php if(isset($_GET['title'])) { echo $_GET['title']; } ?>" />
+    <meta property="og:description" content="<?php if(isset($_GET['description'])) { echo $_GET['description']; } ?>" />
     <!-- favicon info -->
     <link rel="apple-touch-icon" sizes="180x180" href='<?php echo $source_url ."/img/apple-touch-icon.png"; ?>'>
     <link rel="icon" type="image/png" href='<?php echo $source_url ."/img/favicon-32x32.png"; ?>' sizes="32x32">
