@@ -236,7 +236,11 @@
       });
       // route share link box
       $(".shareroute").click(function (event) {
-        rg2.utils.showShareDialog(parseInt(event.target.id, 10));
+        rg2.utils.showShareDialog(
+          rg2.t("Share route"),
+          parseInt(event.target.id, 10),
+          rg2.t("Copy and paste this link to share your route")
+        );
       });
       // checkbox to delete a route
       $(".deleteroute").click(function (event) {

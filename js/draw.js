@@ -332,6 +332,7 @@
       $("#btn-three-seconds").button('enable');
       // setting value to null allows you to open the same file again if needed
       $("#rg2-load-gps-file").val(null).button('enable');
+      rg2.redraw(false);
     },
 
     alignMapToAngle : function (control) {
@@ -512,7 +513,7 @@
     },
 
     routeSaved : function (data) {
-      rg2.utils.showWarningDialog(this.gpstrack.routeData.name, rg2.t('Your route has been saved') + '.');
+      rg2.utils.showShareDialog(this.gpstrack.routeData.name, data.newid, rg2.t('Your route has been saved') + '.');
       rg2.saveDrawnRouteDetails({eventid: parseInt(data.eventid, 10), id: data.newid, token: data.token});
       rg2.loadEvent(rg2.events.getActiveEventID());
     },
