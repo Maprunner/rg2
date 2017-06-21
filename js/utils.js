@@ -159,7 +159,10 @@
       res = rg2.results.getFullResultForRawID(routeid);
       link = rg2Config.json_url.replace("rg2api.php", "#" + rg2.events.getKartatEventID());
       link += "&route=" + routeid;
-      link += "&course=" + res.courseid;
+      // avoid problems when adding routes to events with no initial results
+      if (res !== undefined) {
+        link += "&course=" + res.courseid;
+      }
       return link;
     },
 
