@@ -176,7 +176,7 @@
         }
       });
       twttr.widgets.load(document.getElementById("share-buttons-div"));
-      FB.XFBML.parse();
+      FB.XFBML.parse(document.getElementById("share-buttons-div"));
     },
 
     getShareDialog : function (routeid, text) {

@@ -1,6 +1,6 @@
 <?php
 // version replaced by Gruntfile as part of release
-define ('RG2VERSION', '1.4.2');
+define ('RG2VERSION', '1.4.3');
 
 if (file_exists( dirname(__FILE__) . '/rg2-config.php')) {
   require_once( dirname(__FILE__) . '/rg2-config.php' );
@@ -88,6 +88,7 @@ if (isset($_GET['lang'])) {
     $lang = "en";
   }
 }
+
 header('Content-type: text/html; charset=utf-8');
 ?>
 <!DOCTYPE html>
@@ -97,6 +98,20 @@ header('Content-type: text/html; charset=utf-8');
     <title>Routegadget 2</title>
     <meta name="description" content="View and save route choices for orienteering events">
     <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="canonical" href="<?php echo $source_url . "/"; ?>" />
+    <!-- Twitter meta tags -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:site" content="@MaprunnerGB" />
+    <meta name="twitter:title" content="Routegadget 2" />
+    <meta name="twitter:description" content="View my route on Routegadget 2" />
+    <meta name="twitter:image" content="<?php echo $source_url . "/img/android-chrome-512x512.png"; ?>" />
+    <!-- Facebook meta tags -->
+    <meta property="og:url" content="<?php echo $source_url . "/"; ?>" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Routegadget 2" />
+    <meta property="og:description" content="View my route on Routegadget 2" />
+    <meta property="og:image" content="<?php echo $source_url . "/img/facebook-412x412.png"; ?>" />
+    <meta property="fb:app_id" content="1743436915667271" />
     <!-- favicon info -->
     <link rel="apple-touch-icon" sizes="180x180" href='<?php echo $source_url ."/img/apple-touch-icon.png"; ?>'>
     <link rel="icon" type="image/png" href='<?php echo $source_url ."/img/favicon-32x32.png"; ?>' sizes="32x32">
