@@ -6,7 +6,6 @@
 /*global Image:false */
 (function () {
   function Manager(keksi) {
-    var dummy;
     this.user = new rg2.User(keksi);
     this.newMap = new rg2.Map();
     this.georefsystems = new rg2.Georefs();
@@ -26,10 +25,6 @@
     this.results = [];
     this.variants = [];
     this.resultCourses = [];
-    // set dummy course in case we set up an event with no results
-    // gets overwritten if we load results from file
-    dummy = {courseid: 0, course: ""};
-    this.resultCourses.push(dummy);
     this.mapWidth = 0;
     this.mapHeight = 0;
     this.mapFile = undefined;
@@ -306,14 +301,26 @@
     displayCourseAllocations : function () {
       var i, html;
       if ((this.courses.length) && (this.resultCourses.length)) {
+        html = "<div id='rg2-course-allocations'><table><thead><tr><th>Results</th><th>Course</th></tr></thead><tbody>";
         // create html for course allocation list
         // using a table to make it easier for now
-        html = "<div id='rg2-course-allocations'><table><thead><tr><th>Results</th><th>Course</th></tr></thead><tbody>";
         for (i = 0; i < this.resultCourses.length; i += 1) {
           html += "<tr><td>" + this.resultCourses[i].course + "</td><td>" + this.createCourseDropdown(this.resultCourses[i].course, i) + "</td></tr>";
         }
         html += "</tbody></table></div>";
         $("#rg2-course-allocations").empty().append(html);
+      }
+    },
+
+    createResultCourseMapping : function () {
+      var i;
+      // create a dummy result-course mapping
+      // to allow display of courses with no results
+      if (this.format === rg2.config.FORMAT_NO_RESULTS) {
+        this.resultCourses.length = 0;
+        for (i = 0; i < this.courses.length; i += 1) {
+          this.resultCourses.push({courseid: this.courses[i].courseid, course: this.courses[i].name});
+        }
       }
     },
 
@@ -418,6 +425,7 @@
       data.level = this.eventLevel;
       if (this.drawingCourses) {
         this.courses.push(this.drawnCourse);
+        this.createResultCourseMapping();
       }
       this.setControlLocations();
       this.mapResultsToCourses();
@@ -848,6 +856,7 @@
       this.newcontrols = parsedCourses.newcontrols;
       this.coursesGeoreferenced = parsedCourses.georeferenced;
       rg2.managerUI.displayCourseInfo(this.getCourseInfoAsHTML());
+      this.createResultCourseMapping();
       this.displayCourseAllocations();
       this.fitControlsToMap();
       rg2.redraw(false);
@@ -1161,6 +1170,7 @@
     toggleResultsRequired : function (noResults) {
       if (noResults) {
         this.format = rg2.config.FORMAT_NO_RESULTS;
+        this.createResultCourseMapping();
       } else {
         this.format = rg2.config.FORMAT_NORMAL;
       }
