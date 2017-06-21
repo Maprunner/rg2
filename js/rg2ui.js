@@ -6,7 +6,7 @@
     setTitleBar: function () {
       var title;
       if (window.innerWidth >= rg2.config.BIG_SCREEN_BREAK_POINT) {
-        title = rg2.events.getActiveEventName() + " " + rg2.events.getActiveEventDate();
+        title = rg2.he.decode(rg2.events.getActiveEventName()) + " " + rg2.events.getActiveEventDate();
         // set the tab title
         document.title = title;
         $("#rg2-event-title").html(title).show();
@@ -233,6 +233,14 @@
         }
         rg2.requestedHash.setRoutes();
         rg2.redraw(false);
+      });
+      // route share link box
+      $(".shareroute").click(function (event) {
+        rg2.utils.showShareDialog(
+          rg2.t("Share route"),
+          parseInt(event.target.id, 10),
+          rg2.t("Copy and paste this link to share your route")
+        );
       });
       // checkbox to delete a route
       $(".deleteroute").click(function (event) {

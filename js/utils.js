@@ -1,4 +1,7 @@
 /*global rg2:false */
+/*global rg2Config:false */
+/*global FB:false */
+/*global twttr:false */
 (function () {
   var utils =  {
     rotatePoint : function (x, y, angle) {
@@ -149,6 +152,44 @@
         return nodelist[0].textContent.trim();
       }
       return defaultValue;
+    },
+
+    generateRouteShareLink : function (routeid) {
+      var res, link;
+      res = rg2.results.getFullResultForRawID(routeid);
+      link = rg2Config.json_url.replace("rg2api.php", "#" + rg2.events.getKartatEventID());
+      link += "&route=" + routeid;
+      // avoid problems when adding routes to events with no initial results
+      if (res !== undefined) {
+        link += "&course=" + res.courseid;
+      }
+      return link;
+    },
+
+    showShareDialog : function (title, routeid, text) {
+      var dlg;
+      dlg = this.getShareDialog(routeid, text);
+      $(dlg).dialog({
+        // title has been translated before we get here if needed
+        title : title,
+        dialogClass : "rg2-share-dialog",
+        width : "auto",
+        close : function () {
+          $('#rg2-share-dialog').dialog('destroy').remove();
+        }
+      });
+      twttr.widgets.load(document.getElementById("share-buttons-div"));
+      FB.XFBML.parse(document.getElementById("share-buttons-div"));
+    },
+
+    getShareDialog : function (routeid, text) {
+      var link, dlg;
+      link = this.generateRouteShareLink(routeid);
+      dlg = '<div id=rg2-share-dialog><p>' + rg2.t(text) + '</p>';
+      dlg += '<input autofocus onFocus="this.select()" readonly size=' + link.length + ' value=' + link + '></input><br>';
+      dlg += '<div id="share-buttons-div" class="social-buttons-div"><a class="twitter-share-button" href="https://twitter.com/intent/tweet" data-size="large" data-url="' + link + '" data-hashtags="routegadget2" data-related="MaprunnerGB">Tweet</a><script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>';
+      dlg += '<div class="fb-share-button" data-href="' + link + '" data-layout="button" data-size="large"></div></div></div>';
+      return dlg;
     },
 
     createModalDialog : function (dlg) {

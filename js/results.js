@@ -448,7 +448,10 @@
         } else {
           html += "<td>" + this.getNameHTML(res, i);
         }
+
         if (res.canDelete) {
+          // add share icon
+          html += " <i class='shareroute fa fa-share-square-o' id=" + res.resultid + "></i>";
           html += " <i class='deleteroute fa fa-trash' id=" + i + "></i>";
         }
         html += "</td><td>" + res.time + "</td>";
