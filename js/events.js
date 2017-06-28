@@ -109,11 +109,18 @@
       return this.events[this.activeEventID].locked;
     },
 
+    getLengthUnits : function () {
+      if ((this.activeEventID === null) || (!this.mapIsGeoreferenced())) {
+        return "px";
+      }
+      return "m";
+    },
+
     getMetresPerPixel : function () {
       var lat1, lat2, lon1, lon2, size, pixels, w;
       if ((this.activeEventID === null) || (!this.mapIsGeoreferenced())) {
         // 1 is as harmless as anything else in this situation
-        return {metresPerPixel: 1, units: "px"};
+        return 1;
       }
       size = rg2.getMapSize();
       pixels = rg2.utils.getDistanceBetweenPoints(0, 0, size.width, size.height);
@@ -122,7 +129,7 @@
       lat1 = w.F;
       lon2 = (w.A * size.width) + (w.B * size.height) + w.C;
       lat2 = (w.D * size.width) + (w.E * size.height) + w.F;
-      return {metresPerPixel: rg2.utils.getLatLonDistance(lat1, lon1, lat2, lon2) / pixels, units: "m"};
+      return rg2.utils.getLatLonDistance(lat1, lon1, lat2, lon2) / pixels;
     },
 
     getWorldFile : function () {
