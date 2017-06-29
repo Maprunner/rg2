@@ -55,12 +55,10 @@
           rg2.courses.drawCourses(rg2.config.DIM);
           rg2.results.drawTracks();
           rg2.controls.drawControls(false);
-          // parameter determines if animation time is updated or not
           if (fromTimer) {
-            rg2.animation.runAnimation(true);
-          } else {
-            rg2.animation.runAnimation(false);
+            rg2.animation.incrementAnimationTime();
           }
+          rg2.animation.drawAnimation();
         }
       }
     } else {
