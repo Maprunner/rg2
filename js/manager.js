@@ -404,7 +404,7 @@
     },
 
     generateNewEventData : function () {
-      var data, text, user;
+      var data, text, user, i;
       data = {};
       data.name = this.eventName;
       data.mapid = this.maps[this.mapIndex].mapid;
@@ -436,6 +436,12 @@
       }
       data.courses = this.courses.slice(0);
       data.results = this.results.slice(0);
+      // #386 remove unused data: partial solution to problems with POST size
+      for (i = 0; i < data.results.length; i += 1) {
+        delete data.results[i].codes;
+        delete data.results[i].chipid;
+        delete data.results[i].club;
+      }
       user = this.user.encodeUser();
       data.x = user.x;
       data.y = user.y;
