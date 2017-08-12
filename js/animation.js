@@ -110,10 +110,14 @@
         return html;
       }
       for (i = 0; i < this.runners.length; i += 1) {
-        html += "<p style='color:" + this.runners[i].colour + ";'>" + this.runners[i].coursename;
-        html += "</p><p>:&nbsp;" + this.runners[i].cumulativeDistance[time] + " " + this.units + " : " + this.runners[i].name.trim() + "</p>";
+        html += "<p style='color:" + this.runners[i].colour + ";'>" + this.runners[i].coursename + ": ";
+        html += this.runners[i].name.trim() + ": " + this.getDistanceAtTime(this.runners[i].cumulativeDistance, time) + " " + this.units;
       }
       return html;
+    },
+
+    getDistanceAtTime : function (cumDist, time) {
+      return (time > (cumDist.length - 1)) ? cumDist[cumDist.length - 1] : cumDist[time];
     },
 
     getMaxControls : function () {
@@ -347,7 +351,6 @@
           } else {
             text = runner.name;
           }
-          text += " " + runner.cumulativeDistance[time] + " " + this.units;
           rg2.ctx.save();
           // centre map on runner location
           rg2.ctx.translate(runner.x[time], runner.y[time]);
