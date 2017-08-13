@@ -228,7 +228,7 @@ header('Content-type: text/html; charset=utf-8');
        </div>
        <hr class="rg2-hr">
        <div class="rg2-gps-text">
-        <span id="draw-text-1">Left click to add/lock/unlock a handle.></span>
+        <span id="draw-text-1">Left click to add/lock/unlock a handle.</span>
         <ul><li id="draw-text-2">Green: draggable</li>
         <li id="draw-text-3">Red: locked</li></ul>
         <span id="draw-text-4">Right click to delete a handle.</span>
