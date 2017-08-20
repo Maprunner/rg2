@@ -379,6 +379,8 @@
       $("#event-create-dialog").dialog("destroy");
       self = this;
       data = this.generateNewEventData();
+      $("#rg2-load-progress-label").text("Creating event");
+      $("#rg2-load-progress").show();
       $.ajax({
         data : data,
         type : "POST",
@@ -399,6 +401,10 @@
         },
         error : function () {
           rg2.utils.showWarningDialog("Save failed", " Failed to create event.");
+        },
+        complete : function () {
+          $("#rg2-load-progress-label").text("");
+          $("#rg2-load-progress").hide();
         }
       });
     },
@@ -1206,6 +1212,8 @@
       formData.append("name", this.mapFile.name);
       formData.append("x", user.x);
       formData.append("y", user.y);
+      $("#rg2-load-progress-label").text("Saving map");
+      $("#rg2-load-progress").show();
       $.ajax({
         url : url,
         data : formData,
@@ -1226,6 +1234,10 @@
         error : function (jqXHR, textStatus) {
           /*jslint unparam:true*/
           console.log(textStatus);
+        },
+        complete : function () {
+          $("#rg2-load-progress-label").text("");
+          $("#rg2-load-progress").hide();
         }
       });
     },
