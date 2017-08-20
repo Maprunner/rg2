@@ -42,7 +42,6 @@
 
     initialiseTrack : function (data) {
       var info;
-      this.cumulativeDistance = [];
       this.legpos = [];
       // set true if track includes all expected controls in correct order or is a GPS track
       this.hasValidTrack = false;
@@ -202,10 +201,8 @@
       var course;
       // allow for getting two tracks for same result: should have been filtered in API...
       this.xysecs.length = 0;
-      this.cumulativeDistance.length = 0;
       // add times and distances at each position
       this.xysecs[0] = 0;
-      this.cumulativeDistance[0] = 0;
       // get course details
       course = {};
       // each person has their own defined score course
@@ -226,7 +223,9 @@
     },
 
     calculateTrackTimes: function (course) {
-      var nextcontrol, nextx, nexty, dist, oldx, oldy, i, x, y, previouscontrolindex;
+      var nextcontrol, nextx, nexty, dist, oldx, oldy, i, x, y, previouscontrolindex, cumulativeDistance;
+      cumulativeDistance = [];
+      cumulativeDistance[0] = 0;
       nextcontrol = this.getNextValidControl(0);
       nextx = course.x[nextcontrol];
       nexty = course.y[nextcontrol];
@@ -244,13 +243,13 @@
         x = this.trackx[i];
         y = this.tracky[i];
         dist += rg2.utils.getDistanceBetweenPoints(x, y, oldx, oldy);
-        this.cumulativeDistance[i] = Math.round(dist);
+        cumulativeDistance[i] = Math.round(dist);
         oldx = x;
         oldy = y;
         // track ends at control
         if ((nextx === x) && (nexty === y)) {
           this.xysecs[i] = this.splits[nextcontrol];
-          this.addInterpolatedTimes(previouscontrolindex, i);
+          this.addInterpolatedTimes(previouscontrolindex, i, cumulativeDistance);
           previouscontrolindex = i;
           nextcontrol = this.getNextValidControl(nextcontrol);
           if (nextcontrol === course.x.length) {
@@ -280,16 +279,12 @@
     expandTrackWithNoSplits : function () {
       // based on ExpandNormalTrack, but deals with event format 2: no results
       // this means we have a course and a finish time but no split times
-      var totaltime, currenttime, course, nextcontrol, nextx, nexty, lastx, lasty, i, x, y, moved, previouscontrolindex, dist, totaldist, oldx, oldy;
+      var totaltime, currenttime, course, nextcontrol, nextx, nexty, lastx, lasty, i, x, y, moved, previouscontrolindex, totaldist, cumulativeDistance;
       this.xysecs.length = 0;
-      this.cumulativeDistance.length = 0;
-
       // only have finish time, which is in [1] at present
       totaltime = this.splits[1];
       currenttime = 0;
       this.xysecs[0] = 0;
-      this.cumulativeDistance[0] = 0;
-
       // get course details: can't be a score course since they aren't supported for format 2
       course = {};
       course.x = rg2.courses.getCourseDetails(this.courseid).x;
@@ -302,15 +297,13 @@
       // add finish location to track just in case...
       this.trackx.push(lastx);
       this.tracky.push(lasty);
-      dist = 0;
       previouscontrolindex = 0;
-      totaldist = this.calculateTotalTrackLength();
+      cumulativeDistance = this.calculateTotalTrackLength();
+      totaldist = cumulativeDistance[cumulativeDistance.length - 1];
       // read through track to generate splits
       x = 0;
       y = 0;
       moved = false;
-      oldx = this.trackx[0];
-      oldy = this.tracky[0];
       for (i = 1; i < this.trackx.length; i += 1) {
         x = this.trackx[i];
         y = this.tracky[i];
@@ -318,16 +311,12 @@
         if ((x !== this.trackx[0]) || (y !== this.tracky[0])) {
           moved = true;
         }
-        dist += rg2.utils.getDistanceBetweenPoints(x, y, oldx, oldy);
-        this.cumulativeDistance[i] = Math.round(dist);
-        oldx = x;
-        oldy = y;
         // track ends at control, as long as we have moved away from the start
         if ((nextx === x) && (nexty === y) && moved) {
-          currenttime = parseInt((dist / totaldist) * totaltime, 10);
+          currenttime = parseInt((cumulativeDistance[i] / totaldist) * totaltime, 10);
           this.xysecs[i] = currenttime;
           this.splits[nextcontrol] = currenttime;
-          this.addInterpolatedTimes(previouscontrolindex, i);
+          this.addInterpolatedTimes(previouscontrolindex, i, cumulativeDistance);
           previouscontrolindex = i;
           nextcontrol += 1;
           if (nextcontrol === course.x.length) {
@@ -344,44 +333,36 @@
 
     calculateTotalTrackLength : function () {
       // read through track to find total distance
-      var i, oldx, oldy, totaldist;
-      totaldist = 0;
+      var i, oldx, oldy, cumulativeDistance;
+      cumulativeDistance = [];
+      cumulativeDistance[0] = 0;
       oldx = this.trackx[0];
       oldy = this.tracky[0];
       for (i = 1; i < this.trackx.length; i += 1) {
-        totaldist += rg2.utils.getDistanceBetweenPoints(this.trackx[i], this.tracky[i], oldx, oldy);
+        cumulativeDistance[i] = cumulativeDistance[i - 1] + Math.round(rg2.utils.getDistanceBetweenPoints(this.trackx[i], this.tracky[i], oldx, oldy));
         oldx = this.trackx[i];
         oldy = this.tracky[i];
       }
-      return totaldist;
+      return cumulativeDistance;
     },
 
-    addInterpolatedTimes : function (startindex, endindex) {
+    addInterpolatedTimes : function (startindex, endindex, cumulativeDistance) {
       // add interpolated time at each point based on cumulative distance; this assumes uniform speed...
       var oldt, deltat, olddist, deltadist, i;
       oldt = this.xysecs[startindex];
       deltat = this.xysecs[endindex] - oldt;
-      olddist = this.cumulativeDistance[startindex];
-      deltadist = this.cumulativeDistance[endindex] - olddist;
+      olddist = cumulativeDistance[startindex];
+      deltadist = cumulativeDistance[endindex] - olddist;
       for (i = startindex; i <= endindex; i += 1) {
-        this.xysecs[i] = oldt + Math.round(((this.cumulativeDistance[i] - olddist) * deltat / deltadist));
+        this.xysecs[i] = oldt + Math.round(((cumulativeDistance[i] - olddist) * deltat / deltadist));
       }
     },
 
     expandGPSTrack : function () {
-      var t, dist, oldx, oldy, delta, len;
-      dist = 0;
-      oldx = this.trackx[0];
-      oldy = this.tracky[0];
-      len = this.trackx.length;
+      var t;
       // in theory we get one point every three seconds
-      for (t = 0; t < len; t += 1) {
+      for (t = 0; t < this.trackx.length; t += 1) {
         this.xysecs[t] = 3 * t;
-        delta = rg2.utils.getDistanceBetweenPoints(this.trackx[t], this.tracky[t], oldx, oldy);
-        dist += delta;
-        this.cumulativeDistance[t] = Math.round(dist);
-        oldx = this.trackx[t];
-        oldy = this.tracky[t];
       }
       // colours now set the first time we try to draw the track: major time saving on initial event load
       this.setSpeedColours.length = 0;
