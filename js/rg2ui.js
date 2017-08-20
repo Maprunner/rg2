@@ -149,7 +149,11 @@
       $("#btn-show-splits").click(function () {
         $("#rg2-splits-table").empty().append(rg2.animation.getSplitsTable()).dialog({
           width : 'auto',
+          maxHeight: $("#rg2-map-canvas").height(),
+          height: 'auto',
+          position: {my: "top", at: "top", of: "#rg2-map-canvas"},
           dialogClass : "rg2-splits-table",
+          modal: true,
           buttons : {
             Ok : function () {
               $("#rg2-splits-table").dialog('close');

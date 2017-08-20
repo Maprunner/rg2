@@ -192,7 +192,9 @@
 
     doDrawingReset : function () {
       $('#rg2-drawing-reset-dialog').dialog("destroy");
-      rg2.courses.removeFromDisplay(this.gpstrack.routeData.courseid);
+      if (this.gpstrack.routeData.courseid !== null) {
+        rg2.courses.removeFromDisplay(this.gpstrack.routeData.courseid);
+      }
       if (this.gpstrack.routeData.resultid !== null) {
         rg2.results.putScoreCourseOnDisplay(this.gpstrack.routeData.resultid, false);
       }
@@ -494,6 +496,7 @@
       // create JSON data
       json = JSON.stringify(this.gpstrack.routeData);
       self = this;
+      document.getElementById("rg2-container").style.cursor = "wait";
       $.ajax({
         data : json,
         type : 'POST',
@@ -508,6 +511,9 @@
         },
         error : function () {
           rg2.utils.showWarningDialog(self.gpstrack.routeData.name, rg2.t('Your route was not saved. Please try again'));
+        },
+        complete : function () {
+          document.getElementById("rg2-container").style.cursor = "default";
         }
       });
     },

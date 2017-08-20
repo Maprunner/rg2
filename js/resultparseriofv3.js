@@ -11,16 +11,16 @@
 
     Constructor : ResultParserIOFV3,
 
-    getID : function (element, name) {
+    getID : function (element, index) {
       var temp;
       if (element.length > 0) {
         temp = element[0].textContent;
         // remove new lines from empty <Id> tags
         temp.replace(/[\n\r]/g, '');
-        return (temp.trim() + "__" + name);
+        return (temp.trim());
       }
-      // no id defined so just use count of runners
-      return (this.results.length + "__" + name);
+      // no id defined so just use result index
+      return index;
     },
 
     getClub : function (element) {
@@ -44,7 +44,7 @@
             temp = personlist[j].getElementsByTagName('Given')[0].textContent + " " + personlist[j].getElementsByTagName('Family')[0].textContent;
             // remove new lines from empty <Given> and <Family> tags
             result.name = temp.replace(/[\n\r]/g, '').trim();
-            result.dbid = this.getID(personlist[j].getElementsByTagName('Id'), result.name);
+            result.dbid = this.getID(personlist[j].getElementsByTagName('Id'), j);
             result.club = this.getClub(personlist[j].getElementsByTagName('Organisation'));
             resultlist = personlist[j].getElementsByTagName('Result');
             this.extractIOFV3Results(resultlist, result);

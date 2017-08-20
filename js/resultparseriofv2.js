@@ -11,13 +11,13 @@
 
     Constructor : ResultParserIOFV2,
 
-    getDBID : function (element, name) {
+    getDBID : function (element, index) {
       // remove new lines from empty <PersonId> tags
       element = element.replace(/[\n\r]/g, '').trim();
       if (element) {
         return element;
       }
-      return name;
+      return index;
     },
 
     getName : function (personlist) {
@@ -38,7 +38,7 @@
             result = {};
             result.course = course;
             result.name = this.getName(personlist[j]);
-            result.dbid = this.getDBID(personlist[j].getElementsByTagName('PersonId')[0].textContent, result.name);
+            result.dbid = this.getDBID(personlist[j].getElementsByTagName('PersonId')[0].textContent, j);
             result.club = rg2.utils.extractTextContentZero(personlist[j].getElementsByTagName('ShortName'), '');
             resultlist = personlist[j].getElementsByTagName('Result');
             this.extractIOFV2Results(resultlist, result);

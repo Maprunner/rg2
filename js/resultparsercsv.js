@@ -67,7 +67,7 @@
       result.chipid = fields[this.CSVFormat.CHIP_IDX];
       // delete quotes from CSV file: output from MERCS
       result.name = (fields[this.CSVFormat.FIRST_NAME_IDX] + " " + fields[this.CSVFormat.SURNAME_IDX]).trim().replace(/\"/g, '');
-      result.dbid = (fields[this.CSVFormat.DB_IDX] + "__" + result.name).replace(/\"/g, '');
+      result.dbid = (fields[this.CSVFormat.DB_IDX]);
       result.starttime = rg2.utils.getSecsFromHHMMSS(fields[this.CSVFormat.START_TIME_IDX]);
       result.time = fields[this.CSVFormat.TOTAL_TIME_IDX];
       result.position = this.getPosition(fields);

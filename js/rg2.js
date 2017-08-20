@@ -101,9 +101,9 @@ var rg2 = (function (window, $) {
     updateUIForNewEvent(eventid);
     rg2.courses.deleteAllCourses();
     rg2.controls.deleteAllControls();
-    rg2.animation.resetAnimation();
     rg2.results.deleteAllResults();
     rg2.events.setActiveEventID(eventid);
+    rg2.animation.resetAnimation();
     rg2.drawing.initialiseDrawing(rg2.events.hasResults(eventid));
     rg2.loadNewMap(rg2Config.maps_url + rg2.events.getMapFileName());
     rg2.ui.setTitleBar();

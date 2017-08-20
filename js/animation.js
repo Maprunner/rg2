@@ -17,6 +17,7 @@
     Constructor : Animation,
 
     resetAnimation : function () {
+      this.units = rg2.events.getLengthUnits();
       this.runners.length = 0;
       clearInterval(this.timer);
       this.timer = null;
@@ -32,6 +33,7 @@
       this.earliestStartSecs = 0;
       this.latestFinishSecs = 0;
       this.tailLength = 0;
+      this.tailStartTimeSecs = 0;
       this.useFullTails = false;
       // control to start from if this option selected
       this.massStartControl = 0;
@@ -74,7 +76,7 @@
     },
 
     updateAnimationDetails : function () {
-      var html = this.getAnimationNames();
+      var html = this.getAnimationNames(this.animationSecs);
       if (html !== "") {
         $("#rg2-track-names").empty().append(html).show();
         $("#rg2-animation-controls").show();
@@ -86,22 +88,36 @@
       $("#rg2-clock").text(rg2.utils.formatSecsAsHHMMSS(this.animationSecs));
     },
 
+    updateNameDetails : function (time) {
+      var html = this.getAnimationNames(time);
+      if (html !== "") {
+        $("#rg2-track-names").empty().append(html).show();
+      } else {
+        $("#rg2-track-names").hide();
+      }
+    },
+
     // slider callback
     clockSliderMoved : function (time) {
       this.resetAnimationTime(time);
       rg2.redraw(false);
     },
 
-    getAnimationNames : function () {
+    getAnimationNames : function (time) {
       var i, html;
       html = "";
       if (this.runners.length < 1) {
         return html;
       }
       for (i = 0; i < this.runners.length; i += 1) {
-        html += "<p style='color:" + this.runners[i].colour + ";'>" + this.runners[i].coursename + ":&nbsp;" + this.runners[i].name.trim() + "</p>";
+        html += "<p style='color:" + this.runners[i].colour + ";'>" + this.runners[i].coursename + ": ";
+        html += this.runners[i].name.trim() + ": " + this.getDistanceAtTime(this.runners[i].cumulativeDistance, time) + " " + this.units;
       }
       return html;
+    },
+
+    getDistanceAtTime : function (cumDist, time) {
+      return (time > (cumDist.length - 1)) ? cumDist[cumDist.length - 1] : cumDist[time];
     },
 
     getMaxControls : function () {
@@ -125,11 +141,10 @@
     },
 
     getSplitsTable : function () {
-      var html, i, j, info, run, maxControls, legSplit, prevControlSecs;
+      var html, i, j, run, maxControls, legSplit, prevControlSecs;
       if (this.runners.length < 1) {
         return "<p>" + rg2.t("Select runners on Results tab") + ".</p>";
       }
-      info = rg2.events.getMetresPerPixel();
       legSplit = [];
       prevControlSecs = 0;
       maxControls = this.getMaxControls();
@@ -150,7 +165,7 @@
         if (isNaN(run.cumulativeTrackDistance[run.cumulativeTrackDistance.length - 1])) {
           html += "</tr><tr class='splitsdistance-row'><td></td><td>--</td>";
         } else {
-          html += "</tr><tr class='splitsdistance-row'><td></td><td>" + run.cumulativeTrackDistance[run.cumulativeTrackDistance.length - 1] + " " + info.units + "</td>";
+          html += "</tr><tr class='splitsdistance-row'><td></td><td>" + run.cumulativeTrackDistance[run.cumulativeTrackDistance.length - 1] + " " + this.units + "</td>";
         }
         for (j = 1; j < run.splits.length; j += 1) {
           if (isNaN(run.legTrackDistance[j])) {
@@ -322,7 +337,7 @@
       $("#btn-toggle-names").prop("title", rg2.t(title));
     },
 
-    displayName : function (runner, time, units) {
+    displayName : function (runner, time) {
       var text;
       if (this.displayNames) {
         // make sure we have a valid position to display
@@ -336,7 +351,6 @@
           } else {
             text = runner.name;
           }
-          text += " " + runner.cumulativeDistance[time] + " " + units;
           rg2.ctx.save();
           // centre map on runner location
           rg2.ctx.translate(runner.x[time], runner.y[time]);
@@ -349,37 +363,33 @@
       }
     },
 
-    setAnimationTime : function (fromTimer) {
-      // only increment time if called from the timer and we haven't got to the end already
-      if (fromTimer) {
-        if (this.realTime) {
-          if (this.animationSecs < this.latestFinishSecs) {
-            this.milliSecs += this.deltas[this.deltaIndex];
-          }
-        } else {
-          if (this.animationSecs < this.slowestTimeSecs) {
-            this.milliSecs += this.deltas[this.deltaIndex];
-          }
+    incrementAnimationTime : function () {
+      // only increment time if we haven't got to the end already
+      if (this.realTime) {
+        if (this.animationSecs < this.latestFinishSecs) {
+          this.milliSecs += this.deltas[this.deltaIndex];
+        }
+      } else {
+        if (this.animationSecs < this.slowestTimeSecs) {
+          this.milliSecs += this.deltas[this.deltaIndex];
         }
       }
       this.animationSecs = parseInt((this.milliSecs / 1000), 10);
-      // return value is earliest time we need to worry about when drawing screen
+      // find earliest time we need to worry about when drawing screen
       if (this.useFullTails) {
-        return (this.startSecs + 1);
+        this.tailStartTimeSecs = this.startSecs + 1;
+      } else {
+        this.tailStartTimeSecs = Math.max(this.animationSecs - this.tailLength, this.startSecs + 1);
       }
-      return Math.max(this.animationSecs - this.tailLength, this.startSecs + 1);
     },
 
-    runAnimation : function (fromTimer) {
+    drawAnimation : function () {
       // This function draws the current state of the animation.
-      // It also advances the animation time if it is called as a result of a timer expiry.
-      var runner, timeOffset, i, t, tailStartTimeSecs, info;
-      tailStartTimeSecs = this.setAnimationTime(fromTimer);
+      var runner, timeOffset, i, t;
       $("#rg2-clock-slider").slider("value", this.animationSecs);
       $("#rg2-clock").text(rg2.utils.formatSecsAsHHMMSS(this.animationSecs));
       rg2.ctx.lineWidth = rg2.options.routeWidth;
       rg2.ctx.globalAlpha = rg2.config.FULL_INTENSITY;
-      info = rg2.events.getMetresPerPixel();
       for (i = 0; i < this.runners.length; i += 1) {
         runner = this.runners[i];
         if (this.realTime) {
@@ -396,11 +406,11 @@
         rg2.ctx.strokeStyle = runner.colour;
         rg2.ctx.globalAlpha = rg2.options.routeIntensity;
         rg2.ctx.beginPath();
-        rg2.ctx.moveTo(runner.x[tailStartTimeSecs - timeOffset], runner.y[tailStartTimeSecs - timeOffset]);
+        rg2.ctx.moveTo(runner.x[this.tailStartTimeSecs - timeOffset], runner.y[this.tailStartTimeSecs - timeOffset]);
 
         // t runs as real time seconds or 0-based seconds depending on this.realTime
         //runner.x[] is always indexed in 0-based time so needs to be adjusted for starttime offset
-        for (t = tailStartTimeSecs; t <= this.animationSecs; t += 1) {
+        for (t = this.tailStartTimeSecs; t <= this.animationSecs; t += 1) {
           if ((t > timeOffset) && ((t - timeOffset) < runner.nextStopTime)) {
             rg2.ctx.lineTo(runner.x[t - timeOffset], runner.y[t - timeOffset]);
           }
@@ -420,8 +430,9 @@
         rg2.ctx.stroke();
         rg2.ctx.fillStyle = runner.colour;
         rg2.ctx.fill();
-        this.displayName(runner, t, info.units);
+        this.displayName(runner, t);
       }
+      this.updateNameDetails(t);
       if (this.massStartByControl) {
         this.checkForStopControl(this.animationSecs);
       }
