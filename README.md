@@ -1,13 +1,9 @@
 # Routegadget 2
 
 ## Latest news
-Version 1.4.2 was released on 3rd June 2017.
+Version 1.4.5 was released on 13th September 2017 and is installed on all routegadget.co.uk sites.
 
-It includes two significant changes:
-
-1. Handling of results with missing controls has been modified. It is now possible to draw and save your route even if you didn't go to all of the controls on the course. Previously you could draw the route but not save it, which was a little frustrating. This change also means that the GPS autofit function will work properly with missing splits.
-
-2. The manager interface now accepts results lists by class as well as by course. For most managers this will make no difference, since they can continue to use results by course. If you do have results by class you can now map several classes to a single course, as required. The results will be consolidated into a single course result, which will use the course name as defined in the course file.
+This is a minor release. The display of positions in the results tab has been tidied up. It also corrects a bug associated with drawing routes for events that have courses but no splits, which wasn't something I knew you could do in the first place. 
 
 ## User Guide and Introductory Videos
 
