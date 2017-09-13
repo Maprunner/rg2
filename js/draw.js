@@ -379,6 +379,11 @@
       // to allow drawing for missed controls where the split time is 0
       var i, splits;
       splits = this.gpstrack.routeData.splits;
+      // allow for events with no results: splits will be a start and finish time only
+      // in this case just move to next control
+      if (splits.length === 2) {
+        return thisControl + 1;
+      }
       for (i = thisControl + 1; i < splits.length; i += 1) {
         if (splits[i] !== splits[i - 1]) {
           return i;
@@ -393,12 +398,17 @@
       // to allow drawing for missed controls where the split time is 0
       var i, splits;
       splits = this.gpstrack.routeData.splits;
+      // allow for events with no results: splits will be a start and finish time only
+      // in this case just move to previous control
+      if (splits.length === 2) {
+        return thisControl - 1;
+      }
       for (i = thisControl - 1; i > 0; i -= 1) {
         if (splits[i] !== splits[i - 1]) {
           return i;
         }
       }
-      // got back to start...
+      // go back to start...
       return 0;
     },
 
@@ -476,6 +486,7 @@
       this.gpstrack.routeData.comments = $("#rg2-new-comments").val();
 
       $("#btn-undo-gps-adjust").button("disable");
+      this.setDeltas();
       this.postRoute();
     },
 
@@ -487,7 +498,21 @@
       // don't need start control so remove it
       this.gpstrack.routeData.controlx.splice(0, 1);
       this.gpstrack.routeData.controly.splice(0, 1);
+      this.setDeltas();
       this.postRoute();
+    },
+
+    setDeltas : function () {
+      var i;
+      // send as differences rather than absolute values: provides almost 50% reduction in size of json file
+      for (i = this.gpstrack.routeData.x.length - 1; i > 0; i -= 1) {
+        this.gpstrack.routeData.x[i] = this.gpstrack.routeData.x[i] - this.gpstrack.routeData.x[i - 1];
+        this.gpstrack.routeData.y[i] = this.gpstrack.routeData.y[i] - this.gpstrack.routeData.y[i - 1];
+      }
+      // in theory time is same length as x and y but why take the risk...
+      for (i = this.gpstrack.routeData.time.length - 1; i > 0; i -= 1) {
+        this.gpstrack.routeData.time[i] = this.gpstrack.routeData.time[i] - this.gpstrack.routeData.time[i - 1];
+      }
     },
 
     postRoute : function () {

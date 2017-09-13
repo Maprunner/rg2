@@ -187,7 +187,7 @@
       link = this.generateRouteShareLink(routeid);
       dlg = '<div id=rg2-share-dialog><p>' + rg2.t(text) + '</p>';
       dlg += '<input autofocus onFocus="this.select()" readonly size=' + link.length + ' value=' + link + '></input><br>';
-      dlg += '<div id="share-buttons-div" class="social-buttons-div"><a class="twitter-share-button" href="https://twitter.com/intent/tweet" data-size="large" data-url="' + link + '" data-hashtags="routegadget2" data-related="MaprunnerGB">Tweet</a><script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>';
+      dlg += '<div id="share-buttons-div" class="social-buttons-div"><a class="twitter-share-button" href="https://twitter.com/intent/tweet" data-size="large" data-url="' + link + '" data-hashtags="routegadget2" data-related="MaprunnerGB">Tweet</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>';
       dlg += '<div class="fb-share-button" data-href="' + link + '" data-layout="button" data-size="large"></div></div></div>';
       return dlg;
     },
