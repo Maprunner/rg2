@@ -1755,7 +1755,7 @@ function getResultsForEvent($eventid) {
       // look for RG2 extra fields in dbid
       $databaseid = encode_rg_input($data[5]);
       $pos = strpos($databaseid, "_#");
-      if ($pos) {
+      if ($pos !== FALSE) {
         $extras = explode("#", substr($databaseid, $pos + 2));
         if (count($extras) == 2) {
           $detail["position"] = $extras[0];
