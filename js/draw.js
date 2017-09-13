@@ -476,6 +476,7 @@
       this.gpstrack.routeData.comments = $("#rg2-new-comments").val();
 
       $("#btn-undo-gps-adjust").button("disable");
+      this.setDeltas();
       this.postRoute();
     },
 
@@ -487,7 +488,21 @@
       // don't need start control so remove it
       this.gpstrack.routeData.controlx.splice(0, 1);
       this.gpstrack.routeData.controly.splice(0, 1);
+      this.setDeltas();
       this.postRoute();
+    },
+
+    setDeltas : function () {
+      var i;
+      // send as differences rather than absolute values: provides almost 50% reduction in size of json file
+      for (i = this.gpstrack.routeData.x.length - 1; i > 0; i -= 1) {
+        this.gpstrack.routeData.x[i] = this.gpstrack.routeData.x[i] - this.gpstrack.routeData.x[i - 1];
+        this.gpstrack.routeData.y[i] = this.gpstrack.routeData.y[i] - this.gpstrack.routeData.y[i - 1];
+      }
+      // in theory time is same length as x and y but why take the risk...
+      for (i = this.gpstrack.routeData.time.length - 1; i > 0; i -= 1) {
+        this.gpstrack.routeData.time[i] = this.gpstrack.routeData.time[i] - this.gpstrack.routeData.time[i - 1];
+      }
     },
 
     postRoute : function () {
