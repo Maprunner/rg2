@@ -379,6 +379,11 @@
       // to allow drawing for missed controls where the split time is 0
       var i, splits;
       splits = this.gpstrack.routeData.splits;
+      // allow for events with no results: splits will be a start and finish time only
+      // in this case just move to next control
+      if (splits.length === 2) {
+        return thisControl + 1;
+      }
       for (i = thisControl + 1; i < splits.length; i += 1) {
         if (splits[i] !== splits[i - 1]) {
           return i;
@@ -393,12 +398,17 @@
       // to allow drawing for missed controls where the split time is 0
       var i, splits;
       splits = this.gpstrack.routeData.splits;
+      // allow for events with no results: splits will be a start and finish time only
+      // in this case just move to previous control
+      if (splits.length === 2) {
+        return thisControl - 1;
+      }
       for (i = thisControl - 1; i > 0; i -= 1) {
         if (splits[i] !== splits[i - 1]) {
           return i;
         }
       }
-      // got back to start...
+      // go back to start...
       return 0;
     },
 
