@@ -104,14 +104,27 @@
     },
 
     getAnimationNames : function (time) {
-      var i, html;
+      var i, j, html, tracks;
+      // major refactoring for #400
+      // get all tracks displayed so we can add them of they are not animated as well
+      tracks = rg2.results.getDisplayedTrackDetails();
       html = "";
-      if (this.runners.length < 1) {
-        return html;
-      }
       for (i = 0; i < this.runners.length; i += 1) {
         html += "<p style='color:" + this.runners[i].colour + ";'>" + this.runners[i].coursename + ": ";
         html += this.runners[i].name.trim() + ": " + this.getDistanceAtTime(this.runners[i].cumulativeDistance, time) + " " + this.units;
+        // make sure we don't display things twice if display AND animate boxes checked
+        for (j = 0; j < tracks.length; j += 1) {
+          if (tracks[j].id === this.runners[i].runnerid) {
+            tracks[j].displayed = true;
+            break;
+          }
+        }
+      }
+      // add names where just the track is displayed
+      for (j = 0; j < tracks.length; j += 1) {
+        if (!tracks[j].displayed) {
+          html += "<p style='color:" + tracks[j].colour + ";'>" + tracks[j].course + ": " + tracks[j].name.trim();
+        }
       }
       return html;
     },
