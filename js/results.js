@@ -355,7 +355,6 @@
           info.course = rg2.courses.getCourseName(this.results[i].courseid);
           info.name = this.results[i].name;
           info.id = i;
-          info.displayed = false;
           tracks.push(info);
         }
       }

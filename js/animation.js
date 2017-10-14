@@ -104,28 +104,48 @@
     },
 
     getAnimationNames : function (time) {
-      var i, j, html, tracks;
+      var i, html, tracks, info, oldCourse;
       // major refactoring for #400
       // get all tracks displayed so we can add them of they are not animated as well
       tracks = rg2.results.getDisplayedTrackDetails();
-      html = "";
       for (i = 0; i < this.runners.length; i += 1) {
-        html += "<p style='color:" + this.runners[i].colour + ";'>" + this.runners[i].coursename + ": ";
-        html += this.runners[i].name.trim() + ": " + this.getDistanceAtTime(this.runners[i].cumulativeDistance, time) + " " + this.units;
-        // make sure we don't display things twice if display AND animate boxes checked
-        for (j = 0; j < tracks.length; j += 1) {
-          if (tracks[j].id === this.runners[i].runnerid) {
-            tracks[j].displayed = true;
-            break;
+        // people can be in both lists: just accept it since they have two different colours
+        info = {};
+        info.colour = this.runners[i].colour;
+        info.course = this.runners[i].coursename;
+        info.name = this.runners[i].name.trim();
+        info.distance = this.getDistanceAtTime(this.runners[i].cumulativeDistance, time);
+        tracks.push(info);
+      }
+      tracks.sort(function (a, b) {
+        if (a.course !== b.course) {
+          if (a.course > b.course) {
+            return 1;
           }
+          return -1;
         }
-      }
-      // add names where just the track is displayed
-      for (j = 0; j < tracks.length; j += 1) {
-        if (!tracks[j].displayed) {
-          html += "<p style='color:" + tracks[j].colour + ";'>" + tracks[j].course + ": " + tracks[j].name.trim();
+        if (a.name > b.name) {
+          return 1;
         }
+        if (a.name < b.name) {
+          return -1;
+        }
+        return 0;
+      });
+      html = "<table>";
+      oldCourse = "";
+      for (i = 0; i < tracks.length; i += 1) {
+        if (oldCourse !== tracks[i].course) {
+          html += "<tr><th colspan='3'>" + tracks[i].course + "</th></tr>";
+          oldCourse = tracks[i].course;
+        }
+        html += "<tr><td style='color:" + tracks[i].colour + ";'><i class='fa fa-circle'></i></td><td>" + tracks[i].name + "</td><td>";
+        if (tracks[i].hasOwnProperty('distance')) {
+          html +=  tracks[i].distance + this.units;
+        }
+        html +=  "</td></tr>";
       }
+      html += "</table>";
       return html;
     },
 
