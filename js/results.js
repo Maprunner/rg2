@@ -289,17 +289,6 @@
       }
     },
 
-    updateTrackNames : function () {
-      var html;
-      $("#rg2-track-names").empty();
-      html = this.getDisplayedTrackNames();
-      if (html !== "") {
-        $("#rg2-track-names").append(html).show();
-      } else {
-        $("#rg2-track-names").hide();
-      }
-    },
-
     getTracksOnDisplay : function () {
       var i, tracks, result;
       tracks = [];
@@ -319,7 +308,6 @@
           this.results[i].putTrackOnDisplay();
         }
       }
-      this.updateTrackNames();
     },
 
     removeOneTrackFromDisplay : function (resultid) {
@@ -329,7 +317,6 @@
           this.results[i].removeTrackFromDisplay();
         }
       }
-      this.updateTrackNames();
     },
 
     updateTrackDisplay : function (courseid, display) {
@@ -343,7 +330,6 @@
           }
         }
       }
-      this.updateTrackNames();
     },
 
     getDisplayedTrackNames : function () {
@@ -356,6 +342,23 @@
         }
       }
       return html;
+    },
+
+    getDisplayedTrackDetails : function () {
+      // used to populate rg2-track-names within animation on screen redraw
+      var i, tracks, info;
+      tracks = [];
+      for (i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].displayTrack) {
+          info = {};
+          info.colour = this.results[i].trackColour;
+          info.course = rg2.courses.getCourseName(this.results[i].courseid);
+          info.name = this.results[i].name;
+          info.id = i;
+          tracks.push(info);
+        }
+      }
+      return tracks;
     },
 
     resultIDExists : function (resultid) {

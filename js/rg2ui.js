@@ -526,7 +526,9 @@
       $select.empty().append(html).menu({
         select : function (event, ui) {
           /*jslint unparam:true*/
-          rg2.loadEvent(ui.item[0].id);
+          var id;
+          id = parseInt(ui.item[0].id.replace('event-', ''), 10);
+          rg2.loadEvent(id);
           rg2.requestedHash.setNewEvent(rg2.events.getKartatEventID());
         }
       });

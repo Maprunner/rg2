@@ -76,8 +76,9 @@
     },
 
     updateAnimationDetails : function () {
-      var html = this.getAnimationNames(this.animationSecs);
-      if (html !== "") {
+      var html;
+      if (this.runners.length > 0) {
+        html = this.getAnimationNames(this.animationSecs);
         $("#rg2-track-names").empty().append(html).show();
         $("#rg2-animation-controls").show();
       } else {
@@ -104,20 +105,65 @@
     },
 
     getAnimationNames : function (time) {
-      var i, html;
-      html = "";
-      if (this.runners.length < 1) {
-        return html;
-      }
+      var i, html, tracks, info, oldCourse;
+      // major refactoring for #400
+      // get all tracks displayed so we can add them of they are not animated as well
+      tracks = rg2.results.getDisplayedTrackDetails();
       for (i = 0; i < this.runners.length; i += 1) {
-        html += "<p style='color:" + this.runners[i].colour + ";'>" + this.runners[i].coursename + ": ";
-        html += this.runners[i].name.trim() + ": " + this.getDistanceAtTime(this.runners[i].cumulativeDistance, time) + " " + this.units;
+        // people can be in both lists: just accept it since they have two different colours
+        info = {};
+        info.colour = this.runners[i].colour;
+        info.course = this.runners[i].coursename;
+        info.name = this.runners[i].name.trim();
+        if (this.realTime) {
+          info.distance = this.getDistanceAtTime(i, this.animationSecs - this.runners[i].starttime);
+        } else {
+          info.distance = this.getDistanceAtTime(i, time);
+        }
+        tracks.push(info);
       }
+      tracks.sort(function (a, b) {
+        if (a.course !== b.course) {
+          if (a.course > b.course) {
+            return 1;
+          }
+          return -1;
+        }
+        if (a.name > b.name) {
+          return 1;
+        }
+        if (a.name < b.name) {
+          return -1;
+        }
+        return 0;
+      });
+      html = "<table>";
+      oldCourse = "";
+      for (i = 0; i < tracks.length; i += 1) {
+        if (oldCourse !== tracks[i].course) {
+          html += "<tr><th colspan='3'>" + tracks[i].course + "</th></tr>";
+          oldCourse = tracks[i].course;
+        }
+        html += "<tr><td style='color:" + tracks[i].colour + ";'><i class='fa fa-circle'></i></td><td class='align-left'>" + tracks[i].name + "</td>";
+        if (tracks[i].hasOwnProperty('distance')) {
+          html +=  "<td class='align-right'>" + tracks[i].distance + this.units;
+        } else {
+          html += "<td>";
+        }
+        html +=  "</td></tr>";
+      }
+      html += "</table>";
       return html;
     },
 
-    getDistanceAtTime : function (cumDist, time) {
-      return (time > (cumDist.length - 1)) ? cumDist[cumDist.length - 1] : cumDist[time];
+    getDistanceAtTime : function (idx, time) {
+      var dist, cumDist;
+      cumDist = this.runners[idx].cumulativeDistance;
+      dist = (time > (cumDist.length - 1)) ? cumDist[cumDist.length - 1] : cumDist[time];
+      if (dist === undefined) {
+        dist = 0;
+      }
+      return dist;
     },
 
     getMaxControls : function () {
@@ -410,7 +456,7 @@
 
         // t runs as real time seconds or 0-based seconds depending on this.realTime
         //runner.x[] is always indexed in 0-based time so needs to be adjusted for starttime offset
-        for (t = this.tailStartTimeSecs; t <= this.animationSecs; t += 1) {
+        for (t = this.tailStartTimeSecs; t < this.animationSecs; t += 1) {
           if ((t > timeOffset) && ((t - timeOffset) < runner.nextStopTime)) {
             rg2.ctx.lineTo(runner.x[t - timeOffset], runner.y[t - timeOffset]);
           }

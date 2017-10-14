@@ -1,6 +1,6 @@
 <?php
 // version replaced by Gruntfile as part of release
-define ('RG2VERSION', '1.4.5');
+define ('RG2VERSION', '1.4.6');
 
 if (file_exists( dirname(__FILE__) . '/rg2-config.php')) {
   require_once( dirname(__FILE__) . '/rg2-config.php' );
@@ -92,7 +92,7 @@ if (isset($_GET['lang'])) {
 header('Content-type: text/html; charset=utf-8');
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <title>Routegadget 2</title>

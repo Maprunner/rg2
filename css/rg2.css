@@ -336,7 +336,7 @@ html, body {
   padding: 0;
 }
 
-#rg2-track-names {
+.track-names {
    border: 1px solid darkgray;
    background: rgb(204, 204, 204);
    background: rgba(204, 204, 204, 0.75);
@@ -352,8 +352,18 @@ html, body {
    overflow: auto;
 }
 
-#rg2-track-names p {
-   margin: 0;
+.align-right {
+   text-align: right;
+}
+
+.align-left {
+   text-align: left;
+}
+
+.track-names th {
+  background: rgb(150, 150, 150);
+  background: rgba(150, 150, 150, 0.75);
+  text-align: left;
 }
 
 #rg2-replay-start-control {
