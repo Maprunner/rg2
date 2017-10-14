@@ -76,8 +76,9 @@
     },
 
     updateAnimationDetails : function () {
-      var html = this.getAnimationNames(this.animationSecs);
-      if (html !== "") {
+      var html;
+      if (this.runners.length > 0) {
+        html = this.getAnimationNames(this.animationSecs);
         $("#rg2-track-names").empty().append(html).show();
         $("#rg2-animation-controls").show();
       } else {
@@ -114,7 +115,11 @@
         info.colour = this.runners[i].colour;
         info.course = this.runners[i].coursename;
         info.name = this.runners[i].name.trim();
-        info.distance = this.getDistanceAtTime(this.runners[i].cumulativeDistance, time);
+        if (this.realTime) {
+          info.distance = this.getDistanceAtTime(i, this.animationSecs - this.runners[i].starttime);
+        } else {
+          info.distance = this.getDistanceAtTime(i, time);
+        }
         tracks.push(info);
       }
       tracks.sort(function (a, b) {
@@ -139,9 +144,11 @@
           html += "<tr><th colspan='3'>" + tracks[i].course + "</th></tr>";
           oldCourse = tracks[i].course;
         }
-        html += "<tr><td style='color:" + tracks[i].colour + ";'><i class='fa fa-circle'></i></td><td>" + tracks[i].name + "</td><td>";
+        html += "<tr><td style='color:" + tracks[i].colour + ";'><i class='fa fa-circle'></i></td><td class='align-left'>" + tracks[i].name + "</td>";
         if (tracks[i].hasOwnProperty('distance')) {
-          html +=  tracks[i].distance + this.units;
+          html +=  "<td class='align-right'>" + tracks[i].distance + this.units;
+        } else {
+          html += "<td>";
         }
         html +=  "</td></tr>";
       }
@@ -149,8 +156,14 @@
       return html;
     },
 
-    getDistanceAtTime : function (cumDist, time) {
-      return (time > (cumDist.length - 1)) ? cumDist[cumDist.length - 1] : cumDist[time];
+    getDistanceAtTime : function (idx, time) {
+      var dist, cumDist;
+      cumDist = this.runners[idx].cumulativeDistance;
+      dist = (time > (cumDist.length - 1)) ? cumDist[cumDist.length - 1] : cumDist[time];
+      if (dist === undefined) {
+        dist = 0;
+      }
+      return dist;
     },
 
     getMaxControls : function () {
@@ -443,7 +456,7 @@
 
         // t runs as real time seconds or 0-based seconds depending on this.realTime
         //runner.x[] is always indexed in 0-based time so needs to be adjusted for starttime offset
-        for (t = this.tailStartTimeSecs; t <= this.animationSecs; t += 1) {
+        for (t = this.tailStartTimeSecs; t < this.animationSecs; t += 1) {
           if ((t > timeOffset) && ((t - timeOffset) < runner.nextStopTime)) {
             rg2.ctx.lineTo(runner.x[t - timeOffset], runner.y[t - timeOffset]);
           }

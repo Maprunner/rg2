@@ -352,11 +352,16 @@ html, body {
    overflow: auto;
 }
 
-.track-names td {
+.align-right {
+   text-align: right;
+}
+
+.align-left {
    text-align: left;
 }
 
 .track-names th {
+  background: rgb(150, 150, 150);
   background: rgba(150, 150, 150, 0.75);
   text-align: left;
 }
