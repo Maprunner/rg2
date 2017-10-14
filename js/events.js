@@ -148,7 +148,7 @@
         if (this.events[i].comment !== "") {
           title += ": " + this.events[i].comment;
         }
-        html += '<li title="' + title + '" id=' + i + "><a href='#" + this.events[i].kartatid + "'>";
+        html += '<li title="' + title + '" id=event-' + i + "><a href='#" + this.events[i].kartatid + "'>";
         if (this.events[i].comment !== "") {
           html += "<i class='fa fa-info-circle event-info-icon' id='info-" + i + "'></i>";
         }

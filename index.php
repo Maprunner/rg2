@@ -92,7 +92,7 @@ if (isset($_GET['lang'])) {
 header('Content-type: text/html; charset=utf-8');
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <title>Routegadget 2</title>
