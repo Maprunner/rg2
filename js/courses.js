@@ -75,8 +75,8 @@
       var i, dropdown;
       dropdown = document.getElementById("rg2-control-select");
       $("#rg2-control-select").empty();
-      dropdown.options.add(rg2.utils.generateOption(rg2.config.MASS_START_BY_CONTROL, "By control"));
       dropdown.options.add(rg2.utils.generateOption(0, "S"));
+      dropdown.options.add(rg2.utils.generateOption(rg2.config.MASS_START_BY_CONTROL, "By control"));
       for (i = 1; i < this.highestControlNumber; i += 1) {
         dropdown.options.add(rg2.utils.generateOption(i, i));
       }
