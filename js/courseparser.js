@@ -2,8 +2,10 @@
 (function () {
   function CourseParser(evt, worldfile, localWorldfile) {
     this.courses = [];
+    this.courseClassMapping = [];
     this.newcontrols = new rg2.Controls();
     this.courses.length = 0;
+    this.courseClassMapping.length = 0;
     this.fromCondes = false;
     this.coursesGeoreferenced = false;
     this.newcontrols.deleteAllControls();
@@ -11,7 +13,7 @@
     this.localWorldfile = localWorldfile;
     this.worldfile = worldfile;
     this.processCoursesXML(evt.target.result);
-    return {courses: this.courses, newcontrols: this.newcontrols, georeferenced: this.coursesGeoreferenced};
+    return {courses: this.courses, newcontrols: this.newcontrols, mapping: this.courseClassMapping, georeferenced: this.coursesGeoreferenced};
   }
 
   CourseParser.prototype = {
@@ -96,6 +98,9 @@
       // extract all courses
       nodelist = xml.getElementsByTagName('Course');
       this.extractV3Courses(nodelist);
+      // extract all course/class mappings
+      nodelist = xml.getElementsByTagName('ClassCourseAssignment');
+      this.extractV3CourseClassMapping(nodelist);
     },
 
     getXYFromLatLng : function (latLng) {
@@ -165,6 +170,16 @@
         codes = this.extractCodesFromControlList(nodelist[i], "Control");
         // courseid 0 for now: set when result mapping is known
         this.courses.push({courseid: 0, x: x, y: y, codes: codes, name: name});
+      }
+      $("#rg2-select-course-file").addClass('valid');
+    },
+
+    extractV3CourseClassMapping : function (nodelist) {
+      var i, course, className;
+      for (i = 0; i < nodelist.length; i += 1) {
+        course = nodelist[i].getElementsByTagName('CourseName')[0].textContent.trim();
+        className = nodelist[i].getElementsByTagName('ClassName')[0].textContent.trim();
+        this.courseClassMapping.push({'course': course, 'className': className});
       }
       $("#rg2-select-course-file").addClass('valid');
     },
