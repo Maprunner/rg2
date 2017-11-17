@@ -485,8 +485,14 @@
     },
 
     getCourseHeader : function (result) {
-      var html;
-      html = "<h3>" + result.coursename + "<input class='showcourse' id=" + result.courseid + " type=checkbox name=course title='Show course'></input></h3><div>";
+      var html, info, text;
+      text = result.coursename;
+      info = rg2.courses.getCourseDetails(result.courseid);
+      // need to protect against some old events with dodgy results
+      if (info) {
+        text += info.length === undefined ? '' : ": " + info.length + ' km';
+      }
+      html = "<h3>" + text + "<input class='showcourse' id=" + result.courseid + " type=checkbox name=course title='Show course'></input></h3><div>";
       // Add the search bar with the id of the course name
       html += "<div class='input-group margin-bottom-sm'><span class='input-group-addon'><i class='fa fa-search fa-fw'></i></span><input type='text' class='form-control rg2-result-search' id='search-" + result.courseid + "' placeholder='" + rg2.t("Search") + "'></div>";
       // Start the table with an id that relates to the course name to help with the filtering function
