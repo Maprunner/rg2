@@ -30,20 +30,21 @@ var rg2 = (function (window, $) {
     var stats, resultsinfo, coursearray;
     resultsinfo = rg2.results.getResultsInfo();
     coursearray = rg2.courses.getCoursesForEvent();
-    stats = "<tr><td><strong>" + rg2.t("Courses") + "</strong></td><td>" + coursearray.length + "</td></tr>";
-    stats += "<tr><td><strong>" + rg2.t("Controls") + "</strong></td><td>" + controls + "</td></tr>";
-    stats += "<tr><td><strong>" + rg2.t("Results") + "</strong></td><td>" + resultsinfo.results + "</td></tr>";
-    stats += "<tr><td><strong>" + rg2.t("Routes") + "</strong></td><td>" + resultsinfo.totalroutes + " (" + resultsinfo.percent + "%)</td></tr>";
-    stats += "<tr><td><strong>" + rg2.t("Drawn routes") + "</strong></td><td>" + resultsinfo.drawnroutes + "</td></tr>";
-    stats += "<tr><td><strong>" + rg2.t("GPS routes") + "</strong></td><td>" + resultsinfo.gpsroutes + "</td></tr>";
-    stats += "<tr><td><strong>" + rg2.t("Total time") + "</strong></td><td>" + resultsinfo.time + "</td></tr>";
+    stats = "<tr><td><strong>" + rg2.t("Courses") + "</strong></td><td>" + coursearray.length + "</td>";
+    stats += "<td><strong>" + rg2.t("Controls") + "</strong></td><td>" + controls + "</td>";
+    stats += "<td><strong>" + rg2.t("Results") + "</strong></td><td>" + resultsinfo.results + "</td></tr>";
+    stats += "<tr><td><strong>" + rg2.t("Routes") + "</strong></td><td>" + resultsinfo.totalroutes + " (" + resultsinfo.percent + "%)</td>";
+    stats += "<td><strong>" + rg2.t("Drawn routes") + "</strong></td><td>" + resultsinfo.drawnroutes + "</td>";
+    stats += "<td><strong>" + rg2.t("GPS routes") + "</strong></td><td>" + resultsinfo.gpsroutes + "</td></tr>";
+    stats += "<tr><td><strong>" + rg2.t("Total time") + "</strong></td><td colspan='5'>" + resultsinfo.time + "</td></tr>";
     return stats;
   }
 
   function getMapStats(validWordlfile) {
     var stats, mapSize;
     mapSize = rg2.getMapSize();
-    stats = "<tr><td><strong>" +  rg2.t("Map") + "</strong></td><td>ID " + rg2.events.getActiveMapID() + ", " + mapSize.width + " x " + mapSize.height + " pixels";
+    stats = "<tr><td><strong>" +  rg2.t("Map") + "</strong></td><td colspan='5'>ID " + rg2.events.getActiveMapID();
+    stats += ", " + mapSize.width + " x " + mapSize.height + " pixels";
     if (validWordlfile) {
       stats += ". " +  rg2.t("Map is georeferenced") + ".</td></tr>";
     } else {
@@ -62,10 +63,11 @@ var rg2 = (function (window, $) {
     id = rg2.events.getKartatEventID();
     eventinfo = rg2.events.getEventInfo(parseInt(id, 10));
     runnercomments = rg2.results.getComments();
-    stats = "<div><table><thead><tr><th colspan='3'><h2>" + rg2.t("Event statistics") + ": " + eventinfo.name + ": " + eventinfo.date + "</h2></th></tr></thead><tbody>";
+    stats = "<div><table><thead><tr><th colspan='6'><h2>" + rg2.t("Event statistics") + ": " + eventinfo.name;
+    stats += ": " + eventinfo.date + "</h2></th></tr></thead><tbody>";
     stats += getResultsStats(eventinfo.controls);
     if (eventinfo.comment) {
-      stats += "<tr><td>" + rg2.t("Comments") + "</td><td>" + eventinfo.comment + "</td></tr>";
+      stats += "<tr><td><strong>" + rg2.t("Comments") + "</strong></td><td colspan='5'>" + eventinfo.comment + "</td></tr>";
     }
     stats += getMapStats(eventinfo.worldfile.valid);
     stats += "</tbody></table>";

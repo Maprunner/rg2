@@ -11,6 +11,10 @@ html, body {
   font: 16px/26px -apple-system,"Roboto","Segoe UI","Helvetica Neue",Arial,sans-serif;
 }
 
+.ui-widget {
+  font: -apple-system,"Roboto","Segoe UI","Helvetica Neue",Arial,sans-serif;
+}
+
 #rg2-header-container {
     background: #002bd9;
     color: white;
@@ -149,14 +153,19 @@ html, body {
 }
 
 #rg2-about-dialog thead tr {
-  background: #bbb;
+  background: #002bd9;
+  color: #fff
 }
 
 #rg2-about-dialog thead th {
   text-align: left;
 }
 
-#rg2-about-dialog tbody tr:nth-child(odd) {
+#rg2-about-dialog tbody td:nth-child(odd) {
+  background: #ddd;
+}
+
+#rg2-about-dialog tbody td:nth-child(even) {
   background: #eee;
 }
 
