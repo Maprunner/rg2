@@ -35,7 +35,7 @@
       for (i = 1; i < this.x.length; i += 1) {
         length += rg2.utils.getDistanceBetweenPoints(this.x[i], this.y[i], this.x[i - 1], this.y[i - 1]);
       }
-      return (length / 1000).toFixed(1);
+      return (length * metresPerPixel / 1000).toFixed(1);
     },
 
     setAngles : function () {
