@@ -24,7 +24,7 @@ module.exports = function(grunt) {
   var clubs = ['aire', 'albania', 'ayroc', 'bado', 'baoc', 'basoc', 'bko', 'boc', 'bok', 'bl', 'chig', 'claro', 'clyde', 'coboc', 'cuoc', 'cvfr', 'darkandwhite', 'dee',
    'devonoc', 'ebor', 'ecko', 'elo', 'epoc', 'esoc', 'euoc', 'gmoa', 'gramp', 'go', 'halo', 'happyherts', 'havoc', 'hoc', 'interlopers', 'invoc', 'jk',
    'kerno', 'kfo', 'lamm', 'leioc', 'loc', 'log', 'lok', 'lvo', 'maroc', 'mdoc', 'mid-wales', 'moravian', 'mvoc', 'nato', 'ngoc', 'noroc', 'nwo', 'od', 'omm', 'ouoc',
-   'pfo', 'potoc', 'quantock', 'rafo', 'roxburghreivers', 'sa', 'sarum', 'saxons', 'sboc', 'scottish6days', 'seloc', 'slow', 'smbo', 'smoc', 'sn', 'so', 'soa', 'soc',
+   'pfo', 'potoc', 'quantock', 'rafo', 'roxburghreivers', 'sa', 'sarum', 'saxons', 'sboc', 'scottish6days', 'seloc', 'slow', 'slmm', 'smbo', 'smoc', 'sn', 'so', 'soa', 'soc',
    'solway', 'sportident', 'sroc', 'stag', 'start', 'suffoc', 'swoc', 'syo', 'tay', 'test', 'purple-thistle', 'tinto', 'tvoc', 'walton', 'waoc', 'wcoc', 'wim', 'wmoc',
    'wrekin', 'wsco2008', 'wsx'];
   

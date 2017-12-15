@@ -44,7 +44,6 @@ html, body {
   width: 90%;
 }
 #rg2-course-select, #rg2-name-select {
-  float: right;
   min-width: 200px;
   max-width: 200px;
 }
@@ -200,9 +199,6 @@ html, body {
 }
 
 .showcourse {
-	float: right;
-}
-.event-info-icon {
 	float: right;
 }
 
@@ -638,7 +634,6 @@ body {
 #rg2-option-controls input[type="checkbox"] {
   margin-left: 10px;
   margin-top: 10px;
-  float: right;
 }
 
 #rg2-draw .ui-button {
