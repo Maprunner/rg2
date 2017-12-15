@@ -1,6 +1,7 @@
 {
-	"name": "RG2",
-	"icons": [
+	"name": "Routegadget 2",
+	"short_name": "RG2",
+  "icons": [
 		{
 			"src": "\/android-chrome-192x192.png",
 			"sizes": "192x192",
@@ -12,6 +13,7 @@
 			"type": "image\/png"
 		}
 	],
+  "background_color": "#002bd9",
 	"theme_color": "#ffffff",
 	"display": "standalone"
 }

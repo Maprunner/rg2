@@ -119,8 +119,7 @@
     getMetresPerPixel : function () {
       var lat1, lat2, lon1, lon2, size, pixels, w;
       if ((this.activeEventID === null) || (!this.mapIsGeoreferenced())) {
-        // 1 is as harmless as anything else in this situation
-        return 1;
+        return undefined;
       }
       size = rg2.getMapSize();
       pixels = rg2.utils.getDistanceBetweenPoints(0, 0, size.width, size.height);

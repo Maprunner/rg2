@@ -94,6 +94,9 @@
       this.x[0] = itemsx[0];
       this.y[0] = itemsy[0];
       metresPerPixel = rg2.events.getMetresPerPixel();
+      if (metresPerPixel === undefined) {
+        metresPerPixel = 1;
+      }
       for (item = 1; item < itemstime.length; item += 1) {
         tox = itemsx[item];
         toy = itemsy[item];

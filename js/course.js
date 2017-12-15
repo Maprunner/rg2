@@ -15,6 +15,7 @@
     // save angle to show control code text
     this.textAngle = [];
     this.setAngles();
+    this.length = this.setLength();
   }
 
   Course.prototype = {
@@ -22,6 +23,19 @@
 
     incrementTracksCount : function () {
       this.trackcount += 1;
+    },
+
+    setLength : function () {
+      var i, length, metresPerPixel;
+      length = 0;
+      metresPerPixel = rg2.events.getMetresPerPixel();
+      if ((metresPerPixel === undefined) || this.isScoreCourse) {
+        return undefined;
+      }
+      for (i = 1; i < this.x.length; i += 1) {
+        length += rg2.utils.getDistanceBetweenPoints(this.x[i], this.y[i], this.x[i - 1], this.y[i - 1]);
+      }
+      return (length * metresPerPixel / 1000).toFixed(1);
     },
 
     setAngles : function () {

@@ -11,6 +11,10 @@ html, body {
   font: 16px/26px -apple-system,"Roboto","Segoe UI","Helvetica Neue",Arial,sans-serif;
 }
 
+.ui-widget {
+  font: -apple-system,"Roboto","Segoe UI","Helvetica Neue",Arial,sans-serif;
+}
+
 #rg2-header-container {
     background: #002bd9;
     color: white;
@@ -40,7 +44,6 @@ html, body {
   width: 90%;
 }
 #rg2-course-select, #rg2-name-select {
-  float: right;
   min-width: 200px;
   max-width: 200px;
 }
@@ -149,14 +152,19 @@ html, body {
 }
 
 #rg2-about-dialog thead tr {
-  background: #bbb;
+  background: #002bd9;
+  color: #fff
 }
 
 #rg2-about-dialog thead th {
   text-align: left;
 }
 
-#rg2-about-dialog tbody tr:nth-child(odd) {
+#rg2-about-dialog tbody td:nth-child(odd) {
+  background: #ddd;
+}
+
+#rg2-about-dialog tbody td:nth-child(even) {
   background: #eee;
 }
 
@@ -191,9 +199,6 @@ html, body {
 }
 
 .showcourse {
-	float: right;
-}
-.event-info-icon {
 	float: right;
 }
 
@@ -350,6 +355,8 @@ html, body {
    z-index: 90;
    max-height: 500px;
    overflow: auto;
+   margin-top:5px;
+   margin-right: 5px;
 }
 
 .align-right {
@@ -627,7 +634,6 @@ body {
 #rg2-option-controls input[type="checkbox"] {
   margin-left: 10px;
   margin-top: 10px;
-  float: right;
 }
 
 #rg2-draw .ui-button {

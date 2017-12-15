@@ -1,6 +1,6 @@
 <?php
 // version replaced by Gruntfile as part of release
-define ('RG2VERSION', '1.4.6');
+define ('RG2VERSION', '1.4.7');
 
 if (file_exists( dirname(__FILE__) . '/rg2-config.php')) {
   require_once( dirname(__FILE__) . '/rg2-config.php' );
@@ -119,7 +119,7 @@ header('Content-type: text/html; charset=utf-8');
     <link rel="manifest" href='<?php echo $source_url ."/img/manifest.json"; ?>'>
     <link rel="mask-icon" href='<?php echo $source_url ."/img/safari-pinned-tab.svg"; ?>' color="#5bbad5">
     <meta name="theme-color" content="#ffffff">    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css"; ?>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
   <?php if ($debug) { ?>
     <link rel="stylesheet" href='<?php echo $source_url ."/css/rg2.css'>"; ?>
   <?php } else { ?>
@@ -179,11 +179,11 @@ header('Content-type: text/html; charset=utf-8');
           <h3 class="no-top-margin" id='rg2-draw-title'>Draw route</h3>
           <div id="rg2-select-course">
            <label for='rg2-course-select'>Select course: </label>
-           <select  id="rg2-course-select"></select>
+           <select id="rg2-course-select" class="pushright"></select>
           </div>
           <div id="rg2-select-name">
            <label for='rg2-name-select'>Select name: </label>
-           <select id="rg2-name-select"></select>
+           <select id="rg2-name-select" class="pushright"></select>
           </div>
           <div id="rg2-enter-name">
            <div>

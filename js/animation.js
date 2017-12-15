@@ -107,10 +107,10 @@
     getAnimationNames : function (time) {
       var i, html, tracks, info, oldCourse;
       // major refactoring for #400
-      // get all tracks displayed so we can add them of they are not animated as well
+      // get all tracks displayed so we can add them if they are not animated as well
       tracks = rg2.results.getDisplayedTrackDetails();
       for (i = 0; i < this.runners.length; i += 1) {
-        // people can be in both lists: just accept it since they have two different colours
+        // people can be in both lists: just accept it
         info = {};
         info.colour = this.runners[i].colour;
         info.course = this.runners[i].coursename;
@@ -122,6 +122,15 @@
         }
         tracks.push(info);
       }
+      if (tracks.length === 0) {
+        return "";
+      }
+      // need to do this to allow a stable (deterministic) sort
+      // otherwise people with same colour can end up next to each other in name list
+      // still not perfect but better than it was
+      for (i = 0; i < tracks.length; i += 1) {
+        tracks[i].index = i;
+      }
       tracks.sort(function (a, b) {
         if (a.course !== b.course) {
           if (a.course > b.course) {
@@ -129,10 +138,10 @@
           }
           return -1;
         }
-        if (a.name > b.name) {
+        if (a.index > b.index) {
           return 1;
         }
-        if (a.name < b.name) {
+        if (a.index < b.index) {
           return -1;
         }
         return 0;
