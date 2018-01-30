@@ -6,7 +6,7 @@
     this.resultCourses = [];
     this.valid = true;
     parsedResults = this.processResults(evt, fileFormat);
-    this.results = parsedResults.results;
+    this.results = this.sortResults(parsedResults.results);
     this.valid = parsedResults.valid;
     this.getCoursesFromResults();
     return {results: this.results, resultCourses: this.resultCourses, valid: this.valid};
@@ -27,6 +27,32 @@
         rg2.utils.showWarningDialog("File type error", "Results file type is not recognised. Please select a valid file.");
         return {results: [], valid: false};
       }
+    },
+
+    sortResults : function (unsortedResults) {
+    	// Sort un-ordered XML data
+    	// sort keys in order are: position, time, name
+    	return unsortedResults.sort( function (a, b) {
+    		if (a.position != '' && b.position != '' ) {
+    			// sort by position, if available
+				return a.position - b.position;
+    		} else if ( a.position == '' && position != '') {
+    			//
+    			return 1;
+    		} else if ( a.position != '' && position == '') {
+    			//
+    			return -1;
+    		} else {
+    			// sort by time, if available
+    			if (a.time == 0 && b.time == 0) {
+    				// sort by name, when no time
+    				return a.name - b.name
+    			} else {
+    				//
+    				return a.time - b.time;
+    			}
+    		}
+    	});
     },
 
     getCoursesFromResults : function () {
