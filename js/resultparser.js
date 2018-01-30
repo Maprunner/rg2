@@ -30,58 +30,58 @@
     },
 
     hasZeroTime : function (time) {
-    	if (time == 0 || time == '0' || time == '0:00' || time == '00:00' ) {
-    		return true;
-    	} else {
-    		return false;
-    	}
+        if (time == 0 || time == '0' || time == '0:00' || time == '00:00' ) {
+            return true;
+        } else {
+            return false;
+        }
     },
     
     sortResultItems : function (a, b) {
-		if (a.position != '' && b.position != '' ) {
-			// sort by position, if available
-			return a.position - b.position;
-		} else if ( a.position == '' && b.position != '') {
-			//
-			return 1;
-		} else if ( a.position != '' && b.position == '') {
-			//
-			return -1;
-		} else {
-			// sort by time, if available
-			if (this.rg2.ResultParser.prototype.hasZeroTime(a.time) && this.rg2.ResultParser.prototype.hasZeroTime(b.time)) {
-				// sort by name, when no time
-				return a.name - b.name;
-			} else {
-				//
-				return a.time - b.time;
-			}
-		}
-	},
+        if (a.position != '' && b.position != '' ) {
+            // sort by position, if available
+            return a.position - b.position;
+        } else if ( a.position == '' && b.position != '') {
+            //
+            return 1;
+        } else if ( a.position != '' && b.position == '') {
+            //
+            return -1;
+        } else {
+            // sort by time, if available
+            if (this.rg2.ResultParser.prototype.hasZeroTime(a.time) && this.rg2.ResultParser.prototype.hasZeroTime(b.time)) {
+                // sort by name, when no time
+                return a.name - b.name;
+            } else {
+                //
+                return a.time - b.time;
+            }
+        }
+    },
     
     sortResults : function (unsortedResults) {
-    	// Sort un-ordered XML data
-    	// sort keys in order are: position, time, name
-    	var courses = {};
-    	
-    	// find courses
-    	for (int i = 0; i < unsortedResults.length; i+) {
-    		var coursename = unsortedResults[i].course;
-    		if (!(coursename in courses)) {
-    			courses[coursename] = [];
-    		}
-			courses[coursename].push(unsortedResults[i]);	
-    	}
-    	
-    	var sortedResults = [];
-    	
-    	for (var course in courses) {
-    		// sort courses and merge results
-    		courses[course].sort(this.sortResultItems);
-    		sortedResults = sortedResults.concat(courses[course]);
-    	}
-    	
-    	return sortedResults;
+        // Sort un-ordered XML data
+        // sort keys in order are: position, time, name
+        var courses = {};
+        
+        // find courses
+        for (int i = 0; i < unsortedResults.length; i+) {
+            var coursename = unsortedResults[i].course;
+            if (!(coursename in courses)) {
+                courses[coursename] = [];
+            }
+            courses[coursename].push(unsortedResults[i]);    
+        }
+        
+        var sortedResults = [];
+        
+        for (var course in courses) {
+            // sort courses and merge results
+            courses[course].sort(this.sortResultItems);
+            sortedResults = sortedResults.concat(courses[course]);
+        }
+        
+        return sortedResults;
     },
 
     getCoursesFromResults : function () {
