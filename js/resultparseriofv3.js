@@ -74,7 +74,7 @@
         if (timeInt <= 60) {
             return rg2.utils.formatSecsAsMMSS(timeInt);
         } else {
-            return return rg2.utils.formatSecsAsHHMMSS(timeInt);
+            return rg2.utils.formatSecsAsHHMMSS(timeInt);
         }
         
       }
