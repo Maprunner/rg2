@@ -65,7 +65,7 @@
         var courses = {};
         
         // find courses
-        for (int i = 0; i < unsortedResults.length; i+) {
+        for (var i = 0; i < unsortedResults.length; i += 1) {
             var coursename = unsortedResults[i].course;
             if (!(coursename in courses)) {
                 courses[coursename] = [];
