@@ -72,9 +72,9 @@
       if (time.length > 0) {
         var timeInt = parseInt(time[0].textContent, 10);
         if (timeInt <= 60) {
-        	return rg2.utils.formatSecsAsMMSS(timeInt);
+            return rg2.utils.formatSecsAsMMSS(timeInt);
         } else {
-        	return return rg2.utils.formatSecsAsHHMMSS(timeInt);
+            return return rg2.utils.formatSecsAsHHMMSS(timeInt);
         }
         
       }
