@@ -70,9 +70,15 @@
 
     getTotalTimeAsSeconds : function (time) {
       if (time.length > 0) {
-        return rg2.utils.formatSecsAsMMSS(parseInt(time[0].textContent, 10));
+        var timeInt = parseInt(time[0].textContent, 10);
+        if (timeInt <= 60) {
+        	return rg2.utils.formatSecsAsMMSS(timeInt);
+        } else {
+        	return return rg2.utils.formatSecsAsHHMMSS(timeInt);
+        }
+        
       }
-      return 0;
+      return '00:00';
     },
 
     extractIOFV3Results : function (resultlist, result) {
