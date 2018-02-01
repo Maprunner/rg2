@@ -1,7 +1,8 @@
 /*global rg2:false */
 rg2.setDictionary({
-  language: 'Suomi',
+// Suomeksi	
   code: 'fi',
+  language: 'Suomi',
   translation: 'mki@iki.fi',
   'Events': 'Tapahtumat',
   'Course': 'Rata',
@@ -22,6 +23,8 @@ rg2.setDictionary({
   'Reset': 'Tyhjennä',
   'Zoom out': 'Loitonna',
   'Zoom in': 'Lähennä',
+  'Rotate right': 'Käännä oikealle',
+  'Rotate left': 'Käännä vasemmalle',
   'Splits': 'Väliajat',
   'Splits table': 'Väliaikataulukko',
   'Select runners on Results tab': 'Valitse osallistuja tuloslistalta',
@@ -70,6 +73,7 @@ rg2.setDictionary({
   '+3 sec': '+3 s',
   'Undo': 'Kumoa',
   'Save GPS route': 'Tallenna GPS reitti',
+  'Align map to next control': 'Kohdista kartta seuraavaan rastipisteeseen',
   'Move track and map together (or right click-drag)': 'Siirrä reittiä ja rataa yhdessä (tai raahaa oikealla napilla)',
   'Map is georeferenced': 'Kartta on paikkatarkka',
   'International event': 'Kansainvälinen kilpailu',
@@ -95,10 +99,14 @@ rg2.setDictionary({
   'Red - locked': 'Punainen - lukittu',
   'Right click to delete a handle': 'Poista piste hiiren oikealla',
   'Drag a handle to adjust track around locked point(s)': 'Kohdista reitti siirtämällä lukitsemattomia pisteitä',
-  'Align map to next control': 'Kohdista kartta seuraavaa rastiin',
-  'Autofit': 'Automaattinen kohdistus',
+  'Autofit': 'Sovita automaattisesti',
   'Route already drawn': 'Reitti on jo piirretty',
   'If you draw a new route it will overwrite the old route for this runner.': 'Jos piirrät uuden reitin poistetaan kilpailijan vanha reitti.',
   'GPS routes are saved separately and will not be overwritten.': 'GPS reitit tallennetaan erikseen eikä niitä ylikirjoiteta.',
-  'Search': 'Hae'
+  'Route deleted': 'Reitti poistettu',
+  'Route has been deleted': 'Reitti on poistettu',
+  'Delete failed': 'Poisto epäonnistui',
+  'Search': 'Hae',
+  'Share route': 'Jaa reitti',
+  'Copy and paste this link to share your route': 'Kopio tämä linkki jakaaksesi reittisi'
 });
