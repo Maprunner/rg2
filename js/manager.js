@@ -40,6 +40,7 @@
     // state flag showing we have found the least worst encoding so use anyway
     this.useThisEncoding = false;
     this.backgroundLocked = false;
+    this.sortResults = false;
     this.handle = {x: null, y: null};
     this.maps = [];
     this.localworldfile = new rg2.Worldfile(0);
@@ -142,6 +143,9 @@
       });
       $("#btn-no-results").click(function (evt) {
         self.toggleResultsRequired(evt.target.checked);
+      });
+      $("#btn-sort-results").click(function (evt) {
+        self.toggleSortResults(evt.target.checked);
       });
       $("#rg2-load-course-file").button().click(function (evt) {
         if (!self.mapLoaded) {
@@ -442,7 +446,11 @@
         data.variants = this.variants.slice(0);
       }
       data.courses = this.courses.slice(0);
-      data.results = this.results.slice(0);
+      if (this.sortResults) {
+        data.results = this.results.slice(0).sort(this.sortResultItems);
+      } else {
+        data.results = this.results.slice(0);
+      }
       // #386 remove unused data: partial solution to problems with POST size
       for (i = 0; i < data.results.length; i += 1) {
         delete data.results[i].codes;
@@ -453,6 +461,36 @@
       data.x = user.x;
       data.y = user.y;
       return JSON.stringify(data);
+    },
+
+    hasZeroTime : function (time) {
+      if (time === 0 || time === '0' || time === '0:00' || time === '00:00') {
+        return true;
+      }
+      return false;
+    },
+
+    sortResultItems : function (a, b) {
+      // called after final courseids allocated so this is safe
+      if (a.courseid !== b.courseid) {
+        return a.courseid - b.courseid;
+      }
+      if (a.position !== '' && b.position !== '') {
+        // sort by position, if available
+        return a.position - b.position;
+      }
+      if (a.position === '' && b.position !== '') {
+        return 1;
+      }
+      if (a.position !== '' && b.position === '') {
+        return -1;
+      }
+      // sort by time, if available
+      if (this.rg2.Manager.prototype.hasZeroTime(a.time) && this.rg2.Manager.prototype.hasZeroTime(b.time)) {
+        // sort by name, when no time
+        return a.name - b.name;
+      }
+      return a.time - b.time;
     },
 
     renumberResults : function () {
@@ -1199,6 +1237,10 @@
     // locks or unlocks background when adjusting map
     toggleMoveAll : function (checkedState) {
       this.backgroundLocked = checkedState;
+    },
+
+    toggleSortResults : function (checkedState) {
+      this.sortResults = checkedState;
     },
 
     // determines if a results file is needed
