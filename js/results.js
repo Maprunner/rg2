@@ -84,12 +84,15 @@
     },
 
     // lists all runners on a given course
-    getAllRunnersForCourse : function (courseid) {
+    // withTrack = true means only return runners with a valid track
+    getAllRunnersForCourse : function (courseid, withTrack) {
       var i, runners;
       runners = [];
       for (i = 0; i < this.results.length; i += 1) {
         if (this.results[i].courseid === courseid) {
-          runners.push(i);
+          if (!withTrack || this.results[i].hasValidTrack) {
+            runners.push(i);
+          }
         }
       }
       return runners;
@@ -436,7 +439,7 @@
           if (firstCourse) {
             firstCourse = false;
           } else {
-            html += this.getBottomRow(tracksForThisCourse, oldCourseID) + "</table></div>";
+            html += this.getBottomRows(tracksForThisCourse, oldCourseID) + "</table></div>";
           }
           tracksForThisCourse = 0;
           html += this.getCourseHeader(res);
@@ -464,10 +467,14 @@
         } else {
           html += "<td></td>";
         }
-        html += "<td><input class='showreplay showreplay-" + oldCourseID + "' id=" + i + " type=checkbox name=replay></input></td>";
+        html += "<td><input class='showreplay";
+        if (res.hasValidTrack) {
+          html += " showtrackreplay";
+        }
+        html += " showreplay-" + oldCourseID + "' id=" + i + " type=checkbox name=replay></input></td>";
         html += "</tr>";
       }
-      html += this.getBottomRow(tracksForThisCourse, oldCourseID) + "</table></div></div>";
+      html += this.getBottomRows(tracksForThisCourse, oldCourseID) + "</table></div></div>";
       return html;
     },
 
@@ -500,15 +507,19 @@
       return html;
     },
 
-    getBottomRow : function (tracks, oldCourseID) {
-      // create bottom row for all tracks checkboxes
+    getBottomRows : function (tracks, oldCourseID) {
+      // create bottom rows for all tracks checkboxes
+      // first row is drawn and GPS routes (if they exist)
       var html;
-      html = "<tr class='allitemsrow'><td></td><td>" + rg2.t("All") + "</td><td></td>";
+      html = "<tr class='allitemsrow'><td></td><td>" + rg2.t("Routes") + "</td><td></td>";
       if (tracks > 0) {
         html += "<td><input class='allcoursetracks' id=" + oldCourseID + " type=checkbox name=track></input></td>";
+        html += "<td><input class='allcoursetracksreplay' id=" + oldCourseID + " type=checkbox name=replay></input></td>";
       } else {
-        html += "<td></td>";
+        html += "<td></td><td></td>";
       }
+      // second row allows replay of non-drawn routes
+      html += "</tr><tr class='allitemsrow'><td></td><td>" + rg2.t("All") + "</td><td></td><td></td>";
       html += "<td><input class='allcoursereplay' id=" + oldCourseID + " type=checkbox name=replay></input></td></tr>";
       return html;
     },
