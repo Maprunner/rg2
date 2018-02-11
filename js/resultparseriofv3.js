@@ -73,9 +73,8 @@
         var timeInt = parseInt(time[0].textContent, 10);
         if (timeInt <= 3600) {
           return rg2.utils.formatSecsAsMMSS(timeInt);
-        } else {
-          return rg2.utils.formatSecsAsHHMMSS(timeInt);
         }
+        return rg2.utils.formatSecsAsHHMMSS(timeInt);
       }
       return '00:00';
     },

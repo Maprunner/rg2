@@ -1,6 +1,6 @@
 <?php
 // version replaced by Gruntfile as part of release
-define ('RG2VERSION', '1.4.7');
+define ('RG2VERSION', '1.4.8');
 
 if (file_exists( dirname(__FILE__) . '/rg2-config.php')) {
   require_once( dirname(__FILE__) . '/rg2-config.php' );

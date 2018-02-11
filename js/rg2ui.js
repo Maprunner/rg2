@@ -273,10 +273,27 @@
         rg2.requestedHash.setRoutes();
         rg2.redraw(false);
       });
+      // checkbox to animate all tracks for course
+      $(".allcoursetracksreplay").click(function (event) {
+        var courseresults, selector;
+        // true means only return runners with a valid track
+        courseresults = rg2.results.getAllRunnersForCourse(parseInt(event.target.id, 10), true);
+        rg2.animation.animateRunners(courseresults, event.target.checked);
+        selector = ".showtrackreplay.showreplay-" + event.target.id;
+        if (event.target.checked) {
+          // select all the individual checkboxes for each course
+          $(selector).prop('checked', true);
+        } else {
+          $(selector).prop('checked', false);
+        }
+        rg2.redraw(false);
+      });
       // checkbox to animate all results for course
+      // this one draws straight lines between controls for non-drawn routes
       $(".allcoursereplay").click(function (event) {
         var courseresults, selector;
-        courseresults = rg2.results.getAllRunnersForCourse(parseInt(event.target.id, 10));
+        // false means get all runners even if they don;t have a valid track
+        courseresults = rg2.results.getAllRunnersForCourse(parseInt(event.target.id, 10), false);
         rg2.animation.animateRunners(courseresults, event.target.checked);
         selector = ".showreplay-" + event.target.id;
         if (event.target.checked) {
@@ -284,6 +301,7 @@
           $(selector).prop('checked', true);
         } else {
           $(selector).prop('checked', false);
+          $(".allcoursetracksreplay").prop('checked', false);
         }
         rg2.redraw(false);
       });
