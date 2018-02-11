@@ -1,9 +1,11 @@
 # Routegadget 2
 
 ## Latest news
-Version 1.4.5 was released on 13th September 2017 and is installed on all routegadget.co.uk sites.
+Version 1.4.8 was released on 11th February 2018 and is installed on all routegadget.co.uk sites.
 
-This is a minor release. The display of positions in the results tab has been tidied up. It also corrects a bug associated with drawing routes for events that have courses but no splits, which wasn't something I knew you could do in the first place. 
+This is a minor release with two new features:
+* When selecting runners for replay you can now select only those who have drawn or uploaded a route. Select the "Routes" checkbox rather than the "All" checkbox on the results tab. Thanks to Robin Strain for finally prompting me to add something I had kept thinking would be a good idea.
+* An option has been added to the RG2 manager to sort the results file, which is done by course, then position, then time and finally name. The majority of users will not need to select this option, since their results file will already be in a sensible order. Thanks to Mikko K from Finland for the original pull request.
 
 ## User Guide and Introductory Videos
 
