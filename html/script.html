@@ -1,0 +1,91 @@
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+<script>window.twttr = (function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0],
+    t = window.twttr || {};
+  if (d.getElementById(id)) return t;
+  js = d.createElement(s);
+  js.id = id;
+  js.src = "https://platform.twitter.com/widgets.js";
+  fjs.parentNode.insertBefore(js, fjs);
+
+  t._e = [];
+  t.ready = function(f) {
+    t._e.push(f);
+  };
+  return t;
+}(document, "script", "twitter-wjs"));</script>
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "https://connect.facebook.net/en_GB/sdk.js#xfbml=1&version=v2.9";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+<?php if ($debug) { ?>
+<script src='<?php echo $source_url . "/js/rg2.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/rg2ui.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/rg2input.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/rg2getjson.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/config.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/canvas.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/events.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/event.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/results.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/result.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/gpstrack.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/controls.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/control.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/courses.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/course.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/draw.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/animation.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/runner.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/map.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/utils.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/plugins.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/handles.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/lib/he.js"; ?>'></script>
+<?php } else { ?>
+<script src='<?php echo $source_url . "/js/rg2-".RG2VERSION.".min.js"; ?>'></script>
+<?php } ?>
+<?php if ($manager) { ?>
+  <?php if ($debug) { ?>
+<script src='<?php echo $source_url . "/js/resultparser.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/resultparsercsv.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/resultparseriofv2.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/resultparseriofv3.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/courseparser.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/managerui.js"; ?>'></script>
+<script src='<?php echo $source_url . "/js/manager.js"; ?>'></script>
+  <?php } else {?>
+<script src='<?php echo $source_url . "/js/rg2manager-".RG2VERSION.".min.js"; ?>'></script>
+  <?php } ?>
+<script src='<?php echo $source_url . "/js/lib/proj4js-compressed.js"; ?>'></script>
+  <?php } ?>
+<script type="text/javascript">
+var rg2Config = {
+json_url: '<?php echo $json_url; ?>',
+maps_url: '<?php echo $maps_url; ?>',
+lang_url: '<?php echo $source_url.'/lang/'; ?>',
+header_colour: '<?php echo $header_colour; ?>',
+header_text_colour: '<?php echo $header_text_colour; ?>',
+<?php if (defined('SPLITSBROWSER_DIRECTORY')) { ?>
+enable_splitsbrowser: true,
+<?php } else { ?>
+enable_splitsbrowser: false,
+<?php } ?>
+<?php if ($manager) { ?>
+keksi: '<?php echo $keksi; ?>',
+<?php if (defined('EPSG_CODE')) { ?>
+epsg_code: '<?php echo EPSG_CODE; ?>',
+epsg_params: '<?php echo EPSG_PARAMS; ?>',
+<?php } ?>
+<?php } ?>
+languages: {},
+start_language: '<?php echo $lang; ?>'
+};
+<?php echo '$(document).ready(rg2.init);' ?>
+</script>
