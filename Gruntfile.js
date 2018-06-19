@@ -106,10 +106,10 @@ module.exports = function(grunt) {
     sync : {
       rel : {
         files: [{
-          src : ['rg2api.php', 'index.php', 'html/**', 'img/favicon.ico'],
+          src : ['rg2api.php', 'index.php', 'app/**', 'html/**', 'img/favicon.ico'],
           dest : 'rel/'
         }],
-        verbose: true, // Default: false
+        verbose: true,
         pretend: false, // Don't do any disk operations - just write log. Default: false
         failOnError: true, // Fail the task when copying is not possible. Default: false
         updateAndDelete: true
