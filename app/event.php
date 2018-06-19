@@ -20,7 +20,7 @@ class event
             $output = file_get_contents(CACHE_DIRECTORY."stats.json");
         } else {
             // TRUE means do include stats in output
-            $output = self::getAllEvents(false);
+            $output = self::getAllEvents(true);
             @file_put_contents(CACHE_DIRECTORY."stats.json", $output);
         }
         return $output;
