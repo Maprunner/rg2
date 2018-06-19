@@ -655,8 +655,8 @@
               // case 4: drag point between locked handle and end
               this.scaleRotateAroundSingleLockedPoint(p1, p2, latest, latest.time, trk.handles.getFinishHandle().time);
             } else {
-              // case 5: shear/scale around two locked points
-              this.scaleRotateBetweenTwoLockedPoints(p1, p2, handle);
+              // case 5: adjust between two locked points
+              this.adjustBetweenTwoLockedPoints(p1, p2, handle);
             }
           }
         } else {
@@ -666,60 +666,32 @@
       }
     },
 
-    scaleRotateBetweenTwoLockedPoints : function (p1, p2, handle) {
-      // case 5: shear/scale between two locked points
-      // all based on putting handle1 at (0, 0), rotating handle 2 to be on x-axis and then shearing on x-axis and scaling on y-axis.
-      // there must be a better way...
-      var i, lockedHandle1, lockedHandle2, scale, angle, reverseAngle, a, x, y, pt, pt1, pt2, trk;
-      trk = this.gpstrack;
-      lockedHandle1 = trk.handles.getPreviousLockedHandle(handle);
-      lockedHandle2 = trk.handles.getNextLockedHandle(handle);
-      //console.log("Point (", p1.x, ", ", p1.y, ") in middle of ", lockedHandle1.index, lockedHandle1.basex, lockedHandle1.basey, " and ", lockedHandle2.index, lockedHandle2.basex, lockedHandle2.basey);
-      reverseAngle = rg2.utils.getAngle(lockedHandle1.basex, lockedHandle1.basey, lockedHandle2.basex, lockedHandle2.basey);
-      angle = (2 * Math.PI) - reverseAngle;
-
-      pt1 = rg2.utils.rotatePoint(p1.x - lockedHandle1.basex, p1.y - lockedHandle1.basey, angle);
-      pt2 = rg2.utils.rotatePoint(p2.x - lockedHandle1.basex, p2.y - lockedHandle1.basey, angle);
-
-      // calculate scaling factors
-      a = (pt2.x - pt1.x) / pt1.y;
-      scale = pt2.y / pt1.y;
-
-      if (!isFinite(a) || !isFinite(scale)) {
-        // this will cause trouble when y1 is 0 (or even just very small) but I've never managed to get it to happen
-        // you need to click exactly on a line through the two locked handles: just do nothing for now
-        // console.log("p1.y became 0: scale factors invalid", a, scale);
-        return;
-      }
-      // recalculate all points between locked handles
-      for (i = lockedHandle1.time + 1; i < lockedHandle2.time; i += 1) {
-        // translate to put locked point at origin
-        // rotate to give locked points as x-axis
-        pt = rg2.utils.rotatePoint(trk.baseX[i] - lockedHandle1.basex, trk.baseY[i] - lockedHandle1.basey, angle);
-        x = pt.x;
-        y = pt.y;
-
-        // shear/stretch/rotate and translate back
-        pt = rg2.utils.rotatePoint(x + (y * a), y * scale, reverseAngle);
-        trk.routeData.x[i] = pt.x + lockedHandle1.basex;
-        trk.routeData.y[i] = pt.y + lockedHandle1.basey;
-      }
-      // recalculate all handles between locked handles
-      trk.handles.scaleAndRotateBetweenLockedPoints(lockedHandle1, a, scale, angle, reverseAngle, lockedHandle1.time, lockedHandle2.time);
+    adjustBetweenTwoLockedPoints : function (p1, p2, handle) {
+      // case 5: adjust between two locked points
+      // see, there is an easier way
+      var previousHandle, nextHandle;
+      //console.log("Point (", p1.x, ", ", p1.y, ") for handle ", handle.index, handle.basex, handle.basey);
+      previousHandle = this.gpstrack.handles.getPreviousLockedHandle(handle);
+      nextHandle = this.gpstrack.handles.getNextLockedHandle(handle);
+      // adjust route between previous locked handle and dragged point
+      this.scaleRotateAroundSingleLockedPoint(p1, p2, previousHandle, previousHandle.time, handle.time);
+      // adjust route between dragged point and next locked handle
+      this.scaleRotateAroundSingleLockedPoint(p1, p2, nextHandle, handle.time, nextHandle.time);
     },
 
-    scaleRotateAroundSingleLockedPoint : function (p1, p2, lockedHandle, fromTime, toTime) {
+    scaleRotateAroundSingleLockedPoint : function (p1, p2, p3, fromTime, toTime) {
+      // rotate p1 to p2 around p3
       var i, scale, angle, pt;
       // scale and rotate track around single locked point
-      scale = rg2.utils.getDistanceBetweenPoints(p2.x, p2.y, lockedHandle.basex, lockedHandle.basey) / rg2.utils.getDistanceBetweenPoints(p1.x, p1.y, lockedHandle.basex, lockedHandle.basey);
-      angle = rg2.utils.getAngle(p2.x, p2.y, lockedHandle.basex, lockedHandle.basey) - rg2.utils.getAngle(p1.x, p1.y, lockedHandle.basex, lockedHandle.basey);
-      //console.log (p1.x, p1.y, p2.x, p2.y, handle.basex, handle.basey, scale, angle, fromTime, toTime);
+      scale = rg2.utils.getDistanceBetweenPoints(p2.x, p2.y, p3.x, p3.y) / rg2.utils.getDistanceBetweenPoints(p1.x, p1.y, p3.x, p3.y);
+      angle = rg2.utils.getAngle(p2.x, p2.y, p3.x, p3.y) - rg2.utils.getAngle(p1.x, p1.y, p3.x, p3.y);
+      console.log (p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, scale, angle, fromTime, toTime);
       for (i = fromTime; i <= toTime; i += 1) {
-        pt = rg2.utils.rotatePoint(this.gpstrack.baseX[i] - lockedHandle.basex, this.gpstrack.baseY[i] - lockedHandle.basey, angle);
-        this.gpstrack.routeData.x[i] = (pt.x * scale) + lockedHandle.basex;
-        this.gpstrack.routeData.y[i] = (pt.y * scale) + lockedHandle.basey;
+        pt = rg2.utils.rotatePoint(this.gpstrack.baseX[i] - p3.x, this.gpstrack.baseY[i] - p3.y, angle);
+        this.gpstrack.routeData.x[i] = (pt.x * scale) + p3.x;
+        this.gpstrack.routeData.y[i] = (pt.y * scale) + p3.y;
       }
-      this.gpstrack.handles.scaleAndRotate(lockedHandle, scale, angle, fromTime, toTime);
+      this.gpstrack.handles.alignHandles(this.gpstrack.routeData);
     },
 
     dragTrack : function (dx, dy) {
