@@ -13,20 +13,13 @@
   require(dirname(__FILE__) . '/app/utils.php');
 
   require_once(dirname(__FILE__) . '/rg2-config.php');
-  // override allows testing of a local configuration such as c:/xampp/htdocs/rg2
-  if (file_exists(dirname(__FILE__) . '/rg2-override-config.php')) {
-      require_once(dirname(__FILE__) . '/rg2-override-config.php');
-      define('DEBUG', true);
-  }
-  // enable logging by default
-  if (!defined('RG_LOG_FILE')) {
-      define("RG_LOG_FILE", dirname(__FILE__)."/log/utils::rg2log.txt");
-  }
+
+  define("RG_LOG_FILE", dirname(__FILE__)."/log/rg2log.txt");
 
   if (defined('OVERRIDE_KARTAT_DIRECTORY')) {
-      $url = OVERRIDE_KARTAT_DIRECTORY;
+      $kartat = OVERRIDE_KARTAT_DIRECTORY;
   } else {
-      $url = "../kartat/";
+      $kartat = "../kartat/";
   }
 
   // The default encoding used by Route Gadget 2
@@ -40,10 +33,10 @@
   }
 
   // version replaced by Gruntfile as part of release
-  define('RG2VERSION', '1.5.0beta');
-  define('KARTAT_DIRECTORY', $url);
+  define('RG2VERSION', '1.5.0beta2');
+  define('KARTAT_DIRECTORY', $kartat);
   define('LOCK_DIRECTORY', dirname(__FILE__)."/lock/saving/");
-  define('CACHE_DIRECTORY', $url."cache/");
+  define('CACHE_DIRECTORY', $kartat."cache/");
   define('GPS_RESULT_OFFSET', 50000);
   define('GPS_INTERVAL', 3);
   define('SCORE_EVENT_FORMAT', 3);
