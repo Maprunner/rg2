@@ -591,6 +591,12 @@ body {
   padding-right: 5px;
 }
 
+#rg2-manage-create > div::after {
+  display: block;
+  content: "";
+  clear: both;
+}
+
 #rg2-manage-create div, #rg2-manage-map div, #rg2-manage-edit div {
   margin-top: 5px;
 }
@@ -621,7 +627,6 @@ body {
 .manage-event-edit-div label {
   width: 80px;
 }
-
 
 #manage-edit-options input {
   width: 220px;

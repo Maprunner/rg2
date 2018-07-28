@@ -1,0 +1,54 @@
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+<script>window.twttr = (function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0],
+    t = window.twttr || {};
+  if (d.getElementById(id)) return t;
+  js = d.createElement(s);
+  js.id = id;
+  js.src = "https://platform.twitter.com/widgets.js";
+  fjs.parentNode.insertBefore(js, fjs);
+
+  t._e = [];
+  t.ready = function(f) {
+    t._e.push(f);
+  };
+  return t;
+}(document, "script", "twitter-wjs"));</script>
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "https://connect.facebook.net/en_GB/sdk.js#xfbml=1&version=v2.9";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+<script src='<?php echo $source_url . "/js/rg2-".RG2VERSION.".min.js"; ?>'></script>
+<?php if ($manager) { ?>
+  <script src='<?php echo $source_url . "/js/rg2manager-".RG2VERSION.".min.js"; ?>'></script>
+  <script src='<?php echo $source_url . "/js/lib/proj4js-compressed.js"; ?>'></script>
+<?php } ?>
+<script type="text/javascript">
+var rg2Config = {
+json_url: '<?php echo $json_url; ?>',
+maps_url: '<?php echo $maps_url; ?>',
+lang_url: '<?php echo $source_url.'/lang/'; ?>',
+header_colour: '<?php echo $header_colour; ?>',
+header_text_colour: '<?php echo $header_text_colour; ?>',
+<?php if (defined('SPLITSBROWSER_DIRECTORY')) { ?>
+enable_splitsbrowser: true,
+<?php } else { ?>
+enable_splitsbrowser: false,
+<?php } ?>
+<?php if ($manager) { ?>
+keksi: '<?php echo $keksi; ?>',
+<?php if (defined('EPSG_CODE')) { ?>
+epsg_code: '<?php echo EPSG_CODE; ?>',
+epsg_params: '<?php echo EPSG_PARAMS; ?>',
+<?php } ?>
+<?php } ?>
+languages: {},
+start_language: '<?php echo $lang; ?>'
+};
+<?php echo '$(document).ready(rg2.init);' ?>
+</script>

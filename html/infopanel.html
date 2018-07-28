@@ -1,0 +1,103 @@
+<div id="rg2-info-panel">
+  <div id="rg2-info-panel-tab-headers">
+  <ul>
+    <li id="rg2-events-tab">
+    <a href="#rg2-event-tab-body">Events</a>
+    </li>
+    <li id="rg2-courses-tab">
+      <a href="#rg2-course-list">Courses</a>
+    </li>
+    <li id="rg2-results-tab">
+      <a href="#rg2-result-list">Results</a>
+    </li>
+    <li id="rg2-draw-tab">
+      <a href="#rg2-draw">Draw</a>
+    </li>
+    <?php if ($manager) { ?>
+    <li id="rg2-login-tab">
+      <a href="#rg2-manage-login">Login</a>
+    </li>
+    <li id="rg2-create-tab">
+      <a href="#rg2-manage-create">Add event</a>
+    </li>
+    <li id="rg2-edit-tab">
+      <a href="#rg2-manage-edit">Edit event</a>
+    </li>
+    <li id="rg2-map-tab">
+      <a href="#rg2-manage-map">Add map</a>
+    </li>
+    <?php } ?>
+  </ul>
+  </div>
+  <div id="rg2-info-panel-tab-body">
+  <div id="rg2-event-tab-body">
+    <div id="rg2-event-search"></div>
+    <div id="rg2-event-list"></div>
+  </div>
+  <div id="rg2-course-list">
+    <div id="rg2-course-table"></div>
+  </div>
+  <div id="rg2-result-list"></div>
+  <div id="rg2-draw">
+    <h3 class="no-top-margin" id='rg2-draw-title'>Draw route</h3>
+    <div id="rg2-select-course">
+      <label for='rg2-course-select'>Select course: </label>
+      <select id="rg2-course-select" class="pushright"></select>
+    </div>
+    <div id="rg2-select-name">
+      <label for='rg2-name-select'>Select name: </label>
+      <select id="rg2-name-select" class="pushright"></select>
+    </div>
+    <div id="rg2-enter-name">
+      <div>
+        <label for='rg2-name'>Enter name: </label>
+        <span id = "rg2-name"><input id="rg2-name-entry" class="pushright" type="text"></span>
+      </div>
+      <div>
+        <label for='rg2-time'>Enter time (mm:ss): </label>
+        <span id = "rg2-time"><input  id="rg2-time-entry" class="pushright" type="text"></span>
+      </div>
+    </div>
+    <div>
+      <textarea id="rg2-new-comments"></textarea>
+    </div>
+    <div>
+      <input type=checkbox id="btn-align-map"><label for="btn-align-map">Align map to next control</label>
+    </div>
+    <div class="singlerow">
+      <button class="singlerowitem" id="btn-three-seconds">+3 sec</button>
+      <button class="singlerowitem" id="btn-undo">Undo</button>
+      <button class="singlerowitem" id="btn-save-route">Save</button>
+      <button class="singlerowitem" id="btn-reset-drawing">Reset</button>
+    </div>
+    <hr class="rg2-hr">
+    <h3 id='rg2-load-gps-title'>Load GPS file (GPX or TCX)</h3>
+    <div id="rg2-select-gps-file">
+      <input type='file' accept='.gpx, .tcx' id='rg2-load-gps-file'>
+    </div>
+    <div class="singlerow">
+      <button class = "singlerowitem" id="btn-autofit-gps">Autofit</button>
+      <div id="rg2-offset-spinner" class="singlerowitem">
+        <input id="spn-offset" />
+      </div>
+      <button  class = "singlerowitem" id="btn-undo-gps-adjust">Undo</button>
+    </div>
+    <div class="singlerow">
+      <button id="btn-save-gps-route">Save GPS route</button>
+    </div>
+    <hr class="rg2-hr">
+    <div>
+      <input type=checkbox id="btn-move-all"><label for="btn-move-all">Move track and map together (or right click-drag)</label>
+    </div>
+    <hr class="rg2-hr">
+    <div class="rg2-gps-text">
+      <span id="draw-text-1">Left click to add/lock/unlock a handle.</span>
+      <ul><li id="draw-text-2">Green: draggable</li>
+      <li id="draw-text-3">Red: locked</li></ul>
+      <span id="draw-text-4">Right click to delete a handle.</span>
+      <br><span id="draw-text-5">Drag a handle to adjust track around locked point(s).</span>
+    </div>
+  </div>
+<?php if ($manager) {include  'html/manager.html'; } ?>
+</div>
+</div>
