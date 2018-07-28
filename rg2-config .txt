@@ -14,8 +14,7 @@
   // probably only relevant for routegadget.co.uk to avoid 100 copies of source files
   //define('OVERRIDE_SOURCE_DIRECTORY', 'http://www.routegadget.co.uk');
 
-  // allow relocating kartat directory: only really relevant for development environment
-  // path is relative to RG_BASE_DIRECTORY
+  // allow relocating kartat directory: only intended for development environment using localhost
   // define('OVERRIDE_KARTAT_DIRECTORY', '../rg2-test-data/hh/kartat/');
   
   // location of Splitsbrowser files if required: see Wiki for details of how to install Splitsbrowser

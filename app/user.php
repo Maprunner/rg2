@@ -48,7 +48,11 @@ class user
     {
         // simple cookie generator! Don't need unique, just need something vaguely random
         $keksi = substr(str_shuffle("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"), 0, 20);
-        file_put_contents(KARTAT_DIRECTORY."keksi.txt", $keksi.PHP_EOL);
+        $result = file_put_contents(KARTAT_DIRECTORY."keksi.txt", $keksi.PHP_EOL);
+        //utils::rg2log(KARTAT_DIRECTORY." ".$keksi." ".$result);
+        if ($result === false) {
+          utils::rg2log("Error writing keksi.txt: ".$keksi);
+        }
         return $keksi;
     }
 }

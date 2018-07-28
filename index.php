@@ -9,7 +9,7 @@ require(dirname(__FILE__) . '/app/user.php');
 require(dirname(__FILE__) . '/app/utils.php');
 
 // version replaced by Gruntfile as part of release
-define('RG2VERSION', '1.5.0beta2');
+define('RG2VERSION', '1.5');
 define("RG_LOG_FILE", dirname(__FILE__)."/log/rg2log.txt");
 
 if (file_exists(dirname(__FILE__) . '/rg2-config.php')) {
@@ -43,12 +43,16 @@ if (defined('OVERRIDE_SOURCE_DIRECTORY')) {
   $source_url = RG_BASE_DIRECTORY . "/rg2";
 }
 
+// messy but works OK for now
+// Overrides work OK on a local server which is what they are intended for
 if (defined('OVERRIDE_KARTAT_DIRECTORY')) {
-    $maps_url = RG_BASE_DIRECTORY . "/". OVERRIDE_KARTAT_DIRECTORY;
+    $maps_dir = OVERRIDE_KARTAT_DIRECTORY;
+    $maps_url = OVERRIDE_KARTAT_DIRECTORY;
 } else {
+    $maps_dir = "../kartat/";
     $maps_url = RG_BASE_DIRECTORY . "/kartat/";
 }
-define('KARTAT_DIRECTORY', $maps_url);
+define('KARTAT_DIRECTORY', $maps_dir);
 
 // include manager function as parameter for now until we decide the best way forward
 if (isset($_GET['manage'])) {
