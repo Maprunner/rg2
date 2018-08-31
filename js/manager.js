@@ -45,6 +45,8 @@
     this.maps = [];
     this.localworldfile = new rg2.Worldfile(0);
     this.worldfile = new rg2.Worldfile(0);
+    this.georefmap = L.map('rg2-world-file-map');
+    this.initialiseMap();
     this.initialiseUI();
   }
 
@@ -71,6 +73,13 @@
         // prevent form submission
         return false;
       });
+    },
+
+    initialiseMap : function () {
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+	      maxZoom: 19,
+	      attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+      }).addTo(this.georefmap);
     },
 
     logIn : function () {
@@ -1439,10 +1448,12 @@
         delete this.newMap.worldfile;
         this.newMap.worldfile = new rg2.Worldfile(wf);
         this.updateGeorefDisplay();
+        this.updateGeorefMap();
       } catch (err) {
         delete this.newMap.worldfile;
         this.newMap.worldfile = new rg2.Worldfile(0);
         this.updateGeorefDisplay();
+        this.updateGeorefMap();
         return;
       }
     },
@@ -1453,6 +1464,22 @@
       for (i = 0; i < letters.length; i += 1) {
         $("#georef-" + letters[i]).empty().text(letters[i] + ": " + this.newMap.worldfile[letters[i]]);
       }
+    },
+    updateGeorefMap : function () {
+      // Plot a polygon and recentre the map on the polygon
+      lon = this.newMap.lon;
+      lat = this.newMap.lat;
+      poly_coords = [];
+      // For some reason this is the order the coordinates are stored in.
+      indicies = [3, 1, 2, 0]
+      indicies.forEach( function(i) {
+        poly_coords.push([lat[i], lon[i]])
+      })
+      poly = L.polygon(poly_coords, { color: 'red'})
+      poly.addTo(this.georefmap);
+      $("#rg2-world-file-map").show()
+      this.georefmap.invalidateSize();
+      this.georefmap.fitBounds(poly.getBounds());
     }
   };
   rg2.Manager = Manager;
