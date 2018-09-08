@@ -4,6 +4,7 @@
 /*global Proj4js:false */
 /*global console:false */
 /*global Image:false */
+/*global L:false */
 (function () {
   function Manager(keksi) {
     this.user = new rg2.User(keksi);
@@ -1466,18 +1467,19 @@
       }
     },
     updateGeorefMap : function () {
+      var lon, lat, poly, poly_coords, indices;
       // Plot a polygon and recentre the map on the polygon
       lon = this.newMap.lon;
       lat = this.newMap.lat;
       poly_coords = [];
       // For some reason this is the order the coordinates are stored in.
-      indicies = [3, 1, 2, 0]
-      indicies.forEach( function(i) {
-        poly_coords.push([lat[i], lon[i]])
-      })
-      poly = L.polygon(poly_coords, { color: 'red'})
+      indices = [3, 1, 2, 0];
+      indices.forEach( function(i) {
+        poly_coords.push([lat[i], lon[i]]);
+      });
+      poly = L.polygon(poly_coords, { color: 'red'});
       poly.addTo(this.georefmap);
-      $("#rg2-world-file-map").show()
+      $("#rg2-world-file-map").show();
       this.georefmap.invalidateSize();
       this.georefmap.fitBounds(poly.getBounds());
     }
