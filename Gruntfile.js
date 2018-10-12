@@ -1,16 +1,17 @@
 module.exports = function(grunt) {
-  var jsFileList = ['js/rg2.js', 'js/animation.js', 'js/canvas.js', 'js/config.js', 'js/control.js', 'js/controls.js', 'js/course.js', 'js/courseparser.js', 'js/courses.js', 'js/draw.js', 'js/event.js',
-    'js/events.js', 'js/gpstrack.js', 'js/handles.js', 'js/map.js', 'js/plugins.js', 'js/result.js', 'js/resultparser.js', 'js/resultparsercsv.js', 'js/resultparseriofv2.js','js/resultparseriofv3.js',
+  var jsFileList = ['js/rg2.js', 'js/animation.js', 'js/canvas.js', 'js/config.js', 'js/control.js', 'js/controls.js', 'js/course.js', 'js/courses.js',
+    'js/draw.js', 'js/event.js', 'js/events.js', 'js/gpstrack.js', 'js/handles.js', 'js/map.js', 'js/plugins.js', 'js/result.js',
     'js/results.js', 'js/rg2getjson.js', 'js/rg2input.js', 'js/rg2ui.js', 'js/runner.js', 'js/utils.js', 'js/lib/he.js'
     ];
 
   var langFileList = ['lang/de.js', 'lang/fi.js', 'lang/fr.js', 'lang/it.js', 'lang/ja.js', 'lang/no.js', 'lang/pt.js', 'lang/xx.js'];
 
   // don't jsHint he.js, plugins.js
-  var jsHintList = ['js/rg2.js', 'js/animation.js', 'js/canvas.js', 'js/config.js', 'js/control.js', 'js/controls.js', 'js/course.js', 'js/courseparser.js', 'js/courses.js', 'js/draw.js', 'js/event.js',
-    'js/events.js', 'js/gpstrack.js', 'js/handles.js', 'js/map.js', 'js/result.js', 'js/resultparser.js', 'js/results.js', 'js/rg2getjson.js', 'js/rg2input.js', 'js/rg2ui.js', 'js/runner.js', 'js/utils.js'];
+  var jsHintList = ['js/rg2.js', 'js/animation.js', 'js/canvas.js', 'js/config.js', 'js/control.js', 'js/controls.js', 'js/course.js',
+    'js/courses.js', 'js/draw.js', 'js/event.js', 'js/events.js', 'js/gpstrack.js', 'js/handles.js', 'js/map.js', 'js/result.js',
+    'js/results.js', 'js/rg2getjson.js', 'js/rg2input.js', 'js/rg2ui.js', 'js/runner.js', 'js/utils.js'];
 
-  var jsManagerSrc = ['js/manager.js', 'js/resultparseriofv2.js', 'js/resultparseriofv3.js', 'js/resultparsercsv.js', 'js/resultparser.js', 'js/courseparser.js', 'js/managerui.js'];
+  var jsManagerSrc = ['js/manager.js', 'js/courseparser.js', 'js/resultparseriofv2.js', 'js/resultparseriofv3.js', 'js/resultparsercsv.js', 'js/resultparser.js', 'js/managerui.js'];
 
   var jsMinFile = 'js/rg2-<%= pkg.version %>.min.js';
   var jsManagerMinFile = 'js/rg2manager-<%= pkg.version %>.min.js';
@@ -22,8 +23,8 @@ module.exports = function(grunt) {
   // installed routegadget.co.uk clubs that need to be updated for a new release
   // careful: clok has a different config so is set up separately
   var clubs = ['aire', 'albania', 'ayroc', 'bado', 'baoc', 'basoc', 'bko', 'boc', 'bok', 'bl', 'chig', 'claro', 'clyde', 'coboc', 'cuoc', 'cvfr', 'darkandwhite', 'dee',
-   'devonoc', 'ebor', 'ecko', 'elo', 'epoc', 'esoc', 'euoc', 'gmoa', 'gramp', 'go', 'halo', 'happyherts', 'havoc', 'hoc', 'interlopers', 'invoc', 'jk',
-   'kerno', 'kfo', 'lamm', 'leioc', 'loc', 'log', 'lok', 'lvo', 'maroc', 'masterplanadventure', 'mdoc', 'mid-wales', 'moravian', 'mvoc', 'nato', 'ngoc', 'noroc', 'nwo', 'od', 'omm', 'ouoc',
+   'devonoc', 'ebor', 'ecko', 'elo', 'epoc', 'eryri', 'esoc', 'euoc', 'gmoa', 'gramp', 'go', 'halo', 'happyherts', 'havoc', 'hoc', 'interlopers', 'invoc', 'jk', 'kerno', 'kfo',
+   'lamm', 'leioc', 'loc', 'log', 'lok', 'lvo', 'maroc', 'masterplanadventure', 'mdoc', 'mid-wales', 'moravian', 'mvoc', 'nato', 'ngoc', 'noroc', 'nwo', 'od', 'omm', 'ouoc',
    'pfo', 'potoc', 'quantock', 'rafo', 'roxburghreivers', 'sa', 'sarum', 'saxons', 'sboc', 'scottish6days', 'seloc', 'slow', 'slmm', 'smbo', 'smoc', 'sn', 'so', 'soa', 'soc',
    'solway', 'sportident', 'sroc', 'stag', 'start', 'suffoc', 'swoc', 'syo', 'tay', 'test', 'purple-thistle', 'tinto', 'tvoc', 'walton', 'waoc', 'wcoc', 'wim', 'wmoc',
    'wrekin', 'wsco2008', 'wsx'];
