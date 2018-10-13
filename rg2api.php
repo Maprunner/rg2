@@ -180,6 +180,10 @@ function handleGetRequest($type, $id)
   case 'splitsbrowser':
     $output = splitsbrowser::getSplitsbrowser($id);
     break;
+  case 'fix':
+    event::fixResults($id);
+    $output = json_encode("Results fixed for event ".$id);
+    break;
   default:
     utils::rg2log("Get request not recognised: ".$type.", ".$id);
     $output = json_encode("Request not recognised.");

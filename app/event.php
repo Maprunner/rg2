@@ -482,4 +482,54 @@ class event
     {
         return strcmp($a["date"], $b["date"]);
     }
+
+    public static function fixResults($id) {
+    // modifies splits when they have been corrupted by Excel/Emit
+    // times over 24 minutes get treated as hours and minutes, not minutes and seconds
+    // e.g 96540 should be 26m 49s, not 26h 49m
+    // called as rg2api?id=xx&type=fix
+    if (utils::lockDatabase() !== false) {
+      $updatedfile = array();
+      $oldfile = file(KARTAT_DIRECTORY."kilpailijat_".$id.".txt");
+      foreach ($oldfile as $row) {
+          $data = explode("|", $row);
+          // modify splits in data[8]
+          // trim trailing ; which create null fields when expanded
+          if ($data[8]) {
+            $temp = rtrim($data[8], ";");
+            // split array at ; and force to integers
+            $splits = array_map('intval', explode(";", $temp));
+            // adjust back to proper time
+            for ($i = 0; $i < count($splits); $i++) {
+              if ($splits[$i] >= (3600 * 24)) {
+                $mins = intval($splits[$i] / 3600);
+                $secs = ($splits[$i] - ($mins * 3600)) /60;
+                $splits[$i] = ($mins *60) + $secs;
+              }
+            }
+            // reconstruct ;-separated list
+            $data[8] = "";
+            for ($i = 0; $i < count($splits); $i++) {
+              $data[8] .= $splits[$i].";";
+            }
+            // don't want the terminating ;
+            substr_replace($data[8] ,"", -1);
+          }
+          $row = "";
+          // reconstruct |-separated row
+          for ($i = 0; $i < count($data); $i++) {
+            if ($i > 0) {
+              $row .= "|";
+            }
+            $row .= $data[$i];
+          }
+          if (count($data) < 10) {
+              $row .= PHP_EOL;
+          }
+          $updatedfile[] = $row;
+      }
+      $status = file_put_contents(KARTAT_DIRECTORY."kilpailijat_".$id.".txt", $updatedfile);
+      utils::unlockDatabase();
+    }
+  }
 }
