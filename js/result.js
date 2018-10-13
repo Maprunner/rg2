@@ -12,6 +12,7 @@
     this.position = data.position;
     this.status = data.status;
     this.canDelete = false;
+    this.showResult = true;
     this.token = 0;
     // get round iconv problem in API for now: unescape special characters to get sensible text
     if (data.comments) {
@@ -389,24 +390,32 @@
         oldy = this.tracky[t];
         oldDelta = delta;
       }
-      this.mapSpeedColours(maxSpeed);
+
+      this.mapSpeedColours();
 
     },
 
-    mapSpeedColours : function (maxspeed) {
+    mapSpeedColours : function () {
       // converts speed to RGB value
-      var i, red, green, halfmax;
-      //console.log("'Max speed = " + maxspeed);
-      halfmax = maxspeed / 2;
+      var i, red, green, halfrange, maxspeed, minspeed, sorted;
+      sorted = this.speedColour.slice().sort(function(a, b){return a - b;});
+      maxspeed = sorted[sorted.length -1];
+      // arbitrary limit below which everything will be red
+      minspeed = sorted[Math.floor(sorted.length / 95)];
+      halfrange = (maxspeed - minspeed) / 2;
       // speedColour comes in with speeds at each point and gets updated to the associated colour
       for (i = 1; i < this.speedColour.length; i += 1) {
-        if (this.speedColour[i] > halfmax) {
+        if (this.speedColour[i] > (minspeed + halfrange)) {
           // fade green to orange
-          red = Math.round(255 * (this.speedColour[i] - halfmax) / halfmax);
+          red = Math.round(255 * (this.speedColour[i] - halfrange) / halfrange);
           green = 255;
         } else {
           // fade orange to red
-          green = Math.round(255 * this.speedColour[i] / halfmax);
+          if (this.speedColour[i] > minspeed) {
+            green = Math.round(255 * (this.speedColour[i] - minspeed) / halfrange);
+          } else {
+            green = 0;
+          }
           red = 255;
         }
         this.speedColour[i] = '#';

@@ -1,35 +1,50 @@
 <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+<?php if ($manager) { ?>
 <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js"
    integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA=="
    crossorigin="">
 </script>
-<script>window.twttr = (function(d, s, id) {
-  var js, fjs = d.getElementsByTagName(s)[0],
-    t = window.twttr || {};
-  if (d.getElementById(id)) return t;
-  js = d.createElement(s);
-  js.id = id;
-  js.src = "https://platform.twitter.com/widgets.js";
-  fjs.parentNode.insertBefore(js, fjs);
-
-  t._e = [];
-  t.ready = function(f) {
-    t._e.push(f);
-  };
-  return t;
-}(document, "script", "twitter-wjs"));</script>
-<div id="fb-root"></div>
-<script>(function(d, s, id) {
-  var js, fjs = d.getElementsByTagName(s)[0];
-  if (d.getElementById(id)) return;
-  js = d.createElement(s); js.id = id;
-  js.src = "https://connect.facebook.net/en_GB/sdk.js#xfbml=1&version=v2.9";
-  fjs.parentNode.insertBefore(js, fjs);
-}(document, 'script', 'facebook-jssdk'));</script>
-<script src='<?php echo $source_url . "/js/rg2-".RG2VERSION.".min.js"; ?>'></script>
+<?php } ?>
+<?php if ($debug) { ?>
+  <script src='<?php echo $source_url . "/js/rg2.js"; ?>'></script>
+  <script src='<?php echo $source_url . "/js/rg2ui.js"; ?>'></script>
+  <script src='<?php echo $source_url . "/js/rg2input.js"; ?>'></script>
+  <script src='<?php echo $source_url . "/js/rg2getjson.js"; ?>'></script>
+  <script src='<?php echo $source_url . "/js/config.js"; ?>'></script>
+  <script src='<?php echo $source_url . "/js/canvas.js"; ?>'></script>
+  <script src='<?php echo $source_url . "/js/events.js"; ?>'></script>
+  <script src='<?php echo $source_url . "/js/event.js"; ?>'></script>
+  <script src='<?php echo $source_url . "/js/results.js"; ?>'></script>
+  <script src='<?php echo $source_url . "/js/result.js"; ?>'></script>
+  <script src='<?php echo $source_url . "/js/gpstrack.js"; ?>'></script>
+  <script src='<?php echo $source_url . "/js/controls.js"; ?>'></script>
+  <script src='<?php echo $source_url . "/js/control.js"; ?>'></script>
+  <script src='<?php echo $source_url . "/js/courses.js"; ?>'></script>
+  <script src='<?php echo $source_url . "/js/course.js"; ?>'></script>
+  <script src='<?php echo $source_url . "/js/draw.js"; ?>'></script>
+  <script src='<?php echo $source_url . "/js/animation.js"; ?>'></script>
+  <script src='<?php echo $source_url . "/js/runner.js"; ?>'></script>
+  <script src='<?php echo $source_url . "/js/map.js"; ?>'></script>
+  <script src='<?php echo $source_url . "/js/utils.js"; ?>'></script>
+  <script src='<?php echo $source_url . "/js/plugins.js"; ?>'></script>
+  <script src='<?php echo $source_url . "/js/handles.js"; ?>'></script>
+  <script src='<?php echo $source_url . "/js/lib/he.js"; ?>'></script>
+<?php } else { ?>
+  <script src='<?php echo $source_url . "/js/rg2-".RG2VERSION.".min.js"; ?>'></script>
+<?php } ?>
 <?php if ($manager) { ?>
-  <script src='<?php echo $source_url . "/js/rg2manager-".RG2VERSION.".min.js"; ?>'></script>
+  <?php if ($debug) { ?>
+    <script src='<?php echo $source_url . "/js/resultparser.js"; ?>'></script>
+    <script src='<?php echo $source_url . "/js/resultparsercsv.js"; ?>'></script>
+    <script src='<?php echo $source_url . "/js/resultparseriofv2.js"; ?>'></script>
+    <script src='<?php echo $source_url . "/js/resultparseriofv3.js"; ?>'></script>
+    <script src='<?php echo $source_url . "/js/courseparser.js"; ?>'></script>
+    <script src='<?php echo $source_url . "/js/managerui.js"; ?>'></script>
+    <script src='<?php echo $source_url . "/js/manager.js"; ?>'></script>
+  <?php } else {?>
+    <script src='<?php echo $source_url . "/js/rg2manager-".RG2VERSION.".min.js"; ?>'></script>
+  <?php } ?>
   <script src='<?php echo $source_url . "/js/lib/proj4js-compressed.js"; ?>'></script>
 <?php } ?>
 <script type="text/javascript">
