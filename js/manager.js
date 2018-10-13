@@ -22,6 +22,7 @@
     this.mapping = [];
     this.mapLoaded = false;
     this.coursesGeoreferenced = false;
+    this.controlsAdjusted = false;
     this.drawingCourses = false;
     this.drawnCourse = {};
     this.results = [];
@@ -350,7 +351,7 @@
         return 'Club name is not valid.';
       }
       if (!this.eventDate) {
-        return 'Event date is not valid.';
+        return 'Date is not valid.';
       }
       if (!this.eventLevel) {
         return 'Event level is not valid.';
@@ -368,6 +369,9 @@
           return 'No results information. Check your results file.';
         }
       }
+      if (!this.controlsAdjusted) {
+        return 'Controls have not been adjusted on the map.';
+      }
       return 'OK';
 
     },
@@ -376,7 +380,7 @@
       var valid, dlg;
       valid = this.validateData();
       if (valid !== 'OK') {
-        rg2.utils.showWarningDialog("Data missing", valid + " Please enter all necessary information before creating the event.");
+        rg2.utils.showWarningDialog("Event set-up incomplete", valid + " Please enter all necessary information and make sure controls are aligned before creating the event.");
         return;
       }
       dlg = {};
@@ -1064,6 +1068,7 @@
           // lock background to prevent accidentally moving the aligned controls
           // user can always unlock and adjust
           this.backgroundLocked = true;
+          this.controlsAdjusted = true;
           $('#btn-move-map-and-controls').prop('checked', true);
         } else {
           // fit within the map since this is probably needed anyway
@@ -1178,6 +1183,7 @@
         // drag track and background
         rg2.ctx.translate(p2.x - p1.x, p2.y - p1.y);
       } else {
+        this.controlsAdjusted = true;
         if (this.handle.x !== null) {
           // scale controls
           scaleX = (p2.x - this.handle.x) / (p1.x - this.handle.x);
