@@ -3,7 +3,7 @@
 ## Latest news
 Version 1.5.2 was released on 13th October 2018 and is installed on all routegadget.co.uk sites.
 
-This includes som tidying up and minor enhamcements that may be useful:
+This includes some tidying up and minor enhancements that may be useful:
 
 * Results are simplified so you don't end up with an extra GPS result listed. Thanks to Roy Heselden for suggesting this. It is something that I had never really thought about, but now looks a lot more sensible than the old way.
 * You can now select replay of routes from the Course tab. Thanks to Olav Kvittem for the suggestion.
