@@ -9,7 +9,7 @@ require(dirname(__FILE__) . '/app/user.php');
 require(dirname(__FILE__) . '/app/utils.php');
 
 // version replaced by Gruntfile as part of release
-define('RG2VERSION', '1.5.1');
+define('RG2VERSION', '1.5.2');
 define("RG_LOG_FILE", dirname(__FILE__)."/log/rg2log.txt");
 
 if (file_exists(dirname(__FILE__) . '/rg2-config.php')) {
@@ -44,7 +44,6 @@ if (defined('HEADER_TEXT_COLOUR')) {
 
 $json_url = RG_BASE_DIRECTORY . "/rg2/rg2api.php";
 if (defined('OVERRIDE_SOURCE_DIRECTORY')) {
-  $debug = true;
   $source_url = OVERRIDE_SOURCE_DIRECTORY . "/rg2";
 } else {
   $source_url = RG_BASE_DIRECTORY . "/rg2";

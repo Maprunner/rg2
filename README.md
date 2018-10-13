@@ -1,13 +1,16 @@
 # Routegadget 2
 
 ## Latest news
-Version 1.5 was released on 28th July 2018 and is installed on all routegadget.co.uk sites.
+Version 1.5.2 was released on 13th October 2018 and is installed on all routegadget.co.uk sites.
 
-This includes a refactored back end which should be totally transparent to users, but means we can start thinking seriously about a new and improved front end. There are two changes that might be useful:
+This includes som tidying up and minor enhamcements that may be useful:
 
-* GPS adjustment has been significantly improved, so it is now possible to make sensible adjustments between two locked points.
+* Results are simplified so you don't end up with an extra GPS result listed. Thanks to Roy Heselden for suggesting this. It is something that I had never really thought about, but now looks a lot more sensible than the old way.
+* You can now select replay of routes from the Course tab. Thanks to Olav Kvittem for the suggestion.
+* Debug mode re-enabled for people who want to build and test their own version.
+* Facebook and Twitter removed since they loaded a lot of extra files and I'm not sure anyone was using the links.
+* The manager gives a warning if controls are not adjusted when setting up an event on a non-georeferenced map.
 
-* Manager dialogs should now be aligned correctly if you are running Firefox on LINUX.
 
 ## User Guide and Introductory Videos
 
