@@ -25,6 +25,12 @@ if (defined('UI_THEME')) {
     $ui_theme = 'base';
 }
 
+if (isset($_GET['debug'])) {
+    $debug = TRUE;
+  } else {
+    $debug = FALSE;
+  }
+
 if (defined('HEADER_COLOUR')) {
     $header_colour = HEADER_COLOUR;
 } else {
@@ -38,6 +44,7 @@ if (defined('HEADER_TEXT_COLOUR')) {
 
 $json_url = RG_BASE_DIRECTORY . "/rg2/rg2api.php";
 if (defined('OVERRIDE_SOURCE_DIRECTORY')) {
+  $debug = true;
   $source_url = OVERRIDE_SOURCE_DIRECTORY . "/rg2";
 } else {
   $source_url = RG_BASE_DIRECTORY . "/rg2";
@@ -46,6 +53,7 @@ if (defined('OVERRIDE_SOURCE_DIRECTORY')) {
 // messy but works OK for now
 // Overrides work OK on a local server which is what they are intended for
 if (defined('OVERRIDE_KARTAT_DIRECTORY')) {
+    $debug = true;
     $maps_dir = OVERRIDE_KARTAT_DIRECTORY;
     $maps_url = OVERRIDE_KARTAT_DIRECTORY;
 } else {
