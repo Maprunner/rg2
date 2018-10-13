@@ -12,6 +12,7 @@
     this.position = data.position;
     this.status = data.status;
     this.canDelete = false;
+    this.showResult = true;
     this.token = 0;
     // get round iconv problem in API for now: unescape special characters to get sensible text
     if (data.comments) {

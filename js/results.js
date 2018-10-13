@@ -431,9 +431,13 @@
       firstCourse = true;
       oldCourseID = 0;
       tracksForThisCourse = 0;
-      this.results.sort(this.sortByCourseIDThenResultID);
+      this.prepareResults();
       for (i = 0; i < this.results.length; i += 1) {
         res = this.results[i];
+        if (!res.showResult) {
+          // result marked not to display as it is being combined with GPS route
+          continue;
+        }
         if (res.courseid !== oldCourseID) {
           // found a new course so add header
           if (firstCourse) {
@@ -477,6 +481,34 @@
       html += this.getBottomRows(tracksForThisCourse, oldCourseID) + "</table></div></div>";
       return html;
     },
+
+    prepareResults : function () {
+      var oldID, i, canCombine;
+      // want to avoid extra results line for GPS routes if there is no drawn route
+      // first sort so that GPS routes come after initial result
+      this.results.sort(this.sortByCourseIDThenResultID);
+      // now we can combine first GPS route with original result if needed
+      oldID = undefined;
+      canCombine = false;
+      for (i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].rawid === oldID) {
+          if (canCombine) {
+            if (this.results[i].hasValidTrack) {
+              // found a GPS track to combine
+              this.results[i - 1].showResult = false;
+              // add position to GPS route
+              this.results[i].position = this.results[i - 1].position;
+              canCombine = false;
+            }
+          }
+        } else {
+          // this is the original result which can be combined if
+          // it doesn't already have a drawn route
+          canCombine = !this.results[i].hasValidTrack;
+          oldID = this.results[i].rawid;
+        }
+      }
+    },    
 
     getNameHTML : function (res, i) {
       var namehtml;
