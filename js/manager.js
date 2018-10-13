@@ -1223,6 +1223,7 @@
       // console.log("Mouse up ",x, y);
       if (this.drawingCourses) {
         this.addNewControl(x, y);
+        this.controlsAdjusted = true;
         return;
       }
       if ((this.mapLoaded) && (this.newcontrols.controls.length > 0)) {
