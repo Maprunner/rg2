@@ -114,8 +114,8 @@
   function translateTitleProperties() {
     var i, selector, text;
     selector = ["#rg2-hide-info-panel-icon", '#btn-about', '#btn-options', '#btn-zoom-out', '#btn-zoom-in', '#btn-reset', '#btn-show-splits', '#rg2-splits-table', '#btn-slower',
-      '#btn-faster', '#btn-rotate-right', '#btn-rotate-left'];
-    text = ["Hide info panel", 'Help', 'Options', 'Zoom out', 'Zoom in', 'Reset', 'Splits', 'Splits table', 'Slower', 'Faster', 'Rotate right', 'Rotate left'];
+      '#btn-faster', '#btn-rotate-right', '#btn-rotate-left', '#btn-stats'];
+    text = ["Hide info panel", 'Help', 'Options', 'Zoom out', 'Zoom in', 'Reset', 'Splits', 'Splits table', 'Slower', 'Faster', 'Rotate right', 'Rotate left', 'Statistics'];
     for (i = 0; i < selector.length; i += 1) {
       $(selector[i]).prop('title', t(text[i]));
     }

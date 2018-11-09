@@ -152,7 +152,7 @@
           html += "<i class='fa fa-info-circle event-info-icon' id='info-" + i + "'></i>";
         }
         if (this.events[i].worldfile.valid) {
-          html += "<i class='fa fa-globe event-info-icon' id='info-" + i + "'>&nbsp</i>";
+          html += "<i class='fa fa-globe-americas event-info-icon' id='info-" + i + "'>&nbsp</i>";
         }
         if (this.events[i].locked) {
           html += "<i class='fa fa-lock event-info-icon' id='info-" + i + "'>&nbsp</i>";

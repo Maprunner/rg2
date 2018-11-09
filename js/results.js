@@ -98,6 +98,20 @@
       return runners;
     },
 
+    getAllResultsForCourse : function (courseid) {
+      var i, results;
+      results = [];
+      for (i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].courseid === courseid) {
+          // only want first entry: not other drawn routes
+          if (this.results[i].resultid === this.results[i].rawid) {
+            results.push(this.results[i]);
+          }
+        }
+      }
+      return results;
+    },
+
     // read through results to get list of all controls on score courses
     // since there is no master list of controls!
     generateScoreCourses : function () {
@@ -147,7 +161,7 @@
           pos.length = 0;
           for (j = 0; j < this.results.length; j += 1) {
             if (this.results[j].courseid === info.courses[i]) {
-              pos.push({time: this.results[j].splits[k], id: j});
+              pos.push({time: this.results[j].splits[k] - this.results[j].splits[k-1], id: j});
             }
           }
           pos.sort(this.sortTimes);
@@ -155,6 +169,25 @@
           for (j = 0; j < pos.length; j += 1) {
             // no allowance for ties yet
             this.results[pos[j].id].legpos[k] = j + 1;
+          }
+        }
+      }
+      pos.length = 0;
+      for (i = 0; i < info.courses.length; i += 1) {
+        //console.log("Generate positions for course " + info.courses[i]);
+        // start at 1 since 0 is time 0
+        for (k = 1; k < info.controls[i]; k += 1) {
+          pos.length = 0;
+          for (j = 0; j < this.results.length; j += 1) {
+            if (this.results[j].courseid === info.courses[i]) {
+              pos.push({time: this.results[j].splits[k], id: j});
+            }
+          }
+          pos.sort(this.sortTimes);
+          //console.log(pos);
+          for (j = 0; j < pos.length; j += 1) {
+            // no allowance for ties yet
+            this.results[pos[j].id].racepos[k] = j + 1;
           }
         }
       }

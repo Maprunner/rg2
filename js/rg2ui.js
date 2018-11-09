@@ -17,9 +17,9 @@
         $("#rg2-event-title").hide();
       }
       if (rg2.events.mapIsGeoreferenced()) {
-        $("#rg2-event-title-icon").addClass("fa fa-globe");
+        $("#rg2-event-title-icon").addClass("fa fa-globe-americas");
       } else {
-        $("#rg2-event-title-icon").removeClass("fa fa-globe");
+        $("#rg2-event-title-icon").removeClass("fa fa-globe-americas");
       }
       if (rg2.events.eventIsLocked()) {
         $("#rg2-event-lock-icon").addClass("fa fa-lock");
@@ -136,6 +136,9 @@
       });
       $("#btn-reset").click(function () {
         rg2.resetMapState();
+      });
+      $("#btn-stats").click(function () {
+        rg2.stats.showStats();
       });
       $("#btn-reset-drawing").button().button("disable").click(function () {
         rg2.drawing.resetDrawing();
@@ -569,6 +572,7 @@
       });
       $("#rg2-course-select").change(function () {
         rg2.drawing.setCourse(parseInt($("#rg2-course-select").val(), 10));
+        rg2.stats.setCourse(parseInt($("#rg2-course-select").val(), 10));
       });
       $("#rg2-enter-name").click(function () {
         rg2.drawing.setNameAndTime();
