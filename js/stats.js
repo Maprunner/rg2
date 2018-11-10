@@ -35,41 +35,58 @@
       // all sorts of possible data consistency errors that might turn up
       //try {
         this.initialise(rawid);
-        html = this.generateTable();
+        html = this.generateSummary();
+        html += this.generateTableByLegPos();
+        html += this.generateTableByRacePos();
         this.displayStats(html);
-        for (i = 1; i < this.byLegPos.length; i += 1) {
-          this.drawChart(this.byLegPos[i]);
-        }
+        //this.addCharts();
       //} catch (err) {
       //  rg2.utils.showWarningDialog("Data inconsistency", "Cannot generate statistics.");
       //  return;
       //}
     },
 
-    drawChart : function (data) {
-  
-      var barWidth = 5; 
-      var width = (barWidth + 10) * data.length;
-      var height = 200;
+    addCharts : function () {
+      var i;
+      for (i = 1; i < this.byLegPos.length; i += 1) {
+        this.drawChart(i, this.byLegPos[i]);
+      }
+    },
+
+    drawChart : function (leg,data) {
+      var margin, height, width;
+      margin = {top: 10, right: 30, bottom: 30, left: 40};
+      width = 960 - margin.left - margin.right;
+      height = 240 - margin.top - margin.bottom;
       
       var x = d3.scaleLinear().domain([0, data.length]).range([0, width]);
       var y = d3.scaleLinear().domain([0, d3.max(data, function(datum) 
         {return datum.t;})]).rangeRound([0, height]);
         
-      var barBasic = d3.select("#rg2-stats-table").
+      var svg = d3.select("#rg2-stats-info").
         append("svg:svg").
-        attr("width", width).
-        attr("height", height);
+        attr("width", width + margin.left + margin.right).
+        attr("height", height + margin.top + margin.bottom).
+        append("g").
+        attr("transform", 
+              "translate(" + margin.left + "," + margin.top + ")");
     
-      barBasic.selectAll("rect").
+      svg.selectAll("rect").
         data(data).
         enter().
         append("svg:rect").
         attr("x", function(datum, index) { return x(index); }).
         attr("y", function(datum) { return height - y(datum.t); }).
         attr("height", function(datum) { return y(datum.t); }).
-        attr("width", barWidth).
+        attr("width", 5).
         attr("fill", "purple");
+
+      svg.append("g")
+        .attr("transform", "translate(0," + height + ")")
+        .call(d3.axisBottom(x));
+
+      svg.append("g")
+        .call(d3.axisLeft(y));  
     },
 
     displayStats : function (html) {
@@ -89,10 +106,20 @@
       });
     },
 
-    generateTable : function () {
+    generateSummary : function () {
+      var html;
+      html = '<h2>Summary</h2>';
+      html += 'Name: ' + this.result.name + '<br>Course:' + this.result.coursename + '<br>';
+      html += 'Total time: ' + this.result.time + '<br>';
+      html += 'Position: ' + this.result.position + ' out of ' + this.results.length + '<br>';
+      html += 'Average leg position: ' + this.getAverageLegPos();
+      return html;
+    },
+
+    generateTableByLegPos : function () {
       var i, html, headings, data, row, behind;
 
-      headings = ['Control', 'Code', 'Leg',  'Position', 'Best', 'Who', 'Behind', '%', 'Elapsed', 'Position', 'Best', 'Who', 'Behind', '%']; 
+      headings = ['Control', 'Code', 'Leg',  'Position', 'Best', 'Who', 'Behind', '%']; 
       row = [];
       data = [];
       for (i = 0; i < this.result.splits.length;  i += 1) {
@@ -142,7 +169,33 @@
             row.push(parseInt((behind * 100 / this.byLegPos[i][0].t), 10));
           }
         }
+        data.push(row.slice());
+      }
+
+      html = '<h2>Leg Times</h2>';
+      html += this.getHTMLTable(headings, data);
+      return html;
+    },
+
+    generateTableByRacePos : function () {
+      var i, html, headings, data, row, behind;
+
+      headings = ['Control', 'Code', 'Elapsed', 'Position', 'Best', 'Who', 'Behind', '%']; 
+      row = [];
+      data = [];
+      for (i = 0; i < this.result.splits.length;  i += 1) {
+        row.length = 0;
         if (i == 0) {
+          row.push('S');
+        } else {
+          if (i == (this.result.splits.length - 1)) {
+            row.push('F');
+          } else {
+            row.push(i);
+          }
+        }
+        row.push(this.course.codes[i]);   
+         if (i == 0) {
           row.push('0.00');
         } else {
           row.push(rg2.utils.formatSecsAsMMSS(this.result.splits[i]));
@@ -172,9 +225,7 @@
         data.push(row.slice());
       }
 
-      html = 'Name: ' + this.result.name + '<br>Course:' + this.result.coursename + '<br>';
-      html += 'Total time: ' + this.result.time + '<br>Position: ' + this.result.position + '<br>';
-      html += 'Average leg position: ' + this.getAverageLegPos();
+      html = '<h2>Cumulative Times</h2>';
       html += this.getHTMLTable(headings, data);
       return html;
     },
