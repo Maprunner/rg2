@@ -1,28 +1,98 @@
 /*global rg2:false */
+/*global d3:false */
 (function () {
   function Stats() {
     'use strict';
     this.result = null;
-    this.codes = [];
-    this.controls = [];
-    this.legLeader = [];
-    this.raceLeader = [];
+    this.results = [];
+    this.course = null;
+    this.byLegPos = [];
+    this.byRacePos = [];
   }
 
   Stats.prototype = {
     Constructor : Stats,
 
-    showStats : function () {
-      var i, html, headings, data, row;
+    initialise : function (rawid) {
+      var i;
 
-      this.result = rg2.results.getFullResult(97);
-      this.analyseCourse(this.result.courseid);
+      this.result = rg2.results.getFullResultForRawID(rawid);
+      this.result.legSplits = [];
+      // make life easier by creating leg splits from race splits
+      this.result.legSplits[0] = 0;
+      for (i = 1; i < this.result.splits.length; i += 1) {
+        this.result.legSplits[i] = this.result.splits[i] - this.result.splits[i - 1];
+      }
+      this.results = rg2.results.getAllResultsForCourse(this.result.courseid);
+      this.course = rg2.courses.getCourseDetails(this.result.courseid);
+      this.byLegPos.length = 0;
+      this.byRacePos.length = 0;
+      this.analyseCourse();
+    },
 
-      headings = ['Control', 'Code', 'Leg',  'Position', 'Best', 'Who', 'Elapsed', 'Position', 'Best'];
+    showStats : function (rawid) {
+      var html;
+      // all sorts of possible data consistency errors that might turn up
+      //try {
+        this.initialise(rawid);
+        html = this.generateTable();
+        this.displayStats(html);
+        for (i = 1; i < this.byLegPos.length; i += 1) {
+          this.drawChart(this.byLegPos[i]);
+        }
+      //} catch (err) {
+      //  rg2.utils.showWarningDialog("Data inconsistency", "Cannot generate statistics.");
+      //  return;
+      //}
+    },
 
-      html = 'Name: ' + this.result.name + '<br>Course:' + this.result.coursename + '<br>';
-      html += 'Total time: ' + this.result.time + '<br>Position: ' + this.result.position + '<br>';  
+    drawChart : function (data) {
+  
+      var barWidth = 5; 
+      var width = (barWidth + 10) * data.length;
+      var height = 200;
       
+      var x = d3.scaleLinear().domain([0, data.length]).range([0, width]);
+      var y = d3.scaleLinear().domain([0, d3.max(data, function(datum) 
+        {return datum.t;})]).rangeRound([0, height]);
+        
+      var barBasic = d3.select("#rg2-stats-table").
+        append("svg:svg").
+        attr("width", width).
+        attr("height", height);
+    
+      barBasic.selectAll("rect").
+        data(data).
+        enter().
+        append("svg:rect").
+        attr("x", function(datum, index) { return x(index); }).
+        attr("y", function(datum) { return height - y(datum.t); }).
+        attr("height", function(datum) { return y(datum.t); }).
+        attr("width", barWidth).
+        attr("fill", "purple");
+    },
+
+    displayStats : function (html) {
+      $("#rg2-stats-info").empty().append(html);
+      $("#rg2-stats-table").dialog({
+        width : 'auto',
+        maxHeight: $("#rg2-map-canvas").height(),
+        height: 'auto',
+        position: {my: "top", at: "top", of: "#rg2-map-canvas"},
+        dialogClass : "rg2-stats-table",
+        modal: false,
+        buttons : {
+          Ok : function () {
+            $("#rg2-stats-table").dialog('close');
+          }
+        }
+      });
+    },
+
+    generateTable : function () {
+      var i, html, headings, data, row, behind;
+
+      headings = ['Control', 'Code', 'Leg',  'Position', 'Best', 'Who', 'Behind', '%', 'Elapsed', 'Position', 'Best', 'Who', 'Behind', '%']; 
       row = [];
       data = [];
       for (i = 0; i < this.result.splits.length;  i += 1) {
@@ -36,19 +106,42 @@
             row.push(i);
           }
         }
-        row.push(this.codes[i]);   
+        row.push(this.course.codes[i]);   
         if (i == 0) {
           row.push('0.00');
         } else {
-          row.push(rg2.utils.formatSecsAsMMSS(this.result.splits[i] - this.result.splits[i - 1]));
+          row.push(rg2.utils.formatSecsAsMMSS(this.result.legSplits[i]));
         }
         if (i == 0) {
           row.push('-');
         } else {
           row.push(this.result.legpos[i]);
         }
-        row.push(this.legLeader[i].time);
-        row.push(this.legLeader[i].name);
+        row.push(rg2.utils.formatSecsAsMMSS(this.byLegPos[i][0].t));
+        if (i === 0) {
+          row.push("-");
+        } else {
+          row.push(this.results[this.byLegPos[i][0].resid].name);
+        }
+        behind = this.result.legSplits[i] - this.byLegPos[i][0].t;
+        if (i === 0) {
+          row.push("-");
+        } else {
+          if (this.result.legSplits[i] === 0){
+            row.push ('-');
+          } else {
+            row.push(rg2.utils.formatSecsAsMMSS(behind));
+          }
+        }
+        if (i === 0) {
+          row.push(0);
+        } else {
+          if (this.result.legSplits[i] === 0){
+            row.push ('-');
+          } else {
+            row.push(parseInt((behind * 100 / this.byLegPos[i][0].t), 10));
+          }
+        }
         if (i == 0) {
           row.push('0.00');
         } else {
@@ -59,52 +152,69 @@
         } else {
           row.push(this.result.racepos[i]);
         }
-        row.push('?');        
+        row.push(rg2.utils.formatSecsAsMMSS(this.byRacePos[i][0].t));
+        if (i === 0) {
+          row.push("-");
+        } else {
+          row.push(this.results[this.byRacePos[i][0].resid].name);
+        }
+        behind = this.result.splits[i] - this.byRacePos[i][0].t;
+        if (i === 0) {
+          row.push("-");
+        } else {
+          row.push(rg2.utils.formatSecsAsMMSS(behind));
+        }
+        if (i === 0) {
+          row.push(0);
+         } else {
+          row.push(parseInt((behind * 100 / this.byRacePos[i][0].t), 10));
+        }
         data.push(row.slice());
       }
 
+      html = 'Name: ' + this.result.name + '<br>Course:' + this.result.coursename + '<br>';
+      html += 'Total time: ' + this.result.time + '<br>Position: ' + this.result.position + '<br>';
+      html += 'Average leg position: ' + this.getAverageLegPos();
       html += this.getHTMLTable(headings, data);
-
-      $("#rg2-stats-info").empty().append(html);
-      $("#rg2-stats-table").dialog({
-        width : 'auto',
-        maxHeight: $("#rg2-map-canvas").height(),
-        height: 'auto',
-        position: {my: "top", at: "top", of: "#rg2-map-canvas"},
-        dialogClass : "rg2-stats-table",
-        modal: true,
-        buttons : {
-          Ok : function () {
-            $("#rg2-stats-table").dialog('close');
-          }
-        }
-      });
+      return html;
     },
 
-    analyseCourse : function (courseid) {
-      var i, k, results, course, legTimes, raceTimes;
+    getAverageLegPos : function () {
+      var i, total, count;
+      total = 0;
+      count = 0;
+      for (i = 1; i < this.result.legpos.length; i += 1) {
+        total += this.result.legpos[i];
+        count += 1; 
+      }
+      return (total/count).toFixed(1);
+    },
 
-      results = rg2.results.getAllResultsForCourse(courseid);
-      course = rg2.courses.getCourseDetails(courseid);
-      this.codes = course.codes;
+    analyseCourse : function () {
+      var i, k, legTimes, raceTimes;
+
       legTimes = [];
       raceTimes = [];
-      for (i = 1; i < course.codes.length; i += 1) {
+      for (i = 0; i < this.course.codes.length; i += 1) {
         legTimes.length = 0;
         raceTimes.length = 0;
-        for (k = 0; k < results.length; k += 1) {
-          legTimes.push({t: results[k].splits[i] - results[k].splits[i - 1], resid: k, pos: results[k].legpos[i]});
-          raceTimes.push({t: results[k].splits[i], resid: k, pos: results[k].racepos[i]});
-        }
-        this.controls.push({leg: legTimes, race: raceTimes});
-      }
-      this.legLeader.push({name: "", time: "-"});
-      for (i = 1; i < course.codes.length; i += 1) {
-        for (k = 0; k < results.length; k += 1) {
-          if (this.controls[i].leg[k].pos === 1) {
-            this.legLeader.push({name: this.controls[i].leg[k].resid, time: this.controls[i].leg[k].pos});
+        for (k = 0; k < this.results.length; k += 1) {
+          if (i === 0) {
+            legTimes.push({t: 0, resid: 0, pos: 0});
+            raceTimes.push({t: 0, resid: 0, pos: 0});
+          } else {
+            legTimes.push({t: this.results[k].splits[i] - this.results[k].splits[i - 1], resid: k, pos: this.results[k].legpos[i]});
+            raceTimes.push({t: this.results[k].splits[i], resid: k, pos: this.results[k].racepos[i]});
           }
         }
+        legTimes.sort(function (a, b) {
+          return a.pos - b.pos;
+        });
+        raceTimes.sort(function (a, b) {
+          return a.pos - b.pos;
+        });
+        this.byLegPos.push(legTimes.slice());
+        this.byRacePos.push(raceTimes.slice());
       }
     },
 

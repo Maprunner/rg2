@@ -151,43 +151,61 @@
     },
 
     generateLegPositions : function () {
-      var i, j, k, info, pos;
+      var i, j, k, info, pos, prevTime, prevPos;
       info = this.getCoursesAndControls();
       pos = [];
+      // two very similar bits of code: scope to rationalise...
+      // Generate positions for each leg
       for (i = 0; i < info.courses.length; i += 1) {
-        //console.log("Generate positions for course " + info.courses[i]);
         // start at 1 since 0 is time 0
         for (k = 1; k < info.controls[i]; k += 1) {
           pos.length = 0;
           for (j = 0; j < this.results.length; j += 1) {
-            if (this.results[j].courseid === info.courses[i]) {
+            if ((this.results[j].courseid === info.courses[i]) && (this.results[j].resultid === this.results[j].rawid)) {
               pos.push({time: this.results[j].splits[k] - this.results[j].splits[k-1], id: j});
             }
           }
-          pos.sort(this.sortTimes);
-          //console.log(pos);
+          pos.sort(this.sortLegTimes);
+          prevPos = 1;
+          prevTime = 0;
+          // set positions
           for (j = 0; j < pos.length; j += 1) {
-            // no allowance for ties yet
-            this.results[pos[j].id].legpos[k] = j + 1;
+            if (pos[j].time !== prevTime) {
+              // new time so position increments
+              this.results[pos[j].id].legpos[k] = j + 1;
+              prevTime = pos[j].time;
+              prevPos = j + 1;
+            } else {
+              // same time so use same position
+              this.results[pos[j].id].legpos[k] = prevPos;
+            }
           }
         }
       }
+      // Generate positions for cumulative time at each control
       pos.length = 0;
       for (i = 0; i < info.courses.length; i += 1) {
-        //console.log("Generate positions for course " + info.courses[i]);
         // start at 1 since 0 is time 0
         for (k = 1; k < info.controls[i]; k += 1) {
           pos.length = 0;
           for (j = 0; j < this.results.length; j += 1) {
             if (this.results[j].courseid === info.courses[i]) {
-              pos.push({time: this.results[j].splits[k], id: j});
+              pos.push({time: this.results[j].splits[k], id: j, ok: this.results[j].status});
             }
           }
-          pos.sort(this.sortTimes);
-          //console.log(pos);
+          pos.sort(this.sortRaceTimes);
+          prevPos = 1;
+          prevTime = 0;
           for (j = 0; j < pos.length; j += 1) {
-            // no allowance for ties yet
-            this.results[pos[j].id].racepos[k] = j + 1;
+            if (pos[j].time !== prevTime) {
+              // new time so position increments
+              this.results[pos[j].id].racepos[k] = j + 1;
+              prevTime = pos[j].time;
+              prevPos = j + 1;
+            } else {
+              // same time so use same position
+              this.results[pos[j].id].racepos[k] = prevPos;
+            }
           }
         }
       }
@@ -222,8 +240,22 @@
       this.results[id].displayScoreCourse = display;
     },
 
-    sortTimes : function (a, b) {
-      return a.time - b.time;
+    sortLegTimes : function (a, b) {
+      // missing splits get sorted to the bottom
+      if (a.time === 0) {
+        return 1;
+      } else {
+        return a.time - b.time;
+      }
+    },
+
+    sortRaceTimes : function (a, b) {
+      // incomplete results always go at the end
+      if (a.ok !== 'ok') {
+        return 1;
+      } else {
+        return a.time - b.time;
+      }
     },
 
     countResultsByCourseID : function (courseid) {
@@ -482,7 +514,7 @@
           html += this.getCourseHeader(res);
           oldCourseID = res.courseid;
         }
-        html += '<tr><td>' + res.position + '</td>';
+        html += '<tr><td id=' + res.rawid + '>' + res.position + '</td>';
         // #310 filter default comments in local language just in case
         if ((res.comments !== "") && (res.comments !== rg2.t('Type your comment'))) {
           // #304 make sure double quotes show up

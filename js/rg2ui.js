@@ -137,9 +137,6 @@
       $("#btn-reset").click(function () {
         rg2.resetMapState();
       });
-      $("#btn-stats").click(function () {
-        rg2.stats.showStats();
-      });
       $("#btn-reset-drawing").button().button("disable").click(function () {
         rg2.drawing.resetDrawing();
       });
@@ -357,6 +354,17 @@
       } else {
         $("#rg2-control-select").prop('disabled', false);
       }
+      $('.resulttable tr').dblclick(function() {
+        var id;
+        // only deal with "normal events"
+        if (rg2.events.hasResults() && !rg2.events.isScoreEvent()) {
+          // only handle clicks on valid results rows
+          id = $(this).find("td").attr("id");
+          if (id) {
+            rg2.stats.showStats(parseInt(id, 10));
+          }
+        }
+      });
     },
 
     createCourseMenu : function () {
@@ -572,7 +580,6 @@
       });
       $("#rg2-course-select").change(function () {
         rg2.drawing.setCourse(parseInt($("#rg2-course-select").val(), 10));
-        rg2.stats.setCourse(parseInt($("#rg2-course-select").val(), 10));
       });
       $("#rg2-enter-name").click(function () {
         rg2.drawing.setNameAndTime();
