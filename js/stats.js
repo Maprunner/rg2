@@ -14,7 +14,7 @@
     Constructor: Stats,
 
     initialise: function (rawid) {
-      var i;
+      var i, k;
 
       this.result = rg2.results.getFullResultForRawID(rawid);
       this.result.legSplits = [];
@@ -26,6 +26,11 @@
       this.results = rg2.results.getAllResultsForCourse(this.result.courseid);
       for (i = 0; i < this.results.length; i += 1) {
         this.results[i].timeInSecs = rg2.utils.getSecsFromHHMMSS(this.results[i].time);
+        this.results[i].legSplits = [];
+        this.results[i].legSplits[0] = 0;
+        for (k = 1; k < this.results[i].splits.length; k += 1) {
+          this.results[i].legSplits[k] = this.results[i].splits[k] - this.results[i].splits[k - 1];
+        }
       }
       this.course = rg2.courses.getCourseDetails(this.result.courseid);
       // includes start and finish
@@ -112,7 +117,7 @@
       var min = d3.min(values);
 
       var x = d3.scaleLinear()
-        .domain([min, max])
+        .domain([0, max])
         .range([0, width]);
       var y = d3.scaleLinear()
         .range([height, 0]);
@@ -135,7 +140,6 @@
       // Scale the range of the data in the y domain
       y.domain([0, d3.max(bins, function (d) { return d.length; })]);
 
-      // append the bar rectangles to the svg element
       svg.selectAll("rect")
         .data(bins)
         .enter().append("rect")
@@ -248,18 +252,18 @@
       return html;
     },
 
-    getTimeFromLegPos : function (legpos) {
+    getTimeFromLegPos: function (legpos) {
       return legpos.t;
     },
 
     getAverages: function (data, getValue) {
-      // assumes this comes in as an array by leg time
-      // but with any 0 times at the end
       var i, total, count, median;
+      data.sort(function compare (a, b) {
+        return a - b;
+      });
       total = 0;
       count = 0;
       for (i = 0; i < data.length; i += 1) {
-
         if (getValue(data[i]) !== 0) {
           count = count + 1;
           total = total + getValue(data[i]);
@@ -372,7 +376,7 @@
       }
     },
 
-    calculateLostTime : function () {
+    calculateLostTime: function () {
       var i, k, bestTime, averages, times;
       // find fastest time
       bestTime = 99999;
@@ -388,15 +392,24 @@
       // find median times for each leg
       this.course.medianLegTime = [];
       times = [];
-      for (i = 0; i < this.results.length; i += 1) {
+      for (i = 0; i < this.controls; i += 1) {
         times.length = 0;
-        for (k = 0; k < this.controls; k += 1) {
-          if (this.results[i].timeInSecs !== 0) {
-            times.push(this.results[i].timeInSecs);
+        for (k = 0; k < this.results.length; k += 1) {
+          if (this.results[k].legSplits[i] !== 0) {
+            times.push(this.results[k].legSplits[i]);
           }
         }
-        averages = this.getAverages(times, function (a) { return a;});
+        averages = this.getAverages(times, function (a) { return a; });
         this.course.medianLegTime[i] = averages.median;
+      }
+      // find offset to median times
+      times = [];
+      for (i = 0; i < this.results.length; i += 1) {
+        this.results[i].medianOffset = [];
+        this.results[i].medianOffset[0] = 0;
+        for (k = 1; k < this.controls; k += 1) {
+          this.results[i].medianOffset[k] = (this.results[i].legSplits[k] - this.course.medianLegTime[k]) / this.course.medianLegTime[k];
+        }
       }
     },
 

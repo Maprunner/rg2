@@ -37,7 +37,7 @@ module.exports = function(grunt) {
       options : {
         curly : true,
         plusplus : true,
-        esversion : 3,
+        esversion : 6,
         //strict: true,
         undef : true,
         unused: true,
@@ -72,7 +72,8 @@ module.exports = function(grunt) {
         'ids': false,
         'box-model': false,
         'duplicate-background-images': false,
-        'outline-none': false
+        'outline-none': false,
+        'order-alphabetical': false
       },
       src: 'css/rg2.css'
     },
