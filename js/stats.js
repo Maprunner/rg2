@@ -1,5 +1,4 @@
 /*global rg2:false */
-/*global d3:false */
 /*global agGrid:false */
 (function () {
   function Stats() {
@@ -44,17 +43,16 @@
 
     showStats: function (rawid) {
       // all sorts of possible data consistency errors that might turn up
-      //try {
-      this.initialise(rawid);
-      this.generateSummary();
-      this.generateTableByLegPos();
-      this.generateTableByRacePos();
-      this.displayStats();
-      //this.addCharts();
-      //} catch (err) {
-      //  rg2.utils.showWarningDialog("Data inconsistency", "Cannot generate statistics.");
-      //  return;
-      //}
+      try {
+        this.initialise(rawid);
+        this.generateSummary();
+        this.generateTableByLegPos();
+        this.generateTableByRacePos();
+        this.displayStats();
+      } catch (err) {
+        rg2.utils.showWarningDialog("Data inconsistency", "Cannot generate statistics.");
+        return;
+      }
     },
 
     displayStats: function () {
@@ -74,11 +72,13 @@
     },
 
     generateSummary: function () {
-      var html;
+      var html, info;
+      info = this.getLegPosInfo();
       html = 'Name: <strong>' + this.result.name + '</strong><br>Course:<strong>' + this.result.coursename + '</strong><br>';
       html += 'Total time: <strong>' + this.result.time + '</strong><br>';
       html += 'Position: <strong>' + this.result.position + ' out of ' + this.results.length + '</strong><br>';
-      html += 'Average leg position: <strong>' + this.getAverageLegPos() + '</strong><br>';
+      html += 'Average leg position: <strong>' + info.average + '</strong>';
+      html += ' (Best: <strong>' + info.best + '</strong>, Worst: <strong>' + info.worst + ')</strong><br>';
       html += 'Estimated loss: <strong>' + rg2.utils.formatSecsAsMMSS(this.results[this.resultIndex].totalLoss);
       html += ' (' + (100 * this.results[this.resultIndex].totalLoss / this.result.timeInSecs).toFixed(1) + ' %)</strong>';
       $("#rg2-stats-summary").empty().append(html);
@@ -149,15 +149,15 @@
 
       var gridOptions = {
         columnDefs: [
-          { headerName: "Control", field: "control", headerClass: "align-center", cellClass: "align-center" },
-          { headerName: "Time", field: "time", headerClass: "align-center", cellClass: "align-center" },
-          { headerName: "Position", field: "position", headerClass: "align-center", cellClass: "align-center" },
-          { headerName: "Best", field: "best", headerClass: "align-center", cellClass: "align-center" },
-          { headerName: "Who", field: "who" },
-          { headerName: "Behind", field: "behind", headerClass: "align-center", cellClass: "align-center" },
-          { headerName: "%", field: "percent", headerClass: "align-center", cellClass: "align-center" },
-          { headerName: "Predicted", field: "predicted", headerClass: "align-center", cellClass: "align-center" },
-          { headerName: "Loss", field: "loss", headerClass: "align-center", cellClass: "align-center" }
+          { headerName: "Control", field: "control", headerClass: "align-center", cellClass: "align-center", width: 88 },
+          { headerName: "Time", field: "time", headerClass: "align-center", cellClass: "align-center", width: 85 },
+          { headerName: "Position", field: "position", headerClass: "align-center", cellClass: "align-center", width: 100 },
+          { headerName: "Best", field: "best", headerClass: "align-center", cellClass: "align-center", width: 85 },
+          { headerName: "Who", field: "who", width: 200, tooltipField: "who" },
+          { headerName: "Behind", field: "behind", headerClass: "align-center", cellClass: "align-center", width: 85 },
+          { headerName: "%", field: "percent", headerClass: "align-center", cellClass: "align-center", width: 60 },
+          { headerName: "Predicted", field: "predicted", headerClass: "align-center", cellClass: "align-center", width: 110 },
+          { headerName: "Loss", field: "loss", headerClass: "align-center", cellClass: "align-center", width: 85 }
         ],
         rowData: rowData,
         domLayout: 'autoHeight',
@@ -171,10 +171,10 @@
 
     autosizeColumns: function (params) {
       var allColumnIds = [];
-      params.columnApi.getAllColumns().forEach(function(column) {
-          allColumnIds.push(column.colId);
+      params.columnApi.getAllColumns().forEach(function (column) {
+        allColumnIds.push(column.colId);
       });
-      params.columnApi.autoSizeColumns(allColumnIds);
+      //params.columnApi.autoSizeColumns(allColumnIds);
     },
 
     getTimeFromLegPos: function (legpos) {
@@ -272,13 +272,13 @@
 
       var gridOptions = {
         columnDefs: [
-          { headerName: "Control", field: "control", headerClass: "align-center", cellClass: "align-center" },
-          { headerName: "Time", field: "time", headerClass: "align-center", cellClass: "align-center" },
-          { headerName: "Position", field: "position", headerClass: "align-center", cellClass: "align-center" },
-          { headerName: "Best", field: "best", headerClass: "align-center", cellClass: "align-center" },
-          { headerName: "Who", field: "who" },
-          { headerName: "Behind", field: "behind", headerClass: "align-center", cellClass: "align-center" },
-          { headerName: "%", field: "percent", headerClass: "align-center", cellClass: "align-center" }
+          { headerName: "Control", field: "control", headerClass: "align-center", cellClass: "align-center", width: 88 },
+          { headerName: "Time", field: "time", headerClass: "align-center", cellClass: "align-center", width: 85 },
+          { headerName: "Position", field: "position", headerClass: "align-center", cellClass: "align-center", width: 100 },
+          { headerName: "Best", field: "best", headerClass: "align-center", cellClass: "align-center", width: 85 },
+          { headerName: "Who", field: "who", width: 200, tooltipField: "who" },
+          { headerName: "Behind", field: "behind", headerClass: "align-center", cellClass: "align-center", width: 85 },
+          { headerName: "%", field: "percent", headerClass: "align-center", cellClass: "align-center", width: 85 }
         ],
         rowData: rowData,
         domLayout: 'autoHeight',
@@ -290,15 +290,23 @@
       new agGrid.Grid(document.querySelector('#rg2-race-table'), gridOptions);
     },
 
-    getAverageLegPos: function () {
-      var i, total, count;
+    getLegPosInfo: function () {
+      var i, total, count, best, worst;
       total = 0;
       count = 0;
+      worst = 0;
+      best = 9999;
       for (i = 1; i < this.result.legpos.length; i += 1) {
         total += this.result.legpos[i];
         count += 1;
+        if (best > this.result.legpos[i]) {
+          best = this.result.legpos[i];
+        }
+        if (worst < this.result.legpos[i]) {
+          worst = this.result.legpos[i];
+        }
       }
-      return (total / count).toFixed(1);
+      return ({ best: best, worst: worst, average: (total / count).toFixed(1) });
     },
 
     analyseCourse: function () {
@@ -380,133 +388,6 @@
         }
         this.results[i].totalLoss = loss;
       }
-    },
-
-    getHTMLTable: function (headings, data) {
-      // converts an array of headings and an array of arrays of rows into an HTML table
-      var i, j, row, html;
-      html = '<table><thead><tr>';
-      for (i = 0; i < headings.length; i += 1) {
-        html += '<th>' + headings[i] + '</th>';
-      }
-      html += '</thead><tbody>';
-
-      for (j = 0; j < data.length; j += 1) {
-        row = data[j];
-        html += '<tr>';
-        for (i = 0; i < row.length; i += 1) {
-          html += '<td>' + row[i] + '</td>';
-        }
-        html += '</tr>';
-      }
-      html += '</tbody></table>';
-
-      return html;
-    },
-
-    addCharts: function () {
-      var i;
-      for (i = 1; i < this.byLegPos.length; i += 1) {
-        this.drawHistogram(i, this.byLegPos[i]);
-      }
-    },
-
-    drawChart: function (leg, data) {
-      var margin, height, width;
-      margin = { top: 10, right: 30, bottom: 30, left: 40 };
-      width = 960 - margin.left - margin.right;
-      height = 240 - margin.top - margin.bottom;
-
-      var x = d3.scaleLinear().domain([0, data.length]).range([0, width]);
-      var y = d3.scaleLinear().domain([0, d3.max(data, function (datum) { return datum.t; })]).rangeRound([0, height]);
-
-      var svg = d3.select("#rg2-stats-info").
-        append("svg:svg").
-        attr("width", width + margin.left + margin.right).
-        attr("height", height + margin.top + margin.bottom).
-        append("g").
-        attr("transform",
-          "translate(" + margin.left + "," + margin.top + ")");
-
-      svg.selectAll("rect").
-        data(data).
-        enter().
-        append("svg:rect").
-        attr("x", function (datum, index) { return x(index); }).
-        attr("y", function (datum) { return height - y(datum.t); }).
-        attr("height", function (datum) { return y(datum.t); }).
-        attr("width", 5).
-        attr("fill", "purple");
-
-      svg.append("g")
-        .attr("transform", "translate(0," + height + ")")
-        .call(d3.axisBottom(x));
-
-      svg.append("g")
-        .call(d3.axisLeft(y));
-    },
-
-    drawHistogram: function (leg, sourceData) {
-      var i, values, color;
-
-      color = "steelblue";
-      values = [];
-      for (i = 0; i < sourceData.length; i += 1) {
-        if (sourceData[i].t !== 0) {
-          values.push(sourceData[i].t);
-        }
-      }
-
-      var margin = { top: 10, right: 30, bottom: 30, left: 40 },
-        width = 960 - margin.left - margin.right,
-        height = 500 - margin.top - margin.bottom;
-
-      var max = d3.max(values);
-      // var min = d3.min(values);
-
-      var x = d3.scaleLinear()
-        .domain([0, max])
-        .range([0, width]);
-      var y = d3.scaleLinear()
-        .range([height, 0]);
-
-      var histogram = d3.histogram()
-        .value(function (d) { return d; })
-        .domain(x.domain())
-        .thresholds(x.ticks(10));
-
-      var svg = d3.select("#rg2-stats-info").append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-        .append("g")
-        .attr("transform",
-          "translate(" + margin.left + "," + margin.top + ")");
-
-      // group the data for the bars
-      var bins = histogram(values);
-
-      // Scale the range of the data in the y domain
-      y.domain([0, d3.max(bins, function (d) { return d.length; })]);
-
-      svg.selectAll("rect")
-        .data(bins)
-        .enter().append("rect")
-        .attr("class", "bar")
-        .attr("x", 1)
-        .attr("transform", function (d) {
-          return "translate(" + x(d.x0) + "," + y(d.length) + ")";
-        })
-        .attr("width", function (d) { return x(d.x1) - x(d.x0) - 1; })
-        .attr("height", function (d) { return height - y(d.length); });
-
-      // add the x Axis
-      svg.append("g")
-        .attr("transform", "translate(0," + height + ")")
-        .call(d3.axisBottom(x));
-
-      // add the y Axis
-      svg.append("g")
-        .call(d3.axisLeft(y));
     }
   };
   rg2.Stats = Stats;
