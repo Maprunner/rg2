@@ -33,7 +33,7 @@
   }
 
   // version replaced by Gruntfile as part of release
-  define('RG2VERSION', '1.5.3');
+  define('RG2VERSION', '1.5.3b');
   define('KARTAT_DIRECTORY', $kartat);
   define('LOCK_DIRECTORY', dirname(__FILE__)."/lock/saving/");
   define('CACHE_DIRECTORY', $kartat."cache/");

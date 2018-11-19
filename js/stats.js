@@ -15,7 +15,7 @@
     Constructor: Stats,
 
     initialise: function (rawid) {
-      var i, k;
+      var i;
 
       this.result = rg2.results.getFullResultForRawID(rawid);
       if (this.result.position === "") {
@@ -24,13 +24,8 @@
       this.results = rg2.results.getAllResultsForCourse(this.result.courseid);
       for (i = 0; i < this.results.length; i += 1) {
         if (this.results[i].rawid === rawid) {
+          // index for runner we are analysing
           this.resultIndex = i;
-        }
-        this.results[i].timeInSecs = rg2.utils.getSecsFromHHMMSS(this.results[i].time);
-        this.results[i].legSplits = [];
-        this.results[i].legSplits[0] = 0;
-        for (k = 1; k < this.results[i].splits.length; k += 1) {
-          this.results[i].legSplits[k] = this.results[i].splits[k] - this.results[i].splits[k - 1];
         }
       }
       this.course = rg2.courses.getCourseDetails(this.result.courseid);
@@ -48,6 +43,7 @@
         this.generateSummary();
         this.generateTableByLegPos();
         this.generateTableByRacePos();
+        this.generateSplitsTable();
         this.displayStats();
       } catch (err) {
         rg2.utils.showWarningDialog("Data inconsistency", "Cannot generate statistics.");
@@ -104,7 +100,7 @@
         } else {
           row.time = rg2.utils.formatSecsAsMMSS(this.results[this.resultIndex].legSplits[i]);
         }
-        if (i == 0) {
+        if ((i === 0) || (this.results[this.resultIndex].legpos[i] === 0)) {
           row.position = '-';
         } else {
           row.position = this.results[this.resultIndex].legpos[i];
@@ -143,7 +139,11 @@
           }
         }
         row.predicted = rg2.utils.formatSecsAsMMSS(this.results[this.resultIndex].predictedSplit[i]);
-        row.loss = rg2.utils.formatSecsAsMMSS(this.results[this.resultIndex].loss[i]);
+        if (this.results[this.resultIndex].legSplits[i] === 0) {
+          row.loss = '-';
+        } else {
+          row.loss = rg2.utils.formatSecsAsMMSS(this.results[this.resultIndex].loss[i]);
+        }
         rowData.push(row);
       }
 
@@ -257,13 +257,13 @@
           row.who = names;
         }
         behind = this.results[this.resultIndex].splits[i] - this.byRacePos[i][0].t;
-        if (i === 0) {
+        if ((i === 0) || ( this.results[this.resultIndex].racepos[i] === '-')) {
           row.behind = "-";
         } else {
           row.behind = rg2.utils.formatSecsAsMMSS(behind);
         }
-        if (i === 0) {
-          row.percent = 0;
+        if ((i === 0) || ( this.results[this.resultIndex].racepos[i] === '-')) {
+          row.percent = '-';
         } else {
           row.percent = parseInt((behind * 100 / this.byRacePos[i][0].t), 10);
         }
@@ -290,6 +290,61 @@
       new agGrid.Grid(document.querySelector('#rg2-race-table'), gridOptions);
     },
 
+    generateSplitsTable: function () {
+      var i, j, r, row, rowData, columnDefs;
+      columnDefs = [
+        { headerName: "Pos", field: "control", headerClass: "align-center", cellClass: "align-center", width: 88 },
+        { headerName: "Name", field: "name", width: 200},
+        { headerName: "Time", field: "time", headerClass: "align-center", cellClass: "align-center", width: 85 },
+      ];
+      for (j = 1; j < this.controls - 1; j += 1) {
+        columnDefs.push({headerName: j, field: 'C' + j, cellRenderer: this.renderSplits, headerClass: "align-center", cellClass: "align-center", width: 125});
+      }
+      columnDefs.push({headerName: 'F', field: 'finish', headerClass: "align-center", cellClass: "align-center", width: 125});
+
+      rowData = [];
+      for (i = 0; i < this.results.length; i += 1) {
+        row = {};
+        r = this.results[i];
+        row.position = r.position;
+        row.name = r.name;
+        row.time = r.time;
+        for (j = 1; j < this.controls - 1; j += 1) {
+          row['C' + j] = {split: rg2.utils.formatSecsAsMMSS(r.splits[j]), pos: r.racepos[j]};
+        }
+        row.finish = rg2.utils.formatSecsAsMMSS(r.splits[this.controls - 1]);
+        rowData.push(row);
+        row = {};
+        for (j = 1; j < this.controls - 1; j += 1) {
+          row['C' + j] = {split: rg2.utils.formatSecsAsMMSS(r.legSplits[j]), pos: r.legpos[j]};
+        }
+        row.finish = rg2.utils.formatSecsAsMMSS(r.legSplits[this.controls - 1]);
+        rowData.push(row);
+      }
+
+      var gridOptions = {
+
+        columnDefs: columnDefs,
+        rowData: rowData,
+        domLayout: 'autoHeight',
+        enableColResize: true,
+        onFirstDataRendered: this.autosizeColumns
+      };
+
+      $('#rg2-results-table').empty();
+      new agGrid.Grid(document.querySelector('#rg2-results-table'), gridOptions);
+    },
+
+    renderSplits: function (params) {
+      var html;
+      html = params.value.split;
+      html += ' (' + params.value.pos + ')';
+      if (params.value.pos === 1) {
+        html = '<strong>' + html + '</strong>';
+      }
+      return html;
+    },
+
     getLegPosInfo: function () {
       var i, total, count, best, worst;
       total = 0;
@@ -297,6 +352,9 @@
       worst = 0;
       best = 9999;
       for (i = 1; i < this.result.legpos.length; i += 1) {
+        if (this.result.legpos[i] === 0) {
+          continue;
+        }
         total += this.result.legpos[i];
         count += 1;
         if (best > this.result.legpos[i]) {

@@ -38,6 +38,7 @@
       }
       this.setDeletionInfo();
       this.setScoreCourseInfo();
+      this.sanitiseSplits();
       this.generateLegPositions();
     },
 
@@ -150,8 +151,44 @@
       }
     },
 
+    sanitiseSplits : function () {
+      var i, j, previousValidSplit, nextSplitInvalid;
+      // sort out missing punches and add some helpful new fields
+      for (i = 0; i < this.results.length; i += 1) {
+        this.results[i].timeInSecs = rg2.utils.getSecsFromHHMMSS(this.results[i].time);
+        this.results[i].legSplits = [];
+        this.results[i].legSplits[0] = 0;
+        previousValidSplit = 0;
+        nextSplitInvalid = false;
+        for (j = 1; j < this.results[i].splits.length; j += 1) {
+          if ((this.results[i].splits[j] - previousValidSplit) === 0) {
+            // found a zero split
+            this.results[i].legSplits[j] = 0;
+            // need to ignore next split as well: e.g missing 3 means splits to 3 and 4 are invalid
+            nextSplitInvalid = true;
+            if (this.results[i].lastValidSplit === undefined) {
+              // race positions need to stop at previous control
+              this.results[i].lastValidSplit = j - 1;
+            }
+          } else {
+            if (nextSplitInvalid) {
+              this.results[i].legSplits[j] = 0;
+              previousValidSplit = this.results[i].splits[j];
+              nextSplitInvalid = false;
+            } else {
+              this.results[i].legSplits[j] = this.results[i].splits[j] - previousValidSplit;
+              previousValidSplit = this.results[i].splits[j];
+            }
+          }
+        }
+        if (this.results[i].lastValidSplit === undefined) {
+          this.results[i].lastValidSplit = this.results[i].splits.length - 1;
+        }
+      } 
+    },
+
     generateLegPositions : function () {
-      var i, j, k, info, pos, prevTime, prevPos;
+      var i, j, k, info, pos, prevTime, prevPos, time;
       info = this.getCoursesAndControls();
       pos = [];
       // two very similar bits of code: scope to rationalise...
@@ -162,19 +199,27 @@
           pos.length = 0;
           for (j = 0; j < this.results.length; j += 1) {
             if ((this.results[j].courseid === info.courses[i]) && (this.results[j].resultid === this.results[j].rawid)) {
-              pos.push({time: this.results[j].splits[k] - this.results[j].splits[k-1], id: j});
+              pos.push({time: this.results[j].legSplits[k], id: j});
             }
           }
+          // 0 splits sorted to end
           pos.sort(this.sortLegTimes);
-          prevPos = 1;
+          prevPos = 0;
           prevTime = 0;
           // set positions
           for (j = 0; j < pos.length; j += 1) {
             if (pos[j].time !== prevTime) {
-              // new time so position increments
-              this.results[pos[j].id].legpos[k] = j + 1;
-              prevTime = pos[j].time;
-              prevPos = j + 1;
+              if (pos[j].time === 0) {
+                // all missing splits sorted to end with time 0
+                this.results[pos[j].id].legpos[k] = 0;
+                prevTime = 0;
+                prevPos = 0;
+              } else {
+                // new time so position increments
+                this.results[pos[j].id].legpos[k] = j + 1;
+                prevTime = pos[j].time;
+                prevPos = j + 1;
+              }
             } else {
               // same time so use same position
               this.results[pos[j].id].legpos[k] = prevPos;
@@ -189,19 +234,30 @@
         for (k = 1; k < info.controls[i]; k += 1) {
           pos.length = 0;
           for (j = 0; j < this.results.length; j += 1) {
-            if (this.results[j].courseid === info.courses[i]) {
-              pos.push({time: this.results[j].splits[k], id: j, ok: this.results[j].status});
+            if ((this.results[j].courseid === info.courses[i]) && (this.results[j].resultid === this.results[j].rawid)) {
+              if (this.results[j].lastValidSplit < k) {
+                time = 0;
+              } else {
+                time = this.results[j].splits[k];
+              }
+              pos.push({time: time, id: j});
             }
           }
+          // 0 splits sorted to end
           pos.sort(this.sortRaceTimes);
-          prevPos = 1;
+          prevPos = 0;
           prevTime = 0;
           for (j = 0; j < pos.length; j += 1) {
             if (pos[j].time !== prevTime) {
-              // new time so position increments
-              this.results[pos[j].id].racepos[k] = j + 1;
-              prevTime = pos[j].time;
-              prevPos = j + 1;
+              if (pos[j].time === 0) {
+                this.results[pos[j].id].racepos[k] = '-';
+                prevTime = 0;
+              } else {
+                // new time so position increments
+                this.results[pos[j].id].racepos[k] = j + 1;
+                prevTime = pos[j].time;
+                prevPos = j + 1;
+              }
             } else {
               // same time so use same position
               this.results[pos[j].id].racepos[k] = prevPos;
@@ -250,8 +306,8 @@
     },
 
     sortRaceTimes : function (a, b) {
-      // incomplete results always go at the end
-      if (a.ok !== 'ok') {
+      // missing splits get sorted to the bottom
+      if (a.time === 0) {
         return 1;
       } else {
         return a.time - b.time;
