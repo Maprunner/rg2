@@ -662,3 +662,19 @@ body {
 #rg2-world-file-map {
   height: 180px;
 }
+
+.rg2-first {
+  color: darkblue;
+  font-weight: bold;
+}
+
+.rg2-second {
+  color: red;
+  font-weight: bold;
+}
+
+.rg2-third {
+  color: green;
+  font-weight: bold;
+}
+

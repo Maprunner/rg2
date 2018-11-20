@@ -149,32 +149,23 @@
 
       var gridOptions = {
         columnDefs: [
-          { headerName: "Control", field: "control", headerClass: "align-center", cellClass: "align-center", width: 88 },
-          { headerName: "Time", field: "time", headerClass: "align-center", cellClass: "align-center", width: 85 },
-          { headerName: "Position", field: "position", headerClass: "align-center", cellClass: "align-center", width: 100 },
-          { headerName: "Best", field: "best", headerClass: "align-center", cellClass: "align-center", width: 85 },
-          { headerName: "Who", field: "who", width: 200, tooltipField: "who" },
-          { headerName: "Behind", field: "behind", headerClass: "align-center", cellClass: "align-center", width: 85 },
+          { headerName: rg2.t("Control"), field: "control", headerClass: "align-center", cellClass: "align-center", width: 88 },
+          { headerName: rg2.t("Time"), field: "time", headerClass: "align-center", cellClass: "align-center", width: 85 },
+          { headerName: rg2.t("Position"), field: "position", headerClass: "align-center", cellClass: "align-center", width: 100 },
+          { headerName: rg2.t("Best"), field: "best", headerClass: "align-center", cellClass: "align-center", width: 85 },
+          { headerName: rg2.t("Who"), field: "who", width: 200, tooltipField: "who" },
+          { headerName: rg2.t("Behind"), field: "behind", headerClass: "align-center", cellClass: "align-center", width: 85 },
           { headerName: "%", field: "percent", headerClass: "align-center", cellClass: "align-center", width: 60 },
-          { headerName: "Predicted", field: "predicted", headerClass: "align-center", cellClass: "align-center", width: 110 },
-          { headerName: "Loss", field: "loss", headerClass: "align-center", cellClass: "align-center", width: 85 }
+          { headerName: rg2.t("Predicted"), field: "predicted", headerClass: "align-center", cellClass: "align-center", width: 110 },
+          { headerName: rg2.t("Loss"), field: "loss", headerClass: "align-center", cellClass: "align-center", width: 85 }
         ],
         rowData: rowData,
         domLayout: 'autoHeight',
-        enableColResize: true,
-        onFirstDataRendered: this.autosizeColumns
+        enableColResize: true
       };
 
       $('#rg2-leg-table').empty();
       new agGrid.Grid(document.querySelector('#rg2-leg-table'), gridOptions);
-    },
-
-    autosizeColumns: function (params) {
-      var allColumnIds = [];
-      params.columnApi.getAllColumns().forEach(function (column) {
-        allColumnIds.push(column.colId);
-      });
-      //params.columnApi.autoSizeColumns(allColumnIds);
     },
 
     getTimeFromLegPos: function (legpos) {
@@ -272,18 +263,17 @@
 
       var gridOptions = {
         columnDefs: [
-          { headerName: "Control", field: "control", headerClass: "align-center", cellClass: "align-center", width: 88 },
-          { headerName: "Time", field: "time", headerClass: "align-center", cellClass: "align-center", width: 85 },
-          { headerName: "Position", field: "position", headerClass: "align-center", cellClass: "align-center", width: 100 },
-          { headerName: "Best", field: "best", headerClass: "align-center", cellClass: "align-center", width: 85 },
-          { headerName: "Who", field: "who", width: 200, tooltipField: "who" },
-          { headerName: "Behind", field: "behind", headerClass: "align-center", cellClass: "align-center", width: 85 },
+          { headerName: rg2.t("Control"), field: "control", headerClass: "align-center", cellClass: "align-center", width: 88 },
+          { headerName: rg2.t("Time"), field: "time", headerClass: "align-center", cellClass: "align-center", width: 85 },
+          { headerName: rg2.t("Position"), field: "position", headerClass: "align-center", cellClass: "align-center", width: 100 },
+          { headerName: rg2.t("Best"), field: "best", headerClass: "align-center", cellClass: "align-center", width: 85 },
+          { headerName: rg2.t("Who"), field: "who", width: 200, tooltipField: "who" },
+          { headerName: rg2.t("Behind"), field: "behind", headerClass: "align-center", cellClass: "align-center", width: 85 },
           { headerName: "%", field: "percent", headerClass: "align-center", cellClass: "align-center", width: 85 }
         ],
         rowData: rowData,
         domLayout: 'autoHeight',
-        enableColResize: true,
-        onFirstDataRendered: this.autosizeColumns
+        enableColResize: true
       };
 
       $('#rg2-race-table').empty();
@@ -293,14 +283,15 @@
     generateSplitsTable: function () {
       var i, j, r, row, rowData, columnDefs;
       columnDefs = [
-        { headerName: "Pos", field: "control", headerClass: "align-center", cellClass: "align-center", width: 88 },
-        { headerName: "Name", field: "name", width: 200},
-        { headerName: "Time", field: "time", headerClass: "align-center", cellClass: "align-center", width: 85 },
+        { headerName: rg2.t("Pos"), field: "position", headerClass: "align-center", cellClass: "align-center", width: 70 },
+        { headerName: rg2.t("Name"), field: "name", width: 200},
+        { headerName: rg2.t("Time"), field: "time", headerClass: "align-center", cellClass: "align-center", width: 85 },
       ];
       for (j = 1; j < this.controls - 1; j += 1) {
         columnDefs.push({headerName: j, field: 'C' + j, cellRenderer: this.renderSplits, headerClass: "align-center", cellClass: "align-center", width: 125});
       }
-      columnDefs.push({headerName: 'F', field: 'finish', headerClass: "align-center", cellClass: "align-center", width: 125});
+      columnDefs.push({headerName: rg2.t('F'), field: 'finish', headerClass: "align-center", cellClass: "align-center", width: 125});
+      columnDefs.push({headerName: '', field: 'initials', headerClass: "align-center", cellClass: "align-center", width: 75});
 
       rowData = [];
       for (i = 0; i < this.results.length; i += 1) {
@@ -319,16 +310,15 @@
           row['C' + j] = {split: rg2.utils.formatSecsAsMMSS(r.legSplits[j]), pos: r.legpos[j]};
         }
         row.finish = rg2.utils.formatSecsAsMMSS(r.legSplits[this.controls - 1]);
+        row.initials = r.initials;
         rowData.push(row);
       }
 
       var gridOptions = {
-
         columnDefs: columnDefs,
         rowData: rowData,
         domLayout: 'autoHeight',
-        enableColResize: true,
-        onFirstDataRendered: this.autosizeColumns
+        enableColResize: true
       };
 
       $('#rg2-results-table').empty();
@@ -340,7 +330,13 @@
       html = params.value.split;
       html += ' (' + params.value.pos + ')';
       if (params.value.pos === 1) {
-        html = '<strong>' + html + '</strong>';
+        html = '<span class="rg2-first">' + html + '</span>';
+      }
+      if (params.value.pos === 2) {
+        html = '<span class="rg2-second">' + html + '</span>';
+      }
+      if (params.value.pos === 3) {
+        html = '<span class="rg2-third">' + html + '</span>';
       }
       return html;
     },
