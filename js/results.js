@@ -235,7 +235,7 @@
           pos.length = 0;
           for (j = 0; j < this.results.length; j += 1) {
             if ((this.results[j].courseid === info.courses[i]) && (this.results[j].resultid === this.results[j].rawid)) {
-              if (this.results[j].lastValidSplit < k) {
+              if (k > this.results[j].lastValidSplit) {
                 time = 0;
               } else {
                 time = this.results[j].splits[k];
@@ -244,13 +244,14 @@
             }
           }
           // 0 splits sorted to end
-          pos.sort(this.sortRaceTimes);
+          pos.sort(this.sortLegTimes);
           prevPos = 0;
           prevTime = 0;
           for (j = 0; j < pos.length; j += 1) {
             if (pos[j].time !== prevTime) {
               if (pos[j].time === 0) {
-                this.results[pos[j].id].racepos[k] = '-';
+                this.results[pos[j].id].racepos[k] = 0;
+                prevPos = 0;
                 prevTime = 0;
               } else {
                 // new time so position increments
@@ -297,20 +298,16 @@
     },
 
     sortLegTimes : function (a, b) {
-      // missing splits get sorted to the bottom
+      // sort array of times in ascending order
+      // 0 splits get sorted to the bottom
       if (a.time === 0) {
         return 1;
       } else {
-        return a.time - b.time;
-      }
-    },
-
-    sortRaceTimes : function (a, b) {
-      // missing splits get sorted to the bottom
-      if (a.time === 0) {
-        return 1;
-      } else {
-        return a.time - b.time;
+        if (b.time === 0) {
+          return -1;
+        } else {
+          return a.time - b.time;
+        }
       }
     },
 

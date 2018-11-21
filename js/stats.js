@@ -18,9 +18,6 @@
       var i;
 
       this.result = rg2.results.getFullResultForRawID(rawid);
-      if (this.result.position === "") {
-        this.result.position = '--';
-      }
       this.results = rg2.results.getAllResultsForCourse(this.result.courseid);
       for (i = 0; i < this.results.length; i += 1) {
         if (this.results[i].rawid === rawid) {
@@ -31,8 +28,6 @@
       this.course = rg2.courses.getCourseDetails(this.result.courseid);
       // includes start and finish
       this.controls = this.course.codes.length;
-      this.byLegPos.length = 0;
-      this.byRacePos.length = 0;
       this.analyseCourse();
     },
 
@@ -54,7 +49,7 @@
     displayStats: function () {
       $("#rg2-stats-table").dialog({
         width: 'auto',
-        resizable: false,
+        //resizable: false,
         maxHeight: $("#rg2-map-canvas").height(),
         position: { my: "top", at: "top", of: "#rg2-map-canvas" },
         dialogClass: "rg2-stats-table",
@@ -72,7 +67,7 @@
       info = this.getLegPosInfo();
       html = 'Name: <strong>' + this.result.name + '</strong><br>Course:<strong>' + this.result.coursename + '</strong><br>';
       html += 'Total time: <strong>' + this.result.time + '</strong><br>';
-      html += 'Position: <strong>' + this.result.position + ' out of ' + this.results.length + '</strong><br>';
+      html += 'Position: <strong>' + this.results[this.resultIndex].racepos[this.controls - 1] + ' out of ' + this.results.length + '</strong><br>';
       html += 'Average leg position: <strong>' + info.average + '</strong>';
       html += ' (Best: <strong>' + info.best + '</strong>, Worst: <strong>' + info.worst + ')</strong><br>';
       html += 'Estimated loss: <strong>' + rg2.utils.formatSecsAsMMSS(this.results[this.resultIndex].totalLoss);
@@ -172,9 +167,9 @@
       return legpos.t;
     },
 
-    getAverages: function (data, perCent, getValue) {
+    getAverages: function (data, perCent) {
       var i, total, count, adjustedCount, median;
-      // sort incoming values used supplied sort function
+      // sort incoming values
       data.sort(function compare(a, b) {
         return a - b;
       });
@@ -191,18 +186,18 @@
       }
 
       for (i = 0; i < count; i += 1) {
-        total = total + getValue(data[i]);
+        total = total + data[i];
       }
       if (count === 0) {
         return ({ mean: 0, median: 0 });
       }
       if (count === 1) {
-        median = getValue(data[0]);
+        median = data[0];
       } else {
         if (count % 2 === 0) {
-          median = (getValue(data[(count / 2) - 1]) + getValue(data[(count / 2)])) / 2;
+          median = (data[(count / 2) - 1] + data[count / 2]) / 2;
         } else {
-          median = getValue(data[Math.floor(count / 2)]);
+          median = data[Math.floor(count / 2)];
         }
       }
       return ({ mean: total / count, median: median });
@@ -226,9 +221,13 @@
         if (i == 0) {
           row.time = '0.00';
         } else {
-          row.time = rg2.utils.formatSecsAsMMSS(this.results[this.resultIndex].splits[i]);
+          if (this.results[this.resultIndex].splits[i] === this.results[this.resultIndex].splits[i - 1]) {
+            row.time = "";
+          } else {
+            row.time = rg2.utils.formatSecsAsMMSS(this.results[this.resultIndex].splits[i]);
+          }
         }
-        if (i == 0) {
+        if ((i === 0) || (this.results[this.resultIndex].racepos[i] === 0)) {
           row.position = '-';
         } else {
           row.position = this.results[this.resultIndex].racepos[i];
@@ -248,12 +247,12 @@
           row.who = names;
         }
         behind = this.results[this.resultIndex].splits[i] - this.byRacePos[i][0].t;
-        if ((i === 0) || ( this.results[this.resultIndex].racepos[i] === '-')) {
+        if ((i === 0) || ( this.results[this.resultIndex].racepos[i] === 0)) {
           row.behind = "-";
         } else {
           row.behind = rg2.utils.formatSecsAsMMSS(behind);
         }
-        if ((i === 0) || ( this.results[this.resultIndex].racepos[i] === '-')) {
+        if ((i === 0) || ( this.results[this.resultIndex].racepos[i] === 0)) {
           row.percent = '-';
         } else {
           row.percent = parseInt((behind * 100 / this.byRacePos[i][0].t), 10);
@@ -290,26 +289,49 @@
       for (j = 1; j < this.controls - 1; j += 1) {
         columnDefs.push({headerName: j, field: 'C' + j, cellRenderer: this.renderSplits, headerClass: "align-center", cellClass: "align-center", width: 125});
       }
-      columnDefs.push({headerName: rg2.t('F'), field: 'finish', headerClass: "align-center", cellClass: "align-center", width: 125});
+      columnDefs.push({headerName: rg2.t('F'), field: 'finish', cellRenderer: this.renderSplits, headerClass: "align-center", cellClass: "align-center", width: 125});
       columnDefs.push({headerName: '', field: 'initials', headerClass: "align-center", cellClass: "align-center", width: 75});
 
       rowData = [];
+      // sort results table: this gest round problems of having multiple classes on one course where results were by class
+      this.results.sort(function (a, b) {
+        // sort valid times in ascending order
+        if (a.racepos[a.splits.length - 1] === 0) {
+          return 1;
+        } else {
+          if (b.racepos[b.splits.length - 1] === 0) {
+            return -1;
+          } else {
+            return a.racepos[a.splits.length - 1] - b.racepos[b.splits.length - 1];
+          }
+        }
+      });
       for (i = 0; i < this.results.length; i += 1) {
         row = {};
         r = this.results[i];
-        row.position = r.position;
+        if (r.racepos[this.controls - 1] == 0) {
+          row.position = "";
+        } else {
+          row.position = r.racepos[this.controls - 1];
+        }
         row.name = r.name;
         row.time = r.time;
         for (j = 1; j < this.controls - 1; j += 1) {
-          row['C' + j] = {split: rg2.utils.formatSecsAsMMSS(r.splits[j]), pos: r.racepos[j]};
+          if (r.splits[j] === r.splits[j - 1]) {
+            // no valid split for this control
+            row['C' + j] = {split: "0:00", pos: r.racepos[j]};
+          } else {
+            row['C' + j] = {split: rg2.utils.formatSecsAsMMSS(r.splits[j]), pos: r.racepos[j]};
+          }
         }
-        row.finish = rg2.utils.formatSecsAsMMSS(r.splits[this.controls - 1]);
+        row.finish = {split: rg2.utils.formatSecsAsMMSS(r.splits[this.controls - 1]), pos: r.racepos[this.controls - 1]};
+        row.initials = r.initials;
         rowData.push(row);
         row = {};
         for (j = 1; j < this.controls - 1; j += 1) {
           row['C' + j] = {split: rg2.utils.formatSecsAsMMSS(r.legSplits[j]), pos: r.legpos[j]};
         }
-        row.finish = rg2.utils.formatSecsAsMMSS(r.legSplits[this.controls - 1]);
+        row.finish = {split: rg2.utils.formatSecsAsMMSS(r.legSplits[this.controls - 1]), pos: r.legpos[this.controls - 1]};
         row.initials = r.initials;
         rowData.push(row);
       }
@@ -327,16 +349,21 @@
 
     renderSplits: function (params) {
       var html;
+      if (params.value.split === "0:00") {
+        return "";
+      }
       html = params.value.split;
-      html += ' (' + params.value.pos + ')';
-      if (params.value.pos === 1) {
-        html = '<span class="rg2-first">' + html + '</span>';
-      }
-      if (params.value.pos === 2) {
-        html = '<span class="rg2-second">' + html + '</span>';
-      }
-      if (params.value.pos === 3) {
-        html = '<span class="rg2-third">' + html + '</span>';
+      if (params.value.pos !== 0) {
+        html += ' (' + params.value.pos + ')';
+        if (params.value.pos === 1) {
+          html = '<span class="rg2-first">' + html + '</span>';
+        }
+        if (params.value.pos === 2) {
+          html = '<span class="rg2-second">' + html + '</span>';
+        }
+        if (params.value.pos === 3) {
+          html = '<span class="rg2-third">' + html + '</span>';
+        }
       }
       return html;
     },
@@ -366,20 +393,28 @@
     analyseCourse: function () {
       var i, k, legTimes, raceTimes;
       this.calculateLostTime();
+      this.byLegPos.length = 0;
+      this.byRacePos.length = 0;
       legTimes = [];
       raceTimes = [];
+      // for each leg
       for (i = 0; i < this.controls; i += 1) {
         legTimes.length = 0;
         raceTimes.length = 0;
+        // for each runner
         for (k = 0; k < this.results.length; k += 1) {
+          // create array of valid splits to this control
           if (i === 0) {
+            // start control
             legTimes.push({ t: 0, resid: 0, pos: 0 });
             raceTimes.push({ t: 0, resid: 0, pos: 0 });
           } else {
+            // leg split of 0 means invalid split for this runner for this leg
             if (this.results[k].legSplits[i] !== 0) {
               legTimes.push({ t: this.results[k].legSplits[i], resid: k, pos: this.results[k].legpos[i] });
             }
-            if (this.results[k].splits[i] !== 0) {
+            // race position only valid if all controls to that point are valid
+            if (k < this.results[k].lastValidSplit) {
               raceTimes.push({ t: this.results[k].splits[i], resid: k, pos: this.results[k].racepos[i] });
             }
           }
@@ -408,7 +443,7 @@
           }
         }
         // using average of best 25% of times for the leg
-        averages = this.getAverages(times, 25, function (a) { return a; });
+        averages = this.getAverages(times, 25);
         this.course.refLegTime[i] = averages.median;
       }
       // find ratio to reference times
@@ -421,7 +456,7 @@
           this.results[i].refRatio[k] = this.results[i].legSplits[k] / this.course.refLegTime[k];
           ratios.push(this.results[i].refRatio[k]);
         }
-        averages = this.getAverages(ratios, 100, function (a) { return a; });
+        averages = this.getAverages(ratios, 100);
         this.results[i].medianRefRatio = averages.median;
       }
 
