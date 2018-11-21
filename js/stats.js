@@ -48,12 +48,10 @@
 
     displayStats: function () {
       $("#rg2-stats-table").dialog({
-        width: 'auto',
-        //resizable: false,
+        resizable: false,
         maxHeight: $("#rg2-map-canvas").height(),
+        width: $("#rg2-map-canvas").width() / 2,
         position: { my: "top", at: "top", of: "#rg2-map-canvas" },
-        dialogClass: "rg2-stats-table",
-        modal: false,
         buttons: {
           Ok: function () {
             $("#rg2-stats-table").dialog('close');
@@ -280,17 +278,17 @@
     },
 
     generateSplitsTable: function () {
-      var i, j, r, row, rowData, columnDefs;
+      var i, j, r, row, rowData, columnDefs, height;
       columnDefs = [
-        { headerName: rg2.t("Pos"), field: "position", headerClass: "align-center", cellClass: "align-center", width: 70 },
-        { headerName: rg2.t("Name"), field: "name", width: 200},
+        { headerName: rg2.t("Pos"), field: "position", headerClass: "align-center", cellClass: "align-center", width: 60 },
+        { headerName: rg2.t("Name"), field: "name", width: 150},
         { headerName: rg2.t("Time"), field: "time", headerClass: "align-center", cellClass: "align-center", width: 85 },
       ];
       for (j = 1; j < this.controls - 1; j += 1) {
         columnDefs.push({headerName: j, field: 'C' + j, cellRenderer: this.renderSplits, headerClass: "align-center", cellClass: "align-center", width: 125});
       }
       columnDefs.push({headerName: rg2.t('F'), field: 'finish', cellRenderer: this.renderSplits, headerClass: "align-center", cellClass: "align-center", width: 125});
-      columnDefs.push({headerName: '', field: 'initials', headerClass: "align-center", cellClass: "align-center", width: 75});
+      columnDefs.push({headerName: '', field: 'initials', headerClass: "align-center", cellClass: "align-center", width: 75, pinned: "right"});
 
       rowData = [];
       // sort results table: this gest round problems of having multiple classes on one course where results were by class
@@ -332,19 +330,30 @@
           row['C' + j] = {split: rg2.utils.formatSecsAsMMSS(r.legSplits[j]), pos: r.legpos[j]};
         }
         row.finish = {split: rg2.utils.formatSecsAsMMSS(r.legSplits[this.controls - 1]), pos: r.legpos[this.controls - 1]};
-        row.initials = r.initials;
         rowData.push(row);
       }
 
       var gridOptions = {
         columnDefs: columnDefs,
         rowData: rowData,
-        domLayout: 'autoHeight',
+        //domLayout: 'autoHeight',
         enableColResize: true
+        //onFirstDataRendered: this.autoSizeColumns
       };
 
+     // try to set a sensible height that allows table to be viewed using scroll bars
+      height = $("#rg2-map-canvas").height() * 0.75;
+      $('#rg2-results-table-container').removeAttr("style").attr("style", "height: " + height + "px;");
       $('#rg2-results-table').empty();
       new agGrid.Grid(document.querySelector('#rg2-results-table'), gridOptions);
+    },
+
+    autoSizeColumns: function (params) {
+      var allColumnIds = [];
+      params.columnApi.getAllColumns().forEach(function(column) {
+          allColumnIds.push(column.colId);
+      });
+      params.columnApi.autoSizeColumns(allColumnIds);
     },
 
     renderSplits: function (params) {
