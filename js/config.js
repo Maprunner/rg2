@@ -48,7 +48,7 @@
     EVENT_WITHOUT_RESULTS : 2,
     SCORE_EVENT : 3,
     // version gets set automatically by grunt file during build process
-    RG2VERSION: '1.5.2',
+    RG2VERSION: '1.5.3c',
     TIME_NOT_FOUND : 9999,
     // values for evt.which
     RIGHT_CLICK : 3,
@@ -114,8 +114,8 @@
   function translateTitleProperties() {
     var i, selector, text;
     selector = ["#rg2-hide-info-panel-icon", '#btn-about', '#btn-options', '#btn-zoom-out', '#btn-zoom-in', '#btn-reset', '#btn-show-splits', '#rg2-splits-table', '#btn-slower',
-      '#btn-faster', '#btn-rotate-right', '#btn-rotate-left'];
-    text = ["Hide info panel", 'Help', 'Options', 'Zoom out', 'Zoom in', 'Reset', 'Splits', 'Splits table', 'Slower', 'Faster', 'Rotate right', 'Rotate left'];
+      '#btn-faster', '#btn-rotate-right', '#btn-rotate-left', '#btn-stats'];
+    text = ["Hide info panel", 'Help', 'Options', 'Zoom out', 'Zoom in', 'Reset', 'Splits', 'Splits table', 'Slower', 'Faster', 'Rotate right', 'Rotate left', 'Statistics'];
     for (i = 0; i < selector.length; i += 1) {
       $(selector[i]).prop('title', t(text[i]));
     }

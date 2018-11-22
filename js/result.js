@@ -44,6 +44,7 @@
     initialiseTrack : function (data) {
       var info;
       this.legpos = [];
+      this.racepos = [];
       // set true if track includes all expected controls in correct order or is a GPS track
       this.hasValidTrack = false;
       this.displayTrack = false;
