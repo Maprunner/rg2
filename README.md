@@ -1,16 +1,11 @@
 # Routegadget 2
 
 ## Latest news
-Version 1.5.2 was released on 13th October 2018 and is installed on all routegadget.co.uk sites.
+Version 1.5.4 was released on 22nd November 2018 and is installed on all routegadget.co.uk sites.
 
-This includes some tidying up and minor enhancements that may be useful:
+The main change is the inclusion of a new statistics page. Double click on any runner name on the result tab to see details.
 
-* Results are simplified so you don't end up with an extra GPS result listed. Thanks to Roy Heselden for suggesting this. It is something that I had never really thought about, but now looks a lot more sensible than the old way.
-* You can now select replay of routes from the Course tab. Thanks to Olav Kvittem for the suggestion.
-* Debug mode re-enabled for people who want to build and test their own version.
-* Facebook and Twitter removed since they loaded a lot of extra files and I'm not sure anyone was using the links.
-* The manager gives a warning if controls are not adjusted when setting up an event on a non-georeferenced map.
-
+This is still work in progress, but is good enough for people to provide feedback about what to add next.
 
 ## User Guide and Introductory Videos
 

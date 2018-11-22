@@ -1,5 +1,4 @@
 /*global rg2:false */
-/*global console:false */
 (function () {
   function GPSTrack() {
     this.lat = [];

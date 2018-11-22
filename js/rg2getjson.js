@@ -1,6 +1,5 @@
 /*global rg2:false */
 /*global rg2Config:false */
-/*global console */
 (function () {
   function reportJSONFail(errorText) {
     $("#rg2-load-progress").hide();
