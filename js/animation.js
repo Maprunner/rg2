@@ -339,7 +339,7 @@
         }
       } else {
         this.realTime = true;
-        $("#btn-real-time").removeClass().addClass('fa fa-clock-o').prop('title', rg2.t('Mass start'));
+        $("#btn-real-time").removeClass().addClass('fa fa-clock').prop('title', rg2.t('Mass start'));
         $("#rg2-control-select").prop('disabled', true);
       }
       // go back to start

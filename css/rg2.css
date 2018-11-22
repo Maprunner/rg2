@@ -12,7 +12,7 @@ html, body {
 }
 
 .ui-widget {
-  font: -apple-system,"Roboto","Segoe UI","Helvetica Neue",Arial,sans-serif;
+  font: 16px/26px -apple-system,"Roboto","Segoe UI","Helvetica Neue",Arial,sans-serif;
 }
 
 #rg2-header-container {
@@ -367,6 +367,10 @@ html, body {
    text-align: left;
 }
 
+.align-center {
+  text-align: center;
+}
+
 .track-names th {
   background: rgb(150, 150, 150);
   background: rgba(150, 150, 150, 0.75);
@@ -658,3 +662,19 @@ body {
 #rg2-world-file-map {
   height: 180px;
 }
+
+.rg2-first {
+  color: darkblue;
+  font-weight: bold;
+}
+
+.rg2-second {
+  color: red;
+  font-weight: bold;
+}
+
+.rg2-third {
+  color: green;
+  font-weight: bold;
+}
+

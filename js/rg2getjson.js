@@ -1,6 +1,5 @@
 /*global rg2:false */
 /*global rg2Config:false */
-/*global console */
 (function () {
   function reportJSONFail(errorText) {
     $("#rg2-load-progress").hide();
@@ -15,7 +14,7 @@
       type : "events",
       cache : false
     }).done(function (json) {
-      console.log("Events: " + json.data.events.length);
+      //console.log("Events: " + json.data.events.length);
       rg2.events.deleteAllEvents();
       $.each(json.data.events, function () {
         rg2.events.addEvent(new rg2.Event(this));
@@ -120,7 +119,7 @@
       cache : false
     }).done(function (json) {
       $("#rg2-load-progress-label").text(rg2.t("Saving courses"));
-      console.log("Event " + id + ": " + json.data.courses.length + " courses, " + json.data.results.length + " results, " + json.data.routes.length + " routes");
+      //("Event " + id + ": " + json.data.courses.length + " courses, " + json.data.results.length + " results, " + json.data.routes.length + " routes");
       $.each(json.data.courses, function () {
         rg2.courses.addCourse(new rg2.Course(this, rg2.events.isScoreEvent()));
       });
@@ -130,9 +129,11 @@
       $("#btn-toggle-names").show();
       processResults(json);
       processGPSTracks(json);
+      rg2.eventLoaded();
     }).fail(function (jqxhr, textStatus, error) {
       /*jslint unparam:true*/
       reportJSONFail("Event request failed for event " + id + ": " + error);
+      rg2.eventLoaded();
     });
   }
 

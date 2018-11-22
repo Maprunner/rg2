@@ -1,5 +1,4 @@
 /*global rg2:false */
-/*global console:false */
 (function () {
   function GPSTrack() {
     this.lat = [];
@@ -289,7 +288,7 @@
       }
       // convert index in bestGuess into offset in x, y, time
       offset = bestGuess - range;
-      console.log("Offset = " + offset);
+      //console.log("Offset = " + offset);
       return offset;
     },
 

@@ -685,7 +685,7 @@
       // scale and rotate track around single locked point
       scale = rg2.utils.getDistanceBetweenPoints(p2.x, p2.y, p3.x, p3.y) / rg2.utils.getDistanceBetweenPoints(p1.x, p1.y, p3.x, p3.y);
       angle = rg2.utils.getAngle(p2.x, p2.y, p3.x, p3.y) - rg2.utils.getAngle(p1.x, p1.y, p3.x, p3.y);
-      console.log (p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, scale, angle, fromTime, toTime);
+      //console.log (p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, scale, angle, fromTime, toTime);
       for (i = fromTime; i <= toTime; i += 1) {
         pt = rg2.utils.rotatePoint(this.gpstrack.baseX[i] - p3.x, this.gpstrack.baseY[i] - p3.y, angle);
         this.gpstrack.routeData.x[i] = (pt.x * scale) + p3.x;

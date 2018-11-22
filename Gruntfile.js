@@ -1,7 +1,7 @@
 module.exports = function(grunt) {
   var jsFileList = ['js/rg2.js', 'js/animation.js', 'js/canvas.js', 'js/config.js', 'js/control.js', 'js/controls.js', 'js/course.js', 'js/courses.js',
     'js/draw.js', 'js/event.js', 'js/events.js', 'js/gpstrack.js', 'js/handles.js', 'js/map.js', 'js/plugins.js', 'js/result.js',
-    'js/results.js', 'js/rg2getjson.js', 'js/rg2input.js', 'js/rg2ui.js', 'js/runner.js', 'js/utils.js', 'js/lib/he.js'
+    'js/results.js', 'js/rg2getjson.js', 'js/rg2input.js', 'js/rg2ui.js', 'js/runner.js', 'js/stats.js', 'js/utils.js', 'js/lib/he.js'
     ];
 
   var langFileList = ['lang/de.js', 'lang/fi.js', 'lang/fr.js', 'lang/it.js', 'lang/ja.js', 'lang/no.js', 'lang/pt.js', 'lang/xx.js'];
@@ -9,7 +9,7 @@ module.exports = function(grunt) {
   // don't jsHint he.js, plugins.js
   var jsHintList = ['js/rg2.js', 'js/animation.js', 'js/canvas.js', 'js/config.js', 'js/control.js', 'js/controls.js', 'js/course.js',
     'js/courses.js', 'js/draw.js', 'js/event.js', 'js/events.js', 'js/gpstrack.js', 'js/handles.js', 'js/map.js', 'js/result.js',
-    'js/results.js', 'js/rg2getjson.js', 'js/rg2input.js', 'js/rg2ui.js', 'js/runner.js', 'js/utils.js'];
+    'js/results.js', 'js/rg2getjson.js', 'js/rg2input.js', 'js/rg2ui.js', 'js/runner.js', 'js/stats.js', 'js/utils.js'];
 
   var jsManagerSrc = ['js/manager.js', 'js/courseparser.js', 'js/resultparseriofv2.js', 'js/resultparseriofv3.js', 'js/resultparsercsv.js', 'js/resultparser.js', 'js/managerui.js'];
 
@@ -37,7 +37,7 @@ module.exports = function(grunt) {
       options : {
         curly : true,
         plusplus : true,
-        esversion : 3,
+        esversion : 6,
         //strict: true,
         undef : true,
         unused: true,
@@ -72,7 +72,8 @@ module.exports = function(grunt) {
         'ids': false,
         'box-model': false,
         'duplicate-background-images': false,
-        'outline-none': false
+        'outline-none': false,
+        'order-alphabetical': false
       },
       src: 'css/rg2.css'
     },

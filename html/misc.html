@@ -1,31 +1,51 @@
- <canvas id="rg2-map-canvas">Your browser does not support HTML5.</canvas>
- <div id="rg2-load-progress" class="rg2-progress-display">
-   <div id="rg2-load-progress-bar"></div>
-   <div id="rg2-load-progress-label"></div>
- </div>
- <div id="rg2-map-load-progress" class="rg2-progress-display">
-   <div id="rg2-map-load-progress-bar"></div>
-   <div id="rg2-map-load-progress-label"></div>
- </div>
- <div id="rg2-hide-info-panel-control">
-   <div><i id="rg2-hide-info-panel-icon" class="fa fa-chevron-left"></i></div>
- </div>  
- <div id="rg2-track-names" class="track-names"></div>
- <div id="rg2-about-dialog">
-   <p id="rg2-event-stats"></p>
-   <hr>
-   <p>Routegadget 2 (RG2) is a web application for drawing and comparing orienteering routes. It is based on the original Routegadget developed by Jarkko Ryyppö.
-   For further details see the <a href="https://github.com/Maprunner/rg2/wiki/User-guide" target="_blank" rel="noopener">User Guide</a> and the <a href="https://github.com/Maprunner/rg2" target="_blank" rel="noopener">RG2 project page</a>.
-   The latest version of RG2 is available for download <a href="https://github.com/Maprunner/rg2/archive/master.zip" target="_blank" rel="noopener">from GitHub</a>.
-   You can see details of <a href="http://www.maprunner.co.uk/rg2-stats" target="_blank" rel="noopener">all RG2 installations here</a>.
-   This includes an RSS feed that provides details of new RG2 events when they are added.</p>
-   <p>
-      <strong>Simon Errington</strong> (simon (at) maprunner.co.uk) <br>
-      <strong>James Errington</strong> (james (at) maprunner.co.uk) <br>
-   </p>
-   <hr>
-   <p id="rg2-manager-link"></p>
-   <hr>
-   <p class="rg2-info-text"><?php echo ADDITIONAL_INFO_TEXT; ?></p>
- </div>
- <div id="rg2-splits-table" title="Splits display"></div>
+<canvas id="rg2-map-canvas">Your browser does not support HTML5.</canvas>
+<div id="rg2-load-progress" class="rg2-progress-display">
+  <div id="rg2-load-progress-bar"></div>
+  <div id="rg2-load-progress-label"></div>
+</div>
+<div id="rg2-map-load-progress" class="rg2-progress-display">
+  <div id="rg2-map-load-progress-bar"></div>
+  <div id="rg2-map-load-progress-label"></div>
+</div>
+<div id="rg2-hide-info-panel-control">
+  <div><i id="rg2-hide-info-panel-icon" class="fa fa-chevron-left"></i></div>
+</div>
+<div id="rg2-track-names" class="track-names"></div>
+<div id="rg2-about-dialog">
+  <p id="rg2-event-stats"></p>
+  <hr>
+  <p>Routegadget 2 (RG2) is a web application for drawing and comparing orienteering routes. It is based on the
+    original Routegadget developed by Jarkko Ryyppö.
+    For further details see the <a href="https://github.com/Maprunner/rg2/wiki/User-guide" target="_blank" rel="noopener">User
+      Guide</a> and the <a href="https://github.com/Maprunner/rg2" target="_blank" rel="noopener">RG2 project page</a>.
+    The latest version of RG2 is available for download <a href="https://github.com/Maprunner/rg2/archive/master.zip"
+      target="_blank" rel="noopener">from GitHub</a>.
+    You can see details of <a href="http://www.maprunner.co.uk/rg2-stats" target="_blank" rel="noopener">all RG2
+      installations here</a>.
+    This includes an RSS feed that provides details of new RG2 events when they are added.</p>
+  <p>
+    <strong>Simon Errington</strong> (simon (at) maprunner.co.uk) <br>
+    <strong>James Errington</strong> (james (at) maprunner.co.uk) <br>
+  </p>
+  <hr>
+  <p id="rg2-manager-link"></p>
+  <hr>
+  <p class="rg2-info-text">
+    <?php echo ADDITIONAL_INFO_TEXT; ?>
+  </p>
+</div>
+<div id="rg2-splits-table" title="Splits display"></div>
+<div id="rg2-stats-table" title="Statistics">
+  <div id="container">
+    <h2>Summary</h2>
+    <div id="rg2-stats-summary"></div>
+    <h2>Leg Times</h2>
+    <div id="rg2-leg-table" style="width: 900px; height: 100%;" class="ag-theme-blue"></div>
+    <h2>Cumulative Times</h2>
+    <div id="rg2-race-table" style="width: 830px; height: 100%;" class="ag-theme-blue"></div>
+    <h2>Full results</h2>
+    <div id="rg2-results-table-container">
+      <div id="rg2-results-table" style="width: 900px; height: 100%;" class="ag-theme-blue"></div>
+    </div>
+  </div>
+</div>
