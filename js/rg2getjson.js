@@ -15,7 +15,7 @@
       type : "events",
       cache : false
     }).done(function (json) {
-      console.log("Events: " + json.data.events.length);
+      //console.log("Events: " + json.data.events.length);
       rg2.events.deleteAllEvents();
       $.each(json.data.events, function () {
         rg2.events.addEvent(new rg2.Event(this));
@@ -120,7 +120,7 @@
       cache : false
     }).done(function (json) {
       $("#rg2-load-progress-label").text(rg2.t("Saving courses"));
-      console.log("Event " + id + ": " + json.data.courses.length + " courses, " + json.data.results.length + " results, " + json.data.routes.length + " routes");
+      //("Event " + id + ": " + json.data.courses.length + " courses, " + json.data.results.length + " results, " + json.data.routes.length + " routes");
       $.each(json.data.courses, function () {
         rg2.courses.addCourse(new rg2.Course(this, rg2.events.isScoreEvent()));
       });
