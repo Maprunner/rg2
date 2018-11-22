@@ -28,22 +28,35 @@
       this.course = rg2.courses.getCourseDetails(this.result.courseid);
       // includes start and finish
       this.controls = this.course.codes.length;
+      if (this.controls <= 2) {
+        throw new this.rg2Exception('No splits available.');
+      }
       this.analyseCourse();
+    },
+
+    rg2Exception : function (msg) {
+      this.message = msg;
     },
 
     showStats: function (rawid) {
       // all sorts of possible data consistency errors that might turn up
-      try {
+      //try {
         this.initialise(rawid);
         this.generateSummary();
         this.generateTableByLegPos();
         this.generateTableByRacePos();
         this.generateSplitsTable();
         this.displayStats();
-      } catch (err) {
-        rg2.utils.showWarningDialog("Data inconsistency", "Cannot generate statistics.");
-        return;
-      }
+      //} catch (err) {
+      //  if (err instanceof this.rg2Exception) {
+      //    // one we trapped ourselves
+      //    rg2.utils.showWarningDialog("Cannot generate statistics.", err.message);
+      //  } else {
+      //    // general problem: probably an index out of bounds on an array somewhere: dodgy results files
+      //    rg2.utils.showWarningDialog("Cannot generate statistics.", "Data inconsistency.");
+      //  }
+      //  return;
+      //}
     },
 
     displayStats: function () {
@@ -202,9 +215,10 @@
     },
 
     generateTableByRacePos: function () {
-      var i, j, row, rowData, behind, names;
+      var i, j, row, rowData, behind, names, loss;
 
       rowData = [];
+      loss = 0;
       for (i = 0; i < this.results[this.resultIndex].splits.length; i += 1) {
         row = {};
         if (i == 0) {
@@ -255,6 +269,8 @@
         } else {
           row.percent = parseInt((behind * 100 / this.byRacePos[i][0].t), 10);
         }
+        loss = loss + this.results[this.resultIndex].loss[i];
+        row.loss = rg2.utils.formatSecsAsMMSS(loss);
         rowData.push(row);
       }
 
@@ -266,7 +282,8 @@
           { headerName: rg2.t("Best"), field: "best", headerClass: "align-center", cellClass: "align-center", width: 85 },
           { headerName: rg2.t("Who"), field: "who", width: 200, tooltipField: "who" },
           { headerName: rg2.t("Behind"), field: "behind", headerClass: "align-center", cellClass: "align-center", width: 85 },
-          { headerName: "%", field: "percent", headerClass: "align-center", cellClass: "align-center", width: 85 }
+          { headerName: "%", field: "percent", headerClass: "align-center", cellClass: "align-center", width: 85 },
+          { headerName: "Loss", field: "loss", headerClass: "align-center", cellClass: "align-center", width: 100 }
         ],
         rowData: rowData,
         domLayout: 'autoHeight',
@@ -285,9 +302,10 @@
         { headerName: rg2.t("Time"), field: "time", headerClass: "align-center", cellClass: "align-center", width: 85 },
       ];
       for (j = 1; j < this.controls - 1; j += 1) {
-        columnDefs.push({headerName: j, field: 'C' + j, cellRenderer: this.renderSplits, headerClass: "align-center", cellClass: "align-center", width: 125});
+        columnDefs.push({headerName: j, field: 'C' + j, cellRenderer: this.renderSplits, headerClass: "align-center", cellClass: "align-center", width: 110});
       }
-      columnDefs.push({headerName: rg2.t('F'), field: 'finish', cellRenderer: this.renderSplits, headerClass: "align-center", cellClass: "align-center", width: 125});
+      columnDefs.push({headerName: rg2.t('F'), field: 'finish', cellRenderer: this.renderSplits, headerClass: "align-center", cellClass: "align-center", width: 110});
+      columnDefs.push({headerName: rg2.t('Loss'), field: 'loss', headerClass: "align-center", cellClass: "align-center", width: 100});
       columnDefs.push({headerName: '', field: 'initials', headerClass: "align-center", cellClass: "align-center", width: 75, pinned: "right"});
 
       rowData = [];
@@ -323,6 +341,7 @@
           }
         }
         row.finish = {split: rg2.utils.formatSecsAsMMSS(r.splits[this.controls - 1]), pos: r.racepos[this.controls - 1]};
+        row.loss = rg2.utils.formatSecsAsMMSS(r.timeInSecs - r.totalLoss);
         row.initials = r.initials;
         rowData.push(row);
         row = {};
@@ -330,6 +349,7 @@
           row['C' + j] = {split: rg2.utils.formatSecsAsMMSS(r.legSplits[j]), pos: r.legpos[j]};
         }
         row.finish = {split: rg2.utils.formatSecsAsMMSS(r.legSplits[this.controls - 1]), pos: r.legpos[this.controls - 1]};
+        row.loss = rg2.utils.formatSecsAsMMSS(r.totalLoss);
         rowData.push(row);
       }
 
@@ -423,16 +443,16 @@
               legTimes.push({ t: this.results[k].legSplits[i], resid: k, pos: this.results[k].legpos[i] });
             }
             // race position only valid if all controls to that point are valid
-            if (k < this.results[k].lastValidSplit) {
+            if (i <= this.results[k].lastValidSplit) {
               raceTimes.push({ t: this.results[k].splits[i], resid: k, pos: this.results[k].racepos[i] });
             }
           }
         }
         legTimes.sort(function (a, b) {
-          return a.pos - b.pos;
+          return a.t - b.t;
         });
         raceTimes.sort(function (a, b) {
-          return a.pos - b.pos;
+          return a.t - b.t;
         });
         this.byLegPos.push(legTimes.slice());
         this.byRacePos.push(raceTimes.slice());
