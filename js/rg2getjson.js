@@ -130,9 +130,11 @@
       $("#btn-toggle-names").show();
       processResults(json);
       processGPSTracks(json);
+      rg2.eventLoaded();
     }).fail(function (jqxhr, textStatus, error) {
       /*jslint unparam:true*/
       reportJSONFail("Event request failed for event " + id + ": " + error);
+      rg2.eventLoaded();
     });
   }
 

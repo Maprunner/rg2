@@ -10,6 +10,7 @@
 /*global setTimeout:false */
 var rg2 = (function (window, $) {
   'use strict';
+  var eventRequestInProgress = false;
 
   function startDisplayingInfo() {
     // check if a specific event has been requested
@@ -100,6 +101,11 @@ var rg2 = (function (window, $) {
   }
 
   function loadEvent(eventid) {
+    // prevent double loading if user double clicks on event
+    if (eventRequestInProgress) {
+      return;
+    }
+    eventRequestInProgress = true;
     updateUIForNewEvent(eventid);
     rg2.courses.deleteAllCourses();
     rg2.controls.deleteAllControls();
@@ -111,6 +117,10 @@ var rg2 = (function (window, $) {
     rg2.ui.setTitleBar();
     rg2.redraw(false);
     rg2.getEvent(rg2.events.getKartatEventID());
+  }
+
+  function eventLoaded() {
+    eventRequestInProgress = false;
   }
 
   function createObjects() {
@@ -167,6 +177,7 @@ var rg2 = (function (window, $) {
     // functions and variables available elsewhere
     init : init,
     loadEvent : loadEvent,
-    getEventStats : getEventStats
+    getEventStats : getEventStats,
+    eventLoaded : eventLoaded
   };
 }(window, window.jQuery));
