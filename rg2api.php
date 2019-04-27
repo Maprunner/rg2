@@ -28,8 +28,9 @@
   // The input encoding from files in kartat directory
   // note: backward compatibility for old RG_INPUT_ENCODING configuration
   if (defined('RG_INPUT_ENCODING')) {
-      //
-      define('RG_FILE_ENCODING', RG_INPUT_ENCODING);
+    define('RG_FILE_ENCODING', RG_INPUT_ENCODING);
+  } else {
+    define('RG_FILE_ENCODING', RG2_ENCODING);
   }
 
   // version replaced by Gruntfile as part of release

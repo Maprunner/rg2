@@ -174,16 +174,16 @@ class utils
     //
     public static function encode_rg_output($output_str)
     {
-        $encoded = '';
+        $encoded = "";
+        // convert if kartat files don't use RG2_ENCODING and output_str is encoded using RG2_ENCODING
+        // mb_detect_encoding test is probably redundant, but leave just in case there is some RG1 edge case somewhere
         if (RG_FILE_ENCODING != RG2_ENCODING && mb_detect_encoding($output_str, RG2_ENCODING, true)) {
-            // convert if kartat files doesn't use RG2_ENCODING and output_str is encoded using RG2_ENCODING
             $encoded = @iconv(RG2_ENCODING, RG_FILE_ENCODING . '//TRANSLIT//IGNORE', $output_str);
         } else {
-            // write output as is, if kartat files are useing RG2_ENCODING or input couldn't not be converted from RG2_ENCODING to RG_FILE_ENCODING
+            // write output as is
             $encoded = $output_str;
         }
         if (!$encoded) {
-            //
             $encoded = "";
         }
         return $encoded;
