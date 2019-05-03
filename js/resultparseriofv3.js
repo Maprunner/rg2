@@ -25,7 +25,9 @@
 
     getClub: function (element) {
       if (element.length > 0) {
-        return element[0].getElementsByTagName('Name')[0].textContent;
+        if (element[0].getElementsByTagName('Name')[0]) {
+          return element[0].getElementsByTagName('Name')[0].textContent;
+        }
       }
       return "";
     },
