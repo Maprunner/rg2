@@ -5,9 +5,9 @@
   }
 
   Results.prototype = {
-    Constructor : Results,
+    Constructor: Results,
 
-    addResults : function (data, isScoreEvent) {
+    addResults: function (data, isScoreEvent) {
       var i, l, result, variant, codes, scorex, scorey;
       l = data.length;
       // extract score course details if necessary
@@ -42,7 +42,7 @@
       this.generateLegPositions();
     },
 
-    setScoreCourseInfo : function () {
+    setScoreCourseInfo: function () {
       // don't get score course info for GPS tracks so find it from original result
       var i, baseresult;
       for (i = 0; i < this.results.length; i += 1) {
@@ -59,7 +59,7 @@
       }
     },
 
-    setDeletionInfo : function () {
+    setDeletionInfo: function () {
       var i, r, eventid, deletionInfo, opt;
       eventid = rg2.events.getKartatEventID();
       deletionInfo = [];
@@ -80,13 +80,13 @@
       }
     },
 
-    getDeletionInfo : function (id) {
-      return ({id: this.results[id].resultid, token: this.results[id].token});
+    getDeletionInfo: function (id) {
+      return ({ id: this.results[id].resultid, token: this.results[id].token });
     },
 
     // lists all runners on a given course
     // withTrack = true means only return runners with a valid track
-    getAllRunnersForCourse : function (courseid, withTrack) {
+    getAllRunnersForCourse: function (courseid, withTrack) {
       var i, runners;
       runners = [];
       for (i = 0; i < this.results.length; i += 1) {
@@ -99,7 +99,7 @@
       return runners;
     },
 
-    getAllResultsForCourse : function (courseid) {
+    getAllResultsForCourse: function (courseid) {
       var i, results;
       results = [];
       for (i = 0; i < this.results.length; i += 1) {
@@ -115,7 +115,7 @@
 
     // read through results to get list of all controls on score courses
     // since there is no master list of controls!
-    generateScoreCourses : function () {
+    generateScoreCourses: function () {
       var i, j, res, courses, codes, x, y, courseid;
       courses = [];
       codes = [];
@@ -151,7 +151,7 @@
       }
     },
 
-    sanitiseSplits : function () {
+    sanitiseSplits: function () {
       var i, j, previousValidSplit, nextSplitInvalid;
       // sort out missing punches and add some helpful new fields
       for (i = 0; i < this.results.length; i += 1) {
@@ -184,10 +184,10 @@
         if (this.results[i].lastValidSplit === undefined) {
           this.results[i].lastValidSplit = this.results[i].splits.length - 1;
         }
-      } 
+      }
     },
 
-    generateLegPositions : function () {
+    generateLegPositions: function () {
       var i, j, k, info, pos, prevTime, prevPos, time;
       info = this.getCoursesAndControls();
       pos = [];
@@ -199,7 +199,7 @@
           pos.length = 0;
           for (j = 0; j < this.results.length; j += 1) {
             if ((this.results[j].courseid === info.courses[i]) && (this.results[j].resultid === this.results[j].rawid)) {
-              pos.push({time: this.results[j].legSplits[k], id: j});
+              pos.push({ time: this.results[j].legSplits[k], id: j });
             }
           }
           // 0 splits sorted to end
@@ -240,7 +240,7 @@
               } else {
                 time = this.results[j].splits[k];
               }
-              pos.push({time: time, id: j});
+              pos.push({ time: time, id: j });
             }
           }
           // 0 splits sorted to end
@@ -268,7 +268,7 @@
       }
     },
 
-    getCoursesAndControls : function () {
+    getCoursesAndControls: function () {
       var i, courses, controls;
       courses = [];
       controls = [];
@@ -280,10 +280,10 @@
         }
 
       }
-      return {courses: courses, controls: controls};
+      return { courses: courses, controls: controls };
     },
 
-    putScoreCourseOnDisplay : function (resultid, display) {
+    putScoreCourseOnDisplay: function (resultid, display) {
       var i;
       for (i = 0; i < this.results.length; i += 1) {
         if (this.results[i].resultid === resultid) {
@@ -293,11 +293,11 @@
 
     },
 
-    displayScoreCourse : function (id, display) {
+    displayScoreCourse: function (id, display) {
       this.results[id].displayScoreCourse = display;
     },
 
-    sortLegTimes : function (a, b) {
+    sortLegTimes: function (a, b) {
       // sort array of times in ascending order
       // 0 splits get sorted to the bottom
       if (a.time === 0) {
@@ -311,7 +311,7 @@
       }
     },
 
-    countResultsByCourseID : function (courseid) {
+    countResultsByCourseID: function (courseid) {
       var i, count, info;
       info = rg2.events.getEventInfo();
       count = 0;
@@ -326,7 +326,7 @@
       return count;
     },
 
-    getRoutesForEvent : function () {
+    getRoutesForEvent: function () {
       var route, routes, i;
       routes = [];
       for (i = 0; i < this.results.length; i += 1) {
@@ -343,7 +343,7 @@
       return routes;
     },
 
-    getResultsInfo : function () {
+    getResultsInfo: function () {
       var i, info, res;
       info = {};
       info.results = 0;
@@ -377,7 +377,7 @@
       return info;
     },
 
-    formatTotalRunningTime : function (secs) {
+    formatTotalRunningTime: function (secs) {
       var time;
       time = Math.floor(secs / 86400) + " days ";
       secs = secs - (86400 * Math.floor(secs / 86400));
@@ -388,11 +388,11 @@
       return time;
     },
 
-    getFullResult : function (resultid) {
+    getFullResult: function (resultid) {
       return this.results[resultid];
     },
 
-    getFullResultForRawID : function (rawid) {
+    getFullResultForRawID: function (rawid) {
       var i;
       for (i = 0; i < this.results.length; i += 1) {
         if (this.results[i].resultid === rawid) {
@@ -402,7 +402,7 @@
       return undefined;
     },
 
-    drawTracks : function () {
+    drawTracks: function () {
       var i;
       for (i = 0; i < this.results.length; i += 1) {
         this.results[i].drawTrack();
@@ -410,7 +410,7 @@
       }
     },
 
-    getTracksOnDisplay : function () {
+    getTracksOnDisplay: function () {
       var i, tracks, result;
       tracks = [];
       for (i = 0; i < this.results.length; i += 1) {
@@ -422,7 +422,7 @@
       return tracks;
     },
 
-    putOneTrackOnDisplay : function (resultid) {
+    putOneTrackOnDisplay: function (resultid) {
       var i;
       for (i = 0; i < this.results.length; i += 1) {
         if (this.results[i].resultid === parseInt(resultid, 10)) {
@@ -431,7 +431,7 @@
       }
     },
 
-    removeOneTrackFromDisplay : function (resultid) {
+    removeOneTrackFromDisplay: function (resultid) {
       var i;
       for (i = 0; i < this.results.length; i += 1) {
         if (this.results[i].resultid === parseInt(resultid, 10)) {
@@ -440,7 +440,7 @@
       }
     },
 
-    updateTrackDisplay : function (courseid, display) {
+    updateTrackDisplay: function (courseid, display) {
       var i;
       for (i = 0; i < this.results.length; i += 1) {
         if ((this.results[i].courseid === courseid) || (rg2.config.DISPLAY_ALL_COURSES === courseid)) {
@@ -453,7 +453,7 @@
       }
     },
 
-    getDisplayedTrackNames : function () {
+    getDisplayedTrackNames: function () {
       var i, html;
       html = "";
       for (i = 0; i < this.results.length; i += 1) {
@@ -465,7 +465,7 @@
       return html;
     },
 
-    getDisplayedTrackDetails : function () {
+    getDisplayedTrackDetails: function () {
       // used to populate rg2-track-names within animation on screen redraw
       var i, tracks, info;
       tracks = [];
@@ -482,7 +482,7 @@
       return tracks;
     },
 
-    resultIDExists : function (resultid) {
+    resultIDExists: function (resultid) {
       var i;
       for (i = 0; i < this.results.length; i += 1) {
         if (resultid === this.results[i].resultid) {
@@ -492,17 +492,17 @@
       return false;
     },
 
-    getTimeAndSplitsForID : function (resultid) {
+    getTimeAndSplitsForID: function (resultid) {
       var i;
       for (i = 0; i < this.results.length; i += 1) {
         if (resultid === this.results[i].resultid) {
-          return {time: this.results[i].time, splits: this.results[i].splits};
+          return { time: this.results[i].time, splits: this.results[i].splits };
         }
       }
-      return {time: rg2.config.TIME_NOT_FOUND, splits: []};
+      return { time: rg2.config.TIME_NOT_FOUND, splits: [] };
     },
 
-    addTracks : function (tracks) {
+    addTracks: function (tracks) {
       // this gets passed the json data array
       var resultIndex, i, j, l, eventinfo;
       eventinfo = rg2.events.getEventInfo();
@@ -514,7 +514,7 @@
         // loop through all results and add it against the correct id
         while (j < this.results.length) {
           if (resultIndex === this.results[j].resultid) {
-            this.results[j].addTrack(tracks[i], eventinfo.format);
+            this.results[j].addTrack(tracks[i]);
             break;
           }
           j += 1;
@@ -522,11 +522,11 @@
       }
     },
 
-    deleteAllResults : function () {
+    deleteAllResults: function () {
       this.results.length = 0;
     },
 
-    sortByCourseIDThenResultID : function (a, b) {
+    sortByCourseIDThenResultID: function (a, b) {
       // sorts GPS results to be immediately after the associated main id
       if (a.courseid > b.courseid) {
         return 1;
@@ -540,7 +540,7 @@
       return a.rawid - b.rawid;
     },
 
-    formatResultListAsAccordion : function () {
+    formatResultListAsAccordion: function () {
       var html, res, firstCourse, oldCourseID, i, tracksForThisCourse;
       if (this.results.length === 0) {
         return "<p>" + rg2.t("No results available") + "</p>";
@@ -600,7 +600,7 @@
       return html;
     },
 
-    prepareResults : function () {
+    prepareResults: function () {
       var oldID, i, canCombine;
       // want to avoid extra results line for GPS routes if there is no drawn route
       // first sort so that GPS routes come after initial result
@@ -626,9 +626,9 @@
           oldID = this.results[i].rawid;
         }
       }
-    },    
+    },
 
-    getNameHTML : function (res, i) {
+    getNameHTML: function (res, i) {
       var namehtml;
       if (res.rawid === res.resultid) {
         namehtml = res.name;
@@ -641,7 +641,7 @@
       return "<div>" + namehtml + "</div>";
     },
 
-    getCourseHeader : function (result) {
+    getCourseHeader: function (result) {
       var html, info, text;
       text = result.coursename;
       info = rg2.courses.getCourseDetails(result.courseid);
@@ -657,7 +657,7 @@
       return html;
     },
 
-    getBottomRows : function (tracks, oldCourseID) {
+    getBottomRows: function (tracks, oldCourseID) {
       // create bottom rows for all tracks checkboxes
       // first row is drawn and GPS routes (if they exist)
       var html;
@@ -674,7 +674,7 @@
       return html;
     },
 
-    getComments : function () {
+    getComments: function () {
       var i, comments;
       comments = "";
       for (i = 0; i < this.results.length; i += 1) {
@@ -685,7 +685,7 @@
       return comments;
     },
 
-    createNameDropdown : function (courseid) {
+    createNameDropdown: function (courseid) {
       var i, dropdown;
       $("#rg2-name-select").empty();
       dropdown = document.getElementById("rg2-name-select");

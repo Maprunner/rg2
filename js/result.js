@@ -105,7 +105,7 @@
       }
     },
 
-    addTrack: function (data, format) {
+    addTrack: function (data) {
       var i, trackOK;
       this.trackx = data.x.split(",").map(function (n) {
         return parseInt(n, 10);
@@ -121,7 +121,8 @@
       if (this.isGPSTrack) {
         trackOK = this.expandGPSTrack();
       } else {
-        if (format === rg2.config.EVENT_WITHOUT_RESULTS) {
+        // handle events that just have a start and finish time
+        if (this.splits.length === 2) {
           trackOK = this.expandTrackWithNoSplits();
         } else {
           trackOK = this.expandNormalTrack();
