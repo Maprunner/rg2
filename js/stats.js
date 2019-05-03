@@ -34,19 +34,19 @@
       this.analyseCourse();
     },
 
-    rg2Exception : function (msg) {
+    rg2Exception: function (msg) {
       this.message = msg;
     },
 
     showStats: function (rawid) {
       // all sorts of possible data consistency errors that might turn up
       //try {
-        this.initialise(rawid);
-        this.generateSummary();
-        this.generateTableByLegPos();
-        this.generateTableByRacePos();
-        this.generateSplitsTable();
-        this.displayStats();
+      this.initialise(rawid);
+      this.generateSummary();
+      this.generateTableByLegPos();
+      this.generateTableByRacePos();
+      this.generateSplitsTable();
+      this.displayStats();
       //} catch (err) {
       //  if (err instanceof this.rg2Exception) {
       //    // one we trapped ourselves
@@ -82,8 +82,23 @@
       html += 'Average leg position: <strong>' + info.average + '</strong>';
       html += ' (Best: <strong>' + info.best + '</strong>, Worst: <strong>' + info.worst + ')</strong><br>';
       html += 'Estimated loss: <strong>' + rg2.utils.formatSecsAsMMSS(this.results[this.resultIndex].totalLoss);
-      html += ' (' + (100 * this.results[this.resultIndex].totalLoss / this.result.timeInSecs).toFixed(1) + ' %)</strong>';
+      if (this.isNumberOverZero(this.result.timeInSecs)) {
+        html += ' (' + (100 * this.results[this.resultIndex].totalLoss / this.result.timeInSecs).toFixed(1) + ' %)';
+      }
+      html += '</strong>';
       $("#rg2-stats-summary").empty().append(html);
+    },
+
+    isNumberOverZero: function (n) {
+      if (!isNaN(parseFloat(n)) && isFinite(n)) {
+        if (n > 0) {
+          return true;
+        } else {
+          return false;
+        }
+      } else {
+        return false;
+      }
     },
 
     generateTableByLegPos: function () {
@@ -167,7 +182,6 @@
         ],
         rowData: rowData,
         domLayout: 'autoHeight',
-        enableColResize: true
       };
 
       $('#rg2-leg-table').empty();
@@ -259,12 +273,12 @@
           row.who = names;
         }
         behind = this.results[this.resultIndex].splits[i] - this.byRacePos[i][0].t;
-        if ((i === 0) || ( this.results[this.resultIndex].racepos[i] === 0)) {
+        if ((i === 0) || (this.results[this.resultIndex].racepos[i] === 0)) {
           row.behind = "-";
         } else {
           row.behind = rg2.utils.formatSecsAsMMSS(behind);
         }
-        if ((i === 0) || ( this.results[this.resultIndex].racepos[i] === 0)) {
+        if ((i === 0) || (this.results[this.resultIndex].racepos[i] === 0)) {
           row.percent = '-';
         } else {
           row.percent = parseInt((behind * 100 / this.byRacePos[i][0].t), 10);
@@ -287,7 +301,6 @@
         ],
         rowData: rowData,
         domLayout: 'autoHeight',
-        enableColResize: true
       };
 
       $('#rg2-race-table').empty();
@@ -298,24 +311,25 @@
       var i, j, r, row, rowData, columnDefs, height;
       columnDefs = [
         { headerName: rg2.t("Pos"), field: "position", headerClass: "align-center", cellClass: "align-center", width: 60 },
-        { headerName: rg2.t("Name"), field: "name", width: 150},
+        { headerName: rg2.t("Name"), field: "name", width: 150 },
         { headerName: rg2.t("Time"), field: "time", headerClass: "align-center", cellClass: "align-center", width: 85 },
       ];
       for (j = 1; j < this.controls - 1; j += 1) {
-        columnDefs.push({headerName: j, field: 'C' + j, cellRenderer: this.renderSplits, headerClass: "align-center", cellClass: "align-center", width: 110});
+        columnDefs.push({ headerName: j, field: 'C' + j, cellRenderer: this.renderSplits, headerClass: "align-center", cellClass: "align-center", width: 110 });
       }
-      columnDefs.push({headerName: rg2.t('F'), field: 'finish', cellRenderer: this.renderSplits, headerClass: "align-center", cellClass: "align-center", width: 110});
-      columnDefs.push({headerName: rg2.t('Loss'), field: 'loss', headerClass: "align-center", cellClass: "align-center", width: 100});
-      columnDefs.push({headerName: '', field: 'initials', headerClass: "align-center", cellClass: "align-center", width: 75, pinned: "right"});
+      columnDefs.push({ headerName: rg2.t('F'), field: 'finish', cellRenderer: this.renderSplits, headerClass: "align-center", cellClass: "align-center", width: 110 });
+      columnDefs.push({ headerName: rg2.t('Loss'), field: 'loss', headerClass: "align-center", cellClass: "align-center", width: 100 });
+      columnDefs.push({ headerName: '', field: 'initials', headerClass: "align-center", cellClass: "align-center", width: 75, pinned: "right" });
 
       rowData = [];
-      // sort results table: this gest round problems of having multiple classes on one course where results were by class
+      // sort results table: this gets round problems of having multiple classes on one course where results were by class
       this.results.sort(function (a, b) {
         // sort valid times in ascending order
-        if (a.racepos[a.splits.length - 1] === 0) {
+        // sometimes end up with negative or 0 splits so handle those first
+        if (a.racepos[a.splits.length - 1] <= 0) {
           return 1;
         } else {
-          if (b.racepos[b.splits.length - 1] === 0) {
+          if (b.racepos[b.splits.length - 1] <= 0) {
             return -1;
           } else {
             return a.racepos[a.splits.length - 1] - b.racepos[b.splits.length - 1];
@@ -335,20 +349,20 @@
         for (j = 1; j < this.controls - 1; j += 1) {
           if (r.splits[j] === r.splits[j - 1]) {
             // no valid split for this control
-            row['C' + j] = {split: "0:00", pos: r.racepos[j]};
+            row['C' + j] = { split: "0:00", pos: r.racepos[j] };
           } else {
-            row['C' + j] = {split: rg2.utils.formatSecsAsMMSS(r.splits[j]), pos: r.racepos[j]};
+            row['C' + j] = { split: rg2.utils.formatSecsAsMMSS(r.splits[j]), pos: r.racepos[j] };
           }
         }
-        row.finish = {split: rg2.utils.formatSecsAsMMSS(r.splits[this.controls - 1]), pos: r.racepos[this.controls - 1]};
+        row.finish = { split: rg2.utils.formatSecsAsMMSS(r.splits[this.controls - 1]), pos: r.racepos[this.controls - 1] };
         row.loss = rg2.utils.formatSecsAsMMSS(r.timeInSecs - r.totalLoss);
         row.initials = r.initials;
         rowData.push(row);
         row = {};
         for (j = 1; j < this.controls - 1; j += 1) {
-          row['C' + j] = {split: rg2.utils.formatSecsAsMMSS(r.legSplits[j]), pos: r.legpos[j]};
+          row['C' + j] = { split: rg2.utils.formatSecsAsMMSS(r.legSplits[j]), pos: r.legpos[j] };
         }
-        row.finish = {split: rg2.utils.formatSecsAsMMSS(r.legSplits[this.controls - 1]), pos: r.legpos[this.controls - 1]};
+        row.finish = { split: rg2.utils.formatSecsAsMMSS(r.legSplits[this.controls - 1]), pos: r.legpos[this.controls - 1] };
         row.loss = rg2.utils.formatSecsAsMMSS(r.totalLoss);
         rowData.push(row);
       }
@@ -357,11 +371,10 @@
         columnDefs: columnDefs,
         rowData: rowData,
         //domLayout: 'autoHeight',
-        enableColResize: true
         //onFirstDataRendered: this.autoSizeColumns
       };
 
-     // try to set a sensible height that allows table to be viewed using scroll bars
+      // try to set a sensible height that allows table to be viewed using scroll bars
       height = $("#rg2-map-canvas").height() * 0.75;
       $('#rg2-results-table-container').removeAttr("style").attr("style", "height: " + height + "px;");
       $('#rg2-results-table').empty();
@@ -370,8 +383,8 @@
 
     autoSizeColumns: function (params) {
       var allColumnIds = [];
-      params.columnApi.getAllColumns().forEach(function(column) {
-          allColumnIds.push(column.colId);
+      params.columnApi.getAllColumns().forEach(function (column) {
+        allColumnIds.push(column.colId);
       });
       params.columnApi.autoSizeColumns(allColumnIds);
     },

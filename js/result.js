@@ -9,6 +9,9 @@
     this.initials = this.getInitials(this.name);
     this.starttime = data.starttime;
     this.time = data.time;
+    if ((this.time === "00") || (this.time === "0")) {
+      this.time = "";
+    }
     this.position = data.position;
     this.status = data.status;
     this.canDelete = false;
@@ -26,7 +29,7 @@
       this.coursename = data.courseid.toString();
     }
     this.courseid = data.courseid;
-    this.splits = this.adjustRawSplits(data.splits, this.time);
+    this.splits = this.adjustRawSplits(data.splits);
 
     if (isScoreEvent) {
       // save control locations for score course result
@@ -39,9 +42,9 @@
 
 
   Result.prototype = {
-    Constructor : Result,
+    Constructor: Result,
 
-    initialiseTrack : function (data) {
+    initialiseTrack: function (data) {
       var info;
       this.legpos = [];
       this.racepos = [];
@@ -73,35 +76,36 @@
       }
     },
 
-    adjustRawSplits : function (rawSplits) {
+    adjustRawSplits: function (rawSplits) {
       var i;
       // insert a 0 split at the start to make life much easier elsewhere
       rawSplits.splice(0, 0, 0);
       // splits are time in seconds at control, but may have 0 for missing controls
       // make life easier elsewhere by replacing 0 with time at previous valid control
       for (i = 1; i < rawSplits.length; i += 1) {
-        if (rawSplits[i] === 0) {
+        // also allow for negative splits
+        if (rawSplits[i] <= 0) {
           rawSplits[i] = rawSplits[i - 1];
         }
       }
       return rawSplits;
     },
 
-    putTrackOnDisplay : function () {
+    putTrackOnDisplay: function () {
       if (this.hasValidTrack) {
         this.trackColour = rg2.colours.getNextColour();
         this.displayTrack = true;
       }
     },
 
-    removeTrackFromDisplay : function () {
+    removeTrackFromDisplay: function () {
       if (this.hasValidTrack) {
         this.trackColour = null;
         this.displayTrack = false;
       }
     },
 
-    addTrack : function (data, format) {
+    addTrack: function (data, format) {
       var i, trackOK;
       this.trackx = data.x.split(",").map(function (n) {
         return parseInt(n, 10);
@@ -128,7 +132,7 @@
       }
     },
 
-    drawTrack : function () {
+    drawTrack: function () {
       var i, l, oldx, oldy, stopCount;
       if (this.displayTrack) {
         if (this.isGPSTrack && rg2.options.showGPSSpeed && (this.speedColour.length === 0)) {
@@ -176,7 +180,7 @@
       }
     },
 
-    drawScoreCourse : function () {
+    drawScoreCourse: function () {
       // draws a score course for an individual runner to show where they went
       // based on drawCourse in course.js
       // could refactor in future...
@@ -191,7 +195,7 @@
         for (i = 0; i < (this.scorex.length - 1); i += 1) {
           angle[i] = rg2.utils.getAngle(this.scorex[i], this.scorey[i], this.scorex[i + 1], this.scorey[i + 1]);
         }
-        rg2.courses.drawLinesBetweenControls({x: this.scorex, y: this.scorey}, angle, this.courseid, opt);
+        rg2.courses.drawLinesBetweenControls({ x: this.scorex, y: this.scorey }, angle, this.courseid, opt);
         for (i = 1; i < (this.scorex.length - 1); i += 1) {
           rg2.controls.drawSingleControl(this.scorex[i], this.scorey[i], i, Math.PI * 0.25, opt);
         }
@@ -199,7 +203,7 @@
       }
     },
 
-    expandNormalTrack : function () {
+    expandNormalTrack: function () {
       var course;
       // allow for getting two tracks for same result: should have been filtered in API...
       this.xysecs.length = 0;
@@ -265,7 +269,7 @@
       }
     },
 
-    getNextValidControl : function (thisControl) {
+    getNextValidControl: function (thisControl) {
       // look through splits to find next control which has a split time
       // to allow drawing for missed controls where the split time is 0
       var i;
@@ -278,7 +282,7 @@
       return this.splits.length;
     },
 
-    expandTrackWithNoSplits : function () {
+    expandTrackWithNoSplits: function () {
       // based on ExpandNormalTrack, but deals with event format 2: no results
       // this means we have a course and a finish time but no split times
       var totaltime, currenttime, course, nextcontrol, nextx, nexty, lastx, lasty, i, x, y, moved, previouscontrolindex, totaldist, cumulativeDistance;
@@ -333,7 +337,7 @@
       return this.hasValidTrack;
     },
 
-    calculateTotalTrackLength : function () {
+    calculateTotalTrackLength: function () {
       // read through track to find total distance
       var i, oldx, oldy, cumulativeDistance;
       cumulativeDistance = [];
@@ -348,7 +352,7 @@
       return cumulativeDistance;
     },
 
-    addInterpolatedTimes : function (startindex, endindex, cumulativeDistance) {
+    addInterpolatedTimes: function (startindex, endindex, cumulativeDistance) {
       // add interpolated time at each point based on cumulative distance; this assumes uniform speed...
       var oldt, deltat, olddist, deltadist, i;
       oldt = this.xysecs[startindex];
@@ -360,7 +364,7 @@
       }
     },
 
-    expandGPSTrack : function () {
+    expandGPSTrack: function () {
       var t;
       // in theory we get one point every three seconds
       for (t = 0; t < this.trackx.length; t += 1) {
@@ -372,7 +376,7 @@
       return this.hasValidTrack;
     },
 
-    setSpeedColours : function () {
+    setSpeedColours: function () {
       var t, oldx, oldy, delta, maxSpeed, oldDelta, sum, len;
       oldx = this.trackx[0];
       oldy = this.tracky[0];
@@ -396,11 +400,11 @@
 
     },
 
-    mapSpeedColours : function () {
+    mapSpeedColours: function () {
       // converts speed to RGB value
       var i, red, green, halfrange, maxspeed, minspeed, sorted;
-      sorted = this.speedColour.slice().sort(function(a, b){return a - b;});
-      maxspeed = sorted[sorted.length -1];
+      sorted = this.speedColour.slice().sort(function (a, b) { return a - b; });
+      maxspeed = sorted[sorted.length - 1];
       // arbitrary limit below which everything will be red
       minspeed = sorted[Math.floor(sorted.length / 95)];
       halfrange = (maxspeed - minspeed) / 2;
@@ -431,7 +435,7 @@
       }
     },
 
-    getInitials : function (name) {
+    getInitials: function (name) {
       var i, addNext, len, initials;
       // converts name to initials
       if (name === null) {

@@ -414,6 +414,10 @@ html, body {
   border-radius: 3px;
 }
 
+.coursemenutable tbody tr:nth-child(odd) {
+  background-color: #eee;
+}
+
 .coursemenutable tr, td, th {
 	padding-left: 5px;
 	padding-right: 5px;
