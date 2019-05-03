@@ -24,12 +24,9 @@
   // requires a dictionary file xx.js in the lang directory
   // define('START_LANGUAGE', 'no');
 
-  // Set encoding for input data default UTF-8
-  // only really relevant for RG1 installations that used a different encoding when set up
+  // Set encoding for input data read from text files: default UTF-8
+  // Only needed for RG1 installations that used a different encoding when set up
   // define('RG_INPUT_ENCODING', 'UTF-8');
-  
-  // Set encoding for output data returned through API: should always be UTF-8
-  // define('RG_OUTPUT_ENCODING', 'UTF-8//TRANSLIT//IGNORE');
 
   // User interface colour theme: see gallery at http://jqueryui.com/themeroller/
   define('UI_THEME', 'base');

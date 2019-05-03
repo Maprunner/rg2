@@ -4,14 +4,14 @@
     this.results = [];
     this.valid = true;
     this.processIOFV3Results(xml);
-    return {results: this.results, valid: this.valid};
+    return { results: this.results, valid: this.valid };
   }
 
   ResultParserIOFV3.prototype = {
 
-    Constructor : ResultParserIOFV3,
+    Constructor: ResultParserIOFV3,
 
-    getID : function (element, index) {
+    getID: function (element, index) {
       var temp;
       if (element.length > 0) {
         temp = element[0].textContent;
@@ -23,14 +23,16 @@
       return index;
     },
 
-    getClub : function (element) {
+    getClub: function (element) {
       if (element.length > 0) {
-        return element[0].getElementsByTagName('Name')[0].textContent;
+        if (element[0].getElementsByTagName('Name')[0]) {
+          return element[0].getElementsByTagName('Name')[0].textContent;
+        }
       }
       return "";
     },
 
-    processIOFV3Results : function (xml) {
+    processIOFV3Results: function (xml) {
       var classlist, personlist, resultlist, i, j, result, course, temp;
       try {
         classlist = xml.getElementsByTagName('ClassResult');
@@ -60,7 +62,7 @@
       }
     },
 
-    getStartFinishTimeAsSeconds : function (time) {
+    getStartFinishTimeAsSeconds: function (time) {
       if (time.length >= 19) {
         // format is yyyy-mm-ddThh:mm:ss and might have extra Z or +nn
         return rg2.utils.getSecsFromHHMMSS(time.substr(11, 8));
@@ -68,22 +70,22 @@
       return 0;
     },
 
-    getTotalTimeAsSeconds : function (time) {
+    getTotalTimeAsSeconds: function (time) {
       if (time.length > 0 && time[0].textContent) {
         var timeInt = parseInt(time[0].textContent, 10);
-        if (timeInt <= 3600) {
-          return rg2.utils.formatSecsAsMMSS(timeInt);
-        }
-        return rg2.utils.formatSecsAsHHMMSS(timeInt);
+        return rg2.utils.formatSecsAsMMSS(timeInt);
       }
       return '00:00';
     },
 
-    extractIOFV3Results : function (resultlist, result) {
+    extractIOFV3Results: function (resultlist, result) {
       var k, finishtime, splitlist;
       for (k = 0; k < resultlist.length; k += 1) {
         result.chipid = rg2.utils.extractTextContentZero(resultlist[k].getElementsByTagName('ControlCard'), 0);
         result.position = rg2.utils.extractTextContentZero(resultlist[k].getElementsByTagName('Position'), '');
+        if (result.position === "0") {
+          result.position = "";
+        }
         result.status = rg2.utils.extractTextContentZero(resultlist[k].getElementsByTagName('Status'), '');
         // assuming first <Time> is the total time...
         // this one is in seconds and might even have tenths...
@@ -102,7 +104,7 @@
       }
     },
 
-    extractIOFV3Splits : function (splitlist, result) {
+    extractIOFV3Splits: function (splitlist, result) {
       var x, codes;
       codes = [];
       for (x = 0; x < splitlist.length; x += 1) {

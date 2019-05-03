@@ -27,13 +27,12 @@
 
   // The input encoding from files in kartat directory
   // note: backward compatibility for old RG_INPUT_ENCODING configuration
-  if (defined('RG_INPUT_ENCODING')) {
-      //
-      define('RG_FILE_ENCODING', RG_INPUT_ENCODING);
+  if (!defined('RG_INPUT_ENCODING')) {
+    define('RG_INPUT_ENCODING', RG2_ENCODING);
   }
 
   // version replaced by Gruntfile as part of release
-  define('RG2VERSION', '1.5.4');
+  define('RG2VERSION', '1.5.5');
   define('KARTAT_DIRECTORY', $kartat);
   define('LOCK_DIRECTORY', dirname(__FILE__)."/lock/saving/");
   define('CACHE_DIRECTORY', $kartat."cache/");

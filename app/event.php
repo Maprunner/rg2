@@ -279,7 +279,7 @@ class event
 
         // create new hajontakanta file: control sequences for course variants
         // originally for score/relay only, but may be usable for butterflies in future
-        if (($format == SCORE_EVENT_FORMAT) && (count($data->results > 0))) {
+        if (($format == SCORE_EVENT_FORMAT) && (count($data->results) > 0)) {
             // score event so save variants
             for ($i = 0; $i < count($data->variants); $i++) {
                 $controls = $data->variants[$i]->id."|".$data->variants[$i]->name."|";
@@ -311,7 +311,7 @@ class event
 
         // create new radat file: course drawing: RG2 uses this for score event control locations
         $course = "";
-        if (($format == SCORE_EVENT_FORMAT) && (count($data->results > 0))) {
+        if (($format == SCORE_EVENT_FORMAT) && (count($data->results) > 0)) {
             // score event: one row per variant
             for ($i = 0; $i < count($data->variants); $i++) {
                 $a = $data->variants[$i];

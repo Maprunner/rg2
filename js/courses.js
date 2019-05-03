@@ -11,13 +11,13 @@
 
 
   Courses.prototype = {
-    Constructor : Courses,
+    Constructor: Courses,
 
-    getCourseName : function (courseid) {
+    getCourseName: function (courseid) {
       return this.courses[courseid].name;
     },
 
-    getCoursesForEvent : function () {
+    getCoursesForEvent: function () {
       var i, course, courses;
       courses = [];
       for (i = 0; i < this.courses.length; i += 1) {
@@ -32,20 +32,20 @@
       return courses;
     },
 
-    getHighestControlNumber : function () {
+    getHighestControlNumber: function () {
       return this.highestControlNumber;
     },
 
-    getCourseDetails : function (courseid) {
+    getCourseDetails: function (courseid) {
       return this.courses[courseid];
     },
 
-    incrementTracksCount : function (courseid) {
+    incrementTracksCount: function (courseid) {
       this.courses[courseid].incrementTracksCount();
       this.totaltracks += 1;
     },
 
-    addCourse : function (courseObject) {
+    addCourse: function (courseObject) {
       this.courses[courseObject.courseid] = courseObject;
       this.numberofcourses += 1;
       // allow for courses with no defined controls
@@ -59,7 +59,7 @@
       }
     },
 
-    updateCourseDropdown : function () {
+    updateCourseDropdown: function () {
       $("#rg2-course-select").empty();
       var i, dropdown;
       dropdown = document.getElementById("rg2-course-select");
@@ -71,7 +71,7 @@
       }
     },
 
-    updateControlDropdown : function () {
+    updateControlDropdown: function () {
       var i, dropdown;
       dropdown = document.getElementById("rg2-control-select");
       $("#rg2-control-select").empty();
@@ -82,14 +82,14 @@
       }
     },
 
-    deleteAllCourses : function () {
+    deleteAllCourses: function () {
       this.courses.length = 0;
       this.numberofcourses = 0;
       this.totaltracks = 0;
       this.highestControlNumber = 0;
     },
 
-    drawCourses : function (intensity) {
+    drawCourses: function (intensity) {
       var i;
       for (i = 0; i < this.courses.length; i += 1) {
         if (this.courses[i] !== undefined) {
@@ -98,21 +98,21 @@
       }
     },
 
-    putOnDisplay : function (courseid) {
+    putOnDisplay: function (courseid) {
       if (this.courses[courseid] !== undefined) {
         this.courses[courseid].display = true;
       }
     },
 
-    putAllOnDisplay : function () {
+    putAllOnDisplay: function () {
       this.setDisplayAllCourses(true);
     },
 
-    removeAllFromDisplay : function () {
+    removeAllFromDisplay: function () {
       this.setDisplayAllCourses(false);
     },
 
-    setDisplayAllCourses : function (doDisplay) {
+    setDisplayAllCourses: function (doDisplay) {
       var i;
       for (i = 0; i < this.courses.length; i += 1) {
         if (this.courses[i] !== undefined) {
@@ -121,13 +121,13 @@
       }
     },
 
-    removeFromDisplay : function (courseid) {
+    removeFromDisplay: function (courseid) {
       // remove selected course
       this.courses[courseid].display = false;
 
     },
 
-    getCoursesOnDisplay : function () {
+    getCoursesOnDisplay: function () {
       var i, courses;
       courses = [];
       for (i = 0; i < this.courses.length; i += 1) {
@@ -140,12 +140,12 @@
       return courses;
     },
 
-    getNumberOfCourses : function () {
+    getNumberOfCourses: function () {
       return this.numberofcourses;
     },
 
     // look through all courses and extract list of controls
-    generateControlList : function (controls) {
+    generateControlList: function (controls) {
       var codes, x, y, i, j;
       // for all courses
       for (i = 0; i < this.courses.length; i += 1) {
@@ -163,7 +163,7 @@
       }
     },
 
-    updateScoreCourse : function (courseid, codes, x, y) {
+    updateScoreCourse: function (courseid, codes, x, y) {
       var i;
       for (i = 0; i < this.courses.length; i += 1) {
         if (this.courses[i] !== undefined) {
@@ -178,7 +178,7 @@
       }
     },
 
-    setResultsCount : function () {
+    setResultsCount: function () {
       var i;
       for (i = 0; i < this.courses.length; i += 1) {
         if (this.courses[i] !== undefined) {
@@ -187,7 +187,7 @@
       }
     },
 
-    formatCoursesAsTable : function () {
+    formatCoursesAsTable: function () {
       var details, html;
       html = "<table class='coursemenutable'><tr><th>" + rg2.t("Course") + "</th><th><i class='fa fa-eye'></i></th>";
       html += "<th>" + rg2.t("Runners") + "</th><th>" + rg2.t("Routes") + "</th><th><i class='fa fa-eye'></i></th><th><i class='fa fa-play'></i></th></tr>";
@@ -203,9 +203,9 @@
       return html;
     },
 
-    formatCourseDetails : function () {
+    formatCourseDetails: function () {
       var i, details;
-      details = {html: "", res: 0};
+      details = { html: "", res: 0 };
       for (i = 0; i < this.courses.length; i += 1) {
         if (this.courses[i] !== undefined) {
           details.html += "<tr><td>" + this.courses[i].name + "</td>" + "<td><input class='courselist' id=" + i + " type=checkbox name=course></input></td>";
@@ -214,6 +214,8 @@
           if (this.courses[i].trackcount > 0) {
             details.html += "<input id=" + i + " class='tracklist' type=checkbox name=track></input></td>";
             details.html += "<td><input id=" + i + " class='allcoursetracksreplay' type=checkbox name=replay></input>";
+          } else {
+            details.html += "</td><td>";
           }
           details.html += "</td></tr>";
         }
@@ -222,8 +224,8 @@
       return details;
     },
 
-    drawLinesBetweenControls : function (pt, angle, courseid, opt) {
-      this.courses[courseid].drawLinesBetweenControls(pt,  angle, opt);
+    drawLinesBetweenControls: function (pt, angle, courseid, opt) {
+      this.courses[courseid].drawLinesBetweenControls(pt, angle, opt);
     }
   };
   rg2.Courses = Courses;

@@ -9,7 +9,7 @@ require(dirname(__FILE__) . '/app/user.php');
 require(dirname(__FILE__) . '/app/utils.php');
 
 // version replaced by Gruntfile as part of release
-define('RG2VERSION', '1.5.4');
+define('RG2VERSION', '1.5.5');
 define("RG_LOG_FILE", dirname(__FILE__)."/log/rg2log.txt");
 
 if (file_exists(dirname(__FILE__) . '/rg2-config.php')) {
