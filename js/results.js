@@ -28,6 +28,9 @@
       }
       // save each result
       for (i = 0; i < l; i += 1) {
+        if (data[i].resultid > rg2.config.GPS_RESULT_OFFSET && data[i].coursename== '' ) {
+          data[i].coursename = rg2.courses.getCourseDetails(data[i].courseid).name;
+        }
         if (isScoreEvent) {
           variant = data[i].variant;
           result = new rg2.Result(data[i], isScoreEvent, codes[variant], scorex[variant], scorey[variant]);
