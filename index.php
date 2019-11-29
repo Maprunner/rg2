@@ -61,6 +61,12 @@ if (defined('OVERRIDE_KARTAT_DIRECTORY')) {
 }
 define('KARTAT_DIRECTORY', $maps_dir);
 
+// save grief when initial set-up is wrong...
+if (!file_exists($maps_dir)) {
+  echo "Routegadget 2: Kartat directory " . $maps_dir ." not found.";
+  return;
+}
+
 // include manager function as parameter for now until we decide the best way forward
 if (isset($_GET['manage'])) {
     $manager = true;
@@ -86,15 +92,19 @@ header('Content-type: text/html; charset=utf-8');
 <!DOCTYPE html>
 <html lang="en">
 <?php include 'html/head.html'; ?>
+
 <body>
-<?php include 'html/header.html';?>
-<noscript><h3>You have javascript disabled. Routegadget cannot run. Please update your browser configuration.</h3></noscript>
-<div id="rg2-container">
-<?php include 'html/infopanel.html'; ?>
-<?php include 'html/animation.html'; ?>
-<?php include 'html/options.html'; ?>
-<?php include 'html/misc.html'; ?>
-</div>
-<?php include 'html/script.html'; ?>
+  <?php include 'html/header.html';?>
+  <noscript>
+    <h3>You have javascript disabled. Routegadget cannot run. Please update your browser configuration.</h3>
+  </noscript>
+  <div id="rg2-container">
+    <?php include 'html/infopanel.html'; ?>
+    <?php include 'html/animation.html'; ?>
+    <?php include 'html/options.html'; ?>
+    <?php include 'html/misc.html'; ?>
+  </div>
+  <?php include 'html/script.html'; ?>
 </body>
+
 </html>
