@@ -1,7 +1,7 @@
 {
   "name": "rg2",
   "description": "Routegadget 2",
-  "version": "1.5.5",
+  "version": "1.5.6",
   "license": "MIT",
   "repository": "https://github.com/Maprunner/rg2",
   "devDependencies": {
@@ -12,7 +12,7 @@
     "grunt-contrib-cssmin": "~3.0.0",
     "grunt-contrib-jshint": "~2.0.0",
     "grunt-contrib-uglify": "^4.0.1",
-    "grunt-sync": "~0.8.0",
+    "grunt-sync": "^0.8.1",
     "grunt-text-replace": "~0.4.0",
     "load-grunt-tasks": "~4.0.0"
   },
