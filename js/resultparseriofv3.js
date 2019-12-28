@@ -108,12 +108,19 @@
       var x, codes;
       codes = [];
       for (x = 0; x < splitlist.length; x += 1) {
-        // only possible attributes are "Missing" and "Additional" so
-        // if splitlist has attributes it is invalid and needs to be ignored
+        // no attributes means just a standard split with time and control code
         if (splitlist[x].attributes.length === 0) {
           result.splits += rg2.utils.extractTextContentZero(splitlist[x].getElementsByTagName('Time'), 0);
           codes.push(rg2.utils.extractTextContentZero(splitlist[x].getElementsByTagName('ControlCode'), 'X' + x));
           result.splits += ";";
+        } else {
+          // possible status attributes are "Missing" and "Additional"
+          // need to insert a dummy 0 time for missing splits
+          if (splitlist[x].getAttribute('status') === "Missing") {
+            result.splits += "0";
+            codes.push(rg2.utils.extractTextContentZero(splitlist[x].getElementsByTagName('ControlCode'), 'X' + x));
+            result.splits += ";";
+          }
         }
       }
       result.codes = codes;
