@@ -411,7 +411,7 @@
     },
 
     getLegPosInfo: function () {
-      var i, total, count, best, worst;
+      var i, total, count, best, worst, average;
       total = 0;
       count = 0;
       worst = 0;
@@ -429,7 +429,16 @@
           worst = this.result.legpos[i];
         }
       }
-      return ({ best: best, worst: worst, average: (total / count).toFixed(1) });
+
+      // allow for people with no valid leg times
+      if (count > 0) {
+        average = (total / count).toFixed(1);
+      } else {
+        average = 0;
+        best = 0;
+        worst = 0;
+      }
+      return ({ best: best, worst: worst, average: average });
     },
 
     analyseCourse: function () {
