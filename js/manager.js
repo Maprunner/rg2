@@ -43,7 +43,7 @@
     this.useThisEncoding = false;
     this.backgroundLocked = false;
     this.sortResults = false;
-    this.handle = {x: null, y: null};
+    this.handle = { x: null, y: null };
     this.maps = [];
     this.localworldfile = new rg2.Worldfile(0);
     this.worldfile = new rg2.Worldfile(0);
@@ -54,9 +54,9 @@
 
   Manager.prototype = {
 
-    Constructor : Manager,
+    Constructor: Manager,
 
-    initialiseUI : function () {
+    initialiseUI: function () {
       var self;
       self = this;
       $("#btn-login").button();
@@ -77,25 +77,25 @@
       });
     },
 
-    initialiseMap : function () {
+    initialiseMap: function () {
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-	      maxZoom: 19,
-	      attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        maxZoom: 19,
+        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
       }).addTo(this.georefmap);
     },
 
-    logIn : function () {
+    logIn: function () {
       var url, json, self;
       url = rg2Config.json_url + '?type=login';
       json = JSON.stringify(this.user.encodeUser());
       self = this;
       $.ajax({
-        type : 'POST',
-        dataType : 'json',
-        data : json,
-        url : url,
-        cache : false,
-        success : function (data) {
+        type: 'POST',
+        dataType: 'json',
+        data: json,
+        url: url,
+        cache: false,
+        success: function (data) {
           // save new cookie
           self.user.y = data.keksi;
           if (data.ok) {
@@ -104,14 +104,14 @@
             rg2.utils.showWarningDialog("Login failed", "Login failed. Please try again.");
           }
         },
-        error : function () {
+        error: function () {
           rg2.utils.showWarningDialog("Login failed", "User name or password incorrect. Please try again.");
         }
       });
       return false;
     },
 
-    setButtons : function () {
+    setButtons: function () {
       var self;
       self = this;
       $("#btn-create-event").button().click(function () {
@@ -168,7 +168,7 @@
       });
     },
 
-    validateMapUpload : function (upload) {
+    validateMapUpload: function (upload) {
       var reader, image, size;
       reader = new FileReader();
       reader.onload = function (e) {
@@ -190,13 +190,13 @@
       reader.readAsDataURL(upload);
     },
 
-    initialiseEncodings : function () {
+    initialiseEncodings: function () {
       this.encodingIndex = 0;
       this.errorCount = [];
       this.useThisEncoding = false;
     },
 
-    enableEventEdit : function () {
+    enableEventEdit: function () {
       var self = this;
       rg2.managerUI.setUIVisibility();
       this.getMaps();
@@ -228,8 +228,8 @@
       });
 
       $("#rg2-event-date").datepicker({
-        dateFormat : 'yy-mm-dd',
-        onSelect : function (date) {
+        dateFormat: 'yy-mm-dd',
+        onSelect: function (date) {
           self.setDate(date);
         }
       });
@@ -261,12 +261,12 @@
       $('#rg2-info-panel').tabs('option', 'active', rg2.config.TAB_CREATE);
     },
 
-    getMaps : function () {
+    getMaps: function () {
       var i, self;
       self = this;
       $.getJSON(rg2Config.json_url, {
-        type : "maps",
-        cache : false
+        type: "maps",
+        cache: false
       }).done(function (json) {
         self.maps.length = 0;
         console.log("Maps: " + json.data.maps.length);
@@ -280,24 +280,24 @@
       });
     },
 
-    setGeoref : function (code) {
+    setGeoref: function (code) {
       if (code !== null) {
         this.convertWorldFile(code);
       }
     },
 
-    eventListLoaded : function () {
+    eventListLoaded: function () {
       // called after event list has been updated
       rg2.managerUI.createEventEditDropdown();
     },
 
-    eventFinishedLoading : function () {
+    eventFinishedLoading: function () {
       var kartatid;
       kartatid = parseInt($("#rg2-event-selected").val(), 10);
       rg2.managerUI.eventFinishedLoading(rg2.events.getEventInfo(kartatid));
     },
 
-    startDrawingCourses : function () {
+    startDrawingCourses: function () {
       if (this.mapLoaded) {
         this.drawingCourses = true;
         this.courses.length = 0;
@@ -314,7 +314,7 @@
       }
     },
 
-    displayCourseAllocations : function () {
+    displayCourseAllocations: function () {
       var i, html;
       if ((this.courses.length) && (this.resultCourses.length)) {
         html = "<div id='rg2-course-allocations'><table><thead><tr><th>Results</th><th>Course</th></tr></thead><tbody>";
@@ -328,19 +328,19 @@
       }
     },
 
-    createResultCourseMapping : function () {
+    createResultCourseMapping: function () {
       var i;
       // create a dummy result-course mapping
       // to allow display of courses with no results
       if (this.format === rg2.config.FORMAT_NO_RESULTS) {
         this.resultCourses.length = 0;
         for (i = 0; i < this.courses.length; i += 1) {
-          this.resultCourses.push({courseid: this.courses[i].courseid, course: this.courses[i].name});
+          this.resultCourses.push({ courseid: this.courses[i].courseid, course: this.courses[i].name });
         }
       }
     },
 
-    validateData : function () {
+    validateData: function () {
       if (!this.eventName) {
         return 'Event name is not valid.';
       }
@@ -376,7 +376,7 @@
 
     },
 
-    confirmCreateEvent : function () {
+    confirmCreateEvent: function () {
       var valid, dlg;
       valid = this.validateData();
       if (valid !== 'OK') {
@@ -393,7 +393,7 @@
       rg2.utils.createModalDialog(dlg);
     },
 
-    doCreateEvent : function () {
+    doCreateEvent: function () {
       var self, data;
       $("#event-create-dialog").dialog("destroy");
       self = this;
@@ -401,11 +401,11 @@
       $("#rg2-load-progress-label").text("Creating event");
       $("#rg2-load-progress").show();
       $.ajax({
-        data : data,
-        type : "POST",
-        url : rg2Config.json_url + "?type=createevent",
-        dataType : "json",
-        success : function (data) {
+        data: data,
+        type: "POST",
+        url: rg2Config.json_url + "?type=createevent",
+        dataType: "json",
+        success: function (data) {
           // save new cookie
           self.user.y = data.keksi;
           if (data.ok) {
@@ -418,17 +418,17 @@
             rg2.utils.showWarningDialog("Save failed", data.status_msg + " Failed to create event. Please try again.");
           }
         },
-        error : function () {
+        error: function () {
           rg2.utils.showWarningDialog("Save failed", " Failed to create event.");
         },
-        complete : function () {
+        complete: function () {
           $("#rg2-load-progress-label").text("");
           $("#rg2-load-progress").hide();
         }
       });
     },
 
-    generateNewEventData : function () {
+    generateNewEventData: function () {
       var data, text, user, i;
       data = {};
       data.name = this.eventName;
@@ -477,14 +477,14 @@
       return JSON.stringify(data);
     },
 
-    hasZeroTime : function (time) {
+    hasZeroTime: function (time) {
       if (time === 0 || time === '0' || time === '0:00' || time === '00:00') {
         return true;
       }
       return false;
     },
 
-    sortResultItems : function (a, b) {
+    sortResultItems: function (a, b) {
       // called after final courseids allocated so this is safe
       if (a.courseid !== b.courseid) {
         return a.courseid - b.courseid;
@@ -507,7 +507,7 @@
       return a.time - b.time;
     },
 
-    renumberResults : function () {
+    renumberResults: function () {
       // updates the course id and name when we know the mapping
       // and deletes results for courses not required
       var i, newResults, id;
@@ -525,7 +525,7 @@
       this.results = newResults;
     },
 
-    getCourseName : function (id) {
+    getCourseName: function (id) {
       var i;
       for (i = 0; i < this.courses.length; i += 1) {
         if (this.courses[i].courseid === id) {
@@ -535,7 +535,7 @@
       return 0;
     },
 
-    mapResultsToCourses : function () {
+    mapResultsToCourses: function () {
       // read through dropdowns and allocate courseid for each required course
       // also delete unwanted courses
       var i, selector, id, newCourses, courseid;
@@ -571,7 +571,7 @@
     * @param {string} course - Course name from results file.
     * @param {integer} courseidx - Course name index.
     */
-    createCourseDropdown : function (course, courseidx) {
+    createCourseDropdown: function (course, courseidx) {
       var i, j, idx, html;
       idx = -1;
       // check against list of course names first to default to results by course
@@ -615,7 +615,7 @@
       return html;
     },
 
-    extractVariants : function () {
+    extractVariants: function () {
       // called when saving score/relay courses
       // creates all course variants once courseid has been set
       var i, j, codes, course;
@@ -639,7 +639,7 @@
       }
     },
 
-    getVariantID : function (codes, courseid) {
+    getVariantID: function (codes, courseid) {
       // checks if a variant array of codes already exists
       // adds it if it doesn't
       // returns variantid
@@ -670,13 +670,13 @@
           x.push(c.x);
           y.push(c.y);
         }
-        this.variants.push({x: x, y: y, id: id, courseid: courseid, name: 'Variant ' + id, codes: codes});
+        this.variants.push({ x: x, y: y, id: id, courseid: courseid, name: 'Variant ' + id, codes: codes });
       }
 
       return id;
     },
 
-    getCourseIDForResult : function (course) {
+    getCourseIDForResult: function (course) {
       var i;
       for (i = 0; i < this.resultCourses.length; i += 1) {
         if (this.resultCourses[i].course === course) {
@@ -686,7 +686,7 @@
       return 0;
     },
 
-    setControlLocations : function () {
+    setControlLocations: function () {
       // called when saving courses
       // reads control locations and updates course details
       var i, j, c;
@@ -699,7 +699,7 @@
       }
     },
 
-    getControlXY : function (code) {
+    getControlXY: function (code) {
       var i, c;
       c = {};
       c.x = 0;
@@ -714,7 +714,7 @@
       return c;
     },
 
-    confirmUpdateEvent : function () {
+    confirmUpdateEvent: function () {
       var dlg;
       dlg = {};
       dlg.selector = "<div id='event-update-dialog'>Are you sure you want to update this event?</div>";
@@ -726,7 +726,7 @@
       rg2.utils.createModalDialog(dlg);
     },
 
-    doUpdateEvent : function () {
+    doUpdateEvent: function () {
       var id, $url, data, json, self, user;
       $("#event-update-dialog").dialog("destroy");
       id = $("#rg2-event-selected").val();
@@ -744,11 +744,11 @@
       json = JSON.stringify(data);
       self = this;
       $.ajax({
-        data : json,
-        type : "POST",
-        url : $url,
-        dataType : "json",
-        success : function (data) {
+        data: json,
+        type: "POST",
+        url: $url,
+        dataType: "json",
+        success: function (data) {
           // save new cookie
           self.user.y = data.keksi;
           if (data.ok) {
@@ -761,14 +761,14 @@
             rg2.utils.showWarningDialog("Update failed", data.status_msg + ". Event update failed. Please try again.");
           }
         },
-        error : function (jqXHR, textStatus) {
+        error: function (jqXHR, textStatus) {
           /*jslint unparam:true*/
           rg2.utils.showWarningDialog("Update failed", textStatus + ". Event update failed.");
         }
       });
     },
 
-    confirmDeleteRoute : function () {
+    confirmDeleteRoute: function () {
       var dlg;
       dlg = {};
       dlg.selector = "<div id='route-delete-dialog'>This route will be permanently deleted. Are you sure?</div>";
@@ -780,7 +780,7 @@
       rg2.utils.createModalDialog(dlg);
     },
 
-    doDeleteRoute : function () {
+    doDeleteRoute: function () {
       var id, $url, routeid, json, self;
       $("#route-delete-dialog").dialog("destroy");
       id = $("#rg2-event-selected").val();
@@ -789,11 +789,11 @@
       json = JSON.stringify(this.user.encodeUser());
       self = this;
       $.ajax({
-        data : json,
-        type : "POST",
-        url : $url,
-        dataType : "json",
-        success : function (data) {
+        data: json,
+        type: "POST",
+        url: $url,
+        dataType: "json",
+        success: function (data) {
           // save new cookie
           self.user.y = data.keksi;
           if (data.ok) {
@@ -802,14 +802,14 @@
             rg2.utils.showWarningDialog("Delete failed", data.status_msg + ". Delete failed. Please try again.");
           }
         },
-        error : function (jqXHR, textStatus) {
+        error: function (jqXHR, textStatus) {
           /*jslint unparam:true*/
           rg2.utils.showWarningDialog("Delete failed", textStatus + ". Delete failed.");
         }
       });
     },
 
-    confirmDeleteEvent : function () {
+    confirmDeleteEvent: function () {
       var dlg;
       dlg = {};
       dlg.selector = "<div id='event-delete-dialog'>This event will be deleted. Are you sure?</div>";
@@ -821,7 +821,7 @@
       rg2.utils.createModalDialog(dlg);
     },
 
-    doDeleteEvent : function () {
+    doDeleteEvent: function () {
       var id, $url, json, self;
       $("#event-delete-dialog").dialog("destroy");
       id = $("#rg2-event-selected").val();
@@ -829,11 +829,11 @@
       json = JSON.stringify(this.user.encodeUser());
       self = this;
       $.ajax({
-        data : json,
-        type : "POST",
-        url : $url,
-        dataType : "json",
-        success : function (data) {
+        data: json,
+        type: "POST",
+        url: $url,
+        dataType: "json",
+        success: function (data) {
           // save new cookie
           self.user.y = data.keksi;
           if (data.ok) {
@@ -845,14 +845,14 @@
             rg2.utils.showWarningDialog("Delete failed", data.status_msg + ". Event delete failed. Please try again.");
           }
         },
-        error : function (jqXHR, textStatus) {
+        error: function (jqXHR, textStatus) {
           /*jslint unparam:true*/
           rg2.utils.showWarningDialog("Delete failed", textStatus + ". Delete failed.");
         }
       });
     },
 
-    readResults : function () {
+    readResults: function () {
       var format, reader, self;
       reader = new FileReader();
       self = this;
@@ -871,7 +871,7 @@
       }
     },
 
-    checkResultsFileEncoding : function (evt) {
+    checkResultsFileEncoding: function (evt) {
       // not pretty but it works
       // need to use the array of possible encodings that we want to try if the file is not UTF-8
       // might be better to use a synchronous read, but that needs a worker thread
@@ -902,7 +902,7 @@
       this.readResults();
     },
 
-    processResultFile : function (evt) {
+    processResultFile: function (evt) {
       var parsedResults = new rg2.ResultParser(evt, this.resultsFileFormat);
       this.results = parsedResults.results;
       this.resultCourses = parsedResults.resultCourses;
@@ -915,7 +915,7 @@
       this.displayCourseAllocations();
     },
 
-    readCourses : function (evt) {
+    readCourses: function (evt) {
       var reader, self;
       reader = new FileReader();
       reader.onerror = function () {
@@ -931,12 +931,12 @@
       reader.readAsText(evt.target.files[0]);
     },
 
-    processCourseFile : function (evt) {
+    processCourseFile: function (evt) {
       var parsedCourses;
       this.coursesGeoreferenced = false;
       this.backgroundLocked = false;
       $('#btn-move-map-and-controls').prop('checked', false);
-      this.handle = {x: null, y: null};
+      this.handle = { x: null, y: null };
       this.newcontrols.deleteAllControls();
       parsedCourses = new rg2.CourseParser(evt, this.worldfile, this.localworldfile);
       this.courses = parsedCourses.courses;
@@ -950,7 +950,7 @@
       rg2.redraw(false);
     },
 
-    getCourseInfoAsHTML : function () {
+    getCourseInfoAsHTML: function () {
       var info, i;
       if (this.courses.length) {
         info = "<table><thead><tr><th>Course</th><th>Name</th><th>Controls</th></tr></thead><tbody>";
@@ -965,16 +965,16 @@
       return info;
     },
 
-    getResultInfoAsHTML : function () {
+    getResultInfoAsHTML: function () {
       var info, i, runners, oldcourse;
       if (this.results.length) {
-        info = "<table><thead><tr><th>Course</th><th>Winner</th><th>Time</th><th>Runners</th></tr></thead><tbody>";
+        info = "<table><thead><tr><th>Course</th><th>Winner</th><th>Time</th><th class='align-center'>Runners</th></tr></thead><tbody>";
         runners = 0;
         oldcourse = null;
         for (i = 0; i < this.results.length; i += 1) {
           if (this.results[i].course !== oldcourse) {
             if (oldcourse !== null) {
-              info += "<td>" + runners + "</td></tr>";
+              info += "<td class='align-center'>" + runners + "</td></tr>";
               runners = 0;
             }
             info += "<tr><td>" + this.results[i].course + "</td><td>" + this.results[i].name + "</td><td>" + this.results[i].time + "</td>";
@@ -982,7 +982,7 @@
           }
           runners += 1;
         }
-        info += "<td>" + runners + "</td></tr></tbody></table>";
+        info += "<td class='align-center'>" + runners + "</td></tr></tbody></table>";
       } else {
         info = "No valid results found.";
       }
@@ -990,7 +990,7 @@
       return info;
     },
 
-    testForInvalidCharacters : function (rawtext) {
+    testForInvalidCharacters: function (rawtext) {
       // takes in text read from a results file and checks it has converted to UTF-8 correctly
       var i, count;
       count = 0;
@@ -1005,7 +1005,7 @@
       return count;
     },
 
-    readMapFile : function (evt) {
+    readMapFile: function (evt) {
       var reader, self, format;
       reader = new FileReader();
       self = this;
@@ -1021,7 +1021,7 @@
       }
     },
 
-    mapLoadCallback : function () {
+    mapLoadCallback: function () {
       //callback when map image is loaded
       var size;
       this.mapLoaded = true;
@@ -1036,7 +1036,7 @@
       rg2.redraw(false);
     },
 
-    processMap : function (event) {
+    processMap: function (event) {
       // called to load a new map locally
       var size;
       rg2.loadNewMap(event.target.result);
@@ -1050,7 +1050,7 @@
       $("#btn-add-map").button("enable");
     },
 
-    fitControlsToMap : function () {
+    fitControlsToMap: function () {
       var i, georefOK, box, scale;
       georefOK = false;
       if ((this.mapLoaded) && (this.newcontrols.controls.length > 0)) {
@@ -1083,7 +1083,7 @@
       }
     },
 
-    getBoundingBox : function () {
+    getBoundingBox: function () {
       // find bounding box for controls
       var box, i;
       box = {};
@@ -1102,7 +1102,7 @@
       return box;
     },
 
-    copyXYToOldXY : function () {
+    copyXYToOldXY: function () {
       // rebaseline control locations
       var i;
       for (i = 0; i < this.newcontrols.controls.length; i += 1) {
@@ -1111,7 +1111,7 @@
       }
     },
 
-    setClub : function () {
+    setClub: function () {
       this.club = $("#rg2-club-name").val();
       if (this.club) {
         $("#rg2-select-club-name").addClass('valid');
@@ -1120,7 +1120,7 @@
       }
     },
 
-    setEventName : function () {
+    setEventName: function () {
       this.eventName = $("#rg2-event-name").val();
       if (this.eventName) {
         $("#rg2-select-event-name").addClass('valid');
@@ -1129,14 +1129,14 @@
       }
     },
 
-    setCourseName : function () {
+    setCourseName: function () {
       var course = $("#rg2-new-course-name").val();
       if (course) {
         this.drawnCourse.name = course;
       }
     },
 
-    setMapName : function () {
+    setMapName: function () {
       this.newMap.name = $("#rg2-map-name").val();
       if (this.newMap.name) {
         $("#rg2-select-map-name").addClass('valid');
@@ -1145,7 +1145,7 @@
       }
     },
 
-    setDate : function (date) {
+    setDate: function (date) {
       this.eventDate = date;
       if (this.eventDate) {
         $("#rg2-select-event-date").addClass('valid');
@@ -1154,7 +1154,7 @@
       }
     },
 
-    drawControls : function () {
+    drawControls: function () {
       if ((this.mapLoaded) && (this.newcontrols.controls.length > 0)) {
         this.newcontrols.drawControls(true);
         var opt = rg2.getOverprintDetails();
@@ -1176,7 +1176,7 @@
     },
 
     // based on adjustTrack from draw.js
-    adjustControls : function (p1, p2, button) {
+    adjustControls: function (p1, p2, button) {
       // console.log (p1.x, p1.y, p2.x, p2.y, this.handle.x, this.handle.y, button);
       var i, x, y, dx, dy, scaleX, scaleY;
       if ((this.backgroundLocked) || (button === rg2.config.RIGHT_CLICK)) {
@@ -1211,7 +1211,7 @@
       }
     },
 
-    dragEnded : function () {
+    dragEnded: function () {
       // console.log("Drag ended");
       if ((this.mapLoaded) && (this.newcontrols.controls.length > 0)) {
         // rebaseline control locations
@@ -1219,7 +1219,7 @@
       }
     },
 
-    mouseUp : function (x, y) {
+    mouseUp: function (x, y) {
       // console.log("Mouse up ",x, y);
       if (this.drawingCourses) {
         this.addNewControl(x, y);
@@ -1229,14 +1229,14 @@
       if ((this.mapLoaded) && (this.newcontrols.controls.length > 0)) {
         // adjusting the track
         if (this.handle.x === null) {
-          this.handle = {x: x, y: y};
+          this.handle = { x: x, y: y };
         } else {
-          this.handle = {x: null, y: null};
+          this.handle = { x: null, y: null };
         }
       }
     },
 
-    addNewControl : function (x, y) {
+    addNewControl: function (x, y) {
       // add new control: generate a code for it
       var code;
       if (this.newcontrols.controls.length === 0) {
@@ -1252,17 +1252,17 @@
     },
 
     // locks or unlocks background when adjusting map
-    toggleMoveAll : function (checkedState) {
+    toggleMoveAll: function (checkedState) {
       this.backgroundLocked = checkedState;
     },
 
-    toggleSortResults : function (checkedState) {
+    toggleSortResults: function (checkedState) {
       this.sortResults = checkedState;
     },
 
     // determines if a results file is needed
     // TODO: score events
-    toggleResultsRequired : function (noResults) {
+    toggleResultsRequired: function (noResults) {
       if (noResults) {
         this.format = rg2.config.FORMAT_NO_RESULTS;
         this.createResultCourseMapping();
@@ -1271,7 +1271,7 @@
       }
     },
 
-    confirmAddMap : function () {
+    confirmAddMap: function () {
       var dlg;
       dlg = {};
       dlg.selector = "<div id='add-map-dialog'>Are you sure you want to add this map?</div>";
@@ -1283,7 +1283,7 @@
       rg2.utils.createModalDialog(dlg);
     },
 
-    doUploadMapFile : function () {
+    doUploadMapFile: function () {
       var url, user, self, formData;
       $("#add-map-dialog").dialog("destroy");
       // first transfer map file to server
@@ -1298,14 +1298,14 @@
       $("#rg2-load-progress-label").text("Saving map");
       $("#rg2-load-progress").show();
       $.ajax({
-        url : url,
-        data : formData,
-        type : "POST",
-        mimeType : "multipart/form-data",
-        processData : false,
-        contentType : false,
-        dataType : "json",
-        success : function (data) {
+        url: url,
+        data: formData,
+        type: "POST",
+        mimeType: "multipart/form-data",
+        processData: false,
+        contentType: false,
+        dataType: "json",
+        success: function (data) {
           // save new cookie
           self.user.y = data.keksi;
           if (data.ok) {
@@ -1314,18 +1314,18 @@
             rg2.utils.showWarningDialog("Save failed", data.status_msg + ". Failed to save map. Please try again.");
           }
         },
-        error : function (jqXHR, textStatus) {
+        error: function (jqXHR, textStatus) {
           /*jslint unparam:true*/
           console.log(textStatus);
         },
-        complete : function () {
+        complete: function () {
           $("#rg2-load-progress-label").text("");
           $("#rg2-load-progress").hide();
         }
       });
     },
 
-    doAddMap : function () {
+    doAddMap: function () {
       var $url, data, user, json, self;
       // map file uploaded OK so add new details
       $url = rg2Config.json_url + "?type=addmap";
@@ -1338,11 +1338,11 @@
       json = JSON.stringify(data);
       self = this;
       $.ajax({
-        data : json,
-        type : "POST",
-        url : $url,
-        dataType : "json",
-        success : function (data) {
+        data: json,
+        type: "POST",
+        url: $url,
+        dataType: "json",
+        success: function (data) {
           // save new cookie
           self.user.y = data.keksi;
           if (data.ok) {
@@ -1353,14 +1353,14 @@
             rg2.utils.showWarningDialog("Save failed", data.status_msg + ". Failed to save map. Please try again.");
           }
         },
-        error : function (jqXHR, textStatus) {
+        error: function (jqXHR, textStatus) {
           /*jslint unparam:true*/
           console.log(textStatus);
         }
       });
     },
 
-    readGeorefFile : function (evt) {
+    readGeorefFile: function (evt) {
       var reader, self;
       reader = new FileReader();
       self = this;
@@ -1379,13 +1379,13 @@
         txt = evt.target.result;
         args = txt.split(/[\r\n]+/g);
         delete self.localworldfile;
-        self.localworldfile = new rg2.Worldfile({A: args[0], B: args[2], C: args[4], D: args[1], E: args[3], F: args[5]});
+        self.localworldfile = new rg2.Worldfile({ A: args[0], B: args[2], C: args[4], D: args[1], E: args[3], F: args[5] });
         $("#rg2-georef-selected").val(self.georefsystems.getDefault());
         self.convertWorldFile(self.georefsystems.getDefault());
       };
     },
 
-    convertWorldFile : function (type) {
+    convertWorldFile: function (type) {
       // takes in a World file for the map image and translates it to WGS84 (GPS)
       try {
         var i, size, source, dest, xsrc, ysrc, xpx, ypx, p, pt, wf;
@@ -1466,14 +1466,14 @@
       }
     },
 
-    updateGeorefDisplay : function () {
+    updateGeorefDisplay: function () {
       var letters, i;
       letters = ["A", "B", "C", "D", "E", "F"];
       for (i = 0; i < letters.length; i += 1) {
         $("#georef-" + letters[i]).empty().text(letters[i] + ": " + this.newMap.worldfile[letters[i]]);
       }
     },
-    updateGeorefMap : function () {
+    updateGeorefMap: function () {
       var lon, lat, poly, poly_coords, indices;
       // Plot a polygon and recentre the map on the polygon
       lon = this.newMap.lon;
@@ -1481,10 +1481,10 @@
       poly_coords = [];
       // For some reason this is the order the coordinates are stored in.
       indices = [3, 1, 2, 0];
-      indices.forEach( function(i) {
+      indices.forEach(function (i) {
         poly_coords.push([lat[i], lon[i]]);
       });
-      poly = L.polygon(poly_coords, { color: 'red'});
+      poly = L.polygon(poly_coords, { color: 'red' });
       poly.addTo(this.georefmap);
       $("#rg2-world-file-map").show();
       this.georefmap.invalidateSize();

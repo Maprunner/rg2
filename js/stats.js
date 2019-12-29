@@ -29,7 +29,7 @@
       // includes start and finish
       this.controls = this.course.codes.length;
       if (this.controls <= 2) {
-        throw new this.rg2Exception('No splits available.');
+        throw new this.rg2Exception(rg2.t('No splits available.'));
       }
       this.analyseCourse();
     },
@@ -40,36 +40,33 @@
 
     showStats: function (rawid) {
       // all sorts of possible data consistency errors that might turn up
-      //try {
-      this.initialise(rawid);
-      this.generateSummary();
-      this.generateTableByLegPos();
-      this.generateTableByRacePos();
-      this.generateSplitsTable();
-      this.displayStats();
-      //} catch (err) {
-      //  if (err instanceof this.rg2Exception) {
-      //    // one we trapped ourselves
-      //    rg2.utils.showWarningDialog("Cannot generate statistics.", err.message);
-      //  } else {
-      //    // general problem: probably an index out of bounds on an array somewhere: dodgy results files
-      //    rg2.utils.showWarningDialog("Cannot generate statistics.", "Data inconsistency.");
-      //  }
-      //  return;
-      //}
+      try {
+        this.initialise(rawid);
+        this.generateSummary();
+        this.generateTableByLegPos();
+        this.generateTableByRacePos();
+        this.generateSplitsTable();
+        this.displayStats();
+      } catch (err) {
+        if (err instanceof this.rg2Exception) {
+          // one we trapped ourselves
+          rg2.utils.showWarningDialog(rg2.t("Statistics"), err.message);
+        } else {
+          // general problem: probably an index out of bounds on an array somewhere: dodgy results files
+          rg2.utils.showWarningDialog(rg2.t("Statistics"), rg2.t("Data inconsistency."));
+        }
+        return;
+      }
     },
 
     displayStats: function () {
+      // width and height adjustments based on what looks OK when testing...
+      $("#rg2-stats-tabs").tabs();
       $("#rg2-stats-table").dialog({
         resizable: false,
-        maxHeight: $("#rg2-map-canvas").height(),
-        width: $("#rg2-map-canvas").width() / 2,
+        maxHeight: $("#rg2-map-canvas").height() * 0.98,
+        width: Math.min($("#rg2-map-canvas").width() * 0.8, 1000),
         position: { my: "top", at: "top", of: "#rg2-map-canvas" },
-        buttons: {
-          Ok: function () {
-            $("#rg2-stats-table").dialog('close');
-          }
-        }
       });
     },
 
@@ -308,7 +305,7 @@
     },
 
     generateSplitsTable: function () {
-      var i, j, r, row, rowData, columnDefs, height;
+      var i, j, r, row, rowData, columnDefs;
       columnDefs = [
         { headerName: rg2.t("Pos"), field: "position", headerClass: "align-center", cellClass: "align-center", width: 60 },
         { headerName: rg2.t("Name"), field: "name", width: 150 },
@@ -370,15 +367,18 @@
       var gridOptions = {
         columnDefs: columnDefs,
         rowData: rowData,
-        //domLayout: 'autoHeight',
-        //onFirstDataRendered: this.autoSizeColumns
+        onFirstDataRendered: this.sizeToFit
       };
 
       // try to set a sensible height that allows table to be viewed using scroll bars
-      height = $("#rg2-map-canvas").height() * 0.75;
-      $('#rg2-results-table-container').removeAttr("style").attr("style", "height: " + height + "px;");
-      $('#rg2-results-table').empty();
-      new agGrid.Grid(document.querySelector('#rg2-results-table'), gridOptions);
+      //height = $("#rg2-map-canvas").height() * 0.75;
+      //$('#rg2-results-table-container').removeAttr("style").attr("style", "height: " + height + "px;");
+      $('#rg2-results-grid').empty();
+      new agGrid.Grid(document.querySelector('#rg2-results-grid'), gridOptions);
+    },
+
+    sizeToFit: function (params) {
+      params.api.sizeColumnsToFit();
     },
 
     autoSizeColumns: function (params) {

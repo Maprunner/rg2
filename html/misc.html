@@ -16,7 +16,8 @@
   <hr>
   <p>Routegadget 2 (RG2) is a web application for drawing and comparing orienteering routes. It is based on the
     original Routegadget developed by Jarkko Ryyppö.
-    For further details see the <a href="https://github.com/Maprunner/rg2/wiki/User-guide" target="_blank" rel="noopener">User
+    For further details see the <a href="https://github.com/Maprunner/rg2/wiki/User-guide" target="_blank"
+      rel="noopener">User
       Guide</a> and the <a href="https://github.com/Maprunner/rg2" target="_blank" rel="noopener">RG2 project page</a>.
     The latest version of RG2 is available for download <a href="https://github.com/Maprunner/rg2/archive/master.zip"
       target="_blank" rel="noopener">from GitHub</a>.
@@ -36,16 +37,26 @@
 </div>
 <div id="rg2-splits-table" title="Splits display"></div>
 <div id="rg2-stats-table" title="Statistics">
-  <div id="container">
-    <h2>Summary</h2>
+  <div id="rg2-stats-tabs">
+    <ul>
+      <li>
+        <a href="#rg2-stats-summary">Summary</a>
+      </li>
+      <li>
+        <a href="#rg2-leg-table">Leg Times</a>
+      </li>
+      <li>
+        <a href="#rg2-race-table">Cumulative Times</a>
+      </li>
+      <li>
+        <a href="#rg2-results-table">Splits</a>
+      </li>
+    </ul>
     <div id="rg2-stats-summary"></div>
-    <h2>Leg Times</h2>
-    <div id="rg2-leg-table" style="width: 900px; height: 100%;" class="ag-theme-blue"></div>
-    <h2>Cumulative Times</h2>
-    <div id="rg2-race-table" style="width: 830px; height: 100%;" class="ag-theme-blue"></div>
-    <h2>Full results</h2>
-    <div id="rg2-results-table-container">
-      <div id="rg2-results-table" style="width: 900px; height: 100%;" class="ag-theme-blue"></div>
-    </div>
-  </div>
-</div>
+    <div id="rg2-leg-table" style="width: 900px; height: 100%;" class="ag-theme-balham"></div>
+    <div id="rg2-race-table" style="width: 830px; height: 100%;" class="ag-theme-balham"></div>
+    <div id="rg2-results-table">
+      <div class="rg2-results-table-container">
+        <div class="rg2-results-grid-wrapper">
+          <div id="rg2-results-grid" style="height: 100%" class="ag-theme-balham"></div>
+        </div </div> </div> </div> </div>
