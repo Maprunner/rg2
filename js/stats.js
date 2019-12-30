@@ -60,8 +60,14 @@
     },
 
     displayStats: function () {
+      $("#rg2-stats-summary-text").empty().text(rg2.t("Summary"));
+      $("#rg2-stats-leg-text").empty().text(rg2.t("Leg times"));
+      $("#rg2-stats-cumulative-text").empty().text(rg2.t("Cumulative times"));
+      $("#rg2-stats-splits-text").empty().text(rg2.t("Splits"));
       // width and height adjustments based on what looks OK when testing...
-      $("#rg2-stats-tabs").tabs();
+      $("#rg2-stats-tabs").tabs({
+        active: 0
+      });
       $("#rg2-stats-table").dialog({
         resizable: false,
         maxHeight: $("#rg2-map-canvas").height() * 0.98,
@@ -73,12 +79,12 @@
     generateSummary: function () {
       var html, info;
       info = this.getLegPosInfo();
-      html = 'Name: <strong>' + this.result.name + '</strong><br>Course:<strong>' + this.result.coursename + '</strong><br>';
-      html += 'Total time: <strong>' + this.result.time + '</strong><br>';
-      html += 'Position: <strong>' + this.results[this.resultIndex].racepos[this.controls - 1] + ' out of ' + this.results.length + '</strong><br>';
-      html += 'Average leg position: <strong>' + info.average + '</strong>';
-      html += ' (Best: <strong>' + info.best + '</strong>, Worst: <strong>' + info.worst + ')</strong><br>';
-      html += 'Estimated loss: <strong>' + rg2.utils.formatSecsAsMMSS(this.results[this.resultIndex].totalLoss);
+      html = rg2.t('Name') + ': <strong>' + this.result.name + '</strong><br>' + rg2.t('Course') + ':<strong>' + this.result.coursename + '</strong><br>';
+      html += rg2.t('Time') + ': <strong>' + this.result.time + '</strong><br>';
+      html += rg2.t('Position') + ': <strong>' + this.results[this.resultIndex].racepos[this.controls - 1] + ' / ' + this.results.length + '</strong><br>';
+      html += rg2.t('Average leg position') + ': <strong>' + info.average + '</strong> (';
+      html += rg2.t('Best') + ': <strong>' + info.best + '</strong>, ' + rg2.t('Worst') + ': <strong>' + info.worst + ')</strong><br>';
+      html += rg2.t('Estimated loss') + ': <strong>' + rg2.utils.formatSecsAsMMSS(this.results[this.resultIndex].totalLoss);
       if (this.isNumberOverZero(this.result.timeInSecs)) {
         html += ' (' + (100 * this.results[this.resultIndex].totalLoss / this.result.timeInSecs).toFixed(1) + ' %)';
       }
@@ -297,7 +303,7 @@
           { headerName: "Loss", field: "loss", headerClass: "align-center", cellClass: "align-center", width: 100 }
         ],
         rowData: rowData,
-        domLayout: 'autoHeight',
+        domLayout: 'autoHeight'
       };
 
       $('#rg2-race-table').empty();
@@ -307,8 +313,8 @@
     generateSplitsTable: function () {
       var i, j, r, row, rowData, columnDefs;
       columnDefs = [
-        { headerName: rg2.t("Pos"), field: "position", headerClass: "align-center", cellClass: "align-center", width: 60 },
-        { headerName: rg2.t("Name"), field: "name", width: 150 },
+        { headerName: rg2.t("Pos"), field: "position", headerClass: "align-center", cellClass: "align-center", width: 60, pinned: "left", sortable: true },
+        { headerName: rg2.t("Name"), field: "name", width: 150, pinned: "left" },
         { headerName: rg2.t("Time"), field: "time", headerClass: "align-center", cellClass: "align-center", width: 85 },
       ];
       for (j = 1; j < this.controls - 1; j += 1) {
@@ -316,7 +322,6 @@
       }
       columnDefs.push({ headerName: rg2.t('F'), field: 'finish', cellRenderer: this.renderSplits, headerClass: "align-center", cellClass: "align-center", width: 110 });
       columnDefs.push({ headerName: rg2.t('Loss'), field: 'loss', headerClass: "align-center", cellClass: "align-center", width: 100 });
-      columnDefs.push({ headerName: '', field: 'initials', headerClass: "align-center", cellClass: "align-center", width: 75, pinned: "right" });
 
       rowData = [];
       // sort results table: this gets round problems of having multiple classes on one course where results were by class
@@ -366,27 +371,15 @@
 
       var gridOptions = {
         columnDefs: columnDefs,
-        rowData: rowData,
-        onFirstDataRendered: this.sizeToFit
+        rowData: rowData
       };
 
-      // try to set a sensible height that allows table to be viewed using scroll bars
-      //height = $("#rg2-map-canvas").height() * 0.75;
-      //$('#rg2-results-table-container').removeAttr("style").attr("style", "height: " + height + "px;");
+      // can't get ag-grid examples to work in terms of height adjustment so this is
+      // the quick and dirty fix: 175 is content/padding/margin etc. for everything else in the dialog
+      height = ($("#rg2-map-canvas").height() * 0.98) - 175;
+      $('#rg2-results-grid-wrapper').removeAttr("style").attr("style", "height: " + height + "px;");
       $('#rg2-results-grid').empty();
       new agGrid.Grid(document.querySelector('#rg2-results-grid'), gridOptions);
-    },
-
-    sizeToFit: function (params) {
-      params.api.sizeColumnsToFit();
-    },
-
-    autoSizeColumns: function (params) {
-      var allColumnIds = [];
-      params.columnApi.getAllColumns().forEach(function (column) {
-        allColumnIds.push(column.colId);
-      });
-      params.columnApi.autoSizeColumns(allColumnIds);
     },
 
     renderSplits: function (params) {

@@ -689,11 +689,8 @@ body {
 
 .rg2-results-table-container {
   height: 100%;
-  display: flex;
-  flex-direction: column;
 }
 
-.rg2-results-grid-wrapper {
+#rg2-results-grid-wrapper {
   height: 200px;
-  flex: 1;
 }
