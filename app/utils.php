@@ -95,6 +95,16 @@ class utils
         if (substr($secs, 0, 1) ===  ':') {
             $t = substr_replace($t, '0', -1, 0);
         }
+        // prevent negative times which can slip through for various reasons
+        if (substr($t, 0, 1) === "-") {
+          $t = "0:00";
+        }
+        // convert hh:mm:ss to mm:ss for consistency
+        $bits = explode(":", $t);
+        if (count($bits) === 3) {
+          $mins = (intval($bits[0]) * 60) + intval($bits[1]);
+          $t = $mins.":".$bits[2]; 
+        }
         return $t;
     }
 

@@ -40,6 +40,11 @@
       return this.courses[courseid];
     },
 
+    getNumberOfControlsOnCourse: function (courseid) {
+      // codes list includes "S" and "F", so allow for them
+      return this.courses[courseid].codes.length - 2;
+    },
+
     incrementTracksCount: function (courseid) {
       this.courses[courseid].incrementTracksCount();
       this.totaltracks += 1;

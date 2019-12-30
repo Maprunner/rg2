@@ -1,9 +1,11 @@
 # Routegadget 2
 
 ## Latest news
-Version 1.5.6 was released on 29th November 2018 and is installed on all routegadget.co.uk sites.
+Version 1.5.7 was released on 30th December 2018 and is installed on all routegadget.co.uk sites.
 
-This is a very minor update which is probably invisible to most users.
+This improves the statistics display by adding tabs to reduce some of the scrolling. Double click on a runner on the results tab to see this.
+
+It also fixes an IOF XML V3 results import bug which meant that missing controls were not being handled correctly.
 
 ## User Guide and Introductory Videos
 

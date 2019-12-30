@@ -217,8 +217,7 @@
         course.x = this.scorex;
         course.y = this.scorey;
       } else {
-        course.x = rg2.courses.getCourseDetails(this.courseid).x;
-        course.y = rg2.courses.getCourseDetails(this.courseid).y;
+        course = rg2.courses.getCourseDetails(this.courseid);
       }
       this.calculateTrackTimes(course);
       // treat all score tracks as valid for now

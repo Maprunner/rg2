@@ -418,7 +418,7 @@ html, body {
   background-color: #eee;
 }
 
-.coursemenutable tr, td, th {
+.coursemenutable tr, .coursemenutable td, .coursemenutable th {
 	padding-left: 5px;
 	padding-right: 5px;
 	text-align: center;
@@ -442,6 +442,11 @@ table.resulttable td + td,
 table.resulttable th + th {
 	width: 80%;
 	text-align: left;
+}
+
+table.resulttable td + td + td,
+table.resulttable th + th + th {
+	text-align: center;
 }
 
 table.resulttable tbody tr:nth-child(odd) {
@@ -682,3 +687,10 @@ body {
   font-weight: bold;
 }
 
+.rg2-results-table-container {
+  height: 100%;
+}
+
+#rg2-results-grid-wrapper {
+  height: 200px;
+}

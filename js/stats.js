@@ -29,7 +29,7 @@
       // includes start and finish
       this.controls = this.course.codes.length;
       if (this.controls <= 2) {
-        throw new this.rg2Exception('No splits available.');
+        throw new this.rg2Exception(rg2.t('No splits available.'));
       }
       this.analyseCourse();
     },
@@ -40,48 +40,51 @@
 
     showStats: function (rawid) {
       // all sorts of possible data consistency errors that might turn up
-      //try {
-      this.initialise(rawid);
-      this.generateSummary();
-      this.generateTableByLegPos();
-      this.generateTableByRacePos();
-      this.generateSplitsTable();
-      this.displayStats();
-      //} catch (err) {
-      //  if (err instanceof this.rg2Exception) {
-      //    // one we trapped ourselves
-      //    rg2.utils.showWarningDialog("Cannot generate statistics.", err.message);
-      //  } else {
-      //    // general problem: probably an index out of bounds on an array somewhere: dodgy results files
-      //    rg2.utils.showWarningDialog("Cannot generate statistics.", "Data inconsistency.");
-      //  }
-      //  return;
-      //}
+      try {
+        this.initialise(rawid);
+        this.generateSummary();
+        this.generateTableByLegPos();
+        this.generateTableByRacePos();
+        this.generateSplitsTable();
+        this.displayStats();
+      } catch (err) {
+        if (err instanceof this.rg2Exception) {
+          // one we trapped ourselves
+          rg2.utils.showWarningDialog(rg2.t("Statistics"), err.message);
+        } else {
+          // general problem: probably an index out of bounds on an array somewhere: dodgy results files
+          rg2.utils.showWarningDialog(rg2.t("Statistics"), rg2.t("Data inconsistency."));
+        }
+        return;
+      }
     },
 
     displayStats: function () {
+      $("#rg2-stats-summary-text").empty().text(rg2.t("Summary"));
+      $("#rg2-stats-leg-text").empty().text(rg2.t("Leg times"));
+      $("#rg2-stats-cumulative-text").empty().text(rg2.t("Cumulative times"));
+      $("#rg2-stats-splits-text").empty().text(rg2.t("Splits"));
+      // width and height adjustments based on what looks OK when testing...
+      $("#rg2-stats-tabs").tabs({
+        active: 0
+      });
       $("#rg2-stats-table").dialog({
         resizable: false,
-        maxHeight: $("#rg2-map-canvas").height(),
-        width: $("#rg2-map-canvas").width() / 2,
+        maxHeight: $("#rg2-map-canvas").height() * 0.98,
+        width: Math.min($("#rg2-map-canvas").width() * 0.8, 1000),
         position: { my: "top", at: "top", of: "#rg2-map-canvas" },
-        buttons: {
-          Ok: function () {
-            $("#rg2-stats-table").dialog('close');
-          }
-        }
       });
     },
 
     generateSummary: function () {
       var html, info;
       info = this.getLegPosInfo();
-      html = 'Name: <strong>' + this.result.name + '</strong><br>Course:<strong>' + this.result.coursename + '</strong><br>';
-      html += 'Total time: <strong>' + this.result.time + '</strong><br>';
-      html += 'Position: <strong>' + this.results[this.resultIndex].racepos[this.controls - 1] + ' out of ' + this.results.length + '</strong><br>';
-      html += 'Average leg position: <strong>' + info.average + '</strong>';
-      html += ' (Best: <strong>' + info.best + '</strong>, Worst: <strong>' + info.worst + ')</strong><br>';
-      html += 'Estimated loss: <strong>' + rg2.utils.formatSecsAsMMSS(this.results[this.resultIndex].totalLoss);
+      html = rg2.t('Name') + ': <strong>' + this.result.name + '</strong><br>' + rg2.t('Course') + ':<strong>' + this.result.coursename + '</strong><br>';
+      html += rg2.t('Time') + ': <strong>' + this.result.time + '</strong><br>';
+      html += rg2.t('Position') + ': <strong>' + this.results[this.resultIndex].racepos[this.controls - 1] + ' / ' + this.results.length + '</strong><br>';
+      html += rg2.t('Average leg position') + ': <strong>' + info.average + '</strong> (';
+      html += rg2.t('Best') + ': <strong>' + info.best + '</strong>, ' + rg2.t('Worst') + ': <strong>' + info.worst + ')</strong><br>';
+      html += rg2.t('Estimated loss') + ': <strong>' + rg2.utils.formatSecsAsMMSS(this.results[this.resultIndex].totalLoss);
       if (this.isNumberOverZero(this.result.timeInSecs)) {
         html += ' (' + (100 * this.results[this.resultIndex].totalLoss / this.result.timeInSecs).toFixed(1) + ' %)';
       }
@@ -300,7 +303,7 @@
           { headerName: "Loss", field: "loss", headerClass: "align-center", cellClass: "align-center", width: 100 }
         ],
         rowData: rowData,
-        domLayout: 'autoHeight',
+        domLayout: 'autoHeight'
       };
 
       $('#rg2-race-table').empty();
@@ -308,10 +311,10 @@
     },
 
     generateSplitsTable: function () {
-      var i, j, r, row, rowData, columnDefs, height;
+      var i, j, r, height, row, rowData, columnDefs;
       columnDefs = [
-        { headerName: rg2.t("Pos"), field: "position", headerClass: "align-center", cellClass: "align-center", width: 60 },
-        { headerName: rg2.t("Name"), field: "name", width: 150 },
+        { headerName: rg2.t("Pos"), field: "position", headerClass: "align-center", cellClass: "align-center", width: 60, pinned: "left", sortable: true },
+        { headerName: rg2.t("Name"), field: "name", width: 150, pinned: "left" },
         { headerName: rg2.t("Time"), field: "time", headerClass: "align-center", cellClass: "align-center", width: 85 },
       ];
       for (j = 1; j < this.controls - 1; j += 1) {
@@ -319,7 +322,6 @@
       }
       columnDefs.push({ headerName: rg2.t('F'), field: 'finish', cellRenderer: this.renderSplits, headerClass: "align-center", cellClass: "align-center", width: 110 });
       columnDefs.push({ headerName: rg2.t('Loss'), field: 'loss', headerClass: "align-center", cellClass: "align-center", width: 100 });
-      columnDefs.push({ headerName: '', field: 'initials', headerClass: "align-center", cellClass: "align-center", width: 75, pinned: "right" });
 
       rowData = [];
       // sort results table: this gets round problems of having multiple classes on one course where results were by class
@@ -369,24 +371,15 @@
 
       var gridOptions = {
         columnDefs: columnDefs,
-        rowData: rowData,
-        //domLayout: 'autoHeight',
-        //onFirstDataRendered: this.autoSizeColumns
+        rowData: rowData
       };
 
-      // try to set a sensible height that allows table to be viewed using scroll bars
-      height = $("#rg2-map-canvas").height() * 0.75;
-      $('#rg2-results-table-container').removeAttr("style").attr("style", "height: " + height + "px;");
-      $('#rg2-results-table').empty();
-      new agGrid.Grid(document.querySelector('#rg2-results-table'), gridOptions);
-    },
-
-    autoSizeColumns: function (params) {
-      var allColumnIds = [];
-      params.columnApi.getAllColumns().forEach(function (column) {
-        allColumnIds.push(column.colId);
-      });
-      params.columnApi.autoSizeColumns(allColumnIds);
+      // can't get ag-grid examples to work in terms of height adjustment so this is
+      // the quick and dirty fix: 175 is content/padding/margin etc. for everything else in the dialog
+      height = ($("#rg2-map-canvas").height() * 0.98) - 175;
+      $('#rg2-results-grid-wrapper').removeAttr("style").attr("style", "height: " + height + "px;");
+      $('#rg2-results-grid').empty();
+      new agGrid.Grid(document.querySelector('#rg2-results-grid'), gridOptions);
     },
 
     renderSplits: function (params) {
@@ -411,7 +404,7 @@
     },
 
     getLegPosInfo: function () {
-      var i, total, count, best, worst;
+      var i, total, count, best, worst, average;
       total = 0;
       count = 0;
       worst = 0;
@@ -429,7 +422,16 @@
           worst = this.result.legpos[i];
         }
       }
-      return ({ best: best, worst: worst, average: (total / count).toFixed(1) });
+
+      // allow for people with no valid leg times
+      if (count > 0) {
+        average = (total / count).toFixed(1);
+      } else {
+        average = 0;
+        best = 0;
+        worst = 0;
+      }
+      return ({ best: best, worst: worst, average: average });
     },
 
     analyseCourse: function () {

@@ -28,7 +28,7 @@
       }
       // save each result
       for (i = 0; i < l; i += 1) {
-        if (data[i].resultid > rg2.config.GPS_RESULT_OFFSET && data[i].coursename== '' ) {
+        if (data[i].resultid > rg2.config.GPS_RESULT_OFFSET && data[i].coursename === '') {
           data[i].coursename = rg2.courses.getCourseDetails(data[i].courseid).name;
         }
         if (isScoreEvent) {
@@ -41,7 +41,7 @@
       }
       this.setDeletionInfo();
       this.setScoreCourseInfo();
-      this.sanitiseSplits();
+      this.sanitiseSplits(isScoreEvent);
       this.generateLegPositions();
     },
 
@@ -154,8 +154,8 @@
       }
     },
 
-    sanitiseSplits: function () {
-      var i, j, previousValidSplit, nextSplitInvalid;
+    sanitiseSplits: function (isScoreEvent) {
+      var i, j, expectedSplits, previousValidSplit, nextSplitInvalid;
       // sort out missing punches and add some helpful new fields
       for (i = 0; i < this.results.length; i += 1) {
         this.results[i].timeInSecs = rg2.utils.getSecsFromHHMMSS(this.results[i].time);
@@ -186,6 +186,18 @@
         }
         if (this.results[i].lastValidSplit === undefined) {
           this.results[i].lastValidSplit = this.results[i].splits.length - 1;
+        }
+
+        // handle corrupted events with missing splits
+        // force all results to have the correct number of splits to make stats processing work correctly
+        if (!isScoreEvent) {
+          // splits array contains "S" and "F" as well as each control
+          expectedSplits = rg2.courses.getNumberOfControlsOnCourse(this.results[i].courseid) + 2;
+          while (this.results[i].splits.length < expectedSplits) {
+            // copy last valid split data as often as necessary to fill missing gaps
+            this.results[i].splits.push(this.results[i].splits[this.results[i].splits.length - 1]);
+            this.results[i].legSplits.push(0);
+          }
         }
       }
     },
