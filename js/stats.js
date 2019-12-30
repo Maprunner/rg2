@@ -311,7 +311,7 @@
     },
 
     generateSplitsTable: function () {
-      var i, j, r, row, rowData, columnDefs;
+      var i, j, r, height, row, rowData, columnDefs;
       columnDefs = [
         { headerName: rg2.t("Pos"), field: "position", headerClass: "align-center", cellClass: "align-center", width: 60, pinned: "left", sortable: true },
         { headerName: rg2.t("Name"), field: "name", width: 150, pinned: "left" },
