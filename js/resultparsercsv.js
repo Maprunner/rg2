@@ -6,14 +6,14 @@
     this.separator = "";
     this.valid = true;
     this.processResultsCSV(rawCSV);
-    return {results: this.results, valid: this.valid};
+    return { results: this.results, valid: this.valid };
   }
 
   ResultParserCSV.prototype = {
 
-    Constructor : ResultParserCSV,
+    Constructor: ResultParserCSV,
 
-    processResultsCSV : function (rawCSV) {
+    processResultsCSV: function (rawCSV) {
       var rows, commas, semicolons;
       rows = rawCSV.split(/[\r\n|\n]+/);
       // try and work out what the separator is
@@ -34,7 +34,7 @@
     },
 
     // rows: array of raw lines from SI results csv file
-    processCSVResults : function (rows) {
+    processCSVResults: function (rows) {
       var i, fields, newResult;
       // extract what we need: first row is headers so ignore
       for (i = 1; i < rows.length; i += 1) {
@@ -51,7 +51,7 @@
       }
     },
 
-    getPosition : function (fields) {
+    getPosition: function (fields) {
       var position;
       position = parseInt(fields[this.CSVFormat.POSITION_IDX], 10);
       if (isNaN(position)) {
@@ -89,7 +89,7 @@
       return result;
     },
 
-    extractSISplits : function (fields, controls) {
+    extractSISplits: function (fields, controls) {
       var i, result, nextcode, nextsplit;
       nextsplit = this.CSVFormat.FIRST_SPLIT_IDX;
       nextcode = this.CSVFormat.FIRST_CODE_IDX;
@@ -107,15 +107,17 @@
         nextsplit += this.CSVFormat.STEP;
         nextcode += this.CSVFormat.STEP;
       }
-      return {splits: result.splits, codes: result.codes};
+      return { splits: result.splits, codes: result.codes };
     },
 
-    getCSVFormat : function (headers) {
+    getCSVFormat: function (headers) {
       // not a pretty function but it should allow some non-standard CSV formats to be processed such as OEScore output
       var titles, values, fields, i, j, found;
-      titles = ['SI card', 'Database Id', 'Surname', 'First name', 'nc', 'Start', 'Time', 'Classifier', 'City', 'Short', 'Course', 'Course controls', 'Pl', 'Start punch', 'Control1', 'Punch1', 'Control2'];
+      titles = ['si card', 'database id', 'surname', 'first name', 'nc', 'start', 'time', 'classifier', 'city', 'short', 'course', 'course controls', 'pl', 'start punch', 'control1', 'punch1', 'control2'];
       values = [];
-      fields = headers.split(this.separator);
+      fields = headers.split(this.separator).map(function (str) {
+        return str.toLowerCase();
+      });
       for (i = 0; i < titles.length; i += 1) {
         found = false;
         for (j = 0; j < fields.length; j += 1) {
@@ -125,29 +127,29 @@
             break;
           }
           // horrid hacks to handle semi-compliant files
-          if ('SI card' === titles[i]) {
-            if (('Chipno' === fields[j]) || ('SIcard' === fields[j]) || ('Database Id' === fields[j])) {
+          if ('si card' === titles[i]) {
+            if (('chipno' === fields[j]) || ('sicard' === fields[j]) || ('database id' === fields[j])) {
               values[i] = j;
               found = true;
               break;
             }
           }
           if ('nc' === titles[i]) {
-            if ('Classifier' === fields[j]) {
+            if ('classifier' === fields[j]) {
               values[i] = j;
               found = true;
               break;
             }
           }
-          if ('City' === titles[i]) {
-            if ('Club' === fields[j]) {
+          if ('city' === titles[i]) {
+            if ('club' === fields[j]) {
               values[i] = j;
               found = true;
               break;
             }
           }
-          if ('Pl' === titles[i]) {
-            if ('Place' === fields[j]) {
+          if ('pl' === titles[i]) {
+            if ('place' === fields[j]) {
               values[i] = j;
               found = true;
               break;
@@ -162,12 +164,13 @@
 
       if (!found) {
         // default to BOF CSV format
-        values = [1, 2, 3, 4, 8, 9, 11, 12, 15, 18, 39, 42, 43, 44, 46, 47, 2];
+        //not sure of this is really a good idea but it has always been like this...
+        values = [1, 2, 3, 4, 8, 9, 11, 12, 15, 18, 39, 42, 43, 44, 46, 47, 48];
       }
       this.setCSVFormat(values);
     },
 
-    setCSVFormat : function (values) {
+    setCSVFormat: function (values) {
       this.CSVFormat.CHIP_IDX = values[0];
       this.CSVFormat.DB_IDX = values[1];
       this.CSVFormat.SURNAME_IDX = values[2];
@@ -187,8 +190,8 @@
       this.CSVFormat.STEP = values[16] - values[14];
     },
 
-    getSICSVStatus : function (nc, classifier) {
-      if ((nc === '0') || (nc === '') || (nc === 'N')) {
+    getSICSVStatus: function (nc, classifier) {
+      if ((nc === '0') || (nc === '') || (nc === 'N') || (nc === 'n')) {
         if ((classifier === '') || (classifier === '0')) {
           return 'ok';
         }
@@ -198,7 +201,7 @@
     },
 
     // rows: array of raw lines from Spklasse results csv file
-    processSpklasseCSVResults : function (rows) {
+    processSpklasseCSVResults: function (rows) {
       // fields in course row
       var COURSE_IDX = 0, NUM_CONTROLS_IDX = 1, course, controls, i, fields;
       fields = [];
@@ -217,7 +220,7 @@
       }
     },
 
-    extractResult : function (fields, course, controls) {
+    extractResult: function (fields, course, controls) {
       var FIRST_NAME_IDX = 0, SURNAME_IDX = 1, CLUB_IDX = 2, START_TIME_IDX = 3, result, info;
       result = {};
       result.chipid = 0;
@@ -234,7 +237,7 @@
       this.results.push(result);
     },
 
-    extractSpklasseSplits : function (fields) {
+    extractSpklasseSplits: function (fields) {
       var i, splits, codes, totaltime, len, FIRST_SPLIT_IDX = 4;
       splits = '';
       codes = [];
@@ -248,7 +251,7 @@
         totaltime += rg2.utils.getSecsFromHHMMSS(fields[i + FIRST_SPLIT_IDX]);
         splits += totaltime;
       }
-      return {splits: splits, codes: codes, totaltime: totaltime};
+      return { splits: splits, codes: codes, totaltime: totaltime };
     }
   };
   rg2.ResultParserCSV = ResultParserCSV;
