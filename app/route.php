@@ -347,7 +347,9 @@ class route
         if (strlen($coords) < 5) {
             return array("", "");
         }
-        $xy = explode("N", $coords);
+
+        // cope with strange zero-filled routes that start with ;
+        $xy = explode("N", ltrim($coords, ';'));
         $x = array();
         $y = array();
         foreach ($xy as $point) {

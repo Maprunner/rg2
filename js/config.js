@@ -6,52 +6,52 @@
   var config, options, dictionary;
 
   config = {
-    DEFAULT_SCALE_FACTOR : 1.1,
-    TAB_EVENTS : 0,
-    TAB_COURSES : 1,
-    TAB_RESULTS : 2,
-    TAB_DRAW : 3,
-    TAB_LOGIN : 4,
-    TAB_CREATE : 5,
-    TAB_EDIT : 6,
-    TAB_MAP : 7,
+    DEFAULT_SCALE_FACTOR: 1.1,
+    TAB_EVENTS: 0,
+    TAB_COURSES: 1,
+    TAB_RESULTS: 2,
+    TAB_DRAW: 3,
+    TAB_LOGIN: 4,
+    TAB_CREATE: 5,
+    TAB_EDIT: 6,
+    TAB_MAP: 7,
     INVALID_MAP_ID: 9999,
     // translated when output so leave as English here
-    DEFAULT_NEW_COMMENT : "Type your comment",
-    DEFAULT_EVENT_COMMENT : "Comments (optional)",
+    DEFAULT_NEW_COMMENT: "Type your comment",
+    DEFAULT_EVENT_COMMENT: "Comments (optional)",
     // added to resultid when saving a GPS track
-    GPS_RESULT_OFFSET : 50000,
-    MASS_START_REPLAY : 1,
-    REAL_TIME_REPLAY : 2,
+    GPS_RESULT_OFFSET: 50000,
+    MASS_START_REPLAY: 1,
+    REAL_TIME_REPLAY: 2,
     // dropdown selection value
-    MASS_START_BY_CONTROL : 99999,
-    VERY_HIGH_TIME_IN_SECS : 99999,
+    MASS_START_BY_CONTROL: 99999,
+    VERY_HIGH_TIME_IN_SECS: 99999,
     // screen sizes for different layouts
-    BIG_SCREEN_BREAK_POINT : 800,
-    SMALL_SCREEN_BREAK_POINT : 500,
-    PURPLE : '#b300ff',
-    RED : '#ff0000',
-    GREEN : '#00ff00',
-    GREY : '#e0e0e0',
-    RED_30 : 'rgba(255,0,0,0.3)',
-    GREEN_30 : 'rgba(0,255,0,0.3)',
-    WHITE : '#ffffff',
-    BLACK : '#000000',
-    RUNNER_DOT_RADIUS : 6,
-    HANDLE_DOT_RADIUS : 7,
+    BIG_SCREEN_BREAK_POINT: 800,
+    SMALL_SCREEN_BREAK_POINT: 500,
+    PURPLE: '#b300ff',
+    RED: '#ff0000',
+    GREEN: '#00ff00',
+    GREY: '#e0e0e0',
+    RED_30: 'rgba(255,0,0,0.3)',
+    GREEN_30: 'rgba(0,255,0,0.3)',
+    WHITE: '#ffffff',
+    BLACK: '#000000',
+    RUNNER_DOT_RADIUS: 6,
+    HANDLE_DOT_RADIUS: 7,
     HANDLE_COLOUR: '#ff0000',
     // parameters for call to draw courses
-    DIM : 0.75,
-    FULL_INTENSITY : 1.0,
+    DIM: 0.75,
+    FULL_INTENSITY: 1.0,
     // values of event format
-    NORMAL_EVENT : 1,
-    EVENT_WITHOUT_RESULTS : 2,
-    SCORE_EVENT : 3,
+    NORMAL_EVENT: 1,
+    EVENT_WITHOUT_RESULTS: 2,
+    SCORE_EVENT: 3,
     // version gets set automatically by grunt file during build process
-    RG2VERSION: '1.5.7',
-    TIME_NOT_FOUND : 9999,
+    RG2VERSION: '1.5.8',
+    TIME_NOT_FOUND: 9999,
     // values for evt.which
-    RIGHT_CLICK : 3,
+    RIGHT_CLICK: 3,
     DO_NOT_SAVE_COURSE: 9999,
     FORMAT_NORMAL: 1,
     FORMAT_NO_RESULTS: 2,
@@ -61,14 +61,14 @@
     MAX_DRAWN_ROUTES: 10,
     // array of available languages: not great to do it like this but it helps for routegadget.co.uk set-up
     languages: [
-      {language: "Deutsch", code: "de"},
-      {language: "Suomi", code: "fi"},
-      {language: "Français", code: "fr"},
-      {language: "Italiano", code: "it"},
-      {language: "日本語", code: "ja"},
-      {language: "Norsk", code: "no"},
-      {language: "Português - Brasil", code: "pt"},
-      {language: "Русский", code: "ru"}
+      { language: "Deutsch", code: "de" },
+      { language: "Suomi", code: "fi" },
+      { language: "Français", code: "fr" },
+      { language: "Italiano", code: "it" },
+      { language: "日本語", code: "ja" },
+      { language: "Norsk", code: "no" },
+      { language: "Português - Brasil", code: "pt" },
+      { language: "Русский", code: "ru" }
     ],
     // Size of map upload in MB that triggers the warning dialog
     FILE_SIZE_WARNING: 2
@@ -76,17 +76,20 @@
 
   options = {
     // initialised to default values: overwritten from storage later
-    mapIntensity : 1,
-    routeIntensity : 1,
-    replayFontSize : 12,
-    courseWidth : 3,
-    routeWidth : 4,
-    circleSize : 20,
-    snap : true,
-    showThreeSeconds : false,
-    showGPSSpeed : false,
+    mapIntensity: 1,
+    routeIntensity: 1,
+    replayFontSize: 12,
+    courseWidth: 3,
+    routeWidth: 4,
+    circleSize: 20,
+    snap: true,
+    showThreeSeconds: false,
+    showGPSSpeed: false,
     // align map with next control at top when drawing route
     alignMap: false,
+    // speeds in min/km
+    maxSpeed: 4,
+    minSpeed: 15,
     // array of up to MAX_DRAWN_ROUTES entries with details to allow deletion
     // stored in order they are added, so first entry is most recent and gets deleted if necessary
     drawnRoutes: []
@@ -292,5 +295,5 @@
   rg2.setDictionary = setDictionary;
   rg2.getDictionaryCode = getDictionaryCode;
   rg2.setLanguageOptions = setLanguageOptions;
-  rg2.createLanguageDropdown =  createLanguageDropdown;
+  rg2.createLanguageDropdown = createLanguageDropdown;
 }());

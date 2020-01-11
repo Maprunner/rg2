@@ -37,9 +37,14 @@
     ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     // go back to where we started
     ctx.restore();
-    // set transparency of map
-    ctx.globalAlpha = rg2.options.mapIntensity;
     if (map.height > 0) {
+      // set map background white so that dimmed maps do not have grey showing through
+      ctx.fillStyle = rg2.config.WHITE;
+      // this might have been reset by the ctx.restore()
+      ctx.globalAlpha = rg2.config.FULL_INTENSITY;
+      ctx.fillRect(0, 0, map.width, map.height);
+      // set transparency of map
+      ctx.globalAlpha = rg2.options.mapIntensity;
       // using non-zero map height to show we have a map loaded
       ctx.drawImage(map, 0, 0);
       var active = $("#rg2-info-panel").tabs("option", "active");
@@ -132,7 +137,7 @@
   function showInfoDisplay(show, title, position) {
     var chevronRemove, chevronAdd;
     rg2.input.infoPanelMaximised = show;
-    $("#rg2-resize-info").prop("title",  rg2.t(title));
+    $("#rg2-resize-info").prop("title", rg2.t(title));
     $("#rg2-hide-info-panel-control").css("left", position);
     if (show) {
       $("#rg2-info-panel").show();
@@ -143,7 +148,7 @@
       chevronRemove = "fa-chevron-left";
       chevronAdd = "fa-chevron-right";
     }
-    $("#rg2-hide-info-panel-icon").removeClass(chevronRemove).addClass(chevronAdd).prop("title",  rg2.t(title));
+    $("#rg2-hide-info-panel-icon").removeClass(chevronRemove).addClass(chevronAdd).prop("title", rg2.t(title));
   }
 
   function resizeInfoDisplay() {
@@ -238,7 +243,7 @@
   }
 
   function getMapSize() {
-    return {height: map.height, width: map.width};
+    return { height: map.height, width: map.width };
   }
 
   function resizeCanvas() {
@@ -283,7 +288,7 @@
   rg2.zoom = zoom;
   rg2.rotateMap = rotateMap;
   rg2.alignMap = alignMap;
-  rg2.redraw =  redraw;
+  rg2.redraw = redraw;
   rg2.canvas = canvas;
   rg2.setUpCanvas = setUpCanvas;
   rg2.ctx = ctx;

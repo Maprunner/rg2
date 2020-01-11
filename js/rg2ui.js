@@ -28,14 +28,14 @@
       }
     },
 
-    setNewLanguage : function (lang) {
+    setNewLanguage: function (lang) {
       var eventid;
       if ($("#rg2-event-list").menu("instance") !== undefined) {
         $("#rg2-event-list").menu("destroy");
       }
       // non-english dictionary is already installed by script that has loaded
       if (lang === "en") {
-        rg2.setDictionary({code: "en"});
+        rg2.setDictionary({ code: "en" });
       }
       this.createEventMenu();
       eventid = rg2.events.getActiveEventID();
@@ -51,7 +51,7 @@
       rg2.redraw(false);
     },
 
-    getManagerLink : function () {
+    getManagerLink: function () {
       var link, html;
       // replace the api link with the manage token
       link = rg2Config.json_url.replace("rg2api.php", "?manage");
@@ -60,48 +60,48 @@
     },
 
     // called whenever the active tab changes to tidy up as necessary
-    tabActivated : function () {
+    tabActivated: function () {
       var active = $("#rg2-info-panel").tabs("option", "active");
       switch (active) {
-      case rg2.config.TAB_DRAW:
-        rg2.courses.removeAllFromDisplay();
-        rg2.drawing.showCourseInProgress();
-        break;
-      default:
-        break;
+        case rg2.config.TAB_DRAW:
+          rg2.courses.removeAllFromDisplay();
+          rg2.drawing.showCourseInProgress();
+          break;
+        default:
+          break;
       }
       rg2.redraw(false);
     },
 
-    displayAboutDialog : function () {
+    displayAboutDialog: function () {
       $("#rg2-event-stats").empty().html(rg2.getEventStats());
       $("#rg2-manager-link").empty().html(this.getManagerLink());
       $("#rg2-about-dialog").dialog({
-        width : Math.min(1000, (rg2.canvas.width * 0.8)),
-        maxHeight : Math.min(1000, (rg2.canvas.height * 0.9)),
-        title : "RG2 Version " + rg2.config.RG2VERSION,
-        dialogClass : "rg2-about-dialog",
-        resizable : false,
-        buttons : {
-          Ok : function () {
+        width: Math.min(1000, (rg2.canvas.width * 0.8)),
+        maxHeight: Math.min(1000, (rg2.canvas.height * 0.9)),
+        title: "RG2 Version " + rg2.config.RG2VERSION,
+        dialogClass: "rg2-about-dialog",
+        resizable: false,
+        buttons: {
+          Ok: function () {
             $(this).dialog("close");
           }
         }
       });
     },
 
-    displayOptionsDialog : function () {
+    displayOptionsDialog: function () {
       $("#rg2-option-controls").dialog({
-        minWidth : 400,
-        title :  rg2.t("Configuration options"),
-        dialogClass : "rg2-options-dialog",
-        close : function () {
+        minWidth: 400,
+        title: rg2.t("Configuration options"),
+        dialogClass: "rg2-options-dialog",
+        close: function () {
           rg2.saveConfigOptions();
         }
       });
     },
 
-    initialiseButtons : function () {
+    initialiseButtons: function () {
       var self;
       self = this;
       $("#btn-about").click(function () {
@@ -148,14 +148,14 @@
       });
       $("#btn-show-splits").click(function () {
         $("#rg2-splits-table").empty().append(rg2.animation.getSplitsTable()).dialog({
-          width : 'auto',
+          width: 'auto',
           maxHeight: $("#rg2-map-canvas").height(),
           height: 'auto',
-          position: {my: "top", at: "top", of: "#rg2-map-canvas"},
-          dialogClass : "rg2-splits-table",
+          position: { my: "top", at: "top", of: "#rg2-map-canvas" },
+          dialogClass: "rg2-splits-table",
           modal: true,
-          buttons : {
-            Ok : function () {
+          buttons: {
+            Ok: function () {
               $("#rg2-splits-table").dialog('close');
             }
           }
@@ -202,7 +202,7 @@
       $("#rg2-load-gps-file").button().button("disable");
     },
 
-    setResultCheckboxes : function () {
+    setResultCheckboxes: function () {
       // checkbox to show a course
       $(".showcourse").click(function (event) {
         var id;
@@ -307,7 +307,7 @@
       });
     },
 
-    createResultMenu : function () {
+    createResultMenu: function () {
       //loads menu from populated result array
       var html = rg2.results.formatResultListAsAccordion();
       // #177 not pretty but gets round problems of double encoding
@@ -354,7 +354,7 @@
       } else {
         $("#rg2-control-select").prop('disabled', false);
       }
-      $('.resulttable tr').dblclick(function() {
+      $('.resulttable tr').dblclick(function () {
         var id;
         // only deal with "normal events"
         if (rg2.events.hasResults() && !rg2.events.isScoreEvent()) {
@@ -367,7 +367,7 @@
       });
     },
 
-    createCourseMenu : function () {
+    createCourseMenu: function () {
       //loads menu from populated courses array
       $("#rg2-course-table").empty().append(rg2.courses.formatCoursesAsTable());
 
@@ -434,22 +434,22 @@
       });
     },
 
-    initialiseSpinners : function () {
+    initialiseSpinners: function () {
       $("#spn-control-circle").spinner({
-        max : 50,
-        min : 3,
-        step : 1,
-        spin : function (event, ui) {
+        max: 50,
+        min: 3,
+        step: 1,
+        spin: function (event, ui) {
           /*jslint unparam:true*/
           rg2.setConfigOption("circleSize", ui.value);
           rg2.redraw(false);
         }
       }).val(rg2.options.circleSize);
       $("#spn-course-width").spinner({
-        max : 10,
-        min : 1,
-        step : 0.5,
-        spin : function (event, ui) {
+        max: 10,
+        min: 1,
+        step: 0.5,
+        spin: function (event, ui) {
           /*jslint unparam:true*/
           rg2.setConfigOption("courseWidth", ui.value);
           rg2.redraw(false);
@@ -457,22 +457,22 @@
       }).val(rg2.options.courseWidth);
       $("#spn-map-intensity").spinner({
         // spinner uses 0 to 100%: stored and used as 0 to 1
-        max : 100,
-        min : 0,
-        step : 10,
-        numberFormat : "n",
-        spin : function (event, ui) {
+        max: 100,
+        min: 0,
+        step: 10,
+        numberFormat: "n",
+        spin: function (event, ui) {
           /*jslint unparam:true*/
           rg2.setConfigOption("mapIntensity", ui.value / 100);
           rg2.redraw(false);
         }
       }).val(rg2.options.mapIntensity * 100);
       $("#spn-name-font-size").spinner({
-        max : 30,
-        min : 5,
-        step : 1,
-        numberFormat : "n",
-        spin : function (event, ui) {
+        max: 30,
+        min: 5,
+        step: 1,
+        numberFormat: "n",
+        spin: function (event, ui) {
           /*jslint unparam:true*/
           rg2.setConfigOption("replayFontSize", ui.value);
           rg2.redraw(false);
@@ -480,21 +480,21 @@
       }).val(rg2.options.replayFontSize);
       $("#spn-route-intensity").spinner({
         // spinner uses 0 to 100%: stored and used as 0 to 1
-        max : 100,
-        min : 0,
-        step : 10,
-        numberFormat : "n",
-        spin : function (event, ui) {
+        max: 100,
+        min: 0,
+        step: 10,
+        numberFormat: "n",
+        spin: function (event, ui) {
           /*jslint unparam:true*/
           rg2.setConfigOption("routeIntensity", ui.value / 100);
           rg2.redraw(false);
         }
       }).val(rg2.options.routeIntensity * 100);
       $("#spn-route-width").spinner({
-        max : 10,
-        min : 1,
-        step : 0.5,
-        spin : function (event, ui) {
+        max: 10,
+        min: 1,
+        step: 0.5,
+        spin: function (event, ui) {
           /*jslint unparam:true*/
           rg2.setConfigOption("routeWidth", ui.value);
           rg2.redraw(false);
@@ -502,29 +502,46 @@
       }).val(rg2.options.routeWidth);
       // set default to 0 secs = no tails
       $("#spn-tail-length").spinner({
-        max : 600,
-        min : 0,
-        spin : function (event, ui) {
+        max: 600,
+        min: 0,
+        spin: function (event, ui) {
           /*jslint unparam:true*/
           rg2.animation.setTailLength(ui.value);
         }
       }).val(0);
       $("#spn-offset").spinner({
-        max : 600,
-        min : -600,
+        max: 600,
+        min: -600,
         disabled: true,
-        spin : function (event, ui) {
+        spin: function (event, ui) {
           /*jslint unparam:true*/
           rg2.drawing.adjustOffset(ui.value);
         }
       }).val(0);
+      // speed is min/km so low is fast
+      $("#spn-max-speed").spinner({
+        max: 10,
+        min: 1,
+        spin: function (event, ui) {
+          /*jslint unparam:true*/
+          rg2.results.setSpeedRange(ui.value, rg2.options.minSpeed);
+        }
+      }).val(rg2.options.maxSpeed);
+      $("#spn-min-speed").spinner({
+        max: 20,
+        min: 5,
+        spin: function (event, ui) {
+          /*jslint unparam:true*/
+          rg2.results.setSpeedRange(rg2.options.maxSpeed, ui.value);
+        }
+      }).val(rg2.options.minSpeed);
     },
 
-    setAutofitSpinner : function (offset) {
+    setAutofitSpinner: function (offset) {
       $("#spn-offset").spinner("value", offset).spinner("enable");
     },
 
-    createEventMenu : function () {
+    createEventMenu: function () {
       //loads menu from populated events array
       var html, $select;
       if (rg2.config.managing) {
@@ -553,7 +570,7 @@
         $select.menu("destroy");
       }
       $select.empty().append(html).menu({
-        select : function (event, ui) {
+        select: function (event, ui) {
           /*jslint unparam:true*/
           var id;
           id = parseInt(ui.item[0].id.replace('event-', ''), 10);
@@ -563,7 +580,7 @@
       });
     },
 
-    setUIEventHandlers : function () {
+    setUIEventHandlers: function () {
       var text, newlang, self;
       self = this;
       $("#rg2-resize-info").click(function () {
@@ -589,7 +606,7 @@
       $('#rg2-new-comments').focus(function () {
         // Clear comment box if user focuses on it and it still contains default text
         text = $("#rg2-new-comments").val();
-        if (text ===  rg2.t(rg2.config.DEFAULT_NEW_COMMENT)) {
+        if (text === rg2.t(rg2.config.DEFAULT_NEW_COMMENT)) {
           $('#rg2-new-comments').val("");
         }
       });
@@ -631,7 +648,7 @@
       });
     },
 
-    configureUI : function () {
+    configureUI: function () {
       // disable right click menu: may add our own later
       $(document).on("contextmenu", function (evt) {
         evt.preventDefault();
@@ -640,20 +657,20 @@
       var self;
       self = this;
       $("#rg2-info-panel").tabs({
-        disabled : [rg2.config.TAB_COURSES, rg2.config.TAB_RESULTS, rg2.config.TAB_DRAW],
-        active : rg2.config.TAB_EVENTS,
-        heightStyle : "content",
-        activate : function () {
+        disabled: [rg2.config.TAB_COURSES, rg2.config.TAB_RESULTS, rg2.config.TAB_DRAW],
+        active: rg2.config.TAB_EVENTS,
+        heightStyle: "content",
+        activate: function () {
           self.tabActivated();
         }
       });
       $("#rg2-result-list").accordion({
-        collapsible : true,
-        heightStyle : "content"
+        collapsible: true,
+        heightStyle: "content"
       });
       $("#rg2-clock").text("00:00:00");
       $("#rg2-clock-slider").slider({
-        slide : function (event, ui) {
+        slide: function (event, ui) {
           /*jslint unparam:true*/
           // passes slider value as new time
           rg2.animation.clockSliderMoved(ui.value);
@@ -665,12 +682,12 @@
       $("#rg2-track-names").hide();
       $("#rg2-add-new-event").hide();
       $("#rg2-load-progress-bar").progressbar({
-        value : false
+        value: false
       });
       $("#rg2-load-progress-label").text("");
       $("#rg2-load-progress").hide();
       $("#rg2-map-load-progress-bar").progressbar({
-        value : false
+        value: false
       });
       $("#rg2-map-load-progress-label").text("");
       $("#rg2-map-load-progress").hide();

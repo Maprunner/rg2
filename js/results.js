@@ -497,6 +497,26 @@
       return tracks;
     },
 
+    setSpeedRange: function (max, min) {
+      // make sure fastest is faster than slowest
+      // remembering speeds are min/km so low is fast
+      $("#spn-min-speed").spinner("option", "min", rg2.options.maxSpeed + 1);
+      $("#spn-max-speed").spinner("option", "max", rg2.options.minSpeed - 1);
+      rg2.setConfigOption("maxSpeed", max);
+      rg2.setConfigOption("minSpeed", min);
+      this.resetSpeedColours();
+      rg2.redraw(false);
+    },
+
+    resetSpeedColours: function () {
+      // called when user changes GPS speed colour configuration
+      var i;
+      for (i = 0; i < this.results.length; i += 1) {
+        // forces colours to recalculate
+        this.results[i].speedColour.length = 0;
+      }
+    },
+
     resultIDExists: function (resultid) {
       var i;
       for (i = 0; i < this.results.length; i += 1) {
