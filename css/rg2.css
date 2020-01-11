@@ -233,8 +233,16 @@ html, body {
   padding-right: 5px;
 }
 
-#spn-map-intensity, #spn-course-width, #spn-route-width, #spn-name-font-size, #spn-route-intensity, #spn-control-circle, #spn-offset {
+.rg2-spinner {
   width: 40px;
+}
+
+.rg2-run-green {
+  color: green;
+}
+
+.rg2-run-red {
+  color: red;
 }
 
 .options {

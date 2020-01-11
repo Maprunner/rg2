@@ -371,68 +371,87 @@
         this.xysecs[t] = 3 * t;
       }
       // colours now set the first time we try to draw the track: major time saving on initial event load
-      this.setSpeedColours.length = 0;
+      this.speedColour.length = 0;
       this.hasValidTrack = true;
       return this.hasValidTrack;
     },
 
     setSpeedColours: function () {
-      var t, oldx, oldy, delta, maxSpeed, oldDelta, sum, len;
-      oldx = this.trackx[0];
-      oldy = this.tracky[0];
-      maxSpeed = 0;
-      oldDelta = 0;
+      var t, len, delta, oldDelta;
       len = this.trackx.length;
-      //calculate "speed" at each point as sum of distance travelled for two points
-      for (t = 0; t < len; t += 1) {
-        delta = rg2.utils.getDistanceBetweenPoints(this.trackx[t], this.tracky[t], oldx, oldy);
-        sum = delta + oldDelta;
-        if (maxSpeed < sum) {
-          maxSpeed = sum;
-        }
-        this.speedColour[t] = sum;
-        oldx = this.trackx[t];
-        oldy = this.tracky[t];
+      //calculate distance between each point in pixels, averaged over 2 points
+      this.speedColour[0] = 0;
+      oldDelta = 0;
+      for (t = 1; t < len; t += 1) {
+        delta = rg2.utils.getDistanceBetweenPoints(this.trackx[t], this.tracky[t], this.trackx[t - 1], this.tracky[t - 1]);
+        this.speedColour[t] = (delta + oldDelta) / 2;
         oldDelta = delta;
       }
-
       this.mapSpeedColours();
-
     },
 
     mapSpeedColours: function () {
+      // speed options are in min/km
+      var maxMetresPerSecond = 16.667 / rg2.options.maxSpeed;
+      var minMetresPerSecond = 16.667 / rg2.options.minSpeed;
+      var secondsPerSample = 3;
       // converts speed to RGB value
-      var i, red, green, halfrange, maxspeed, minspeed, sorted;
+      var i, range, value, maxspeed, minspeed, sorted, metresPerPixel;
       sorted = this.speedColour.slice().sort(function (a, b) { return a - b; });
-      maxspeed = sorted[sorted.length - 1];
-      // arbitrary limit below which everything will be red
-      minspeed = sorted[Math.floor(sorted.length / 95)];
-      halfrange = (maxspeed - minspeed) / 2;
-      // speedColour comes in with speeds at each point and gets updated to the associated colour
-      for (i = 1; i < this.speedColour.length; i += 1) {
-        if (this.speedColour[i] > (minspeed + halfrange)) {
-          // fade green to orange
-          red = Math.round(255 * (this.speedColour[i] - halfrange) / halfrange);
-          green = 255;
-        } else {
-          // fade orange to red
-          if (this.speedColour[i] > minspeed) {
-            green = Math.round(255 * (this.speedColour[i] - minspeed) / halfrange);
-          } else {
-            green = 0;
-          }
-          red = 255;
-        }
-        this.speedColour[i] = '#';
-        if (red < 16) {
-          this.speedColour[i] += '0';
-        }
-        this.speedColour[i] += red.toString(16);
-        if (green < 16) {
-          this.speedColour[i] += '0';
-        }
-        this.speedColour[i] += green.toString(16) + '00';
+      metresPerPixel = rg2.events.getMetresPerPixel();
+      if (metresPerPixel !== undefined) {
+        maxspeed = secondsPerSample * maxMetresPerSecond / metresPerPixel;
+        minspeed = secondsPerSample * minMetresPerSecond / metresPerPixel;
+      } else {
+        maxspeed = sorted[sorted.length - 1];
+        // arbitrary limit below which everything will be red
+        minspeed = sorted[Math.floor(sorted.length / 95)];
       }
+      range = maxspeed - minspeed;
+      // speedColour comes in with speeds at each point and gets updated to the associated colour
+      for (i = 0; i < this.speedColour.length; i += 1) {
+        // force value into allowable range
+        value = Math.max(this.speedColour[i], minspeed);
+        value = Math.min(value, maxspeed);
+        //console.log(value, (value - minspeed) / range);
+        this.speedColour[i] = this.getColour((value - minspeed) / range);
+      }
+    },
+
+    getColour: function (value) {
+      // RGB Hex values
+      //   Red Or  Yel LGr Gre PaG LBl Bl  DBl
+      // R 255 255 255 128 0   0   0   0   0
+      // G 0   128 255 255 255 255 255 128 0
+      // B 0   0   0   0   0   128 255 255 255
+      var colour, red, green;
+      colour = "#";
+      // using range 0 = Red to 1 = Green
+      // gets in a value between 0 (slowest) and 1 (fastest) and returns a colour string
+      if (value === 0) {
+        return "#0080ff";
+      }
+      if (value < 0.5) {
+        colour += "ff";
+      } else {
+        red = parseInt((1 - value) * 255 * 2, 10);
+        if (red < 16) {
+          colour += "0";
+        }
+        colour += red.toString(16);
+      }
+      if (value >= 0.5) {
+        colour += "ff";
+      } else {
+        green = 255 - parseInt((0.5 - value) * 255 * 2, 10);
+        if (green < 16) {
+          colour += "0";
+        }
+        colour += green.toString(16);
+      }
+      colour += "00";
+      // console.log(value, colour);
+      return colour;
     },
 
     getInitials: function (name) {
@@ -457,6 +476,7 @@
       }
       return initials;
     }
+
   };
   rg2.Result = Result;
 }());
