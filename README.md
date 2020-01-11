@@ -1,11 +1,13 @@
 # Routegadget 2
 
 ## Latest news
-Version 1.5.7 was released on 30th December 2018 and is installed on all routegadget.co.uk sites.
+Version 1.5.8 was released on 11th January 2020 and is installed on all routegadget.co.uk sites. This includes several enhancements.
 
-This improves the statistics display by adding tabs to reduce some of the scrolling. Double click on a runner on the results tab to see this.
+* The statistics display (accessed by double clicking on a runner on the results tab) has been further updated and now includes "performance" and "consistency" values. Performance represents how well you did against the average of the top 25% of splits for each leg. A higher score is better. Consistency gives an indication of how your performance on each leg varied. A lower score is better.
 
-It also fixes an IOF XML V3 results import bug which meant that missing controls were not being handled correctly.
+* Colour-coding of GPS routes for georeferenced maps is now based on minutes per kilometer. You can configure the speed range by setting the fast (green) and slow (red) speeds from the configuration dialog. Points below the slow setting are displayed in blue.
+
+* Various minor changes have been made to improve the handling of incomplete results (e.g. missing punches).
 
 ## User Guide and Introductory Videos
 
