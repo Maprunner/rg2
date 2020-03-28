@@ -589,6 +589,16 @@ body {
   user-select: none;
 }
 
+.selectable {
+  -ms-user-select: all;
+  -webkit-user-select: all;
+  -khtml-user-select: all;
+  -moz-user-select: all;
+  -webkit-touch-callout: all;
+  -webkit-user-drag: all;
+  user-select: all;
+}
+
 .manage-input {
   margin-top: 3px;
   margin-right: 3px;

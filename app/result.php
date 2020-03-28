@@ -90,7 +90,7 @@ class result
                 $detail["name"] = trim(utils::encode_rg_input($data[3]));
                 $detail["starttime"] = intval($data[4]);
                 $detail["position"] = '';
-                $detail["status"] = '';
+                $detail["status"] = 'ok';
                 // look for RG2 extra fields in dbid
                 $databaseid = utils::encode_rg_input($data[5]);
                 $pos = strpos($databaseid, "_#");
@@ -116,8 +116,7 @@ class result
                         }
                     }
                 }
-                $detail["time"] = utils::tidyTime($data[7]);
-                ;
+                list($detail["time"], $detail["secs"]) = utils::tidyTime($data[7]);
                 // trim trailing ;which create null fields when expanded
                 $temp = rtrim($data[8], ";");
                 // split array at ;and force to integers
@@ -132,6 +131,35 @@ class result
                 $row++;
             }
             fclose($handle);
+        }
+
+        if (!event::hasResults($eventid)) {
+          // event with no results so need to sort times and add positions
+          // a lot easier to do this here in one place rather than when adding and deleting results
+          // avoids multiple rewrites of full results file plus need to manage route deletion
+          usort($output, "self::sortResultsByCourseThenTime");
+          $pos = 0;
+          $ties = 0;
+          $oldsecs = -1;
+          $courseid = -1;
+          for ($i = 0; $i < count($output); $i++) {
+            if ($courseid !== $output[$i]["courseid"]) {
+              // new course so reset
+              $pos = 1;
+              $courseid = $output[$i]["courseid"];
+              $ties = 0;
+              $oldsecs = -1;
+            } else {
+              // same course so check for ties
+              if ($oldsecs === $output[$i]["secs"]) {
+                $ties++;
+              } else {
+                $pos = $pos + 1 + $ties;
+              }
+            }
+            $output[$i]["position"] = $pos;
+            $oldsecs = $output[$i]["secs"];
+          }
         }
         return $output;
     }
@@ -163,5 +191,13 @@ class result
             }
         }
         return false;
+    }
+
+    private static function sortResultsByCourseThenTime($a, $b)
+    {
+      if (intval($a["courseid"]) !== intval($b["courseid"])) {
+        return (intval($a["courseid"]) - intval($b["courseid"]));
+      }
+      return (intval($a["secs"]) - intval($b["secs"]));
     }
 }

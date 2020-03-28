@@ -637,6 +637,11 @@
 
     prepareResults: function () {
       var oldID, i, canCombine;
+      // no concept of combining for events with no initial results
+      // this also avoids the sort which we don't want
+      if (!rg2.events.hasResults()) {
+        return;
+      }
       // want to avoid extra results line for GPS routes if there is no drawn route
       // first sort so that GPS routes come after initial result
       this.results.sort(this.sortByCourseIDThenResultID);
