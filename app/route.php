@@ -14,9 +14,13 @@ class route
                 if (($resultid > 0) && ($resultid < GPS_RESULT_OFFSET) && ($courseid > 0)) {
                     $detail = array();
                     $detail["id"] = $resultid;
-                    list($detail["x"], $detail["y"]) = self::expandCoords($data[4]);
-                    $output[] = $detail;
-                }
+                    list($ok, $detail["x"], $detail["y"]) = self::expandCoords($data[4]);
+                    if ($ok) {                     
+                        $output[] = $detail;
+                    } else {
+                      utils::rg2log("Invalid route for eventid ".$eventid." for result ".$resultid);
+                    }
+               }
             }
             fclose($handle);
         }
@@ -33,8 +37,11 @@ class route
                         $detail = array();
                         $detail["id"] = $resultid;
                         // list allocates return values in an array to the specified variables
-                        list($detail["x"], $detail["y"]) = self::expandCoords($data[9]);
-                        $output[] = $detail;
+                        list($ok, $detail["x"], $detail["y"]) = self::expandCoords($data[9]);
+                        if ($ok) {                     
+                            $output[] = $detail;
+                        } else {
+                            utils::rg2log("Invalid route for eventid ".$eventid." for result ".$resultid);                        }
                     }
                 }
             }
@@ -345,7 +352,7 @@ class route
         // handle empty coord string: found some examples in Jukola files
         // 5 is enough for one coordinate set, but the problem files just had "0"
         if (strlen($coords) < 5) {
-            return array("", "");
+            return array(false, [], []);
         }
 
         // cope with strange zero-filled routes that start with ;
@@ -357,12 +364,12 @@ class route
             if (count($temp) == 2) {
                 $x[] = $temp[0];
                 // strip off trailing ,0 if it exists
-                $pos = strpos($temp[1], ",");
-                if ($pos !== false) {
-                    // remove leading - by starting at 1
-                    $y[] = substr($temp[1], 1, $pos - 1);
-                } else {
+                $temp[1] = str_replace(",0", "", $temp[1]);
+                // y value should be negative (apparently...) but sometimes isn't for old files
+                if ((substr($temp[1], 0, 1) === "-") && (strlen($temp[1]) > 1)) {
                     $y[] = substr($temp[1], 1);
+                } else {
+                    return array(false, [], []);
                 }
             }
         }
@@ -374,6 +381,6 @@ class route
 
         // return the two arrays as comma-separated strings
         // used to return as integer arrays, but this caused memory problems in json_encode
-        return array(implode(",", $x), implode(",", $y));
+        return array(true, implode(",", $x), implode(",", $y));
     }
 }
