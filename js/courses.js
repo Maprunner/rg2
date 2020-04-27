@@ -17,6 +17,10 @@
       return this.courses[courseid].name;
     },
 
+    isValidCourseId: function (courseid) {
+      return courseid < this.courses.length;
+    },
+
     getCoursesForEvent: function () {
       var i, course, courses;
       courses = [];

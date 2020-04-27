@@ -23,7 +23,7 @@ module.exports = function (grunt) {
     'gmoa', 'gramp', 'go', 'halo', 'happyherts', 'havoc', 'hoc', 'interlopers', 'invoc', 'jk', 'kerno', 'kfo', 'kongmmm',
     'lamm', 'leioc', 'loc', 'log', 'lok', 'lvo', 'maroc', 'masterplanadventure', 'mdoc', 'mid-wales', 'moravian', 'mvoc',
     'nato', 'ngoc', 'noroc', 'nwo', 'od', 'omm', 'orox', 'ouoc', 'oureaevents', 'pfo', 'potoc', 'quantock', 'rafo',
-    'roxburghreivers', 'run-herts', 'sa', 'sarum', 'saxons', 'sboc', 'scottish6days', 'seloc', 'slow', 'slmm', 'smbo',
+    'roxburghreivers', 'run-herts', 'sa', 'sarum', 'saxons', 'sboc', 'scottish6days', 'seloc', 'sl_2020', 'slow', 'slmm', 'smbo',
     'smoc', 'sn', 'so', 'soa', 'soc', 'solway', 'sportident', 'sroc', 'stag', 'start', 'suffoc', 'swoc', 'syo', 'tay',
     'test', 'purple-thistle', 'tinto', 'tvoc', 'walton', 'waoc', 'wcoc', 'wim', 'wmoc', 'wrekin', 'wsco2008', 'wsx'];
 

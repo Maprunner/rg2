@@ -54,7 +54,7 @@ class splitsbrowser
         foreach ($results as $result) {
             $data = explode("|", $result);
             // extract time
-            $t = utils::tidyTime($data[7]);
+            list($t, $temp) = utils::tidyTime($data[7]);
             if (intval($data[0]) < GPS_RESULT_OFFSET) {
                 if ($first_line) {
                     $first_line = false;

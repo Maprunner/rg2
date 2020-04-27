@@ -28,16 +28,20 @@
       }
       // save each result
       for (i = 0; i < l; i += 1) {
-        if (data[i].resultid > rg2.config.GPS_RESULT_OFFSET && data[i].coursename === '') {
-          data[i].coursename = rg2.courses.getCourseDetails(data[i].courseid).name;
-        }
-        if (isScoreEvent) {
-          variant = data[i].variant;
-          result = new rg2.Result(data[i], isScoreEvent, codes[variant], scorex[variant], scorey[variant]);
-        } else {
-          result = new rg2.Result(data[i], isScoreEvent);
-        }
-        this.results.push(result);
+        // trap cases where only some courses for an event are set up, but for some reason all the results get saved
+        // so you end up getting results for courses you don't know about: kust ignore these results
+        if (rg2.courses.isValidCourseId(data[i].courseid)) {
+          if (data[i].resultid > rg2.config.GPS_RESULT_OFFSET && data[i].coursename === '') {
+            data[i].coursename = rg2.courses.getCourseDetails(data[i].courseid).name;
+          }
+          if (isScoreEvent) {
+            variant = data[i].variant;
+            result = new rg2.Result(data[i], isScoreEvent, codes[variant], scorex[variant], scorey[variant]);
+          } else {
+            result = new rg2.Result(data[i], isScoreEvent);
+          }
+          this.results.push(result);
+      }
       }
       this.setDeletionInfo();
       this.setScoreCourseInfo();
@@ -637,6 +641,11 @@
 
     prepareResults: function () {
       var oldID, i, canCombine;
+      // no concept of combining for events with no initial results
+      // this also avoids the sort which we don't want
+      if (!rg2.events.hasResults()) {
+        return;
+      }
       // want to avoid extra results line for GPS routes if there is no drawn route
       // first sort so that GPS routes come after initial result
       this.results.sort(this.sortByCourseIDThenResultID);
@@ -714,7 +723,9 @@
       comments = "";
       for (i = 0; i < this.results.length; i += 1) {
         if (this.results[i].comments !== "") {
-          comments += "<tr><td><strong>" + this.results[i].name + "</strong></td><td>" + this.results[i].coursename + "</td><td>" + this.results[i].comments + "</td></tr>";
+          comments += "<tr><td><strong>" + this.results[i].name + "</strong></td><td>";
+          comments += this.results[i].coursename + "</td><td class='selectable'>" + this.results[i].comments + "</td></tr>";
+
         }
       }
       return comments;

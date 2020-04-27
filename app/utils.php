@@ -80,6 +80,17 @@ class utils
         return $comments;
     }
 
+    public static function getSecsFromHHMM($t) {
+      // gets in (H)HH:MM and needs to return seconds
+      $bits = explode(":", $t);
+      if (count($bits) === 2) {
+        return ((intval($bits[0]) * 60) + intval($bits[1]));
+      } else {
+        return 0;
+      }
+
+    }
+
     public static function tidyTime($in)
     {
         // takes what should be a time as mm:ss or hh:mm:ss and tidies it up
@@ -105,7 +116,7 @@ class utils
           $mins = (intval($bits[0]) * 60) + intval($bits[1]);
           $t = $mins.":".$bits[2]; 
         }
-        return $t;
+        return array($t, self::getSecsFromHHMM($t));
     }
 
     public static function getAngle($x1, $y1, $x2, $y2)

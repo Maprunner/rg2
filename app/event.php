@@ -478,6 +478,22 @@ class event
         return false;
     }
 
+    public static function hasResults($eventid)
+    {
+        if (($handle = @fopen(KARTAT_DIRECTORY."kisat.txt", "r")) !== false) {
+            while (($data = fgetcsv($handle, 0, "|")) !== false) {
+                if ($data[0] == $eventid) {
+                    if ($data[2] == 2) {
+                        return false;
+                    } else {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     private static function sortEventsByDate($a, $b)
     {
         return strcmp($a["date"], $b["date"]);
