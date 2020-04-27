@@ -18,7 +18,7 @@
     },
 
     isValidCourseId: function (courseid) {
-      return courseid < this.courses.length
+      return courseid < this.courses.length;
     },
 
     getCoursesForEvent: function () {
