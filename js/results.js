@@ -29,7 +29,7 @@
       // save each result
       for (i = 0; i < l; i += 1) {
         // trap cases where only some courses for an event are set up, but for some reason all the results get saved
-        // so you end up getting results for courses you don't know about: kust ignore these results
+        // so you end up getting results for courses you don't know about: just ignore these results
         if (rg2.courses.isValidCourseId(data[i].courseid)) {
           if (data[i].resultid > rg2.config.GPS_RESULT_OFFSET && data[i].coursename === '') {
             data[i].coursename = rg2.courses.getCourseDetails(data[i].courseid).name;

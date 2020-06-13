@@ -78,6 +78,7 @@
       nodelist = xml.getElementsByTagName('Control');
       // only need first-level Controls
       pt = {x: 0, y: 0};
+      let controls = []
       for (i = 0; i < nodelist.length; i += 1) {
         if (nodelist[i].parentNode.nodeName === 'RaceCourseData') {
           code = nodelist[i].getElementsByTagName("Id")[0].textContent;
@@ -92,6 +93,13 @@
           // don't want to save crossing points
           if (nodelist[i].getAttribute('type') !== 'CrossingPoint') {
             this.newcontrols.addControl(code.trim(), pt.x, pt.y);
+            let control = {}
+            control.id = i
+            control.lat = parseFloat(latlng[0].getAttribute('lat'));
+            control.lng = parseFloat(latlng[0].getAttribute('lng'));
+            control.x = pt.x
+            control.y = pt.y
+            controls.push(control)
           }
         }
       }
