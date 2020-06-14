@@ -21,7 +21,7 @@
     Constructor : CourseParser,
 
     processCoursesXML : function (rawXML) {
-      var xml, version, nodelist;
+      var xml, kml, version, nodelist;
       try {
         xml = $.parseXML(rawXML);
       } catch (err) {
@@ -30,7 +30,12 @@
       }
       nodelist = xml.getElementsByTagName('CourseData');
       if (nodelist.length === 0) {
-        rg2.utils.showWarningDialog("XML file error", "File is not a valid XML course file. CourseData element missing.");
+        kml = xml.getElementsByTagName('kml');
+        if (kml.length > 0) {
+          this.processKMLCourses(xml);
+        } else {
+          rg2.utils.showWarningDialog("XML file error", "File is not a valid XML course file. CourseData element missing.");
+        }
         return;
       }
       version = this.getVersion(xml);
@@ -80,6 +85,46 @@
       pt = {x: 0, y: 0};
       let controls = []
       for (i = 0; i < nodelist.length; i += 1) {
+        if (nodelist[i].parentNode.nodeName === 'RaceCourseData') {
+          code = nodelist[i].getElementsByTagName("Id")[0].textContent;
+          latlng = nodelist[i].getElementsByTagName("Position");
+          if ((this.localWorldfile.valid) && (latlng.length > 0)) {
+            pt = this.getXYFromLatLng(latlng);
+            this.coursesGeoreferenced = true;
+          } else {
+            // only works if all controls have lat/lon or none do: surely a safe assumption...
+            pt = this.getXYFromMapPosition(nodelist[i].getElementsByTagName("MapPosition"));
+          }
+          // don't want to save crossing points
+          if (nodelist[i].getAttribute('type') !== 'CrossingPoint') {
+            this.newcontrols.addControl(code.trim(), pt.x, pt.y);
+            let control = {}
+            control.id = i
+            control.lat = parseFloat(latlng[0].getAttribute('lat'));
+            control.lng = parseFloat(latlng[0].getAttribute('lng'));
+            control.x = pt.x
+            control.y = pt.y
+            controls.push(control)
+          }
+        }
+      }
+      // extract all courses
+      nodelist = xml.getElementsByTagName('Course');
+      this.extractV3Courses(nodelist);
+      // extract all course/class mappings
+      nodelist = xml.getElementsByTagName('ClassCourseAssignment');
+      this.extractV3CourseClassMapping(nodelist);
+    },
+
+    processKMLCourses : function (xml) {
+      // reads OOM KML files
+      // extract all controls
+      var nodelist, i, code, pt, latlng;
+      nodelist = xml.getElementsByTagName('Placemark');
+      pt = {x: 0, y: 0};
+      let controls = []
+      for (i = 0; i < nodelist.length; i += 1) {
+        let coords = nodelist[i].getElementsByTagName('coordinates');
         if (nodelist[i].parentNode.nodeName === 'RaceCourseData') {
           code = nodelist[i].getElementsByTagName("Id")[0].textContent;
           latlng = nodelist[i].getElementsByTagName("Position");
