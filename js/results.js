@@ -337,7 +337,7 @@
       for (i = 0; i < this.results.length; i += 1) {
         if (this.results[i].courseid === courseid) {
           // don't double-count GPS tracks, unless no initial results (#284)
-          if ((this.results[i].resultid < rg2.config.GPS_RESULT_OFFSET) || (info.format === rg2.config.EVENT_WITHOUT_RESULTS)) {
+          if ((this.results[i].resultid < rg2.config.GPS_RESULT_OFFSET) || (info.format === rg2.config.FORMAT_NO_RESULTS)) {
             count += 1;
           }
         }

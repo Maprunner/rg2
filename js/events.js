@@ -85,12 +85,12 @@
     },
 
     isScoreEvent : function () {
-      return (this.events[this.activeEventID].format === rg2.config.SCORE_EVENT);
+      return (this.events[this.activeEventID].format === rg2.config.FORMAT_SCORE_EVENT);
     },
 
     hasResults : function () {
       if (this.activeEventID !== null) {
-        return (this.events[this.activeEventID].format !== rg2.config.EVENT_WITHOUT_RESULTS);
+        return (this.events[this.activeEventID].format !== rg2.config.FORMAT_NO_RESULTS);
       }
       return true;
     },

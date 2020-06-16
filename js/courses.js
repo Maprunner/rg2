@@ -46,6 +46,10 @@
       return this.courses[courseid];
     },
 
+    getCourseLegLengths: function (courseid) {
+      return this.courses[courseid].getLegLengths();
+    },
+
     getNumberOfControlsOnCourse: function (courseid) {
       // codes list includes "S" and "F", so allow for them
       return this.courses[courseid].codes.length - 2;

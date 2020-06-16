@@ -21,7 +21,7 @@
     Constructor : CourseParser,
 
     processCoursesXML : function (rawXML) {
-      var xml, kml, version, nodelist;
+      var xml, version, nodelist;
       try {
         xml = $.parseXML(rawXML);
       } catch (err) {
@@ -30,8 +30,7 @@
       }
       nodelist = xml.getElementsByTagName('CourseData');
       if (nodelist.length === 0) {
-        kml = xml.getElementsByTagName('kml');
-        if (kml.length > 0) {
+        if (xml.documentElement.nodeName === "kml") {
           this.processKMLCourses(xml);
         } else {
           rg2.utils.showWarningDialog("XML file error", "File is not a valid XML course file. CourseData element missing.");
@@ -79,11 +78,11 @@
 
     processIOFV3XMLCourses : function (xml) {
       // extract all controls
-      var nodelist, i, code, pt, latlng;
+      var nodelist, i, code, pt, latlng, controls, control;
       nodelist = xml.getElementsByTagName('Control');
       // only need first-level Controls
       pt = {x: 0, y: 0};
-      let controls = []
+      controls = [];
       for (i = 0; i < nodelist.length; i += 1) {
         if (nodelist[i].parentNode.nodeName === 'RaceCourseData') {
           code = nodelist[i].getElementsByTagName("Id")[0].textContent;
@@ -98,13 +97,13 @@
           // don't want to save crossing points
           if (nodelist[i].getAttribute('type') !== 'CrossingPoint') {
             this.newcontrols.addControl(code.trim(), pt.x, pt.y);
-            let control = {}
-            control.id = i
+            control = {};
+            control.id = i;
             control.lat = parseFloat(latlng[0].getAttribute('lat'));
             control.lng = parseFloat(latlng[0].getAttribute('lng'));
-            control.x = pt.x
-            control.y = pt.y
-            controls.push(control)
+            control.x = pt.x;
+            control.y = pt.y;
+            controls.push(control);
           }
         }
       }
@@ -117,43 +116,39 @@
     },
 
     processKMLCourses : function (xml) {
-      // reads OOM KML files
+      // reads OOM KML files: assumes we have a WGS-84 georeferenced map...
       // extract all controls
-      var nodelist, i, code, pt, latlng;
-      nodelist = xml.getElementsByTagName('Placemark');
-      pt = {x: 0, y: 0};
-      let controls = []
-      for (i = 0; i < nodelist.length; i += 1) {
-        let coords = nodelist[i].getElementsByTagName('coordinates');
-        if (nodelist[i].parentNode.nodeName === 'RaceCourseData') {
-          code = nodelist[i].getElementsByTagName("Id")[0].textContent;
-          latlng = nodelist[i].getElementsByTagName("Position");
-          if ((this.localWorldfile.valid) && (latlng.length > 0)) {
-            pt = this.getXYFromLatLng(latlng);
-            this.coursesGeoreferenced = true;
-          } else {
-            // only works if all controls have lat/lon or none do: surely a safe assumption...
-            pt = this.getXYFromMapPosition(nodelist[i].getElementsByTagName("MapPosition"));
-          }
-          // don't want to save crossing points
-          if (nodelist[i].getAttribute('type') !== 'CrossingPoint') {
-            this.newcontrols.addControl(code.trim(), pt.x, pt.y);
-            let control = {}
-            control.id = i
-            control.lat = parseFloat(latlng[0].getAttribute('lat'));
-            control.lng = parseFloat(latlng[0].getAttribute('lng'));
-            control.x = pt.x
-            control.y = pt.y
-            controls.push(control)
-          }
-        }
+      var places, point, coords, code, pt, controls, control, i, codes, className, courseName, lat, lng;
+      controls = [];
+      this.coursesGeoreferenced = true;
+      places = xml.getElementsByTagName('Placemark');
+      for (i = 0; i < places.length; i = i + 1 ) {
+        pt = {};
+        code = places[i].getElementsByTagName('name')[0].childNodes[0].nodeValue.trim();
+        point = places[i].getElementsByTagName('Point')[0];
+        coords = point.getElementsByTagName('coordinates')[0].childNodes[0].nodeValue.trim().split(",");
+        lat = +coords[1];
+        lng = +coords[0];
+        pt.x = this.worldfile.getX(lng, lat);
+        pt.y = this.worldfile.getY(lng, lat);
+        this.newcontrols.addControl(code.trim(), pt.x, pt.y);
+        control = {};
+        control.id = i + 1;
+        control.lat = lat;
+        control.lng = lng;
+        control.x = pt.x;
+        control.y = pt.y;
+        controls.push(control);
       }
-      // extract all courses
-      nodelist = xml.getElementsByTagName('Course');
-      this.extractV3Courses(nodelist);
-      // extract all course/class mappings
-      nodelist = xml.getElementsByTagName('ClassCourseAssignment');
-      this.extractV3CourseClassMapping(nodelist);
+      // set up dummy score course
+      codes = [];
+      courseName = "Course 1";
+      className = "Course 1";
+      codes = this.newcontrols.controls.map(function (control) { return control.code;});
+      // courseid 0 for now: set when result mapping is known
+      this.courses.push({courseid: 0, x: [], y: [], codes: codes, name: courseName});   
+      this.courseClassMapping.push({'course': courseName, 'className': className});
+      $("#rg2-select-course-file").addClass('valid');
     },
 
     getXYFromLatLng : function (latLng) {

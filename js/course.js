@@ -42,6 +42,22 @@
       }
     },
 
+    getLegLengths : function () {
+      // used for events with no results to allow pro rata splits
+      var i, distanceSoFar;
+      distanceSoFar = [];
+      if (this.isScoreCourse) {
+        // arbitrary for now...
+        distanceSoFar[1] = 1;
+        return distanceSoFar;
+      }
+      distanceSoFar[0] = 0;
+      for (i = 1; i < this.x.length; i += 1) {
+        distanceSoFar[i] = parseInt(distanceSoFar[i-1] + rg2.utils.getDistanceBetweenPoints(this.x[i], this.y[i], this.x[i - 1], this.y[i - 1]), 0);
+      }
+      return distanceSoFar;
+    },
+
     setAngles : function () {
       var i, c1x, c1y, c2x, c2y, c3x, c3y;
       for (i = 0; i < (this.x.length - 1); i += 1) {

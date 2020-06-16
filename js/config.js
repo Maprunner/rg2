@@ -43,16 +43,13 @@
     // parameters for call to draw courses
     DIM: 0.75,
     FULL_INTENSITY: 1.0,
-    // values of event format
-    NORMAL_EVENT: 1,
-    EVENT_WITHOUT_RESULTS: 2,
-    SCORE_EVENT: 3,
-    // version gets set automatically by grunt file during build process
+     // version gets set automatically by grunt file during build process
     RG2VERSION: '1.5.9',
     TIME_NOT_FOUND: 9999,
     // values for evt.which
     RIGHT_CLICK: 3,
     DO_NOT_SAVE_COURSE: 9999,
+    // values of event format
     FORMAT_NORMAL: 1,
     FORMAT_NO_RESULTS: 2,
     FORMAT_SCORE_EVENT: 3,
