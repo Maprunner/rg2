@@ -51,8 +51,9 @@
     DO_NOT_SAVE_COURSE: 9999,
     // values of event format
     FORMAT_NORMAL: 1,
-    FORMAT_NO_RESULTS: 2,
+    FORMAT_NORMAL_NO_RESULTS: 2,
     FORMAT_SCORE_EVENT: 3,
+    FORMAT_SCORE_EVENT_NO_RESULTS: 4,
     DISPLAY_ALL_COURSES: 99999,
     //number of drawn routes that can be saved for possible later deletion
     MAX_DRAWN_ROUTES: 10,

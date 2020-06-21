@@ -38,7 +38,10 @@
   define('CACHE_DIRECTORY', $kartat."cache/");
   define('GPS_RESULT_OFFSET', 50000);
   define('GPS_INTERVAL', 3);
-  define('SCORE_EVENT_FORMAT', 3);
+  define('FORMAT_NORMAL', 1);
+  define('FORMAT_NORMAL_NO_RESULTS', 2);
+  define('FORMAT_SCORE_EVENT', 3);
+  define('FORMAT_SCORE_EVENT_NO_RESULTS', 4);
   // added to end of event comments to show event is read-only
   define('EVENT_LOCKED_INDICATOR', '_');
 

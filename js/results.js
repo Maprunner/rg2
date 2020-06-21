@@ -337,7 +337,9 @@
       for (i = 0; i < this.results.length; i += 1) {
         if (this.results[i].courseid === courseid) {
           // don't double-count GPS tracks, unless no initial results (#284)
-          if ((this.results[i].resultid < rg2.config.GPS_RESULT_OFFSET) || (info.format === rg2.config.FORMAT_NO_RESULTS)) {
+          if ((this.results[i].resultid < rg2.config.GPS_RESULT_OFFSET) ||
+            (info.format === rg2.config.FORMAT_NO_RESULTS) ||
+            (info.format === rg2.config.FORMAT_SCORE_EVENT_NO_RESULTS)) {
             count += 1;
           }
         }
@@ -606,7 +608,7 @@
           html += this.getCourseHeader(res);
           oldCourseID = res.courseid;
         }
-        html += '<tr><td id=' + res.rawid + '>' + res.position + '</td>';
+        html += '<tr class="resultrow"><td id=' + res.rawid + '>' + res.position + '</td>';
         // #310 filter default comments in local language just in case
         if ((res.comments !== "") && (res.comments !== rg2.t('Type your comment'))) {
           // #304 make sure double quotes show up
@@ -641,11 +643,6 @@
 
     prepareResults: function () {
       var oldID, i, canCombine;
-      // no concept of combining for events with no initial results
-      // this also avoids the sort which we don't want
-      if (!rg2.events.hasResults()) {
-        return;
-      }
       // want to avoid extra results line for GPS routes if there is no drawn route
       // first sort so that GPS routes come after initial result
       this.results.sort(this.sortByCourseIDThenResultID);

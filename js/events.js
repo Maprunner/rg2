@@ -85,12 +85,17 @@
     },
 
     isScoreEvent : function () {
-      return (this.events[this.activeEventID].format === rg2.config.FORMAT_SCORE_EVENT);
+      if (this.activeEventID !== null) {
+        return ((this.events[this.activeEventID].format === rg2.config.FORMAT_SCORE_EVENT) || 
+          (this.events[this.activeEventID].format === rg2.config.FORMAT_SCORE_EVENT_NO_RESULTS));
+      }
+      return false;
     },
 
     hasResults : function () {
       if (this.activeEventID !== null) {
-        return (this.events[this.activeEventID].format !== rg2.config.FORMAT_NO_RESULTS);
+        return ((this.events[this.activeEventID].format === rg2.config.FORMAT_NORMAL) ||
+          (this.events[this.activeEventID].format === rg2.config.FORMAT_SCORE_EVENT));
       }
       return true;
     },
