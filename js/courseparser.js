@@ -6,7 +6,7 @@
     this.newcontrols = new rg2.Controls();
     this.courses.length = 0;
     this.courseClassMapping.length = 0;
-    this.fromCondes = false;
+    this.fromOldCondes = false;
     this.coursesGeoreferenced = false;
     this.newcontrols.deleteAllControls();
     // holding copies of worldfiles: not ideal but it works
@@ -70,9 +70,19 @@
     },
 
     setCreator : function (text) {
-      // allow handling of files from Condes which use original worldfile rather than WGS-84 as expected by IOF scheme
+      var version;
+      // creator looks like "Condes version 10.1.1": need to extract version number
+      var introLength = 15;
+      // allow handling of files from Condes before v10.1 which use original worldfile rather than WGS-84 as expected by IOF scheme
       if (text.indexOf('Condes') > -1) {
-        this.fromCondes = true;
+        if (text.length > introLength) {
+          // parseFloat ignores everything from second decimal poin if it finds one
+          // so we will get something like 10.1 from 10.1.1
+          version = parseFloat(text.substring(introLength));
+          if (version < 10.1) {
+            this.fromOldCondes = true;
+          }
+        }
       }
     },
 
@@ -156,8 +166,8 @@
       pt = {x: 0, y: 0};
       lat = parseFloat(latLng[0].getAttribute('lat'));
       lng = parseFloat(latLng[0].getAttribute('lng'));
-      // handle Condes-specific georeferencing
-      if (this.fromCondes) {
+      // handle old Condes-specific georeferencing
+      if (this.fromOldCondes) {
         // use original map worldfile
         pt.x = this.localWorldfile.getX(lng, lat);
         pt.y = this.localWorldfile.getY(lng, lat);
