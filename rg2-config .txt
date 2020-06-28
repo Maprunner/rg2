@@ -47,7 +47,12 @@
   //
   // Note: EPSG:27700 is built in to RG2 as default so you do NOT need to declare it here: this is just an example
   // EPSG:900913 (Google) is also built in
-  // Uncomment the following lines and edit for the required co-ordinate system
+  // Uncomment the following lines and edit for the required co-ordinate system(s).
+  // Use | to separate different systems if you need to add more than one.
   //
   //define('EPSG_CODE', "EPSG:32722");
-  //define('EPSG_PARAMS', "+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs ");
+  //define('EPSG_PARAMS', "+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs");
+  //
+  // or 
+  //define('EPSG_CODE', "EPSG:12345|EPSG:67890");
+  //define('EPSG_PARAMS', "+proj=x +ellps=WGS84 +datum=WGS84 +units=m +no_defs|+proj=y +ellps=WGS84 +datum=WGS84 +units=m +no_defs");
