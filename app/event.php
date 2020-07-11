@@ -210,6 +210,7 @@ class event
         $hasResults = ($format == FORMAT_NORMAL) || ($format == FORMAT_SCORE_EVENT);
         $isScoreEvent = ($format == FORMAT_SCORE_EVENT) || ($format == FORMAT_SCORE_EVENT_NO_RESULTS);
         $write["status_msg"] = "";
+
         if (($handle = @fopen(KARTAT_DIRECTORY."kisat.txt", "r+")) !== false) {
             // read to end of file to find last entry
             $oldid = 0;
@@ -238,6 +239,12 @@ class event
         }
         @fflush($handle);
         @fclose($handle);
+
+        if ($format !== $data->format) {
+          // create file to show what is going on so we can send correct response to events request
+          // file contents irrelevant at the moment..
+          file_put_contents(KARTAT_DIRECTORY."format_".$newid.".txt", "format=4", FILE_APPEND);
+        }
 
         // create new sarjat file: course names
         $courses = "";
@@ -312,75 +319,12 @@ class event
         }
 
         // create new radat file: course drawing: RG2 uses this for score event control locations
-        $course = "";
         if (($isScoreEvent) && (count($data->results) > 0)) {
-            // score event: one row per variant
-            for ($i = 0; $i < count($data->variants); $i++) {
-                $a = $data->variants[$i];
-                $finish = count($a->x) - 1;
-                $course .= $a->id."|".$a->courseid."|".utils::encode_rg_output($a->name)."|2;";
-                $course .= $a->x[$finish].";-".$a->y[$finish].";0;0N";
-                // loop from first to last control
-                for ($j = 1; $j < $finish; $j++) {
-                    // control circle
-                    $course .= "1;".$a->x[$j].";-".$a->y[$j].";0;0N";
-                    // line between controls
-                    list($x1, $y1, $x2, $y2) = utils::getLineEnds($a->x[$j], $a->y[$j], $a->x[$j-1], $a->y[$j-1]);
-                    $course .= "4;".$x1.";-".$y1.";".$x2.";-".$y2."N";
-                    // text: just use 20 offset for now: RG1 and RGJS seem happy
-                    $course .= "3;".($a->x[$j] + 20).";-".($a->y[$j] + 20).";".$j.";0N";
-                }
-                // start triangle
-                $side = 20;
-                $angle = utils::getAngle($a->x[0], $a->y[0], $a->x[1], $a->y[1]);
-                $angle = $angle + (M_PI / 2);
-                $x0 = (int) ($a->x[0] + ($side * sin($angle)));
-                $y0 = (int) ($a->y[0] - ($side * cos($angle)));
-                $x1 = (int) ($a->x[0] + ($side * sin($angle + (2 * M_PI / 3))));
-                $y1 = (int) ($a->y[0] - ($side * cos($angle + (2 * M_PI / 3))));
-                $x2 = (int) ($a->x[0] + ($side * sin($angle - (2 * M_PI / 3))));
-                $y2 = (int) ($a->y[0] - ($side * cos($angle - (2 * M_PI / 3))));
-
-                $course .= "4;".$x0.";-".$y0.";".$x1.";-".$y1."N";
-                $course .= "4;".$x1.";-".$y1.";".$x2.";-".$y2."N";
-                $course .= "4;".$x2.";-".$y2.";".$x0.";-".$y0."N";
-
-                $course .= PHP_EOL;
-            }
+          // score event with results: one row per variant
+          $course = self::getCourseDrawing($data->variants);
         } else {
-            // normal event or score event without results so save courses: one row per course
-            for ($i = 0; $i < count($data->courses); $i++) {
-                $a = $data->courses[$i];
-                $finish = count($a->x) - 1;
-                $course .= $a->courseid."|".$a->courseid."|".utils::encode_rg_output($a->name)."|2;";
-                $course .= $a->x[$finish].";-".$a->y[$finish].";0;0N";
-                // loop from first to last control
-                for ($j = 1; $j < $finish; $j++) {
-                    // control circle
-                    $course .= "1;".$a->x[$j].";-".$a->y[$j].";0;0N";
-                    // line between controls
-                    list($x1, $y1, $x2, $y2) = utils::getLineEnds($a->x[$j], $a->y[$j], $a->x[$j-1], $a->y[$j-1]);
-                    $course .= "4;".$x1.";-".$y1.";".$x2.";-".$y2."N";
-                    // text: just use 20 offset for now: RG1 and RGJS seem happy
-                    $course .= "3;".($a->x[$j] + 20).";-".($a->y[$j] + 20).";".$j.";0N";
-                }
-                // start triangle
-                $side = 20;
-                $angle = utils::getAngle($a->x[0], $a->y[0], $a->x[1], $a->y[1]);
-                $angle = $angle + (M_PI / 2);
-                $x0 = (int) ($a->x[0] + ($side * sin($angle)));
-                $y0 = (int) ($a->y[0] - ($side * cos($angle)));
-                $x1 = (int) ($a->x[0] + ($side * sin($angle + (2 * M_PI / 3))));
-                $y1 = (int) ($a->y[0] - ($side * cos($angle + (2 * M_PI / 3))));
-                $x2 = (int) ($a->x[0] + ($side * sin($angle - (2 * M_PI / 3))));
-                $y2 = (int) ($a->y[0] - ($side * cos($angle - (2 * M_PI / 3))));
-
-                $course .= "4;".$x0.";-".$y0.";".$x1.";-".$y1."N";
-                $course .= "4;".$x1.";-".$y1.";".$x2.";-".$y2."N";
-                $course .= "4;".$x2.";-".$y2.";".$x0.";-".$y0."N";
-
-                $course .= PHP_EOL;
-            }
+          // normal event or score event without results so save courses: one row per course
+          $course = self::getCourseDrawing($data->courses);
         }
         file_put_contents(KARTAT_DIRECTORY."radat_".$newid.".txt", $course);
 
@@ -414,6 +358,52 @@ class event
         }
         utils::rg2log("Added new event ");
         return $write;
+    }
+
+    public static function getCourseDrawing($rows)
+    {    
+      $course = "";
+      for ($i = 0; $i < count($rows); $i++) {
+        $a = $rows[$i];
+        $finish = count($a->x) - 1;
+        // minor difference in historic handling of course and variant ids
+        if (isset($a->id)) {
+          $course .= $a->id;
+        } else {
+          $course .= $a->courseid;
+        }
+        $course .= "|".$a->courseid."|".utils::encode_rg_output($a->name)."|2;";
+        $course .= $a->x[$finish].";-".$a->y[$finish].";0;0N";
+        // loop from first to last control
+        for ($j = 1; $j < $finish; $j++) {
+          // control circle
+          $course .= "1;".$a->x[$j].";-".$a->y[$j].";0;0N";
+          // line between controls
+          list($x1, $y1, $x2, $y2) = utils::getLineEnds($a->x[$j], $a->y[$j], $a->x[$j-1], $a->y[$j-1]);
+          $course .= "4;".$x1.";-".$y1.";".$x2.";-".$y2."N";
+          // text: just use 20 offset for now: RG1 and RGJS seem happy
+          $course .= "3;".($a->x[$j] + 20).";-".($a->y[$j] + 20).";".$j.";0N";
+        }
+        $course .= self::getStartTriangle($a->x, $a->y);
+        $course .= PHP_EOL;
+      }
+      return $course;
+    }
+    public static function getStartTriangle($x, $y)
+    {
+      $side = 20;
+      $angle = utils::getAngle($x[0], $y[0], $x[1], $y[1]);
+      $angle = $angle + (M_PI / 2);
+      $x0 = (int) ($x[0] + ($side * sin($angle)));
+      $y0 = (int) ($y[0] - ($side * cos($angle)));
+      $x1 = (int) ($x[0] + ($side * sin($angle + (2 * M_PI / 3))));
+      $y1 = (int) ($y[0] - ($side * cos($angle + (2 * M_PI / 3))));
+      $x2 = (int) ($x[0] + ($side * sin($angle - (2 * M_PI / 3))));
+      $y2 = (int) ($y[0] - ($side * cos($angle - (2 * M_PI / 3))));
+      $start = "4;".$x0.";-".$y0.";".$x1.";-".$y1."N";
+      $start .= "4;".$x1.";-".$y1.";".$x2.";-".$y2."N";
+      $start .= "4;".$x2.";-".$y2.";".$x0.";-".$y0."N";
+      return $start;
     }
 
     public static function deleteEvent($eventid)
@@ -456,9 +446,6 @@ class event
       // RG2 supports format 4 but old Routegadget doesn't, so pretend it was type 2
       // messy but should be OK (!?)
       if ($incomingFormat == FORMAT_SCORE_EVENT_NO_RESULTS) {
-        // create file to show what is going on so we can send correct response to events request
-        // file contents irrelevant at the moment..
-        file_put_contents(KARTAT_DIRECTORY."format_".$newid.".txt", "format=4", FILE_APPEND);
         return FORMAT_NORMAL_NO_RESULTS;
       }
       return $incomingFormat;
