@@ -13,7 +13,7 @@
     input.dragged = false;
     // need to cache this here since IE and FF don't set it for mousemove events
     input.whichButton = evt.which;
-    //console.log ("InputDown " + input.lastX + " " + input.lastY + " " + input.dragStart.x + " " + input.dragStart.y);
+    console.log ("InputDown " + input.lastX + " " + input.lastY + " " + input.dragStart.x + " " + input.dragStart.y);
   }
 
   function handleInputMove() {
