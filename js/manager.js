@@ -322,7 +322,7 @@
     displayCourseAllocations: function () {
       var i, html;
       if ((this.courses.length) && (this.resultCourses.length)) {
-        html = "<div id='rg2-course-alloc'><table><thead><tr><th>Results</th><th>Course</th></tr></thead><tbody>";
+        html = "<div id='rg2-course-allocations'><table><thead><tr><th>Results</th><th>Course</th></tr></thead><tbody>";
         // create html for course allocation list
         // using a table to make it easier for now
         for (i = 0; i < this.resultCourses.length; i += 1) {
