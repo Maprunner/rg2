@@ -2,35 +2,32 @@
 (function () {
   function Results() {
     this.results = [];
-    // save variants since they are needed to add results for score events without results
-    this.variants = [];
-    // for historic reasons variant numbers seem to start at 1, not 0: best to stick with this just in case
-    // so add a dummy entry at start of array
-    this.addVariant([], {x:[], y:[]});
   }
 
   Results.prototype = {
     Constructor: Results,
 
     addResults: function (data, isScoreEvent) {
-      var i, result, variant, newVariant;
+      var i, l, result, variant, codes, scorex, scorey;
+      l = data.length;
       // extract score course details if necessary
       if (isScoreEvent) {
+        codes = [];
+        scorex = [];
+        scorey = [];
         // details are only sent the first time a variant occurs (to reduce file size quite a lot in some cases)
         // so need to extract them for use later
-        for (i = 0; i < data.length; i += 1) {
+        for (i = 0; i < l; i += 1) {
           variant = data[i].variant;
-          if (this.variants[variant] === undefined) {
-            newVariant = {};
-            newVariant.codes = data[i].scorecodes;
-            newVariant.scorex = data[i].scorex;
-            newVariant.scorey = data[i].scorey;
-            this.variants[variant] = newVariant;
+          if (codes[variant] === undefined) {
+            codes[variant] = data[i].scorecodes;
+            scorex[variant] = data[i].scorex;
+            scorey[variant] = data[i].scorey;
           }
         }
       }
       // save each result
-      for (i = 0; i < data.length; i += 1) {
+      for (i = 0; i < l; i += 1) {
         // trap cases where only some courses for an event are set up, but for some reason all the results get saved
         // so you end up getting results for courses you don't know about: just ignore these results
         if (rg2.courses.isValidCourseId(data[i].courseid)) {
@@ -39,7 +36,7 @@
           }
           if (isScoreEvent) {
             variant = data[i].variant;
-            result = new rg2.Result(data[i], isScoreEvent, this.variants[variant].codes, this.variants[variant].scorex, this.variants[variant].scorey);
+            result = new rg2.Result(data[i], isScoreEvent, codes[variant], scorex[variant], scorey[variant]);
           } else {
             result = new rg2.Result(data[i], isScoreEvent);
           }
@@ -744,38 +741,7 @@
           }
         }
       }
-    },
-
-    addVariant: function (codes, locations) {
-      // checks if a variant array of codes already exists
-      // adds it if it doesn't
-      // returns variantid
-      var i, j, match, newVariant;
-      for (i = 0; i < this.variants.length; i += 1) {
-        match = true;
-        if (this.variants[i].codes.length === codes.length) {
-          for (j = 0; j < codes.length; j += 1) {
-            if (this.variants[i].codes[j] !== codes[j]) {
-              match = false;
-              break;
-            }
-          }
-        } else {
-          match = false;
-        }
-        if (match) {
-          return i;
-        }
-      }
-      // didn't find a match so add a new variant
-      newVariant = {};
-      newVariant.codes = codes;
-      newVariant.x = locations.x;
-      newVariant.y = locations.y;
-      this.variants.push(newVariant);
-      return this.variants.length - 1;
     }
   };
-
   rg2.Results = Results;
 }());

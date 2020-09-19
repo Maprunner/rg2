@@ -109,13 +109,8 @@
             this.newcontrols.addControl(code.trim(), pt.x, pt.y);
             control = {};
             control.id = i;
-            if (latlng.length > 0) {
-              control.lat = parseFloat(latlng[0].getAttribute('lat'));
-              control.lng = parseFloat(latlng[0].getAttribute('lng')); 
-            } else {
-              control.lat = 0;
-              control.lng = 0;
-            }
+            control.lat = parseFloat(latlng[0].getAttribute('lat'));
+            control.lng = parseFloat(latlng[0].getAttribute('lng'));
             control.x = pt.x;
             control.y = pt.y;
             controls.push(control);

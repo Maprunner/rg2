@@ -150,19 +150,17 @@ class route
                     }
                 }
             }
-            $newresultdata = $id."|".$data->courseid."|".utils::encode_rg_output($data->coursename)."|".$name."|".$data->startsecs."||";
-            if (isset($data->variantid)) {
-              $newresultdata .= $data->variantid;
-            }
+
             $splits = "";
             for ($i = 1; $i < count($data->splits); $i++) {
               $splits .= $data->splits[$i].";";
             }
-            $newresultdata .= "|".$data->totaltime."|".$splits."|";
+            $newresultdata = $id."|".$data->courseid."|".utils::encode_rg_output($data->coursename)."|".$name;
             if ($id >= GPS_RESULT_OFFSET) {
-              $newresultdata .=  $track;
+                $newresultdata .= "|".$data->startsecs."|||".$data->totaltime."|.".$splits."|".$track.PHP_EOL;
+            } else {
+                $newresultdata .= "|".$data->startsecs."|||".$data->totaltime."|".$splits."|".PHP_EOL;
             }
-            $newresultdata .= PHP_EOL;
         }
 
         $write["status_msg"] = "";
@@ -198,41 +196,6 @@ class route
 
         if (!$status) {
             $write["status_msg"] .= " Save error for merkinnat. ";
-        }
-
-        // if variants array present then this is score event with no initial results
-        // and a new variant needs to be added
-        if (isset($data->variants)) {
-          $variant = $data->variants[0];
-          $controls = $variant->id."|";
-          for ($i = 0; $i < count($variant->x); $i++) {
-            $controls .= $variant->x[$i].";-".$variant->y[$i]."N";
-          }
-          $controls .= PHP_EOL;
-          $status = file_put_contents(KARTAT_DIRECTORY."ratapisteet_".$eventid.".txt", $controls, FILE_APPEND);
-          if (!$status) {
-            $write["status_msg"] .= " Save error for ratapisteet. ";
-          }
-
-          $controls = $variant->id."|".$variant->name."|";
-          // data includes start and finish which we don't want
-          for ($j = 1; $j < (count($variant->codes) - 1); $j++) {
-            if ($j > 1) {
-              $controls .= "_";
-            }
-            $controls .= $data->variant->codes[$j];
-          }
-          $controls .= PHP_EOL;
-          file_put_contents(KARTAT_DIRECTORY."hajontakanta_".$newid.".txt", $controls, FILE_APPEND);
-          if (!$status) {
-            $write["status_msg"] .= " Save error for hajontakanta. ";
-          }
-
-          $course = event::getCourseDrawing($data->courses);
-          file_put_contents(KARTAT_DIRECTORY."radat_".$newid.".txt", $course, FILE_APPEND);
-          if (!$status) {
-            $write["status_msg"] .= " Save error for radat. ";
-          }
         }
 
         if (($newresult === true) || ($id >= GPS_RESULT_OFFSET)) {

@@ -631,7 +631,7 @@
     extractVariants: function () {
       // called when saving score/relay courses
       // creates all course variants once courseid has been set
-      var i, j, k, codes, course, id, locations, loc;
+      var i, j, codes, course;
       this.variants.length = 0;
       for (i = 0; i < this.results.length; i += 1) {
         // codes here are just controls so need to add start and finish
@@ -647,21 +647,46 @@
         codes.unshift(course.codes[0]);
         // add finish code at end
         codes.push(course.codes[course.codes.length - 1]);
-        // allocate variantid based on what we have already loaded in results: allows us not to duplicate variant ids
-        // when adding results for score events with no results
-        locations = {};
-        locations.x = [];
-        locations.y = [];
-        for (k = 0; k < codes.length; k += 1) {
-          loc = this.getControlXY(codes[k]);
-          locations.x.push(loc.x);
-          locations.y.push(loc.y);
-        }
-        id = rg2.results.addVariant(codes, locations);
-        // save local variant info
-        this.results[i].variantid = id;
-        this.variants.push({ x: locations.x, y: locations.y, id: id, courseid: this.results[i].courseid, name: 'Variant ' + id, codes: codes });
+
+        this.results[i].variantid = this.getVariantID(this.results[i].codes, this.results[i].courseid);
       }
+    },
+
+    getVariantID: function (codes, courseid) {
+      // checks if a variant array of codes already exists
+      // adds it if it doesn't
+      // returns variantid
+      var i, j, c, x, y, match, id;
+      x = [];
+      y = [];
+      id = 0;
+      for (i = 0; i < this.variants.length; i += 1) {
+        if (this.variants[i].codes.length === codes.length) {
+          match = true;
+          for (j = 0; j < codes.length; j += 1) {
+            if (this.variants[i].codes[j] !== codes[j]) {
+              match = false;
+              break;
+            }
+          }
+          if (match) {
+            id = i + 1;
+            break;
+          }
+        }
+      }
+      if (id === 0) {
+        // didn't find a match so add a new variant
+        id = this.variants.length + 1;
+        for (i = 0; i < codes.length; i += 1) {
+          c = this.getControlXY(codes[i]);
+          x.push(c.x);
+          y.push(c.y);
+        }
+        this.variants.push({ x: x, y: y, id: id, courseid: courseid, name: 'Variant ' + id, codes: codes });
+      }
+
+      return id;
     },
 
     getCourseIDForResult: function (course) {

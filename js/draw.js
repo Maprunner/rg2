@@ -103,11 +103,9 @@
       this.gpstrack = new rg2.GPSTrack();
       this.gpstrack.routeData = new rg2.RouteData();
       this.pendingCourseID = null;
-      this.courseDetails = {};
       // the RouteData versions of these have the start control removed for saving
       this.controlx = [];
       this.controly = [];
-      this.controlsVisited = [];
       this.angles = [];
       this.nextControl = 0;
       this.previousValidControlIndex = 0;
@@ -165,25 +163,26 @@
     },
 
     initialiseCourse : function (courseid) {
+      var course;
       this.gpstrack.routeData.eventid = rg2.events.getKartatEventID();
       this.gpstrack.routeData.courseid = courseid;
-      this.courseDetails = rg2.courses.getCourseDetails(courseid);
-      this.isScoreCourse = this.courseDetails.isScoreCourse;
+      course = rg2.courses.getCourseDetails(courseid);
+      this.isScoreCourse = course.isScoreCourse;
       // save details for normal courses
       // can't do this here for score courses since you need to know the
       // variant for a given runner
       if (!this.isScoreCourse) {
         rg2.courses.putOnDisplay(courseid);
-        this.gpstrack.routeData.coursename = this.courseDetails.name;
-        this.controlx = this.courseDetails.x;
-        this.controly = this.courseDetails.y;
+        this.gpstrack.routeData.coursename = course.name;
+        this.controlx = course.x;
+        this.controly = course.y;
         this.gpstrack.routeData.x.length = 0;
         this.gpstrack.routeData.y.length = 0;
         this.gpstrack.routeData.x[0] = this.controlx[0];
         this.gpstrack.routeData.y[0] = this.controly[0];
         this.gpstrack.routeData.controlx = this.controlx;
         this.gpstrack.routeData.controly = this.controly;
-        this.angles = this.courseDetails.angle;
+        this.angles = course.angle;
       }
       rg2.results.createNameDropdown(courseid);
       $("#rg2-name-select").prop('disabled', false);
@@ -300,7 +299,6 @@
 
     setNameAndTime : function () {
       // callback for an entered name when no results available
-      // only enabled once we have a valid course so this.courseDetails will be valid
       var time, name, distanceSoFar, length, splits, i;
       name = $("#rg2-name-entry").val();
       if (name) {
@@ -324,41 +322,16 @@
         this.gpstrack.routeData.startsecs = 0;
         this.gpstrack.routeData.time[0] = rg2.utils.getSecsFromHHMMSS(time);
         this.gpstrack.routeData.totalsecs = rg2.utils.getSecsFromHHMMSS(time);
-        this.previousValidControlIndex = 0;
         this.nextControl = 1;
-        if (this.isScoreCourse) {
-          // don't know which controls they are going to so for now just add start and finish
-          this.gpstrack.routeData.time[0] = rg2.utils.getSecsFromHHMMSS(time);
-          this.courseDetails.hasVisited = [];
-          this.courseDetails.hasVisited = this.courseDetails.codes.map(function () { return false;});
-          rg2.courses.putOnDisplay(this.courseDetails.courseid);
-          this.controlx = [this.courseDetails.x[0], this.courseDetails.x[this.courseDetails.x.length - 1]];
-          this.controly = [this.courseDetails.y[0], this.courseDetails.y[this.courseDetails.y.length - 1]];
-          this.controlsVisited = [this.courseDetails.codes[0], this.courseDetails.codes[this.courseDetails.y.length - 1]];
-          this.courseDetails.hasVisited[0] = true;
-
-          this.gpstrack.routeData.x.length = 0;
-          this.gpstrack.routeData.y.length = 0;
-          this.gpstrack.routeData.x[0] = this.controlx[0];
-          this.gpstrack.routeData.y[0] = this.controly[0];
-          this.gpstrack.routeData.splits = [0, this.gpstrack.routeData.totalsecs];
-        } else {
-          distanceSoFar = rg2.courses.getCourseLegLengths(this.gpstrack.routeData.courseid);
-          splits = [];
-          length = distanceSoFar[distanceSoFar.length - 1];
-          if (length > 0) {
-            // generate pro rata splits
-            // recalculate based on drawn lengths once route is complete...
-            for (i = 0; i < distanceSoFar.length; i = i + 1) {
-              splits[i] = parseInt((distanceSoFar[i] / length * this.gpstrack.routeData.totalsecs), 10);
-            }
-          } else {
-            // handle case of a drawn course with only S and F both in the same place so total length is 0...
-            splits[0] = 0;
-            splits[1] = this.gpstrack.routeData.totalsecs;
-          }
-          this.gpstrack.routeData.splits = splits;
+        distanceSoFar = rg2.courses.getCourseLegLengths(this.gpstrack.routeData.courseid);
+        length = distanceSoFar[distanceSoFar.length - 1];
+        // generate pro rata splits
+        splits = [];
+        for (i = 0; i < distanceSoFar.length; i = i + 1) {
+          splits[i] = parseInt((distanceSoFar[i] / length * this.gpstrack.routeData.totalsecs), 10);
         }
+        this.gpstrack.routeData.splits = splits;
+        this.previousValidControlIndex = 0;
         rg2.redraw(false);
         this.startDrawing();
       }
@@ -391,60 +364,21 @@
     },
 
     addNewPoint : function (x, y) {
-      if (this.isScoreCourse && !this.hasResults) {
-        // don't know where they are going so need to test all unvisited controls
-        var idx = this.getControlIndex(x, y);
-        if (idx > -1) {
-          this.addRouteDataPoint(this.courseDetails.x[idx], this.courseDetails.y[idx]);
-          // we have already added the finish to make things work so don't add it again
-          if (idx !== (this.courseDetails.x.length - 1)) {
-            this.controlsVisited.splice(-1,  0, this.courseDetails.codes[idx]);
-            this.controlx.splice(-1,  0, this.courseDetails.x[idx]);
-            this.controly.splice(-1,  0, this.courseDetails.y[idx]);
-          }
-          this.courseDetails.hasVisited[idx] = true;
-          this.previousValidControlIndex = this.controlx.length - 2;
-          this.nextControl = this.controlx.length - 1;
-          if (idx === (this.courseDetails.x.length - 1)) {
-            $("#btn-save-route").button("enable");
-          }
-        } else {
-          this.addRouteDataPoint(Math.round(x), Math.round(y));
+      if (this.closeEnough(x, y)) {
+        this.addRouteDataPoint(this.controlx[this.nextControl], this.controly[this.nextControl]);
+        // angles will be wrong for missing splits since we don't know angles between non-consecutive controls and I 
+        // don't intend to start calculating them now...
+        this.alignMapToAngle(this.nextControl);
+        this.previousValidControlIndex = this.nextControl;
+        this.nextControl = this.getNextValidControl(this.nextControl);
+        if (this.nextControl === this.controlx.length) {
+          $("#btn-save-route").button("enable");
         }
       } else {
-        if (this.closeEnough(x, y, this.controlx[this.nextControl], this.controly[this.nextControl])) {
-          this.addRouteDataPoint(this.controlx[this.nextControl], this.controly[this.nextControl]);
-          // angles will be wrong for missing splits since we don't know angles between non-consecutive controls and I 
-          // don't intend to start calculating them now...
-          this.alignMapToAngle(this.nextControl);
-          this.previousValidControlIndex = this.nextControl;
-          this.nextControl = this.getNextValidControl(this.nextControl);
-          if (this.nextControl === this.controlx.length) {
-            $("#btn-save-route").button("enable");
-          }
-        } else {
-          this.addRouteDataPoint(Math.round(x), Math.round(y));
-        }
-        // for now disable undo for events with no results
-        // needs some thought to handle new how splits and controls are added/removed
-        if (this.hasResults) {
-          $("#btn-undo").button("enable");
-        }
+        this.addRouteDataPoint(Math.round(x), Math.round(y));
       }
+      $("#btn-undo").button("enable");
       rg2.redraw(false);
-    },
-
-   getControlIndex : function (x, y) {
-      // called for a score event with no results to test if a drawn route has got to an unvisited control
-      var i;
-      for (i = 0; i < this.courseDetails.hasVisited.length; i = i + 1) {
-        if (!this.courseDetails.hasVisited[i]) {
-          if (this.closeEnough(x, y, this.courseDetails.x[i], this.courseDetails.y[i])) {
-            return i;
-          } 
-        }
-      }
-      return -1;
     },
 
     getNextValidControl : function (thisControl) {
@@ -568,30 +502,15 @@
       this.gpstrack.routeData.comments = $("#rg2-new-comments").val();
       this.gpstrack.routeData.controlx = this.controlx;
       this.gpstrack.routeData.controly = this.controly;
-      this.setVariant();
       // don't need start control so remove it
       this.gpstrack.routeData.controlx.splice(0, 1);
       this.gpstrack.routeData.controly.splice(0, 1);
       this.setDeltas();
       this.postRoute();
-    },
-
-    setVariant : function () {
-      var variant;
-      if (!this.hasResults && this.isScoreCourse) {
-        // only set variants array if this is a new variant that needs to be added
-        // back end assumes it can just add this to end of existng list of variants
-        // based on manager.js for now...
-        // allocate variantid based on what we have already loaded in results: allows us not to duplicate variant ids
-        // when adding results for score events with no results
-        variant = {};
-        variant.id = rg2.results.addVariant(this.controlsVisited, {x: this.controlx, y: this.controly});
-        variant.codes = this.controlsVisited;
-        variant.x = this.controlx;
-        variant.y = this.controly;
-        variant.courseid = this.courseDetails.courseid;
-        variant.name = 'Variant ' + variant.id;
-        this.gpstrack.routeData.variants = [variant];
+      // delete start split of this is a result being added
+      // we created an array with a 0 split for the start to make the drawing work, but the back end doesn't want it
+      if ((this.gpstrack.routeData.resultid === 0) || (this.gpstrack.routeData.resultid ==  rg2.GPS_RESULT_OFFSET)) {
+        this.gpstrack.routeData.splits.splice(0, 1);
       }
     },
 
@@ -694,15 +613,15 @@
     },
 
     // snapto: test if drawn route is close enough to control
-    closeEnough : function (x, y, targetx, targety) {
+    closeEnough : function (x, y) {
       var range;
       if (rg2.options.snap) {
         range = 8;
       } else {
         range = 2;
       }
-      if (Math.abs(x - targetx) < range) {
-        if (Math.abs(y - targety) < range) {
+      if (Math.abs(x - this.controlx[this.nextControl]) < range) {
+        if (Math.abs(y - this.controly[this.nextControl]) < range) {
           return true;
         }
       }
