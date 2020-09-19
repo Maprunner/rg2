@@ -95,9 +95,13 @@ class map
             // read to end of file to find last entry
             $oldid = 0;
             while (($olddata = fgetcsv($handle, 0, "|")) !== false) {
-                if (count($olddata) > 0) {
-                    $oldid = intval($olddata[0]);
+              // blank rows come back as a single null array entry so ignore them
+              if (count($olddata) > 1) {
+                // ids should be increasing anyway, but just in case...
+                if (intval($olddata[0]) > $oldid) {
+                  $oldid = intval($olddata[0]);
                 }
+              }
             }
             $newid = $oldid + 1;
         } else {

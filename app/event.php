@@ -211,12 +211,18 @@ class event
         $isScoreEvent = ($format == FORMAT_SCORE_EVENT) || ($format == FORMAT_SCORE_EVENT_NO_RESULTS);
         $write["status_msg"] = "";
         if (($handle = @fopen(KARTAT_DIRECTORY."kisat.txt", "r+")) !== false) {
-            // read to end of file to find last entry
-            $oldid = 0;
-            while (($olddata = fgetcsv($handle, 0, "|")) !== false) {
+          // read to end of file to find last entry
+          $oldid = 0;
+          while (($olddata = fgetcsv($handle, 0, "|")) !== false) {
+            // blank rows come back as a single null array entry so ignore them
+            if (count($olddata) > 1) {
+              // ids should be increasing anyway, but just in case...
+              if (intval($olddata[0]) > $oldid) {
                 $oldid = intval($olddata[0]);
+              }
             }
-            $newid = $oldid + 1;
+          }
+          $newid = $oldid + 1;
         } else {
             // create new kisat file
             $newid = 1;
