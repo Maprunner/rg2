@@ -1,7 +1,7 @@
 # Routegadget 2
 
 ## Latest news
-Version 1.5.9 was released on 27th April 2020 and is installed on all routegadget.co.uk sites. This includes various minor enhancements to support events that are set up with no results.
+Version 1.6.0 was released on 20th September 2020 and is installed on all routegadget.co.uk sites. This includes various minor enhancements, including an update to support course files from Condes 10.1 which uses a modified method of georeferencing.
 
 ## User Guide and Introductory Videos
 
