@@ -18,7 +18,9 @@
     },
 
     isValidCourseId: function (courseid) {
-      return courseid < this.courses.length;
+      // detects the unused entries in the courses array
+      // index 0 never used: some others not used if you only set up certain courses for a set of results
+      return courseid in this.courses;
     },
 
     getCoursesForEvent: function () {
@@ -42,6 +44,10 @@
 
     getCourseDetails: function (courseid) {
       return this.courses[courseid];
+    },
+
+    getCourseLegLengths: function (courseid) {
+      return this.courses[courseid].getLegLengths();
     },
 
     getNumberOfControlsOnCourse: function (courseid) {

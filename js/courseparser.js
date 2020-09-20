@@ -6,7 +6,7 @@
     this.newcontrols = new rg2.Controls();
     this.courses.length = 0;
     this.courseClassMapping.length = 0;
-    this.fromCondes = false;
+    this.fromOldCondes = false;
     this.coursesGeoreferenced = false;
     this.newcontrols.deleteAllControls();
     // holding copies of worldfiles: not ideal but it works
@@ -30,7 +30,11 @@
       }
       nodelist = xml.getElementsByTagName('CourseData');
       if (nodelist.length === 0) {
-        rg2.utils.showWarningDialog("XML file error", "File is not a valid XML course file. CourseData element missing.");
+        if (xml.documentElement.nodeName === "kml") {
+          this.processKMLCourses(xml);
+        } else {
+          rg2.utils.showWarningDialog("XML file error", "File is not a valid XML course file. CourseData element missing.");
+        }
         return;
       }
       version = this.getVersion(xml);
@@ -66,18 +70,29 @@
     },
 
     setCreator : function (text) {
-      // allow handling of files from Condes which use original worldfile rather than WGS-84 as expected by IOF scheme
+      var version;
+      // creator looks like "Condes version 10.1.1": need to extract version number
+      var introLength = 15;
+      // allow handling of files from Condes before v10.1 which use original worldfile rather than WGS-84 as expected by IOF scheme
       if (text.indexOf('Condes') > -1) {
-        this.fromCondes = true;
+        if (text.length > introLength) {
+          // parseFloat ignores everything from second decimal poin if it finds one
+          // so we will get something like 10.1 from 10.1.1
+          version = parseFloat(text.substring(introLength));
+          if (version < 10.1) {
+            this.fromOldCondes = true;
+          }
+        }
       }
     },
 
     processIOFV3XMLCourses : function (xml) {
       // extract all controls
-      var nodelist, i, code, pt, latlng;
+      var nodelist, i, code, pt, latlng, controls, control;
       nodelist = xml.getElementsByTagName('Control');
       // only need first-level Controls
       pt = {x: 0, y: 0};
+      controls = [];
       for (i = 0; i < nodelist.length; i += 1) {
         if (nodelist[i].parentNode.nodeName === 'RaceCourseData') {
           code = nodelist[i].getElementsByTagName("Id")[0].textContent;
@@ -92,6 +107,18 @@
           // don't want to save crossing points
           if (nodelist[i].getAttribute('type') !== 'CrossingPoint') {
             this.newcontrols.addControl(code.trim(), pt.x, pt.y);
+            control = {};
+            control.id = i;
+            if (latlng.length > 0) {
+              control.lat = parseFloat(latlng[0].getAttribute('lat'));
+              control.lng = parseFloat(latlng[0].getAttribute('lng')); 
+            } else {
+              control.lat = 0;
+              control.lng = 0;
+            }
+            control.x = pt.x;
+            control.y = pt.y;
+            controls.push(control);
           }
         }
       }
@@ -103,13 +130,49 @@
       this.extractV3CourseClassMapping(nodelist);
     },
 
+    processKMLCourses : function (xml) {
+      // reads OOM KML files: assumes we have a WGS-84 georeferenced map...
+      // extract all controls
+      var places, point, coords, code, pt, controls, control, i, codes, className, courseName, lat, lng;
+      controls = [];
+      this.coursesGeoreferenced = true;
+      places = xml.getElementsByTagName('Placemark');
+      for (i = 0; i < places.length; i = i + 1 ) {
+        pt = {};
+        code = places[i].getElementsByTagName('name')[0].childNodes[0].nodeValue.trim();
+        point = places[i].getElementsByTagName('Point')[0];
+        coords = point.getElementsByTagName('coordinates')[0].childNodes[0].nodeValue.trim().split(",");
+        lat = +coords[1];
+        lng = +coords[0];
+        pt.x = this.worldfile.getX(lng, lat);
+        pt.y = this.worldfile.getY(lng, lat);
+        this.newcontrols.addControl(code.trim(), pt.x, pt.y);
+        control = {};
+        control.id = i + 1;
+        control.lat = lat;
+        control.lng = lng;
+        control.x = pt.x;
+        control.y = pt.y;
+        controls.push(control);
+      }
+      // set up dummy score course
+      codes = [];
+      courseName = "Course 1";
+      className = "Course 1";
+      codes = this.newcontrols.controls.map(function (control) { return control.code;});
+      // courseid 0 for now: set when result mapping is known
+      this.courses.push({courseid: 0, x: [], y: [], codes: codes, name: courseName});   
+      this.courseClassMapping.push({'course': courseName, 'className': className});
+      $("#rg2-select-course-file").addClass('valid');
+    },
+
     getXYFromLatLng : function (latLng) {
       var lat, lng, pt;
       pt = {x: 0, y: 0};
       lat = parseFloat(latLng[0].getAttribute('lat'));
       lng = parseFloat(latLng[0].getAttribute('lng'));
-      // handle Condes-specific georeferencing
-      if (this.fromCondes) {
+      // handle old Condes-specific georeferencing
+      if (this.fromOldCondes) {
         // use original map worldfile
         pt.x = this.localWorldfile.getX(lng, lat);
         pt.y = this.localWorldfile.getY(lng, lat);

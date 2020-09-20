@@ -93,7 +93,7 @@ class event
                     }
                 }
 
-                $detail["format"] = intval($data[2]);
+                $detail["format"] = utils::getEventFormat(intval($detail["id"]), $data[2]);
                 // Issue #11: found a stray &#39; in a SUFFOC file
                 $name = utils::encode_rg_input($data[3]);
                 $detail["name"] = str_replace("&#39;", "'", $name);
@@ -206,15 +206,23 @@ class event
 
     public static function addNewEvent($data)
     {
-        $format = $data->format;
+        $format = self::setEventFormat($data->format);
+        $hasResults = ($format == FORMAT_NORMAL) || ($format == FORMAT_SCORE_EVENT);
+        $isScoreEvent = ($format == FORMAT_SCORE_EVENT) || ($format == FORMAT_SCORE_EVENT_NO_RESULTS);
         $write["status_msg"] = "";
         if (($handle = @fopen(KARTAT_DIRECTORY."kisat.txt", "r+")) !== false) {
-            // read to end of file to find last entry
-            $oldid = 0;
-            while (($olddata = fgetcsv($handle, 0, "|")) !== false) {
+          // read to end of file to find last entry
+          $oldid = 0;
+          while (($olddata = fgetcsv($handle, 0, "|")) !== false) {
+            // blank rows come back as a single null array entry so ignore them
+            if (count($olddata) > 1) {
+              // ids should be increasing anyway, but just in case...
+              if (intval($olddata[0]) > $oldid) {
                 $oldid = intval($olddata[0]);
+              }
             }
-            $newid = $oldid + 1;
+          }
+          $newid = $oldid + 1;
         } else {
             // create new kisat file
             $newid = 1;
@@ -255,7 +263,7 @@ class event
         }
 
         // create new ratapisteet file: control locations
-        if (($format == SCORE_EVENT_FORMAT) && (count($data->results) > 0)) {
+        if (($isScoreEvent) && (count($data->results) > 0)) {
             // score event with results so save variants
             for ($i = 0; $i < count($data->variants); $i++) {
                 $controls = $data->variants[$i]->id."|";
@@ -279,7 +287,7 @@ class event
 
         // create new hajontakanta file: control sequences for course variants
         // originally for score/relay only, but may be usable for butterflies in future
-        if (($format == SCORE_EVENT_FORMAT) && (count($data->results) > 0)) {
+        if (($isScoreEvent) && (count($data->results) > 0)) {
             // score event so save variants
             for ($i = 0; $i < count($data->variants); $i++) {
                 $controls = $data->variants[$i]->id."|".$data->variants[$i]->name."|";
@@ -311,7 +319,7 @@ class event
 
         // create new radat file: course drawing: RG2 uses this for score event control locations
         $course = "";
-        if (($format == SCORE_EVENT_FORMAT) && (count($data->results) > 0)) {
+        if (($isScoreEvent) && (count($data->results) > 0)) {
             // score event: one row per variant
             for ($i = 0; $i < count($data->variants); $i++) {
                 $a = $data->variants[$i];
@@ -447,6 +455,19 @@ class event
         }
 
         return($write);
+    }
+    
+    private static function setEventFormat($incomingFormat)
+    {
+      // RG2 supports format 4 but old Routegadget doesn't, so pretend it was type 2
+      // messy but should be OK (!?)
+      if ($incomingFormat == FORMAT_SCORE_EVENT_NO_RESULTS) {
+        // create file to show what is going on so we can send correct response to events request
+        // file contents irrelevant at the moment..
+        file_put_contents(KARTAT_DIRECTORY."format_".$newid.".txt", "format=4", FILE_APPEND);
+        return FORMAT_NORMAL_NO_RESULTS;
+      }
+      return $incomingFormat;
     }
 
     public static function getEventName($eventid)

@@ -151,11 +151,15 @@ class route
                 }
             }
 
+            $splits = "";
+            for ($i = 1; $i < count($data->splits); $i++) {
+              $splits .= $data->splits[$i].";";
+            }
             $newresultdata = $id."|".$data->courseid."|".utils::encode_rg_output($data->coursename)."|".$name;
             if ($id >= GPS_RESULT_OFFSET) {
-                $newresultdata .= "|".$data->startsecs."|||".$data->totaltime."||".$track.PHP_EOL;
+                $newresultdata .= "|".$data->startsecs."|||".$data->totaltime."|.".$splits."|".$track.PHP_EOL;
             } else {
-                $newresultdata .= "|".$data->startsecs."|||".$data->totaltime."|".$data->totalsecs.";|".PHP_EOL;
+                $newresultdata .= "|".$data->startsecs."|||".$data->totaltime."|".$splits."|".PHP_EOL;
             }
         }
 

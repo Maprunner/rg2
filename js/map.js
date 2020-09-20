@@ -8,14 +8,21 @@
   }
 
   function Georefs() {
+    var i, codes, params;
     this.georefsystems = [];
     this.georefsystems.push(new Georef("Not georeferenced", "none", ""));
     this.georefsystems.push(new Georef("GB National Grid", "EPSG:27700", "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs"));
     this.georefsystems.push(new Georef("Google EPSG:900913", "EPSG:900913", "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs"));
     if (rg2Config.epsg_code !== undefined) {
-      this.georefsystems.push(new Georef(rg2Config.epsg_code, rg2Config.epsg_code.replace(" ", ""), rg2Config.epsg_params));
-      this.defaultGeorefVal = rg2Config.epsg_code.replace(" ", "");
+      // if more than one user-defined then they come in as |-separated strings
+      codes = rg2Config.epsg_code.split("|");
+      params = rg2Config.epsg_params.split("|");
+      for (i = 0; i <codes.length; i = i + 1) {
+        this.georefsystems.push(new Georef(codes[i].replace(" ", ""), codes[i].replace(" ", ""), params[i]));
+      }
+      this.defaultGeorefVal = codes[0].replace(" ", "");
     } else {
+      // default to GB National Grid
       this.defaultGeorefVal = "EPSG:27700";
     }
   }

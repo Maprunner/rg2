@@ -299,7 +299,7 @@
 
     setNameAndTime : function () {
       // callback for an entered name when no results available
-      var time, name;
+      var time, name, distanceSoFar, length, splits, i;
       name = $("#rg2-name-entry").val();
       if (name) {
         $("#rg2-name").addClass('valid');
@@ -323,7 +323,14 @@
         this.gpstrack.routeData.time[0] = rg2.utils.getSecsFromHHMMSS(time);
         this.gpstrack.routeData.totalsecs = rg2.utils.getSecsFromHHMMSS(time);
         this.nextControl = 1;
-        this.gpstrack.routeData.splits = [0, this.gpstrack.routeData.totalsecs];
+        distanceSoFar = rg2.courses.getCourseLegLengths(this.gpstrack.routeData.courseid);
+        length = distanceSoFar[distanceSoFar.length - 1];
+        // generate pro rata splits
+        splits = [];
+        for (i = 0; i < distanceSoFar.length; i = i + 1) {
+          splits[i] = parseInt((distanceSoFar[i] / length * this.gpstrack.routeData.totalsecs), 10);
+        }
+        this.gpstrack.routeData.splits = splits;
         this.previousValidControlIndex = 0;
         rg2.redraw(false);
         this.startDrawing();
@@ -500,6 +507,11 @@
       this.gpstrack.routeData.controly.splice(0, 1);
       this.setDeltas();
       this.postRoute();
+      // delete start split of this is a result being added
+      // we created an array with a 0 split for the start to make the drawing work, but the back end doesn't want it
+      if ((this.gpstrack.routeData.resultid === 0) || (this.gpstrack.routeData.resultid ==  rg2.GPS_RESULT_OFFSET)) {
+        this.gpstrack.routeData.splits.splice(0, 1);
+      }
     },
 
     setDeltas : function () {
