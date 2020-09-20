@@ -44,7 +44,7 @@
     DIM: 0.75,
     FULL_INTENSITY: 1.0,
      // version gets set automatically by grunt file during build process
-    RG2VERSION: '1.5.9',
+    RG2VERSION: '1.6.0',
     TIME_NOT_FOUND: 9999,
     // values for evt.which
     RIGHT_CLICK: 3,
