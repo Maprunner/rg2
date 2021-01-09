@@ -353,6 +353,9 @@ class route
         // Split Nxx;-yy,0Nxxx;-yy,0N.. into x,y arrays
         // but note that sometimes you don't get the ,0
 
+        // Issue #476: turns out the other Routegadget now provides non-integer values for xx and yy so these need to be rounded.
+        // Otherwise you get a strange incremental offset along the route.
+
         // handle empty coord string: found some examples in Jukola files
         // 5 is enough for one coordinate set, but the problem files just had "0"
         if (strlen($coords) < 5) {
@@ -366,12 +369,12 @@ class route
         foreach ($xy as $point) {
             $temp = explode(";", $point);
             if (count($temp) == 2) {
-                $x[] = $temp[0];
+                $x[] = round($temp[0]);
                 // strip off trailing ,0 if it exists
                 $temp[1] = str_replace(",0", "", $temp[1]);
                 // y value should be negative (apparently...) but sometimes isn't for old files
                 if ((substr($temp[1], 0, 1) === "-") && (strlen($temp[1]) > 1)) {
-                    $y[] = substr($temp[1], 1);
+                    $y[] = round(substr($temp[1], 1));
                 } else {
                     return array(false, [], []);
                 }
