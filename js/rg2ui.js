@@ -61,8 +61,7 @@
 
     // called whenever the active tab changes to tidy up as necessary
     tabActivated: function () {
-      var active = $("#rg2-info-panel").tabs("option", "active");
-      switch (active) {
+      switch (this.getActiveTab()) {
         case rg2.config.TAB_DRAW:
           rg2.courses.removeAllFromDisplay();
           rg2.drawing.showCourseInProgress();
@@ -70,6 +69,12 @@
         default:
           break;
       }
+
+      // Set scroll bar position in tab to how it was when 
+      // user was last looking at it
+      var scrollPos = $("#rg2-info-panel").attr(this.getScrollPosAttrName());
+      $("#rg2-event-tab-body").scrollParent().scrollTop(scrollPos);
+
       rg2.redraw(false);
     },
 
@@ -580,9 +585,21 @@
       });
     },
 
+    getScrollPosAttrName: function () {
+      return `scroll-${this.getActiveTab()}`;
+    },
+
+    getActiveTab: function () {
+      return $("#rg2-info-panel").tabs("option", "active");
+    },
+
     setUIEventHandlers: function () {
       var text, newlang, self;
       self = this;
+      $("#rg2-info-panel-tab-body").scroll(function () {
+        // Save current scroll bar position in tab
+        $("#rg2-info-panel").attr(self.getScrollPosAttrName(), $(this).scrollTop());
+      });
       $("#rg2-resize-info").click(function () {
         rg2.resizeInfoDisplay();
       });
