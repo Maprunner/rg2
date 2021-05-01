@@ -106,7 +106,7 @@ module.exports = function (grunt) {
     sync: {
       rel: {
         files: [{
-          src: ['rg2api.php', 'index.php', 'app/**', 'html/**', 'img/favicon.ico'],
+          src: ['rg2api.php', 'index.php', 'app/**', 'html/**', 'img/favicon.ico', 'img/manifest.json'],
           dest: 'rel/'
         }],
         verbose: true,
