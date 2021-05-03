@@ -106,7 +106,7 @@ module.exports = function (grunt) {
     sync: {
       rel: {
         files: [{
-          src: ['rg2api.php', 'index.php', 'app/**', 'html/**', 'img/favicon.ico'],
+          src: ['rg2api.php', 'index.php', 'app/**', 'html/**', 'img/favicon.ico', 'img/manifest.json'],
           dest: 'rel/'
         }],
         verbose: true,
@@ -153,7 +153,7 @@ module.exports = function (grunt) {
         cwd: 'rel/',
         expand: true,
         src: '**',
-        dest: 'ftpsite/' + club + '/rg2/'
+        dest: 'website/' + club + '.routegadget.co.uk/public_html/rg2/'
       }],
       verbose: true, // Default: false
       pretend: false, // Don't do any disk operations - just write log. Default: false
@@ -169,7 +169,7 @@ module.exports = function (grunt) {
       cwd: 'rel/',
       expand: true,
       src: '**',
-      dest: 'ftpsite/clok/gadget/rg2/'
+      dest: 'website/clok.routegadget.co.uk/public_html/gadget/rg2/'
     }],
     verbose: true, // Default: false
     pretend: false, // Don't do any disk operations - just write log. Default: false

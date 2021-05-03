@@ -8,17 +8,17 @@
  */
   // Location of directory where Routegadget is installed.
   // This should have /kartat and /rg2 sub-directories.
-  define('RG_BASE_DIRECTORY', 'http://www.happyherts.routegadget.co.uk');
+  define('RG_BASE_DIRECTORY', 'https://www.happyherts.routegadget.co.uk');
   
   // override to allow js and css to be loaded from a separate location if needed
   // probably only relevant for routegadget.co.uk to avoid 100 copies of source files
-  //define('OVERRIDE_SOURCE_DIRECTORY', 'http://www.routegadget.co.uk');
+  //define('OVERRIDE_SOURCE_DIRECTORY', 'https://www.routegadget.co.uk');
 
   // allow relocating kartat directory: only intended for development environment using localhost
   // define('OVERRIDE_KARTAT_DIRECTORY', '../rg2-test-data/hh/kartat/');
   
   // location of Splitsbrowser files if required: see Wiki for details of how to install Splitsbrowser
-  define('SPLITSBROWSER_DIRECTORY', 'http://www.routegadget.co.uk/splitsbrowser');
+  define('SPLITSBROWSER_DIRECTORY', 'https://www.routegadget.co.uk/splitsbrowser');
   
   // default language if not English: this is overridden if the query includes a language (e.g. ?lang=fi)
   // requires a dictionary file xx.js in the lang directory

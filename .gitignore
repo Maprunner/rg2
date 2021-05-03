@@ -8,6 +8,7 @@ log
 node_modules
 rel
 ftpsite
+website
 .ftppass
 test
 karma.conf.js
