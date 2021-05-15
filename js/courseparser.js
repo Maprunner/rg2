@@ -13,6 +13,7 @@
     this.localWorldfile = localWorldfile;
     this.worldfile = worldfile;
     this.processCoursesXML(evt.target.result);
+    this.addControlCount();
     return {courses: this.courses, newcontrols: this.newcontrols, mapping: this.courseClassMapping, georeferenced: this.coursesGeoreferenced};
   }
 
@@ -301,7 +302,15 @@
         }
       }
       return false;
-    }
+    },
+
+    addControlCount : function () {
+      var i;
+      for (i = 0; i < this.courses.length; i += 1) {
+        // codes include S and F so need to subtract 2 from length
+        this.courses[i].controlcount = this.courses[i].codes.length - 2;
+      }
+   }
   };
   rg2.CourseParser = CourseParser;
 }());

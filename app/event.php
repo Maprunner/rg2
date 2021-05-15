@@ -709,15 +709,33 @@ class event
       utils::unlockDatabase();
     }
   }
-  public static function fixSplits($id) 
+  public static function areSplitsBroken() 
+  {
+    $answer = "Splits broken for events: ";
+    if (($handle = @fopen(KARTAT_DIRECTORY . "kisat.txt", "r")) !== false) {
+      while (($data = fgetcsv($handle, 0, "|")) !== false) {
+        if (count($data) > 2) {
+          if ($data[2] == "1") {
+            $id = intval($data[0]);
+            if (self::fixSplits($id, false)) {
+              $answer .= $id . ": ";
+            }
+          }
+        }
+      }
+    }
+    return $answer;
+  }
+  public static function fixSplits($id, $doUpdate) 
   {
     // modifies splits when they have been produced from non-compliant IOF XML files such as eTiming
     // which include a split time for the finish
     // 100;200;300;400;400 needs to become 100;200;300;400
     // called as rg2api?id=xx&type=fixsplits
+    $fixNeeded = false;
     if (utils::lockDatabase() !== false) {
       $updatedfile = array();
-      $oldfile = file(KARTAT_DIRECTORY."kilpailijat_".$id.".txt");
+      $oldfile = @file(KARTAT_DIRECTORY."kilpailijat_".$id.".txt");
       $coursecount = 0;
       $courses = array();
       $controls = array();
@@ -732,36 +750,39 @@ class event
         }
         fclose($handle);
       }
-      foreach ($oldfile as $row) {
-        $data = explode("|", $row);
-        // modify splits in data[8]
-        $expectedsplits = 0;
-        if ($data[2]) {
-          for ($i = 0; $i < count($courses); $i++) {
-            if ($data[2] === $courses[$i]) {
-              // expect to see a split per control plus one for the finish in this internal representation
-              $expectedsplits = $controls[$i] + 1;
+      if ($oldfile) {
+        foreach ($oldfile as $row) {
+          $data = explode("|", $row);
+          // modify splits in data[8]
+          $expectedsplits = 0;
+          if ($data[2]) {
+            for ($i = 0; $i < count($courses); $i++) {
+              if ($data[2] === $courses[$i]) {
+                // expect to see a split per control plus one for the finish in this internal representation
+                $expectedsplits = $controls[$i] + 1;
+              }
             }
           }
-        }
-        if ($data[8]) {
-          $temp = rtrim($data[8], ";");
-          // split array at ; and force to integers
-          $splits = array_map('intval', explode(";", $temp));
-          $count = count($splits);
-          // only adjust if we have exactly one too many: may miss a few edge cases but makes it safer overall
-          if ($count === ($expectedsplits + 1)) {
-            // remove penultimate split since just for fun eTiming can also manage
-            // to produce a valid result with no splits times giving 0;0;..0;0;1234
-            // and we want to keep the final split
-            $splits[$count - 2] = $splits[$count - 1];
-            // reconstruct ;-separated list
-            $data[8] = "";
-            for ($i = 0; $i < $expectedsplits; $i++) {
-              $data[8] .= $splits[$i].";";
+          if (($expectedsplits > 1) && ($data[8])) {
+            $temp = rtrim($data[8], ";");
+            // split array at ; and force to integers
+            $splits = array_map('intval', explode(";", $temp));
+            $count = count($splits);
+            // only adjust if we have exactly one too many: may miss a few edge cases but makes it safer overall
+            if ($count === ($expectedsplits + 1)) {
+              // remove penultimate split since just for fun eTiming can also manage
+              // to produce a valid result with no splits times giving 0;0;..0;0;1234
+              // and we want to keep the final split
+              $splits[$count - 2] = $splits[$count - 1];
+              // reconstruct ;-separated list
+              $data[8] = "";
+              for ($i = 0; $i < $expectedsplits; $i++) {
+                $data[8] .= $splits[$i].";";
+              }
+              // don't want the terminating ;
+              $data[8] = substr_replace($data[8] ,"", -1);
+              $fixNeeded = true;
             }
-            // don't want the terminating ;
-            $data[8] = substr_replace($data[8] ,"", -1);
           }
           $row = "";
           // reconstruct |-separated row
@@ -775,8 +796,11 @@ class event
           $updatedfile[] = $row;
         }
       }
-      $status = file_put_contents(KARTAT_DIRECTORY."kilpailijat_".$id.".txt", $updatedfile);
+      if ($doUpdate) {
+        $status = file_put_contents(KARTAT_DIRECTORY."kilpailijat_".$id.".txt", $updatedfile);
+      }
       utils::unlockDatabase();
+      return $fixNeeded;
     }
   }
 }

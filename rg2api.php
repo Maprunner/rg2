@@ -186,8 +186,12 @@ function handleGetRequest($type, $id)
     event::fixResults($id);
     $output = json_encode("Results fixed for event ".$id);
     break;
+  case 'aresplitsbroken':
+    $answer = event::areSplitsBroken();
+    $output = json_encode($answer);
+    break;
   case 'fixsplits':
-    event::fixSplits($id);
+    event::fixSplits($id, true);
     $output = json_encode("Splits fixed for event ".$id);
     break;
   default:
