@@ -2,6 +2,100 @@
 /*global rg2Config:false */
 (function () {
   var utils =  {
+
+    oauthpopup : function (options){
+      // Open another window for oauth authorisation. Pass token back to main window when successful.
+      options.windowName = options.windowName ||  'ConnectWithOAuth'; // should not include space for IE
+      options.windowOptions = options.windowOptions || 'location=0,status=0,width=800,height=400';
+      options.callback = options.callback || function(){ window.location.reload(); };
+      var that = this;
+      console.log(options.path);
+      that._oauthWindow = window.open(options.path, options.windowName, options.windowOptions);
+      that._oauthInterval = window.setInterval(function(){
+  
+      var activities = '';
+      
+      if (that._oauthWindow.document.body.innerHTML.startsWith('{"access_token":')){
+        activities = that._oauthWindow.document.body.innerHTML;
+        that._oauthWindow.close();
+      } 
+      
+      if (that._oauthWindow.closed) {
+              window.clearInterval(that._oauthInterval);
+              options.callback(activities);
+          }
+      }, 1000);
+    },
+
+    addStravaActivitySelector: function (elementId, activityId, name, token, type, dt){
+
+      //Reformat string as date
+      dat = dt.substring(0,10)+ " "+ dt.substring(11,16)
+
+      //create button elements
+      var border = document.createElement("div");
+      border.className= 'border';
+
+      var act = document.createElement("div");
+      act.className= 'grid-container';
+      
+      var actTitle = document.createElement("span");
+	    actTitle.setAttribute("id", "act-title");
+	    actTitle.innerText = name;
+	    act.appendChild(actTitle);
+
+      var actType = document.createElement("span");
+	    actType.setAttribute("id", "act-type");
+	    actType.innerText = type;
+	    act.appendChild(actType);
+
+      var actDate = document.createElement("span");
+	    actDate.setAttribute("id", "act-date");
+	    actDate.innerText = dat;
+	    act.appendChild(actDate);
+
+      var btn = document.createElement("span");
+	    btn.setAttribute("id", "act-btn");
+      btn.className = "act-btn";
+	    btn.innerText = 'Add';
+	    act.appendChild(btn);
+
+      //request activity stream onclick and load to interface.
+      btn.onclick = function() {
+        btn.innerText = "Added";
+
+        //disable other buttons
+        var cusid_ele = document.getElementsByClassName('act-btn');
+        for (var i = 0; i < cusid_ele.length; ++i) {
+          var item = cusid_ele[i];  
+          if (item.innerText === 'Add'){
+            //hide other buttons. Not strictly necessary as clicking different add will override
+            //but probably more obvious to the user if we don't allow it?
+            item.style.visibility = 'hidden';
+          } else {
+            //disable Added button
+            item.style.pointerEvents = 'none';
+          }
+        }
+
+        // get activity stream
+        $.getJSON(rg2Config.json_url, {
+          type : "stravaActivityStream",
+          id : activityId+'|'+token,
+          cache : false
+        }).done(function (json) {
+          rg2.drawing.uploadStrava(json);
+        }).fail(function (jqxhr, textStatus, error) {
+          /*jslint unparam:true*/
+          reportJSONFail("Activities request failed: " + error);
+        });
+      }
+      
+      border.appendChild(act);
+      document.getElementById(elementId).appendChild(border);
+      
+    },
+
     rotatePoint : function (x, y, angle) {
       // rotation matrix: see http://en.wikipedia.org/wiki/Rotation_matrix
       var pt = {};

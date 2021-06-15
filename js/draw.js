@@ -28,6 +28,10 @@
       this.gpstrack.uploadGPS(evt);
     },
 
+    uploadStrava : function (evt) {
+      this.gpstrack.uploadStrava(evt);
+    },
+
     getControlXY : function () {
       return {x: this.controlx, y: this.controly};
     },
@@ -341,6 +345,7 @@
       $("#btn-three-seconds").button('enable');
       // setting value to null allows you to open the same file again if needed
       $("#rg2-load-gps-file").val(null).button('enable');
+      $("#btn-get-strava").button('enable');
       rg2.redraw(false);
     },
 
