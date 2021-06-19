@@ -33,32 +33,36 @@
       dat = dt.substring(0,10)+ " "+ dt.substring(11,16)
 
       //create button elements
-      var border = document.createElement("div");
-      border.className= 'border';
+      tr = document.getElementById(elementId).insertRow();
 
-      var act = document.createElement("div");
-      act.className= 'grid-container';
+      var td = tr.insertCell();
       
       var actTitle = document.createElement("span");
 	    actTitle.setAttribute("id", "act-title");
 	    actTitle.innerText = name;
-	    act.appendChild(actTitle);
+	    td.appendChild(actTitle);
+
+      var td = tr.insertCell();
 
       var actType = document.createElement("span");
 	    actType.setAttribute("id", "act-type");
 	    actType.innerText = type;
-	    act.appendChild(actType);
+	    td.appendChild(actType);
+
+      var td = tr.insertCell();
 
       var actDate = document.createElement("span");
 	    actDate.setAttribute("id", "act-date");
 	    actDate.innerText = dat;
-	    act.appendChild(actDate);
+	    td.appendChild(actDate);
 
-      var btn = document.createElement("span");
+      var td = tr.insertCell();
+
+      var btn = document.createElement("button");
 	    btn.setAttribute("id", "act-btn");
       btn.className = "act-btn";
 	    btn.innerText = 'Add';
-	    act.appendChild(btn);
+	    td.appendChild(btn);
 
       //request activity stream onclick and load to interface.
       btn.onclick = function() {
@@ -89,10 +93,7 @@
           /*jslint unparam:true*/
           reportJSONFail("Activities request failed: " + error);
         });
-      }
-      
-      border.appendChild(act);
-      document.getElementById(elementId).appendChild(border);
+      }      
       
     },
 

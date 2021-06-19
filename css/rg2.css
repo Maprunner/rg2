@@ -406,54 +406,6 @@ html, body {
   display: table-cell;
 }
 
-.border{
-  padding: 2px;
-}
-
-.grid-container {
-  border: 1px solid silver;
-  border-radius: 3px;
-  display: grid;
-  grid-template-areas:
-    'top top btn'
-    'left right btn';
-  grid-gap: 1px;
-  background-color: white;
-  padding: 2px;
-}
-
-.grid-container > span {
-  background-color: white;
-  text-align: left;
-  padding: 1px 1px 1px 1px;
-  font-size: 12px;
-}
-
-#act-title{
-  text-align:left;
-  font-weight: bold;
-  grid-area:top;
-}
-
-#act-type{
-  grid-area:left;
-}
-
-#act-date{
-  grid-area:right;
-}
-
-#act-btn{
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border: 1px solid darkslategrey;
-  border-radius: 3px;
-  background-color: silver;
-  grid-area:btn;
-}
-
-
 #rg2-manage-edit .ui-button {
 	margin-top: 10px;
   margin-bottom: 10px;
