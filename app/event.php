@@ -36,6 +36,12 @@ class event
             $all['results'] = result::getResultsForEvent($id);
             $all['routes'] = route::getRoutesForEvent($id);
             $all['API version'] = RG2VERSION;
+            if (defined('STRAVA_SECRET')){
+                $all['strava'] = 'true';
+            } else {
+                $all['strava'] = 'false';
+            }
+
             $output = json_encode($all);
             @file_put_contents(CACHE_DIRECTORY."all_".$id.".json", $output);
         }

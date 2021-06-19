@@ -11,6 +11,7 @@
   require(dirname(__FILE__) . '/app/splitsbrowser.php');
   require(dirname(__FILE__) . '/app/user.php');
   require(dirname(__FILE__) . '/app/utils.php');
+  require(dirname(__FILE__) . '/app/strava.php');
 
   require_once(dirname(__FILE__) . '/rg2-config.php');
 
@@ -55,18 +56,25 @@
   } else {
       $id = 0;
   }
-
-  if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-      handleGetRequest($type, $id);
-  } elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
-      if ($type == 'uploadmapfile') {
-          map::uploadMapFile();
-      } else {
-          handlePostRequest($type, $id);
-      }
+  if (isset($_GET['code'])) {
+      $code = $_GET['code'];
   } else {
-      header('HTTP/1.1 405 Method Not Allowed');
-      header('Allow: GET, POST');
+      $code = 'unknown';
+  }
+
+  if ($_SERVER['REQUEST_METHOD'] == 'GET' && $code == 'unknown') {
+    handleGetRequest($type, $id);
+  } elseif ($_SERVER['REQUEST_METHOD'] == 'GET' && $code !== 'unknown') {
+    strava::getStravaActivities($code);
+  } elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    if ($type == 'uploadmapfile') {
+        map::uploadMapFile();
+    } else {
+        handlePostRequest($type, $id);
+    }
+  } else {
+    header('HTTP/1.1 405 Method Not Allowed');
+    header('Allow: GET, POST');
   }
 
 function handlePostRequest($type, $eventid)
@@ -186,6 +194,9 @@ function handleGetRequest($type, $id)
     event::fixResults($id);
     $output = json_encode("Results fixed for event ".$id);
     break;
+  case 'stravaActivityStream':
+      $output = strava::getActivityStream($id);
+      break;
   default:
     utils::rg2log("Get request not recognised: ".$type.", ".$id);
     $output = json_encode("Request not recognised.");

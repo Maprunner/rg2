@@ -145,6 +145,7 @@
       $("#btn-reset-drawing").button().button("disable").click(function () {
         rg2.drawing.resetDrawing();
       });
+      $("#btn-get-strava").button().button("disable");
       $("#btn-save-gps-route").button().button("disable").click(function () {
         rg2.drawing.saveGPSRoute();
       });
@@ -663,6 +664,34 @@
       $("#rg2-load-gps-file").change(function (evt) {
         rg2.drawing.uploadGPS(evt);
       });
+
+      $("#btn-get-strava").click(function(){
+        //open oauth popup. return list of latest activities.
+        rg2.utils.oauthpopup({
+        path: 'https://www.strava.com/oauth/authorize?client_id=65468&response_type=code&redirect_uri='+window.location.protocol+'//'+window.location.hostname+'/rg2/rg2api.php&approval_prompt=force&scope=activity:read_all',
+        callback: function(activities){
+  
+            //parse the returned json
+            var activ = JSON.parse(activities);
+            var act =  activ.activities;
+            var token = activ.access_token;
+            
+            //reset div to empty
+            document.getElementById('strava-activities').innerHTML = '';
+            //disable load button
+            $("#btn-get-strava").button("disable");
+ 
+            //add current activities to div so user can select one
+            //limit to 10
+            for (var i=0; i<10; i++){
+              var a = act[i];
+              var activityId = a.id.toString()
+              rg2.utils.addStravaActivitySelector('strava-activities', activityId, a.name, token, a.type, a.start_date_local);
+            }
+          }
+        });
+      });
+
     },
 
     configureUI: function () {

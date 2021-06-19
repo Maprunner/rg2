@@ -127,6 +127,9 @@
       rg2.courses.generateControlList(rg2.controls);
       $("#btn-toggle-controls").show();
       $("#btn-toggle-names").show();
+      if (json.data.strava ==='false'){
+        $("#btn-get-strava").hide();
+      }
       processResults(json);
       processGPSTracks(json);
       rg2.eventLoaded();
