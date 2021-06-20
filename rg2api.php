@@ -112,6 +112,13 @@ function handlePostRequest($type, $eventid)
         @unlink(CACHE_DIRECTORY."stats.json");
        break;
 
+      case 'updateresults':
+          // this a modified editevent function
+        $write = result::updateResults($eventid, $data);
+        @unlink(CACHE_DIRECTORY."events.json");
+        @unlink(CACHE_DIRECTORY."stats.json");
+        break;
+
       case 'deleteroute':
           // this is the manager delete function
         $write = route::deleteRoute($eventid);

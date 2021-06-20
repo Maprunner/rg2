@@ -193,6 +193,196 @@ class result
         return false;
     }
 
+    public static function updateResults($eventid, $data){
+
+		$date = date("Y-m-dTHis");
+
+		utils::rg2log($_SERVER['DOCUMENT_ROOT']."/kartat/kilpailijat_".$eventid."_rm_".$date.".txt");
+
+		// Renaming doesn't work because of locks so copy and write empty
+		@rename($_SERVER['DOCUMENT_ROOT']."/kartat/kilpailijat_".$eventid.".txt",
+			$_SERVER['DOCUMENT_ROOT']."/kartat/kilpailijat_".$eventid."_rm_".$date.".txt");
+		@rename($_SERVER['DOCUMENT_ROOT']."/kartat/merkinnat_".$eventid.".txt",
+			$_SERVER['DOCUMENT_ROOT']."/kartat/merkinnat_".$eventid."_rm_".$date.".txt");
+		@rename($_SERVER['DOCUMENT_ROOT']."/kartat/kommentit_".$eventid.".txt",
+			$_SERVER['DOCUMENT_ROOT']."/kartat/kommentit_".$eventid."_rm_".$date.".txt");
+
+
+		// create new kilpailijat file: results
+
+		for ($i = 0; $i < count($data->results); $i++) {
+		    $a = $data->results[$i];
+
+			// save position and status if we got them
+			if (isset($a->position)) {
+				$position = $a->position;
+			} else {
+				$position = '';
+			}
+			if (isset($a->status)) {
+				$status = utils::abbreviateStatus($a->status);
+			} else {
+				$status = '';
+			}
+
+			// course provided by json is actually result class - update to course name
+			// based on mapping, and load to txt file if not "Do not save"
+
+			$coursename = "";
+			$courseid = "";
+			if (($handle = @fopen(KARTAT_DIRECTORY."mappings_".$eventid.".txt", "r")) !== false) {
+				while (($sa_data = fgetcsv($handle, 0, "|")) !== false) {
+					if (utils::encode_rg_output($a->course) == $sa_data[0]) {
+						$coursename = $sa_data[1];
+						$courseid = $sa_data[2]; 
+						break;
+					}
+				}
+			}
+
+			if($coursename !== "Do not save"){
+				$result = ($i + 1)."|".$courseid."|".utils::encode_rg_output($coursename);
+				$result .= "|".utils::encode_rg_output(trim($a->name))."|".$a->starttime."|";
+				// abusing dbid to save status and position
+				$result .= utils::encode_rg_output($a->dbid)."_#".$position."#".$status;
+				$result .= "|".$a->variantid."|".$a->time."|".$a->splits.PHP_EOL;
+				file_put_contents(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt", $result, FILE_APPEND);
+			}
+		}
+
+		// Get orig and new resultid so we can replace them in comments and routes files
+		// 1|1|C2|Bridget Anderson|35700|121_#1#OK||00:51:36|
+
+		$kilpailijat = array();
+
+		if (($oldres = @fopen(KARTAT_DIRECTORY."kilpailijat_".$eventid."_rm_".$date.".txt", "r")) !== false) {
+			while (($old = fgetcsv($oldres, 0, "|")) !== false) {
+
+				if (($newres = @fopen(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt", "r")) !== false) {
+					while (($new = fgetcsv($newres, 0, "|")) !== false) {
+
+						if ($new[3] == $old[3] && $new[2] == $old[2]){
+
+							$row = array();
+							$row["origresultid"] = $old[0];
+							$row["newresultid"] = $new[0];
+							$row["origcourseid"] = $old[1];
+							$row["newcourseid"] = $new[1];
+							$row["coursename"] = $old[2];
+							$row["name"] = $old[3];
+							$kilpailijat[] = $row;
+
+							break;
+						}
+					}
+				}
+			}
+		}
+
+		// Fix for GPS routes - not included in new file
+		if (($oldres = @fopen(KARTAT_DIRECTORY."kilpailijat_".$eventid."_rm_".$date.".txt", "r")) !== false) {
+			while (($old = fgetcsv($oldres, 0, "|")) !== false) {
+				if (strpos($old[3], 'GPS ') !== false){
+
+					// Get the current Id for the non-GPS record
+							
+					foreach ($kilpailijat as $kil){
+
+						if (substr($old[3], 5, -1) == $kil["name"] && 
+							$old[2] == $kil["coursename"]){
+
+							utils::rg2log($old[3]);
+								
+							$row = array();
+							$row["origresultid"] = $old[0];
+							$row["newresultid"] = 100000 + $kil["newresultid"];
+							$row["origcourseid"] = $old[1];
+							$row["newcourseid"] = $kil["newcourseid"];
+							$row["coursename"] = $old[2];
+							$row["name"] = $old[3];
+							$kilpailijat[] = $row;
+
+							$result = $row["newresultid"]."|".$row["newcourseid"]."|".$row["coursename"];
+							$result .= "|".$row["name"]."|".$old[4]."|||".$old[7]."||".$old[9].PHP_EOL;
+							// doesn't save all params - see  "abusing dbid to save status and position" comment above
+
+							file_put_contents(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt", $result, FILE_APPEND);
+
+							break;
+						}
+					}
+				}
+			}
+		}
+
+		utils::rg2log(json_encode($kilpailijat));
+
+
+		// Recreate kommentit file
+		// Replace old course id and result id with ones from new kilpailijat file
+		// Kommentit format:  2|34|Jake Hanson||test
+
+		$updatedfile = array();
+		$oldfile = file(KARTAT_DIRECTORY."kommentit_".$eventid."_rm_".$date.".txt");
+		foreach ($oldfile as $oldrow) {
+		    $olddata = explode("|", $oldrow);
+
+		    foreach ($kilpailijat as $k){
+    			if ($k["origresultid"] == $olddata[1]){
+
+    			    $row = $k["newcourseid"]."|".$k["newresultid"]."|".$olddata[2]."||".$olddata[4];
+
+    			    $updatedfile[] = $row;
+
+    			    break;
+
+    			}
+		    }
+		}
+        $status = file_put_contents(KARTAT_DIRECTORY."kommentit_".$eventid.".txt", $updatedfile);
+        utils::rg2log("Updated route comments file ");
+
+		// Recreate merkinnat file
+		// Replace old course id and result id with ones from new kilpaijat file
+		// Merkinnat format: 2|34|Jake Hanson|null|Semicolon-separated results
+
+		$updatedfile = array();
+		$oldfile = file(KARTAT_DIRECTORY."merkinnat_".$eventid."_rm_".$date.".txt");
+		foreach ($oldfile as $oldrow) {
+		    $olddata = explode("|", $oldrow);
+
+		    foreach ($kilpailijat as $k){
+    			if ($k["origresultid"] == $olddata[1]){
+
+    			    $row = $k["newcourseid"]."|".$k["newresultid"]."|".$olddata[2]."|null|".$olddata[4];
+
+    			    $updatedfile[] = $row;
+
+    			    break;
+
+    			}
+		    }
+		}
+        $status = file_put_contents(KARTAT_DIRECTORY."merkinnat_".$eventid.".txt", $updatedfile);
+        utils::rg2log("Updated routes file ");
+
+		// Yeah just skipping this for now
+		// @TODO
+		//Also fix login thing
+        $write["status_msg"] = "";
+
+		if ($write["status_msg"] == "") {
+		    $write["ok"] = true;
+		    $write["status_msg"] = "Results updated.";
+		} else {
+		    $write["ok"] = false;
+		}
+		utils::rg2log("Updated results file ");
+		return $write;
+
+		utils::unlockDatabase();
+    }
+
     private static function sortResultsByCourseThenTime($a, $b)
     {
       if (intval($a["courseid"]) !== intval($b["courseid"])) {

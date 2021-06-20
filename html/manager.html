@@ -55,6 +55,7 @@
     <span>Move map and controls together <input type="checkbox" id="btn-move-map-and-controls"></span>
   </div>
   <div id="rg2-course-allocations"></div>
+  <button type="button" id="btn-add-fieldmapping">Add mapping</button>
   <hr class="rg2-hr">
   <div>
     <span>Read-only (enable drawing via "Edit event" tab) <input type="checkbox" id="chk-read-only"></span>
@@ -94,6 +95,12 @@
       <select id="rg2-route-selected"></select>
       <br/>
       <button type="button" class="manage-file-label" id="btn-delete-route">Delete</button>
+    </div>
+    <div>
+        <hr class="rg2-hr">
+        <h3 class="no-top-margin">Update results</h3>
+        <span>Results file<input type='file' accept='.csv, .xml' id='rg2-update-results-file' class="pushright manage-file-input" /></span>
+        <button type="button" class="manage-file-label" id="btn-update-results">Update results</button>
     </div>
     <hr class="rg2-hr">
     <h3 class="no-top-margin">Delete event</h3>
