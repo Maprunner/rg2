@@ -137,7 +137,7 @@
       $("#rg2-event-level-edit").val(event.rawtype);
       $("#rg2-edit-event-comments").empty().val(rg2.he.decode(event.comment));
       $("#chk-edit-read-only").prop("checked", event.locked);
-      rg2.utils.setButtonState("enable", ["#btn-delete-event", "#btn-update-event", "#btn-delete-route"]);
+      rg2.utils.setButtonState("enable", ["#btn-delete-event", "#btn-update-event", "#btn-delete-route", "#btn-update-results"]);
       this.createRouteDeleteDropdown(event.id);
     },
 

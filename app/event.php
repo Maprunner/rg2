@@ -413,12 +413,10 @@ class event
         }
 
         // create new mappings file: result to class
-        $classmappings = "";
         for ($i = 1; $i < count($data->mappings); $i++) {
-            $classmappings .= utils::encode_rg_output($data->mappings[$i]->class)."|".utils::encode_rg_output($data->mappings[$i]->course)."|".$i.PHP_EOL;
+            $classmappings = utils::encode_rg_output($data->mappings[$i]->class)."|".utils::encode_rg_output($data->mappings[$i]->course)."|".$i.PHP_EOL;
+            file_put_contents(KARTAT_DIRECTORY."mappings_".$newid.".txt", $classmappings, FILE_APPEND);
         }
-        file_put_contents(KARTAT_DIRECTORY."mappings_".$newid.".txt", $classmappings, FILE_APPEND);
-
 
         if ($write["status_msg"] == "") {
             $write["ok"] = true;

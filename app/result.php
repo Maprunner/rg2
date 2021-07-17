@@ -295,7 +295,7 @@ class result
 								
 							$row = array();
 							$row["origresultid"] = $old[0];
-							$row["newresultid"] = 100000 + $kil["newresultid"];
+							$row["newresultid"] = GPS_RESULT_OFFSET + $kil["newresultid"];
 							$row["origcourseid"] = $old[1];
 							$row["newcourseid"] = $kil["newcourseid"];
 							$row["coursename"] = $old[2];

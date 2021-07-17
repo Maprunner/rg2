@@ -122,6 +122,9 @@
       $("#btn-update-event").button().click(function () {
         self.confirmUpdateEvent();
       }).button("disable");
+      $("#btn-update-results").button().click(function () {
+        self.confirmUpdateResults();
+      }).button("disable");
       $("#btn-delete-route").button().click(function () {
         self.confirmDeleteRoute();
       }).button("disable");
@@ -151,9 +154,6 @@
         self.initialiseEncodings();
         self.readResults();
       });
-      $("#btn-update-results").button().click(function () {
-        self.confirmUpdateResults();
-      });
       $("#btn-move-map-and-controls").click(function (evt) {
         self.toggleMoveAll(evt.target.checked);
       });
@@ -168,7 +168,7 @@
       });
       $("#rg2-load-course-file").button().click(function (evt) {
         if (!self.mapLoaded) {
-          rg2.utils.showWarningDialog("No map loaded", "Please load a map file before adding courses.");
+          rg2.utils.showWarningDialog("No event loaded", "Please load a map file before adding courses.");
           evt.preventDefault();
         }
       }).change(function (evt) {
@@ -180,7 +180,7 @@
 
       $("#rg2-update-results-file").button().click(function (evt) {
         if (!self.mapLoaded) {
-          rg2.utils.showWarningDialog("No map loaded", "Please load a map file before adding results.");
+          rg2.utils.showWarningDialog("No event loaded", "Please load an event before adding results.");
           evt.preventDefault();
         }
       }).change(function (evt) {
@@ -516,6 +516,7 @@
         delete data.results[i].chipid;
         delete data.results[i].club;
       }
+      data.mappings = this.generateFieldMappings();
       user = this.user.encodeUser();
       data.x = user.x;
       data.y = user.y;
@@ -526,7 +527,12 @@
           data = [];
           $('#rg2-course-allocations tr').each(function (i, row) {
               var $row = $(row);
-              $class = $row.find('input').val();
+              $class = $row.find('td:first').text();
+
+              //could be manual input - try input instead
+              if ($class.length == 0){
+                $class = $row.find('input').val();
+              }
               $course = $row.find(':selected').text();
               data.push({
                   "class": $class, "course": $course })
@@ -1568,7 +1574,7 @@
         // save new cookie
         self.user.y = data.keksi;
         if (data.ok) {
-          rg2.utils.showWarningDialog("Results updated");
+          rg2.utils.showWarningDialog("Results updated.", "Results for " + self.eventName + " have been updated.");
           // open newly created event in a separate window
           window.open(rg2Config.json_url.replace("rg2api.php", "") + "#" + data.newid);
           rg2.getEvents();
