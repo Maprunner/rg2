@@ -168,7 +168,7 @@
       });
       $("#rg2-load-course-file").button().click(function (evt) {
         if (!self.mapLoaded) {
-          rg2.utils.showWarningDialog("No event loaded", "Please load a map file before adding courses.");
+          rg2.utils.showWarningDialog("No map loaded", "Please load a map file before adding courses.");
           evt.preventDefault();
         }
       }).change(function (evt) {
@@ -180,7 +180,7 @@
 
       $("#rg2-update-results-file").button().click(function (evt) {
         if (!self.mapLoaded) {
-          rg2.utils.showWarningDialog("No event loaded", "Please load an event before adding results.");
+          rg2.utils.showWarningDialog("No event loaded", "Please select an event before adding results.");
           evt.preventDefault();
         }
       }).change(function (evt) {
