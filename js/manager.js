@@ -372,8 +372,6 @@
           var html2 = "<tr><td><input type=\"text\"/></td><td>" + this.createCourseDropdown("New Class", 1) + "</td></tr>";
           var html = html1 + html2 + tableEnd
 
-          console.log(html)
-
           $("#rg2-course-allocations").empty().append(html);
       },
 
@@ -516,30 +514,40 @@
         delete data.results[i].chipid;
         delete data.results[i].club;
       }
-      data.mappings = this.generateFieldMappings();
+      data.mappings = this.generateFieldMappings(data.courses);
       user = this.user.encodeUser();
       data.x = user.x;
       data.y = user.y;
       return JSON.stringify(data);
     },
 
-      generateFieldMappings: function () {
-          data = [];
-          $('#rg2-course-allocations tr').each(function (i, row) {
-              var $row = $(row);
-              $class = $row.find('td:first').text();
+    generateFieldMappings: function (courses) {
+      console.log(courses);
+        data = [];
+        $('#rg2-course-allocations tr').each(function (i, row) {
+            var $row = $(row);
+            $class = $row.find('td:first').text();
 
-              //could be manual input - try input instead
-              if ($class.length == 0){
-                $class = $row.find('input').val();
+            //could be manual input - try input instead
+            if ($class.length == 0){
+              $class = $row.find('input').val();
+            }
+            $course = $row.find(':selected').text();
+
+            $courseid = 0
+            //Get courseids
+            for (var i = 0; i<courses.length; i++){
+              if (courses[i].name == $course){
+                $courseid = courses[i].courseid;
               }
-              $course = $row.find(':selected').text();
-              data.push({
-                  "class": $class, "course": $course })
-          })
+            }
 
-          return data;
-      },
+            data.push({
+                "class": $class, "course": $course, "courseid":$courseid })
+        })
+
+        return data;
+    },
 
 
     hasZeroTime: function (time) {
@@ -1574,7 +1582,7 @@
         // save new cookie
         self.user.y = data.keksi;
         if (data.ok) {
-          rg2.utils.showWarningDialog("Results updated.", "Results for " + self.eventName + " have been updated.");
+          rg2.utils.showWarningDialog("Results updated.", "Results have been updated.");
           // open newly created event in a separate window
           window.open(rg2Config.json_url.replace("rg2api.php", "") + "#" + data.newid);
           rg2.getEvents();

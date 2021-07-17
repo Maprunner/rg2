@@ -196,20 +196,17 @@ class result
     public static function updateResults($eventid, $data){
 
 		$date = date("Y-m-dTHis");
+        $write["status_msg"] = "";
+        
+        utils::rg2log("Updating result files for ".$eventid.". Old data will have datestamp: ".$date.".txt");
 
-		utils::rg2log($_SERVER['DOCUMENT_ROOT']."/kartat/kilpailijat_".$eventid."_rm_".$date.".txt");
 
-		// Renaming doesn't work because of locks so copy and write empty
-		@rename($_SERVER['DOCUMENT_ROOT']."/kartat/kilpailijat_".$eventid.".txt",
-			$_SERVER['DOCUMENT_ROOT']."/kartat/kilpailijat_".$eventid."_rm_".$date.".txt");
-		@rename($_SERVER['DOCUMENT_ROOT']."/kartat/merkinnat_".$eventid.".txt",
-			$_SERVER['DOCUMENT_ROOT']."/kartat/merkinnat_".$eventid."_rm_".$date.".txt");
-		@rename($_SERVER['DOCUMENT_ROOT']."/kartat/kommentit_".$eventid.".txt",
-			$_SERVER['DOCUMENT_ROOT']."/kartat/kommentit_".$eventid."_rm_".$date.".txt");
+        //Archive old kilpailijat file
+        rename(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt",
+        KARTAT_DIRECTORY."kilpailijat_".$eventid."_rm_".$date.".txt");
 
 
 		// create new kilpailijat file: results
-
 		for ($i = 0; $i < count($data->results); $i++) {
 		    $a = $data->results[$i];
 
@@ -225,23 +222,22 @@ class result
 				$status = '';
 			}
 
-			// course provided by json is actually result class - update to course name
-			// based on mapping, and load to txt file if not "Do not save"
-
+			// course provided by json is actually result class - get correct course name
+			// based on mapping file, and load to txt file if not "Do not save"
 			$coursename = "";
 			$courseid = "";
-			if (($handle = @fopen(KARTAT_DIRECTORY."mappings_".$eventid.".txt", "r")) !== false) {
-				while (($sa_data = fgetcsv($handle, 0, "|")) !== false) {
-					if (utils::encode_rg_output($a->course) == $sa_data[0]) {
-						$coursename = $sa_data[1];
-						$courseid = $sa_data[2]; 
-						break;
-					}
+            $fh = fopen(KARTAT_DIRECTORY."mappings_".$eventid.".txt", 'r');
+            while ($oldrow = fgets($fh)) {
+                $row = explode("|", $oldrow);
+                if (utils::encode_rg_output($a->course) == $row[0]) {
+                    $coursename = $row[1];
+                    $courseid = $row[2]; 
+                    break;
 				}
 			}
 
 			if($coursename !== "Do not save"){
-				$result = ($i + 1)."|".$courseid."|".utils::encode_rg_output($coursename);
+				$result = ($i + 1)."|".trim($courseid)."|".utils::encode_rg_output($coursename);
 				$result .= "|".utils::encode_rg_output(trim($a->name))."|".$a->starttime."|";
 				// abusing dbid to save status and position
 				$result .= utils::encode_rg_output($a->dbid)."_#".$position."#".$status;
@@ -250,126 +246,144 @@ class result
 			}
 		}
 
-		// Get orig and new resultid so we can replace them in comments and routes files
-		// 1|1|C2|Bridget Anderson|35700|121_#1#OK||00:51:36|
 
-		$kilpailijat = array();
+        // Get orig and new resultid so we can replace them in comments and routes files
+        // 1|1|C2|Bridget Anderson|35700|121_#1#OK||00:51:36|
 
-		if (($oldres = @fopen(KARTAT_DIRECTORY."kilpailijat_".$eventid."_rm_".$date.".txt", "r")) !== false) {
-			while (($old = fgetcsv($oldres, 0, "|")) !== false) {
+        $kilpailijat = array();
 
-				if (($newres = @fopen(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt", "r")) !== false) {
-					while (($new = fgetcsv($newres, 0, "|")) !== false) {
+        $fh = fopen(KARTAT_DIRECTORY."kilpailijat_".$eventid."_rm_".$date.".txt", 'r');
+        while ($oldrow = fgets($fh)) {
 
-						if ($new[3] == $old[3] && $new[2] == $old[2]){
+            $old = explode("|", $oldrow);
 
-							$row = array();
-							$row["origresultid"] = $old[0];
-							$row["newresultid"] = $new[0];
-							$row["origcourseid"] = $old[1];
-							$row["newcourseid"] = $new[1];
-							$row["coursename"] = $old[2];
-							$row["name"] = $old[3];
-							$kilpailijat[] = $row;
+            $fh = fopen(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt", 'r');
+            while ($newrow = fgets($fh)) {
 
-							break;
-						}
-					}
-				}
-			}
-		}
+                $new = explode("|", $newrow);
 
-		// Fix for GPS routes - not included in new file
-		if (($oldres = @fopen(KARTAT_DIRECTORY."kilpailijat_".$eventid."_rm_".$date.".txt", "r")) !== false) {
-			while (($old = fgetcsv($oldres, 0, "|")) !== false) {
-				if (strpos($old[3], 'GPS ') !== false){
+                if ($new[3] == $old[3] && $new[2] == $old[2]){
 
-					// Get the current Id for the non-GPS record
-							
-					foreach ($kilpailijat as $kil){
+                    $row = array();
+                    $row["origresultid"] = $old[0];
+                    $row["newresultid"] = $new[0];
+                    $row["origcourseid"] = $old[1];
+                    $row["newcourseid"] = $new[1];
+                    $row["coursename"] = $old[2];
+                    $row["name"] = $old[3];
+                    $kilpailijat[] = $row;
 
-						if (substr($old[3], 5, -1) == $kil["name"] && 
-							$old[2] == $kil["coursename"]){
+                    break;
+                }
+            }
+        }
 
-							utils::rg2log($old[3]);
-								
-							$row = array();
-							$row["origresultid"] = $old[0];
-							$row["newresultid"] = GPS_RESULT_OFFSET + $kil["newresultid"];
-							$row["origcourseid"] = $old[1];
-							$row["newcourseid"] = $kil["newcourseid"];
-							$row["coursename"] = $old[2];
-							$row["name"] = $old[3];
-							$kilpailijat[] = $row;
+        // Add GPS routes from old file
+        $fh = fopen(KARTAT_DIRECTORY."kilpailijat_".$eventid."_rm_".$date.".txt", 'r');
+        while ($oldrow = fgets($fh)) {
 
-							$result = $row["newresultid"]."|".$row["newcourseid"]."|".$row["coursename"];
-							$result .= "|".$row["name"]."|".$old[4]."|||".$old[7]."||".$old[9].PHP_EOL;
-							// doesn't save all params - see  "abusing dbid to save status and position" comment above
+            $old = explode("|", $oldrow);
+            
+            if (strpos($old[3], 'GPS ') !== false){
 
-							file_put_contents(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt", $result, FILE_APPEND);
+                // Get the current Id for the non-GPS record
+                        
+                foreach ($kilpailijat as $kil){
 
-							break;
-						}
-					}
-				}
-			}
-		}
+                    if (substr($old[3], 5) == $kil["name"] && 
+                        $old[2] == $kil["coursename"]){
+                            
+                        $row = array();
+                        $row["origresultid"] = $old[0];
+                        $row["newresultid"] = GPS_RESULT_OFFSET + $kil["newresultid"];
+                        $row["origcourseid"] = $old[1];
+                        $row["newcourseid"] = $kil["newcourseid"];
+                        $row["coursename"] = $old[2];
+                        $row["name"] = $old[3];
+                        $kilpailijat[] = $row;
 
-		utils::rg2log(json_encode($kilpailijat));
+                        $result = $row["newresultid"]."|".$row["newcourseid"]."|".$row["coursename"];
+                        $result .= "|".$row["name"]."|".$old[4]."|||".$old[7]."||".$old[9].PHP_EOL;
+                        // doesn't save all params - see  "abusing dbid to save status and position" comment above
+
+                        file_put_contents(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt", $result, FILE_APPEND);
+
+                        break;
+                        
+                    }
+                }
+            }
+        }
+
+        if (file_exists(KARTAT_DIRECTORY."kommentit_".$eventid.".txt")){
+
+            // Recreate kommentit file
+            // Replace old course id and result id with ones from new kilpailijat file
+            // Kommentit format:  2|34|Jake Hanson||test
+
+            $updatedfile = array();
+            $fh = fopen(KARTAT_DIRECTORY."/kommentit_".$eventid.".txt", 'r');
+            while ($oldrow = fgets($fh)) {
+                
+                $olddata = explode("|", $oldrow);
+
+                foreach ($kilpailijat as $k){
+                    if ($k["origresultid"] == $olddata[1]){
+
+                        $row = $k["newcourseid"]."|".$k["newresultid"]."|".$olddata[2]."||".$olddata[4];
+
+                        $updatedfile[] = $row;
+
+                        break;
+
+                    }
+                }
+            }
+
+            //Archive old file
+            rename(KARTAT_DIRECTORY."kommentit_".$eventid.".txt",
+            KARTAT_DIRECTORY."kommentit_".$eventid."_rm_".$date.".txt");
+
+            //Write new file
+            file_put_contents(KARTAT_DIRECTORY."kommentit_".$eventid.".txt", $updatedfile);
+            utils::rg2log("Updated route comments file ");
+        }
+        
+        if (file_exists(KARTAT_DIRECTORY."merkinnat_".$eventid.".txt")){
 
 
-		// Recreate kommentit file
-		// Replace old course id and result id with ones from new kilpailijat file
-		// Kommentit format:  2|34|Jake Hanson||test
+            // Recreate merkinnat file
+            // Replace old course id and result id with ones from new kilpaijat file
+            // Merkinnat format: 2|34|Jake Hanson|null|Semicolon-separated results
 
-		$updatedfile = array();
-		$oldfile = file(KARTAT_DIRECTORY."kommentit_".$eventid."_rm_".$date.".txt");
-		foreach ($oldfile as $oldrow) {
-		    $olddata = explode("|", $oldrow);
+            $updatedfile = array();
+            $fh = fopen(KARTAT_DIRECTORY."merkinnat_".$eventid.".txt", 'r');
+            while ($oldrow = fgets($fh)) {
+                    $olddata = explode("|", $oldrow);
 
-		    foreach ($kilpailijat as $k){
-    			if ($k["origresultid"] == $olddata[1]){
+                    foreach ($kilpailijat as $k){
+                        if ($k["origresultid"] == $olddata[1]){
 
-    			    $row = $k["newcourseid"]."|".$k["newresultid"]."|".$olddata[2]."||".$olddata[4];
+                            $row = $k["newcourseid"]."|".$k["newresultid"]."|".$olddata[2]."|null|".$olddata[4];
 
-    			    $updatedfile[] = $row;
+                            $updatedfile[] = $row;
 
-    			    break;
+                            break;
 
-    			}
-		    }
-		}
-        $status = file_put_contents(KARTAT_DIRECTORY."kommentit_".$eventid.".txt", $updatedfile);
-        utils::rg2log("Updated route comments file ");
+                        }
+                    }
+                
+            }
 
-		// Recreate merkinnat file
-		// Replace old course id and result id with ones from new kilpaijat file
-		// Merkinnat format: 2|34|Jake Hanson|null|Semicolon-separated results
+            //Archive old file
+            rename(KARTAT_DIRECTORY."merkinnat_".$eventid.".txt",
+            KARTAT_DIRECTORY."merkinnat_".$eventid."_rm_".$date.".txt");
 
-		$updatedfile = array();
-		$oldfile = file(KARTAT_DIRECTORY."merkinnat_".$eventid."_rm_".$date.".txt");
-		foreach ($oldfile as $oldrow) {
-		    $olddata = explode("|", $oldrow);
+            //Write updated file
+            file_put_contents(KARTAT_DIRECTORY."merkinnat_".$eventid.".txt", $updatedfile);
+            utils::rg2log("Updated routes file");
 
-		    foreach ($kilpailijat as $k){
-    			if ($k["origresultid"] == $olddata[1]){
-
-    			    $row = $k["newcourseid"]."|".$k["newresultid"]."|".$olddata[2]."|null|".$olddata[4];
-
-    			    $updatedfile[] = $row;
-
-    			    break;
-
-    			}
-		    }
-		}
-        $status = file_put_contents(KARTAT_DIRECTORY."merkinnat_".$eventid.".txt", $updatedfile);
-        utils::rg2log("Updated routes file ");
-
-		// Yeah just skipping this for now
-		// @TODO
-		//Also fix login thing
-        $write["status_msg"] = "";
+        }
 
 		if ($write["status_msg"] == "") {
 		    $write["ok"] = true;
