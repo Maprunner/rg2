@@ -303,8 +303,7 @@ class result
                         $kilpailijat[] = $row;
 
                         $result = $row["newresultid"]."|".$row["newcourseid"]."|".$row["coursename"];
-                        $result .= "|".$row["name"]."|".$old[4]."|||".$old[7]."||".$old[9].PHP_EOL;
-                        // doesn't save all params - see  "abusing dbid to save status and position" comment above
+                        $result .= "|".$row["name"]."|".$old[4]."|".$old[5]."|".$old[6]."|".$old[7]."|".$old[8]."|".$old[9];
 
                         file_put_contents(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt", $result, FILE_APPEND);
 
@@ -330,7 +329,7 @@ class result
                 foreach ($kilpailijat as $k){
                     if ($k["origresultid"] == $olddata[1]){
 
-                        $row = $k["newcourseid"]."|".$k["newresultid"]."|".$olddata[2]."||".$olddata[4];
+                        $row = $k["newcourseid"]."|".$k["newresultid"]."|".$olddata[2]."|".$olddata[3]."|".$olddata[4];
 
                         $updatedfile[] = $row;
 
@@ -364,7 +363,7 @@ class result
                     foreach ($kilpailijat as $k){
                         if ($k["origresultid"] == $olddata[1]){
 
-                            $row = $k["newcourseid"]."|".$k["newresultid"]."|".$olddata[2]."|null|".$olddata[4];
+                            $row = $k["newcourseid"]."|".$k["newresultid"]."|".$olddata[2]."|".$olddata[2]."|".$olddata[4];
 
                             $updatedfile[] = $row;
 
