@@ -206,14 +206,16 @@ class event
 
     public static function enrichCourseName($data, $i)
     {
-        $classes = "";
         if (isset($data->mapping)) {
             for ($j = 0; $j < count($data->mapping); $j++) {
                 if ($data->mapping[$j]->course === $data->courses[$i]->name) {
                     if (isset($classes)) {
                         $classes .= ", ";
                     }
-                    $classes .= $data->mapping[$j]->className;
+                    $class_name .= $data->mapping[$j]->className;
+                    $class_name = str_replace(' ', '', $class_name);
+                    $class_name = str_replace('-', '', $class_name);
+                    $classes .= $class_name;
                 }
             }
         }
