@@ -204,18 +204,18 @@ class event
         return($write);
     }
 
-    public static function enrichCourseName($data, $course_id)
+    public static function enrichCourseName($data, $i)
     {
-        if (!isset($data->courses[$i]->classes)) {
-            return ($data->courses[$i]->name);
-        }
-
         $classes = "";
-        for ($j = 0; $j < count($data->courses[$i]->classes); $j++) {
-            if (isset($classes)) {
-                $classes .= ", ";
+        if (isset($data->mapping)) {
+            for ($j = 0; $j < count($data->mapping); $j++) {
+                if ($data->mapping[$j]->course === $data->courses[$i]->name) {
+                    if (isset($classes)) {
+                        $classes .= ", ";
+                    }
+                    $classes .= $data->mapping[$j]->className;
+                }
             }
-            $classes .= $data->courses[$i]->classes[$j];
         }
         
         if (isset($classes)) {
@@ -269,7 +269,7 @@ class event
         // create new sarjat file: course names
         $courses = "";
         for ($i = 0; $i < count($data->courses); $i++) {
-            $courses .= $data->courses[$i]->courseid."|".utils::encode_rg_output(enrichCourseName($data, $i)).PHP_EOL;
+            $courses .= $data->courses[$i]->courseid."|".utils::encode_rg_output(self::enrichCourseName($data, $i)).PHP_EOL;
         }
         file_put_contents(KARTAT_DIRECTORY."sarjat_".$newid.".txt", $courses, FILE_APPEND);
 
@@ -325,7 +325,7 @@ class event
         } else {
             // normal event or score event without results so save courses
             for ($i = 0; $i < count($data->courses); $i++) {
-                $controls = $data->courses[$i]->courseid."|".enrichCourseName($data, $i)."|";
+                $controls = $data->courses[$i]->courseid."|".self::enrichCourseName($data, $i)."|";
                 // data includes start and finish which we don't want
                 for ($j = 1; $j < (count($data->courses[$i]->codes) - 1); $j++) {
                     if ($j > 1) {
