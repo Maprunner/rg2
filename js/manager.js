@@ -22,6 +22,7 @@
     this.newcontrols = new rg2.Controls();
     this.courses = [];
     this.mapping = [];
+    this.isEnrichCourseNames = false;
     this.mapLoaded = false;
     this.coursesGeoreferenced = false;
     this.controlsAdjusted = false;
@@ -159,6 +160,9 @@
       });
       $("#btn-score-event").click(function (evt) {
         self.toggleScoreEvent(evt.target.checked);
+      });
+      $("#btn-enrich-course-names").click(function(evt) {
+        self.toggleEnrichCourseNames(evt.target.checked);
       });
       $("#btn-sort-results").click(function (evt) {
         self.toggleSortResults(evt.target.checked);
@@ -479,6 +483,7 @@
         data.results = this.results.slice(0);
       }
       data.mapping = this.mapping.slice(0);
+      data.enrich_course_names = this.isEnrichCourseNames;
       // #386 remove unused data: partial solution to problems with POST size
       for (i = 0; i < data.results.length; i += 1) {
         delete data.results[i].codes;
@@ -581,6 +586,33 @@
       this.courses = newCourses;
     },
 
+    enrichCourseName: function(course_name) {
+        var j;
+        var classes = "";
+
+        if (this.mapping && (this.mapping.length > 0) && this.isEnrichCourseNames) {
+            for (j = 0; j < this.mapping.length; j += 1) {
+                var course = this.mapping[j].course;
+                var class_name = "";
+                if (course === course_name) {
+                    if (classes !== "") {
+                        classes += ", ";
+                    }
+                    class_name = this.mapping[j].className;
+                    class_name = class_name.replace(/ /g, "");
+                    class_name = class_name.replace(/-/g, "");
+                    classes += class_name;
+                }
+            }
+        }
+
+        if (classes !== "") {
+            return (course_name + ": " + classes);
+        }
+
+        return course_name;
+    },
+
     /**
     * @param {string} course - Course name from results file.
     * @param {integer} courseidx - Course name index.
@@ -623,7 +655,7 @@
         if (idx === i) {
           html += " selected";
         }
-        html += ">" + this.courses[i].name + "</option>";
+        html += ">" + this.enrichCourseName(this.courses[i].name) + "</option>";
       }
       html += "</select>";
       return html;
@@ -1283,6 +1315,10 @@
 
     toggleScoreEvent: function (checked) {
       this.isScoreEvent = checked;
+    },
+
+    toggleEnrichCourseNames: function (checked) {
+      this.isEnrichCourseNames = checked;
     },
 
     confirmAddMap: function () {

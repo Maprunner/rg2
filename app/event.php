@@ -204,11 +204,11 @@ class event
         return($write);
     }
 
-    public static function enrichCourseName($data, $i)
+    public static function enrichCourseName($data, $course_name)
     {
-        if (isset($data->mapping)) {
+        if (isset($data->mapping) && isset($data->enrich_course_names)) {
             for ($j = 0; $j < count($data->mapping); $j++) {
-                if ($data->mapping[$j]->course === $data->courses[$i]->name) {
+                if ($data->mapping[$j]->course === $course_name) {
                     if (isset($classes)) {
                         $classes .= ", ";
                     }
@@ -221,10 +221,10 @@ class event
         }
         
         if (isset($classes)) {
-            return($data->courses[$i]->name.": ".$classes);
+            return($course_name.": ".$classes);
         }
             
-        return ($data->courses[$i]->name);
+        return ($course_name);
     }
 
     public static function addNewEvent($data)
@@ -271,7 +271,7 @@ class event
         // create new sarjat file: course names
         $courses = "";
         for ($i = 0; $i < count($data->courses); $i++) {
-            $courses .= $data->courses[$i]->courseid."|".utils::encode_rg_output(self::enrichCourseName($data, $i)).PHP_EOL;
+            $courses .= $data->courses[$i]->courseid."|".utils::encode_rg_output(self::enrichCourseName($data, $data->courses[$i]->name)).PHP_EOL;
         }
         file_put_contents(KARTAT_DIRECTORY."sarjat_".$newid.".txt", $courses, FILE_APPEND);
 
@@ -327,7 +327,7 @@ class event
         } else {
             // normal event or score event without results so save courses
             for ($i = 0; $i < count($data->courses); $i++) {
-                $controls = $data->courses[$i]->courseid."|".self::enrichCourseName($data, $i)."|";
+                $controls = $data->courses[$i]->courseid."|".self::enrichCourseName($data, $data->courses[$i]->name)."|";
                 // data includes start and finish which we don't want
                 for ($j = 1; $j < (count($data->courses[$i]->codes) - 1); $j++) {
                     if ($j > 1) {
@@ -427,7 +427,7 @@ class event
             } else {
                 $status = '';
             }
-            $result = ($i + 1)."|".$a->courseid."|".utils::encode_rg_output($a->course);
+            $result = ($i + 1)."|".$a->courseid."|".utils::encode_rg_output(self::enrichCourseName($data, $a->course));
             $result .= "|".utils::encode_rg_output(trim($a->name))."|".$a->starttime."|";
             // abusing dbid to save status and position
             $result .= utils::encode_rg_output($a->dbid)."_#".$position."#".$status;
