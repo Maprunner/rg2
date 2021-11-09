@@ -212,7 +212,7 @@ class event
                     if (isset($classes)) {
                         $classes .= ", ";
                     }
-                    $class_name .= $data->mapping[$j]->className;
+                    $class_name = $data->mapping[$j]->className;
                     $class_name = str_replace(' ', '', $class_name);
                     $class_name = str_replace('-', '', $class_name);
                     $classes .= $class_name;
