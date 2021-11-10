@@ -206,7 +206,7 @@ class event
 
     public static function enrichCourseName($data, $course_name)
     {
-        if (isset($data->mapping) && isset($data->enrich_course_names)) {
+        if (isset($data->mapping) && isset($data->enrich_course_names) && ($data->enrich_course_names === true)) {
             for ($j = 0; $j < count($data->mapping); $j++) {
                 if ($data->mapping[$j]->course === $course_name) {
                     if (isset($classes)) {
