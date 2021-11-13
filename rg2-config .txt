@@ -56,5 +56,6 @@
   // or 
   //define('EPSG_CODE', "EPSG:12345|EPSG:67890");
   //define('EPSG_PARAMS', "+proj=x +ellps=WGS84 +datum=WGS84 +units=m +no_defs|+proj=y +ellps=WGS84 +datum=WGS84 +units=m +no_defs");
-  define('EPSG_CODE', "EPSG:32633");
-  define('EPSG_PARAMS', "+proj=utm +zone=33 +ellps=WGS84 +datum=WGS84 +units=m +no_defs ");
+  // or
+  //define('EPSG_CODE', "EPSG:32633");
+  //define('EPSG_PARAMS', "+proj=utm +zone=33 +ellps=WGS84 +datum=WGS84 +units=m +no_defs ");
