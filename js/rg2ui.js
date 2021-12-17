@@ -650,7 +650,7 @@
         }
         rg2.redraw(false);
       });
-      $("#rg2-select-language").click(function () {
+      $("#rg2-select-language").change(function () {
         newlang = $("#rg2-select-language").val();
         if (newlang !== rg2.getDictionaryCode()) {
           if (newlang === 'en') {
