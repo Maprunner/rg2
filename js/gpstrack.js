@@ -119,6 +119,31 @@
         }
       }
     },
+  
+    uploadStrava : function(json){
+      for (i=0; i < json.data.length; i++){
+
+        const d = json.data[i];
+
+        if (d.type === 'latlng'){
+
+          for (l=0; l < d.data.length; l++){
+            const lat = d.data[l][0];
+            const lon = d.data[l][1];
+            this.lat.push(lat);
+            this.lon.push(lon);
+          };
+
+        } else if (d.type === 'time'){
+            
+          for (t=0; t < d.data.length; t++){
+            const tm = d.data[t]
+            this.routeData.time.push(tm)
+          };
+        }
+      };
+      this.processGPSTrack();
+    },
 
     getStartOffset : function (timestring) {
       var secs;

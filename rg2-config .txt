@@ -56,3 +56,7 @@
   // or 
   //define('EPSG_CODE', "EPSG:12345|EPSG:67890");
   //define('EPSG_PARAMS', "+proj=x +ellps=WGS84 +datum=WGS84 +units=m +no_defs|+proj=y +ellps=WGS84 +datum=WGS84 +units=m +no_defs");
+  
+  // If using strava, add the application oauth client and secret
+  //define('STRAVA_CLIENT', '')
+  //define('STRAVA_SECRET', '')
