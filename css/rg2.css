@@ -60,31 +60,37 @@ html, body {
 	height: 50px;
 }
 
+
+#rg2-animation-controls {
+  display: flex;
+  flex-flow: column wrap;
+  width: 350px;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+}
+
 .rg2-ani-row {
     background: silver;
     color: white;
-    position: absolute;
     vertical-align: middle;
     height: 36px;
-	  width: 380px;
-    right: 0;
-	  border: 4px solid darkgray;
   	z-index: 100;
     line-height: 36px;
 }
 
 .row-1 {
-    bottom: 80px;
-    font-size: 20px;
+  border: 4px solid darkgray;
+  font-size: 20px;
 }
 
 .row-2 {
-    bottom: 40px;
+  border-left: 4px solid darkgray;
+  border-right: 4px solid darkgray;
 }
-
 .row-3 {
-    bottom: 0;
-    color: black;
+  border: 4px solid darkgray;
+  color: black;
 }
 
 #rg2-resize-info {
@@ -115,6 +121,15 @@ html, body {
 	width: 30px;
 	text-align: center;
 	border-right: 4px solid darkgray;
+}
+
+.rg2-button-right {
+  background: silver;
+  color: white;
+	float: right;
+	width: 30px;
+	text-align: center;
+	border-left: 4px solid darkgray;
 }
 
 .rg2-wide-button {
@@ -229,9 +244,8 @@ html, body {
 }
 
 #rg2-tails-type {
-	padding-left: 5px;
+	padding: 0px 5px;
 	border-right: 4px solid darkgray;
-	width: 93px;
   float:left;
 }
 
@@ -240,8 +254,8 @@ html, body {
 }
 
 #rg2-tails-spinner {
-  float: right;
-  padding-right: 5px;
+  float: left;
+  padding: 0px 5px;
   border-right: 4px solid darkgray;
 }
 
@@ -399,8 +413,11 @@ html, body {
 
 #rg2-replay-start-control {
   float: right;
-  padding-left: 5px;
   margin-right:5px
+}
+
+#rg2-control-select {
+  width: 80px;
 }
 
 .pushright {
@@ -495,8 +512,8 @@ padding: 0;
 }
 
 #rg2-clock-slider {
-  margin: 10px 25px;
-  width: 180px;
+  margin: 10px 15px;
+  width: 175px;
   float:right;
 
 }

@@ -43,7 +43,7 @@
       this.displayInitials = false;
       this.updateAnimationDetails();
       $("#btn-start-stop").removeClass('fa-pause').addClass('fa-play').prop('title', rg2.t('Run'));
-      $("#btn-real-time").removeClass().addClass('fa fa-users').prop('title', rg2.t('Mass start mode | View real-time mode'));
+      $("#btn-real-time").removeClass().addClass('fa fa-users').prop('title', rg2.t('Real time') + ' > ' + rg2.t('Mass start'));
       $("#btn-toggle-names").prop('title', rg2.t('Show initials'));
     },
 
@@ -333,13 +333,13 @@
       // toggles between mass start and real time
       if (this.realTime) {
         this.realTime = false;
-        $("#btn-real-time").removeClass().addClass('fa fa-users').prop('title', rg2.t('Mass start mode | View real-time mode'));
+        $("#btn-real-time").removeClass().addClass('fa fa-users').prop('title', rg2.t('Mass start') + ' > ' + rg2.t('Real time'));
         if (rg2.courses.getHighestControlNumber() > 0) {
           $("#rg2-control-select").prop('disabled', false);
         }
       } else {
         this.realTime = true;
-        $("#btn-real-time").removeClass().addClass('fa fa-clock').prop('title', rg2.t('Real-time mode | View mass start mode'));
+        $("#btn-real-time").removeClass().addClass('fa fa-clock').prop('title', rg2.t('Real time') + ' > ' + rg2.t('Mass start'));
         $("#rg2-control-select").prop('disabled', true);
       }
       // go back to start
