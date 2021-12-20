@@ -412,6 +412,17 @@ class event
             file_put_contents(KARTAT_DIRECTORY."kilpailijat_".$newid.".txt", $result, FILE_APPEND);
         }
 
+        // create new mappings file: result classname|coursename|courseid so we can match them up again for updates. 
+        // may be able to use the sarjat file but don't want to touch it - I don't know what it could break in RG1
+        for ($i = 1; $i < count($data->mappings); $i++) {
+            $class = utils::encode_rg_output($data->mappings[$i]->class);
+            $course = utils::encode_rg_output($data->mappings[$i]->course);
+            $courseid = utils::encode_rg_output($data->mappings[$i]->courseid);
+
+            $classmapping = $class."|".$course."|".$courseid.PHP_EOL;
+            file_put_contents(KARTAT_DIRECTORY."mappings_".$newid.".txt", $classmapping, FILE_APPEND);
+        }
+
         if ($write["status_msg"] == "") {
             $write["ok"] = true;
             $write["status_msg"] = "Event created.";
@@ -441,7 +452,7 @@ class event
 
         // rename all associated files but don't worry about errors
         // safer than deleting them since you can always add the event again
-        $files = array("kilpailijat_", "kommentit_", "hajontakanta_", "merkinnat_", "radat_", "ratapisteet_", "sarjat_", "sarjojenkoodit_");
+        $files = array("kilpailijat_", "kommentit_", "hajontakanta_", "merkinnat_", "radat_", "ratapisteet_", "sarjat_", "sarjojenkoodit_", "mappings_");
         foreach ($files as $file) {
             @rename(KARTAT_DIRECTORY.$file.$eventid.".txt", KARTAT_DIRECTORY."deleted_".$file.$eventid.".txt");
         }

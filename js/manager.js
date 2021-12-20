@@ -122,6 +122,9 @@
       $("#btn-update-event").button().click(function () {
         self.confirmUpdateEvent();
       }).button("disable");
+      $("#btn-update-results").button().click(function () {
+        self.confirmUpdateResults();
+      }).button("disable");
       $("#btn-delete-route").button().click(function () {
         self.confirmDeleteRoute();
       }).button("disable");
@@ -171,6 +174,21 @@
       }).change(function (evt) {
         self.readCourses(evt);
       });
+        $("#btn-add-fieldmapping").button().click(function () {
+            self.addFieldMapping();
+        });
+
+      $("#rg2-update-results-file").button().click(function (evt) {
+        if (!self.mapLoaded) {
+          rg2.utils.showWarningDialog("No event loaded", "Please select an event before adding results.");
+          evt.preventDefault();
+        }
+      }).change(function (evt) {
+        self.resultsOrCourseFile = evt.target.files[0];
+        self.initialiseEncodings();
+        self.readResults();
+      });
+
     },
 
     validateMapUpload: function (upload) {
@@ -345,6 +363,18 @@
       }
     },
 
+      addFieldMapping: function () {
+
+          var tableEnd = "</tbody></table></div>";
+
+          var html1 = $("#rg2-course-allocations").html().replace(tableEnd, "");
+
+          var html2 = "<tr><td><input type=\"text\"/></td><td>" + this.createCourseDropdown("New Class", 1) + "</td></tr>";
+          var html = html1 + html2 + tableEnd
+
+          $("#rg2-course-allocations").empty().append(html);
+      },
+
     validateData: function () {
       if (!this.eventName) {
         return 'Event name is not valid.';
@@ -484,11 +514,41 @@
         delete data.results[i].chipid;
         delete data.results[i].club;
       }
+      data.mappings = this.generateFieldMappings(data.courses);
       user = this.user.encodeUser();
       data.x = user.x;
       data.y = user.y;
       return JSON.stringify(data);
     },
+
+    generateFieldMappings: function (courses) {
+      console.log(courses);
+        data = [];
+        $('#rg2-course-allocations tr').each(function (i, row) {
+            var $row = $(row);
+            $class = $row.find('td:first').text();
+
+            //could be manual input - try input instead
+            if ($class.length == 0){
+              $class = $row.find('input').val();
+            }
+            $course = $row.find(':selected').text();
+
+            $courseid = 0
+            //Get courseids
+            for (var i = 0; i<courses.length; i++){
+              if (courses[i].name == $course){
+                $courseid = courses[i].courseid;
+              }
+            }
+
+            data.push({
+                "class": $class, "course": $course, "courseid":$courseid })
+        })
+
+        return data;
+    },
+
 
     hasZeroTime: function (time) {
       if (time === 0 || time === '0' || time === '0:00' || time === '00:00') {
@@ -1502,7 +1562,65 @@
       $("#rg2-world-file-map").show();
       this.georefmap.invalidateSize();
       this.georefmap.fitBounds(poly.getBounds());
-    }
+  },
+
+  confirmUpdateResults : function () {
+    var self, data, id;
+    $("#event-create-dialog").dialog("destroy");
+    self = this;
+    data = this.generateUpdatedResults();
+    $("#rg2-load-progress-label").text("Creating event");
+      $("#rg2-load-progress").show();
+      id = $("#rg2-event-selected").val();
+    console.log(data)
+      $.ajax({
+          data: data,
+          type : "POST",
+          url: rg2Config.json_url + "?type=updateresults&id=" + id,
+      dataType : "json",
+      success : function (data) {
+        // save new cookie
+        self.user.y = data.keksi;
+        if (data.ok) {
+          rg2.utils.showWarningDialog("Results updated.", "Results have been updated.");
+          // open newly created event in a separate window
+          window.open(rg2Config.json_url.replace("rg2api.php", "") + "#" + data.newid);
+          rg2.getEvents();
+          rg2.managerUI.setEvent();
+        } else {
+          rg2.utils.showWarningDialog("Save failed", data.status_msg + " Failed to update results. Please try again.");
+        }
+      },
+      error : function () {
+        rg2.utils.showWarningDialog("Save failed", " Failed to update results.");
+      },
+      complete : function () {
+        $("#rg2-load-progress-label").text("");
+        $("#rg2-load-progress").hide();
+      }
+     });
+    },
+
+    generateUpdatedResults : function () {
+
+      var data, user;
+        data = {};
+        data.results = this.results.slice(0);
+
+        for (i = 0; i < data.results.length; i += 1) {
+            data.results[i].variantid=0
+        }
+
+
+      user = this.user.encodeUser();
+      data.x = user.x;
+      data.y = user.y;
+      
+      return JSON.stringify(data);
+
+    },
+
+
   };
   rg2.Manager = Manager;
 }());
