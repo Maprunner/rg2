@@ -4,7 +4,13 @@
   "version": "1.6.2",
   "license": "MIT",
   "repository": "https://github.com/Maprunner/rg2",
+  "scripts": {
+    "format": "prettier --write .",
+    "lint": "eslint ."
+  },
   "devDependencies": {
+    "eslint": "^8.5.0",
+    "eslint-config-prettier": "^8.3.0",
     "grunt": "^1.4.0",
     "grunt-bumpup": "~0.6.3",
     "grunt-contrib-clean": "~2.0.0",
@@ -14,7 +20,7 @@
     "grunt-contrib-uglify": "^5.0.0",
     "grunt-sync": "^0.8.2",
     "grunt-text-replace": "~0.4.0",
-    "load-grunt-tasks": "~5.1.0"
-  },
-  "dependencies": {}
+    "load-grunt-tasks": "~5.1.0",
+    "prettier": "^2.5.1"
+  }
 }
