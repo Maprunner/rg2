@@ -32,7 +32,6 @@
         rg2.manager.eventListLoaded();
       }
     }).fail(function (jqxhr, textStatus, error) {
-      /*jslint unparam:true*/
       reportJSONFail("Events request failed: " + error);
     });
   }
@@ -134,7 +133,6 @@
       processGPSTracks(json);
       rg2.eventLoaded();
     }).fail(function (jqxhr, textStatus, error) {
-      /*jslint unparam:true*/
       reportJSONFail("Event request failed for event " + id + ": " + error);
       rg2.eventLoaded();
     });
@@ -145,9 +143,8 @@
       .done(function (lang) {
         // script sets rg2.dictionary to new language
         rg2.ui.setNewLanguage(lang);
+        /* eslint-disable-next-line no-unused-vars */
       }).fail(function (jqxhr, settings, exception) {
-        /*jslint unparam:true*/
-        /* jshint unused:vars */
         reportJSONFail("Language request failed.");
       });
   }

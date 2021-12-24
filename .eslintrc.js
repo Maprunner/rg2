@@ -7,4 +7,7 @@ module.exports = {
   },
   extends: ["eslint:recommended", "prettier"],
   ignorePatterns: "js/lib/**/*",
+  parserOptions: {
+    ecmaVersion: 6,
+  },
 };
