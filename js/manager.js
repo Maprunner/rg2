@@ -478,6 +478,18 @@
       } else {
         data.results = this.results.slice(0);
       }
+      // #485 tidy up for results files that have a finish time in the splits list
+      // not pretty but it will catch most of the issues
+      if (data.format === rg2.config.FORMAT_NORMAL) {
+        for (i = 0; i < data.results.length; i += 1) {
+          var splits = (data.results[i].splits.match(/;/g) || []).length;
+          // if we have one too many splits
+          if (splits === this.getControlCount(data.courses, data.results[i].courseid) + 1) {
+            // remove last ; and everything after it
+            data.results[i].splits = data.results[i].splits.substring(0, data.results[i].splits.lastIndexOf(";"));
+          }
+        }
+      }
       // #386 remove unused data: partial solution to problems with POST size
       for (i = 0; i < data.results.length; i += 1) {
         delete data.results[i].codes;
@@ -488,6 +500,15 @@
       data.x = user.x;
       data.y = user.y;
       return JSON.stringify(data);
+    },
+
+    getControlCount: function (courses, courseid) {
+      for (var i = 0; i < courses.length; i += 1) {
+        if (courses[i].courseid === courseid) {
+          return courses[i].controlcount;
+        }
+      }
+      return 0;
     },
 
     hasZeroTime: function (time) {
@@ -775,7 +796,6 @@
           }
         },
         error: function (jqXHR, textStatus) {
-          /*jslint unparam:true*/
           rg2.utils.showWarningDialog("Update failed", textStatus + ". Event update failed.");
         }
       });
@@ -816,7 +836,6 @@
           }
         },
         error: function (jqXHR, textStatus) {
-          /*jslint unparam:true*/
           rg2.utils.showWarningDialog("Delete failed", textStatus + ". Delete failed.");
         }
       });
@@ -859,7 +878,6 @@
           }
         },
         error: function (jqXHR, textStatus) {
-          /*jslint unparam:true*/
           rg2.utils.showWarningDialog("Delete failed", textStatus + ". Delete failed.");
         }
       });
@@ -1328,7 +1346,6 @@
           }
         },
         error: function (jqXHR, textStatus) {
-          /*jslint unparam:true*/
           console.log(textStatus);
         },
         complete: function () {
@@ -1367,7 +1384,6 @@
           }
         },
         error: function (jqXHR, textStatus) {
-          /*jslint unparam:true*/
           console.log(textStatus);
         }
       });

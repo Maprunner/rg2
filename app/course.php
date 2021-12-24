@@ -39,6 +39,15 @@ class course
                 $pairs = explode("N", $data[1]);
                 for ($j = 0; $j < count($pairs); $j++) {
                     $xy = explode(";", $pairs[$j]);
+                    // some events (mainly historic?) have invalid list of controls
+                    // which means an event won't load once created
+                    // the next two checks at least allow you to load the event to see what has happened
+                    if (count($xy) < 2) {
+                      $xy[1] = 1;
+                    }
+                    if (!is_numeric($xy[1])) {
+                      $xy[1] = 1;
+                    }
                     // some courses seem to have nulls at the end so just ignore them
                     if ($xy[0] != "") {
                         $dummycodes[$j] = self::getDummyCode($pairs[$j]);
