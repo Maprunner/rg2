@@ -471,6 +471,7 @@
       }
       this.setControlLocations();
       this.mapResultsToCourses();
+      this.enrichCourseNames();
       this.renumberResults();
       if (this.isScoreEvent) {
         this.extractVariants();
@@ -504,6 +505,15 @@
       data.x = user.x;
       data.y = user.y;
       return JSON.stringify(data);
+    },
+
+    enrichCourseNames: function () {
+      if (!this.isEnrichCourseNames) {
+        return;
+      }
+      for (var i = 0; i < this.courses.length; i += 1) {
+        this.courses[i].name = this.enrichCourseName(this.courses[i].name)
+      }
     },
 
     getControlCount: function (courses, courseid) {
@@ -606,30 +616,29 @@
     },
 
     enrichCourseName: function(course_name) {
-        var j;
-        var classes = "";
+      var j;
+      var classes = "";
 
-        if (this.mapping && (this.mapping.length > 0) && this.isEnrichCourseNames) {
-            for (j = 0; j < this.mapping.length; j += 1) {
-                var course = this.mapping[j].course;
-                var class_name = "";
-                if (course === course_name) {
-                    if (classes !== "") {
-                        classes += ", ";
-                    }
-                    class_name = this.mapping[j].className;
-                    class_name = class_name.replace(/ /g, "");
-                    class_name = class_name.replace(/-/g, "");
-                    classes += class_name;
-                }
+      if (this.mapping && (this.mapping.length > 0) && this.isEnrichCourseNames) {
+        for (j = 0; j < this.mapping.length; j += 1) {
+          var course = this.mapping[j].course;
+          var class_name = "";
+          if (course === course_name) {
+            if (classes !== "") {
+              classes += ", ";
             }
+            class_name = this.mapping[j].className;
+            class_name = class_name.replace(/ /g, "");
+            class_name = class_name.replace(/-/g, "");
+            classes += class_name;
+          }
         }
+      }
 
-        if (classes !== "") {
-            return (course_name + ": " + classes);
-        }
-
-        return course_name;
+      if (classes !== "") {
+        return (course_name + ": " + classes);
+      }
+      return course_name;
     },
 
     /**
@@ -1007,6 +1016,11 @@
       this.courses = parsedCourses.courses;
       this.newcontrols = parsedCourses.newcontrols;
       this.mapping = parsedCourses.mapping;
+      if (this.mapping.length > 0) {
+        $("#rg2-enrich-course-names").show();
+      } else {
+        $("#rg2-enrich-course-names").hide();
+      }
       this.coursesGeoreferenced = parsedCourses.georeferenced;
       rg2.managerUI.displayCourseInfo(this.getCourseInfoAsHTML());
       this.createResultCourseMapping();
@@ -1338,6 +1352,7 @@
 
     toggleEnrichCourseNames: function (checked) {
       this.isEnrichCourseNames = checked;
+      this.displayCourseAllocations();
     },
 
     confirmAddMap: function () {

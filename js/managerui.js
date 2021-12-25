@@ -22,7 +22,7 @@
 
     setUIVisibility : function () {
       var items;
-      items = ["#rg2-draw-courses", "#rg2-manage-login", "#rg2-login-tab"];
+      items = ["#rg2-draw-courses", "#rg2-manage-login", "#rg2-login-tab", "#rg2-enrich-course-names"];
       this.showItems(items, false);
       items = ["#rg2-manage-create", "#rg2-create-tab", "#rg2-edit-tab", "#rg2-map-tab"];
       this.showItems(items, true);
