@@ -598,9 +598,8 @@
             rg2.utils.showWarningDialog(rg2.t("Delete failed"), rg2.t("Delete failed"));
           }
         },
+        /* eslint-disable-next-line no-unused-vars */
         error : function (jqXHR, textStatus) {
-          /*jslint unparam:true*/
-          /* jshint unused:vars */
           rg2.utils.showWarningDialog(rg2.t("Delete failed"), rg2.t("Delete failed"));
         }
       });

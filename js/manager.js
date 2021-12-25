@@ -836,7 +836,6 @@
           }
         },
         error: function (jqXHR, textStatus) {
-          /*jslint unparam:true*/
           rg2.utils.showWarningDialog("Update failed", textStatus + ". Event update failed.");
         }
       });
@@ -877,7 +876,6 @@
           }
         },
         error: function (jqXHR, textStatus) {
-          /*jslint unparam:true*/
           rg2.utils.showWarningDialog("Delete failed", textStatus + ". Delete failed.");
         }
       });
@@ -920,7 +918,6 @@
           }
         },
         error: function (jqXHR, textStatus) {
-          /*jslint unparam:true*/
           rg2.utils.showWarningDialog("Delete failed", textStatus + ". Delete failed.");
         }
       });
@@ -1399,7 +1396,6 @@
           }
         },
         error: function (jqXHR, textStatus) {
-          /*jslint unparam:true*/
           console.log(textStatus);
         },
         complete: function () {
@@ -1438,7 +1434,6 @@
           }
         },
         error: function (jqXHR, textStatus) {
-          /*jslint unparam:true*/
           console.log(textStatus);
         }
       });
