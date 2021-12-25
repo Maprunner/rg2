@@ -6,7 +6,7 @@ module.exports = {
     jquery: true,
   },
   extends: ["eslint:recommended", "prettier"],
-  ignorePatterns: "js/lib/**/*",
+  ignorePatterns: ["js/lib/**/*", "*.min.js"],
   parserOptions: {
     ecmaVersion: 6,
   },

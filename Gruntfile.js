@@ -18,16 +18,19 @@ module.exports = function (grunt) {
       },
     },
 
-    cssmin: {
+    postcss: {
       options: {
-        shorthandCompacting: false,
-        roundingPrecision: -1,
+        failOnError: true,
+        map: false,
+        processors: [
+          require('autoprefixer'),
+          require('cssnano')({preset: "default"})
+        ]
       },
-      target: {
-        files: {
-          "css/rg2-<%= pkg.version %>.min.css": "css/rg2.css",
-        },
-      },
+      dist: {
+        src: "css/rg2.css",
+        dest: "css/rg2-<%= pkg.version %>.min.css"
+      }
     },
 
     sync: {
@@ -119,7 +122,7 @@ module.exports = function (grunt) {
   // increment minor version number: do anything else by editting package.json by hand
   grunt.registerTask("bump", ["bumpup"]);
 
-  grunt.registerTask("build", ["clean:minified", "cssmin", "uglify", "build-manager"]);
+  grunt.registerTask("build", ["clean:minified", "postcss", "uglify", "build-manager"]);
 
   grunt.registerTask("build-manager", ["uglify:manager"]);
 
