@@ -251,6 +251,7 @@ var clubs = [
   "soa",
   "soc",
   "solway",
+  "sos",
   "sportident",
   "sroc",
   "stag",
