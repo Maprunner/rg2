@@ -1,4 +1,4 @@
-/*global rg2:false */
+
 /*global agGrid:false */
 (function () {
   function Stats() {

@@ -1,4 +1,4 @@
-/*global rg2:false */
+
 (function () {
   function Results() {
     this.results = [];
@@ -545,13 +545,11 @@
 
     addTracks: function (tracks) {
       // this gets passed the json data array
-      var resultIndex, i, j, l, eventinfo;
-      eventinfo = rg2.events.getEventInfo();
       // for each track
-      l = tracks.length;
-      for (i = 0; i < l; i += 1) {
-        resultIndex = tracks[i].id;
-        j = 0;
+      let l = tracks.length;
+      for (let i = 0; i < l; i += 1) {
+        let resultIndex = tracks[i].id;
+        let j = 0;
         // loop through all results and add it against the correct id
         while (j < this.results.length) {
           if (resultIndex === this.results[j].resultid) {

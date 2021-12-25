@@ -1,9 +1,4 @@
-/*global rg2:false */
-/*global rg2Config:false */
-/*global FormData:false */
 /*global Proj4js:false */
-/*global console:false */
-/*global Image:false */
 /*global L:false */
 (function () {
   function Manager(keksi) {

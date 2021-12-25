@@ -1,4 +1,3 @@
-/*global rg2:false */
 (function () {
   function Courses() {
     // indexed by the provided courseid which omits 0 and hence a sparse array

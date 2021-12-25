@@ -10,4 +10,8 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 6,
   },
+  globals: {
+    rg2: "writable",
+    rg2Config: "readonly"
+},
 };

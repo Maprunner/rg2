@@ -1,4 +1,4 @@
-/*global rg2:false */
+
 (function () {
   function ResultParser(evt, fileFormat) {
     var parsedResults;

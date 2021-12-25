@@ -6,8 +6,7 @@
  * Licensed under the MIT license.
  * https://github.com/Maprunner/rg2/blob/master/LICENSE
  */
-/*global rg2Config:false */
-/*global setTimeout:false */
+// eslint-disable-next-line no-redeclare
 var rg2 = (function (window, $) {
   'use strict';
   var eventRequestInProgress = false;

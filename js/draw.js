@@ -1,5 +1,3 @@
-/*global rg2:false */
-/*global rg2Config:false */
 // handle drawing of a new route
 (function () {
   function Draw() {

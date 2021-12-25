@@ -1,6 +1,3 @@
-/*global rg2:false */
-/*global clearInterval:false */
-/*global setInterval:false */
 (function () {
   function Animation() {
     'use strict';
@@ -154,6 +151,7 @@
           oldCourse = tracks[i].course;
         }
         html += "<tr><td style='color:" + tracks[i].colour + ";'><i class='fa fa-circle'></i></td><td class='align-left'>" + tracks[i].name + "</td>";
+        // eslint-disable-next-line no-prototype-builtins
         if (tracks[i].hasOwnProperty('distance')) {
           html +=  "<td class='align-right'>" + tracks[i].distance + this.units;
         } else {

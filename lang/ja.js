@@ -1,4 +1,3 @@
-/*global rg2:false */
 rg2.setDictionary({
 code: 'ja',
 language: '日本語',

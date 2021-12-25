@@ -1,7 +1,3 @@
-/*global rg2:false */
-/*global console:false */
-/*global localStorage:false */
-/*global rg2Config:false */
 (function () {
   var config, options, dictionary;
 
@@ -95,6 +91,7 @@
 
   // translation function
   function t(str) {
+    // eslint-disable-next-line no-prototype-builtins
     if (dictionary.hasOwnProperty(str)) {
       return dictionary[str];
     }
@@ -221,6 +218,7 @@
   }
   function saveConfigOptions() {
     try {
+      // eslint-disable-next-line no-prototype-builtins
       if ((window.hasOwnProperty('localStorage')) && (window.localStorage !== null)) {
         localStorage.setItem('rg2-options', JSON.stringify(this.options));
       }
@@ -233,6 +231,7 @@
   function loadConfigOptions() {
     try {
       var prop, storedOptions;
+      // eslint-disable-next-line no-prototype-builtins
       if ((window.hasOwnProperty('localStorage')) && (window.localStorage !== null)) {
         if (localStorage.getItem('rg2-options') !== null) {
           storedOptions = JSON.parse(localStorage.getItem('rg2-options'));
@@ -240,6 +239,7 @@
           // need to do this to allow for new options that people don't yet have
           for (prop in storedOptions) {
             // probably a redundant check but it prevents lint from complaining
+            // eslint-disable-next-line no-prototype-builtins
             if (storedOptions.hasOwnProperty(prop)) {
               this.options[prop] = storedOptions[prop];
             }

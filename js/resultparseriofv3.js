@@ -1,4 +1,4 @@
-/*global rg2:false */
+
 (function () {
   function ResultParserIOFV3(xml) {
     this.results = [];
