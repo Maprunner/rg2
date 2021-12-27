@@ -1,4 +1,4 @@
-/*global rg2:false */
+
 (function () {
   function Result(data, isScoreEvent, scorecodes, scorex, scorey) {
     // resultid is the kartat id value

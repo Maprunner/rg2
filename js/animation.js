@@ -1,6 +1,3 @@
-/*global rg2:false */
-/*global clearInterval:false */
-/*global setInterval:false */
 (function () {
   function Animation() {
     'use strict';
@@ -43,7 +40,7 @@
       this.displayInitials = false;
       this.updateAnimationDetails();
       $("#btn-start-stop").removeClass('fa-pause').addClass('fa-play').prop('title', rg2.t('Run'));
-      $("#btn-real-time").removeClass().addClass('fa fa-users').prop('title', rg2.t('Real time'));
+      $("#btn-real-time").removeClass().addClass('fa fa-users').prop('title', rg2.t('Real time') + ' > ' + rg2.t('Mass start'));
       $("#btn-toggle-names").prop('title', rg2.t('Show initials'));
     },
 
@@ -154,6 +151,7 @@
           oldCourse = tracks[i].course;
         }
         html += "<tr><td style='color:" + tracks[i].colour + ";'><i class='fa fa-circle'></i></td><td class='align-left'>" + tracks[i].name + "</td>";
+        // eslint-disable-next-line no-prototype-builtins
         if (tracks[i].hasOwnProperty('distance')) {
           html +=  "<td class='align-right'>" + tracks[i].distance + this.units;
         } else {
@@ -333,13 +331,13 @@
       // toggles between mass start and real time
       if (this.realTime) {
         this.realTime = false;
-        $("#btn-real-time").removeClass().addClass('fa fa-users').prop('title', rg2.t('Real time'));
+        $("#btn-real-time").removeClass().addClass('fa fa-users').prop('title', rg2.t('Mass start') + ' > ' + rg2.t('Real time'));
         if (rg2.courses.getHighestControlNumber() > 0) {
           $("#rg2-control-select").prop('disabled', false);
         }
       } else {
         this.realTime = true;
-        $("#btn-real-time").removeClass().addClass('fa fa-clock').prop('title', rg2.t('Mass start'));
+        $("#btn-real-time").removeClass().addClass('fa fa-clock').prop('title', rg2.t('Real time') + ' > ' + rg2.t('Mass start'));
         $("#rg2-control-select").prop('disabled', true);
       }
       // go back to start

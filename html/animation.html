@@ -1,24 +1,18 @@
   <div id="rg2-animation-controls">
     <div class="rg2-ani-row row-1">
-      <div class="rg2-button"><i id="btn-slower" title = "Slower" class="fa fa-minus"></i></div>
-      <div class="rg2-button"><i id="btn-faster" title = "Faster" class="fa fa-plus"></i></div>
-      <div class="rg2-button"><i id="btn-real-time" title = "Real time" class="fa fa-users"></i></div>
-      <div class="rg2-button"><i id="btn-start-stop" title = "Run" class="fa fa-play"></i></div>
       <div id="rg2-clock"></div>
-    </div>
-    <div class="rg2-ani-row row-2">
-      <div id="rg2-animation-speed" class="rg2-wide-button"></div>
       <div id="rg2-clock-slider"></div>
     </div>
-    <div class="rg2-ani-row row-3">
-      <div id="rg2-replay-start-control">
-        <label for="rg2-control-select">Start at</label>
-        <select  id="rg2-control-select"><option>S</option></select>
-      </div>
-      <div class="rg2-button"><i id="btn-show-splits" title = "Splits" class="fa fa-list-alt"></i></div>
-      <div class="rg2-button"><i id="btn-toggle-names" title = "Show initials" class="fa fa-tag"></i></div>
+    <div class="rg2-ani-row row-2">
+      <div class="rg2-button-left"><i id="btn-start-stop" title = "Run" class="fa fa-play"></i></div>
+      <div class="rg2-button-left"><i id="btn-slower" title = "Slower" class="fa fa-backward"></i></div>
+      <div id="rg2-animation-speed" class="rg2-wide-button"></div>
+      <div class="rg2-button-left"><i id="btn-faster" title = "Faster" class="fa fa-forward"></i></div>
+      <div class="rg2-button-right"><i id="btn-real-time" title = "Real time > Mass start" class="fa fa-users"></i></div>
+      <div class="rg2-button-right"><i id="btn-show-splits" title = "Splits" class="fa fa-list-alt"></i></div>
+      <div class="rg2-button-right"><i id="btn-toggle-names" title = "Show initials" class="fa fa-tag"></i></div>
     </div>
-    <div class="rg2-ani-row row-4">
+    <div class="rg2-ani-row row-3">
       <div id="rg2-tails-spinner">
         <label for="spn-tail-length">Length</label>
         <input id="spn-tail-length" name="value" />
@@ -27,5 +21,9 @@
         <label for="btn-full-tails">Full tails</label>
         <input type="checkbox" id="btn-full-tails" />
       </div>
+      <div id="rg2-replay-start-control" title = "Start at">
+        <select id="rg2-control-select"><option>S</option></select>
+      </div>
     </div>
+
   </div>

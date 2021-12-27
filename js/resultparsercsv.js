@@ -1,4 +1,4 @@
-/*global rg2:false */
+
 (function () {
   function ResultParserCSV(rawCSV) {
     this.results = [];
@@ -66,13 +66,13 @@
       result.valid = true;
       result.chipid = fields[this.CSVFormat.CHIP_IDX];
       // delete quotes from CSV file: output from MERCS
-      result.name = (fields[this.CSVFormat.FIRST_NAME_IDX] + " " + fields[this.CSVFormat.SURNAME_IDX]).trim().replace(/\"/g, '');
+      result.name = (fields[this.CSVFormat.FIRST_NAME_IDX] + " " + fields[this.CSVFormat.SURNAME_IDX]).trim().replace(/"/g, '');
       result.dbid = (fields[this.CSVFormat.DB_IDX]);
       result.starttime = rg2.utils.getSecsFromHHMMSS(fields[this.CSVFormat.START_TIME_IDX]);
       result.time = fields[this.CSVFormat.TOTAL_TIME_IDX];
       result.position = this.getPosition(fields);
       result.status = this.getSICSVStatus(fields[this.CSVFormat.NC_IDX], fields[this.CSVFormat.CLASSIFIER_IDX]);
-      result.club = fields[this.CSVFormat.CLUB_IDX].trim().replace(/\"/g, '');
+      result.club = fields[this.CSVFormat.CLUB_IDX].trim().replace(/"/g, '');
       result.course = fields[this.CSVFormat.COURSE_IDX];
       if (result.course === '') {
         result.valid = false;

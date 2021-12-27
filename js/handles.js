@@ -1,4 +1,4 @@
-/*global rg2:false */
+
 (function () {
   function Handle(x, y, time, index) {
     // current position of handles

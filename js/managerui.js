@@ -1,4 +1,4 @@
-/*global rg2:false */
+
 (function () {
   var managerUI = {
     showItems : function (items, doShow) {
@@ -22,7 +22,7 @@
 
     setUIVisibility : function () {
       var items;
-      items = ["#rg2-draw-courses", "#rg2-manage-login", "#rg2-login-tab"];
+      items = ["#rg2-draw-courses", "#rg2-manage-login", "#rg2-login-tab", "#rg2-enrich-course-names"];
       this.showItems(items, false);
       items = ["#rg2-manage-create", "#rg2-create-tab", "#rg2-edit-tab", "#rg2-map-tab"];
       this.showItems(items, true);
@@ -76,17 +76,15 @@
     },
 
     createGeorefDropdown : function (georef) {
-      var dropdown;
       $("#rg2-georef-selected").empty();
-      dropdown = document.getElementById("rg2-georef-selected");
-      dropdown = georef.getDropdown(dropdown);
+      let dropdown = document.getElementById("rg2-georef-selected");
+      georef.getDropdown(dropdown);
     },
 
     createEventEditDropdown : function () {
-      var dropdown;
       $("#rg2-event-selected").empty();
-      dropdown = document.getElementById("rg2-event-selected");
-      dropdown = rg2.events.getEventEditDropdown(dropdown);
+      let dropdown = document.getElementById("rg2-event-selected");
+      rg2.events.getEventEditDropdown(dropdown);
     },
 
     createRouteDeleteDropdown : function (id) {

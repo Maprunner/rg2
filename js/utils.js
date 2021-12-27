@@ -1,5 +1,3 @@
-/*global rg2:false */
-/*global rg2Config:false */
 (function () {
   var utils =  {
     rotatePoint : function (x, y, angle) {

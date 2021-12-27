@@ -8,11 +8,11 @@ html, body {
   margin: 0;
   border: 0;
   display: block;
-  font: 16px/26px -apple-system,"Roboto","Segoe UI","Helvetica Neue",Arial,sans-serif;
+  font: 16px/26px -apple-system,Roboto,"Segoe UI","Helvetica Neue",Arial,sans-serif;
 }
 
 .ui-widget {
-  font: 16px/26px -apple-system,"Roboto","Segoe UI","Helvetica Neue",Arial,sans-serif;
+  font: 16px/26px -apple-system,Roboto,"Segoe UI","Helvetica Neue",Arial,sans-serif;
 }
 
 #rg2-header-container {
@@ -43,13 +43,13 @@ html, body {
 .form-control {
   width: 90%;
 }
+
 #rg2-course-select, #rg2-name-select {
   min-width: 200px;
   max-width: 200px;
 }
 
 #rg2-manager-event-select {
-  /*margin-top:100px;*/
   width: 100%;
 }
 
@@ -60,36 +60,38 @@ html, body {
 	height: 50px;
 }
 
+
+#rg2-animation-controls {
+  display: flex;
+  flex-flow: column wrap;
+  width: 350px;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+}
+
 .rg2-ani-row {
     background: silver;
     color: white;
-    position: absolute;
     vertical-align: middle;
     height: 36px;
-	  width: 280px;
-    right: 0;
-	  border: 4px solid darkgray;
   	z-index: 100;
     line-height: 36px;
 }
 
 .row-1 {
-    bottom: 120px;
-    font-size: 20px;
+  border: 4px solid darkgray;
+  font-size: 20px;
 }
 
 .row-2 {
-    bottom: 80px;
+  border-left: 4px solid darkgray;
+  border-right: 4px solid darkgray;
 }
 
 .row-3 {
-    bottom: 40px;
-    color: black;
-}
-
-.row-4 {
-    bottom: 0;
-    color: black;
+  border: 4px solid darkgray;
+  color: black;
 }
 
 #rg2-resize-info {
@@ -110,18 +112,41 @@ html, body {
 	float: right;
 	width: 30px;
 	text-align: center;
+	border-right: 4px solid darkgray;
+}
+
+.rg2-button-left {
+  background: silver;
+  color: white;
+	float: left;
+	width: 30px;
+	text-align: center;
+	border-right: 4px solid darkgray;
+}
+
+.rg2-button-right {
+  background: silver;
+  color: white;
+	float: right;
+	width: 30px;
+	text-align: center;
 	border-left: 4px solid darkgray;
 }
 
 .rg2-wide-button {
   background: silver;
   color: white;
-	float: right;
-	width: 64px;
+	float: left;
+	width: 55px;
 	text-align: center;
-	border-left: 4px solid darkgray;
+  border-right: 4px solid darkgray;
 }
-.rg2-button:hover {
+
+.rg2-button:hover  {
+  color: darkgray;
+}
+
+.rg2-button-left:hover{
   color: darkgray;
 }
 
@@ -216,12 +241,14 @@ html, body {
    font-size: 26px;
    color: black;
  	 text-align: center;
+    float:left;
+    margin-left: 20px;
 }
 
 #rg2-tails-type {
-	padding-left: 5px;
+	padding: 0 5px;
 	border-right: 4px solid darkgray;
-	width: 100px;
+  float:left;
 }
 
 #spn-tail-length {
@@ -229,8 +256,9 @@ html, body {
 }
 
 #rg2-tails-spinner {
-  float: right;
-  padding-right: 5px;
+  float: left;
+  padding: 0 5px;
+  border-right: 4px solid darkgray;
 }
 
 .rg2-spinner {
@@ -275,7 +303,7 @@ html, body {
 }
 
 #rg2-info-panel-tab-headers .ui-tabs-nav a {
-   padding: .5em .5em;
+   padding: .5em;
 }
 
 #rg2-info-panel-tab-body {
@@ -307,7 +335,7 @@ html, body {
   color: black;
   width: 20px;
   text-align: center;
-  border: 1px solid #AAAAAA;
+  border: 1px solid #AAA;
   background: #E0E0E0;
 }
 
@@ -318,10 +346,10 @@ html, body {
 
 .rg2-progress-display {
    border: 1px solid darkgray;
-   background: rgb(204, 204, 204);
-   background: rgba(204, 204, 204, 1.0);
+   background: rgb(204 204 204);
+   background: rgb(204 204 204 / 100%);
    padding : 2px;
-   font:1.0em/1.0em arial;
+   font:1.0em/1.0em Arial, sans-serif;
    text-align:center;
    height: auto;
    width: 200px;
@@ -351,11 +379,11 @@ html, body {
 
 .track-names {
    border: 1px solid darkgray;
-   background: rgb(204, 204, 204);
-   background: rgba(204, 204, 204, 0.75);
+   background: rgb(204 204 204);
+   background: rgb(204 204 204 / 75%);
    padding : 2px;
    position: absolute;
-   font:0.75em arial;
+   font:0.75em Arial, sans-serif;
    top: 0;
    right: 0;
    height: auto;
@@ -380,14 +408,18 @@ html, body {
 }
 
 .track-names th {
-  background: rgb(150, 150, 150);
-  background: rgba(150, 150, 150, 0.75);
+  background: rgb(150 150 150);
+  background: rgb(150 150 150 / 75%);
   text-align: left;
 }
 
 #rg2-replay-start-control {
-  float: left;
-  padding-left: 5px;
+  float: right;
+  margin-right:5px
+}
+
+#rg2-control-select {
+  width: 80px;
 }
 
 .pushright {
@@ -416,9 +448,9 @@ html, body {
 	color: green;
 }
 
-/* light green background*/
+/* light green background */
 .valid {
-  background-color: #99ffcc;
+  background-color: #9fc;
   border-radius: 3px;
 }
 
@@ -473,7 +505,6 @@ padding: 0;
 }
 
 #rg2-button-bar .ui-button-text-icon-primary,
-#rg2-button-bar .ui-button-text,
 #rg2-button-bar .ui-button-text-icons,
 #rg2-button-bar .ui-button-text {
 	font-size: 0.75em;
@@ -483,7 +514,9 @@ padding: 0;
 
 #rg2-clock-slider {
   margin: 10px 15px;
-  width: 180px;
+  width: 175px;
+  float:right;
+
 }
 
 #rg2-clock-slider .ui-state-default {
@@ -522,7 +555,7 @@ height: 20px;
 }
 
 #rg2-tails-spinner .ui-spinner input {
-  font: 16px Helvetica, Helvetica Neue, Arial;
+  font: 16px Helvetica, "Helvetica Neue", Arial, sans-serif;
   margin-bottom: 9px
 }
 
@@ -542,31 +575,37 @@ height: 20px;
   margin-top: 5px;
   margin-bottom: 5px;
 }
+
 /* spinner icons */
 #rg2-tails-spinner .ui-icon,
 #rg2-tails-spinner .ui-widget-content .ui-icon {
-	background-image: url(../img/ui-icons_222222_256x240.png);
+	background-image: url("../img/ui-icons_222222_256x240.png");
 }
+
 #rg2-tails-spinner .ui-widget-header .ui-icon {
-	background-image: url(../img/ui-icons_222222_256x240.png);
+	background-image: url("../img/ui-icons_222222_256x240.png");
 }
+
 #rg2-tails-spinner .ui-state-default .ui-icon {
-	background-image: url(../img/ui-icons_888888_256x240.png);
+	background-image: url("../img/ui-icons_888888_256x240.png");
 }
+
 #rg2-tails-spinner .ui-state-hover .ui-icon,
 #rg2-tails-spinner .ui-state-focus .ui-icon {
-	background-image: url(../img/ui-icons_454545_256x240.png);
+	background-image: url("../img/ui-icons_454545_256x240.png");
 }
+
 #rg2-tails-spinner .ui-state-active .ui-icon {
-	background-image: url(../img/ui-icons_454545_256x240.png);
+	background-image: url("../img/ui-icons_454545_256x240.png");
 }
+
 #rg2-tails-spinner .ui-state-highlight .ui-icon {
-	background-image: url(../img/ui-icons_2e83ff_256x240.png);
+	background-image: url("../img/ui-icons_2e83ff_256x240.png");
 }
 
 #rg2-tails-spinner .ui-state-error .ui-icon,
 .ui-state-error-text .ui-icon {
-	background-image: url(../img/ui-icons_cd0a0a_256x240.png);
+	background-image: url("../img/ui-icons_cd0a0a_256x240.png");
 }
 
 /* allow close button on dialog to be hidden

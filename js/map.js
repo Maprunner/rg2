@@ -1,5 +1,3 @@
-/*global rg2:false */
-/*global rg2Config:false */
 (function () {
   function Georef(description, name, params) {
     this.description = description;

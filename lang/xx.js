@@ -1,4 +1,3 @@
-/*global rg2:false */
 rg2.setDictionary({
   // Dummy file to start from
   code: 'xx',

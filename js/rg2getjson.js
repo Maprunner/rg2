@@ -1,5 +1,3 @@
-/*global rg2:false */
-/*global rg2Config:false */
 (function () {
   function reportJSONFail(errorText) {
     $("#rg2-load-progress").hide();
@@ -32,13 +30,12 @@
         rg2.manager.eventListLoaded();
       }
     }).fail(function (jqxhr, textStatus, error) {
-      /*jslint unparam:true*/
       reportJSONFail("Events request failed: " + error);
     });
   }
 
   function processGPSTracks(json) {
-    var active, i, event, routes, crs;
+    var active, i, routes, crs;
     $("#rg2-load-progress-label").text(rg2.t("Saving routes"));
     // TODO remove temporary (?) fix to get round RG1 events with no courses defined: see #179
     if (rg2.courses.getNumberOfCourses() > 0) {
@@ -75,16 +72,19 @@
         $("#rg2-splitsbrowser").off().hide();
       }
       // set up screen as requested in hash
-      event = $.Event('click');
-      event.target = {};
-      event.target.checked = true;
       routes = rg2.requestedHash.getRoutes();
       for (i = 0; i < routes.length; i += 1) {
+        const event = $.Event('click');
+        event.target = {};
+        event.target.checked = true;
         event.target.id = routes[i];
         $(".showtrack").filter("#" + routes[i]).trigger(event).prop('checked', true);
       }
       crs = rg2.requestedHash.getCourses();
       for (i = 0; i < crs.length; i += 1) {
+        const event = $.Event('click');
+        event.target = {};
+        event.target.checked = true;
         event.target.id = crs[i];
         $(".showcourse").filter("#" + crs[i]).trigger(event).prop('checked', true);
       }
@@ -131,7 +131,6 @@
       processGPSTracks(json);
       rg2.eventLoaded();
     }).fail(function (jqxhr, textStatus, error) {
-      /*jslint unparam:true*/
       reportJSONFail("Event request failed for event " + id + ": " + error);
       rg2.eventLoaded();
     });
@@ -142,9 +141,8 @@
       .done(function (lang) {
         // script sets rg2.dictionary to new language
         rg2.ui.setNewLanguage(lang);
+        /* eslint-disable-next-line no-unused-vars */
       }).fail(function (jqxhr, settings, exception) {
-        /*jslint unparam:true*/
-        /* jshint unused:vars */
         reportJSONFail("Language request failed.");
       });
   }

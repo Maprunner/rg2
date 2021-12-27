@@ -1,5 +1,3 @@
-/*global rg2:false */
-/*global Image:false */
 (function () {
   var canvas, ctx, map;
   canvas = $("#rg2-map-canvas")[0];

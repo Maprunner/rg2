@@ -1,4 +1,3 @@
-/*global rg2:false */
 (function () {
   function Controls() {
     this.controls = [];

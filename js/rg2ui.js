@@ -1,5 +1,3 @@
-/*global rg2:false */
-/*global rg2Config:false */
 (function () {
   var ui = {
 
@@ -445,7 +443,6 @@
         min: 3,
         step: 1,
         spin: function (event, ui) {
-          /*jslint unparam:true*/
           rg2.setConfigOption("circleSize", ui.value);
           rg2.redraw(false);
         }
@@ -455,7 +452,6 @@
         min: 1,
         step: 0.5,
         spin: function (event, ui) {
-          /*jslint unparam:true*/
           rg2.setConfigOption("courseWidth", ui.value);
           rg2.redraw(false);
         }
@@ -467,7 +463,6 @@
         step: 10,
         numberFormat: "n",
         spin: function (event, ui) {
-          /*jslint unparam:true*/
           rg2.setConfigOption("mapIntensity", ui.value / 100);
           rg2.redraw(false);
         }
@@ -478,7 +473,6 @@
         step: 1,
         numberFormat: "n",
         spin: function (event, ui) {
-          /*jslint unparam:true*/
           rg2.setConfigOption("replayFontSize", ui.value);
           rg2.redraw(false);
         }
@@ -490,7 +484,6 @@
         step: 10,
         numberFormat: "n",
         spin: function (event, ui) {
-          /*jslint unparam:true*/
           rg2.setConfigOption("routeIntensity", ui.value / 100);
           rg2.redraw(false);
         }
@@ -500,7 +493,6 @@
         min: 1,
         step: 0.5,
         spin: function (event, ui) {
-          /*jslint unparam:true*/
           rg2.setConfigOption("routeWidth", ui.value);
           rg2.redraw(false);
         }
@@ -510,7 +502,6 @@
         max: 600,
         min: 0,
         spin: function (event, ui) {
-          /*jslint unparam:true*/
           rg2.animation.setTailLength(ui.value);
         }
       }).val(0);
@@ -519,7 +510,6 @@
         min: -600,
         disabled: true,
         spin: function (event, ui) {
-          /*jslint unparam:true*/
           rg2.drawing.adjustOffset(ui.value);
         }
       }).val(0);
@@ -528,7 +518,6 @@
         max: 10,
         min: 1,
         spin: function (event, ui) {
-          /*jslint unparam:true*/
           rg2.results.setSpeedRange(ui.value, rg2.options.minSpeed);
         }
       }).val(rg2.options.maxSpeed);
@@ -536,7 +525,6 @@
         max: 20,
         min: 5,
         spin: function (event, ui) {
-          /*jslint unparam:true*/
           rg2.results.setSpeedRange(rg2.options.maxSpeed, ui.value);
         }
       }).val(rg2.options.minSpeed);
@@ -576,7 +564,6 @@
       }
       $select.empty().append(html).menu({
         select: function (event, ui) {
-          /*jslint unparam:true*/
           var id;
           id = parseInt(ui.item[0].id.replace('event-', ''), 10);
           rg2.loadEvent(id);
@@ -688,7 +675,6 @@
       $("#rg2-clock").text("00:00:00");
       $("#rg2-clock-slider").slider({
         slide: function (event, ui) {
-          /*jslint unparam:true*/
           // passes slider value as new time
           rg2.animation.clockSliderMoved(ui.value);
         }

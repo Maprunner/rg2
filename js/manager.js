@@ -1,9 +1,4 @@
-/*global rg2:false */
-/*global rg2Config:false */
-/*global FormData:false */
 /*global Proj4js:false */
-/*global console:false */
-/*global Image:false */
 /*global L:false */
 (function () {
   function Manager(keksi) {
@@ -22,6 +17,7 @@
     this.newcontrols = new rg2.Controls();
     this.courses = [];
     this.mapping = [];
+    this.isEnrichCourseNames = false;
     this.mapLoaded = false;
     this.coursesGeoreferenced = false;
     this.controlsAdjusted = false;
@@ -159,6 +155,9 @@
       });
       $("#btn-score-event").click(function (evt) {
         self.toggleScoreEvent(evt.target.checked);
+      });
+      $("#btn-enrich-course-names").click(function(evt) {
+        self.toggleEnrichCourseNames(evt.target.checked);
       });
       $("#btn-sort-results").click(function (evt) {
         self.toggleSortResults(evt.target.checked);
@@ -467,6 +466,7 @@
       }
       this.setControlLocations();
       this.mapResultsToCourses();
+      this.enrichCourseNames();
       this.renumberResults();
       if (this.isScoreEvent) {
         this.extractVariants();
@@ -478,6 +478,18 @@
       } else {
         data.results = this.results.slice(0);
       }
+      // #485 tidy up for results files that have a finish time in the splits list
+      // not pretty but it will catch most of the issues
+      if (data.format === rg2.config.FORMAT_NORMAL) {
+        for (i = 0; i < data.results.length; i += 1) {
+          var splits = (data.results[i].splits.match(/;/g) || []).length;
+          // if we have one too many splits
+          if (splits === this.getControlCount(data.courses, data.results[i].courseid) + 1) {
+            // remove last ; and everything after it
+            data.results[i].splits = data.results[i].splits.substring(0, data.results[i].splits.lastIndexOf(";"));
+          }
+        }
+      }
       // #386 remove unused data: partial solution to problems with POST size
       for (i = 0; i < data.results.length; i += 1) {
         delete data.results[i].codes;
@@ -488,6 +500,24 @@
       data.x = user.x;
       data.y = user.y;
       return JSON.stringify(data);
+    },
+
+    enrichCourseNames: function () {
+      if (!this.isEnrichCourseNames) {
+        return;
+      }
+      for (var i = 0; i < this.courses.length; i += 1) {
+        this.courses[i].name = this.enrichCourseName(this.courses[i].name)
+      }
+    },
+
+    getControlCount: function (courses, courseid) {
+      for (var i = 0; i < courses.length; i += 1) {
+        if (courses[i].courseid === courseid) {
+          return courses[i].controlcount;
+        }
+      }
+      return 0;
     },
 
     hasZeroTime: function (time) {
@@ -580,6 +610,32 @@
       this.courses = newCourses;
     },
 
+    enrichCourseName: function(course_name) {
+      var j;
+      var classes = "";
+
+      if (this.mapping && (this.mapping.length > 0) && this.isEnrichCourseNames) {
+        for (j = 0; j < this.mapping.length; j += 1) {
+          var course = this.mapping[j].course;
+          var class_name = "";
+          if (course === course_name) {
+            if (classes !== "") {
+              classes += ", ";
+            }
+            class_name = this.mapping[j].className;
+            class_name = class_name.replace(/ /g, "");
+            class_name = class_name.replace(/-/g, "");
+            classes += class_name;
+          }
+        }
+      }
+
+      if (classes !== "") {
+        return (course_name + ": " + classes);
+      }
+      return course_name;
+    },
+
     /**
     * @param {string} course - Course name from results file.
     * @param {integer} courseidx - Course name index.
@@ -622,7 +678,7 @@
         if (idx === i) {
           html += " selected";
         }
-        html += ">" + this.courses[i].name + "</option>";
+        html += ">" + this.enrichCourseName(this.courses[i].name) + "</option>";
       }
       html += "</select>";
       return html;
@@ -775,7 +831,6 @@
           }
         },
         error: function (jqXHR, textStatus) {
-          /*jslint unparam:true*/
           rg2.utils.showWarningDialog("Update failed", textStatus + ". Event update failed.");
         }
       });
@@ -816,7 +871,6 @@
           }
         },
         error: function (jqXHR, textStatus) {
-          /*jslint unparam:true*/
           rg2.utils.showWarningDialog("Delete failed", textStatus + ". Delete failed.");
         }
       });
@@ -859,7 +913,6 @@
           }
         },
         error: function (jqXHR, textStatus) {
-          /*jslint unparam:true*/
           rg2.utils.showWarningDialog("Delete failed", textStatus + ". Delete failed.");
         }
       });
@@ -955,6 +1008,11 @@
       this.courses = parsedCourses.courses;
       this.newcontrols = parsedCourses.newcontrols;
       this.mapping = parsedCourses.mapping;
+      if (this.mapping.length > 0) {
+        $("#rg2-enrich-course-names").show();
+      } else {
+        $("#rg2-enrich-course-names").hide();
+      }
       this.coursesGeoreferenced = parsedCourses.georeferenced;
       rg2.managerUI.displayCourseInfo(this.getCourseInfoAsHTML());
       this.createResultCourseMapping();
@@ -1284,6 +1342,11 @@
       this.isScoreEvent = checked;
     },
 
+    toggleEnrichCourseNames: function (checked) {
+      this.isEnrichCourseNames = checked;
+      this.displayCourseAllocations();
+    },
+
     confirmAddMap: function () {
       var dlg;
       dlg = {};
@@ -1328,7 +1391,6 @@
           }
         },
         error: function (jqXHR, textStatus) {
-          /*jslint unparam:true*/
           console.log(textStatus);
         },
         complete: function () {
@@ -1367,7 +1429,6 @@
           }
         },
         error: function (jqXHR, textStatus) {
-          /*jslint unparam:true*/
           console.log(textStatus);
         }
       });

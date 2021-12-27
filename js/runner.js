@@ -1,4 +1,4 @@
-/*global rg2:false */
+
 /*exported Runner */
 // animated runner details
 (function () {

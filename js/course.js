@@ -1,4 +1,3 @@
-/*global rg2:false */
 (function () {
   function Course(data, isScoreCourse) {
     this.name = data.name;

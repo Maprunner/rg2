@@ -32,7 +32,7 @@
   }
 
   // version replaced by Gruntfile as part of release
-  define('RG2VERSION', '1.6.2');
+  define('RG2VERSION', '1.6.3');
   define('KARTAT_DIRECTORY', $kartat);
   define('LOCK_DIRECTORY', dirname(__FILE__)."/lock/saving/");
   define('CACHE_DIRECTORY', $kartat."cache/");
@@ -185,6 +185,14 @@ function handleGetRequest($type, $id)
   case 'fix':
     event::fixResults($id);
     $output = json_encode("Results fixed for event ".$id);
+    break;
+  case 'aresplitsbroken':
+    $answer = event::areSplitsBroken();
+    $output = json_encode($answer);
+    break;
+  case 'fixsplits':
+    event::fixSplits($id, true);
+    $output = json_encode("Splits fixed for event ".$id);
     break;
   default:
     utils::rg2log("Get request not recognised: ".$type.", ".$id);

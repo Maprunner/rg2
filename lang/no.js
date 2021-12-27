@@ -1,4 +1,3 @@
-/*global rg2:false */
 rg2.setDictionary({
 code: 'no',
 language: 'Norsk',
