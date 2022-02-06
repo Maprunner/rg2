@@ -130,6 +130,7 @@ var rg2 = (function (window, $) {
     rg2.controls = new rg2.Controls();
     rg2.animation = new rg2.Animation();
     rg2.drawing = new rg2.Draw();
+    rg2.overlay = new rg2.Overlay();
     rg2.requestedHash = new rg2.RequestedHash();
     rg2.stats = new rg2.Stats();
   }

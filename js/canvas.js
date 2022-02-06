@@ -57,6 +57,7 @@
         } else {
           rg2.courses.drawCourses(rg2.config.DIM);
           rg2.results.drawTracks();
+          rg2.overlay.drawOverlays();
           rg2.controls.drawControls(false);
           if (fromTimer) {
             rg2.animation.incrementAnimationTime();

@@ -751,3 +751,8 @@ body {
 #rg2-results-grid-wrapper {
   height: 200px;
 }
+
+.rg2-overlay-details-table {
+  display: grid;
+  grid-template-columns: 1fr 5fr 5fr 5fr;
+}
