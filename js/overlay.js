@@ -79,7 +79,7 @@
       this.currentOverlay.colour = this.getNextColour();
     },
 
-    mouseUp: function (x, y, button) {
+    mouseUp: function (x, y) {
       if (!this.measuring) {
         return;
       }
@@ -140,10 +140,13 @@
       }
       details = details + this.formatOverlay(this.currentOverlay, false);
       $("#rg2-overlay-details").empty().append(details);
-      // reset click handlers for deletion
+      // reset click handlers
       var self = this;
       $(".delete-overlay").off().click(function (event) {
         self.deleteOverlay(parseInt(event.target.id, 10));
+      });
+      $(".end-overlay").off().click(function () {
+        self.endOverlay();
       });
     },
 
@@ -156,7 +159,7 @@
         if (completed) {
           formatted = formatted + "<div><i class='delete-overlay fa fa-trash' id=" + ol.idx + "></i></div>";
         } else {
-          formatted = formatted + "<div></div>";
+          formatted = formatted + "<div><i class='end-overlay fa fa-save' id=" + ol.idx + "></i></div>";
         }
       }
       return formatted;
