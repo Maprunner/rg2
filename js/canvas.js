@@ -259,6 +259,7 @@
   function mapLoadedCallback() {
     $("#rg2-map-load-progress").hide();
     resetMapState();
+    rg2.overlay.mapLoaded();
     if (rg2.config.managing) {
       rg2.manager.mapLoadCallback();
     }

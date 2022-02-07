@@ -754,5 +754,10 @@ body {
 
 .rg2-overlay-details-table {
   display: grid;
-  grid-template-columns: 1fr 5fr 5fr 5fr;
+  grid-template-columns: 1fr 2fr 4fr 1fr;
+}
+
+.overlay-bar {
+  background-color: var(--overlay-colour);
+  margin: 5px;
 }
