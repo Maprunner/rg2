@@ -715,14 +715,20 @@
 
     getComments: function () {
       var i, comments;
+      let header = "<div class='rg2-comments-table'><div class='header'>" + rg2.t("Name") + "</div><div class='header'>" + rg2.t("Course") + "</div>";
+      header += "<div class='header'>" + rg2.t("Comments") + "</div>";
       comments = "";
+
       for (i = 0; i < this.results.length; i += 1) {
         if (this.results[i].comments !== "") {
-          comments += "<tr><td><strong>" + this.results[i].name + "</strong></td><td>";
-          comments += this.results[i].coursename + "</td><td class='selectable'>" + this.results[i].comments + "</td></tr>";
-
+          comments += "<div class='item'><strong>" + this.results[i].name + "</strong></div><div class='item'>";
+          comments += this.results[i].coursename + "</div><div class='item selectable'>" + this.results[i].comments + "</div>";
         }
       }
+      if (comments !== "") {
+        comments = header + comments + "</div> ";
+      }
+ 
       return comments;
     },
 

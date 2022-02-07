@@ -26,35 +26,29 @@ var rg2 = (function (window, $) {
     }, 500);
   }
 
-  function getResultsStats(controls) {
-    var stats, resultsinfo, coursearray;
+  function getResultsStats(controls, validWorldFile) {
+    var stats, resultsinfo, coursearray, mapSize;
     resultsinfo = rg2.results.getResultsInfo();
     coursearray = rg2.courses.getCoursesForEvent();
-    stats = "<tr><td><strong>" + rg2.t("Courses") + "</strong></td><td>" + coursearray.length + "</td>";
-    stats += "<td><strong>" + rg2.t("Controls") + "</strong></td><td>" + controls + "</td>";
-    stats += "<td><strong>" + rg2.t("Results") + "</strong></td><td>" + resultsinfo.results + "</td></tr>";
-    stats += "<tr><td><strong>" + rg2.t("Routes") + "</strong></td><td>" + resultsinfo.totalroutes + " (" + resultsinfo.percent + "%)</td>";
-    stats += "<td><strong>" + rg2.t("Drawn routes") + "</strong></td><td>" + resultsinfo.drawnroutes + "</td>";
-    stats += "<td><strong>" + rg2.t("GPS routes") + "</strong></td><td>" + resultsinfo.gpsroutes + "</td></tr>";
-    stats += "<tr><td><strong>" + rg2.t("Total time") + "</strong></td><td colspan='5'>" + resultsinfo.time + "</td></tr>";
-    return stats;
-  }
-
-  function getMapStats(validWordlfile) {
-    var stats, mapSize;
     mapSize = rg2.getMapSize();
-    stats = "<tr><td><strong>" +  rg2.t("Map") + "</strong></td><td colspan='5'>ID " + rg2.events.getActiveMapID();
-    stats += ", " + mapSize.width + " x " + mapSize.height + " pixels";
-    if (validWordlfile) {
-      stats += ". " +  rg2.t("Map is georeferenced") + ".</td></tr>";
-    } else {
-      stats += ".</td></tr>";
+    stats = "<div class='rg2-event-stats-table'><div class='header'>" + rg2.t("Courses") + "</div><div class='item'>" + coursearray.length + "</div>";
+    stats += "<div class='header'>" + rg2.t("Controls") + "</div><div class='item'>" + controls + "</div>";
+    stats += "<div class='header'>" + rg2.t("Results") + "</div><div class='item'>" + resultsinfo.results + "</div>";
+    stats += "<div class='header'>" + rg2.t("Routes") + "</div><div class='item'>" + resultsinfo.totalroutes + " (" + resultsinfo.percent + "%)</div>";
+    stats += "<div class='header'>" + rg2.t("Drawn routes") + "</div><div class='item'>" + resultsinfo.drawnroutes + "</div>";
+    stats += "<div class='header'>" + rg2.t("GPS routes") + "</div><div class='item'>" + resultsinfo.gpsroutes + "</div>";
+    stats += "<div class='header'>" + rg2.t("Total time") + "</div><div class='item'>" + resultsinfo.time + "</div>";
+    stats += "<div class='header'>" +  rg2.t("Map") + " ID " + rg2.events.getActiveMapID() + "</div>";
+    stats += "<div class='item'>" + mapSize.width + " x " + mapSize.height + " pixels";
+    if (validWorldFile) {
+      stats += ". " + rg2.t("Map is georeferenced") + ".";
     }
+    stats += "</div></div>";
     return stats;
   }
 
   function getEventStats() {
-    var stats, runnercomments, eventinfo, id;
+    var stats, eventinfo, id;
     id = rg2.events.getActiveEventID();
     // check there is an event to report on
     if (id === null) {
@@ -62,19 +56,14 @@ var rg2 = (function (window, $) {
     }
     id = rg2.events.getKartatEventID();
     eventinfo = rg2.events.getEventInfo(parseInt(id, 10));
-    runnercomments = rg2.results.getComments();
-    stats = "<div><table><thead><tr><th colspan='6'><h2>" + rg2.t("Event statistics") + ": " + eventinfo.name;
-    stats += ": " + eventinfo.date + "</h2></th></tr></thead><tbody>";
-    stats += getResultsStats(eventinfo.controls);
+    stats = "<h2>" + rg2.t("Event statistics") + ": " + eventinfo.name + ": " + eventinfo.date + "</h2>";
     if (eventinfo.comment) {
-      stats += "<tr><td><strong>" + rg2.t("Comments") + "</strong></td><td colspan='5'>" + eventinfo.comment + "</td></tr>";
+      stats += "<div><strong>" + rg2.t("Comments") + "</strong>: " + eventinfo.comment + "</div>";
     }
-    stats += getMapStats(eventinfo.worldfile.valid);
-    stats += "</tbody></table>";
-    if (runnercomments) {
-      stats += "<div><table><thead><tr><th>"  + rg2.t("Name") + "</th><th>" + rg2.t("Course") + "</th><th>" + rg2.t("Comments") + "</th></tr></thead><tbody>";
-      stats += runnercomments + "</tbody></table></div>";
-    }
+    stats += "<hr>";
+    stats += getResultsStats(eventinfo.controls, eventinfo.worldfile.valid);
+    stats += "<hr>";
+    stats += rg2.results.getComments();
     // #177 not pretty but gets round problems of double encoding
     stats = stats.replace(/&amp;/g, '&');
     return stats;
