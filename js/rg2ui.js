@@ -214,14 +214,26 @@
         id = event.target.id;
         if (event.target.checked) {
           rg2.courses.putOnDisplay(id);
-          // check box on courses tab
-          $(".courselist").filter("#" + id).prop('checked', true);
+          // align courses and results tab
+          $(".showcourse").filter("#" + id).prop('checked', true);
         } else {
           rg2.courses.removeFromDisplay(id);
-          // uncheck box on courses tab
-          $(".courselist").filter("#" + id).prop('checked', false);
-          // make sure the all checkbox is not checked
-          $(".allcourses").prop('checked', false);
+          // align courses and results tab
+          $(".showcourse").filter("#" + id).prop('checked', false);
+        }
+        $(".showallcourses").prop('checked', rg2.courses.allCoursesDisplayed());
+        rg2.requestedHash.setCourses();
+        rg2.redraw(false);
+      });
+      // checkbox on course tab to show all courses
+      $(".showallcourses").click(function (event) {
+        if (event.target.checked) {
+          rg2.courses.putAllOnDisplay();
+          // select all the individual checkboxes for each course
+          $(".showcourse").prop('checked', true);
+        } else {
+          rg2.courses.removeAllFromDisplay();
+          $(".showcourse").prop('checked', false);
         }
         rg2.requestedHash.setCourses();
         rg2.redraw(false);
@@ -373,41 +385,6 @@
     createCourseMenu: function () {
       //loads menu from populated courses array
       $("#rg2-course-table").empty().append(rg2.courses.formatCoursesAsTable());
-
-      // checkbox on course tab to show a course
-      $(".courselist").click(function (event) {
-        var id = parseInt(event.currentTarget.id, 10);
-        if (event.target.checked) {
-          rg2.courses.putOnDisplay(id);
-          // check box on results tab
-          $(".showcourse").filter("#" + id).prop('checked', true);
-        } else {
-          rg2.courses.removeFromDisplay(id);
-          // make sure the all checkbox is not checked
-          $(".allcourses").prop('checked', false);
-          // uncheck box on results tab
-          $(".showcourse").filter("#" + id).prop('checked', false);
-        }
-        rg2.requestedHash.setCourses();
-        rg2.redraw(false);
-      });
-      // checkbox on course tab to show all courses
-      $(".allcourses").click(function (event) {
-        if (event.target.checked) {
-          rg2.courses.putAllOnDisplay();
-          // select all the individual checkboxes for each course
-          $(".courselist").prop('checked', true);
-          // check all boxes on results tab
-          $(".showcourse").prop('checked', true);
-        } else {
-          rg2.courses.removeAllFromDisplay();
-          $(".courselist").prop('checked', false);
-          // uncheck all boxes on results tab
-          $(".showcourse").prop('checked', false);
-        }
-        rg2.requestedHash.setCourses();
-        rg2.redraw(false);
-      });
       // checkbox on course tab to show tracks for one course
       $(".tracklist").click(function (event) {
         var courseid = event.target.id;

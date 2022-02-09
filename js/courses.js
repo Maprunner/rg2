@@ -151,6 +151,17 @@
       return courses;
     },
 
+    allCoursesDisplayed: function () {
+      for (let i = 0; i < this.courses.length; i += 1) {
+        if (this.courses[i] !== undefined) {
+          if (!this.courses[i].display) {
+            return false;
+          }
+        }
+      }
+      return true;
+    },
+
     getNumberOfCourses: function () {
       return this.numberofcourses;
     },
@@ -205,7 +216,7 @@
       details = this.formatCourseDetails();
       // add bottom row for all courses checkboxes
       html += details.html + "<tr class='allitemsrow'><td>" + rg2.t("All") + "</td>";
-      html += "<td><input class='allcourses' id=" + details.coursecount + " type=checkbox name=course></input></td>";
+      html += "<td><input class='showallcourses' id=" + details.coursecount + " type=checkbox name=course></input></td>";
       html += "<td>" + details.res + "</td><td>" + this.totaltracks + "</td><td>";
       if (this.totaltracks > 0) {
         html += "<input id=" + details.coursecount + " class='alltracks' type=checkbox name=track></input>";
@@ -219,7 +230,7 @@
       let i;
       for (i = 0; i < this.courses.length; i += 1) {
         if (this.courses[i] !== undefined) {
-          details.html += "<tr><td>" + this.courses[i].name + "</td>" + "<td><input class='courselist' id=" + i + " type=checkbox name=course></input></td>";
+          details.html += "<tr><td>" + this.courses[i].name + "</td>" + "<td><input class='showcourse' id=" + i + " type=checkbox name=course></input></td>";
           details.html += "<td>" + this.courses[i].resultcount + "</td>" + "<td>" + this.courses[i].trackcount + "</td><td>";
           details.res += this.courses[i].resultcount;
           if (this.courses[i].trackcount > 0) {
