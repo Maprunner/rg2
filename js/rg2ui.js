@@ -435,6 +435,8 @@
         rg2.requestedHash.setRoutes();
         rg2.redraw(false);
       });
+      $("#rg2-course-filter-table").empty().append(rg2.courses.formatCourseFilters());
+      rg2.courses.formatFilterSliders()
     },
 
     initialiseSpinners: function () {

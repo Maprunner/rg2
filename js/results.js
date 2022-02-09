@@ -424,9 +424,9 @@
     },
 
     drawTracks: function () {
-      var i;
-      for (i = 0; i < this.results.length; i += 1) {
-        this.results[i].drawTrack();
+      for (let i = 0; i < this.results.length; i += 1) {
+        const filter = rg2.courses.getFilterDetails(this.results[i].courseid);
+        this.results[i].drawTrack(filter);
         this.results[i].drawScoreCourse();
       }
     },

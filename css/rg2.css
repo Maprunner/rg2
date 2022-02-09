@@ -804,3 +804,16 @@ body {
   display: grid;
   grid-template-columns: 1fr 3fr;
 }
+
+#rg2-course-filter-table {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: 1fr 3fr;
+  row-gap: 10px;
+  column-gap: 10px;
+}
+
+.filter-item {
+  align-self: center;
+  line-height: 1.5em;
+}

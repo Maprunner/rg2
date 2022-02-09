@@ -133,51 +133,68 @@
       }
     },
 
-    drawTrack: function () {
-      var i, l, oldx, oldy, stopCount;
-      if (this.displayTrack) {
-        if (this.isGPSTrack && rg2.options.showGPSSpeed && (this.speedColour.length === 0)) {
-          // set speed colours if we haven't done it yet
-          this.setSpeedColours();
-        }
-        rg2.ctx.lineWidth = rg2.options.routeWidth;
-        rg2.ctx.strokeStyle = this.trackColour;
-        rg2.ctx.globalAlpha = rg2.options.routeIntensity;
-        rg2.ctx.fillStyle = this.trackColour;
-        rg2.ctx.font = '10pt Arial';
-        rg2.ctx.textAlign = "left";
-        rg2.ctx.beginPath();
-        rg2.ctx.moveTo(this.trackx[0], this.tracky[0]);
-        oldx = this.trackx[0];
-        oldy = this.tracky[0];
-        stopCount = 0;
-        l = this.trackx.length;
-        for (i = 1; i < l; i += 1) {
-          // lines
-          rg2.ctx.lineTo(this.trackx[i], this.tracky[i]);
-          if ((this.trackx[i] === oldx) && (this.tracky[i] === oldy)) {
-            // we haven't moved
-            stopCount += 1;
-          } else {
-            // we have started moving again
-            if (stopCount > 0) {
-              if (!this.isGPSTrack || (this.isGPSTrack && rg2.options.showThreeSeconds)) {
-                rg2.ctx.fillText("+" + (3 * stopCount), oldx + 5, oldy + 5);
-              }
-              stopCount = 0;
+    drawTrack: function (filter) {
+      // lots of scope for problems drawing incomplete results so just trap and move one
+      try {
+        let oldx, oldy, stopCount;
+        if (this.displayTrack) {
+          if (this.isGPSTrack && rg2.options.showGPSSpeed && (this.speedColour.length === 0)) {
+            // set speed colours if we haven't done it yet
+            this.setSpeedColours();
+          }
+          let startIndex = 0;
+          let endIndex = this.xysecs.length;
+          let fromSplit = this.splits[filter.filterFrom];
+          let toSplit = this.splits[filter.filterTo];
+          for (let f = 0; f < this.xysecs.length; f += 1) {
+            if (this.xysecs[f] < fromSplit) {
+              startIndex = f;
+            }
+            if (this.xysecs[f] <= toSplit) {
+              endIndex = f;
             }
           }
-          oldx = this.trackx[i];
-          oldy = this.tracky[i];
-          if (this.isGPSTrack && rg2.options.showGPSSpeed) {
-            // draw partial track since we need to keep changing colour
-            rg2.ctx.strokeStyle = this.speedColour[i];
-            rg2.ctx.stroke();
-            rg2.ctx.beginPath();
-            rg2.ctx.moveTo(oldx, oldy);
+          rg2.ctx.lineWidth = rg2.options.routeWidth;
+          rg2.ctx.strokeStyle = this.trackColour;
+          rg2.ctx.globalAlpha = rg2.options.routeIntensity;
+          rg2.ctx.fillStyle = this.trackColour;
+          rg2.ctx.font = '10pt Arial';
+          rg2.ctx.textAlign = "left";
+          rg2.ctx.beginPath();
+          rg2.ctx.moveTo(this.trackx[startIndex], this.tracky[startIndex]);
+          oldx = this.trackx[startIndex];
+          oldy = this.tracky[startIndex];
+          stopCount = 0;
+          for (let i = startIndex + 1; i <= endIndex; i += 1) {
+            // lines
+            rg2.ctx.lineTo(this.trackx[i], this.tracky[i]);
+            if ((this.trackx[i] === oldx) && (this.tracky[i] === oldy)) {
+              // we haven't moved
+              stopCount += 1;
+            } else {
+              // we have started moving again
+              if (stopCount > 0) {
+                if (!this.isGPSTrack || (this.isGPSTrack && rg2.options.showThreeSeconds)) {
+                  rg2.ctx.fillText("+" + (3 * stopCount), oldx + 5, oldy + 5);
+                }
+                stopCount = 0;
+              }
+            }
+            oldx = this.trackx[i];
+            oldy = this.tracky[i];
+            if (this.isGPSTrack && rg2.options.showGPSSpeed) {
+              // draw partial track since we need to keep changing colour
+              rg2.ctx.strokeStyle = this.speedColour[i];
+              rg2.ctx.stroke();
+              rg2.ctx.beginPath();
+              rg2.ctx.moveTo(oldx, oldy);
+            }
           }
+          rg2.ctx.stroke();
         }
-        rg2.ctx.stroke();
+      } catch (e) {
+        console.log("Problem drawing track for result ID " + this.resultid);
+        return;
       }
     },
 
