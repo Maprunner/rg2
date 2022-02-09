@@ -263,16 +263,6 @@
       $(".deleteroute").click(function (event) {
         rg2.drawing.confirmDeleteRoute(parseInt(event.target.id, 10));
       });
-      // checkbox to animate a result
-      $(".showreplay").click(function (event) {
-        let id = parseInt(event.target.id, 10);
-        if (event.target.checked) {
-          rg2.animation.addRunner(new rg2.Runner(id), true);
-        } else {
-          rg2.animation.removeRunner(id, true);
-        }
-        rg2.redraw(false);
-      });
       // checkbox to display all tracks for course
       $(".allcoursetracks").click(function (event) {
         let courseid = parseInt(event.target.id, 10);
@@ -296,36 +286,48 @@
         rg2.requestedHash.setRoutes();
         rg2.redraw(false);
       });
+      // checkbox to animate a result
+      $(".showreplay").click(function (event) {
+        let idx = parseInt(event.target.id, 10);
+        // this is a mess but too complicated to refactor at this point
+        // replay id uses index into this.results rather than resultid like elsewhere
+        const courseid = rg2.results.getCourseForResultByIndex(idx);
+        if (event.target.checked) {
+          rg2.animation.addRunner(new rg2.Runner(idx), true);
+        } else {
+          rg2.animation.removeRunner(idx, true);
+        }
+        // align "All routes" checkbox
+        $(".allcoursetracksreplay").filter("#" + courseid).prop('checked', rg2.results.allTracksForCourseReplayed(courseid));
+        // align "All" checkbox
+        $(".allcoursereplay").filter("#" + courseid).prop('checked', rg2.results.allResultsForCourseReplayed(courseid));
+        rg2.redraw(false);
+      });
       // checkbox to animate all tracks for course
       $(".allcoursetracksreplay").click(function (event) {
-        var courseresults, selector;
+        let courseid = parseInt(event.target.id, 10);
         // true means only return runners with a valid track
-        courseresults = rg2.results.getAllRunnersForCourse(parseInt(event.target.id, 10), true);
+        const courseresults = rg2.results.getAllRunnersForCourse(courseid, true);
         rg2.animation.animateRunners(courseresults, event.target.checked);
-        selector = ".showtrackreplay.showreplay-" + event.target.id;
-        if (event.target.checked) {
-          // select all the individual checkboxes for each course
-          $(selector).prop('checked', true);
-        } else {
-          $(selector).prop('checked', false);
-        }
+        // align individual result checkboxes
+        $(".showtrackreplay.showreplay-" + courseid).prop('checked', event.target.checked);
+        // align "All routes" checkbox
+        $(".allcoursetracksreplay").filter("#" + courseid).prop('checked', event.target.checked);
+        // align "All" checkbox
+        $(".allcoursereplay").prop('checked', rg2.results.allResultsForCourseReplayed(courseid));
         rg2.redraw(false);
       });
       // checkbox to animate all results for course
       // this one draws straight lines between controls for non-drawn routes
       $(".allcoursereplay").click(function (event) {
-        var courseresults, selector;
-        // false means get all runners even if they don;t have a valid track
-        courseresults = rg2.results.getAllRunnersForCourse(parseInt(event.target.id, 10), false);
+        const courseid = parseInt(event.target.id, 10);
+        // false means get all runners even if they don't have a valid track
+        const courseresults = rg2.results.getAllRunnersForCourse(courseid, false);
         rg2.animation.animateRunners(courseresults, event.target.checked);
-        selector = ".showreplay-" + event.target.id;
-        if (event.target.checked) {
-          // select all the individual checkboxes for each course
-          $(selector).prop('checked', true);
-        } else {
-          $(selector).prop('checked', false);
-          $(".allcoursetracksreplay").prop('checked', false);
-        }
+        // align individual result checkboxes
+        $(".showreplay-" + courseid).prop('checked', event.target.checked);
+        // align "All routes" checkbox
+        $(".allcoursetracksreplay").filter("#" + courseid).prop('checked', rg2.results.allTracksForCourseReplayed(courseid));
         rg2.redraw(false);
       });
     },

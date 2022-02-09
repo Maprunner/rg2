@@ -373,6 +373,10 @@
       return undefined;
     },
 
+    getCourseForResultByIndex: function (idx) {
+      return this.results[idx].courseid;
+    },
+
     getResultsInfo: function () {
       var i, info, res;
       info = {};
@@ -777,6 +781,33 @@
       }
       return true;
     },
+
+    allTracksForCourseReplayed: function (courseid) {
+      for (let i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].courseid === courseid) {
+          if (this.results[i].hasValidTrack) {
+            // careful: animation runners use index, not resultid
+            if (!rg2.animation.resultIsBeingAnimated(i)) {
+              return false;
+            }
+          }
+        }
+      }
+      return true;
+    },
+
+    allResultsForCourseReplayed: function (courseid) {
+      for (let i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].courseid === courseid) {
+          // careful: animation runners use index, not resultid
+          if (!rg2.animation.resultIsBeingAnimated(i)) {
+            return false;
+          }
+        }
+      }
+      return true;
+    },
+
   };
   rg2.Results = Results;
 }());
