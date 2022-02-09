@@ -245,21 +245,19 @@
       });
       // checkbox to show a result
       $(".showtrack").click(function (event) {
+        const id = parseInt(event.target.id, 10);
+        const courseid = rg2.results.getCourseForResult(id);
         if (event.target.checked) {
-          rg2.results.putOneTrackOnDisplay(event.target.id);
+          rg2.results.putOneTrackOnDisplay(id);
         } else {
-          rg2.results.removeOneTrackFromDisplay(event.target.id);
+          rg2.results.removeOneTrackFromDisplay(id);
         }
+        // align all routes for this course checkboxes
+        $(".allcoursetracks").filter("#" + courseid).prop('checked', rg2.results.allTracksForCourseDisplayed(courseid));
+        // align all routes for all courses checkbox
+        $(".alltracks").prop('checked', rg2.results.allTracksDisplayed());
         rg2.requestedHash.setRoutes();
         rg2.redraw(false);
-      });
-      // route share link box
-      $(".shareroute").click(function (event) {
-        rg2.utils.showShareDialog(
-          rg2.t("Share route"),
-          parseInt(event.target.id, 10),
-          rg2.t("Copy and paste this link to share your route")
-        );
       });
       // checkbox to delete a route
       $(".deleteroute").click(function (event) {
@@ -267,24 +265,34 @@
       });
       // checkbox to animate a result
       $(".showreplay").click(function (event) {
+        let id = parseInt(event.target.id, 10);
         if (event.target.checked) {
-          rg2.animation.addRunner(new rg2.Runner(parseInt(event.target.id, 10)), true);
+          rg2.animation.addRunner(new rg2.Runner(id), true);
         } else {
-          rg2.animation.removeRunner(parseInt(event.target.id, 10), true);
+          rg2.animation.removeRunner(id, true);
         }
         rg2.redraw(false);
       });
       // checkbox to display all tracks for course
       $(".allcoursetracks").click(function (event) {
-        var selector;
-        rg2.results.updateTrackDisplay(parseInt(event.target.id, 10), event.target.checked);
-        selector = ".showtrack-" + event.target.id;
-        if (event.target.checked) {
-          // select all the individual checkboxes for the course
-          $(selector).prop('checked', true);
-        } else {
-          $(selector).prop('checked', false);
-        }
+        let courseid = parseInt(event.target.id, 10);
+        rg2.results.updateTrackDisplay(courseid, event.target.checked);
+        // align all tabs
+        $(".allcoursetracks").filter("#" + courseid).prop('checked', event.target.checked);
+        // align individual result checkboxes
+        $(".showtrack-" + courseid).prop('checked', event.target.checked);
+        // align all routes for all courses checkbox
+        $(".alltracks").prop('checked', rg2.results.allTracksDisplayed());
+        rg2.requestedHash.setRoutes();
+        rg2.redraw(false);
+      });
+      // checkbox on course tab to show all tracks for all courses
+      $(".alltracks").click(function (event) {
+        rg2.results.updateTrackDisplay(rg2.config.DISPLAY_ALL_COURSES, event.target.checked);
+        // align all the individual checkboxes for each course
+        $(".showtrack").prop('checked', event.target.checked);
+        // align all tabs
+        $(".allcoursetracks").prop('checked', event.target.checked);
         rg2.requestedHash.setRoutes();
         rg2.redraw(false);
       });
@@ -385,33 +393,6 @@
     createCourseMenu: function () {
       //loads menu from populated courses array
       $("#rg2-course-table").empty().append(rg2.courses.formatCoursesAsTable());
-      // checkbox on course tab to show tracks for one course
-      $(".tracklist").click(function (event) {
-        var courseid = event.target.id;
-        if (event.target.checked) {
-          rg2.results.updateTrackDisplay(parseInt(courseid, 10), true);
-        } else {
-          rg2.results.updateTrackDisplay(parseInt(courseid, 10), false);
-          // make sure the all checkbox is not checked
-          $(".alltracks").prop('checked', false);
-        }
-        rg2.requestedHash.setRoutes();
-        rg2.redraw(false);
-      });
-      // checkbox on course tab to show all tracks
-      $(".alltracks").click(function (event) {
-        if (event.target.checked) {
-          rg2.results.updateTrackDisplay(rg2.config.DISPLAY_ALL_COURSES, true);
-          // select all the individual checkboxes for each course
-          $(".tracklist").prop('checked', true);
-        } else {
-          rg2.results.updateTrackDisplay(rg2.config.DISPLAY_ALL_COURSES, false);
-          // deselect all the individual checkboxes for each course
-          $(".tracklist").prop('checked', false);
-        }
-        rg2.requestedHash.setRoutes();
-        rg2.redraw(false);
-      });
       $("#rg2-course-filter-table").empty().append(rg2.courses.formatCourseFilters());
       rg2.courses.formatFilterSliders()
     },

@@ -234,7 +234,7 @@
           details.html += "<td>" + this.courses[i].resultcount + "</td>" + "<td>" + this.courses[i].trackcount + "</td><td>";
           details.res += this.courses[i].resultcount;
           if (this.courses[i].trackcount > 0) {
-            details.html += "<input id=" + i + " class='tracklist' type=checkbox name=track></input></td>";
+            details.html += "<input id=" + i + " class='allcoursetracks' type=checkbox name=track></input></td>";
             details.html += "<td><input id=" + i + " class='allcoursetracksreplay' type=checkbox name=replay></input>";
           } else {
             details.html += "</td><td>";

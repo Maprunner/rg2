@@ -364,6 +364,15 @@
       return routes;
     },
 
+    getCourseForResult: function (id) {
+      for (let i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].resultid === id) {
+          return this.results[i].courseid;
+        }
+      }
+      return undefined;
+    },
+
     getResultsInfo: function () {
       var i, info, res;
       info = {};
@@ -617,8 +626,6 @@
         }
 
         if (res.canDelete) {
-          // add share icon
-          html += " <i class='shareroute fa fa-share-square-o' id=" + res.resultid + "></i>";
           html += " <i class='deleteroute fa fa-trash' id=" + i + "></i>";
         }
         html += "</td><td>" + res.time + "</td>";
@@ -745,7 +752,31 @@
           }
         }
       }
-    }
+    },
+
+    allTracksForCourseDisplayed: function (courseid) {
+      for (let i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].courseid === courseid) {
+          if (this.results[i].hasValidTrack) {
+            if (!this.results[i].displayTrack) {
+              return false;
+            }
+          }
+        }
+      }
+      return true;
+    },
+
+    allTracksDisplayed: function () {
+      for (let i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].hasValidTrack) {
+          if (!this.results[i].displayTrack) {
+            return false;
+          }
+        }
+      }
+      return true;
+    },
   };
   rg2.Results = Results;
 }());
