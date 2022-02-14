@@ -48,13 +48,23 @@
         rg2.manager.mouseUp(Math.round(input.dragStart.x), Math.round(input.dragStart.y));
       } else {
         // pass button that was clicked
-        rg2.drawing.mouseUp(Math.round(input.dragStart.x), Math.round(input.dragStart.y), evt.which);
+        if (active === rg2.config.TAB_DRAW) {
+          rg2.drawing.mouseUp(Math.round(input.dragStart.x), Math.round(input.dragStart.y), evt.which);
+        } else {
+          // on results or courses tab
+          rg2.overlay.mouseUp(Math.round(input.dragStart.x), Math.round(input.dragStart.y), evt.which); 
+        }
       }
     } else {
       if (active === rg2.config.TAB_CREATE) {
         rg2.manager.dragEnded();
       } else {
-        rg2.drawing.dragEnded();
+        if (active === rg2.config.TAB_DRAW) {
+          rg2.drawing.dragEnded();
+        } else { 
+          // on results or courses tab
+          rg2.overlay.dragEnded();
+        }
       }
     }
     input.dragStart = null;

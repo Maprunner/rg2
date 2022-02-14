@@ -119,26 +119,23 @@
     },
 
     putAllOnDisplay: function () {
-      this.setDisplayAllCourses(true);
+      for (let i = 0; i < this.courses.length; i += 1) {
+        if (this.courses[i] !== undefined) {
+            this.putOnDisplay(i);
+        }
+      }
     },
 
     removeAllFromDisplay: function () {
-      this.setDisplayAllCourses(false);
-    },
-
-    setDisplayAllCourses: function (doDisplay) {
-      var i;
-      for (i = 0; i < this.courses.length; i += 1) {
+      for (let i = 0; i < this.courses.length; i += 1) {
         if (this.courses[i] !== undefined) {
-          this.courses[i].display = doDisplay;
+            this.removeFromDisplay(i);
         }
       }
     },
 
     removeFromDisplay: function (courseid) {
-      // remove selected course
       this.courses[courseid].display = false;
-
     },
 
     getCoursesOnDisplay: function () {
@@ -152,6 +149,17 @@
         }
       }
       return courses;
+    },
+
+    allCoursesDisplayed: function () {
+      for (let i = 0; i < this.courses.length; i += 1) {
+        if (this.courses[i] !== undefined) {
+          if (!this.courses[i].display) {
+            return false;
+          }
+        }
+      }
+      return true;
     },
 
     getNumberOfCourses: function () {
@@ -208,7 +216,7 @@
       details = this.formatCourseDetails();
       // add bottom row for all courses checkboxes
       html += details.html + "<tr class='allitemsrow'><td>" + rg2.t("All") + "</td>";
-      html += "<td><input class='allcourses' id=" + details.coursecount + " type=checkbox name=course></input></td>";
+      html += "<td><input class='showallcourses' id=" + details.coursecount + " type=checkbox name=course></input></td>";
       html += "<td>" + details.res + "</td><td>" + this.totaltracks + "</td><td>";
       if (this.totaltracks > 0) {
         html += "<input id=" + details.coursecount + " class='alltracks' type=checkbox name=track></input>";
@@ -218,15 +226,15 @@
     },
 
     formatCourseDetails: function () {
-      var i, details;
-      details = { html: "", res: 0 };
+      let details = { html: "", res: 0 };
+      let i;
       for (i = 0; i < this.courses.length; i += 1) {
         if (this.courses[i] !== undefined) {
-          details.html += "<tr><td>" + this.courses[i].name + "</td>" + "<td><input class='courselist' id=" + i + " type=checkbox name=course></input></td>";
+          details.html += "<tr><td>" + this.courses[i].name + "</td>" + "<td><input class='showcourse' id=" + i + " type=checkbox name=course></input></td>";
           details.html += "<td>" + this.courses[i].resultcount + "</td>" + "<td>" + this.courses[i].trackcount + "</td><td>";
           details.res += this.courses[i].resultcount;
           if (this.courses[i].trackcount > 0) {
-            details.html += "<input id=" + i + " class='tracklist' type=checkbox name=track></input></td>";
+            details.html += "<input id=" + i + " class='allcoursetracks' type=checkbox name=track></input></td>";
             details.html += "<td><input id=" + i + " class='allcoursetracksreplay' type=checkbox name=replay></input>";
           } else {
             details.html += "</td><td>";
@@ -238,8 +246,52 @@
       return details;
     },
 
+    formatCourseFilters: function () {
+      let details = "";    
+      for (let i = 0; i < this.courses.length; i += 1) {
+        if (this.courses[i] !== undefined) {
+          // only filter for normal events with at least one control as well as start and finish
+          if ((!this.courses[i].isScoreCourse) && (this.courses[i].codes.length > 2)) {
+            details += "<div class='filter-item'>" + this.courses[i].name + "</div><div class='filter-item' id='course-filter-" + this.courses[i].courseid + "'></div>";
+          }
+        }
+      }
+      return details;
+    },
+
+    formatFilterSliders: function () {
+      for (let i = 0; i < this.courses.length; i += 1) {
+        if (this.courses[i] !== undefined) {
+          let self = this;
+          $("#course-filter-" + this.courses[i].courseid).slider({
+            range: true,
+            min: 0,
+            max: this.courses[i].codes.length,
+            values: [0, this.courses[i].codes.length],
+            slide: function (event, ui) {
+              self.filterChanged(i, ui.values[0], ui.values[1]);
+            }
+          })
+        }
+      }
+    },
+
     drawLinesBetweenControls: function (pt, angle, courseid, opt) {
       this.courses[courseid].drawLinesBetweenControls(pt, angle, opt);
+    },
+
+    getFilterDetails: function (courseid) {
+      const filter = {};
+      filter.filterFrom = this.courses[courseid].filterFrom;
+      filter.filterTo = this.courses[courseid].filterTo;
+      return filter;
+    },
+
+    // slider callback
+    filterChanged: function (courseid, low, high) {
+      this.courses[courseid].filterFrom = low;
+      this.courses[courseid].filterTo = high;
+      rg2.redraw(false);
     }
   };
   rg2.Courses = Courses;

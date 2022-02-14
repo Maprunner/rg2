@@ -144,6 +144,7 @@ var jsFileList = [
   "js/gpstrack.js",
   "js/handles.js",
   "js/map.js",
+  "js/overlay.js",
   "js/plugins.js",
   "js/result.js",
   "js/results.js",

@@ -57,6 +57,7 @@
         } else {
           rg2.courses.drawCourses(rg2.config.DIM);
           rg2.results.drawTracks();
+          rg2.overlay.drawOverlays();
           rg2.controls.drawControls(false);
           if (fromTimer) {
             rg2.animation.incrementAnimationTime();
@@ -258,6 +259,7 @@
   function mapLoadedCallback() {
     $("#rg2-map-load-progress").hide();
     resetMapState();
+    rg2.overlay.mapLoaded();
     if (rg2.config.managing) {
       rg2.manager.mapLoadCallback();
     }

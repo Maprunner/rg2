@@ -531,7 +531,14 @@
         this.deltaIndex += 1;
       }
       $("#rg2-animation-speed").empty().text("x " + (this.deltas[this.deltaIndex] / 100));
+    },
+
+    resultIsBeingAnimated: function (resultid) {
+      // is given result in the array of animated runners?
+      return (this.runners.findIndex(runner => runner.runnerid === resultid) > -1);
     }
+
+
   };
   rg2.Animation = Animation;
 }());

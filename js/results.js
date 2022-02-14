@@ -364,6 +364,19 @@
       return routes;
     },
 
+    getCourseForResult: function (id) {
+      for (let i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].resultid === id) {
+          return this.results[i].courseid;
+        }
+      }
+      return undefined;
+    },
+
+    getCourseForResultByIndex: function (idx) {
+      return this.results[idx].courseid;
+    },
+
     getResultsInfo: function () {
       var i, info, res;
       info = {};
@@ -424,9 +437,9 @@
     },
 
     drawTracks: function () {
-      var i;
-      for (i = 0; i < this.results.length; i += 1) {
-        this.results[i].drawTrack();
+      for (let i = 0; i < this.results.length; i += 1) {
+        const filter = rg2.courses.getFilterDetails(this.results[i].courseid);
+        this.results[i].drawTrack(filter);
         this.results[i].drawScoreCourse();
       }
     },
@@ -617,8 +630,6 @@
         }
 
         if (res.canDelete) {
-          // add share icon
-          html += " <i class='shareroute fa fa-share-square-o' id=" + res.resultid + "></i>";
           html += " <i class='deleteroute fa fa-trash' id=" + i + "></i>";
         }
         html += "</td><td>" + res.time + "</td>";
@@ -715,14 +726,20 @@
 
     getComments: function () {
       var i, comments;
+      let header = "<div class='rg2-comments-table'><div class='header'>" + rg2.t("Name") + "</div><div class='header'>" + rg2.t("Course") + "</div>";
+      header += "<div class='header'>" + rg2.t("Comments") + "</div>";
       comments = "";
+
       for (i = 0; i < this.results.length; i += 1) {
         if (this.results[i].comments !== "") {
-          comments += "<tr><td><strong>" + this.results[i].name + "</strong></td><td>";
-          comments += this.results[i].coursename + "</td><td class='selectable'>" + this.results[i].comments + "</td></tr>";
-
+          comments += "<div class='item'><strong>" + this.results[i].name + "</strong></div><div class='item'>";
+          comments += this.results[i].coursename + "</div><div class='item selectable'>" + this.results[i].comments + "</div>";
         }
       }
+      if (comments !== "") {
+        comments = header + comments + "</div> ";
+      }
+ 
       return comments;
     },
 
@@ -739,7 +756,58 @@
           }
         }
       }
-    }
+    },
+
+    allTracksForCourseDisplayed: function (courseid) {
+      for (let i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].courseid === courseid) {
+          if (this.results[i].hasValidTrack) {
+            if (!this.results[i].displayTrack) {
+              return false;
+            }
+          }
+        }
+      }
+      return true;
+    },
+
+    allTracksDisplayed: function () {
+      for (let i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].hasValidTrack) {
+          if (!this.results[i].displayTrack) {
+            return false;
+          }
+        }
+      }
+      return true;
+    },
+
+    allTracksForCourseReplayed: function (courseid) {
+      for (let i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].courseid === courseid) {
+          if (this.results[i].hasValidTrack) {
+            // careful: animation runners use index, not resultid
+            if (!rg2.animation.resultIsBeingAnimated(i)) {
+              return false;
+            }
+          }
+        }
+      }
+      return true;
+    },
+
+    allResultsForCourseReplayed: function (courseid) {
+      for (let i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].courseid === courseid) {
+          // careful: animation runners use index, not resultid
+          if (!rg2.animation.resultIsBeingAnimated(i)) {
+            return false;
+          }
+        }
+      }
+      return true;
+    },
+
   };
   rg2.Results = Results;
 }());

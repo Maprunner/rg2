@@ -5,6 +5,8 @@
     this.display = false;
     this.courseid = data.courseid;
     this.codes = data.codes;
+    this.filterTo = this.codes.length;
+    this.filterFrom = 0;
     this.x = data.xpos;
     this.y = data.ypos;
     this.isScoreCourse = isScoreCourse;
@@ -102,7 +104,10 @@
           }
 
         } else {
-          for (i = 1; i < (this.x.length - 1); i += 1) {
+          // don't want to draw an extra circle round the start or finish
+          let from = Math.max(this.filterFrom, 1);
+          let to = Math.min(this.filterTo + 1, this.x.length - 1);
+          for (i = from; i < to; i += 1) {
             rg2.controls.drawSingleControl(this.x[i], this.y[i], i, this.textAngle[i], opt);
           }
           rg2.controls.drawFinish(this.x[this.x.length - 1], this.y[this.y.length - 1], "", opt);
@@ -110,8 +115,10 @@
       }
     },
     drawLinesBetweenControls : function (pt, angle, opt) {
-      var c1x, c1y, c2x, c2y, i, dist;
-      for (i = 0; i < (pt.x.length - 1); i += 1) {
+      var c1x, c1y, c2x, c2y, dist;
+      let from = this.filterFrom;
+      let to = this.filterTo;
+      for (let i = from; i < to; i += 1) {
         if (i === 0) {
           dist = opt.startTriangleLength;
         } else {

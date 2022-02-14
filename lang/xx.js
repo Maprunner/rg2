@@ -19,6 +19,7 @@ rg2.setDictionary({
   'All': 'Al',
   'Help': 'Hlp',
   'Options': 'Optns',
+  'Measure': 'Msure',
   'Reset': 'Rset',
   'Zoom out': 'Zm out',
   'Zoom in': 'Zm in',

@@ -66,7 +66,9 @@
       $("#btn-show-splits").show();
       if ((rg2Config.enable_splitsbrowser) && (rg2.events.hasResults())) {
         $("#rg2-splitsbrowser").off().click(function () {
-          window.open(rg2Config.json_url + "?type=splitsbrowser&id=" + rg2.events.getKartatEventID());
+          // _=<timestamp> mimics jQuery cache busting strategy to force reload of event data: needed to get
+          // around events that are deleted and then recreated with same number
+          window.open(rg2Config.json_url + "?type=splitsbrowser&id=" + rg2.events.getKartatEventID() + "&_=" + Date.now());
         }).show();
       } else {
         $("#rg2-splitsbrowser").off().hide();
