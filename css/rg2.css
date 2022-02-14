@@ -740,6 +740,10 @@ body {
   font-weight: bold;
 }
 
+.rg2-lost-time {
+  background-color: #ffddee;
+}
+
 .rg2-results-table-container {
   height: 100%;
 }

@@ -75,7 +75,7 @@
         resizable: false,
         maxHeight: $("#rg2-map-canvas").height() * 0.98,
         width: Math.min($("#rg2-map-canvas").width() * 0.8, 1000),
-        position: { my: "top", at: "top", of: "#rg2-map-canvas" },
+        position: { my: "right top", at: "right top", of: "#rg2-map-canvas" },
       });
     },
 
@@ -414,9 +414,9 @@
         for (j = 1; j < this.controls - 1; j += 1) {
           if (r.splits[j] === r.splits[j - 1]) {
             // no valid split for this control
-            row['C' + j] = { split: "0:00", pos: r.racepos[j] };
+            row['C' + j] = { split: "0:00", pos: r.racepos[j], loss: false };
           } else {
-            row['C' + j] = { split: rg2.utils.formatSecsAsMMSS(r.splits[j]), pos: r.racepos[j] };
+            row['C' + j] = { split: rg2.utils.formatSecsAsMMSS(r.splits[j]), pos: r.racepos[j], loss:false };
           }
         }
         row.finish = { split: rg2.utils.formatSecsAsMMSS(r.splits[this.controls - 1]), pos: r.racepos[this.controls - 1] };
@@ -428,9 +428,10 @@
         rowData.push(row);
         row = {};
         for (j = 1; j < this.controls - 1; j += 1) {
-          row['C' + j] = { split: rg2.utils.formatSecsAsMMSS(r.legSplits[j]), pos: r.legpos[j] };
+          // highlight predicted losses greater than 20 seconds
+          row['C' + j] = { split: rg2.utils.formatSecsAsMMSS(r.legSplits[j]), pos: r.legpos[j], loss: r.loss[j] > 19 };
         }
-        row.finish = { split: rg2.utils.formatSecsAsMMSS(r.legSplits[this.controls - 1]), pos: r.legpos[this.controls - 1] };
+        row.finish = { split: rg2.utils.formatSecsAsMMSS(r.legSplits[this.controls - 1]), pos: r.legpos[this.controls - 1], loss: r.loss[this.controls - 1] > 19 };
         row.loss = rg2.utils.formatSecsAsMMSS(r.totalLoss);
         rowData.push(row);
       }
@@ -453,24 +454,27 @@
     },
 
     renderSplits: function (params) {
-      var html;
       if (params.value.split === "0:00") {
         return "";
       }
-      html = params.value.split;
+      let splitinfo = params.value.split;
+      let classes = ""
       if (params.value.pos !== 0) {
-        html += ' (' + params.value.pos + ')';
+        splitinfo += ' (' + params.value.pos + ')';
         if (params.value.pos === 1) {
-          html = '<span class="rg2-first">' + html + '</span>';
+          classes = "rg2-first";
         }
         if (params.value.pos === 2) {
-          html = '<span class="rg2-second">' + html + '</span>';
+          classes = "rg2-second";
         }
         if (params.value.pos === 3) {
-          html = '<span class="rg2-third">' + html + '</span>';
+          classes = "rg2-third";
         }
       }
-      return html;
+      if (params.value.loss) {
+        classes += " rg2-lost-time";
+      }
+      return '<span class="' + classes + '">' + splitinfo + "</span>";
     },
 
     getLegPosInfo: function () {
