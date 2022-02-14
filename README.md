@@ -1,7 +1,9 @@
 # Routegadget 2
 
 ## Latest news
-Version 1.6.2 was released on 3rd May 2021 and is installed on all routegadget.co.uk sites. This includes various minor enhancements.
+Version 1.7.0 was released on 14th February 2022 and is installed on all routegadget.co.uk sites. This includes two new functions to help with race analysis:
+* A new "Measure" icon has been added to the toolbar. If you click on this you can then measure different route options by drawing directly on the map. Distances are shown in metres for georeferenced maps and pixels for other maps.
+* The "Courses" tab now has a slider for each course. This allows you to view only part of a course and route display and makes things much easier when analysing convoluted courses with a lot of crossovers.
 
 ## User Guide and Introductory Videos
 
