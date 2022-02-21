@@ -92,7 +92,8 @@
         rg2.controls.drawStart(this.x[0], this.y[0], "", this.angle[0], opt);
         // don't join up controls for score events
         if (!this.isScoreCourse) {
-          this.drawLinesBetweenControls({x: this.x, y: this.y}, this.angle, opt);
+          const filter = {from: this.filterFrom, to: this.filterTo};
+          this.drawLinesBetweenControls({x: this.x, y: this.y}, this.angle, opt, filter);
         }
         if (this.isScoreCourse) {
           for (i = 1; i < (this.x.length); i += 1) {
@@ -114,11 +115,9 @@
         }
       }
     },
-    drawLinesBetweenControls : function (pt, angle, opt) {
+    drawLinesBetweenControls : function (pt, angle, opt, filter) {
       var c1x, c1y, c2x, c2y, dist;
-      let from = this.filterFrom;
-      let to = this.filterTo;
-      for (let i = from; i < to; i += 1) {
+      for (let i = filter.from; i < filter.to; i += 1) {
         if (i === 0) {
           dist = opt.startTriangleLength;
         } else {

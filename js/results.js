@@ -438,7 +438,12 @@
 
     drawTracks: function () {
       for (let i = 0; i < this.results.length; i += 1) {
-        const filter = rg2.courses.getFilterDetails(this.results[i].courseid);
+        let filter;
+        if (this.results[i].isScoreEvent) {
+          filter = {from: 0, to: this.results[i].scorex.length};
+        } else {
+          filter = rg2.courses.getFilterDetails(this.results[i].courseid);
+        }
         this.results[i].drawTrack(filter);
         this.results[i].drawScoreCourse();
       }

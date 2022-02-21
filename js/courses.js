@@ -276,8 +276,8 @@
       }
     },
 
-    drawLinesBetweenControls: function (pt, angle, courseid, opt) {
-      this.courses[courseid].drawLinesBetweenControls(pt, angle, opt);
+    drawLinesBetweenControls: function (pt, angle, courseid, opt, filter) {
+      this.courses[courseid].drawLinesBetweenControls(pt, angle, opt, filter);
     },
 
     getFilterDetails: function (courseid) {
