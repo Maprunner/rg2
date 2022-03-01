@@ -191,6 +191,7 @@ var clubs = [
   "cvfr",
   "darkandwhite",
   "dee",
+  "dfok",
   "devonoc",
   "ebor",
   "ecko",
