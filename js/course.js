@@ -5,6 +5,7 @@
     this.display = false;
     this.courseid = data.courseid;
     this.codes = data.codes;
+    this.exclude = this.extractExcludedControls(data.exclude);
     this.filterTo = this.codes.length;
     this.filterFrom = 0;
     this.x = data.xpos;
@@ -137,6 +138,15 @@
         rg2.ctx.moveTo(c1x, c1y);
         rg2.ctx.lineTo(c2x, c2y);
         rg2.ctx.stroke();
+      }
+    },
+
+    extractExcludedControls: function (excluded) {
+      if (excluded !== "") {
+        const exclude = excluded.split(",").map(a => parseInt(a, 10));
+        return exclude;
+      } else {
+        return [];
       }
     }
   };

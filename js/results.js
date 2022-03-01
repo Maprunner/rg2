@@ -159,23 +159,33 @@
     },
 
     sanitiseSplits: function (isScoreEvent) {
-      var i, j, expectedSplits, previousValidSplit, nextSplitInvalid;
       // sort out missing punches and add some helpful new fields
-      for (i = 0; i < this.results.length; i += 1) {
+      let currentCourseID = undefined;
+      let excluded = "";
+      for (let i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].courseid !== currentCourseID) {
+          currentCourseID = this.results[i].courseid;
+          excluded = rg2.courses.getExcluded(currentCourseID);
+        }
         this.results[i].timeInSecs = rg2.utils.getSecsFromHHMMSS(this.results[i].time);
         this.results[i].legSplits = [];
         this.results[i].legSplits[0] = 0;
-        previousValidSplit = 0;
-        nextSplitInvalid = false;
-        for (j = 1; j < this.results[i].splits.length; j += 1) {
+        let previousValidSplit = 0;
+        let nextSplitInvalid = false;
+        for (let j = 1; j < this.results[i].splits.length; j += 1) {
           if ((this.results[i].splits[j] - previousValidSplit) === 0) {
-            // found a zero split
-            this.results[i].legSplits[j] = 0;
-            // need to ignore next split as well: e.g missing 3 means splits to 3 and 4 are invalid
-            nextSplitInvalid = true;
-            if (this.results[i].lastValidSplit === undefined) {
-              // race positions need to stop at previous control
-              this.results[i].lastValidSplit = j - 1;
+            if (excluded.indexOf(j) > -1) {
+              this.results[i].legSplits[j] = this.results[i].splits[j] - previousValidSplit;
+              previousValidSplit = this.results[i].splits[j];
+            } else {
+              // found a zero split
+              this.results[i].legSplits[j] = 0;
+              // need to ignore next split as well: e.g missing 3 means splits to 3 and 4 are invalid
+              nextSplitInvalid = true;
+              if (this.results[i].lastValidSplit === undefined) {
+                // race positions need to stop at previous control
+                this.results[i].lastValidSplit = j - 1;
+              }
             }
           } else {
             if (nextSplitInvalid) {
@@ -196,7 +206,7 @@
         // force all results to have the correct number of splits to make stats processing work correctly
         if (!isScoreEvent) {
           // splits array contains "S" and "F" as well as each control
-          expectedSplits = rg2.courses.getNumberOfControlsOnCourse(this.results[i].courseid) + 2;
+          const expectedSplits = rg2.courses.getNumberOfControlsOnCourse(this.results[i].courseid) + 2;
           while (this.results[i].splits.length < expectedSplits) {
             // copy last valid split data as often as necessary to fill missing gaps
             this.results[i].splits.push(this.results[i].splits[this.results[i].splits.length - 1]);

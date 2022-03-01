@@ -30,7 +30,16 @@
     }
     this.courseid = data.courseid;
     this.splits = this.adjustRawSplits(data.splits);
-
+    // adjust finish time if necessary when controls have been excluded
+    if (this.resultid < rg2.config.GPS_RESULT_OFFSET) {
+      let excluded = rg2.courses.getExcluded(this.courseid);
+      if (excluded) {
+        const time = rg2.utils.getSecsFromHHMMSS(this.time);
+        if (time !== 0) {
+          this.splits[this.splits.length - 1] = time
+        }
+      }  
+    }
     if (isScoreEvent) {
       // save control locations for score course result
       this.scorex = scorex;

@@ -292,7 +292,15 @@
       this.courses[courseid].filterFrom = low;
       this.courses[courseid].filterTo = high;
       rg2.redraw(false);
-    }
+    },
+
+    getExcluded: function (courseid) {
+      if (courseid in this.courses) {
+        return this.courses[courseid].exclude;
+      } else {
+        return [];
+      }
+    },
   };
   rg2.Courses = Courses;
 }());
