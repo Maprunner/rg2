@@ -8,7 +8,6 @@
     this.overlays = [];
     // overlay being drawn or not yet started
     this.currentOverlay = this.initialiseOverlay();
-    // has drawing started fro current overlay?
     this.units = "px";
     this.metresPerPixel = 1;
     this.initialiseUI();
@@ -66,6 +65,14 @@
       rg2.redraw(false);
     },
 
+    deleteAllOverlays: function () {
+      this.overlays.length = 0;
+      this.currentOverlay = this.initialiseOverlay();
+      this.updateOverlays();
+      this.updateDetails();
+      rg2.redraw(false);
+    },
+
     updateOverlays: function () {
       this.colourIndex = 0;
       // recolour and reallocate labels starting from A after deletion
@@ -108,6 +115,7 @@
       $("#btn-measure").click(function() { 
         $('#rg2-map-canvas').css('cursor', 'crosshair');
         self.measuring = true;
+        rg2.redraw(false);
         $("#rg2-overlay-dialog").dialog({
             position: { my: "right-10 top+10", at: "right top", of: "#rg2-map-canvas" },
             width: 200,
@@ -117,8 +125,10 @@
           close: function () {
             self.measuring = false;
             $('#rg2-map-canvas').css('cursor', 'auto');
+            rg2.redraw(false);
             }
         });
+        self.updateDetails();
       })
     },
 
@@ -139,11 +149,18 @@
         details = details + this.formatOverlay(this.overlays[i], true);
       }
       details = details + this.formatOverlay(this.currentOverlay, false);
+      // show "delete all" if at least two exist
+      if (this.overlays.length > 1) {
+        details = details + "<div>" + rg2.t("All") + "</div><div></div><div></div><div><i class='delete-all-overlays fa fa-trash'></i></div>";
+      }
       $("#rg2-overlay-details").empty().append(details);
       // reset click handlers
       var self = this;
       $(".delete-overlay").off().click(function (event) {
         self.deleteOverlay(parseInt(event.target.id, 10));
+      });
+      $(".delete-all-overlays").off().click(function () {
+        self.deleteAllOverlays();
       });
       $(".end-overlay").off().click(function () {
         self.endOverlay();
@@ -152,15 +169,17 @@
 
     formatOverlay: function (ol, completed) {
       let formatted = ""
+      formatted = formatted + "<div>" + ol.id + "</div>";
+      formatted = formatted + "<div class='overlay-bar' style='--overlay-colour:" + ol.colour + ";'></div>";
       if (ol.started) {
-        formatted = formatted + "<div>" + ol.id + "</div>";
-        formatted = formatted + "<div class='overlay-bar' style='--overlay-colour:" + ol.colour + ";'></div>";
         formatted = formatted + "<div>" + parseInt(ol.length, 10) + this.units + "</div>";
         if (completed) {
           formatted = formatted + "<div><i class='delete-overlay fa fa-trash' id=" + ol.idx + "></i></div>";
         } else {
           formatted = formatted + "<div><i class='end-overlay fa fa-save' id=" + ol.idx + "></i></div>";
         }
+      } else {
+        formatted = formatted + "<div></div><div></div>";
       }
       return formatted;
     },
@@ -177,6 +196,10 @@
     },
 
     drawOverlays: function () {
+      // only draw if measuring dialog is open
+      if (!this.measuring) {
+        return;
+      }
       rg2.ctx.lineWidth = 5;
       rg2.ctx.globalAlpha = 0.6;
       // draw completed overlays
