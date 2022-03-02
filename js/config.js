@@ -11,6 +11,7 @@
     TAB_CREATE: 5,
     TAB_EDIT: 6,
     TAB_MAP: 7,
+    TAB_DELETE_MAP: 8,
     INVALID_MAP_ID: 9999,
     // translated when output so leave as English here
     DEFAULT_NEW_COMMENT: "Type your comment",
