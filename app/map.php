@@ -182,7 +182,7 @@ class map
         }
         // assumes various things about the three points
         // works for RG2, may not work for the original, but we can live with that
-        // idealy we would have saved the world file rather than three points
+        // ideally we would have saved the world file rather than three points
         if (($x[0]!== 0) || ($y[0] !== 0) || ($y[2] !== 0) || ($x[2] === 0)) {
             return array(0, 0, 0, 0, 0, 0);
         }
@@ -202,5 +202,64 @@ class map
         $E = ($lat[1] - ($D * $x[1]) -  $F) / $y[1];
 
         return array($A, $B, $C, $D, $E, $F);
+    }
+
+    public static function deleteUnusedMaps($data)
+    {
+      $write["status_msg"] = "";
+      $usedmapids = array();
+      $requestedids = $data->maps;
+
+      // extract list of used map ids
+      if (($handle = @fopen(KARTAT_DIRECTORY."kisat.txt", "r+")) !== false) {
+        while (($eventdata = fgetcsv($handle, 0, "|")) !== false) {
+          if (count($eventdata) > 2) {
+            $usedmapids[] = $eventdata[1];
+          }
+        }
+      }
+      @fclose($handle);
+
+      $dodelete = array();
+      // only delete requested list if they are really unused
+      for ($i = 0; $i < count($requestedids); $i++) {
+        if (!in_array($requestedids[$i], $usedmapids)) {
+          $dodelete[] = $requestedids[$i];
+        }
+      }
+
+      // delete maps from kartat file
+      $filename = KARTAT_DIRECTORY."kartat.txt";
+      $oldfile = file($filename);
+      $updatedfile = array();
+      foreach ($oldfile as $row) {
+        $data = explode("|", $row);
+        if (count($data) > 0) {
+          if (!in_array($data[0], $dodelete)) {
+            $updatedfile[] = $row;
+          }
+        }
+      }
+      $status = file_put_contents($filename, $updatedfile);
+      if ($status === false) {
+        $write["status_msg"] .= "Save error for kartat. ";
+      }
+
+      // delete associated map files
+      for ($i = 0; $i < count($dodelete); $i++) {
+        @unlink(KARTAT_DIRECTORY.$dodelete[$i].".jpg");
+        @unlink(KARTAT_DIRECTORY.$dodelete[$i].".gif");
+        @unlink(KARTAT_DIRECTORY."worldfile_".$dodelete[$i].".txt");
+      }  
+
+      if ($write["status_msg"] == "") {
+        $write["ok"] = true;
+        $write["status_msg"] = "Unused maps deleted";
+        utils::rg2log("Unused maps deleted");
+      } else {
+        $write["ok"] = false;
+      }
+
+      return $write;
     }
 }

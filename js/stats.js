@@ -528,9 +528,9 @@
             raceTimes.push({ t: 0, resid: 0, pos: 0 });
           } else {
             // leg split of 0 means invalid split for this runner for this leg
-            if (this.results[k].legSplits[i] !== 0) {
+            //if (this.results[k].legSplits[i] !== 0) {
               legTimes.push({ t: this.results[k].legSplits[i], resid: k, pos: this.results[k].legpos[i] });
-            }
+            //}
             // race position only valid if all controls to that point are valid
             if (i <= this.results[k].lastValidSplit) {
               raceTimes.push({ t: this.results[k].splits[i], resid: k, pos: this.results[k].racepos[i] });
@@ -538,7 +538,16 @@
           }
         }
         legTimes.sort(function (a, b) {
-          return a.t - b.t;
+          // sort array of times in ascending order: 0 splits get sorted to the bottom
+          if (a.t === 0) {
+            return 1;
+          } else {
+            if (b.t === 0) {
+              return -1;
+            } else {
+              return a.t - b.t;
+            }
+          }
         });
         raceTimes.sort(function (a, b) {
           return a.t - b.t;

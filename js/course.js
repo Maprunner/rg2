@@ -5,6 +5,7 @@
     this.display = false;
     this.courseid = data.courseid;
     this.codes = data.codes;
+    this.exclude = this.extractExcludedControls(data.exclude);
     this.filterTo = this.codes.length;
     this.filterFrom = 0;
     this.x = data.xpos;
@@ -92,7 +93,8 @@
         rg2.controls.drawStart(this.x[0], this.y[0], "", this.angle[0], opt);
         // don't join up controls for score events
         if (!this.isScoreCourse) {
-          this.drawLinesBetweenControls({x: this.x, y: this.y}, this.angle, opt);
+          const filter = {from: this.filterFrom, to: this.filterTo};
+          this.drawLinesBetweenControls({x: this.x, y: this.y}, this.angle, opt, filter);
         }
         if (this.isScoreCourse) {
           for (i = 1; i < (this.x.length); i += 1) {
@@ -114,11 +116,9 @@
         }
       }
     },
-    drawLinesBetweenControls : function (pt, angle, opt) {
+    drawLinesBetweenControls : function (pt, angle, opt, filter) {
       var c1x, c1y, c2x, c2y, dist;
-      let from = this.filterFrom;
-      let to = this.filterTo;
-      for (let i = from; i < to; i += 1) {
+      for (let i = filter.from; i < filter.to; i += 1) {
         if (i === 0) {
           dist = opt.startTriangleLength;
         } else {
@@ -138,6 +138,15 @@
         rg2.ctx.moveTo(c1x, c1y);
         rg2.ctx.lineTo(c2x, c2y);
         rg2.ctx.stroke();
+      }
+    },
+
+    extractExcludedControls: function (excluded) {
+      if (excluded !== "") {
+        const exclude = excluded.split(",").map(a => parseInt(a, 10));
+        return exclude;
+      } else {
+        return [];
       }
     }
   };

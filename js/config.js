@@ -11,6 +11,7 @@
     TAB_CREATE: 5,
     TAB_EDIT: 6,
     TAB_MAP: 7,
+    TAB_DELETE_MAP: 8,
     INVALID_MAP_ID: 9999,
     // translated when output so leave as English here
     DEFAULT_NEW_COMMENT: "Type your comment",
@@ -40,7 +41,7 @@
     DIM: 0.75,
     FULL_INTENSITY: 1.0,
      // version gets set automatically by grunt file during build process
-    RG2VERSION: '1.7.0',
+    RG2VERSION: '1.8.0',
     TIME_NOT_FOUND: 9999,
     // values for evt.which
     RIGHT_CLICK: 3,

@@ -2,13 +2,13 @@
 (function () {
   function Overlay() {
     this.measuring = false;
+    this.dragging = false;
     this.colours = ["#ff00ff", "#0000ff", "#00ff00", "#ff0000", "#00ffff" ];
     this.colourIndex = 0;
     // array of completed overlays
     this.overlays = [];
     // overlay being drawn or not yet started
     this.currentOverlay = this.initialiseOverlay();
-    // has drawing started fro current overlay?
     this.units = "px";
     this.metresPerPixel = 1;
     this.initialiseUI();
@@ -66,6 +66,14 @@
       rg2.redraw(false);
     },
 
+    deleteAllOverlays: function () {
+      this.overlays.length = 0;
+      this.currentOverlay = this.initialiseOverlay();
+      this.updateOverlays();
+      this.updateDetails();
+      rg2.redraw(false);
+    },
+
     updateOverlays: function () {
       this.colourIndex = 0;
       // recolour and reallocate labels starting from A after deletion
@@ -83,7 +91,8 @@
       if (!this.measuring) {
         return;
       }
-
+      // console.log("Mouse up ", x, y);
+      this.dragging = false;
       if (!this.currentOverlay.started) {
         this.startOverlay();
       }
@@ -99,15 +108,58 @@
       }
     },
 
-    dragEnded: function () {
+    mouseDrag: function (from, to) {
+      // return value indicates if we handled the move or not
+      // console.log("Drag ", from, to);
+      if (!this.measuring) {
+        return false;
+      }
+      if (!this.dragging) {
+        for (let i = 0; i < this.overlays.length; i += 1) {
+          for (let j = 0; j < this.overlays[i].x.length; j += 1) {
+            if (this.closeEnough(from.x, from.y, this.overlays[i].x[j], this.overlays[i].y[j])) {
+              this.dragging = true;
+              this.dragOverlay = i;
+              this.dragPoint = j;
+            }
+          }
+        }
+      }
+      if (this.dragging) {
+        this.overlays[this.dragOverlay].x[this.dragPoint] = parseInt(to.x, 10);
+        this.overlays[this.dragOverlay].y[this.dragPoint] = parseInt(to.y, 10);
+        this.overlays[this.dragOverlay].length = this.calculateLength(this.overlays[this.dragOverlay].x, this.overlays[this.dragOverlay].y) * this.metresPerPixel;
+        this.updateDetails();
+        //rg2.redraw(false);
+        return true;
+      }
+      return false;
+    },
 
+    closeEnough : function (x1, y1, x2, y2) {
+      const range = 10;
+      if (Math.abs(x1 - x2) < range) {
+        if (Math.abs(y1 - y2) < range) {
+          return true;
+        }
+      }
+      return false;
+    },
+
+    dragEnded: function () {
+      //console.log("Drag ended");
+      this.dragging = false;
     },
 
     initialiseUI: function () {
-      var self = this;
-      $("#btn-measure").click(function() { 
+      const self = this;
+      $("#btn-measure").click(function () {
+        if (rg2.events.getActiveEventID() === null) {
+          return;
+        }
         $('#rg2-map-canvas').css('cursor', 'crosshair');
         self.measuring = true;
+        rg2.redraw(false);
         $("#rg2-overlay-dialog").dialog({
             position: { my: "right-10 top+10", at: "right top", of: "#rg2-map-canvas" },
             width: 200,
@@ -117,8 +169,10 @@
           close: function () {
             self.measuring = false;
             $('#rg2-map-canvas').css('cursor', 'auto');
+            rg2.redraw(false);
             }
         });
+        self.updateDetails();
       })
     },
 
@@ -139,11 +193,18 @@
         details = details + this.formatOverlay(this.overlays[i], true);
       }
       details = details + this.formatOverlay(this.currentOverlay, false);
+      // show "delete all" if at least two exist
+      if (this.overlays.length > 1) {
+        details = details + "<div>" + rg2.t("All") + "</div><div></div><div></div><div><i class='delete-all-overlays fa fa-trash'></i></div>";
+      }
       $("#rg2-overlay-details").empty().append(details);
       // reset click handlers
       var self = this;
       $(".delete-overlay").off().click(function (event) {
         self.deleteOverlay(parseInt(event.target.id, 10));
+      });
+      $(".delete-all-overlays").off().click(function () {
+        self.deleteAllOverlays();
       });
       $(".end-overlay").off().click(function () {
         self.endOverlay();
@@ -152,50 +213,67 @@
 
     formatOverlay: function (ol, completed) {
       let formatted = ""
+      formatted = formatted + "<div>" + ol.id + "</div>";
+      formatted = formatted + "<div class='overlay-bar' style='--overlay-colour:" + ol.colour + ";'></div>";
       if (ol.started) {
-        formatted = formatted + "<div>" + ol.id + "</div>";
-        formatted = formatted + "<div class='overlay-bar' style='--overlay-colour:" + ol.colour + ";'></div>";
         formatted = formatted + "<div>" + parseInt(ol.length, 10) + this.units + "</div>";
         if (completed) {
           formatted = formatted + "<div><i class='delete-overlay fa fa-trash' id=" + ol.idx + "></i></div>";
         } else {
           formatted = formatted + "<div><i class='end-overlay fa fa-save' id=" + ol.idx + "></i></div>";
         }
+      } else {
+        formatted = formatted + "<div></div><div></div>";
       }
       return formatted;
     },
 
-    drawSingleOverlay: function (ol) {
+    drawSingleOverlay: function (ol, finished) {
       rg2.ctx.strokeStyle = ol.colour;
       rg2.ctx.fillStyle = ol.colour;
+      // draw lines
       rg2.ctx.beginPath();
       rg2.ctx.moveTo(ol.x[0], ol.y[0]);
       for (let i = 1; i < ol.x.length; i += 1) {
         rg2.ctx.lineTo(ol.x[i], ol.y[i]);
       }
       rg2.ctx.stroke();
+      // draw dots
+      for (let i = 0; i < ol.x.length; i += 1) {
+        rg2.ctx.beginPath();
+        rg2.ctx.arc(ol.x[i], ol.y[i], 10, 0, 2 * Math.PI, false);
+        if (finished) {
+          rg2.ctx.fill();
+        } else {
+          rg2.ctx.stroke();
+        }
+      }
     },
 
     drawOverlays: function () {
+      // only draw if measuring dialog is open
+      if (!this.measuring) {
+        return;
+      }
       rg2.ctx.lineWidth = 5;
       rg2.ctx.globalAlpha = 0.6;
       // draw completed overlays
       if (this.overlays.length > 0) {
         for (let j = 0; j < this.overlays.length; j += 1) {
-          this.drawSingleOverlay( this.overlays[j]);
+          this.drawSingleOverlay( this.overlays[j], true);
         }
       }
       // draw overlay in progress
       if (this.currentOverlay.started) {
         if (this.currentOverlay.x.length === 1) {
-          // only one point so draw dot to mark start
+          // only one point so draw ring to mark start
           rg2.ctx.strokeStyle = this.currentOverlay.colour;
           rg2.ctx.fillStyle = this.currentOverlay.colour;
           rg2.ctx.beginPath();
           rg2.ctx.arc(this.currentOverlay.x[0], this.currentOverlay.y[0], 10, 0, 2 * Math.PI, false);
           rg2.ctx.stroke();
         } else {
-          this.drawSingleOverlay(this.currentOverlay);
+          this.drawSingleOverlay(this.currentOverlay, false);
         }
       }
     }

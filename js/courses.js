@@ -276,8 +276,8 @@
       }
     },
 
-    drawLinesBetweenControls: function (pt, angle, courseid, opt) {
-      this.courses[courseid].drawLinesBetweenControls(pt, angle, opt);
+    drawLinesBetweenControls: function (pt, angle, courseid, opt, filter) {
+      this.courses[courseid].drawLinesBetweenControls(pt, angle, opt, filter);
     },
 
     getFilterDetails: function (courseid) {
@@ -292,7 +292,15 @@
       this.courses[courseid].filterFrom = low;
       this.courses[courseid].filterTo = high;
       rg2.redraw(false);
-    }
+    },
+
+    getExcluded: function (courseid) {
+      if (courseid in this.courses) {
+        return this.courses[courseid].exclude;
+      } else {
+        return [];
+      }
+    },
   };
   rg2.Courses = Courses;
 }());

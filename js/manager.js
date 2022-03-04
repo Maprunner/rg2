@@ -46,6 +46,7 @@
     this.localworldfile = new rg2.Worldfile(0);
     this.worldfile = new rg2.Worldfile(0);
     this.georefmap = L.map('rg2-world-file-map');
+    this.unusedMaps = [];
     this.initialiseMap();
     this.initialiseUI();
   }
@@ -126,6 +127,9 @@
       }).button("disable");
       $("#btn-add-map").button().click(function () {
         self.confirmAddMap();
+      }).button("disable");
+      $("#btn-delete-unused-maps").button().click(function () {
+        self.confirmDeleteUnusedMaps();
       }).button("disable");
       $("#btn-draw-courses").button().click(function () {
         self.startDrawingCourses();
@@ -278,6 +282,8 @@
           self.maps.push(new rg2.Map(json.data.maps[i]));
         }
         rg2.managerUI.createMapDropdown(self.maps);
+        self.findUnusedMaps(self.maps);
+        rg2.managerUI.displayUnusedMaps(self.unusedMaps);
         $("#btn-toggle-controls").show();
       }).fail(function () {
         rg2.utils.showWarningDialog("Map request failed", "Error getting map list.");
@@ -293,6 +299,13 @@
     eventListLoaded: function () {
       // called after event list has been updated
       rg2.managerUI.createEventEditDropdown();
+      // unused maps get set initially when maps are loaded by the manager
+      // need to avoid race condition where events load before manager is initialised
+      // this bit is needed to deal with maps changing state when events are created or deleted
+      if (this.maps.length > 0) {
+        this.findUnusedMaps(this.maps);
+        rg2.managerUI.displayUnusedMaps(this.unusedMaps);
+      }
     },
 
     eventFinishedLoading: function () {
@@ -418,6 +431,7 @@
             window.open(rg2Config.json_url.replace("rg2api.php", "") + "#" + data.newid);
             rg2.getEvents();
             rg2.managerUI.setEvent();
+            // unused map data gets reset in eventListLoaded callback
           } else {
             rg2.utils.showWarningDialog("Save failed", data.status_msg + " Failed to create event. Please try again.");
           }
@@ -907,6 +921,7 @@
             rg2.utils.showWarningDialog("Event deleted", "Event " + id + " has been deleted.");
             rg2.getEvents();
             rg2.managerUI.setEvent();
+            // unused map data gets reset in eventListLoaded callback
             $("#rg2-event-selected").empty();
           } else {
             rg2.utils.showWarningDialog("Delete failed", data.status_msg + ". Event delete failed. Please try again.");
@@ -1072,7 +1087,7 @@
           count += 1;
         }
       }
-      console.log("Encoding: " + this.encodings[this.encodingIndex] + ", Invalid characters: " + count);
+      // console.log("Encoding: " + this.encodings[this.encodingIndex] + ", Invalid characters: " + count);
       return count;
     },
 
@@ -1547,6 +1562,7 @@
         $("#georef-" + letters[i]).empty().text(letters[i] + ": " + this.newMap.worldfile[letters[i]]);
       }
     },
+
     updateGeorefMap: function () {
       var lon, lat, poly, poly_coords, indices;
       // Plot a polygon and recentre the map on the polygon
@@ -1563,6 +1579,82 @@
       $("#rg2-world-file-map").show();
       this.georefmap.invalidateSize();
       this.georefmap.fitBounds(poly.getBounds());
+    },
+
+    confirmDeleteUnusedMaps: function () {
+      const selectedMaps = $('.unused-map:checkbox:checked').map(function () {
+        return parseInt(this.value, 10)
+      }).get();
+      if (selectedMaps.length === 0) {
+        rg2.utils.showWarningDialog("Warning", "No maps selected.");
+        return;
+      }
+      for (let i = 0; i < this.unusedMaps.length; i += 1) {
+        if (selectedMaps.indexOf(this.unusedMaps[i].mapid) > -1) {
+          this.unusedMaps[i].delete = true;
+        } else {
+          this.unusedMaps[i].delete = false;
+        }
+      }
+      const dlg = {};
+      dlg.selector = "<div id='unused-maps-delete-dialog'>Selected maps will be deleted. Are you sure?</div>";
+      dlg.title = "Confirm map deletion";
+      dlg.classes = "rg2-confirm-unused-map-delete-dialog";
+      dlg.doText = "Delete maps";
+      dlg.onDo = this.doDeleteUnusedMaps.bind(this);
+      dlg.onCancel = rg2.managerUI.doCancelDeleteUnusedMaps.bind(this);
+      rg2.utils.createModalDialog(dlg);
+    },
+
+    doDeleteUnusedMaps: function () {
+      $("#unused-maps-delete-dialog").dialog("destroy");
+      const $url = rg2Config.json_url + "?type=deleteunusedmaps";
+      let data = {};
+      data.maps = this.unusedMaps.filter(map => (map.delete === true)).map(map => map.mapid);
+      const user = this.user.encodeUser();
+      data.x = user.x;
+      data.y = user.y;
+      const json = JSON.stringify(data);
+      const self = this;
+      $.ajax({
+        data: json,
+        type: "POST",
+        url: $url,
+        dataType: "json",
+        success: function (data) {
+          // save new cookie
+          self.user.y = data.keksi;
+          if (data.ok) {
+            rg2.utils.showWarningDialog("Maps deleted", "All selected maps have been deleted.");
+          } else {
+            rg2.utils.showWarningDialog("Delete failed", data.status_msg + ". Delete failed. Please try again.");
+          }
+        },
+        error: function (jqXHR, textStatus) {
+          rg2.utils.showWarningDialog("Delete failed", textStatus + ". Unused map deletion failed.");
+        },
+        complete: function () {
+          // whatever happened it is safest to reload map list at this point
+          self.getMaps();
+        }
+      });
+    },
+
+    findUnusedMaps: function (maps) {
+      this.unusedMaps.length = 0;
+      for (let i = 0; i < maps.length; i += 1) {
+        if (!rg2.events.mapIDIsInUse(maps[i].mapid)) {
+          const map = {};
+          map.mapid = maps[i].mapid;
+          map.name = maps[i].name;
+          if (map.name === "") {
+            map.name = "(None)";
+          }
+          map.delete = false;
+          this.unusedMaps.push(map);
+        }
+      }
+      // console.log("Unused maps: " + this.unusedMaps.length);
     }
   };
   rg2.Manager = Manager;

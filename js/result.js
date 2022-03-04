@@ -30,7 +30,16 @@
     }
     this.courseid = data.courseid;
     this.splits = this.adjustRawSplits(data.splits);
-
+    // adjust finish time if necessary when controls have been excluded
+    if (this.resultid < rg2.config.GPS_RESULT_OFFSET) {
+      let excluded = rg2.courses.getExcluded(this.courseid);
+      if (excluded) {
+        const time = rg2.utils.getSecsFromHHMMSS(this.time);
+        if (time !== 0) {
+          this.splits[this.splits.length - 1] = time
+        }
+      }  
+    }
     if (isScoreEvent) {
       // save control locations for score course result
       this.scorex = scorex;
@@ -203,18 +212,19 @@
       // based on drawCourse in course.js
       // could refactor in future...
       // > 1 since we need at least a start and finish to draw something
-      var angle, i, opt;
       if ((this.displayScoreCourse) && (this.scorex.length > 1)) {
-        opt = rg2.getOverprintDetails();
+        const opt = rg2.getOverprintDetails();
         rg2.ctx.globalAlpha = rg2.config.FULL_INTENSITY;
-        angle = rg2.utils.getAngle(this.scorex[0], this.scorey[0], this.scorex[1], this.scorey[1]);
+        let angle = rg2.utils.getAngle(this.scorex[0], this.scorey[0], this.scorex[1], this.scorey[1]);
         rg2.controls.drawStart(this.scorex[0], this.scorey[0], "", angle, opt);
         angle = [];
-        for (i = 0; i < (this.scorex.length - 1); i += 1) {
+        for (let i = 0; i < (this.scorex.length - 1); i += 1) {
           angle[i] = rg2.utils.getAngle(this.scorex[i], this.scorey[i], this.scorex[i + 1], this.scorey[i + 1]);
         }
-        rg2.courses.drawLinesBetweenControls({ x: this.scorex, y: this.scorey }, angle, this.courseid, opt);
-        for (i = 1; i < (this.scorex.length - 1); i += 1) {
+        // draw all controls for a score course: too complicated to filter individuals
+        const filter = {from: 0, to: this.scorex.length};
+        rg2.courses.drawLinesBetweenControls({ x: this.scorex, y: this.scorey }, angle, this.courseid, opt, filter);
+        for (let i = 1; i < (this.scorex.length - 1); i += 1) {
           rg2.controls.drawSingleControl(this.scorex[i], this.scorey[i], i, Math.PI * 0.25, opt);
         }
         rg2.controls.drawFinish(this.scorex[this.scorex.length - 1], this.scorey[this.scorey.length - 1], "", opt);

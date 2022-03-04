@@ -32,7 +32,7 @@
   }
 
   // version replaced by Gruntfile as part of release
-  define('RG2VERSION', '1.7.0');
+  define('RG2VERSION', '1.8.0');
   define('KARTAT_DIRECTORY', $kartat);
   define('LOCK_DIRECTORY', dirname(__FILE__)."/lock/saving/");
   define('CACHE_DIRECTORY', $kartat."cache/");
@@ -112,8 +112,16 @@ function handlePostRequest($type, $eventid)
         @unlink(CACHE_DIRECTORY."stats.json");
        break;
 
+      case 'deleteunusedmaps':
+        $write = map::deleteUnusedMaps($data);
+        // shouldn't impact the cache but just delete to be safe
+        @unlink(CACHE_DIRECTORY."events.json");
+        @unlink(CACHE_DIRECTORY."all_".$eventid.".json");
+        @unlink(CACHE_DIRECTORY."stats.json");
+       break;
+
       case 'deleteroute':
-          // this is the manager delete function
+        // this is the manager delete function
         $write = route::deleteRoute($eventid);
         @unlink(CACHE_DIRECTORY."all_".$eventid.".json");
         @unlink(CACHE_DIRECTORY."stats.json");

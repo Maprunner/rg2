@@ -11,20 +11,33 @@ class course
         $xpos = array();
         $ypos = array();
         $dummycontrols = array();
+        $excludedControls = array();
         // @ suppresses error report if file does not exist
-        // read control codes for each course
-        if (($handle = @fopen(KARTAT_DIRECTORY."sarjojenkoodit_".$eventid.".txt", "r")) !== false) {
-            $controlsFound = true;
+        // read excluded controls for each course
+        // allows for road crossings with 0 splits
+        if (($handle = @fopen(KARTAT_DIRECTORY."exclude_".$eventid.".txt", "r")) !== false) {
             while (($data = fgetcsv($handle, 0, "|")) !== false) {
-                // ignore first field: it is an index
-                $codes = array();
-                for ($j = 1; $j < count($data); $j++) {
-                    $codes[$j - 1] = $data[$j];
-                }
-                $controls[$row] = $codes;
-                $row++;
+              $detail = array();
+              $detail["courseid"] = intval($data[0]);
+              $detail["controls"] = $data[1];
+              $excludedControls[] = $detail;
             }
             fclose($handle);
+        }
+
+        // read control codes for each course
+          if (($handle = @fopen(KARTAT_DIRECTORY."sarjojenkoodit_".$eventid.".txt", "r")) !== false) {
+            $controlsFound = true;
+            while (($data = fgetcsv($handle, 0, "|")) !== false) {
+              // ignore first field: it is an index
+              $codes = array();
+              for ($j = 1; $j < count($data); $j++) {
+                $codes[$j - 1] = $data[$j];
+              }
+              $controls[$row] = $codes;
+              $row++;
+            }
+          fclose($handle);
         }
 
         // extract control locations based on map co-ords
@@ -85,6 +98,13 @@ class course
                     $detail["xpos"] = array();
                     $detail["ypos"] = array();
                 }
+                $exclude = "";
+                for ($j = 0; $j < count($excludedControls); $j++) {
+                  if ($excludedControls[$j]["courseid"] === intval($data[0])) {
+                    $exclude = $excludedControls[$j]["controls"];
+                  }
+                }
+                $detail["exclude"] = $exclude;
                 $output[$row] = $detail;
                 $row++;
             }
