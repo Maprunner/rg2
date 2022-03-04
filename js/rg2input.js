@@ -31,7 +31,10 @@
           if ($("#rg2-info-panel").tabs("option", "active") === rg2.config.TAB_CREATE) {
             rg2.manager.adjustControls({x: Math.round(input.dragStart.x), y: Math.round(input.dragStart.y)}, pt, input.whichButton);
           } else {
-            rg2.ctx.translate(pt.x - input.dragStart.x, pt.y - input.dragStart.y);
+            let overlayDragged = rg2.overlay.mouseDrag(input.dragStart, pt);
+            if (!overlayDragged) {
+              rg2.ctx.translate(pt.x - input.dragStart.x, pt.y - input.dragStart.y);
+            }
           }
         }
         input.dragged = true;

@@ -2,6 +2,7 @@
 (function () {
   function Overlay() {
     this.measuring = false;
+    this.dragging = false;
     this.colours = ["#ff00ff", "#0000ff", "#00ff00", "#ff0000", "#00ffff" ];
     this.colourIndex = 0;
     // array of completed overlays
@@ -90,7 +91,8 @@
       if (!this.measuring) {
         return;
       }
-
+      // console.log("Mouse up ", x, y);
+      this.dragging = false;
       if (!this.currentOverlay.started) {
         this.startOverlay();
       }
@@ -106,13 +108,55 @@
       }
     },
 
-    dragEnded: function () {
+    mouseDrag: function (from, to) {
+      // return value indicates if we handled the move or not
+      // console.log("Drag ", from, to);
+      if (!this.measuring) {
+        return false;
+      }
+      if (!this.dragging) {
+        for (let i = 0; i < this.overlays.length; i += 1) {
+          for (let j = 0; j < this.overlays[i].x.length; j += 1) {
+            if (this.closeEnough(from.x, from.y, this.overlays[i].x[j], this.overlays[i].y[j])) {
+              this.dragging = true;
+              this.dragOverlay = i;
+              this.dragPoint = j;
+            }
+          }
+        }
+      }
+      if (this.dragging) {
+        this.overlays[this.dragOverlay].x[this.dragPoint] = parseInt(to.x, 10);
+        this.overlays[this.dragOverlay].y[this.dragPoint] = parseInt(to.y, 10);
+        this.overlays[this.dragOverlay].length = this.calculateLength(this.overlays[this.dragOverlay].x, this.overlays[this.dragOverlay].y) * this.metresPerPixel;
+        this.updateDetails();
+        //rg2.redraw(false);
+        return true;
+      }
+      return false;
+    },
 
+    closeEnough : function (x1, y1, x2, y2) {
+      const range = 10;
+      if (Math.abs(x1 - x2) < range) {
+        if (Math.abs(y1 - y2) < range) {
+          return true;
+        }
+      }
+      return false;
+    },
+
+    dragEnded: function () {
+      //console.log("Drag ended");
+      this.dragging = false;
     },
 
     initialiseUI: function () {
-      var self = this;
-      $("#btn-measure").click(function() { 
+      const self = this;
+      $("#btn-measure").click(function () {
+        if (rg2.events.getActiveEventID() === null) {
+          return;
+        }
         $('#rg2-map-canvas').css('cursor', 'crosshair');
         self.measuring = true;
         rg2.redraw(false);
@@ -184,15 +228,26 @@
       return formatted;
     },
 
-    drawSingleOverlay: function (ol) {
+    drawSingleOverlay: function (ol, finished) {
       rg2.ctx.strokeStyle = ol.colour;
       rg2.ctx.fillStyle = ol.colour;
+      // draw lines
       rg2.ctx.beginPath();
       rg2.ctx.moveTo(ol.x[0], ol.y[0]);
       for (let i = 1; i < ol.x.length; i += 1) {
         rg2.ctx.lineTo(ol.x[i], ol.y[i]);
       }
       rg2.ctx.stroke();
+      // draw dots
+      for (let i = 0; i < ol.x.length; i += 1) {
+        rg2.ctx.beginPath();
+        rg2.ctx.arc(ol.x[i], ol.y[i], 10, 0, 2 * Math.PI, false);
+        if (finished) {
+          rg2.ctx.fill();
+        } else {
+          rg2.ctx.stroke();
+        }
+      }
     },
 
     drawOverlays: function () {
@@ -205,20 +260,20 @@
       // draw completed overlays
       if (this.overlays.length > 0) {
         for (let j = 0; j < this.overlays.length; j += 1) {
-          this.drawSingleOverlay( this.overlays[j]);
+          this.drawSingleOverlay( this.overlays[j], true);
         }
       }
       // draw overlay in progress
       if (this.currentOverlay.started) {
         if (this.currentOverlay.x.length === 1) {
-          // only one point so draw dot to mark start
+          // only one point so draw ring to mark start
           rg2.ctx.strokeStyle = this.currentOverlay.colour;
           rg2.ctx.fillStyle = this.currentOverlay.colour;
           rg2.ctx.beginPath();
           rg2.ctx.arc(this.currentOverlay.x[0], this.currentOverlay.y[0], 10, 0, 2 * Math.PI, false);
           rg2.ctx.stroke();
         } else {
-          this.drawSingleOverlay(this.currentOverlay);
+          this.drawSingleOverlay(this.currentOverlay, false);
         }
       }
     }
