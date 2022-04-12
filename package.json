@@ -13,15 +13,14 @@
     "sync": "grunt sync"
   },
   "devDependencies": {
+    "@lodder/grunt-postcss": "^3.1.1",
     "autoprefixer": "^9.8.8",
     "cssnano": "^5.0.17",
     "eslint": "^8.5.0",
     "eslint-config-prettier": "^8.3.0",
     "grunt": "^1.4.1",
-    "grunt-bumpup": "^0.6.3",
     "grunt-contrib-clean": "^2.0.0",
     "grunt-contrib-uglify": "^5.0.1",
-    "@lodder/grunt-postcss": "^3.1.1",
     "grunt-sync": "^0.8.2",
     "grunt-text-replace": "^0.4.0",
     "load-grunt-tasks": "^5.1.0",

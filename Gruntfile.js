@@ -48,8 +48,6 @@ module.exports = function (grunt) {
       },
     },
 
-    bumpup: "package.json",
-
     replace: {
       jsversion: {
         src: "js/config.js",
@@ -119,8 +117,7 @@ module.exports = function (grunt) {
 
   grunt.registerTask("default", ["build"]);
 
-  // increment minor version number: do anything else by editting package.json by hand
-  grunt.registerTask("bump", ["bumpup"]);
+  // bumpup removed: all version number updates done by editting package.json by hand
 
   grunt.registerTask("build", ["clean:minified", "postcss", "uglify", "build-manager"]);
 
