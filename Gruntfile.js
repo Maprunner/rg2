@@ -272,6 +272,7 @@ var clubs = [
   "tvoc",
   "walton",
   "waoc",
+  "waroc",
   "wcoc",
   "wim",
   "wmoc",
