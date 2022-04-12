@@ -827,3 +827,13 @@ body {
 .rg2-unused-map-table .title {
   font-weight: bold;
 }
+
+.rg2-control-slider-grid {
+  display: grid;
+  grid-template-columns: 125px 1fr;
+  align-items: center;
+}
+
+#rg2-iterations {
+  width: 100px;
+}
