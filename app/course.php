@@ -44,6 +44,8 @@ class course
         if (($handle = @fopen(KARTAT_DIRECTORY."ratapisteet_".$eventid.".txt", "r")) !== false) {
             $row = 0;
             while (($data = fgetcsv($handle, 0, "|")) !== false) {
+              // protect against empty rows: shouldn't be there but...
+              if (count($data) > 1) {
                 // ignore first field: it is an index
                 $x = array();
                 $y = array();
@@ -73,6 +75,7 @@ class course
                 $ypos[$row] = $y;
                 $dummycontrols[$row] = $dummycodes;
                 $row++;
+              }
             }
             fclose($handle);
         }
@@ -81,6 +84,8 @@ class course
         // set up details for each course
         if (($handle = @fopen(KARTAT_DIRECTORY."sarjat_".$eventid.".txt", "r")) !== false) {
             while (($data = fgetcsv($handle, 0, "|")) !== false) {
+              // protect against empty rows: shouldn't be there but...
+              if (count($data) > 1) {
                 $detail = array();
                 $detail["courseid"] = intval($data[0]);
                 $detail["name"] = utils::encode_rg_input($data[1]);
@@ -107,6 +112,7 @@ class course
                 $detail["exclude"] = $exclude;
                 $output[$row] = $detail;
                 $row++;
+              }
             }
             fclose($handle);
         }
