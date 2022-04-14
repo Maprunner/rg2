@@ -1,10 +1,11 @@
 # Routegadget 2
 
 ## Latest news
-Version 1.8.0 was released on 4th March 2022 and is installed on all routegadget.co.uk sites. This includes:
-* Enhancements to the "Measure" function following use at HH Zoom meetings. Route nodes can be dragged to adjust them, overlays are only visible when dialog window is open, and "Delete all" button added.
-* New manager function added to allow deletion of unused maps.
-* Enhancement to course sliders so that they handle relay and score courses better.
+Version 1.9.0 was released on 14th April 2022 and is installed on all routegadget.co.uk sites. This includes:
+* Chart display of some of the stats information available when double clicking on a runner name on the results tab.
+* Extra error handling which now allows some very old (RG1, pre 2011) events to be displayed correctly.
+* Extra warnings about map size when setting up an event.
+* Various other minor updates.
 
 ## User Guide and Introductory Videos
 
