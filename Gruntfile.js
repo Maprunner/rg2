@@ -244,7 +244,7 @@ var clubs = [
   "sboc",
   "scottish6days",
   "seloc",
-  "sl_2020",
+  "sl-2020",
   "slow",
   "slmm",
   "smbo",
