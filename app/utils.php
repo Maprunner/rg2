@@ -34,42 +34,38 @@ class utils
 
     public static function lockDatabase()
     {
-        // lock directory version based on http://docstore.mik.ua/oreilly/webprog/pcook/ch18_25.htm
-        // but note mkdir returns TRUE if directory already exists!
-        $locked = false;
+        set_error_handler("utils::lockErrorHandler");
+
+        // lock directory version originally based on http://docstore.mik.ua/oreilly/webprog/pcook/ch18_25.htm
+        // and then needed tweaking for mkdir race condition
 
         // tidy up from possible locking errors
         if (is_dir(LOCK_DIRECTORY)) {
             // if lock directory is more than a few seconds old it wasn't deleted properly, so we'll delete it ourselves
-            // not sure exactly how time changes work, but we can live with a possible twice
-            // a year problem since locking is probably almost never needed
-            if ((time() - filemtime(LOCK_DIRECTORY)) > 15) {
+            if ((time() - filemtime(LOCK_DIRECTORY)) > 15000) {
                 self::unlockDatabase();
             }
         }
-        if (is_dir(LOCK_DIRECTORY)) {
-            // locked already by someone else
-            //self::rg2log("Directory exists ".date("D M j G:i:s T Y", filemtime(LOCK_DIRECTORY)));
-        } else {
-            // try to lock it ourselves
-            //self::rg2log("Trying to lock ".LOCK_DIRECTORY);
-            $locked = mkdir(LOCK_DIRECTORY, 0777);
-        }
+
+        $locked = false;
         $tries = 0;
         while (!$locked && ($tries < 5)) {
-            // wait 500ms up to 5 times trying to get a lock
-            usleep(500000);
-            if (is_dir(LOCK_DIRECTORY)) {
-                // locked already by someone else
-                $locked = false;
-            } else {
-                // try to lock it ourselves
-                $locked = mkdir(LOCK_DIRECTORY, 0777);
+            if (!is_dir(LOCK_DIRECTORY)) {
+              // Try to lock it ourselves.
+              // This can generate a warning that the directory already exists
+              // even though we tested that with is_dir before we got here (race condition if multiple users try
+              // to do something that needs a lock at the same time).
+              // This is trapped by the error handler which lets us keep going to try again.
+              $locked = mkdir(LOCK_DIRECTORY, 0777);
             }
-            $tries++;
-            //self::rg2log("Lock attempt ".$tries);
+            if (!$locked) {
+              // wait another 500ms before trying to get a lock
+              $tries++;
+              self::rg2log("Lock attempts ".$tries);
+              usleep(500000);
+            }
         }
-        //self::rg2log("Lock status ".$locked);
+        restore_error_handler();
         return $locked;
     }
 
@@ -77,6 +73,20 @@ class utils
     {
         // ignore any errors but try to tidy up everything
         @rmdir(LOCK_DIRECTORY);
+    }
+
+    private static function lockErrorHandler($errno, $errstr, $errfile, $errline)
+    {
+      // trap race condition and keep going: application code deals with this
+      // https://stackoverflow.com/questions/44322783/is-is-dir-unreliable-or-are-there-race-conditions-that-can-be-mitigated-here
+      if (($errno === E_WARNING) && ($errstr === "mkdir(): File exists"))
+      {
+        self::rg2log("Trapped mkdir race condition in lock handler");
+        // don't propagate error
+        return true;
+      }
+      // otherwise stick with standard error handling
+      return false;
     }
 
     public static function tidyNewComments($inputComments)

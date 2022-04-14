@@ -76,6 +76,8 @@ class result
         if (($handle = @fopen(KARTAT_DIRECTORY."kilpailijat_".$eventid.".txt", "r")) !== false) {
             $row = 0;
             while (($data = fgetcsv($handle, 0, "|")) !== false) {
+              // protect against spurious blank lines at end of old files
+              if (count($data) > 5) {
                 $detail = array();
                 $resultid = intval($data[0]);
                 $courseid = intval($data[1]);
@@ -129,6 +131,7 @@ class result
                 }
                 $output[$row] = $detail;
                 $row++;
+              }
             }
             fclose($handle);
         }

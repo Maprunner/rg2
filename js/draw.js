@@ -581,7 +581,8 @@
       $("#route-delete-dialog").dialog("destroy");
       info = rg2.results.getDeletionInfo(this.routeToDelete);
       $url = rg2Config.json_url + "?type=deletemyroute&id=" + rg2.events.getKartatEventID() + "&routeid=" + info.id;
-      json = JSON.stringify({token: info.token});
+      json = JSON.stringify({ token: info.token });
+      document.getElementById("rg2-container").style.cursor = "wait";
       $.ajax({
         data : json,
         type : "POST",
@@ -599,6 +600,9 @@
         /* eslint-disable-next-line no-unused-vars */
         error : function (jqXHR, textStatus) {
           rg2.utils.showWarningDialog(rg2.t("Delete failed"), rg2.t("Delete failed"));
+        },
+        complete : function () {
+          document.getElementById("rg2-container").style.cursor = "default";
         }
       });
     },

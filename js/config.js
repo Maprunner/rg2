@@ -29,6 +29,8 @@
     PURPLE: '#b300ff',
     RED: '#ff0000',
     GREEN: '#00ff00',
+    DARK_GREEN: 'rgb(34, 139, 34)',
+    DARK_GREEN_30: 'rgba(34, 139, 34, 0.3)',
     GREY: '#e0e0e0',
     RED_30: 'rgba(255,0,0,0.3)',
     GREEN_30: 'rgba(0,255,0,0.3)',
@@ -41,7 +43,7 @@
     DIM: 0.75,
     FULL_INTENSITY: 1.0,
      // version gets set automatically by grunt file during build process
-    RG2VERSION: '1.8.0',
+    RG2VERSION: '1.9.0',
     TIME_NOT_FOUND: 9999,
     // values for evt.which
     RIGHT_CLICK: 3,
@@ -66,7 +68,10 @@
       { language: "Русский", code: "ru" }
     ],
     // Size of map upload in MB that triggers the warning dialog
-    FILE_SIZE_WARNING: 2
+    FILE_SIZE_WARNING: 2,
+    // Size of map upload in pixels that triggers the warning dialog
+    // emprically this is easily enough for an A3 sensible map
+    PIXEL_SIZE_WARNING: 4000
   };
 
   options = {

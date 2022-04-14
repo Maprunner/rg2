@@ -56,8 +56,17 @@
       <li>
         <a id="rg2-stats-splits-text" href="#rg2-results-table">Splits</a>
       </li>
+      <li>
+        <a id="rg2-stats-loss-text" href="#rg2-time-loss">Time loss</a>
+      </li>
+      <li><a id="rg2-iter-plus-text" href="#rg2-iter-plus">+</a></li>
+      <li><a id="rg2-iter-text" href="#rg2-iter-display">3</a></li>
+      <li><a id="rg2-iter-minus-text" href="#rg2-iter-minus">-</a></li>        
     </ul>
-    <div id="rg2-stats-summary"></div>
+    <div id="rg2-stats-summary">
+      <div id="rg2-stats"></div>
+      <canvas id="rg2-splits-chart"></canvas>
+    </div>
     <div id="rg2-leg-table" style="width: 900px; height: 100%;" class="ag-theme-balham"></div>
     <div id="rg2-race-table" style="width: 830px; height: 100%;" class="ag-theme-balham"></div>
     <div id="rg2-results-table" class="rg2-results-table-container">
@@ -65,5 +74,17 @@
         <div id="rg2-results-grid" style="height: 100%" class="ag-theme-balham"></div>
       </div>
     </div>
-  </div>
+    <div id="rg2-time-loss">
+      <div class="rg2-control-slider-grid">
+        <div id="rg2-control-number"></div>
+        <div id="rg2-control-slider"></div>
+        <div></div>
+        <div id="rg2-loss-details"></div>
+      </div>
+      <canvas id="rg2-leg-chart"></canvas>
+      <canvas id="rg2-loss-chart"></canvas>
+    </div>
+    <div id="rg2-iter-plus"></div>
+    <div id="rg2-iter-display"></div>
+    <div id="rg2-iter-minus"></div>
 </div>

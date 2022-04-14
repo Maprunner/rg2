@@ -1,39 +1,44 @@
-
 /*global agGrid:false */
+/*global Chart:false */
+/*global Promise:false */
 (function () {
   function Stats() {
     'use strict';
     this.result = null;
+    this.rawid = null;
     this.results = [];
     this.course = null;
     this.byLegPos = [];
     this.byRacePos = [];
     this.resultIndex = null;
-    // empirical setting for how often to iterate loss assessment
-    this.iterations = 3;
+    this.splitsChart = undefined;
+    this.legChart = undefined;
+    this.activeLeg = 1;
+    this.maxIterationIndex = 9;
+    // starting iteration to use for display
+    this.iterationIndex = 2;
+    this.extraStats = false;
   }
 
   Stats.prototype = {
     Constructor: Stats,
 
     initialise: function (rawid) {
-      var i;
-
-      this.result = rg2.results.getFullResultForRawID(rawid);
+      this.rawid = rawid;
+      this.result = rg2.results.getFullResultForRawID(this.rawid);
       this.results = rg2.results.getAllResultsForCourse(this.result.courseid);
-      for (i = 0; i < this.results.length; i += 1) {
+      this.resultIndex = this.setResultIndex(this.rawid);
+      this.initialiseCourse(this.result.courseid);
+    },
+
+    setResultIndex: function (rawid) {
+      for (let i = 0; i < this.results.length; i += 1) {
         if (this.results[i].rawid === rawid) {
           // index for runner we are analysing
-          this.resultIndex = i;
+          return i;
         }
       }
-      this.course = rg2.courses.getCourseDetails(this.result.courseid);
-      // includes start and finish
-      this.controls = this.course.codes.length;
-      if (this.controls <= 2) {
-        throw new this.rg2Exception(rg2.t('No splits available.'));
-      }
-      this.analyseCourse();
+      return null;
     },
 
     rg2Exception: function (msg) {
@@ -41,10 +46,82 @@
     },
 
     showStats: function (rawid) {
+      this.rawid = rawid;
+      this.extraStats = false;
+      this.loadStats(rawid);
+    },
+
+    showExtraStats: function (rawid) {
+      this.rawid = rawid;
+      this.extraStats = true;
+      this.loadStats(rawid);
+    },
+
+    loadStats: function (rawid) {
+      $('body').css('cursor', 'wait');
+      const loadScript = (src, integrity) => {
+        return new Promise((resolve, reject) => {
+          const script = document.createElement('script')
+          script.type = 'text/javascript'
+          script.crossOrigin = "anonymous",
+          script.referrerPolicy = "no-referrer",
+          script.integrity = integrity,
+          script.onload = resolve
+          script.onerror = reject
+          script.src = src
+          document.head.append(script)
+        })
+      }
+      const loadCSS = (src) => {
+        return new Promise((resolve, reject) => {
+          const link = document.createElement('link')
+          link.rel = 'stylesheet'
+          link.crossOrigin = "anonymous",
+          link.referrerPolicy = "no-referrer",
+          link.onload = resolve
+          link.onerror = reject
+          link.href = src
+          document.head.append(link)
+        })
+      }
+      const loadChart = () => {
+        if (typeof (Chart) === 'undefined') {
+          return Promise.all([loadScript("https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js",
+            "sha512-QSkVNOCYLtj73J4hbmVoOV6KVZuMluZlioC+trLpewV8qMjsWqlIQvkn1KGX2StWvPMdWGBqim1xlC8krl1EKQ=="),
+            loadCSS("https://unpkg.com/ag-grid-community/dist/styles/ag-grid.css"),
+            loadCSS("https://unpkg.com/ag-grid-community/dist/styles/ag-theme-balham.css")]);
+        } else {
+          return Promise.resolve();
+        }
+      }
+      const loadGrid = () => {
+        if (typeof (agGrid) === 'undefined') {
+          return loadScript("https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.noStyle.js",
+            "")
+        } else {
+          return Promise.resolve();
+        }
+      }
+      loadGrid()
+      .then(() => loadChart())
+        .then(() => {
+          $('body').css('cursor', 'auto');
+          this.prepareStats(rawid);
+      })
+        .catch(() => {
+          rg2.utils.showWarningDialog(rg2.t("Statistics"), rg2.t("Failed to load Grid and Chart utilities."));
+          $('body').css('cursor', 'auto');
+        });
+    },
+
+    prepareStats: function (rawid) {
       // all sorts of possible data consistency errors that might turn up
       try {
         this.initialise(rawid);
+        this.iterateLostTime();
         this.generateSummary();
+        this.generateSplitsChart();
+        this.generateLegChart();
         this.generateTableByLegPos();
         this.generateTableByRacePos();
         this.generateSplitsTable();
@@ -61,15 +138,52 @@
       }
     },
 
+    handleTabActivation: function (event) {
+      // tabs not on display yet
+      if (!event.currentTarget) {
+        return;
+      }
+      // trap + and - and use them to change iteration count
+      switch (event.currentTarget.id) {
+        case "rg2-iter-plus-text":
+          this.incrementIterations();
+          event.preventDefault();
+          break;
+        case "rg2-iter-minus-text":
+          this.decrementIterations();
+          event.preventDefault();
+          break;
+        case "rg2-iter-text":
+          event.preventDefault();
+          break;
+        default:
+      }
+    },
+
     displayStats: function () {
       $("#rg2-stats-summary-text").empty().text(rg2.t("Summary"));
       $("#rg2-stats-leg-text").empty().text(rg2.t("Leg times"));
       $("#rg2-stats-cumulative-text").empty().text(rg2.t("Cumulative times"));
       $("#rg2-stats-splits-text").empty().text(rg2.t("Splits"));
-      // width and height adjustments based on what looks OK when testing...
+      if (this.extraStats) {
+        $("#rg2-iter-text").text(this.iterationIndex + 1);
+        $("#rg2-iter-plus-text").show();
+        $("#rg2-iter-text").show();
+        $("#rg2-iter-minus-text").show();
+      } else {
+        $("#rg2-iter-plus-text").hide();
+        $("#rg2-iter-text").hide();
+        $("#rg2-iter-minus-text").hide();
+      }
+      const self = this;
       $("#rg2-stats-tabs").tabs({
-        active: 0
+        active: 0,
+        beforeActivate: function (event) {
+          self.handleTabActivation(event);
+        }
+
       });
+      // width and height adjustments based on what looks OK when testing...
       $("#rg2-stats-table").dialog({
         title: this.result.name,
         resizable: false,
@@ -80,37 +194,338 @@
     },
 
     generateSummary: function () {
-      var html, info, ratios;
-      info = this.getLegPosInfo();
-      html = rg2.t('Name') + ': <strong>' + this.result.name + '</strong><br>' + rg2.t('Course') + ':<strong>' + this.result.coursename + '</strong><br>';
+      const info = this.getLegPosInfo();
+      const lossText = rg2.t('Estimated loss');
+      let html = rg2.t('Name') + ': <strong>' + this.result.name + '</strong><br>' + rg2.t('Course') + ':<strong>' + this.result.coursename + '</strong><br>';
       html += rg2.t('Time') + ': <strong>' + this.result.time + '</strong><br>';
       html += rg2.t('Position') + ': <strong>' + this.results[this.resultIndex].racepos[this.controls - 1] + ' / ' + this.results.length + '</strong><br>';
       html += rg2.t('Average leg position') + ': <strong>' + info.average + '</strong> (';
-      html += rg2.t('Best') + ': <strong>' + info.best + '</strong>, ' + rg2.t('Worst') + ': <strong>' + info.worst + ')</strong><br>';
-      html += rg2.t('Estimated loss') + ': <strong>' + rg2.utils.formatSecsAsMMSS(this.results[this.resultIndex].totalLoss);
+      html += rg2.t('Best')  + ': <strong>' + info.best + '</strong>, ' + rg2.t('Worst') + ': <strong>' + info.worst + ')</strong><br>';
+      html += lossText + ': <strong>' + rg2.utils.formatSecsAsMMSS(this.results[this.resultIndex].totalLoss[this.iterationIndex]);
       if (this.isNumberOverZero(this.result.timeInSecs)) {
-        html += ' (' + (100 * this.results[this.resultIndex].totalLoss / this.result.timeInSecs).toFixed(1) + ' %)';
+        html += ' (' + (100 * this.results[this.resultIndex].totalLoss[this.iterationIndex] / this.result.timeInSecs).toFixed(1) + ' %)';
       }
       html += '</strong><br>';
-      html += rg2.t('Performance') + ': <strong>' + (this.result.performanceIndex[this.iterations - 1] * 100).toFixed(1) + '%</strong><br>';
-      // first entry is 0 for start control, so throw that away    
-      ratios = this.results[this.resultIndex].refRatio.slice(1);
+      // performanceIndex[0] is based on actual splits
+      html += rg2.t('Performance') + ': <strong>' + (this.result.performanceIndex[0] * 100).toFixed(1) + '%</strong><br>';
+      // discard all 0 entries which relate to missed controls
+      const ratios = this.results[this.resultIndex].refRatio[0].filter((ratio) => ratio > 0);
       html += rg2.t('Consistency') + ': <strong>' + (100 * this.getStandardDeviation(ratios)).toFixed(1) + '%</strong>';
-      $("#rg2-stats-summary").empty().append(html);
+      $("#rg2-stats").empty().append(html);
+    },
+
+    generateSplitsChart: function () {
+      if (this.splitsChart !== undefined) {
+        this.splitsChart.destroy();
+        this.splitsChart = undefined;
+      }
+      const skipped = (ctx, value) => ctx.p0.skip || ctx.p1.skip ? value : undefined;
+      const ctx = document.getElementById('rg2-splits-chart');
+      const labels = this.results[this.resultIndex].legpos.map((val, idx, array) => idx === array.length - 1 ? "F" : idx);
+      const info = this.getLegPosInfo();
+      const legPos = this.results[this.resultIndex].legpos.map((val) => val === 0 ? NaN : val);
+      const losses = this.results[this.resultIndex].loss[this.iterationIndex].map((val, idx) => this.results[this.resultIndex].legpos[idx] === 0 ? NaN : val)
+      const averageLegPos = this.results[this.resultIndex].legpos.map(() => info.average);
+      const worst = this.results[this.resultIndex].loss[this.iterationIndex].reduce(((worst, loss) => Math.max(worst, loss)), 0);
+      // fit y-axis (loss) to nearest higher multiple of 5 minutes (300 seconds)
+      const lossMax = parseInt((worst + 299) / 300, 10) * 300;
+      this.splitsChart = new Chart(ctx, {
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Leg position',
+              type: 'line',
+              data: legPos,
+              borderColor: rg2.config.RED,
+              backgroundColor: rg2.config.RED_30,
+              yAxisID: 'yPosition',
+              segment: {
+                borderColor: ctx => skipped(ctx, 'rgb(0,0,0,0.2)'),
+                borderDash: ctx => skipped(ctx, [6, 6]),
+              },
+              spanGaps: true
+            }, 
+            {
+              label: 'Average leg position',
+              type: 'line',
+              data: averageLegPos,
+              borderColor: rg2.config.RED,
+              backgroundColor: rg2.config.WHITE,
+              borderDash: [5, 5],
+              yAxisID: 'yPosition',
+              pointStyle: 'circle',
+              pointRadius: 0,
+              pointHoverRadius: 0
+            }, 
+            {
+              label: 'Time loss',
+              type: 'bar',
+              data: losses,
+              borderColor: rg2.config.DARK_GREEN,
+              backgroundColor: rg2.config.DARK_GREEN_30,
+              yAxisID: 'yLoss',
+              segment: {
+                borderColor: ctx => skipped(ctx, 'rgb(0,0,0,0.2)'),
+                borderDash: ctx => skipped(ctx, [6, 6]),
+              },
+              spanGaps: true
+            }]
+        },
+        options: {
+          scales: {
+            x: {
+              min: 1,
+              title: {
+                display: true,
+                text: rg2.t("Control")
+              }
+            },
+            yPosition: {
+              type: 'linear',
+              display: true,
+              position: 'left',
+              min: 0,
+              max: this.results.length,
+              title: {
+                display: true,
+                text: 'Leg position'
+              }
+            },
+            yLoss: {
+              type: 'linear',
+              display: true,
+              position: 'right',
+              min: 0,
+              max: lossMax,
+              grid: {
+                drawOnChartArea: false,
+              },
+              title: {
+                display: true,
+                text: 'Time loss'
+              }
+            },
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  if (context.dataset.label === "Time loss") {
+                    return "Loss: " + rg2.utils.formatSecsAsMMSS(losses[context.dataIndex]);
+                  }
+                  if (context.dataset.label === "Leg position") {
+                    return "Position: " + legPos[context.dataIndex];
+                  }
+                  return "";
+                },
+                title: function (context) {
+                  if (context[0].label === "F") {
+                    return rg2.t("Finish");
+                  }
+                  return rg2.t("Control" + " " + context[0].label)
+                }
+              }
+            }
+          }
+        },
+      });
+      const splitsChart = document.querySelector('#rg2-splits-chart');
+      splitsChart.onwheel = (event) => {
+        event.preventDefault();
+        if (event.deltaY < 0) {
+          this.resultIndex = this.resultIndex === (this.results.length - 1) ? 0 : this.resultIndex + 1;
+        } else {
+          this.resultIndex = this.resultIndex > 0 ? this.resultIndex - 1 : this.results.length - 1;
+        }
+        this.prepareStats(this.results[this.resultIndex].rawid);
+      };
+    },
+
+    incrementIterations: function () {
+      this.iterationIndex = Math.min(this.iterationIndex + 1, this.maxIterationIndex);
+      this.setIterations();
+    },
+
+    decrementIterations: function () {
+      this.iterationIndex = Math.max(this.iterationIndex - 1, 0);
+      this.setIterations();
+    },
+
+    setIterations: function () {
+      $("#rg2-iter-text").text(this.iterationIndex + 1);
+      this.drawLegChart();
+      this.generateSummary();
+      this.generateSplitsChart();
+      this.generateTableByLegPos();
+      this.generateTableByRacePos();
+      this.generateSplitsTable();
+    },
+
+    generateLegChart: function () {
+      const self = this;
+      this.activeLeg = 1;
+      $("#rg2-control-slider").slider({
+        value: this.activeLeg,
+        min: 1,
+        max: this.results[this.resultIndex].splits.length - 1,
+        step: 1,
+        slide: function (event, ui) {
+          self.activeLeg = ui.value;
+          self.drawLegChart();          
+        }
+      });
+      this.drawLegChart();
+    },
+
+    drawControlText: function (stacks) {
+      let text;
+      if ((this.result.splits.length - 1) === this.activeLeg) {
+        text = rg2.t("Finish");
+      } else {
+        text = rg2.t("Control" + ": " + this.activeLeg)
+      }
+      $("#rg2-control-number").text(text);
+      const losses = stacks.filter((stack) => stack.loss > 0).map((stack) => stack.loss);
+      const averages = this.getAverages(losses, 100);
+      text = "Runners: " + + averages.count + ", average: " + parseInt(averages.mean, 10) + "s (";
+      text = text + parseInt((averages.mean * 1000 / this.course.refLegTime[this.iterationIndex][this.activeLeg]), 10) / 10 + "%), median: ";
+      text = text + averages.median + "s (" + parseInt((averages.median * 1000 / this.course.refLegTime[this.iterationIndex][this.activeLeg]), 10) / 10 + "%)";
+      $("#rg2-loss-details").text(text);
+    },
+
+    drawLegChart: function () {
+      if (this.legChart !== undefined) {
+        this.legChart.destroy();
+        this.legChart = undefined;
+      }
+      const ctx = document.getElementById('rg2-leg-chart');
+      const getBackgroundColor = (context) => {
+        return stacks[context.dataIndex].activeRunner ? rg2.config.DARK_GREEN : rg2.config.DARK_GREEN_30;
+      }
+      const getBackgroundLossColor = (context) => {
+        return stacks[context.dataIndex].activeRunner ? rg2.config.RED : rg2.config.RED_30;
+      }
+      const stacks = [];
+      this.results.map((res) => {
+        // only add runners with valid split for this control
+        if (parseInt(res.legSplits[this.activeLeg], 10) > 0) {
+          let stack = {};
+          stack.loss = parseInt(res.loss[this.iterationIndex][this.activeLeg], 10);
+          stack.total = parseInt(res.legSplits[this.activeLeg], 10);
+          stack.predicted = stack.total - stack.loss;
+          stack.pos = res.legpos[this.activeLeg];
+          stack.name = res.name;
+          if (res.rawid === this.rawid) {
+            stack.activeRunner = true;
+          }
+          stacks.push(stack);
+        }
+      });
+      stacks.sort((a, b) => a.total - b.total);
+      const predicted = stacks.map((res) => res.predicted);
+      const losses = stacks.map((res) => res.loss);
+      const labels = stacks.map((res) => res.pos);
+      const refTime = stacks.map(() => this.course.refLegTime[this.iterationIndex][this.activeLeg]);
+      const worst = this.results.reduce(((worst, res) => Math.max(worst, res.legSplits[this.activeLeg])), 0);
+      // fit y-axis (time) to nearest higher multiple of 5 minutes (300 seconds)
+      const timeMax = parseInt((worst + 299) / 300, 10) * 300;
+      this.drawControlText(stacks);
+      this.legChart = new Chart(ctx, {
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Predicted',
+              type: 'bar',
+              data: predicted,
+              backgroundColor: getBackgroundColor,
+            },
+            {
+              label: 'Loss',
+              type: 'bar',
+              data: losses,
+              yAxisID: 'yLoss',
+              backgroundColor: getBackgroundLossColor,
+            },
+            {
+              label: 'Reference time',
+              type: 'line',
+              data: refTime,
+              borderColor: rg2.config.RED,
+              backgroundColor: rg2.config.WHITE,
+              borderDash: [5, 5],
+              yAxisID: 'yLoss',
+              pointStyle: 'circle',
+              pointRadius: 0,
+              pointHoverRadius: 0
+            }, 
+          ]
+        },
+        options: {
+          scales: {
+            x: {
+              stacked: true,
+              title: {
+                display: true,
+                text: "Position"
+              },
+            },
+            yLoss: {
+              stacked: true,
+              min: 0,
+              max: timeMax,
+              title: {
+                display: true,
+                text: 'Time (s)'
+              }
+            },
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  var label = context.dataset.label + ": ";
+                  if (context.dataset.label === "Loss") {
+                    label += rg2.utils.formatSecsAsMMSS(stacks[context.dataIndex].loss);
+                  } else {
+                    label += rg2.utils.formatSecsAsMMSS(stacks[context.dataIndex].predicted);
+                  }
+                  return label;
+                },
+                title: function(context) {
+                  const title = stacks[context[0].dataIndex].name + ": " + rg2.utils.formatSecsAsMMSS(stacks[context[0].dataIndex].total);
+                  return title;
+                }
+              }
+            }
+        }
+
+        }
+      });
+      const legChart = document.querySelector('#rg2-leg-chart');
+      legChart.onwheel = (event) => {
+        event.preventDefault();
+        if (event.deltaY < 0) {
+          this.activeLeg = this.activeLeg === (this.result.splits.length - 1) ? 1 : this.activeLeg + 1;
+        } else {
+          this.activeLeg = this.activeLeg > 1 ? this.activeLeg - 1 : this.result.splits.length - 1;
+        }
+        $("#rg2-control-slider").slider("value", this.activeLeg);
+        this.drawLegChart();
+      };
     },
 
     getMean: function (data) {
-      return data.reduce(function (a, b) {
-        return a + b;
-      }, 0) / data.length;
+      return data.reduce((a, b) => a + b, 0) / data.length;
     },
 
     getStandardDeviation: function (values) {
-      var mean;
-      mean = this.getMean(values);
-      return Math.sqrt(values.reduce(function (sq, n) {
-        return sq + Math.pow(n - mean, 2);
-      }, 0) / (values.length));
+      if (values.length === 0) {
+        return 0;
+      }
+      const mean = this.getMean(values);
+      return Math.sqrt(values.reduce((sq, n) => sq + Math.pow(n - mean, 2), 0) / (values.length));
     },
 
     isNumberOverZero: function (n) {
@@ -120,17 +535,14 @@
         } else {
           return false;
         }
-      } else {
-        return false;
       }
+      return false;
     },
 
     generateTableByLegPos: function () {
-      var i, j, row, rowData, behind, names;
-
-      rowData = [];
-      for (i = 0; i < this.results[this.resultIndex].splits.length; i += 1) {
-        row = {};
+      const rowData = [];
+      for (let i = 0; i < this.results[this.resultIndex].splits.length; i += 1) {
+        let row = {};
         if (i === 0) {
           row.control = 'S';
         } else {
@@ -153,23 +565,23 @@
         if (i === 0) {
           row.performance = '-';
         } else {
-          row.performance = (100 * this.results[this.resultIndex].refRatio[i]).toFixed(1);
+          row.performance = (100 * this.results[this.resultIndex].refRatio[0][i]).toFixed(1);
         }
         row.best = rg2.utils.formatSecsAsMMSS(this.byLegPos[i][0].t);
         if (i === 0) {
           row.who = "-";
         } else {
-          names = this.results[this.byLegPos[i][0].resid].name;
-          for (j = 1; j < this.byLegPos[i].length; j += 1) {
+          let names = this.byLegPos[i][0].name;
+          for (let j = 1; j < this.byLegPos[i].length; j += 1) {
             if (this.byLegPos[i][0].t === this.byLegPos[i][j].t) {
-              names += ', ' + this.results[this.byLegPos[i][j].resid].name;
+              names += ', ' + this.byLegPos[i][j].name;
             } else {
               break;
             }
           }
           row.who = names;
         }
-        behind = this.results[this.resultIndex].legSplits[i] - this.byLegPos[i][0].t;
+        const behind = this.results[this.resultIndex].legSplits[i] - this.byLegPos[i][0].t;
         if (i === 0) {
           row.behind = "-";
         } else {
@@ -188,11 +600,11 @@
             row.percent = parseInt((behind * 100 / this.byLegPos[i][0].t), 10);
           }
         }
-        row.predicted = rg2.utils.formatSecsAsMMSS(this.results[this.resultIndex].predictedSplits[i]);
+        row.predicted = rg2.utils.formatSecsAsMMSS(this.results[this.resultIndex].predictedSplits[this.iterationIndex][i]);
         if (this.results[this.resultIndex].legSplits[i] === 0) {
           row.loss = '-';
         } else {
-          row.loss = rg2.utils.formatSecsAsMMSS(this.results[this.resultIndex].loss[i]);
+          row.loss = rg2.utils.formatSecsAsMMSS(this.results[this.resultIndex].loss[this.iterationIndex][i]);
         }
         rowData.push(row);
       }
@@ -252,30 +664,31 @@
       return legpos.t;
     },
 
-    getAverages: function (data, perCent) {
-      var i, total, count, adjustedCount, median;
+    getAverages: function (rawData, perCent) {
+      // avoid mutating source array
+      let data = rawData.slice();
+
       if (data.length === 0) {
-        return ({ mean: 0, median: 0 });
+        return ({ mean: 0, median: 0, count: 0 });
       }
       // sort incoming values
       data.sort(function compare(a, b) {
         return a - b;
       });
-      total = 0;
-      count = data.length;
+      let total = 0;
+      let count = data.length;
       // select top perCent items
       if (perCent < 100) {
-        adjustedCount = parseInt(count * perCent / 100, 10);
         // arbitrary choice to keep at least three entries
-        if (adjustedCount > 3) {
-          data.splice(adjustedCount);
-          count = data.length;
-        }
+        const adjustedCount = Math.max(parseInt(count * perCent / 100, 10), 3);
+        data.splice(adjustedCount);
+        count = data.length;
       }
 
-      for (i = 0; i < count; i += 1) {
+      for (let i = 0; i < count; i += 1) {
         total = total + data[i];
       }
+      let median;
       if (count === 1) {
         median = data[0];
       } else {
@@ -285,16 +698,14 @@
           median = data[Math.floor(count / 2)];
         }
       }
-      return ({ mean: total / count, median: median });
+      return ({ mean: total / count, median: median, count: count });
     },
 
     generateTableByRacePos: function () {
-      var i, j, row, rowData, behind, names, loss;
-
-      rowData = [];
-      loss = 0;
-      for (i = 0; i < this.results[this.resultIndex].splits.length; i += 1) {
-        row = {};
+      const rowData = [];
+      let loss = 0;
+      for (let i = 0; i < this.results[this.resultIndex].splits.length; i += 1) {
+        let row = {};
         if (i == 0) {
           row.control = 'S';
         } else {
@@ -322,17 +733,17 @@
         if (i === 0) {
           row.who = "-";
         } else {
-          names = this.results[this.byRacePos[i][0].resid].name;
-          for (j = 1; j < this.byRacePos[i].length; j += 1) {
+          let names = this.byRacePos[i][0].name;
+          for (let j = 1; j < this.byRacePos[i].length; j += 1) {
             if (this.byRacePos[i][0].t === this.byRacePos[i][j].t) {
-              names += ', ' + this.results[this.byRacePos[i][j].resid].name;
+              names += ', ' + this.byRacePos[i][j].name;
             } else {
               break;
             }
           }
           row.who = names;
         }
-        behind = this.results[this.resultIndex].splits[i] - this.byRacePos[i][0].t;
+        const behind = this.results[this.resultIndex].splits[i] - this.byRacePos[i][0].t;
         if ((i === 0) || (this.results[this.resultIndex].racepos[i] === 0)) {
           row.behind = "-";
         } else {
@@ -343,7 +754,7 @@
         } else {
           row.percent = parseInt((behind * 100 / this.byRacePos[i][0].t), 10);
         }
-        loss = loss + this.results[this.resultIndex].loss[i];
+        loss = loss + this.results[this.resultIndex].loss[this.iterationIndex][i];
         row.loss = rg2.utils.formatSecsAsMMSS(loss);
         rowData.push(row);
       }
@@ -372,13 +783,12 @@
     },
 
     generateSplitsTable: function () {
-      var i, j, r, height, row, rowData, columnDefs, ratios;
-      columnDefs = [
+     const columnDefs = [
         { headerName: rg2.t("Pos"), field: "position", width: 60, pinned: "left", sortable: true },
         { headerName: rg2.t("Name"), field: "name", headerClass: "align-left", cellClass: "align-left", width: 150, pinned: "left" },
         { headerName: rg2.t("Time"), field: "time", width: 85 },
       ];
-      for (j = 1; j < this.controls - 1; j += 1) {
+      for (let j = 1; j < this.controls - 1; j += 1) {
         columnDefs.push({ headerName: j, field: 'C' + j, cellRenderer: this.renderSplits, width: 110 });
       }
       columnDefs.push({ headerName: rg2.t('F'), field: 'finish', cellRenderer: this.renderSplits, width: 110 });
@@ -386,7 +796,7 @@
       columnDefs.push({ headerName: rg2.t('Performance'), field: 'performance', width: 100 });
       columnDefs.push({ headerName: rg2.t('Consistency'), field: 'consistency', width: 100 });
 
-      rowData = [];
+      let rowData = [];
       // sort results table: this gets round problems of having multiple classes on one course where results were by class
       this.results.sort(function (a, b) {
         // sort valid times in ascending order
@@ -401,9 +811,11 @@
           }
         }
       });
-      for (i = 0; i < this.results.length; i += 1) {
-        row = {};
-        r = this.results[i];
+      // need to reset index for active result since array has been sorted
+      this.resultIndex = this.setResultIndex(this.rawid);
+      for (let i = 0; i < this.results.length; i += 1) {
+        let row = {};
+        const r = this.results[i];
         if (r.racepos[this.controls - 1] == 0) {
           row.position = "";
         } else {
@@ -411,7 +823,7 @@
         }
         row.name = r.name;
         row.time = r.time;
-        for (j = 1; j < this.controls - 1; j += 1) {
+        for (let j = 1; j < this.controls - 1; j += 1) {
           if (r.splits[j] === r.splits[j - 1]) {
             // no valid split for this control
             row['C' + j] = { split: "0:00", pos: r.racepos[j], loss: false };
@@ -420,19 +832,19 @@
           }
         }
         row.finish = { split: rg2.utils.formatSecsAsMMSS(r.splits[this.controls - 1]), pos: r.racepos[this.controls - 1] };
-        row.loss = rg2.utils.formatSecsAsMMSS(r.timeInSecs - r.totalLoss);
-        row.performance = (r.performanceIndex[this.iterations - 1] * 100).toFixed(1);
-        // first entry is 0 for start control, so throw that away    
-        ratios = r.refRatio.slice(1);
+        row.loss = rg2.utils.formatSecsAsMMSS(r.timeInSecs - r.totalLoss[this.iterationIndex]);
+        row.performance = (r.performanceIndex[0] * 100).toFixed(1);
+        // discard all 0 entries which relate to missed controls
+        const ratios = r.refRatio[0].filter((ratio) => ratio > 0);
         row.consistency = (100 * this.getStandardDeviation(ratios)).toFixed(1);
         rowData.push(row);
         row = {};
-        for (j = 1; j < this.controls - 1; j += 1) {
+        for (let j = 1; j < this.controls - 1; j += 1) {
           // highlight predicted losses greater than 20 seconds
-          row['C' + j] = { split: rg2.utils.formatSecsAsMMSS(r.legSplits[j]), pos: r.legpos[j], loss: r.loss[j] > 19 };
+          row['C' + j] = { split: rg2.utils.formatSecsAsMMSS(r.legSplits[j]), pos: r.legpos[j], loss: r.loss[this.iterationIndex][j] > 19 };
         }
-        row.finish = { split: rg2.utils.formatSecsAsMMSS(r.legSplits[this.controls - 1]), pos: r.legpos[this.controls - 1], loss: r.loss[this.controls - 1] > 19 };
-        row.loss = rg2.utils.formatSecsAsMMSS(r.totalLoss);
+        row.finish = { split: rg2.utils.formatSecsAsMMSS(r.legSplits[this.controls - 1]), pos: r.legpos[this.controls - 1], loss: r.loss[this.iterationIndex][this.controls - 1] > 19 };
+        row.loss = rg2.utils.formatSecsAsMMSS(r.totalLoss[this.iterationIndex]);
         rowData.push(row);
       }
 
@@ -447,7 +859,7 @@
 
       // can't get ag-grid examples to work in terms of height adjustment so this is
       // the quick and dirty fix: 175 is content/padding/margin etc. for everything else in the dialog
-      height = ($("#rg2-map-canvas").height() * 0.98) - 175;
+      const height = ($("#rg2-map-canvas").height() * 0.98) - 175;
       $('#rg2-results-grid-wrapper').removeAttr("style").attr("style", "height: " + height + "px;");
       $('#rg2-results-grid').empty();
       new agGrid.Grid(document.querySelector('#rg2-results-grid'), gridOptions);
@@ -478,12 +890,11 @@
     },
 
     getLegPosInfo: function () {
-      var i, total, count, best, worst, average;
-      total = 0;
-      count = 0;
-      worst = 0;
-      best = 9999;
-      for (i = 1; i < this.result.legpos.length; i += 1) {
+      let total = 0;
+      let count = 0;
+      let worst = 0;
+      let best = 9999;
+      for (let i = 1; i < this.result.legpos.length; i += 1) {
         if (this.result.legpos[i] === 0) {
           continue;
         }
@@ -498,6 +909,7 @@
       }
 
       // allow for people with no valid leg times
+      let average;
       if (count > 0) {
         average = (total / count).toFixed(1);
       } else {
@@ -508,32 +920,39 @@
       return ({ best: best, worst: worst, average: average });
     },
 
-    analyseCourse: function () {
-      var i, k, legTimes, raceTimes;
-      this.calculateLostTime();
+    initialiseCourse: function (id) {
+      if (this.course) {
+        if (this.course.id === id) {
+          // already initialised and assuming nothing needs to be updated...
+          return;
+        }
+      }
+      this.course = rg2.courses.getCourseDetails(id);
+      // includes start and finish
+      this.controls = this.course.codes.length;
+      if (this.controls <= 2) {
+        throw new this.rg2Exception(rg2.t('No splits available.'));
+      }
       this.byLegPos.length = 0;
       this.byRacePos.length = 0;
-      legTimes = [];
-      raceTimes = [];
+      let legTimes = [];
+      let raceTimes = [];
       // for each leg
-      for (i = 0; i < this.controls; i += 1) {
+      for (let i = 0; i < this.controls; i += 1) {
         legTimes.length = 0;
         raceTimes.length = 0;
         // for each runner
-        for (k = 0; k < this.results.length; k += 1) {
+        for (let k = 0; k < this.results.length; k += 1) {
           // create array of valid splits to this control
           if (i === 0) {
             // start control
-            legTimes.push({ t: 0, resid: 0, pos: 0 });
-            raceTimes.push({ t: 0, resid: 0, pos: 0 });
+            legTimes.push({ t: 0, name: "", pos: 0 });
+            raceTimes.push({ t: 0, name: "", pos: 0 });
           } else {
-            // leg split of 0 means invalid split for this runner for this leg
-            //if (this.results[k].legSplits[i] !== 0) {
-              legTimes.push({ t: this.results[k].legSplits[i], resid: k, pos: this.results[k].legpos[i] });
-            //}
+            legTimes.push({ t: this.results[k].legSplits[i], name: this.results[k].name, pos: this.results[k].legpos[i] });
             // race position only valid if all controls to that point are valid
             if (i <= this.results[k].lastValidSplit) {
-              raceTimes.push({ t: this.results[k].splits[i], resid: k, pos: this.results[k].racepos[i] });
+              raceTimes.push({ t: this.results[k].splits[i], name: this.results[k].name, pos: this.results[k].racepos[i] });
             }
           }
         }
@@ -557,88 +976,119 @@
       }
     },
 
-    calculateLostTime: function () {
-      var i, k, iter, splits;
-      this.course.refLegTime = [];
-      for (i = 0; i < this.results.length; i += 1) {
-        this.results[i].performanceIndex = [];
-        this.results[i].iterSplits = [];
-        splits = [];
-        for (k = 0; k < this.controls; k += 1) {
-          splits.push(this.results[i].legSplits[k]);
-        }
-        this.results[i].iterSplits.push(splits.slice(0));
-      }
-
-      for (iter = 0; iter < this.iterations; iter += 1) {
-        this.iterateLostTime(iter);
-        for (i = 0; i < this.results.length; i += 1) {
-          splits.length = 0;
-          for (k = 0; k < this.controls; k += 1) {
-            splits.push(Math.min(this.results[i].predictedSplits[k], this.results[i].legSplits[k]));
-          }
-          this.results[i].iterSplits.push(splits.slice(0));
-        }
+    iterateLostTime: function () {
+      for (let iter = 0; iter <= this.maxIterationIndex; iter += 1) {
+        this.calculateSplitsforIteration(iter);
+        this.calculatePerformanceForIteration(iter);
+        this.calculateLostTimeForIteration(iter);
       }
     },
 
-    iterateLostTime: function (iter) {
+    calculateSplitsforIteration: function (iter) {
+      for (let i = 0; i < this.results.length; i += 1) {
+        if (iter === 0) {
+          this.results[i].iterSplits = [];
+        }
+        let splits = [];
+        for (let k = 0; k < this.controls; k += 1) {
+          if (iter === 0) {
+            splits.push(this.results[i].legSplits[k]);
+          } else {
+            // splits.push(Math.min(this.results[i].predictedSplits[iter - 1][k], this.results[i].legSplits[k]));
+             splits.push(this.results[i].predictedSplits[iter - 1][k]);
+          }
+        }
+        this.results[i].iterSplits[iter] = splits.slice(0);
+      }
+    },
 
-      var i, k, averages, times, ratios, loss, refTimes;
+    calculatePerformanceForIteration: function (iter) {
       // find reference times for each leg
-      times = [];
-      refTimes = [];
-      for (i = 0; i < this.controls; i += 1) {
+      if (iter === 0) {
+        this.course.refLegTime = [];
+        this.course.refTime = [];
+      }
+      let times = [];
+      let refTimes = [];
+      for (let i = 0; i < this.controls; i += 1) {
         times.length = 0;
-        for (k = 0; k < this.results.length; k += 1) {
+        for (let k = 0; k < this.results.length; k += 1) {
           if (this.results[k].iterSplits[iter][i] !== 0) {
             times.push(this.results[k].iterSplits[iter][i]);
           }
         }
-        // using average of best 25% of times for the leg
-        averages = this.getAverages(times, 25);
+        // using median of best 25% of times (minimum of 3) for the leg
+        const averages = this.getAverages(times, 25);
         refTimes.push(averages.median);
       }
-      this.course.refLegTime.push(refTimes);
-
+      this.course.refLegTime[iter] = refTimes.slice(0);
+      this.course.refTime[iter] = refTimes.reduce((a, b) => a + b);
       // find ratio to reference times
-      ratios = [];
-      for (i = 0; i < this.results.length; i += 1) {
-        this.results[i].refRatio = [];
-        this.results[i].refRatio[0] = 0;
-        ratios.length = 0;
-        for (k = 0; k < this.controls; k += 1) {
+      for (let i = 0; i < this.results.length; i += 1) {
+        if (iter === 0) {
+          this.results[i].refRatio = [];
+          this.results[i].performanceIndex = [];
+          this.results[i].normalPerformanceIndex = [];
+          this.results[i].totalSecs = [];
+        }
+        this.results[i].refRatio[iter] = [];
+        const ratios = [];
+        for (let k = 0; k < this.controls; k += 1) {
           if (this.results[i].iterSplits[iter][k] === 0) {
-            this.results[i].refRatio[k] = 0;
+            this.results[i].refRatio[iter][k] = 0;
           } else {
-            this.results[i].refRatio[k] = this.course.refLegTime[iter][k] / this.results[i].iterSplits[iter][k];
+            this.results[i].refRatio[iter][k] = this.course.refLegTime[iter][k] / this.results[i].iterSplits[iter][k];
           }
-          ratios.push(this.results[i].refRatio[k]);
+          ratios.push(this.results[i].refRatio[iter][k]);
         }
-        averages = this.getAverages(ratios, 100);
-        this.results[i].performanceIndex.push(averages.median);
-      }
+        const nonZeroRatios = ratios.filter((ratio) => ratio > 0);
+        const averages = this.getAverages(nonZeroRatios, 100);
+        this.results[i].performanceIndex[iter] = averages.median;
+        this.results[i].totalSecs[iter] = this.results[i].iterSplits[iter].reduce((a, b) => a + b);
 
-      // find predicted times and losses
-      for (i = 0; i < this.results.length; i += 1) {
-        this.results[i].predictedSplits = [];
-        this.results[i].predictedSplits[0] = 0;
-        this.results[i].loss = [];
-        this.results[i].loss[0] = 0;
-        loss = 0;
-        for (k = 0; k < this.controls; k += 1) {
-          if (this.results[i].performanceIndex[iter] > 0) {
-            this.results[i].predictedSplits[k] = parseInt(this.course.refLegTime[iter][k] / this.results[i].performanceIndex[iter], 10);
-          } else {
-            this.results[i].predictedSplits[k] = this.results[i].legSplits[k];
+        // normal PI weighted by ref times
+        let sum = 0;
+        let weight = 0;
+        for (let k = 0; k < this.controls; k += 1) {
+          if (this.results[i].iterSplits[iter][k] !== 0) {
+            sum = sum + (this.results[i].refRatio[iter][k] * this.course.refLegTime[iter][k]);
+            weight = weight + this.course.refLegTime[iter][k];
           }
-          this.results[i].loss[k] = this.results[i].legSplits[k] - this.results[i].predictedSplits[k];
-          if (this.results[i].loss[k] < 0) {
-            this.results[i].loss[k] = 0;
-          }
-          loss = loss + this.results[i].loss[k];
         }
-        this.results[i].totalLoss = loss;
+        if (sum === 0) {
+          this.results[i].normalPerformanceIndex[iter] = 0;
+        } else {
+          this.results[i].normalPerformanceIndex[iter] = sum / weight;
+        }
+      }
+    },
+
+    calculateLostTimeForIteration: function (iter) {
+      // find predicted times and losses
+      for (let i = 0; i < this.results.length; i += 1) {
+        if (iter === 0) {
+          this.results[i].predictedSplits = [];
+          this.results[i].loss = [];
+          this.results[i].totalLoss = [];
+        }
+        this.results[i].predictedSplits[iter] = [];
+        this.results[i].predictedSplits[iter][0] = 0;
+        this.results[i].loss[iter] = [];
+        this.results[i].loss[iter][0] = 0;
+        let loss = 0;
+        for (let k = 0; k < this.controls; k += 1) {
+          if (this.results[i].performanceIndex[iter] > 0) {
+            this.results[i].predictedSplits[iter][k] = parseInt(this.course.refLegTime[iter][k] / this.results[i].normalPerformanceIndex[iter], 10);
+          } else {
+            this.results[i].predictedSplits[iter][k] = this.results[i].legSplits[k];
+          }
+          this.results[i].loss[iter][k] = this.results[i].legSplits[k] - this.results[i].predictedSplits[iter][k];
+          if (this.results[i].loss[iter][k] < 0) {
+            this.results[i].loss[iter][k] = 0;
+          }
+          loss = loss + this.results[i].loss[iter][k];
+        }
+        this.results[i].totalLoss[iter] = loss;
       }
     }
   };

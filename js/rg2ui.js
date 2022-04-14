@@ -390,6 +390,18 @@
           }
         }
       });
+      // use right click to trigger extra functionality
+      $('.resulttable tr').contextmenu(function (event) {
+        event.preventDefault();
+        // only deal with "normal events"
+        if (rg2.events.hasResults() && !rg2.events.isScoreEvent()) {
+          // only handle clicks on valid results rows
+          const id = $(this).find("td").attr("id");
+          if (id) {
+            rg2.stats.showExtraStats(parseInt(id, 10));
+          }
+        }
+      });
     },
 
     createCourseMenu: function () {
