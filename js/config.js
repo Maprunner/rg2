@@ -68,7 +68,10 @@
       { language: "Русский", code: "ru" }
     ],
     // Size of map upload in MB that triggers the warning dialog
-    FILE_SIZE_WARNING: 2
+    FILE_SIZE_WARNING: 2,
+    // Size of map upload in pixels that triggers the warning dialog
+    // emprically this is easily enough for an A3 sensible map
+    PIXEL_SIZE_WARNING: 4000
   };
 
   options = {

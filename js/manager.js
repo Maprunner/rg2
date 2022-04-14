@@ -177,20 +177,18 @@
     },
 
     validateMapUpload: function (upload) {
-      var reader, image, size;
-      reader = new FileReader();
+      let reader = new FileReader();
       reader.onload = function (e) {
-        image = new Image();
+        let image = new Image();
         image.src = e.target.result;
         image.onload = function () {
-          var msg;
-          size = Math.round(upload.size / 1024 / 1024);
-          msg = "The uploaded map file is " + size + "MB (" + this.width;
-          msg += " x " + this.height + "). It is recommended that you only use maps under";
-          msg += " " + rg2.config.FILE_SIZE_WARNING + "MB. Please see the ";
-          msg += "<a href='https://github.com/Maprunner/rg2/wiki/Map-files'>RG2 wiki</a> for ";
-          msg += "guidance on how to create map files.";
-          if (size > rg2.config.FILE_SIZE_WARNING) {
+          const size = Math.round(upload.size / 1024 / 1024);
+          if ((size > rg2.config.FILE_SIZE_WARNING) || (this.height > rg2.config.PIXEL_SIZE_WARNING) || (this.width > rg2.config.PIXEL_SIZE_WARNING)){
+            let msg = "The uploaded map file is " + size + "MB (" + this.width;
+            msg += " x " + this.height + "px). It is recommended that you use maps under " + rg2.config.FILE_SIZE_WARNING;
+            msg +=  "MB with a maximum dimension of " + rg2.config.PIXEL_SIZE_WARNING + "px. Please see the ";
+            msg += "<a href='https://github.com/Maprunner/rg2/wiki/Map-files'>RG2 wiki</a> for ";
+            msg += "guidance on how to create map files.";
             rg2.utils.showWarningDialog("Oversized map upload", msg);
           }
         };
