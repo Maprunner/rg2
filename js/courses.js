@@ -45,6 +45,15 @@
       return this.courses[courseid];
     },
 
+    getVariantDetails: function (variant) {
+      for (let i = 0; i < this.courses.length; i += 1) {
+        if (this.courses[i].variant === variant) {
+          return this.courses[i];
+        }
+      }
+      return undefined;
+    },
+
     getCourseLegLengths: function (courseid) {
       return this.courses[courseid].getLegLengths();
     },

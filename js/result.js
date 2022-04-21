@@ -29,6 +29,7 @@
       this.coursename = data.courseid.toString();
     }
     this.courseid = data.courseid;
+    this.variant = data.variant;
     this.splits = this.adjustRawSplits(data.splits);
     // adjust finish time if necessary when controls have been excluded
     if (this.resultid < rg2.config.GPS_RESULT_OFFSET) {

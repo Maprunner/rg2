@@ -120,6 +120,19 @@
       return results;
     },
 
+    getAllResultsForVariant: function (variant) {
+      let results = [];
+      for (let i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].variant === variant) {
+          // only want first entry: not other drawn routes
+          if (this.results[i].resultid === this.results[i].rawid) {
+            results.push(this.results[i]);
+          }
+        }
+      }
+      return results;
+    },
+
     // read through results to get list of all controls on score courses
     // since there is no master list of controls!
     generateScoreCourses: function () {
@@ -217,26 +230,33 @@
     },
 
     generateLegPositions: function () {
-      var i, j, k, info, pos, prevTime, prevPos, time;
-      info = this.getCoursesAndControls();
-      pos = [];
+      const info = this.getCoursesAndControls();
+      let pos = [];
       // two very similar bits of code: scope to rationalise...
       // Generate positions for each leg
-      for (i = 0; i < info.courses.length; i += 1) {
+      for (let i = 0; i < info.courses.length; i += 1) {
         // start at 1 since 0 is time 0
-        for (k = 1; k < info.controls[i]; k += 1) {
+        for (let k = 1; k < info.controls[i]; k += 1) {
           pos.length = 0;
-          for (j = 0; j < this.results.length; j += 1) {
-            if ((this.results[j].courseid === info.courses[i]) && (this.results[j].resultid === this.results[j].rawid)) {
-              pos.push({ time: this.results[j].legSplits[k], id: j });
+          for (let j = 0; j < this.results.length; j += 1) {
+            if (this.results[j].resultid === this.results[j].rawid) {
+              if (this.results[j].isScoreEvent) {
+                if ((this.results[j].variant === info.courses[i])) {
+                  pos.push({ time: this.results[j].legSplits[k], id: j });
+                }
+              } else {
+                if ((this.results[j].courseid === info.courses[i])) {
+                  pos.push({ time: this.results[j].legSplits[k], id: j });
+                }
+              }
             }
           }
           // 0 splits sorted to end
           pos.sort(this.sortLegTimes);
-          prevPos = 0;
-          prevTime = 0;
+          let prevPos = 0;
+          let prevTime = 0;
           // set positions
-          for (j = 0; j < pos.length; j += 1) {
+          for (let j = 0; j < pos.length; j += 1) {
             if (pos[j].time !== prevTime) {
               if (pos[j].time === 0) {
                 // all missing splits sorted to end with time 0
@@ -258,25 +278,39 @@
       }
       // Generate positions for cumulative time at each control
       pos.length = 0;
-      for (i = 0; i < info.courses.length; i += 1) {
+      for (let i = 0; i < info.courses.length; i += 1) {
         // start at 1 since 0 is time 0
-        for (k = 1; k < info.controls[i]; k += 1) {
+        for (let k = 1; k < info.controls[i]; k += 1) {
           pos.length = 0;
-          for (j = 0; j < this.results.length; j += 1) {
-            if ((this.results[j].courseid === info.courses[i]) && (this.results[j].resultid === this.results[j].rawid)) {
-              if (k > this.results[j].lastValidSplit) {
-                time = 0;
+          let time = 0;
+          for (let j = 0; j < this.results.length; j += 1) {
+            if (this.results[j].resultid === this.results[j].rawid) {
+              if (this.results[j].isScoreEvent) {
+                if ((this.results[j].variant === info.courses[i])) {
+                  if (k > this.results[j].lastValidSplit) {
+                    time = 0;
+                  } else {
+                    time = this.results[j].splits[k];
+                  }
+                  pos.push({ time: time, id: j });
+                }
               } else {
-                time = this.results[j].splits[k];
+                if ((this.results[j].courseid === info.courses[i])) {
+                  if (k > this.results[j].lastValidSplit) {
+                    time = 0;
+                  } else {
+                    time = this.results[j].splits[k];
+                  }
+                  pos.push({ time: time, id: j });
+                }
               }
-              pos.push({ time: time, id: j });
             }
           }
           // 0 splits sorted to end
           pos.sort(this.sortLegTimes);
-          prevPos = 0;
-          prevTime = 0;
-          for (j = 0; j < pos.length; j += 1) {
+          let prevPos = 0;
+          let prevTime = 0;
+          for (let j = 0; j < pos.length; j += 1) {
             if (pos[j].time !== prevTime) {
               if (pos[j].time === 0) {
                 this.results[pos[j].id].racepos[k] = 0;
@@ -298,16 +332,24 @@
     },
 
     getCoursesAndControls: function () {
-      var i, courses, controls;
-      courses = [];
-      controls = [];
-      for (i = 0; i < this.results.length; i += 1) {
-        if (courses.indexOf(this.results[i].courseid) === -1) {
-          courses.push(this.results[i].courseid);
-          // not a good way fo finding number of controls: better to get from courses?
-          controls.push(this.results[i].splits.length);
+      const courses = [];
+      const controls = [];
+      for (let i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].rawid < rg2.config.GPS_RESULT_OFFSET) {
+          if (this.results[i].isScoreEvent) {
+            if (courses.indexOf(this.results[i].variant) === -1) {
+              // treating variants as courses for the purposes of this section...
+              courses.push(this.results[i].variant);
+              controls.push(this.results[i].splits.length);
+            }        
+          } else {
+            if (courses.indexOf(this.results[i].courseid) === -1) {
+              courses.push(this.results[i].courseid);
+              // not a good way fo finding number of controls: better to get from courses?
+              controls.push(this.results[i].splits.length);
+            }
+          }
         }
-
       }
       return { courses: courses, controls: controls };
     },

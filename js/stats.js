@@ -7,6 +7,7 @@
     this.result = null;
     this.rawid = null;
     this.results = [];
+    this.isScoreOrRelay = false;
     this.course = null;
     this.byLegPos = [];
     this.byRacePos = [];
@@ -25,10 +26,15 @@
 
     initialise: function (rawid) {
       this.rawid = rawid;
+      this.isScoreOrRelay = rg2.events.isScoreEvent();
       this.result = rg2.results.getFullResultForRawID(this.rawid);
-      this.results = rg2.results.getAllResultsForCourse(this.result.courseid);
-      this.resultIndex = this.setResultIndex(this.rawid);
+      if (this.isScoreOrRelay) {
+        this.results = rg2.results.getAllResultsForVariant(this.result.variant);
+      } else {
+        this.results = rg2.results.getAllResultsForCourse(this.result.courseid);
+      }
       this.initialiseCourse(this.result.courseid);
+      this.resultIndex = this.setResultIndex(this.rawid);
     },
 
     setResultIndex: function (rawid) {
@@ -58,6 +64,12 @@
     },
 
     loadStats: function (rawid) {
+      // only deal with "normal events"
+
+      if (!rg2.events.hasResults()) {
+        rg2.utils.showWarningDialog(rg2.t("Statistics"), rg2.t("No statistics available for this event format."));
+        return;
+      }
       $('body').css('cursor', 'wait');
       const loadScript = (src, integrity) => {
         return new Promise((resolve, reject) => {
@@ -286,7 +298,7 @@
               display: true,
               position: 'left',
               min: 0,
-              max: this.results.length,
+              max: parseInt((this.results.length + 9) /10, 10) * 10,
               title: {
                 display: true,
                 text: 'Leg position'
@@ -921,13 +933,11 @@
     },
 
     initialiseCourse: function (id) {
-      if (this.course) {
-        if (this.course.id === id) {
-          // already initialised and assuming nothing needs to be updated...
-          return;
-        }
+      if (this.isScoreOrRelay) {
+        this.course = { id: this.result.variant, codes: this.result.scorecodes };
+      } else {
+        this.course = rg2.courses.getCourseDetails(id);
       }
-      this.course = rg2.courses.getCourseDetails(id);
       // includes start and finish
       this.controls = this.course.codes.length;
       if (this.controls <= 2) {
