@@ -815,6 +815,19 @@
       }
     },
 
+    anyTracksForCourseDisplayed: function (courseid) {
+      for (let i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].courseid === courseid) {
+          if (this.results[i].hasValidTrack) {
+            if (this.results[i].displayTrack) {
+              return true;
+            }
+          }
+        }
+      }
+      return false;
+    },
+
     allTracksForCourseDisplayed: function (courseid) {
       for (let i = 0; i < this.results.length; i += 1) {
         if (this.results[i].courseid === courseid) {

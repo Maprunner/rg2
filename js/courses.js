@@ -124,13 +124,14 @@
     putOnDisplay: function (courseid) {
       if (this.courses[courseid] !== undefined) {
         this.courses[courseid].display = true;
+        this.setFilter(courseid);
       }
     },
 
     putAllOnDisplay: function () {
       for (let i = 0; i < this.courses.length; i += 1) {
         if (this.courses[i] !== undefined) {
-            this.putOnDisplay(i);
+            this.putOnDisplay(this.courses[i].courseid);
         }
       }
     },
@@ -138,19 +139,41 @@
     removeAllFromDisplay: function () {
       for (let i = 0; i < this.courses.length; i += 1) {
         if (this.courses[i] !== undefined) {
-            this.removeFromDisplay(i);
+            this.removeFromDisplay(this.courses[i].courseid);
         }
       }
     },
 
     removeFromDisplay: function (courseid) {
-      this.courses[courseid].display = false;
+      if (this.courses[courseid] !== undefined) {
+        this.courses[courseid].display = false;
+        this.setFilter(courseid);
+      }
+    },
+
+    setFilter: function (courseid) {
+      // may come in as string or integer
+      courseid = parseInt(courseid, 10)
+      // assumes display properties set on courses and results before this call
+      const display = this.courses[courseid].display || rg2.results.anyTracksForCourseDisplayed(courseid);
+      document.querySelectorAll("[data-filter]").forEach(div => {
+        if (parseInt(div.dataset.courseId, 10) === courseid) {
+          div.dataset.filter = display;
+        }
+      });
+    },
+
+    setAllFilters: function () {
+      for (let i = 0; i < this.courses.length; i += 1) {
+        if (this.courses[i] !== undefined) {
+          this.setFilter(i);
+        }
+      }
     },
 
     getCoursesOnDisplay: function () {
-      var i, courses;
-      courses = [];
-      for (i = 0; i < this.courses.length; i += 1) {
+      const courses = [];
+      for (let i = 0; i < this.courses.length; i += 1) {
         if (this.courses[i] !== undefined) {
           if (this.courses[i].display) {
             courses.push(i);
@@ -261,7 +284,9 @@
         if (this.courses[i] !== undefined) {
           // only filter for normal events with at least one control as well as start and finish
           if ((!this.courses[i].isScoreCourse) && (this.courses[i].codes.length > 2)) {
-            details += "<div class='filter-item'>" + this.courses[i].name + "</div><div class='filter-item' id='course-filter-" + this.courses[i].courseid + "'></div>";
+            details += "<div class='filter-item' data-course-id=" + this.courses[i].courseid + " data-filter='false'>" + this.courses[i].name;
+            details += "</div><div class='filter-item' data-course-id=" + this.courses[i].courseid + " data-filter='false' id='course-filter-";
+            details += this.courses[i].courseid + "'></div>";
           }
         }
       }

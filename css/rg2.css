@@ -837,3 +837,11 @@ body {
 #rg2-iterations {
   width: 100px;
 }
+
+div[data-filter="true"] {
+  display: grid;
+}
+
+div[data-filter="false"] {
+  display: none;
+}
