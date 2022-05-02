@@ -222,7 +222,6 @@
 
     autofitTrack : function () {
       // fits a GPS track to the course based on split times at control locations
-      var i, split;
       // unlock map to allow adjustment
       $('#btn-move-all').prop('checked', false);
       this.handles.deleteAllHandles();
@@ -232,10 +231,10 @@
         rg2.ui.setAutofitSpinner(this.autofitOffset);
       }
       // adjust for each control in turn
-      for (i = 1; i < (this.routeData.splits.length - 1); i += 1) {
+      for (let i = 1; i < this.routeData.controlsToAdjust; i += 1) {
         // don't try to adjust missing controls
         if (this.routeData.splits[i] !== this.routeData.splits[i - 1]) {
-          split = this.routeData.splits[i] + this.autofitOffset;
+          const split = this.routeData.splits[i] + this.autofitOffset;
           // move track to control location
           if ((split < this.baseX.length) && (split >= 0)) {
             // add handle at control on track
@@ -267,7 +266,7 @@
         speedAtControl[i] = 0;
       }
       // read through each control
-      for (i = 1; i < (this.routeData.splits.length - 1); i += 1) {
+      for (i = 1; i < this.routeData.controlsToAdjust; i += 1) {
         split = this.routeData.splits[i];
         // ignore missing splits
         if (split !== this.routeData.splits[i - 1]) {

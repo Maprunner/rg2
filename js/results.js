@@ -174,20 +174,19 @@
     sanitiseSplits: function (isScoreEvent) {
       // sort out missing punches and add some helpful new fields
       let currentCourseID = undefined;
-      let excluded = "";
+      let course = undefined;
       for (let i = 0; i < this.results.length; i += 1) {
         if (this.results[i].courseid !== currentCourseID) {
           currentCourseID = this.results[i].courseid;
-          excluded = rg2.courses.getExcluded(currentCourseID);
+          course = rg2.courses.getCourseDetails(currentCourseID);
         }
-        this.results[i].timeInSecs = rg2.utils.getSecsFromHHMMSS(this.results[i].time);
         this.results[i].legSplits = [];
         this.results[i].legSplits[0] = 0;
         let previousValidSplit = 0;
         let nextSplitInvalid = false;
         for (let j = 1; j < this.results[i].splits.length; j += 1) {
           if ((this.results[i].splits[j] - previousValidSplit) === 0) {
-            if (excluded.indexOf(j) > -1) {
+            if (course.exclude[j]) {
               this.results[i].legSplits[j] = this.results[i].splits[j] - previousValidSplit;
               previousValidSplit = this.results[i].splits[j];
             } else {
@@ -257,6 +256,10 @@
           let prevTime = 0;
           // set positions
           for (let j = 0; j < pos.length; j += 1) {
+            if (info.exclude[i][k]) {
+              this.results[pos[j].id].legpos[k] = 0;
+              continue;
+            }
             if (pos[j].time !== prevTime) {
               if (pos[j].time === 0) {
                 // all missing splits sorted to end with time 0
@@ -351,7 +354,8 @@
           }
         }
       }
-      return { courses: courses, controls: controls };
+      const exclude = courses.map((courseid) => rg2.courses.getExcluded(courseid));
+      return { courses: courses, controls: controls, exclude: exclude};
     },
 
     putScoreCourseOnDisplay: function (resultid, display) {

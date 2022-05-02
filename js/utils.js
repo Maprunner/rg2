@@ -264,6 +264,7 @@
   function RouteData() {
     this.courseid = null;
     this.coursename = null;
+    this.controlsToAdjust = 0;
     this.resultid = null;
     this.isScoreCourse = false;
     this.eventid = null;

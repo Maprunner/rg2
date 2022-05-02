@@ -329,12 +329,29 @@
     },
 
     getExcluded: function (courseid) {
-      if (courseid in this.courses) {
-        return this.courses[courseid].exclude;
-      } else {
+      if (rg2.events.isScoreEvent()) {
         return [];
       }
+      return this.courses[courseid].exclude;
     },
+
+    getExcludedText: function () {
+      // recreates excluded_* text file contents
+      // courseid|type|control,time|...
+      let text = "";
+      for (let i = 0; i < this.courses.length; i += 1) {
+        if (this.courses[i] !== undefined) {
+          if (this.courses[i].excludeType !== rg2.config.EXCLUDED_NONE) {
+            text = text + this.courses[i].courseid + "|" + this.courses[i].excludeType;
+          }
+          text = text + this.courses[i].exclude.reduce((accum, exclude, index) => { 
+            return exclude ? accum + "|" + index + "," + this.courses[i].allowed[index]: accum;
+          }, "")
+          text = text + "\n";
+        }
+      }
+      return text;
+    }
   };
   rg2.Courses = Courses;
 }());

@@ -85,9 +85,16 @@
     <div id="rg2-edit-event-level" class="manage-event-edit-div">
       <span>Level:<select class="pushright manage-event-edit-form" id="rg2-event-level-edit"></select></span>
     </div>
+    <span>Comments:</span>
     <textarea id="rg2-edit-event-comments"></textarea>
-    <div>
-      <span>Read-only<input type="checkbox" id="chk-edit-read-only"></span>
+    <div id="rg2-exclude-info">
+      <span>Excluded controls (1 Zero splits, 2 Actual splits)
+        course|type|control,time
+      </span>
+      <textarea id="rg2-edit-exclude">e.g. 1|1|6,60|15,60</textarea>
+      <div>
+        <span>Read-only<input type="checkbox" id="chk-edit-read-only"></span>
+      </div>
     </div>
     <button type="button" class="manage-file-label" id="btn-update-event">Update event details</button>
     </div>

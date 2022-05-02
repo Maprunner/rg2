@@ -12,14 +12,22 @@ class course
         $ypos = array();
         $dummycontrols = array();
         $excludedControls = array();
-        // @ suppresses error report if file does not exist
         // read excluded controls for each course
         // allows for road crossings with 0 splits
         if (($handle = @fopen(KARTAT_DIRECTORY."exclude_".$eventid.".txt", "r")) !== false) {
             while (($data = fgetcsv($handle, 0, "|")) !== false) {
+              $controls = array();
+              $times = array(); 
               $detail = array();
-              $detail["courseid"] = intval($data[0]);
-              $detail["controls"] = $data[1];
+              $detail["courseid"] = $data[0];
+              $detail["type"] = intval($data[1]);
+              for ($i = 2; $i < count($data); $i++) {
+                $split = explode(",", $data[$i]);
+                $controls[] = intval($split[0]);
+                $times[] = intval($split[1]);
+              }
+              $detail["controls"] = $controls;
+              $detail["allowed"] = $times;
               $excludedControls[] = $detail;
             }
             fclose($handle);
@@ -103,13 +111,16 @@ class course
                     $detail["xpos"] = array();
                     $detail["ypos"] = array();
                 }
-                $exclude = "";
+                $detail["exclude"] = array();
+                $detail["allowed"] = array();
+                $detail["excludeType"] = 0;
                 for ($j = 0; $j < count($excludedControls); $j++) {
-                  if ($excludedControls[$j]["courseid"] === intval($data[0])) {
-                    $exclude = $excludedControls[$j]["controls"];
+                  if ($excludedControls[$j]["courseid"] === $data[0]) {
+                    $detail["exclude"] = $excludedControls[$j]["controls"];
+                    $detail["allowed"] = $excludedControls[$j]["allowed"];
+                    $detail["excludeType"] = $excludedControls[$j]["type"];
                   }
                 }
-                $detail["exclude"] = $exclude;
                 $output[$row] = $detail;
                 $row++;
               }
@@ -139,5 +150,48 @@ class course
         // force to a string since it helps elsewhere
         // and it shows that these are dummy values
         return 'X'.$dummycode;
+    }
+    
+    public static function saveExcludeDetails($eventid, $exclude)
+    {
+      $ok = true;
+      $exclude = trim($exclude);
+      if ($exclude == "") {
+        return $ok;
+      }
+      $save = "";
+      $rows = explode("\n", $exclude);
+      for ($row = 0; $row < count($rows); $row++) {
+        $fields = explode("|", $rows[$row]);
+        // remove blank lines
+        if ((count($fields) === 1) && ($fields[0] === "")) {
+          continue;
+        }
+        if (count($fields) < 3) {
+          $ok = false;
+          break;
+        }
+        if (!is_numeric($fields[0])) {
+          $ok = false;
+          break;
+        }
+        if (($fields[1] !== "1") && ($fields[1] !== "2")){
+          $ok = false;
+          break;
+        }
+        for ($j = 2; $j < count($fields); $j++) {
+          $control = explode(",", $fields[$j]);
+          if (count($control) !== 2) {
+            $ok = false;
+            break;
+          }
+        }
+        $save .= $rows[$row]."\n";
+      }
+      if ($ok) {
+        $file = KARTAT_DIRECTORY."exclude_".$eventid.".txt";
+        $ok = file_put_contents($file, $save);
+      }
+      return $ok;
     }
 }

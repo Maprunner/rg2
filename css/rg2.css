@@ -712,9 +712,9 @@ body {
   margin-top: 5px;
 }
 
-#rg2-edit-event-comments {
+textarea {
   width: 95%;
-  height: 50px;
+  height: 100px;
 }
 
 #rg2-event-selected {

@@ -398,11 +398,15 @@
         text = rg2.t("Control" + ": " + this.activeLeg)
       }
       $("#rg2-control-number").text(text);
-      const losses = stacks.filter((stack) => stack.loss > 0).map((stack) => stack.loss);
-      const averages = this.getAverages(losses, 100);
-      text = "Runners: " + + averages.count + ", average: " + parseInt(averages.mean, 10) + "s (";
-      text = text + parseInt((averages.mean * 1000 / this.course.refLegTime[this.iterationIndex][this.activeLeg]), 10) / 10 + "%), median: ";
-      text = text + averages.median + "s (" + parseInt((averages.median * 1000 / this.course.refLegTime[this.iterationIndex][this.activeLeg]), 10) / 10 + "%)";
+      if (this.course.exclude[this.activeLeg]) {
+        text = rg2.t("Control excluded");
+      } else {
+        const losses = stacks.filter((stack) => stack.loss > 0).map((stack) => stack.loss);
+        const averages = this.getAverages(losses, 100);
+        text = "Runners: " + averages.count + ", average: " + parseInt(averages.mean, 10) + "s (";
+        text = text + parseInt((averages.mean * 1000 / this.course.refLegTime[this.iterationIndex][this.activeLeg]), 10) / 10 + "%), median: ";
+        text = text + averages.median + "s (" + parseInt((averages.median * 1000 / this.course.refLegTime[this.iterationIndex][this.activeLeg]), 10) / 10 + "%)";
+      }
       $("#rg2-loss-details").text(text);
     },
 
@@ -413,27 +417,36 @@
       }
       const ctx = document.getElementById('rg2-leg-chart');
       const getBackgroundColor = (context) => {
+        if (stacks.length === 0) {
+          return rg2.DARK_GREEN_30;
+        }
         return stacks[context.dataIndex].activeRunner ? rg2.config.DARK_GREEN : rg2.config.DARK_GREEN_30;
       }
       const getBackgroundLossColor = (context) => {
+        if (stacks.length === 0) {
+          return rg2.RED_30;
+        }
+
         return stacks[context.dataIndex].activeRunner ? rg2.config.RED : rg2.config.RED_30;
       }
       const stacks = [];
-      this.results.map((res) => {
-        // only add runners with valid split for this control
-        if (parseInt(res.legSplits[this.activeLeg], 10) > 0) {
-          let stack = {};
-          stack.loss = parseInt(res.loss[this.iterationIndex][this.activeLeg], 10);
-          stack.total = parseInt(res.legSplits[this.activeLeg], 10);
-          stack.predicted = stack.total - stack.loss;
-          stack.pos = res.legpos[this.activeLeg];
-          stack.name = res.name;
-          if (res.rawid === this.rawid) {
-            stack.activeRunner = true;
+      if (!this.course.exclude[this.activeLeg]) {
+        this.results.map((res) => {
+          // only add runners with valid split for this control
+          if (parseInt(res.legSplits[this.activeLeg], 10) > 0) {
+            let stack = {};
+            stack.loss = parseInt(res.loss[this.iterationIndex][this.activeLeg], 10);
+            stack.total = parseInt(res.legSplits[this.activeLeg], 10);
+            stack.predicted = stack.total - stack.loss;
+            stack.pos = res.legpos[this.activeLeg];
+            stack.name = res.name;
+            if (res.rawid === this.rawid) {
+              stack.activeRunner = true;
+            }
+            stacks.push(stack);
           }
-          stacks.push(stack);
-        }
-      });
+        });
+      }
       stacks.sort((a, b) => a.total - b.total);
       const predicted = stacks.map((res) => res.predicted);
       const losses = stacks.map((res) => res.loss);
@@ -569,28 +582,32 @@
         } else {
           row.time = rg2.utils.formatSecsAsMMSS(this.results[this.resultIndex].legSplits[i]);
         }
-        if ((i === 0) || (this.results[this.resultIndex].legpos[i] === 0)) {
+        if ((i === 0) || (this.results[this.resultIndex].legpos[i] === 0) || this.course.exclude[i]) {
           row.position = '-';
         } else {
           row.position = this.results[this.resultIndex].legpos[i];
         }
-        if (i === 0) {
+        if ((i === 0) || this.course.exclude[i]) {
           row.performance = '-';
         } else {
           row.performance = (100 * this.results[this.resultIndex].refRatio[0][i]).toFixed(1);
         }
-        row.best = rg2.utils.formatSecsAsMMSS(this.byLegPos[i][0].t);
-        if (i === 0) {
+        if (this.course.exclude[i]) {
+          row.best = "-";
+        } else {
+          row.best = rg2.utils.formatSecsAsMMSS(this.byLegPos[i][0].t);
+        }
+        if ((i === 0) || this.course.exclude[i]) {
           row.who = "-";
         } else {
-          let names = this.byLegPos[i][0].name;
-          for (let j = 1; j < this.byLegPos[i].length; j += 1) {
-            if (this.byLegPos[i][0].t === this.byLegPos[i][j].t) {
-              names += ', ' + this.byLegPos[i][j].name;
-            } else {
-              break;
+            let names = this.byLegPos[i][0].name;
+            for (let j = 1; j < this.byLegPos[i].length; j += 1) {
+              if (this.byLegPos[i][0].t === this.byLegPos[i][j].t) {
+                names += ', ' + this.byLegPos[i][j].name;
+              } else {
+                break;
+              }
             }
-          }
           row.who = names;
         }
         const behind = this.results[this.resultIndex].legSplits[i] - this.byLegPos[i][0].t;
@@ -612,7 +629,11 @@
             row.percent = parseInt((behind * 100 / this.byLegPos[i][0].t), 10);
           }
         }
-        row.predicted = rg2.utils.formatSecsAsMMSS(this.results[this.resultIndex].predictedSplits[this.iterationIndex][i]);
+        if (this.course.exclude[i]) {
+          row.predicted = "-";
+        } else {
+          row.predicted = rg2.utils.formatSecsAsMMSS(this.results[this.resultIndex].predictedSplits[this.iterationIndex][i]);
+        }
         if (this.results[this.resultIndex].legSplits[i] === 0) {
           row.loss = '-';
         } else {
@@ -801,7 +822,7 @@
         { headerName: rg2.t("Time"), field: "time", width: 85 },
       ];
       for (let j = 1; j < this.controls - 1; j += 1) {
-        columnDefs.push({ headerName: j, field: 'C' + j, cellRenderer: this.renderSplits, width: 110 });
+        columnDefs.push({ headerName: j + ' (' + this.course.codes[j] + ')', field: 'C' + j, cellRenderer: this.renderSplits, width: 110 });
       }
       columnDefs.push({ headerName: rg2.t('F'), field: 'finish', cellRenderer: this.renderSplits, width: 110 });
       columnDefs.push({ headerName: rg2.t('Loss'), field: 'loss', width: 100 });
@@ -934,7 +955,7 @@
 
     initialiseCourse: function (id) {
       if (this.isScoreOrRelay) {
-        this.course = { id: this.result.variant, codes: this.result.scorecodes };
+        this.course = { id: this.result.variant, codes: this.result.scorecodes, exclude: false };
       } else {
         this.course = rg2.courses.getCourseDetails(id);
       }
@@ -1004,7 +1025,6 @@
           if (iter === 0) {
             splits.push(this.results[i].legSplits[k]);
           } else {
-            // splits.push(Math.min(this.results[i].predictedSplits[iter - 1][k], this.results[i].legSplits[k]));
              splits.push(this.results[i].predictedSplits[iter - 1][k]);
           }
         }
@@ -1022,9 +1042,11 @@
       let refTimes = [];
       for (let i = 0; i < this.controls; i += 1) {
         times.length = 0;
-        for (let k = 0; k < this.results.length; k += 1) {
-          if (this.results[k].iterSplits[iter][i] !== 0) {
-            times.push(this.results[k].iterSplits[iter][i]);
+        if (!this.course.exclude[i]) {
+          for (let k = 0; k < this.results.length; k += 1) {
+            if (this.results[k].iterSplits[iter][i] !== 0) {
+              times.push(this.results[k].iterSplits[iter][i]);
+            }
           }
         }
         // using median of best 25% of times (minimum of 3) for the leg
