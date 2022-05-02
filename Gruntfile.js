@@ -197,6 +197,7 @@ var clubs = [
   "eryri",
   "esoc",
   "euoc",
+  "explorerevents",
   "gmoa",
   "gramp",
   "go",
