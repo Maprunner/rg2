@@ -11,6 +11,9 @@
     this.currentOverlay = this.initialiseOverlay();
     this.units = "px";
     this.metresPerPixel = 1;
+    // empirical settings 
+    this.dotSize = 5;
+    this.lineWidth = 3;
     this.initialiseUI();
     this.updateDetails();
     rg2.redraw(false);
@@ -241,7 +244,7 @@
       // draw dots
       for (let i = 0; i < ol.x.length; i += 1) {
         rg2.ctx.beginPath();
-        rg2.ctx.arc(ol.x[i], ol.y[i], 10, 0, 2 * Math.PI, false);
+        rg2.ctx.arc(ol.x[i], ol.y[i], this.dotSize, 0, 2 * Math.PI, false);
         if (finished) {
           rg2.ctx.fill();
         } else {
@@ -255,7 +258,7 @@
       if (!this.measuring) {
         return;
       }
-      rg2.ctx.lineWidth = 5;
+      rg2.ctx.lineWidth = this.lineWidth;
       rg2.ctx.globalAlpha = 0.6;
       // draw completed overlays
       if (this.overlays.length > 0) {
@@ -270,7 +273,7 @@
           rg2.ctx.strokeStyle = this.currentOverlay.colour;
           rg2.ctx.fillStyle = this.currentOverlay.colour;
           rg2.ctx.beginPath();
-          rg2.ctx.arc(this.currentOverlay.x[0], this.currentOverlay.y[0], 10, 0, 2 * Math.PI, false);
+          rg2.ctx.arc(this.currentOverlay.x[0], this.currentOverlay.y[0], this.dotSize, 0, 2 * Math.PI, false);
           rg2.ctx.stroke();
         } else {
           this.drawSingleOverlay(this.currentOverlay, false);
