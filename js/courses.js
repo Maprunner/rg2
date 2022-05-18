@@ -343,11 +343,11 @@
         if (this.courses[i] !== undefined) {
           if (this.courses[i].excludeType !== rg2.config.EXCLUDED_NONE) {
             text = text + this.courses[i].courseid + "|" + this.courses[i].excludeType;
+            text = text + this.courses[i].exclude.reduce((accum, exclude, index) => { 
+              return exclude ? accum + "|" + index + "," + this.courses[i].allowed[index]: accum;
+            }, "")
+            text = text + "\n";
           }
-          text = text + this.courses[i].exclude.reduce((accum, exclude, index) => { 
-            return exclude ? accum + "|" + index + "," + this.courses[i].allowed[index]: accum;
-          }, "")
-          text = text + "\n";
         }
       }
       return text;
