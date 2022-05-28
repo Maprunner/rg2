@@ -18,7 +18,7 @@
     "cssnano": "^5.0.17",
     "eslint": "^8.5.0",
     "eslint-config-prettier": "^8.3.0",
-    "grunt": "^1.4.1",
+    "grunt": "^1.5.3",
     "grunt-contrib-clean": "^2.0.0",
     "grunt-contrib-uglify": "^5.0.1",
     "grunt-sync": "^0.8.2",
