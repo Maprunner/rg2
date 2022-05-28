@@ -34,13 +34,35 @@
         this.results = rg2.results.getAllResultsForCourse(this.result.courseid);
       }
       this.initialiseCourse(this.result.courseid);
+      this.adjustSplits();
       this.resultIndex = this.setResultIndex(this.rawid);
+    },
+
+    adjustSplits: function () {
+      // adjust splits for events with excluded controls that have uploaded unadjusted splits
+      // total times were adjusted when results were saved initially
+      if (this.course.excludeType === rg2.config.EXCLUDED_REAL_SPLITS) {
+        for (let i = 0; i < this.results.length; i += 1) {
+          let excluded = 0;
+          // start at 1 since you can't exclude the start control
+          for (let j = 1; j < this.course.exclude.length; j += 1) {
+            if (this.course.exclude[j]) {
+              const newExclude = Math.min(this.results[i].splits[j] - this.results[i].splits[j - 1] - excluded, this.course.allowed[j]);
+              excluded = excluded + newExclude;
+            }
+            this.results[i].splits[j] = this.results[i].splits[j] - excluded;
+            this.results[i].legSplits[j] = this.results[i].splits[j] - this.results[i].splits[j-1];
+          }
+        }
+      }
     },
 
     setResultIndex: function (rawid) {
       for (let i = 0; i < this.results.length; i += 1) {
         if (this.results[i].rawid === rawid) {
           // index for runner we are analysing
+          // reset result since we may have adjusted splits for excluded controls
+          this.result = this.results[i];
           return i;
         }
       }

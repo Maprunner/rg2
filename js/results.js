@@ -34,6 +34,7 @@
           if (data[i].resultid > rg2.config.GPS_RESULT_OFFSET && data[i].coursename === '') {
             data[i].coursename = rg2.courses.getCourseDetails(data[i].courseid).name;
           }
+          data[i].displayOrder = i;
           if (isScoreEvent) {
             variant = data[i].variant;
             result = new rg2.Result(data[i], isScoreEvent, codes[variant], scorex[variant], scorey[variant]);
@@ -45,6 +46,7 @@
       }
       this.setDeletionInfo();
       this.setScoreCourseInfo();
+      this.handleExclusions();
       this.sanitiseSplits(isScoreEvent);
       this.generateLegPositions();
     },
@@ -168,6 +170,70 @@
       for (i = 0; i < courses.length; i += 1) {
         courseid = courses[i];
         rg2.courses.updateScoreCourse(courseid, codes[courseid], x[courseid], y[courseid]);
+      }
+    },
+
+    handleExclusions: function () {
+      // adjust times for events with excluded controls that have uploaded unadjusted splits
+      let currentCourseID = undefined;
+      let course = undefined;
+      let adjustedCourseIDs = [];
+      for (let i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].courseid !== currentCourseID) {
+          currentCourseID = this.results[i].courseid;
+          course = rg2.courses.getCourseDetails(currentCourseID);
+        }
+        if (course.excludeType === rg2.config.EXCLUDED_REAL_SPLITS) {
+          if (adjustedCourseIDs.indexOf(currentCourseID) === -1) {
+            adjustedCourseIDs.push(currentCourseID);
+          }
+          let excluded = 0;
+          // start at 1 since you can't exclude the start control
+          for (let j = 1; j < course.exclude.length; j += 1) {
+            if (course.exclude[j]) {
+              excluded = excluded + Math.min(this.results[i].splits[j] - this.results[i].splits[j - 1], course.allowed[j]);;
+            }
+          }
+          this.results[i].timeInSecs = Math.max(this.results[i].timeInSecs - excluded, 0);
+          this.results[i].time = rg2.utils.formatSecsAsMMSS(this.results[i].timeInSecs);
+        }
+      }
+      // set positions for amended courses
+      for (let i = 0; i < adjustedCourseIDs.length; i += 1) {
+        // don't bother with GPS results: they pick up positions from the original result later
+        let runners = this.results.filter(res => (res.courseid === adjustedCourseIDs[i]) && (res.resultid === res.rawid));
+        runners.sort(function (a, b) {
+          // sort valid times in ascending order
+          if ((a.status !== "ok") || (a.timeInSecs === 0)) {
+            return 1;
+          }
+          if ((b.status !== "ok") || (b.timeInSecs === 0)) {
+            return -1;
+          }
+          return (a.timeInSecs - b.timeInSecs);
+        });
+        let pos = 1;
+        let prevTime = 0;
+        for (let i = 0; i < runners.length; i += 1) {
+          if ((runners[i].status !== "ok") || (runners[i].timeInSecs === 0)) {
+            runners[i].position = "";
+            continue;
+          };
+          if (prevTime !== runners[i].timeInSecs) {
+            pos = i + 1;
+            prevTime = runners[i].timeInSecs;
+          }
+          runners[i].position = pos;
+        }
+        for (let i = 0; i < runners.length; i += 1) {
+          let idx = this.results.findIndex(res => (res.rawid === runners[i].rawid));
+          // should always find the index but...
+          if (idx > -1) {
+            this.results[idx].position = runners[i].position;
+            // set new display order for this course
+            this.results[idx].displayOrder = i;
+          }
+        }
       }
     },
 
@@ -647,24 +713,28 @@
       if (b.courseid > a.courseid) {
         return -1;
       }
+      // if rawid matches then this is a GPS route for an existing result
       if (a.rawid === b.rawid) {
         return a.resultid - b.resultid;
       }
-      return a.rawid - b.rawid;
+      // we know these are different results
+      // now sort by displayOrder to allow handling of excluded controls when results order might change
+      // displayOrder defaults to the original results order if nothing is excluded so this sort works as needed
+      // whether controls are excluded or not
+      return a.displayOrder - b.displayOrder;
     },
 
     formatResultListAsAccordion: function () {
-      var html, res, firstCourse, oldCourseID, i, tracksForThisCourse;
       if (this.results.length === 0) {
         return "<p>" + rg2.t("No results available") + "</p>";
       }
-      html = "";
-      firstCourse = true;
-      oldCourseID = 0;
-      tracksForThisCourse = 0;
+      let html = "";
+      let firstCourse = true;
+      let oldCourseID = 0;
+      let tracksForThisCourse = 0;
       this.prepareResults();
-      for (i = 0; i < this.results.length; i += 1) {
-        res = this.results[i];
+      for (let i = 0; i < this.results.length; i += 1) {
+        const res = this.results[i];
         if (!res.showResult) {
           // result marked not to display as it is being combined with GPS route
           continue;
