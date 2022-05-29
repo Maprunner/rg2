@@ -37,7 +37,7 @@ module.exports = function (grunt) {
       rel: {
         files: [
           {
-            src: ["rg2api.php", "index.php", "app/**", "html/**", "img/favicon.ico", "img/manifest.json"],
+            src: ["rg2api.php", "index.php", "app/**", "html/**"],
             dest: "rel/",
           },
         ],
@@ -190,6 +190,7 @@ var clubs = [
   "dee",
   "dfok",
   "devonoc",
+  "dvo",
   "ebor",
   "ecko",
   "elo",
