@@ -34,7 +34,6 @@
           if (data[i].resultid > rg2.config.GPS_RESULT_OFFSET && data[i].coursename === '') {
             data[i].coursename = rg2.courses.getCourseDetails(data[i].courseid).name;
           }
-          data[i].displayOrder = i;
           if (isScoreEvent) {
             variant = data[i].variant;
             result = new rg2.Result(data[i], isScoreEvent, codes[variant], scorex[variant], scorey[variant]);
@@ -42,13 +41,31 @@
             result = new rg2.Result(data[i], isScoreEvent);
           }
           this.results.push(result);
+        }
       }
-      }
+      this.setDisplayOrder();
       this.setDeletionInfo();
       this.setScoreCourseInfo();
       this.handleExclusions();
       this.sanitiseSplits(isScoreEvent);
       this.generateLegPositions();
+    },
+
+    setDisplayOrder: function () {
+      // used to sort results when generating results table for courses with excluded controls
+      for (let i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].resultid < rg2.config.GPS_RESULT_OFFSET) {
+          // order stays as it was when event was set up
+          this.results[i].displayOrder = i;
+        } else {
+          this.results[i].displayOrder = this.getRawDisplayOrder(this.results[i].rawid);
+        }
+      }
+    },
+
+    getRawDisplayOrder: function (rawid) {
+      let idx = this.results.findIndex((res) => res.resultid === rawid);
+      return idx > -1 ? this.results[idx].displayOrder : rawid;
     },
 
     setScoreCourseInfo: function () {
@@ -194,18 +211,32 @@
               excluded = excluded + Math.min(this.results[i].splits[j] - this.results[i].splits[j - 1], course.allowed[j]);;
             }
           }
-          this.results[i].timeInSecs = Math.max(this.results[i].timeInSecs - excluded, 0);
+          this.results[i].timeInSecs = Math.max(this.results[i].splits[this.results[i].splits.length - 1] - excluded, 0);
           this.results[i].time = rg2.utils.formatSecsAsMMSS(this.results[i].timeInSecs);
         }
       }
       // set positions for amended courses
       for (let i = 0; i < adjustedCourseIDs.length; i += 1) {
-        // don't bother with GPS results: they pick up positions from the original result later
-        let runners = this.results.filter(res => (res.courseid === adjustedCourseIDs[i]) && (res.resultid === res.rawid));
+        let runners = this.results.filter(res => (res.courseid === adjustedCourseIDs[i]));
+        // horrid mess since all GPS results show status "ok" even if the original results was not "ok"
+        // so need to copy across status from original result
+        for (let j = 0; j < runners.length; j += 1) {
+          if (runners[j].rawid !== runners[j].resultid) {
+            let idx = runners.findIndex(res => (res.resultid === runners[j].rawid));
+            // should always find the index but...
+            if (idx > -1) {
+              runners[j].status = runners[idx].status;
+            }
+          }
+        }
         runners.sort(function (a, b) {
           // sort valid times in ascending order
-          if ((a.status !== "ok") || (a.timeInSecs === 0)) {
-            return 1;
+           if ((a.status !== "ok") || (a.timeInSecs === 0)) {
+            if ((b.status !== "ok") || (b.timeInSecs === 0)) {
+              return (a.timeInSecs - b.timeInSecs);
+            } else {
+              return 1;
+            }
           }
           if ((b.status !== "ok") || (b.timeInSecs === 0)) {
             return -1;
@@ -214,24 +245,24 @@
         });
         let pos = 1;
         let prevTime = 0;
-        for (let i = 0; i < runners.length; i += 1) {
-          if ((runners[i].status !== "ok") || (runners[i].timeInSecs === 0)) {
-            runners[i].position = "";
+        for (let j = 0; j < runners.length; j += 1) {
+          if ((runners[j].status !== "ok") || (runners[j].timeInSecs === 0)) {
+            runners[j].position = "";
             continue;
           };
-          if (prevTime !== runners[i].timeInSecs) {
-            pos = i + 1;
-            prevTime = runners[i].timeInSecs;
+          if (prevTime !== runners[j].timeInSecs) {
+            pos = j + 1;
+            prevTime = runners[j].timeInSecs;
           }
-          runners[i].position = pos;
+          runners[j].position = pos;
         }
-        for (let i = 0; i < runners.length; i += 1) {
-          let idx = this.results.findIndex(res => (res.rawid === runners[i].rawid));
+        for (let j = 0; j < runners.length; j += 1) {
+          let idx = this.results.findIndex(res => (res.resultid === runners[j].resultid));
           // should always find the index but...
           if (idx > -1) {
-            this.results[idx].position = runners[i].position;
+            this.results[idx].position = runners[j].position;
             // set new display order for this course
-            this.results[idx].displayOrder = i;
+            this.results[idx].displayOrder = j;
           }
         }
       }
@@ -719,7 +750,7 @@
       }
       // we know these are different results
       // now sort by displayOrder to allow handling of excluded controls when results order might change
-      // displayOrder defaults to the original results order if nothing is excluded so this sort works as needed
+      // displayOrder defaults to the original results order if nothing is excluded so this works as needed
       // whether controls are excluded or not
       return a.displayOrder - b.displayOrder;
     },

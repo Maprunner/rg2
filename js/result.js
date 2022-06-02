@@ -17,8 +17,6 @@
     this.status = data.status;
     this.canDelete = false;
     this.showResult = true;
-    // used to sort results when generating results table for courses with excluded controls
-    this.displayOrder = data.displayOrder;
     this.token = 0;
     // get round iconv problem in API for now: unescape special characters to get sensible text
     if (data.comments) {
