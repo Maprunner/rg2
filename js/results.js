@@ -48,7 +48,6 @@
       this.setScoreCourseInfo();
       this.handleExclusions();
       this.sanitiseSplits(isScoreEvent);
-      this.generateLegPositions();
     },
 
     setDisplayOrder: function () {
@@ -243,7 +242,7 @@
           }
           return (a.timeInSecs - b.timeInSecs);
         });
-        let pos = 1;
+        let pos = 0;
         let prevTime = 0;
         for (let j = 0; j < runners.length; j += 1) {
           if ((runners[j].status !== "ok") || (runners[j].timeInSecs === 0)) {
@@ -251,8 +250,15 @@
             continue;
           };
           if (prevTime !== runners[j].timeInSecs) {
-            pos = j + 1;
+            pos = pos + 1;
             prevTime = runners[j].timeInSecs;
+          } else {
+            // same time, but might be GPS result for a normal result
+            if (j > 0) {
+              if (runners[j].rawid !== runners[j - 1].rawid) {
+                pos = pos + 1;
+              }
+            }
           }
           runners[j].position = pos;
         }
@@ -325,112 +331,6 @@
       }
     },
 
-    generateLegPositions: function () {
-      const info = this.getCoursesAndControls();
-      let pos = [];
-      // two very similar bits of code: scope to rationalise...
-      // Generate positions for each leg
-      for (let i = 0; i < info.courses.length; i += 1) {
-        // start at 1 since 0 is time 0
-        for (let k = 1; k < info.controls[i]; k += 1) {
-          pos.length = 0;
-          for (let j = 0; j < this.results.length; j += 1) {
-            if (this.results[j].resultid === this.results[j].rawid) {
-              if (this.results[j].isScoreEvent) {
-                if ((this.results[j].variant === info.courses[i])) {
-                  pos.push({ time: this.results[j].legSplits[k], id: j });
-                }
-              } else {
-                if ((this.results[j].courseid === info.courses[i])) {
-                  pos.push({ time: this.results[j].legSplits[k], id: j });
-                }
-              }
-            }
-          }
-          // 0 splits sorted to end
-          pos.sort(this.sortLegTimes);
-          let prevPos = 0;
-          let prevTime = 0;
-          // set positions
-          for (let j = 0; j < pos.length; j += 1) {
-            if (info.exclude[i][k]) {
-              this.results[pos[j].id].legpos[k] = 0;
-              continue;
-            }
-            if (pos[j].time !== prevTime) {
-              if (pos[j].time === 0) {
-                // all missing splits sorted to end with time 0
-                this.results[pos[j].id].legpos[k] = 0;
-                prevTime = 0;
-                prevPos = 0;
-              } else {
-                // new time so position increments
-                this.results[pos[j].id].legpos[k] = j + 1;
-                prevTime = pos[j].time;
-                prevPos = j + 1;
-              }
-            } else {
-              // same time so use same position
-              this.results[pos[j].id].legpos[k] = prevPos;
-            }
-          }
-        }
-      }
-      // Generate positions for cumulative time at each control
-      pos.length = 0;
-      for (let i = 0; i < info.courses.length; i += 1) {
-        // start at 1 since 0 is time 0
-        for (let k = 1; k < info.controls[i]; k += 1) {
-          pos.length = 0;
-          let time = 0;
-          for (let j = 0; j < this.results.length; j += 1) {
-            if (this.results[j].resultid === this.results[j].rawid) {
-              if (this.results[j].isScoreEvent) {
-                if ((this.results[j].variant === info.courses[i])) {
-                  if (k > this.results[j].lastValidSplit) {
-                    time = 0;
-                  } else {
-                    time = this.results[j].splits[k];
-                  }
-                  pos.push({ time: time, id: j });
-                }
-              } else {
-                if ((this.results[j].courseid === info.courses[i])) {
-                  if (k > this.results[j].lastValidSplit) {
-                    time = 0;
-                  } else {
-                    time = this.results[j].splits[k];
-                  }
-                  pos.push({ time: time, id: j });
-                }
-              }
-            }
-          }
-          // 0 splits sorted to end
-          pos.sort(this.sortLegTimes);
-          let prevPos = 0;
-          let prevTime = 0;
-          for (let j = 0; j < pos.length; j += 1) {
-            if (pos[j].time !== prevTime) {
-              if (pos[j].time === 0) {
-                this.results[pos[j].id].racepos[k] = 0;
-                prevPos = 0;
-                prevTime = 0;
-              } else {
-                // new time so position increments
-                this.results[pos[j].id].racepos[k] = j + 1;
-                prevTime = pos[j].time;
-                prevPos = j + 1;
-              }
-            } else {
-              // same time so use same position
-              this.results[pos[j].id].racepos[k] = prevPos;
-            }
-          }
-        }
-      }
-    },
-
     getCoursesAndControls: function () {
       const courses = [];
       const controls = [];
@@ -467,20 +367,6 @@
 
     displayScoreCourse: function (id, display) {
       this.results[id].displayScoreCourse = display;
-    },
-
-    sortLegTimes: function (a, b) {
-      // sort array of times in ascending order
-      // 0 splits get sorted to the bottom
-      if (a.time === 0) {
-        return 1;
-      } else {
-        if (b.time === 0) {
-          return -1;
-        } else {
-          return a.time - b.time;
-        }
-      }
     },
 
     countResultsByCourseID: function (courseid) {
