@@ -43,7 +43,7 @@
     DIM: 0.75,
     FULL_INTENSITY: 1.0,
      // version gets set automatically by grunt file during build process
-    RG2VERSION: '1.9.0',
+    RG2VERSION: '1.10.0',
     TIME_NOT_FOUND: 9999,
     // values for evt.which
     RIGHT_CLICK: 3,
@@ -54,6 +54,9 @@
     FORMAT_SCORE_EVENT: 3,
     FORMAT_SCORE_EVENT_NO_RESULTS: 4,
     DISPLAY_ALL_COURSES: 99999,
+    EXCLUDED_NONE: 0,
+    EXCLUDED_ZERO_SPLITS: 1,
+    EXCLUDED_REAL_SPLITS: 2,
     //number of drawn routes that can be saved for possible later deletion
     MAX_DRAWN_ROUTES: 10,
     // array of available languages: not great to do it like this but it helps for routegadget.co.uk set-up

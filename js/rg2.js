@@ -41,7 +41,10 @@ var rg2 = (function (window, $) {
     stats += "<div class='header'>" +  rg2.t("Map") + " ID " + rg2.events.getActiveMapID() + "</div>";
     stats += "<div class='item'>" + mapSize.width + " x " + mapSize.height + " pixels";
     if (validWorldFile) {
-      stats += ". " + rg2.t("Map is georeferenced") + ".";
+      const worldFile = rg2.events.getWorldFile();
+      const digits = 1000000;
+      stats += ". " + rg2.t("Map is georeferenced") + ": ";
+      stats += (parseInt((worldFile.F) * digits)/digits) + ", " + (parseInt((worldFile.C) * digits)/digits);
     }
     stats += "</div></div>";
     return stats;

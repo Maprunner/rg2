@@ -172,6 +172,11 @@
       if (!this.isScoreCourse) {
         rg2.courses.putOnDisplay(courseid);
         this.gpstrack.routeData.coursename = course.name;
+        if (course.excludeType === rg2.config.EXCLUDED_ZERO_SPLITS) {
+          this.gpstrack.routeData.controlsToAdjust = course.exclude.indexOf(true);
+        } else {
+          this.gpstrack.routeData.controlsToAdjust = course.x.length - 1;
+        }
         this.controlx = course.x;
         this.controly = course.y;
         this.gpstrack.routeData.x.length = 0;

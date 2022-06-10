@@ -1,0 +1,16 @@
+{
+	"name": "Routegadget 2",
+	"short_name": "RG2",
+  "icons": [
+		{
+			"src": "/img/rg2-logo-192x192.png",
+			"sizes": "192x192",
+			"type": "image/png"
+		},
+		{
+			"src": "/img/rg2-logo-512x512.png",
+			"sizes": "512x512",
+			"type": "image/png"
+		}
+	]
+}

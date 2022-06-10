@@ -208,10 +208,9 @@
     setResultCheckboxes: function () {
       // checkbox to show a course
       $(".showcourse").click(function (event) {
-        var id;
         //Prevent opening accordion when check box is clicked
         event.stopPropagation();
-        id = event.target.id;
+        const id = event.target.id;
         if (event.target.checked) {
           rg2.courses.putOnDisplay(id);
           // align courses and results tab
@@ -222,6 +221,7 @@
           $(".showcourse").filter("#" + id).prop('checked', false);
         }
         $(".showallcourses").prop('checked', rg2.courses.allCoursesDisplayed());
+        rg2.courses.setFilter(id);
         rg2.requestedHash.setCourses();
         rg2.redraw(false);
       });
@@ -235,6 +235,7 @@
           rg2.courses.removeAllFromDisplay();
           $(".showcourse").prop('checked', false);
         }
+        rg2.courses.setAllFilters();
         rg2.requestedHash.setCourses();
         rg2.redraw(false);
       });
@@ -256,6 +257,7 @@
         $(".allcoursetracks").filter("#" + courseid).prop('checked', rg2.results.allTracksForCourseDisplayed(courseid));
         // align all routes for all courses checkbox
         $(".alltracks").prop('checked', rg2.results.allTracksDisplayed());
+        rg2.courses.setFilter(courseid);
         rg2.requestedHash.setRoutes();
         rg2.redraw(false);
       });
@@ -273,6 +275,7 @@
         $(".showtrack-" + courseid).prop('checked', event.target.checked);
         // align all routes for all courses checkbox
         $(".alltracks").prop('checked', rg2.results.allTracksDisplayed());
+        rg2.courses.setFilter(courseid);
         rg2.requestedHash.setRoutes();
         rg2.redraw(false);
       });
@@ -283,6 +286,7 @@
         $(".showtrack").prop('checked', event.target.checked);
         // align all tabs
         $(".allcoursetracks").prop('checked', event.target.checked);
+        rg2.courses.setAllFilters(event.target.checked);
         rg2.requestedHash.setRoutes();
         rg2.redraw(false);
       });
@@ -380,26 +384,18 @@
         $("#rg2-control-select").prop('disabled', false);
       }
       $('.resulttable tr').dblclick(function () {
-        var id;
-        // only deal with "normal events"
-        if (rg2.events.hasResults() && !rg2.events.isScoreEvent()) {
-          // only handle clicks on valid results rows
-          id = $(this).find("td").attr("id");
-          if (id) {
-            rg2.stats.showStats(parseInt(id, 10));
-          }
+        const id = $(this).find("td").attr("id");
+        if (id) {
+          rg2.stats.showStats(parseInt(id, 10));
         }
       });
       // use right click to trigger extra functionality
       $('.resulttable tr').contextmenu(function (event) {
         event.preventDefault();
-        // only deal with "normal events"
-        if (rg2.events.hasResults() && !rg2.events.isScoreEvent()) {
-          // only handle clicks on valid results rows
-          const id = $(this).find("td").attr("id");
-          if (id) {
-            rg2.stats.showExtraStats(parseInt(id, 10));
-          }
+        // only handle clicks on valid results rows
+        const id = $(this).find("td").attr("id");
+        if (id) {
+          rg2.stats.showExtraStats(parseInt(id, 10));
         }
       });
     },

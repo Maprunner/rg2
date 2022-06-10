@@ -1,19 +1,21 @@
 # Routegadget 2
 
 ## Latest news
-Version 1.9.0 was released on 14th April 2022 and is installed on all routegadget.co.uk sites. This includes:
-* Chart display of some of the stats information available when double clicking on a runner name on the results tab.
-* Extra error handling which now allows some very old (RG1, pre 2011) events to be displayed correctly.
-* Extra warnings about map size when setting up an event.
+Version 1.10.0 was released on 10th June 2022 and is installed on all routegadget.co.uk sites. This includes:
+* Enhancements to allow statistics analysis for relay and score events
+* New functionality to improve the handling of courses with excluded controls (such as road crossings).
+* Course filter sliders now only displayed for courses and routes on display
 * Various other minor updates.
 
-## User Guide and Introductory Videos
+## User Guides and Introductory Videos
+
+The [Routegadget UK site](https://www.routegadget.co.uk) has a full User Guide.
 
 [All RG2 videos.](http://screencast-o-matic.com/channels/c2e22vhJZ)
 
 For a quick start try:
 
-1. The [User Guide](https://github.com/Maprunner/rg2/wiki/User-guide) in the wiki.
+1. The [User Guide](https://www.routegadget.co.uk/docs/intro/).
  
 2. Video: [A quick introduction to RG2](http://screencast-o-matic.com/u/VJsd/RG2-Quick-Introduction)
 

@@ -186,6 +186,7 @@ class event
     $write["status_msg"] = "";
     $updatedfile = [];
     $oldfile = file(KARTAT_DIRECTORY . "kisat.txt");
+    $status = true;
     foreach ($oldfile as $row) {
       $data = explode("|", $row);
       if ($data[0] == $eventid) {
@@ -196,6 +197,12 @@ class event
         $data[7] = utils::tidyNewComments($newdata->comments);
         if ($newdata->locked) {
           $data[7] = $data[7] . EVENT_LOCKED_INDICATOR;
+        }
+        if ($newdata->exclude) {
+          $status = course::saveExcludeDetails($eventid, $newdata->exclude);
+          if (!$status) {
+            $write["status_msg"] .= " Invalid excluded control details";
+          }
         }
         $row = "";
         // reconstruct |-separated row
@@ -209,11 +216,14 @@ class event
       }
       $updatedfile[] = $row;
     }
-    $status = file_put_contents(KARTAT_DIRECTORY . "kisat.txt", $updatedfile);
-
-    if (!$status) {
-      $write["status_msg"] .= " Save error for kisat.txt.";
+    if ($status) {
+      // ok so far so try to save
+      $status = file_put_contents(KARTAT_DIRECTORY . "kisat.txt", $updatedfile);
+      if (!$status) {
+        $write["status_msg"] .= " Save error for kisat.txt.";
+      }
     }
+
     if ($write["status_msg"] == "") {
       $write["ok"] = true;
       $write["status_msg"] = "Event detail updated";

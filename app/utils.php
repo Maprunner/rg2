@@ -42,7 +42,7 @@ class utils
         // tidy up from possible locking errors
         if (is_dir(LOCK_DIRECTORY)) {
             // if lock directory is more than a few seconds old it wasn't deleted properly, so we'll delete it ourselves
-            if ((time() - filemtime(LOCK_DIRECTORY)) > 15000) {
+            if ((time() - filemtime(LOCK_DIRECTORY)) > 15) {
                 self::unlockDatabase();
             }
         }

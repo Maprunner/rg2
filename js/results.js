@@ -41,12 +41,30 @@
             result = new rg2.Result(data[i], isScoreEvent);
           }
           this.results.push(result);
+        }
       }
-      }
+      this.setDisplayOrder();
       this.setDeletionInfo();
       this.setScoreCourseInfo();
+      this.handleExclusions();
       this.sanitiseSplits(isScoreEvent);
-      this.generateLegPositions();
+    },
+
+    setDisplayOrder: function () {
+      // used to sort results when generating results table for courses with excluded controls
+      for (let i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].resultid < rg2.config.GPS_RESULT_OFFSET) {
+          // order stays as it was when event was set up
+          this.results[i].displayOrder = i;
+        } else {
+          this.results[i].displayOrder = this.getRawDisplayOrder(this.results[i].rawid);
+        }
+      }
+    },
+
+    getRawDisplayOrder: function (rawid) {
+      let idx = this.results.findIndex((res) => res.resultid === rawid);
+      return idx > -1 ? this.results[idx].displayOrder : rawid;
     },
 
     setScoreCourseInfo: function () {
@@ -120,6 +138,19 @@
       return results;
     },
 
+    getAllResultsForVariant: function (variant) {
+      let results = [];
+      for (let i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].variant === variant) {
+          // only want first entry: not other drawn routes
+          if (this.results[i].resultid === this.results[i].rawid) {
+            results.push(this.results[i]);
+          }
+        }
+      }
+      return results;
+    },
+
     // read through results to get list of all controls on score courses
     // since there is no master list of controls!
     generateScoreCourses: function () {
@@ -158,23 +189,107 @@
       }
     },
 
-    sanitiseSplits: function (isScoreEvent) {
-      // sort out missing punches and add some helpful new fields
+    handleExclusions: function () {
+      // adjust times for events with excluded controls that have uploaded unadjusted splits
       let currentCourseID = undefined;
-      let excluded = "";
+      let course = undefined;
+      let adjustedCourseIDs = [];
       for (let i = 0; i < this.results.length; i += 1) {
         if (this.results[i].courseid !== currentCourseID) {
           currentCourseID = this.results[i].courseid;
-          excluded = rg2.courses.getExcluded(currentCourseID);
+          course = rg2.courses.getCourseDetails(currentCourseID);
         }
-        this.results[i].timeInSecs = rg2.utils.getSecsFromHHMMSS(this.results[i].time);
+        if (course.excludeType === rg2.config.EXCLUDED_REAL_SPLITS) {
+          if (adjustedCourseIDs.indexOf(currentCourseID) === -1) {
+            adjustedCourseIDs.push(currentCourseID);
+          }
+          let excluded = 0;
+          // start at 1 since you can't exclude the start control
+          for (let j = 1; j < course.exclude.length; j += 1) {
+            if (course.exclude[j]) {
+              excluded = excluded + Math.min(this.results[i].splits[j] - this.results[i].splits[j - 1], course.allowed[j]);;
+            }
+          }
+          this.results[i].timeInSecs = Math.max(this.results[i].splits[this.results[i].splits.length - 1] - excluded, 0);
+          this.results[i].time = rg2.utils.formatSecsAsMMSS(this.results[i].timeInSecs);
+        }
+      }
+      // set positions for amended courses
+      for (let i = 0; i < adjustedCourseIDs.length; i += 1) {
+        let runners = this.results.filter(res => (res.courseid === adjustedCourseIDs[i]));
+        // horrid mess since all GPS results show status "ok" even if the original results was not "ok"
+        // so need to copy across status from original result
+        for (let j = 0; j < runners.length; j += 1) {
+          if (runners[j].rawid !== runners[j].resultid) {
+            let idx = runners.findIndex(res => (res.resultid === runners[j].rawid));
+            // should always find the index but...
+            if (idx > -1) {
+              runners[j].status = runners[idx].status;
+            }
+          }
+        }
+        runners.sort(function (a, b) {
+          // sort valid times in ascending order
+           if ((a.status !== "ok") || (a.timeInSecs === 0)) {
+            if ((b.status !== "ok") || (b.timeInSecs === 0)) {
+              return (a.timeInSecs - b.timeInSecs);
+            } else {
+              return 1;
+            }
+          }
+          if ((b.status !== "ok") || (b.timeInSecs === 0)) {
+            return -1;
+          }
+          return (a.timeInSecs - b.timeInSecs);
+        });
+        let pos = 0;
+        let prevTime = 0;
+        for (let j = 0; j < runners.length; j += 1) {
+          if ((runners[j].status !== "ok") || (runners[j].timeInSecs === 0)) {
+            runners[j].position = "";
+            continue;
+          };
+          if (prevTime !== runners[j].timeInSecs) {
+            pos = pos + 1;
+            prevTime = runners[j].timeInSecs;
+          } else {
+            // same time, but might be GPS result for a normal result
+            if (j > 0) {
+              if (runners[j].rawid !== runners[j - 1].rawid) {
+                pos = pos + 1;
+              }
+            }
+          }
+          runners[j].position = pos;
+        }
+        for (let j = 0; j < runners.length; j += 1) {
+          let idx = this.results.findIndex(res => (res.resultid === runners[j].resultid));
+          // should always find the index but...
+          if (idx > -1) {
+            this.results[idx].position = runners[j].position;
+            // set new display order for this course
+            this.results[idx].displayOrder = j;
+          }
+        }
+      }
+    },
+
+    sanitiseSplits: function (isScoreEvent) {
+      // sort out missing punches and add some helpful new fields
+      let currentCourseID = undefined;
+      let course = undefined;
+      for (let i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].courseid !== currentCourseID) {
+          currentCourseID = this.results[i].courseid;
+          course = rg2.courses.getCourseDetails(currentCourseID);
+        }
         this.results[i].legSplits = [];
         this.results[i].legSplits[0] = 0;
         let previousValidSplit = 0;
         let nextSplitInvalid = false;
         for (let j = 1; j < this.results[i].splits.length; j += 1) {
           if ((this.results[i].splits[j] - previousValidSplit) === 0) {
-            if (excluded.indexOf(j) > -1) {
+            if (course.exclude[j]) {
               this.results[i].legSplits[j] = this.results[i].splits[j] - previousValidSplit;
               previousValidSplit = this.results[i].splits[j];
             } else {
@@ -216,100 +331,28 @@
       }
     },
 
-    generateLegPositions: function () {
-      var i, j, k, info, pos, prevTime, prevPos, time;
-      info = this.getCoursesAndControls();
-      pos = [];
-      // two very similar bits of code: scope to rationalise...
-      // Generate positions for each leg
-      for (i = 0; i < info.courses.length; i += 1) {
-        // start at 1 since 0 is time 0
-        for (k = 1; k < info.controls[i]; k += 1) {
-          pos.length = 0;
-          for (j = 0; j < this.results.length; j += 1) {
-            if ((this.results[j].courseid === info.courses[i]) && (this.results[j].resultid === this.results[j].rawid)) {
-              pos.push({ time: this.results[j].legSplits[k], id: j });
-            }
-          }
-          // 0 splits sorted to end
-          pos.sort(this.sortLegTimes);
-          prevPos = 0;
-          prevTime = 0;
-          // set positions
-          for (j = 0; j < pos.length; j += 1) {
-            if (pos[j].time !== prevTime) {
-              if (pos[j].time === 0) {
-                // all missing splits sorted to end with time 0
-                this.results[pos[j].id].legpos[k] = 0;
-                prevTime = 0;
-                prevPos = 0;
-              } else {
-                // new time so position increments
-                this.results[pos[j].id].legpos[k] = j + 1;
-                prevTime = pos[j].time;
-                prevPos = j + 1;
-              }
-            } else {
-              // same time so use same position
-              this.results[pos[j].id].legpos[k] = prevPos;
-            }
-          }
-        }
-      }
-      // Generate positions for cumulative time at each control
-      pos.length = 0;
-      for (i = 0; i < info.courses.length; i += 1) {
-        // start at 1 since 0 is time 0
-        for (k = 1; k < info.controls[i]; k += 1) {
-          pos.length = 0;
-          for (j = 0; j < this.results.length; j += 1) {
-            if ((this.results[j].courseid === info.courses[i]) && (this.results[j].resultid === this.results[j].rawid)) {
-              if (k > this.results[j].lastValidSplit) {
-                time = 0;
-              } else {
-                time = this.results[j].splits[k];
-              }
-              pos.push({ time: time, id: j });
-            }
-          }
-          // 0 splits sorted to end
-          pos.sort(this.sortLegTimes);
-          prevPos = 0;
-          prevTime = 0;
-          for (j = 0; j < pos.length; j += 1) {
-            if (pos[j].time !== prevTime) {
-              if (pos[j].time === 0) {
-                this.results[pos[j].id].racepos[k] = 0;
-                prevPos = 0;
-                prevTime = 0;
-              } else {
-                // new time so position increments
-                this.results[pos[j].id].racepos[k] = j + 1;
-                prevTime = pos[j].time;
-                prevPos = j + 1;
-              }
-            } else {
-              // same time so use same position
-              this.results[pos[j].id].racepos[k] = prevPos;
-            }
-          }
-        }
-      }
-    },
-
     getCoursesAndControls: function () {
-      var i, courses, controls;
-      courses = [];
-      controls = [];
-      for (i = 0; i < this.results.length; i += 1) {
-        if (courses.indexOf(this.results[i].courseid) === -1) {
-          courses.push(this.results[i].courseid);
-          // not a good way fo finding number of controls: better to get from courses?
-          controls.push(this.results[i].splits.length);
+      const courses = [];
+      const controls = [];
+      for (let i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].rawid < rg2.config.GPS_RESULT_OFFSET) {
+          if (this.results[i].isScoreEvent) {
+            if (courses.indexOf(this.results[i].variant) === -1) {
+              // treating variants as courses for the purposes of this section...
+              courses.push(this.results[i].variant);
+              controls.push(this.results[i].splits.length);
+            }        
+          } else {
+            if (courses.indexOf(this.results[i].courseid) === -1) {
+              courses.push(this.results[i].courseid);
+              // not a good way fo finding number of controls: better to get from courses?
+              controls.push(this.results[i].splits.length);
+            }
+          }
         }
-
       }
-      return { courses: courses, controls: controls };
+      const exclude = courses.map((courseid) => rg2.courses.getExcluded(courseid));
+      return { courses: courses, controls: controls, exclude: exclude};
     },
 
     putScoreCourseOnDisplay: function (resultid, display) {
@@ -324,20 +367,6 @@
 
     displayScoreCourse: function (id, display) {
       this.results[id].displayScoreCourse = display;
-    },
-
-    sortLegTimes: function (a, b) {
-      // sort array of times in ascending order
-      // 0 splits get sorted to the bottom
-      if (a.time === 0) {
-        return 1;
-      } else {
-        if (b.time === 0) {
-          return -1;
-        } else {
-          return a.time - b.time;
-        }
-      }
     },
 
     countResultsByCourseID: function (courseid) {
@@ -601,24 +630,28 @@
       if (b.courseid > a.courseid) {
         return -1;
       }
+      // if rawid matches then this is a GPS route for an existing result
       if (a.rawid === b.rawid) {
         return a.resultid - b.resultid;
       }
-      return a.rawid - b.rawid;
+      // we know these are different results
+      // now sort by displayOrder to allow handling of excluded controls when results order might change
+      // displayOrder defaults to the original results order if nothing is excluded so this works as needed
+      // whether controls are excluded or not
+      return a.displayOrder - b.displayOrder;
     },
 
     formatResultListAsAccordion: function () {
-      var html, res, firstCourse, oldCourseID, i, tracksForThisCourse;
       if (this.results.length === 0) {
         return "<p>" + rg2.t("No results available") + "</p>";
       }
-      html = "";
-      firstCourse = true;
-      oldCourseID = 0;
-      tracksForThisCourse = 0;
+      let html = "";
+      let firstCourse = true;
+      let oldCourseID = 0;
+      let tracksForThisCourse = 0;
       this.prepareResults();
-      for (i = 0; i < this.results.length; i += 1) {
-        res = this.results[i];
+      for (let i = 0; i < this.results.length; i += 1) {
+        const res = this.results[i];
         if (!res.showResult) {
           // result marked not to display as it is being combined with GPS route
           continue;
@@ -771,6 +804,19 @@
           }
         }
       }
+    },
+
+    anyTracksForCourseDisplayed: function (courseid) {
+      for (let i = 0; i < this.results.length; i += 1) {
+        if (this.results[i].courseid === courseid) {
+          if (this.results[i].hasValidTrack) {
+            if (this.results[i].displayTrack) {
+              return true;
+            }
+          }
+        }
+      }
+      return false;
     },
 
     allTracksForCourseDisplayed: function (courseid) {

@@ -24,6 +24,7 @@
       info = this.events[realid];
       info.id = realid;
       info.controls = rg2.controls.getControlCount();
+      info.exclude = rg2.courses.getExcludedText();
       return info;
     },
 

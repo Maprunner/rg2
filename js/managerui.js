@@ -122,6 +122,7 @@
         $("#rg2-event-date-edit").val("");
         $("#rg2-event-level-edit").val("");
         $("#rg2-edit-event-comments").val("");
+        $("#rg2-edit-exclude").val("e.g. 1|1|6,60|15,60");
         $("#rg2-route-selected").empty();
         $("#chk-edit-read-only").prop("checked", false);
       }
@@ -134,6 +135,12 @@
       $("#rg2-event-date-edit").empty().val(event.date);
       $("#rg2-event-level-edit").val(event.rawtype);
       $("#rg2-edit-event-comments").empty().val(rg2.he.decode(event.comment));
+      if (rg2.events.isScoreEvent()) {
+        $("#rg2-exclude-info").hide();
+      } else {
+        $("#rg2-edit-exclude").val(event.exclude);
+        $("#rg2-exclude-info").show();
+      }
       $("#chk-edit-read-only").prop("checked", event.locked);
       rg2.utils.setButtonState("enable", ["#btn-delete-event", "#btn-update-event", "#btn-delete-route"]);
       this.createRouteDeleteDropdown(event.id);

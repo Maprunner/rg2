@@ -819,6 +819,7 @@
       data.type = $("#rg2-event-level-edit").val();
       data.eventdate = $("#rg2-event-date-edit").val();
       data.club = $("#rg2-club-name-edit").val();
+      data.exclude = $("#rg2-edit-exclude").val().trim();
       user = this.user.encodeUser();
       data.x = user.x;
       data.y = user.y;
