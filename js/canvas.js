@@ -161,7 +161,7 @@
   }
 
   function zoom(zoomDirection) {
-    if (rg2.events.getActiveEventID() === null) {
+    if ((!rg2.config.managing) && (rg2.events.getActiveEventID() === null)) {
       return;
     }
     const factor = Math.pow(rg2.input.scaleFactor, zoomDirection);
