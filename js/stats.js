@@ -1095,7 +1095,7 @@
 
     initialiseCourse: function (id) {
       if (this.isScoreOrRelay) {
-        this.course = { id: this.result.variant, codes: this.result.scorecodes, exclude: false };
+        this.course = { courseid: this.result.variant, codes: this.result.scorecodes, exclude: false };
       } else {
         this.course = rg2.courses.getCourseDetails(id);
       }
