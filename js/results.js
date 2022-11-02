@@ -230,17 +230,17 @@
         }
         runners.sort(function (a, b) {
           // sort valid times in ascending order
-           if ((a.status !== "ok") || (a.timeInSecs === 0)) {
-            if ((b.status !== "ok") || (b.timeInSecs === 0)) {
-              return (a.timeInSecs - b.timeInSecs);
+          if (a.status !== "ok" || a.timeInSecs === 0) {
+            if (b.status !== "ok" || b.timeInSecs === 0) {
+              return 0;
             } else {
               return 1;
             }
           }
-          if ((b.status !== "ok") || (b.timeInSecs === 0)) {
+          if (b.status !== "ok" || b.timeInSecs === 0) {
             return -1;
           }
-          return (a.timeInSecs - b.timeInSecs);
+          return a.timeInSecs - b.timeInSecs;
         });
         let pos = 0;
         let prevTime = 0;
