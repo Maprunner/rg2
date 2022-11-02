@@ -100,7 +100,7 @@ class result
                     $extras = explode("#", substr($databaseid, $pos + 2));
                     if (count($extras) == 2) {
                         $detail["position"] = $extras[0];
-                        $detail["status"] = $extras[1];
+                        $detail["status"] = strtolower($extras[1]);
                     }
                 }
                 // score event check should be redundant but see issue #159
