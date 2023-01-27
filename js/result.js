@@ -91,7 +91,8 @@
       }
       // for some excluded events the finish split is unadjusted (bug in results system?)
       // so safer to copy in running time
-      rawSplits[rawSplits.length - 1] = this.timeInSecs;
+      // ...but don't get any slower than we already are (random missing splits or something)
+      rawSplits[rawSplits.length - 1] = Math.max(this.timeInSecs, rawSplits[rawSplits.length - 2]);
       return rawSplits;
     },
 

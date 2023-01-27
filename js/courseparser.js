@@ -253,10 +253,14 @@
       controlList = nodeList.getElementsByTagName('CourseControl');
       codes = [];
       for (i = 0; i < controlList.length; i += 1) {
-        code = controlList[i].getElementsByTagName(tagName)[0].textContent.trim();
-        // if control code doesn't exist it was a crossing point so we don't need it
-        if (this.validControlCode(code)) {
-          codes.push(code);
+        // OCAD course files add a "Start" control at map changes which shows
+        // shows up as a spurious control unless we ignore it here
+        if (i === 0 || controlList[i].getAttribute("type") !== "Start") {
+          code = controlList[i].getElementsByTagName(tagName)[0].textContent.trim();
+          // if control code doesn't exist it was a crossing point so we don't need it
+          if (this.validControlCode(code)) {
+            codes.push(code);
+          }
         }
       }
       return codes;
