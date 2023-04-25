@@ -15,7 +15,7 @@
   "devDependencies": {
     "@lodder/grunt-postcss": "^3.1.1",
     "autoprefixer": "^10.4.13",
-    "cssnano": "^5.1.14",
+    "cssnano": "^6.0.0",
     "eslint": "^8.32.0",
     "eslint-config-prettier": "^8.6.0",
     "grunt": "^1.5.3",
@@ -25,8 +25,8 @@
     "grunt-text-replace": "^0.4.0",
     "load-grunt-tasks": "^5.1.0",
     "prettier": "^2.8.3",
-    "stylelint": "^14.6.1",
+    "stylelint": "^15.6.0",
     "stylelint-config-prettier": "^9.0.4",
-    "stylelint-config-standard": "^29.0.0"
+    "stylelint-config-standard": "^33.0.0"
   }
 }
