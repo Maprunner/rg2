@@ -26,24 +26,24 @@
     // screen sizes for different layouts
     BIG_SCREEN_BREAK_POINT: 800,
     SMALL_SCREEN_BREAK_POINT: 500,
-    PURPLE: '#b300ff',
-    RED: '#ff0000',
-    GREEN: '#00ff00',
-    DARK_GREEN: 'rgb(34, 139, 34)',
-    DARK_GREEN_30: 'rgba(34, 139, 34, 0.3)',
-    GREY: '#e0e0e0',
-    RED_30: 'rgba(255,0,0,0.3)',
-    GREEN_30: 'rgba(0,255,0,0.3)',
-    WHITE: '#ffffff',
-    BLACK: '#000000',
+    PURPLE: "#b300ff",
+    RED: "#ff0000",
+    GREEN: "#00ff00",
+    DARK_GREEN: "rgb(34, 139, 34)",
+    DARK_GREEN_30: "rgba(34, 139, 34, 0.3)",
+    GREY: "#e0e0e0",
+    RED_30: "rgba(255,0,0,0.3)",
+    GREEN_30: "rgba(0,255,0,0.3)",
+    WHITE: "#ffffff",
+    BLACK: "#000000",
     RUNNER_DOT_RADIUS: 6,
     HANDLE_DOT_RADIUS: 7,
-    HANDLE_COLOUR: '#ff0000',
+    HANDLE_COLOUR: "#ff0000",
     // parameters for call to draw courses
     DIM: 0.75,
     FULL_INTENSITY: 1.0,
-     // version gets set automatically by grunt file during build process
-    RG2VERSION: '1.10.2',
+    // version gets set automatically by grunt file during build process
+    RG2VERSION: "1.10.2",
     TIME_NOT_FOUND: 9999,
     // values for evt.which
     RIGHT_CLICK: 3,
@@ -61,6 +61,7 @@
     MAX_DRAWN_ROUTES: 10,
     // array of available languages: not great to do it like this but it helps for routegadget.co.uk set-up
     languages: [
+      { language: "Čeština", code: "cz" },
       { language: "Deutsch", code: "de" },
       { language: "Suomi", code: "fi" },
       { language: "Français", code: "fr" },
@@ -68,13 +69,13 @@
       { language: "日本語", code: "ja" },
       { language: "Norsk", code: "no" },
       { language: "Português - Brasil", code: "pt" },
-      { language: "Русский", code: "ru" }
+      { language: "Русский", code: "ru" },
     ],
     // Size of map upload in MB that triggers the warning dialog
     FILE_SIZE_WARNING: 2,
     // Size of map upload in pixels that triggers the warning dialog
     // emprically this is easily enough for an A3 sensible map
-    PIXEL_SIZE_WARNING: 4000
+    PIXEL_SIZE_WARNING: 4000,
   };
 
   options = {
@@ -95,7 +96,7 @@
     minSpeed: 15,
     // array of up to MAX_DRAWN_ROUTES entries with details to allow deletion
     // stored in order they are added, so first entry is most recent and gets deleted if necessary
-    drawnRoutes: []
+    drawnRoutes: [],
   };
 
   // translation function
@@ -109,10 +110,34 @@
 
   function translateTextFields() {
     var i, selector, text;
-    selector = ["#rg2-events-tab a", "#rg2-courses-tab a", "#rg2-results-tab a", "#rg2-draw-tab a", '#rg2-draw-title', '#draw-text-1', '#draw-text-2', '#draw-text-3',
-      '#draw-text-4', '#draw-text-5', '#rg2-load-gps-title', '.rg2-options-dialog .ui-dialog-title'];
-    text = ['Events', 'Courses', 'Results', 'Draw', 'Draw route', 'Left click to add/lock/unlock a handle', 'Green - draggable', 'Red - locked', 'Right click to delete a handle',
-      'Drag a handle to adjust track around locked point(s)', 'Load GPS file (GPX or TCX)', 'Configuration options'];
+    selector = [
+      "#rg2-events-tab a",
+      "#rg2-courses-tab a",
+      "#rg2-results-tab a",
+      "#rg2-draw-tab a",
+      "#rg2-draw-title",
+      "#draw-text-1",
+      "#draw-text-2",
+      "#draw-text-3",
+      "#draw-text-4",
+      "#draw-text-5",
+      "#rg2-load-gps-title",
+      ".rg2-options-dialog .ui-dialog-title",
+    ];
+    text = [
+      "Events",
+      "Courses",
+      "Results",
+      "Draw",
+      "Draw route",
+      "Left click to add/lock/unlock a handle",
+      "Green - draggable",
+      "Red - locked",
+      "Right click to delete a handle",
+      "Drag a handle to adjust track around locked point(s)",
+      "Load GPS file (GPX or TCX)",
+      "Configuration options",
+    ];
     for (i = 0; i < selector.length; i += 1) {
       $(selector[i]).text(t(text[i]));
     }
@@ -120,34 +145,102 @@
 
   function translateTitleProperties() {
     var i, selector, text;
-    selector = ["rg2-replay-start-control", "#rg2-hide-info-panel-icon", '#btn-about', '#btn-options', '#btn-zoom-out', '#btn-zoom-in', '#btn-reset', '#btn-show-splits', '#rg2-splits-table', '#btn-slower',
-      '#btn-faster', '#btn-rotate-right', '#btn-rotate-left', '#btn-stats', '#btn-measure'];
-    text = ["Start at", "Hide info panel", 'Help', 'Options', 'Zoom out', 'Zoom in', 'Reset', 'Splits', 'Splits table', 'Slower', 'Faster', 'Rotate right', 'Rotate left', 'Statistics', 'Measure'];
+    selector = [
+      "rg2-replay-start-control",
+      "#rg2-hide-info-panel-icon",
+      "#btn-about",
+      "#btn-options",
+      "#btn-zoom-out",
+      "#btn-zoom-in",
+      "#btn-reset",
+      "#btn-show-splits",
+      "#rg2-splits-table",
+      "#btn-slower",
+      "#btn-faster",
+      "#btn-rotate-right",
+      "#btn-rotate-left",
+      "#btn-stats",
+      "#btn-measure",
+    ];
+    text = [
+      "Start at",
+      "Hide info panel",
+      "Help",
+      "Options",
+      "Zoom out",
+      "Zoom in",
+      "Reset",
+      "Splits",
+      "Splits table",
+      "Slower",
+      "Faster",
+      "Rotate right",
+      "Rotate left",
+      "Statistics",
+      "Measure",
+    ];
     for (i = 0; i < selector.length; i += 1) {
-      $(selector[i]).prop('title', t(text[i]));
+      $(selector[i]).prop("title", t(text[i]));
     }
   }
 
   function translateTextContentProperties() {
     var i, selector, text;
-    selector = ['label[for=btn-full-tails]', 'label[for=spn-tail-length]', 'label[for=rg2-select-language]', 'label[for=spn-map-intensity]',
-      'label[for=spn-route-intensity]', 'label[for=spn-route-width]', 'label[for=spn-name-font-size]', 'label[for=spn-course-width]', 'label[for=spn-control-circle]',
-      'label[for=chk-snap-toggle]', 'label[for=chk-show-three-seconds]', 'label[for=chk-show-GPS-speed]', 'label[for=rg2-course-select]', 'label[for=rg2-name-select]',
-      'label[for=btn-move-all]', 'label[for=btn-align-map]'];
-    text = ['Full tails', 'Length', 'Language', 'Map intensity %', 'Route intensity %', 'Route width', 'Replay label font size', 'Course overprint width', 'Control circle size',
-      'Snap to control when drawing', 'Show +3 time loss for GPS routes', 'Show GPS speed colours', 'Select course', 'Select name', 'Move track and map together (or right click-drag)',
-      'Align map to next control'];
+    selector = [
+      "label[for=btn-full-tails]",
+      "label[for=spn-tail-length]",
+      "label[for=rg2-select-language]",
+      "label[for=spn-map-intensity]",
+      "label[for=spn-route-intensity]",
+      "label[for=spn-route-width]",
+      "label[for=spn-name-font-size]",
+      "label[for=spn-course-width]",
+      "label[for=spn-control-circle]",
+      "label[for=chk-snap-toggle]",
+      "label[for=chk-show-three-seconds]",
+      "label[for=chk-show-GPS-speed]",
+      "label[for=rg2-course-select]",
+      "label[for=rg2-name-select]",
+      "label[for=btn-move-all]",
+      "label[for=btn-align-map]",
+    ];
+    text = [
+      "Full tails",
+      "Length",
+      "Language",
+      "Map intensity %",
+      "Route intensity %",
+      "Route width",
+      "Replay label font size",
+      "Course overprint width",
+      "Control circle size",
+      "Snap to control when drawing",
+      "Show +3 time loss for GPS routes",
+      "Show GPS speed colours",
+      "Select course",
+      "Select name",
+      "Move track and map together (or right click-drag)",
+      "Align map to next control",
+    ];
     for (i = 0; i < selector.length; i += 1) {
-      $(selector[i]).prop('textContent', t(text[i]));
+      $(selector[i]).prop("textContent", t(text[i]));
     }
   }
 
   function translateButtons() {
     var i, selector, text;
-    selector = ['#btn-undo', '#btn-undo-gps-adjust', '#btn-save-route', '#btn-reset-drawing', '#btn-three-seconds', '#btn-save-gps-route', '#btn-autofit-gps'];
-    text = ['Undo', 'Undo', 'Save', 'Reset', '+3 sec', 'Save GPS route', 'Autofit'];
+    selector = [
+      "#btn-undo",
+      "#btn-undo-gps-adjust",
+      "#btn-save-route",
+      "#btn-reset-drawing",
+      "#btn-three-seconds",
+      "#btn-save-gps-route",
+      "#btn-autofit-gps",
+    ];
+    text = ["Undo", "Undo", "Save", "Reset", "+3 sec", "Save GPS route", "Autofit"];
     for (i = 0; i < selector.length; i += 1) {
-      $(selector[i]).button('option', 'label', t(text[i]));
+      $(selector[i]).button("option", "label", t(text[i]));
     }
   }
 
@@ -158,10 +251,10 @@
     translateButtons();
     // #316 missing translation on language change
     // animation controls are done in resetAnimation fora new language so don't need to do them here
-    if ($('#btn-toggle-controls').hasClass('fa-circle-o')) {
-      $('#btn-toggle-controls').prop('title', t('Show controls'));
+    if ($("#btn-toggle-controls").hasClass("fa-circle-o")) {
+      $("#btn-toggle-controls").prop("title", t("Show controls"));
     } else {
-      $('#btn-toggle-controls').prop('title', t('Hide controls'));
+      $("#btn-toggle-controls").prop("title", t("Hide controls"));
     }
   }
 
@@ -169,11 +262,13 @@
     var i, selected, dropdown;
     $("#rg2-select-language").empty();
     dropdown = document.getElementById("rg2-select-language");
-    selected = (dictionary.code === "en");
-    dropdown.options.add(rg2.utils.generateOption('en', 'en: English', selected));
+    selected = dictionary.code === "en";
+    dropdown.options.add(rg2.utils.generateOption("en", "en: English", selected));
     for (i = 0; i < languages.length; i = i + 1) {
-      selected = (dictionary.code === languages[i].code);
-      dropdown.options.add(rg2.utils.generateOption(languages[i].code, languages[i].code + ": " + languages[i].language, selected));
+      selected = dictionary.code === languages[i].code;
+      dropdown.options.add(
+        rg2.utils.generateOption(languages[i].code, languages[i].code + ": " + languages[i].language, selected)
+      );
     }
   }
 
@@ -189,7 +284,7 @@
   function setLanguageOptions() {
     // use English until we load something else
     dictionary = {};
-    dictionary.code = 'en';
+    dictionary.code = "en";
     // set available languages and set start language if requested
     rg2.createLanguageDropdown(rg2.config.languages);
     if (rg2Config.start_language !== "en") {
@@ -218,7 +313,7 @@
     var routes, i;
     routes = [];
     for (i = 0; i < this.options.drawnRoutes.length; i += 1) {
-      if ((this.options.drawnRoutes[i].id !== route.id) || (this.options.drawnRoutes[i].eventid !== route.eventid)) {
+      if (this.options.drawnRoutes[i].id !== route.id || this.options.drawnRoutes[i].eventid !== route.eventid) {
         routes.push(this.options.drawnRoutes[i]);
       }
     }
@@ -228,8 +323,8 @@
   function saveConfigOptions() {
     try {
       // eslint-disable-next-line no-prototype-builtins
-      if ((window.hasOwnProperty('localStorage')) && (window.localStorage !== null)) {
-        localStorage.setItem('rg2-options', JSON.stringify(this.options));
+      if (window.hasOwnProperty("localStorage") && window.localStorage !== null) {
+        localStorage.setItem("rg2-options", JSON.stringify(this.options));
       }
     } catch (e) {
       // storage not supported so just return
@@ -241,9 +336,9 @@
     try {
       var prop, storedOptions;
       // eslint-disable-next-line no-prototype-builtins
-      if ((window.hasOwnProperty('localStorage')) && (window.localStorage !== null)) {
-        if (localStorage.getItem('rg2-options') !== null) {
-          storedOptions = JSON.parse(localStorage.getItem('rg2-options'));
+      if (window.hasOwnProperty("localStorage") && window.localStorage !== null) {
+        if (localStorage.getItem("rg2-options") !== null) {
+          storedOptions = JSON.parse(localStorage.getItem("rg2-options"));
           // overwrite the options array with saved options from local storage
           // need to do this to allow for new options that people don't yet have
           for (prop in storedOptions) {
@@ -256,13 +351,16 @@
           // best to keep these at default?
           this.options.circleSize = 20;
           if (this.options.mapIntensity === 0) {
-            rg2.utils.showWarningDialog("Warning", "Your saved settings have 0% map intensity so the map is invisible. You can adjust this on the configuration menu");
+            rg2.utils.showWarningDialog(
+              "Warning",
+              "Your saved settings have 0% map intensity so the map is invisible. You can adjust this on the configuration menu"
+            );
           }
         }
       }
     } catch (e) {
       // storage not supported so just continue
-      console.log('Local storage not supported');
+      console.log("Local storage not supported");
     }
   }
 
@@ -286,7 +384,7 @@
     opt.finishOuterRadius = circleSize * (7 / 6);
     opt.startTriangleLength = circleSize * (7 / 6);
     opt.overprintWidth = this.options.courseWidth;
-    opt.font = circleSize + 'pt Arial';
+    opt.font = circleSize + "pt Arial";
     return opt;
   }
 
@@ -303,4 +401,4 @@
   rg2.getDictionaryCode = getDictionaryCode;
   rg2.setLanguageOptions = setLanguageOptions;
   rg2.createLanguageDropdown = createLanguageDropdown;
-}());
+})();
