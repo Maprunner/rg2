@@ -1,7 +1,7 @@
 {
   "name": "rg2",
   "description": "Routegadget 2",
-  "version": "1.10.2",
+  "version": "1.10.3",
   "license": "MIT",
   "repository": "https://github.com/Maprunner/rg2",
   "scripts": {
@@ -14,19 +14,19 @@
   },
   "devDependencies": {
     "@lodder/grunt-postcss": "^3.1.1",
-    "autoprefixer": "^10.4.13",
-    "cssnano": "^5.1.14",
-    "eslint": "^8.32.0",
-    "eslint-config-prettier": "^8.6.0",
-    "grunt": "^1.5.3",
+    "autoprefixer": "^10.4.14",
+    "cssnano": "^5.1.15",
+    "eslint": "^8.45.0",
+    "eslint-config-prettier": "^8.8.0",
+    "grunt": "^1.6.1",
     "grunt-contrib-clean": "^2.0.0",
     "grunt-contrib-uglify": "^5.2.2",
     "grunt-sync": "^0.8.2",
     "grunt-text-replace": "^0.4.0",
     "load-grunt-tasks": "^5.1.0",
-    "prettier": "^2.8.3",
+    "prettier": "^2.8.8",
     "stylelint": "^14.6.1",
-    "stylelint-config-prettier": "^9.0.4",
+    "stylelint-config-prettier": "^9.0.5",
     "stylelint-config-standard": "^29.0.0"
   }
 }
