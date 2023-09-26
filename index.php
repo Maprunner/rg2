@@ -1,15 +1,9 @@
 <?php
-// only needed if using codeception for testing
-// error_reporting(E_ALL);
-// define('C3_CODECOVERAGE_ERROR_LOG_FILE', '/tests/_output/c3_error.log');
-// include 'c3.php';
-// define('MY_APP_STARTED', true);
-
 require(dirname(__FILE__) . '/app/user.php');
 require(dirname(__FILE__) . '/app/utils.php');
 
 // version replaced by Gruntfile as part of release
-define('RG2VERSION', '1.10.3');
+define('RG2VERSION', '2.0.2');
 define("RG_LOG_FILE", dirname(__FILE__) . "/log/rg2log.txt");
 
 if (file_exists(dirname(__FILE__) . '/rg2-config.php')) {
@@ -19,40 +13,24 @@ if (file_exists(dirname(__FILE__) . '/rg2-config.php')) {
   return;
 }
 
-if (defined('UI_THEME')) {
-  $ui_theme = UI_THEME;
+$base = "/rg2/";
+// temporary bodge to get build working
+if ("//localhost" === RG_BASE_DIRECTORY) {
+  $production = false;
 } else {
-  $ui_theme = 'base';
+  $production = true;
 }
 
-if (isset($_GET['debug'])) {
-  $debug = TRUE;
-} else {
-  $debug = FALSE;
-}
-
-if (defined('HEADER_COLOUR')) {
-  $header_colour = HEADER_COLOUR;
-} else {
-  $header_colour = '#002bd9';
-}
-if (defined('HEADER_TEXT_COLOUR')) {
-  $header_text_colour = HEADER_TEXT_COLOUR;
-} else {
-  $header_text_colour = '#ffffff';
-}
-
-$json_url = RG_BASE_DIRECTORY . "/rg2/rg2api.php";
+$api_url = RG_BASE_DIRECTORY . $base . "rg2api.php";
 if (defined('OVERRIDE_SOURCE_DIRECTORY')) {
-  $source_url = OVERRIDE_SOURCE_DIRECTORY . "/rg2";
+  $source_url = OVERRIDE_SOURCE_DIRECTORY . $base;
 } else {
-  $source_url = RG_BASE_DIRECTORY . "/rg2";
+  $source_url = RG_BASE_DIRECTORY . $base;
 }
 
 // messy but works OK for now
 // Overrides work OK on a local server which is what they are intended for
 if (defined('OVERRIDE_KARTAT_DIRECTORY')) {
-  $debug = true;
   $maps_dir = OVERRIDE_KARTAT_DIRECTORY;
   $maps_url = OVERRIDE_KARTAT_DIRECTORY;
 } else {
@@ -76,38 +54,43 @@ if (isset($_GET['manage'])) {
 }
 
 // include language file if requested
-if (isset($_GET['lang'])) {
-  $lang = $_GET['lang'];
+if ((defined('START_LANGUAGE'))) {
+  $lang = START_LANGUAGE;
 } else {
-  if ((defined('START_LANGUAGE'))) {
-    $lang = START_LANGUAGE;
-  } else {
-    $lang = "en";
+  $lang = "en";
+}
+
+// based on https://github.com/firtadokei/codeigniter-vitejs
+if ($production) {
+  $manifestfile = 'manifest.json';
+  $manifest = file_get_contents($manifestfile);
+  $manifest = json_decode($manifest);
+  $jsfiles = "";
+  $cssfiles = "";
+
+  foreach ($manifest as $file) {
+    $fileExtension = substr($file->file, -3, 3);
+    if ($fileExtension === '.js' && isset($file->isEntry) && $file->isEntry === true && (!isset($file->isDynamicEntry) || $file->isDynamicEntry !== true)) {
+      $jsfiles .= '<script type="module" src="' . trim($source_url . $file->file) . '"></script>';
+    }
+
+    if (!empty($file->css)) {
+      foreach ($file->css as $cssFile) {
+        $cssfiles .= '<link rel="stylesheet" href="' . $source_url . $cssFile . '" />';
+      }
+    }
   }
 }
 
 header('Content-type: text/html; charset=utf-8');
 // This forces Siteground to disable its dynamic caching default which does not work for Routegadget
-// May not be needed on your host but definitely needed for routegadget.co.uk
+// since response contents may change even if URL is the same (e.g. start-up config info)
 header('Cache-Control: no-cache');
 
 ?>
 <!DOCTYPE html>
 <html lang="en">
-<?php include 'html/head.html'; ?>
-
-<body>
-  <?php include 'html/header.html'; ?>
-  <noscript>
-    <h3>You have javascript disabled. Routegadget cannot run. Please update your browser configuration.</h3>
-  </noscript>
-  <div id="rg2-container">
-    <?php include 'html/infopanel.html'; ?>
-    <?php include 'html/animation.html'; ?>
-    <?php include 'html/options.html'; ?>
-    <?php include 'html/misc.html'; ?>
-  </div>
-  <?php include 'html/script.html'; ?>
-</body>
+<?php include 'app/html/head.html'; ?>
+<?php include 'app/html/body.html'; ?>
 
 </html>

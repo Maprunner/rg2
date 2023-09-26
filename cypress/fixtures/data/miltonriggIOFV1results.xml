@@ -1,0 +1,5061 @@
+<ResultList xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="IOFData.xsd">
+  <IOFVersion version="1.0" />
+  <Event eventForm="IndSingleDay">
+    <EventId>991a34eb-7527-4173-b8ff-a4edb2969745</EventId>
+    <Name>Milton Rigg</Name>
+    <EventClassificationId type="loc" />
+    <StartDate>
+      <Date dateFormat="YYYY-MM-DD">2014-01-18</Date>
+    </StartDate>
+    <Organiser>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>Border Liners</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+    </Organiser>
+  </Event>
+  <ClassResult>
+    <ClassShortName>Green</ClassShortName>
+    <PersonResult>
+      <Person sex="M">
+        <PersonName>
+          <Family>Lewsley</Family>
+          <Given>Andy</Given>
+        </PersonName>
+        <PersonId type="nat">107271</PersonId>
+        <BirthDate>
+          <Date>1959-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>BL</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>9933912</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:19:01</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>11:47:41</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">28:40</Time>
+        <ResultPosition>1st</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">1:23</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">2:50</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">5:02</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">9:56</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">11:36</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">13:24</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">16:55</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">19:21</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">21:01</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">26:25</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">27:47</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="M">
+        <PersonName>
+          <Family>Hartley</Family>
+          <Given>Alan</Given>
+        </PersonName>
+        <PersonId type="nat">343331</PersonId>
+        <BirthDate>
+          <Date>1974-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>BL</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>1301773</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:05:50</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>11:34:47</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">28:57</Time>
+        <ResultPosition>2nd</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">1:28</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">2:44</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">4:58</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">9:47</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">11:09</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">13:05</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">16:29</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">18:46</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">20:22</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">26:40</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">27:59</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="M">
+        <PersonName>
+          <Family>Davies</Family>
+          <Given>Jeff Powell</Given>
+        </PersonName>
+        <PersonId type="nat">413841</PersonId>
+        <BirthDate>
+          <Date>1993-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>BL</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>407367</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>12:05:48</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>12:35:10</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">29:22</Time>
+        <ResultPosition>3rd</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">1:20</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">2:44</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">5:03</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">9:33</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">10:48</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">12:29</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">15:50</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">17:58</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">19:30</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">26:59</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">28:24</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="M">
+        <PersonName>
+          <Family>Simpson</Family>
+          <Given>Scott</Given>
+        </PersonName>
+        <PersonId type="nat">
+        </PersonId>
+        <BirthDate>
+          <Date>1979-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>BL</ShortName>
+        <CountryId value="other" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>339724</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:02:33</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>11:34:33</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">32:00</Time>
+        <ResultPosition>4th=</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">1:54</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">3:23</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">5:40</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">10:21</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">12:02</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">13:30</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">17:01</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">19:13</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">20:49</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">30:05</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">31:13</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="F">
+        <PersonName>
+          <Family>Brown</Family>
+          <Given>Emily</Given>
+        </PersonName>
+        <PersonId type="nat">448224</PersonId>
+        <BirthDate>
+          <Date>1998-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>BL</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>221195</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:11:39</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>11:43:39</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">32:00</Time>
+        <ResultPosition>4th=</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">1:23</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">2:46</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">5:18</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">10:48</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">12:12</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">14:00</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">17:53</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">20:24</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">22:39</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">29:22</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">30:55</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="M">
+        <PersonName>
+          <Family>Bennett</Family>
+          <Given>Adan</Given>
+        </PersonName>
+        <PersonId type="nat">
+        </PersonId>
+        <BirthDate>
+          <Date>1974-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>BL</ShortName>
+        <CountryId value="other" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>342186</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:25:02</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>11:57:18</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">32:16</Time>
+        <ResultPosition>6th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">1:27</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">3:01</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">5:58</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">10:56</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">12:43</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">14:30</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">18:07</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">20:48</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">22:59</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">29:43</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">31:30</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="M">
+        <PersonName>
+          <Family>Valentine</Family>
+          <Given>Colin</Given>
+        </PersonName>
+        <PersonId type="nat">648331</PersonId>
+        <BirthDate>
+          <Date>1964-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>WCOC</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>337404</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>10:58:32</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>11:31:12</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">32:40</Time>
+        <ResultPosition>7th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">1:34</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">2:48</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">4:55</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">10:39</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">11:57</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">13:34</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">17:24</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">19:48</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">21:32</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">27:04</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">31:28</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="M">
+        <PersonName>
+          <Family>Parker</Family>
+          <Given>Stuart</Given>
+        </PersonName>
+        <PersonId type="nat">
+        </PersonId>
+        <BirthDate>
+          <Date>1969-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>WAROC</ShortName>
+        <CountryId value="other" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>11132</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:46:12</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>12:19:48</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">33:36</Time>
+        <ResultPosition>8th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">1:43</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">3:18</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">5:41</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">10:43</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">12:17</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">14:00</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">17:26</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">19:56</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">21:47</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">31:00</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">32:34</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="M">
+        <PersonName>
+          <Family>Docton</Family>
+          <Given>Alex</Given>
+        </PersonName>
+        <PersonId type="nat">
+        </PersonId>
+        <BirthDate>
+          <Date>1974-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>
+        </ShortName>
+        <CountryId value="other" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>342185</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:10:03</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>11:43:44</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">33:41</Time>
+        <ResultPosition>9th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">1:27</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">3:00</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">5:39</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">11:26</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">13:27</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">15:30</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">20:18</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">23:24</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">25:23</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">31:16</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">32:44</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="F">
+        <PersonName>
+          <Family>Lewsley</Family>
+          <Given>Stella</Given>
+        </PersonName>
+        <PersonId type="nat">
+        </PersonId>
+        <BirthDate>
+          <Date>1954-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>BL</ShortName>
+        <CountryId value="other" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>9933948</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:09:40</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>11:43:52</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">34:12</Time>
+        <ResultPosition>10th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">1:52</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">3:25</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">5:58</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">13:08</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">14:48</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">16:47</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">20:48</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">23:52</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">25:42</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">31:35</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">33:11</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="M">
+        <PersonName>
+          <Family>Murgatroyd</Family>
+          <Given>Alastair</Given>
+        </PersonName>
+        <PersonId type="nat">
+        </PersonId>
+        <BirthDate>
+          <Date>1994-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>SOLWAY</ShortName>
+        <CountryId value="other" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>342184</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:17:35</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>11:52:33</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">34:58</Time>
+        <ResultPosition>11th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">1:22</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">2:55</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">5:08</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">9:34</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">11:28</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">13:14</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">18:27</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">22:32</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">24:49</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">32:21</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">33:59</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="M">
+        <PersonName>
+          <Family>Murgatroyd</Family>
+          <Given>Ian</Given>
+        </PersonName>
+        <PersonId type="nat">
+        </PersonId>
+        <BirthDate>
+          <Date>1964-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>SOLWAY</ShortName>
+        <CountryId value="other" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>342183</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:14:52</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>11:50:15</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">35:23</Time>
+        <ResultPosition>12th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">2:05</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">4:35</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">7:05</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">12:24</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">14:15</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">16:18</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">21:16</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">24:15</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">26:08</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">32:29</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">34:20</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="M">
+        <PersonName>
+          <Family>Ryan</Family>
+          <Given>Paul</Given>
+        </PersonName>
+        <PersonId type="nat">
+        </PersonId>
+        <BirthDate>
+          <Date>1979-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>BL</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>1401155</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:49:02</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>12:25:15</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">36:13</Time>
+        <ResultPosition>13th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">1:24</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">2:47</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">5:15</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">11:09</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">13:01</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">15:31</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">19:24</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">21:48</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">24:39</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">34:00</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">35:30</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="F">
+        <PersonName>
+          <Family>Goulding</Family>
+          <Given>Christine</Given>
+        </PersonName>
+        <PersonId type="nat">468387</PersonId>
+        <BirthDate>
+          <Date>1964-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>BL</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>423531</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:38:29</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>12:14:44</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">36:15</Time>
+        <ResultPosition>14th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">1:42</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">3:07</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">5:33</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">10:30</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">12:08</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">14:03</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">22:54</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">25:36</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">28:08</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">33:48</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">35:19</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="F">
+        <PersonName>
+          <Family>Thompson</Family>
+          <Given>Debbie</Given>
+        </PersonName>
+        <PersonId type="nat">350031</PersonId>
+        <BirthDate>
+          <Date>1959-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>BL</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>9714106</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:48:19</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>12:25:05</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">36:46</Time>
+        <ResultPosition>15th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">1:53</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">3:34</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">6:16</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">12:27</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">14:18</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">16:26</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">20:56</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">23:40</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">25:51</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">33:29</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">35:38</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="M">
+        <PersonName>
+          <Family>Harling</Family>
+          <Given>Toby</Given>
+        </PersonName>
+        <PersonId type="nat" />
+        <BirthDate>
+          <Date>1979-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>
+        </ShortName>
+        <CountryId value="other" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>220494</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:31:56</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>12:09:30</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">37:34</Time>
+        <ResultPosition>16th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">1:43</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">3:14</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">6:07</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">10:50</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">12:33</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">14:58</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">21:20</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">23:19</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">25:21</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">34:05</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">36:43</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="F">
+        <PersonName>
+          <Family>Berry</Family>
+          <Given>Isabel</Given>
+        </PersonName>
+        <PersonId type="nat">
+        </PersonId>
+        <BirthDate>
+          <Date>1993-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>BL</ShortName>
+        <CountryId value="other" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>339726</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:30:46</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>12:09:28</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">38:42</Time>
+        <ResultPosition>17th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">1:51</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">3:39</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">6:42</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">12:14</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">14:09</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">16:34</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">21:57</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">24:27</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">26:35</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">35:07</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">37:51</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="M">
+        <PersonName>
+          <Family>McQuillen</Family>
+          <Given>Dave</Given>
+        </PersonName>
+        <PersonId type="nat">100601</PersonId>
+        <BirthDate>
+          <Date>1944-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>SOLWAY</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>12505</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>10:54:36</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>11:33:41</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">39:05</Time>
+        <ResultPosition>18th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">2:11</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">4:57</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">7:51</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">14:02</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">16:02</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">18:17</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">22:34</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">27:06</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">29:05</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">36:08</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">38:10</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="M">
+        <PersonName>
+          <Family>Lates</Family>
+          <Given>Chris</Given>
+        </PersonName>
+        <PersonId type="nat">117031</PersonId>
+        <BirthDate>
+          <Date>1944-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>BL</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>12537</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:04:50</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>11:43:58</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">39:08</Time>
+        <ResultPosition>19th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">1:47</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">3:57</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">6:38</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">12:10</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">13:52</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">15:53</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">21:33</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">24:20</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">27:34</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">35:47</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">38:11</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="F">
+        <PersonName>
+          <Family>Osborn</Family>
+          <Given>Rachel</Given>
+        </PersonName>
+        <PersonId type="nat">922877</PersonId>
+        <BirthDate>
+          <Date>1974-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>WAROC</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>2049829</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:39:54</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>12:19:39</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">39:45</Time>
+        <ResultPosition>20th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">2:33</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">4:37</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">7:58</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">14:55</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">17:08</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">19:17</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">23:57</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">27:03</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">29:25</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">36:45</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">38:45</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="M">
+        <PersonName>
+          <Family>Wren</Family>
+          <Given>Raymond</Given>
+        </PersonName>
+        <PersonId type="nat">223741</PersonId>
+        <BirthDate>
+          <Date>1949-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>BL</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>516651</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:25:49</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>12:06:25</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">40:36</Time>
+        <ResultPosition>21st</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">2:13</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">4:03</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">6:36</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">12:56</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">14:41</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">18:12</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">22:01</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">25:24</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">27:28</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">35:14</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">39:37</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="M">
+        <PersonName>
+          <Family>Williams</Family>
+          <Given>Paul</Given>
+        </PersonName>
+        <PersonId type="nat">
+        </PersonId>
+        <BirthDate>
+          <Date>1954-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>BL</ShortName>
+        <CountryId value="other" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>342182</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>10:57:50</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>11:39:21</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">41:31</Time>
+        <ResultPosition>22nd</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">2:01</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">3:57</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">6:48</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">14:33</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">16:36</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">18:45</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">24:03</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">27:06</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">29:34</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">38:07</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">40:27</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="M">
+        <PersonName>
+          <Family>Garvey</Family>
+          <Given>Gerry</Given>
+        </PersonName>
+        <PersonId type="nat">393097</PersonId>
+        <BirthDate>
+          <Date>1969-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>BL</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>2036644</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>10:08:02</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>10:51:22</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">43:20</Time>
+        <ResultPosition>23rd</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">1:35</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">3:24</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">6:31</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">14:00</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">16:47</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">19:35</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">25:47</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">28:54</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">31:09</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">39:59</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">42:26</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="M">
+        <PersonName>
+          <Family>Suddaby</Family>
+          <Given>Andrew</Given>
+        </PersonName>
+        <PersonId type="nat">117011</PersonId>
+        <BirthDate>
+          <Date>1939-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>BL</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>11753</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>10:56:36</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>11:40:06</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">43:30</Time>
+        <ResultPosition>24th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">3:00</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">4:46</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">8:10</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">15:36</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">17:57</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">20:16</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">25:21</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">28:40</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">31:04</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">40:15</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">42:19</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="M">
+        <PersonName>
+          <Family>Nichols</Family>
+          <Given>Philip</Given>
+        </PersonName>
+        <PersonId type="nat">165221</PersonId>
+        <BirthDate>
+          <Date>1959-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>BL</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>2046406</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>10:42:26</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>11:26:49</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">44:23</Time>
+        <ResultPosition>25th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">1:54</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">4:09</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">7:46</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">15:30</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">17:51</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">20:27</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">26:21</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">29:41</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">32:15</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">41:07</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">43:11</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="M">
+        <PersonName>
+          <Family>Nisbet</Family>
+          <Given>Dougie</Given>
+        </PersonName>
+        <PersonId type="nat">514171</PersonId>
+        <BirthDate>
+          <Date>1964-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>NN</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>9514172</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:32:09</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>12:17:57</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">45:48</Time>
+        <ResultPosition>26th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">2:29</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">5:02</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">8:27</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">14:21</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">16:20</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">18:33</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">28:27</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">31:40</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">34:38</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">41:13</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">44:51</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="M">
+        <PersonName>
+          <Family>O'Donoghue</Family>
+          <Given>Tim</Given>
+        </PersonName>
+        <PersonId type="nat">366601</PersonId>
+        <BirthDate>
+          <Date>1954-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>SOLWAY</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>33173</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:29:10</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>12:15:02</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">45:52</Time>
+        <ResultPosition>27th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">1:46</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">3:38</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">6:09</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">15:26</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">17:08</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">19:08</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">23:16</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">25:55</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">37:44</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">43:23</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">44:57</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="F">
+        <PersonName>
+          <Family>Wren</Family>
+          <Given>Jenny</Given>
+        </PersonName>
+        <PersonId type="nat">223742</PersonId>
+        <BirthDate>
+          <Date>1954-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>BL</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>33229</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:31:38</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>12:17:32</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">45:54</Time>
+        <ResultPosition>28th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">1:55</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">4:03</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">6:42</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">18:17</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">19:50</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">22:10</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">26:46</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">29:49</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">31:55</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">39:33</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">44:54</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="F">
+        <PersonName>
+          <Family>Bradshaw</Family>
+          <Given>Judith</Given>
+        </PersonName>
+        <PersonId type="nat">
+        </PersonId>
+        <BirthDate>
+          <Date>1974-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>
+        </ShortName>
+        <CountryId value="other" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>13539</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:31:26</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>12:20:50</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">49:24</Time>
+        <ResultPosition>29th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">2:57</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">5:34</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">9:20</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">16:11</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">19:06</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">21:54</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">27:51</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">32:11</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">35:48</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">45:44</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">48:05</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="F">
+        <PersonName>
+          <Family>O'Donoghue</Family>
+          <Given>Ailsa</Given>
+        </PersonName>
+        <PersonId type="nat">366603</PersonId>
+        <BirthDate>
+          <Date>1998-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>SOLWAY</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>335233</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:23:52</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>12:13:17</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">49:25</Time>
+        <ResultPosition>30th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">2:25</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">4:10</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">7:59</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">17:49</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">20:35</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">23:23</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">29:06</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">32:45</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">35:45</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">45:40</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">47:58</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="M">
+        <PersonName>
+          <Family>Armer</Family>
+          <Given>Geoff</Given>
+        </PersonName>
+        <PersonId type="nat">184281</PersonId>
+        <BirthDate>
+          <Date>1949-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>BL</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>221449</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:52:12</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>12:42:11</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">49:59</Time>
+        <ResultPosition>31st</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">2:31</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">4:48</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">8:34</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">16:07</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">18:52</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">21:47</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">29:22</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">33:11</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">36:10</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">46:23</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">48:45</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="F">
+        <PersonName>
+          <Family>Clay</Family>
+          <Given>Penny</Given>
+        </PersonName>
+        <PersonId type="nat" />
+        <BirthDate>
+          <Date>1969-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>
+        </ShortName>
+        <CountryId value="other" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>11758</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:53:20</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>12:44:08</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">50:48</Time>
+        <ResultPosition>32nd</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">2:45</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">4:36</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">7:42</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">14:29</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">16:28</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">19:16</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">24:48</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">28:20</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">37:04</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">47:42</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">49:44</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="M">
+        <PersonName>
+          <Family>Whitworth</Family>
+          <Given>Dick</Given>
+        </PersonName>
+        <PersonId type="nat">116981</PersonId>
+        <BirthDate>
+          <Date>1939-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>BL</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>11784</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>10:49:39</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>11:40:45</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">51:06</Time>
+        <ResultPosition>33rd</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">2:13</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">4:50</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">9:17</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">17:37</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">20:55</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">23:54</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">32:01</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">35:28</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">38:20</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">47:34</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">49:45</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="F">
+        <PersonName>
+          <Family>Bruce</Family>
+          <Given>Sarah</Given>
+        </PersonName>
+        <PersonId type="nat" />
+        <BirthDate>
+          <Date>1974-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>
+        </ShortName>
+        <CountryId value="other" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>886728</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:47:14</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>12:39:49</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">52:35</Time>
+        <ResultPosition>34th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">2:33</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">6:27</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">9:45</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">17:12</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">20:15</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">23:06</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">29:45</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">33:31</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">36:18</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">49:18</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">51:30</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="F">
+        <PersonName>
+          <Family>Blackburn</Family>
+          <Given>Karen</Given>
+        </PersonName>
+        <PersonId type="nat">109381</PersonId>
+        <BirthDate>
+          <Date>1949-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>BL</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>410990</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>10:53:32</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>11:46:13</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">52:41</Time>
+        <ResultPosition>35th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">2:18</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">6:27</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">9:50</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">19:19</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">22:19</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">25:12</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">31:08</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">34:57</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">37:36</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">48:33</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">51:09</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="F">
+        <PersonName>
+          <Family>Smith</Family>
+          <Given>Judith</Given>
+        </PersonName>
+        <PersonId type="nat">430021</PersonId>
+        <BirthDate>
+          <Date>1993-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>BL</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>770770</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:47:37</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>12:42:42</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">55:05</Time>
+        <ResultPosition>36th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">2:31</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">4:36</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">7:20</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">15:09</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">17:51</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">22:37</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">32:38</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">35:54</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">39:02</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">51:10</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">53:53</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="M">
+        <PersonName>
+          <Family>Stansfield</Family>
+          <Given>Robin</Given>
+        </PersonName>
+        <PersonId type="nat">129351</PersonId>
+        <BirthDate>
+          <Date>1944-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>BL</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>202242</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:14:02</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>12:12:56</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">58:54</Time>
+        <ResultPosition>37th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">2:25</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">4:44</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">9:13</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">16:27</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">18:55</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">21:59</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">28:39</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">32:52</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">35:41</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">54:24</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">57:09</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="F">
+        <PersonName>
+          <Family>O'Donoghue</Family>
+          <Given>Helen</Given>
+        </PersonName>
+        <PersonId type="nat">366602</PersonId>
+        <BirthDate>
+          <Date>1964-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>SOLWAY</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>33194</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:27:18</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>12:27:25</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">60:07</Time>
+        <ResultPosition>38th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">2:36</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">5:09</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">9:05</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">23:40</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">26:57</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">30:03</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">37:05</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">41:58</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">45:17</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">55:32</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">58:24</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="F">
+        <PersonName>
+          <Family>McDonald</Family>
+          <Given>Fran</Given>
+        </PersonName>
+        <PersonId type="nat">385291</PersonId>
+        <BirthDate>
+          <Date>1954-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>WCOC</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>11787</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:12:15</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>12:13:35</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">61:20</Time>
+        <ResultPosition>39th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">2:29</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">6:29</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">10:57</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">19:23</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">22:20</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">25:02</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">33:12</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">43:23</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">46:45</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">57:23</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">60:01</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="M">
+        <PersonName>
+          <Family>Beverley</Family>
+          <Given>Steve</Given>
+        </PersonName>
+        <PersonId type="nat">
+        </PersonId>
+        <BirthDate>
+          <Date>1954-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>NATO</ShortName>
+        <CountryId value="other" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>2049771</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:26:17</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>12:28:42</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">62:25</Time>
+        <ResultPosition>40th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">2:16</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">4:40</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">8:47</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">17:12</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">20:07</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">22:22</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">27:47</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">31:21</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">40:53</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">58:52</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">61:15</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="F">
+        <PersonName>
+          <Family>Rafferty</Family>
+          <Given>Helen</Given>
+        </PersonName>
+        <PersonId type="nat">424681</PersonId>
+        <BirthDate>
+          <Date>1944-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>NATO</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>32971</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:22:32</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>12:28:01</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">65:29</Time>
+        <ResultPosition>41st</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">3:03</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">6:11</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">11:14</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">20:49</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">24:13</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">28:19</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">39:06</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">43:42</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">47:11</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">61:10</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">63:58</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="F">
+        <PersonName>
+          <Family>Evans</Family>
+          <Given>Anita</Given>
+        </PersonName>
+        <PersonId type="nat">460662</PersonId>
+        <BirthDate>
+          <Date>1954-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>BL</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>424389</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:18:18</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>12:29:40</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">71:22</Time>
+        <ResultPosition>42nd</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">2:29</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">5:11</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">9:38</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">29:48</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">32:16</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">35:18</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">43:01</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">47:25</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">50:57</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">66:55</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">69:42</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="F">
+        <PersonName>
+          <Family>Whitworth</Family>
+          <Given>Angela</Given>
+        </PersonName>
+        <PersonId type="nat">116982</PersonId>
+        <BirthDate>
+          <Date>1944-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>BL</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>11785</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>10:56:47</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>12:13:48</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">77:01</Time>
+        <ResultPosition>43rd</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">3:32</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">6:34</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">11:20</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">24:48</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">28:00</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">32:10</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">44:38</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">50:55</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">54:27</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">71:00</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">75:01</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="F">
+        <PersonName>
+          <Family>Stewart</Family>
+          <Given>Alison</Given>
+        </PersonName>
+        <PersonId type="nat">
+        </PersonId>
+        <BirthDate>
+          <Date>1964-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>
+        </ShortName>
+        <CountryId value="other" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>339731</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:53:25</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>13:11:13</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">77:48</Time>
+        <ResultPosition>44th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">2:49</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>105</ControlCode>
+          <Time timeFormat="MMM:SS">6:58</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">11:46</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>109</ControlCode>
+          <Time timeFormat="MMM:SS">19:33</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>112</ControlCode>
+          <Time timeFormat="MMM:SS">23:07</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>107</ControlCode>
+          <Time timeFormat="MMM:SS">25:56</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>114</ControlCode>
+          <Time timeFormat="MMM:SS">35:03</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">40:19</Time>
+        </SplitTime>
+        <SplitTime sequence="9">
+          <ControlCode>108</ControlCode>
+          <Time timeFormat="MMM:SS">50:50</Time>
+        </SplitTime>
+        <SplitTime sequence="10">
+          <ControlCode>110</ControlCode>
+          <Time timeFormat="MMM:SS">73:01</Time>
+        </SplitTime>
+        <SplitTime sequence="11">
+          <ControlCode>111</ControlCode>
+          <Time timeFormat="MMM:SS">76:41</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+  </ClassResult>
+  <ClassResult>
+    <ClassShortName>Orange</ClassShortName>
+    <PersonResult>
+      <Person sex="M">
+        <PersonName>
+          <Family>Rawle</Family>
+          <Given>David</Given>
+        </PersonName>
+        <PersonId type="nat">189905</PersonId>
+        <BirthDate>
+          <Date>1969-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>BL</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>2061127</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:05:56</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>11:22:31</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">16:35</Time>
+        <ResultPosition>1st</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>115</ControlCode>
+          <Time timeFormat="MMM:SS">1:27</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>101</ControlCode>
+          <Time timeFormat="MMM:SS">4:19</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>113</ControlCode>
+          <Time timeFormat="MMM:SS">6:13</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">8:07</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>103</ControlCode>
+          <Time timeFormat="MMM:SS">10:32</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">11:18</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">14:45</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="F">
+        <PersonName>
+          <Family>Hazelhurst</Family>
+          <Given>Laura</Given>
+        </PersonName>
+        <PersonId type="nat">
+        </PersonId>
+        <BirthDate>
+          <Date>2004-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>BL</ShortName>
+        <CountryId value="other" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>13531</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>12:02:30</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>12:21:39</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">19:09</Time>
+        <ResultPosition>2nd</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>115</ControlCode>
+          <Time timeFormat="MMM:SS">1:12</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>101</ControlCode>
+          <Time timeFormat="MMM:SS">4:28</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>113</ControlCode>
+          <Time timeFormat="MMM:SS">7:10</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">9:43</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>103</ControlCode>
+          <Time timeFormat="MMM:SS">13:09</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">14:07</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">17:45</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="M">
+        <PersonName>
+          <Family>Glencross</Family>
+          <Given>Stuart</Given>
+        </PersonName>
+        <PersonId type="nat">
+        </PersonId>
+        <BirthDate>
+          <Date>1993-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>BL</ShortName>
+        <CountryId value="other" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>339721</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:02:50</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>11:24:23</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">21:33</Time>
+        <ResultPosition>3rd</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>115</ControlCode>
+          <Time timeFormat="MMM:SS">1:13</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>101</ControlCode>
+          <Time timeFormat="MMM:SS">4:16</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>113</ControlCode>
+          <Time timeFormat="MMM:SS">7:44</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">10:04</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>103</ControlCode>
+          <Time timeFormat="MMM:SS">12:51</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">14:38</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">19:28</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="F">
+        <PersonName>
+          <Family>Docton</Family>
+          <Given>Sally</Given>
+        </PersonName>
+        <PersonId type="nat">
+        </PersonId>
+        <BirthDate>
+          <Date>2001-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>
+        </ShortName>
+        <CountryId value="other" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>342187</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:09:58</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>11:31:59</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">22:01</Time>
+        <ResultPosition>4th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>115</ControlCode>
+          <Time timeFormat="MMM:SS">1:10</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>101</ControlCode>
+          <Time timeFormat="MMM:SS">4:29</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>113</ControlCode>
+          <Time timeFormat="MMM:SS">6:35</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">9:12</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>103</ControlCode>
+          <Time timeFormat="MMM:SS">12:43</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">14:15</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">19:06</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="M">
+        <PersonName>
+          <Family>Ryan</Family>
+          <Given>James</Given>
+        </PersonName>
+        <PersonId type="nat">
+        </PersonId>
+        <BirthDate>
+          <Date>2002-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>
+        </ShortName>
+        <CountryId value="other" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>13537</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:45:23</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>12:10:38</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">25:15</Time>
+        <ResultPosition>5th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>115</ControlCode>
+          <Time timeFormat="MMM:SS">2:52</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>101</ControlCode>
+          <Time timeFormat="MMM:SS">7:03</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>113</ControlCode>
+          <Time timeFormat="MMM:SS">9:18</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">11:43</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>103</ControlCode>
+          <Time timeFormat="MMM:SS">14:27</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">14:28</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">23:31</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="F">
+        <PersonName>
+          <Family>O'Donoghue</Family>
+          <Given>Isla</Given>
+        </PersonName>
+        <PersonId type="nat">366604</PersonId>
+        <BirthDate>
+          <Date>2002-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>SOLWAY</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>424434</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:23:36</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>11:49:30</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">25:54</Time>
+        <ResultPosition>6th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>115</ControlCode>
+          <Time timeFormat="MMM:SS">1:22</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>101</ControlCode>
+          <Time timeFormat="MMM:SS">5:42</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>113</ControlCode>
+          <Time timeFormat="MMM:SS">9:19</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">11:53</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>103</ControlCode>
+          <Time timeFormat="MMM:SS">15:25</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">16:56</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">22:41</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="F">
+        <PersonName>
+          <Family>Beverley</Family>
+          <Given>Sarah</Given>
+        </PersonName>
+        <PersonId type="nat">
+        </PersonId>
+        <BirthDate>
+          <Date>1959-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>NATO</ShortName>
+        <CountryId value="other" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>342189</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:26:22</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>11:52:41</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">26:19</Time>
+        <ResultPosition>7th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>115</ControlCode>
+          <Time timeFormat="MMM:SS">1:26</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>101</ControlCode>
+          <Time timeFormat="MMM:SS">4:56</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>113</ControlCode>
+          <Time timeFormat="MMM:SS">7:07</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">9:41</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>103</ControlCode>
+          <Time timeFormat="MMM:SS">13:26</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">15:08</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">23:47</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="F">
+        <PersonName>
+          <Family>McQuillen</Family>
+          <Given>Jane</Given>
+        </PersonName>
+        <PersonId type="nat">100602</PersonId>
+        <BirthDate>
+          <Date>1944-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>SOLWAY</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>12501</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>10:56:20</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>11:23:49</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">27:29</Time>
+        <ResultPosition>8th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>115</ControlCode>
+          <Time timeFormat="MMM:SS">1:27</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>101</ControlCode>
+          <Time timeFormat="MMM:SS">5:42</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>113</ControlCode>
+          <Time timeFormat="MMM:SS">8:27</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">11:38</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>103</ControlCode>
+          <Time timeFormat="MMM:SS">15:21</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">16:42</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">24:48</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="F">
+        <PersonName>
+          <Family>Pennell</Family>
+          <Given>Marguerite</Given>
+        </PersonName>
+        <PersonId type="nat">117591</PersonId>
+        <BirthDate>
+          <Date>1944-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>WCOC</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>260175</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:55:23</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>12:24:04</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">28:41</Time>
+        <ResultPosition>9th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>115</ControlCode>
+          <Time timeFormat="MMM:SS">2:31</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>101</ControlCode>
+          <Time timeFormat="MMM:SS">7:27</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>113</ControlCode>
+          <Time timeFormat="MMM:SS">10:54</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">14:14</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>103</ControlCode>
+          <Time timeFormat="MMM:SS">18:40</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">19:57</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">25:59</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="F">
+        <PersonName>
+          <Family>Lewsley</Family>
+          <Given>Oban</Given>
+        </PersonName>
+        <PersonId type="nat">107273</PersonId>
+        <BirthDate>
+          <Date>1994-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>BL</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>400835</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:17:02</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>11:47:00</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">29:58</Time>
+        <ResultPosition>10th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>115</ControlCode>
+          <Time timeFormat="MMM:SS">1:47</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>101</ControlCode>
+          <Time timeFormat="MMM:SS">6:21</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>113</ControlCode>
+          <Time timeFormat="MMM:SS">9:27</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">12:52</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>103</ControlCode>
+          <Time timeFormat="MMM:SS">16:46</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">18:00</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">26:34</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="F">
+        <PersonName>
+          <Family>Hawker</Family>
+          <Given>Sue</Given>
+        </PersonName>
+        <PersonId type="nat">202302</PersonId>
+        <BirthDate>
+          <Date>1969-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>BL</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>223251</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>10:57:13</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>11:27:53</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">30:40</Time>
+        <ResultPosition>11th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>115</ControlCode>
+          <Time timeFormat="MMM:SS">1:57</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>101</ControlCode>
+          <Time timeFormat="MMM:SS">7:03</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>113</ControlCode>
+          <Time timeFormat="MMM:SS">10:37</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">14:13</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>103</ControlCode>
+          <Time timeFormat="MMM:SS">18:56</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">20:28</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">27:22</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="M">
+        <PersonName>
+          <Family>Else</Family>
+          <Given>Steve Mills &amp; Rachel</Given>
+        </PersonName>
+        <PersonId type="nat">
+        </PersonId>
+        <BirthDate>
+          <Date>1993-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>
+        </ShortName>
+        <CountryId value="other" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>339722</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:03:43</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>11:35:21</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">31:38</Time>
+        <ResultPosition>12th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>115</ControlCode>
+          <Time timeFormat="MMM:SS">2:07</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>101</ControlCode>
+          <Time timeFormat="MMM:SS">10:26</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>113</ControlCode>
+          <Time timeFormat="MMM:SS">13:43</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">16:52</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>103</ControlCode>
+          <Time timeFormat="MMM:SS">20:57</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">23:27</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">28:53</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person>
+        <PersonName>
+          <Family>Family</Family>
+          <Given>Harding</Given>
+        </PersonName>
+        <PersonId type="nat">
+        </PersonId>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>
+        </ShortName>
+        <CountryId value="other" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>342190</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:43:14</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>12:15:20</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">32:06</Time>
+        <ResultPosition>13th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>115</ControlCode>
+          <Time timeFormat="MMM:SS">1:22</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>101</ControlCode>
+          <Time timeFormat="MMM:SS">5:13</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>113</ControlCode>
+          <Time timeFormat="MMM:SS">8:28</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">12:31</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>103</ControlCode>
+          <Time timeFormat="MMM:SS">17:41</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">19:29</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">28:22</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person>
+        <PersonName>
+          <Family>Family</Family>
+          <Given>Rodley</Given>
+        </PersonName>
+        <PersonId type="nat">
+        </PersonId>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>
+        </ShortName>
+        <CountryId value="other" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>342188</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:23:46</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>11:58:18</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">34:32</Time>
+        <ResultPosition>14th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>115</ControlCode>
+          <Time timeFormat="MMM:SS">2:31</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>101</ControlCode>
+          <Time timeFormat="MMM:SS">7:06</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>113</ControlCode>
+          <Time timeFormat="MMM:SS">10:50</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">15:08</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>103</ControlCode>
+          <Time timeFormat="MMM:SS">20:24</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">22:10</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">31:13</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="M">
+        <PersonName>
+          <Family>Smith</Family>
+          <Given>Ian</Given>
+        </PersonName>
+        <PersonId type="nat">
+        </PersonId>
+        <BirthDate>
+          <Date>1934-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>NATO</ShortName>
+        <CountryId value="other" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>339725</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:08:56</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>11:44:55</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">35:59</Time>
+        <ResultPosition>15th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>115</ControlCode>
+          <Time timeFormat="MMM:SS">1:57</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>101</ControlCode>
+          <Time timeFormat="MMM:SS">6:50</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>113</ControlCode>
+          <Time timeFormat="MMM:SS">9:57</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">14:00</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>103</ControlCode>
+          <Time timeFormat="MMM:SS">19:20</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">24:20</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">32:22</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="F">
+        <PersonName>
+          <Family>Nichols</Family>
+          <Given>Esther</Given>
+        </PersonName>
+        <PersonId type="nat">
+        </PersonId>
+        <BirthDate>
+          <Date>1964-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>
+        </ShortName>
+        <CountryId value="other" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>339729</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:42:43</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>12:19:18</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">36:35</Time>
+        <ResultPosition>16th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>115</ControlCode>
+          <Time timeFormat="MMM:SS">2:00</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>101</ControlCode>
+          <Time timeFormat="MMM:SS">7:56</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>113</ControlCode>
+          <Time timeFormat="MMM:SS">12:09</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">16:31</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>103</ControlCode>
+          <Time timeFormat="MMM:SS">22:51</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">24:56</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">32:54</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="F">
+        <PersonName>
+          <Family>Marshall</Family>
+          <Given>Roberta</Given>
+        </PersonName>
+        <PersonId type="nat">451265</PersonId>
+        <BirthDate>
+          <Date>1959-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>NN</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>9451265</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:32:06</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>12:11:13</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">39:07</Time>
+        <ResultPosition>17th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>115</ControlCode>
+          <Time timeFormat="MMM:SS">4:07</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>101</ControlCode>
+          <Time timeFormat="MMM:SS">9:13</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>113</ControlCode>
+          <Time timeFormat="MMM:SS">12:52</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">17:16</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>103</ControlCode>
+          <Time timeFormat="MMM:SS">22:58</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">24:59</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">35:10</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="F">
+        <PersonName>
+          <Family>Lates</Family>
+          <Given>Helen</Given>
+        </PersonName>
+        <PersonId type="nat">117032</PersonId>
+        <BirthDate>
+          <Date>1944-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>BL</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>12528</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:14:20</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>11:58:14</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">43:54</Time>
+        <ResultPosition>18th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>115</ControlCode>
+          <Time timeFormat="MMM:SS">2:53</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>101</ControlCode>
+          <Time timeFormat="MMM:SS">9:34</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>113</ControlCode>
+          <Time timeFormat="MMM:SS">13:53</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">19:54</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>103</ControlCode>
+          <Time timeFormat="MMM:SS">27:27</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">30:02</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">39:32</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="F">
+        <PersonName>
+          <Family>Low</Family>
+          <Given>Catherine Gossan</Given>
+        </PersonName>
+        <PersonId type="nat">448223</PersonId>
+        <BirthDate>
+          <Date>1974-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>
+        </ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>410814</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:11:42</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>11:57:40</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">45:58</Time>
+        <ResultPosition>19th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>115</ControlCode>
+          <Time timeFormat="MMM:SS">2:36</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>101</ControlCode>
+          <Time timeFormat="MMM:SS">8:02</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>113</ControlCode>
+          <Time timeFormat="MMM:SS">12:50</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">16:52</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>103</ControlCode>
+          <Time timeFormat="MMM:SS">23:34</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">34:05</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">41:52</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="F">
+        <PersonName>
+          <Family>Suddaby</Family>
+          <Given>Judy</Given>
+        </PersonName>
+        <PersonId type="nat">117012</PersonId>
+        <BirthDate>
+          <Date>1944-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>BL</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>11754</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>10:51:44</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>11:43:06</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">51:22</Time>
+        <ResultPosition>20th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>115</ControlCode>
+          <Time timeFormat="MMM:SS">2:51</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>101</ControlCode>
+          <Time timeFormat="MMM:SS">10:52</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>113</ControlCode>
+          <Time timeFormat="MMM:SS">15:32</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">21:15</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>103</ControlCode>
+          <Time timeFormat="MMM:SS">28:44</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">32:48</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">44:00</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="M">
+        <PersonName>
+          <Family>Mainwaring</Family>
+          <Given>Alan</Given>
+        </PersonName>
+        <PersonId type="nat">
+        </PersonId>
+        <BirthDate>
+          <Date>1939-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>BL</ShortName>
+        <CountryId value="other" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>13533</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>12:01:51</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>12:57:28</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">55:37</Time>
+        <ResultPosition>21st</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>115</ControlCode>
+          <Time timeFormat="MMM:SS">2:31</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>101</ControlCode>
+          <Time timeFormat="MMM:SS">8:38</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>113</ControlCode>
+          <Time timeFormat="MMM:SS">20:20</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>102</ControlCode>
+          <Time timeFormat="MMM:SS">25:08</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>103</ControlCode>
+          <Time timeFormat="MMM:SS">30:55</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>106</ControlCode>
+          <Time timeFormat="MMM:SS">34:02</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>104</ControlCode>
+          <Time timeFormat="MMM:SS">50:12</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+  </ClassResult>
+  <ClassResult>
+    <ClassShortName>White</ClassShortName>
+    <PersonResult>
+      <Person sex="M">
+        <PersonName>
+          <Family>Hadry</Family>
+          <Given>Charlie</Given>
+        </PersonName>
+        <PersonId type="nat">
+        </PersonId>
+        <BirthDate>
+          <Date>2004-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>
+        </ShortName>
+        <CountryId value="other" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>339728</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:19:39</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>11:27:42</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">8:03</Time>
+        <ResultPosition>1st</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>115</ControlCode>
+          <Time timeFormat="MMM:SS">0:53</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>125</ControlCode>
+          <Time timeFormat="MMM:SS">2:41</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>123</ControlCode>
+          <Time timeFormat="MMM:SS">3:10</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>122</ControlCode>
+          <Time timeFormat="MMM:SS">3:56</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>101</ControlCode>
+          <Time timeFormat="MMM:SS">4:47</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>124</ControlCode>
+          <Time timeFormat="MMM:SS">5:33</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>125</ControlCode>
+          <Time timeFormat="MMM:SS">6:51</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>121</ControlCode>
+          <Time timeFormat="MMM:SS">7:16</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="M">
+        <PersonName>
+          <Family>Simpson</Family>
+          <Given>Ewan</Given>
+        </PersonName>
+        <PersonId type="nat">
+        </PersonId>
+        <BirthDate>
+          <Date>2004-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>BL</ShortName>
+        <CountryId value="other" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>339723</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:02:38</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>11:10:49</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">8:11</Time>
+        <ResultPosition>2nd</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>115</ControlCode>
+          <Time timeFormat="MMM:SS">1:00</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>125</ControlCode>
+          <Time timeFormat="MMM:SS">2:37</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>123</ControlCode>
+          <Time timeFormat="MMM:SS">3:13</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>122</ControlCode>
+          <Time timeFormat="MMM:SS">4:06</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>101</ControlCode>
+          <Time timeFormat="MMM:SS">5:03</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>124</ControlCode>
+          <Time timeFormat="MMM:SS">5:54</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>125</ControlCode>
+          <Time timeFormat="MMM:SS">7:09</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>121</ControlCode>
+          <Time timeFormat="MMM:SS">7:28</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="F">
+        <PersonName>
+          <Family>Hazelhurst</Family>
+          <Given>Laura</Given>
+        </PersonName>
+        <PersonId type="nat">
+        </PersonId>
+        <BirthDate>
+          <Date>2004-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>BL</ShortName>
+        <CountryId value="other" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>13528</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>12:29:20</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>12:38:28</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">9:08</Time>
+        <ResultPosition>
+        </ResultPosition>
+        <CompetitorStatus value="NotCompeting" />
+        <SplitTime sequence="1">
+          <ControlCode>115</ControlCode>
+          <Time timeFormat="MMM:SS">1:04</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>125</ControlCode>
+          <Time timeFormat="MMM:SS">2:57</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>123</ControlCode>
+          <Time timeFormat="MMM:SS">3:30</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>122</ControlCode>
+          <Time timeFormat="MMM:SS">4:44</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>101</ControlCode>
+          <Time timeFormat="MMM:SS">5:37</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>124</ControlCode>
+          <Time timeFormat="MMM:SS">6:35</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>125</ControlCode>
+          <Time timeFormat="MMM:SS">7:51</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>121</ControlCode>
+          <Time timeFormat="MMM:SS">8:22</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="M">
+        <PersonName>
+          <Family>Hadry</Family>
+          <Given>Archie</Given>
+        </PersonName>
+        <PersonId type="nat">
+        </PersonId>
+        <BirthDate>
+          <Date>2007-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>
+        </ShortName>
+        <CountryId value="other" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>339727</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:21:45</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>11:34:54</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">13:09</Time>
+        <ResultPosition>3rd</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>115</ControlCode>
+          <Time timeFormat="MMM:SS">1:31</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>125</ControlCode>
+          <Time timeFormat="MMM:SS">3:56</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>123</ControlCode>
+          <Time timeFormat="MMM:SS">4:31</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>122</ControlCode>
+          <Time timeFormat="MMM:SS">6:17</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>101</ControlCode>
+          <Time timeFormat="MMM:SS">7:47</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>124</ControlCode>
+          <Time timeFormat="MMM:SS">9:09</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>125</ControlCode>
+          <Time timeFormat="MMM:SS">11:04</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>121</ControlCode>
+          <Time timeFormat="MMM:SS">12:05</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+    <PersonResult>
+      <Person sex="M">
+        <PersonName>
+          <Family>Hartley</Family>
+          <Given>Thomas</Given>
+        </PersonName>
+        <PersonId type="nat">
+        </PersonId>
+        <BirthDate>
+          <Date>2013-01-01</Date>
+        </BirthDate>
+      </Person>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>BL</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+      <Result>
+        <CCard>
+          <CCardId>202142</CCardId>
+          <PunchingUnitType value="SI" />
+        </CCard>
+        <StartTime>
+          <Clock>11:47:20</Clock>
+        </StartTime>
+        <FinishTime>
+          <Clock>12:24:41</Clock>
+        </FinishTime>
+        <Time timeFormat="MMM:SS">37:21</Time>
+        <ResultPosition>4th</ResultPosition>
+        <CompetitorStatus value="OK" />
+        <SplitTime sequence="1">
+          <ControlCode>115</ControlCode>
+          <Time timeFormat="MMM:SS">3:08</Time>
+        </SplitTime>
+        <SplitTime sequence="2">
+          <ControlCode>125</ControlCode>
+          <Time timeFormat="MMM:SS">8:38</Time>
+        </SplitTime>
+        <SplitTime sequence="3">
+          <ControlCode>123</ControlCode>
+          <Time timeFormat="MMM:SS">9:55</Time>
+        </SplitTime>
+        <SplitTime sequence="4">
+          <ControlCode>122</ControlCode>
+          <Time timeFormat="MMM:SS">15:29</Time>
+        </SplitTime>
+        <SplitTime sequence="5">
+          <ControlCode>101</ControlCode>
+          <Time timeFormat="MMM:SS">18:17</Time>
+        </SplitTime>
+        <SplitTime sequence="6">
+          <ControlCode>124</ControlCode>
+          <Time timeFormat="MMM:SS">21:42</Time>
+        </SplitTime>
+        <SplitTime sequence="7">
+          <ControlCode>125</ControlCode>
+          <Time timeFormat="MMM:SS">26:47</Time>
+        </SplitTime>
+        <SplitTime sequence="8">
+          <ControlCode>121</ControlCode>
+          <Time timeFormat="MMM:SS">33:45</Time>
+        </SplitTime>
+      </Result>
+    </PersonResult>
+  </ClassResult>
+</ResultList>

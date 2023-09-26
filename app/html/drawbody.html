@@ -1,0 +1,67 @@
+<div id="rg2-draw-body">
+  <div class="mb-3" id="rg2-course-select">
+    <label for="rg2-select-course"></label>
+    <select id="rg2-select-course" class="form-select form-select-sm"></select>
+  </div>
+  <div class="mb-3" id="rg2-name-select">
+    <label for="rg2-select-name"></label>
+    <select id="rg2-select-name" class="form-select form-select-sm"></select>
+  </div>
+  <div id="rg2-enter-name-and-time" class="mb-3">
+    <div>
+      <label for="rg2-name-entry"></label>
+      <input class="form-control" id="rg2-name-entry" type="text" required />
+    </div>
+    <div>
+      <label for="rg2-time-entry"></label>
+      <input class="form-control" id="rg2-time-entry" type="text" required />
+    </div>
+  </div>
+  <textarea class="form-control mb-3" placeholder="" id="rg2-new-comments" style="height: 100px"></textarea>
+  <div class="mb-3">
+    <input class="form-check-input" type="checkbox" value="" id="chk-align-map" />
+    <label class="form-check-label" for="chk-align-map">Align map to next control</label>
+  </div>
+  <div class="d-flex justify-content-around mb-3">
+    <button class="btn btn-outline-primary btn-sm" id="btn-undo"></button>
+    <button class="btn btn-outline-primary btn-sm" id="btn-three-seconds"></button>
+    <button class="btn btn-outline-primary btn-sm" id="btn-reset-drawing"></button>
+  </div>
+  <div class="d-flex justify-content-around mb-3">
+    <button class="btn btn-primary" id="btn-save-route"></button>
+  </div>
+  <hr class="border border-primary opacity-75" />
+  <legend id="rg2-load-gps-title"></legend>
+  <div class="input-group mb-3">
+    <input type="file" accept=".gpx, .tcx" class="form-control form-control-sm" id="rg2-load-gps-file" />
+  </div>
+  <div class="d-flex justify-content-around mb-3">
+    <button class="btn btn-outline-primary btn-sm" id="btn-autofit-gps"></button>
+    <div>Offset</div>
+    <div class="input-group input-group-sm w-25">
+      <button id="btn-offset-plus" class="btn btn-secondary" type="button">+</button>
+      <input id="rg2-offset-value" type="text" class="form-control" value="0" />
+      <button id="btn-offset-minus" class="btn btn-secondary" type="button">-</button>
+    </div>
+    <button class="btn btn-outline-primary btn-sm" id="btn-undo-gps-adjust"></button>
+  </div>
+  <div class="d-flex justify-content-around mb-3">
+    <button class="btn btn-primary btn-sm" id="btn-save-gps-route"></button>
+  </div>
+  <hr class="border border-primary opacity-75" />
+  <div class="mb-3 d-flex" id="rg2-move-all">
+    <input class="form-check-input" type="checkbox" value="" id="chk-move-all" />
+    <label class="form-check-label px-2" for="chk-move-all"></label>
+  </div>
+  <hr class="border border-primary opacity-75" />
+  <div>
+    <span id="draw-text-1">Left click to add/lock/unlock a handle.</span>
+    <ul>
+      <li id="draw-text-2">Green: draggable</li>
+      <li id="draw-text-3">Red: locked</li>
+    </ul>
+    <span id="draw-text-4">Right click to delete a handle.</span>
+    <br />
+    <span id="draw-text-5">Drag a handle to adjust track around locked point(s).</span>
+  </div>
+</div>

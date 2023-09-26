@@ -1,63 +1,40 @@
 /* eslint-env node */
 module.exports = function (grunt) {
-  // Project configuration.
+  // Project configuration
   grunt.initConfig({
     pkg: grunt.file.readJSON("package.json"),
-    uglify: {
-      options: {
-        banner: '// Version <%= pkg.version %> <%= grunt.template.today("isoDateTime") %>;\n',
-        sourceMap: true,
-      },
-      build: {
-        src: jsFileList,
-        dest: jsMinFile,
-      },
-      manager: {
-        src: jsManagerSrc,
-        dest: jsManagerMinFile,
-      },
+
+    clean: {
+      website: ["website/*"]
     },
 
-    postcss: {
-      options: {
-        failOnError: true,
-        map: false,
-        processors: [
-          require('autoprefixer'),
-          require('cssnano')({preset: "default"})
-        ]
-      },
-      dist: {
-        src: "css/rg2.css",
-        dest: "css/rg2-<%= pkg.version %>.min.css"
-      }
-    },
-
-    sync: {
-      rel: {
+    copy: {
+      distfiles: {
+        // Run after a new build to copy other files that are needed for an installation.
+        // Could possibly do this via public directory in vite (as done for img)
+        // but needs further investigation.
         files: [
-          {
-            src: ["rg2api.php", "index.php", "app/**", "html/**"],
-            dest: "rel/",
-          },
+          { expand: true, nonull: true, src: ["index.php"], dest: "dist/" },
+          { expand: true, nonull: true, src: ["rg2api.php"], dest: "dist/" },
+          { expand: true, nonull: true, src: ["lang/*"], dest: "dist/" },
+          { expand: true, nonull: true, src: ["lock/*"], dest: "dist/" },
+          { expand: true, nonull: true, src: ["log/*"], dest: "dist/" }
         ],
-        verbose: true,
-        pretend: false, // Don't do any disk operations - just write log. Default: false
-        failOnError: true, // Fail the task when copying is not possible. Default: false
-        updateAndDelete: true,
-      },
+        mode: true,
+        timestamp: true
+      }
     },
 
     replace: {
       jsversion: {
-        src: "js/config.js",
+        src: ["src/js/config.js"],
         overwrite: true,
         replacements: [
           {
-            from: /RG2VERSION.*'/,
-            to: "RG2VERSION: '<%= pkg.version %>'",
-          },
-        ],
+            from: /RG2VERSION.*,/,
+            to: "RG2VERSION: '<%= pkg.version %>',"
+          }
+        ]
       },
       phpversion: {
         src: ["rg2api.php", "index.php"],
@@ -65,111 +42,50 @@ module.exports = function (grunt) {
         replacements: [
           {
             from: /\('RG2VERSION'.*\)/,
-            to: "('RG2VERSION', '<%= pkg.version %>')",
-          },
-        ],
-      },
-    },
-
-    clean: {
-      minified: ["js/*.min.js", "js/*.js.map", "css/*.min.css"],
-    },
-  });
+            to: "('RG2VERSION', '<%= pkg.version %>')"
+          }
+        ]
+      }
+    }
+  })
 
   // Load all the grunt tasks
-  require("load-grunt-tasks")(grunt);
+  require("load-grunt-tasks")(grunt)
 
-  for (var i = 0; i < clubs.length; i++) {
-    var club = clubs[i];
-    grunt.config(["sync", club], {
+  // register tasks to copy relevant files for each subdomain to a directory
+  // structure under website that can be synced via FTP to the routegadget.co.uk server
+  for (let i = 0; i < clubs.length; i++) {
+    let club = clubs[i]
+    // careful: CLOK still has historic directory structure
+    let dest =
+      club === "clok"
+        ? "website/" + club + ".routegadget.co.uk/public_html/gadget/rg2/"
+        : "website/" + club + ".routegadget.co.uk/public_html/rg2/"
+    grunt.config(["copy", club], {
       files: [
+        { expand: true, nonull: true, src: ["app/**"], dest: dest },
+        { expand: true, nonull: true, src: ["lang/**"], dest: dest },
+        { expand: true, nonull: true, src: ["index.php"], dest: dest },
+        { expand: true, nonull: true, src: ["rg2api.php"], dest: dest },
         {
-          cwd: "rel/",
           expand: true,
-          src: "**",
-          dest: "website/" + club + ".routegadget.co.uk/public_html/rg2/",
-        },
+          nonull: true,
+          flatten: true,
+          src: ["dist/manifest.json"],
+          dest: "website/" + club + ".routegadget.co.uk/public_html/rg2/"
+        }
       ],
-      verbose: true, // Default: false
-      pretend: false, // Don't do any disk operations - just write log. Default: false
-      failOnError: true, // Fail the task when copying is not possible. Default: false
-      ignoreInDest: "rg2-config.php",
-      updateAndDelete: true,
-    });
+      mode: true,
+      timestamp: true
+    })
   }
 
-  // clok has a different directory set-up
-  grunt.config(["sync", "clok"], {
-    files: [
-      {
-        cwd: "rel/",
-        expand: true,
-        src: "**",
-        dest: "website/clok.routegadget.co.uk/public_html/gadget/rg2/",
-      },
-    ],
-    verbose: true, // Default: false
-    pretend: false, // Don't do any disk operations - just write log. Default: false
-    failOnError: true, // Fail the task when copying is not possible. Default: false
-    ignoreInDest: "rg2-config.php",
-    updateAndDelete: true,
-  });
-
-  grunt.registerTask("default", ["build"]);
-
-  // bumpup removed: all version number updates done by editting package.json by hand
-
-  grunt.registerTask("build", ["clean:minified", "postcss", "uglify", "build-manager"]);
-
-  grunt.registerTask("build-manager", ["uglify:manager"]);
-
-  grunt.registerTask("deploy", ["replace:jsversion", "replace:phpversion", "build", "sync:rel"]);
-};
-
-var jsFileList = [
-  "js/rg2.js",
-  "js/animation.js",
-  "js/canvas.js",
-  "js/config.js",
-  "js/control.js",
-  "js/controls.js",
-  "js/course.js",
-  "js/courses.js",
-  "js/draw.js",
-  "js/event.js",
-  "js/events.js",
-  "js/gpstrack.js",
-  "js/handles.js",
-  "js/map.js",
-  "js/overlay.js",
-  "js/plugins.js",
-  "js/result.js",
-  "js/results.js",
-  "js/rg2getjson.js",
-  "js/rg2input.js",
-  "js/rg2ui.js",
-  "js/runner.js",
-  "js/stats.js",
-  "js/utils.js",
-  "js/lib/he.js",
-];
-
-var jsManagerSrc = [
-  "js/manager.js",
-  "js/courseparser.js",
-  "js/resultparseriofv2.js",
-  "js/resultparseriofv3.js",
-  "js/resultparsercsv.js",
-  "js/resultparser.js",
-  "js/managerui.js",
-];
-
-var jsMinFile = "js/rg2-<%= pkg.version %>.min.js";
-var jsManagerMinFile = "js/rg2manager-<%= pkg.version %>.min.js";
+  grunt.registerTask("default", ["deploy"])
+  grunt.registerTask("deploy", ["clean:website", "copy"])
+}
 
 // installed routegadget.co.uk clubs that need to be updated for a new release
-// careful: clok has a different config so is set up separately
-var clubs = [
+const clubs = [
   "aire",
   "albania",
   "ayroc",
@@ -182,6 +98,7 @@ var clubs = [
   "bl",
   "chig",
   "claro",
+  "clok",
   "clyde",
   "coboc",
   "cuoc",
@@ -277,5 +194,5 @@ var clubs = [
   "wmoc",
   "wrekin",
   "wsco2008",
-  "wsx",
-];
+  "wsx"
+]

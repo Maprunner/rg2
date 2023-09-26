@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CourseData xmlns="http://www.orienteering.org/datastandard/3.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" iofVersion="3.0" createTime="2015-02-21T16:40:56.281Z" creator="OCAD 11.5.8.2095">
+  <Event>
+    <Name>Event</Name>
+  </Event>
+  <RaceCourseData>
+    <Map>
+      <Scale>10000</Scale>
+      <!-- extent of ocad map-->
+      <MapPositionTopLeft x="141.3" y="178.4" unit="mm"/>
+      <MapPositionBottomRight x="293.4" y="-44.6" unit="mm"/>
+    </Map>
+    <Control>
+      <Id>S1</Id>
+      <Position lng="-0.253866" lat="51.761915" />
+      <MapPosition x="262.5" y="33.1" unit="mm" />
+    </Control>
+    <Control>
+      <Id>101</Id>
+      <Position lng="-0.256845" lat="51.761025" />
+      <MapPosition x="241.6" y="23.8" unit="mm" />
+    </Control>
+    <Control>
+      <Id>102</Id>
+      <Position lng="-0.261017" lat="51.761142" />
+      <MapPosition x="212.9" y="25.9" unit="mm" />
+    </Control>
+    <Control>
+      <Id>103</Id>
+      <Position lng="-0.262845" lat="51.760803" />
+      <MapPosition x="200.2" y="22.5" unit="mm" />
+    </Control>
+    <Control>
+      <Id>104</Id>
+      <Position lng="-0.263315" lat="51.762568" />
+      <MapPosition x="197.5" y="42.2" unit="mm" />
+    </Control>
+    <Control>
+      <Id>105</Id>
+      <Position lng="-0.259785" lat="51.765143" />
+      <MapPosition x="222.7" y="70.1" unit="mm" />
+    </Control>
+    <Control>
+      <Id>106</Id>
+      <Position lng="-0.253877" lat="51.765073" />
+      <MapPosition x="263.4" y="68.2" unit="mm" />
+    </Control>
+    <Control>
+      <Id>107</Id>
+      <Position lng="-0.257707" lat="51.760322" />
+      <MapPosition x="235.5" y="16.1" unit="mm" />
+    </Control>
+    <Control>
+      <Id>108</Id>
+      <Position lng="-0.262750" lat="51.763649" />
+      <MapPosition x="201.7" y="54.1" unit="mm" />
+    </Control>
+    <Control>
+      <Id>109</Id>
+      <Position lng="-0.256741" lat="51.764318" />
+      <MapPosition x="243.4" y="60.4" unit="mm" />
+    </Control>
+    <Control>
+      <Id>110</Id>
+      <Position lng="-0.254057" lat="51.763147" />
+      <MapPosition x="261.6" y="46.8" unit="mm" />
+    </Control>
+    <Control>
+      <Id>F1</Id>
+      <Position lng="-0.253534" lat="51.762526" />
+      <MapPosition x="265.0" y="39.8" unit="mm" />
+    </Control>
+
+    <Course>
+      <Name>Orange</Name>
+      <Length>1990</Length>
+      <Climb>0</Climb>
+      <CourseControl type="Start">
+        <Control>S1</Control>
+      </CourseControl>
+      <CourseControl type="Control">
+        <Control>107</Control>
+        <LegLength>319</LegLength>
+      </CourseControl>
+      <CourseControl type="Control">
+        <Control>103</Control>
+        <LegLength>359</LegLength>
+      </CourseControl>
+      <CourseControl type="Control">
+        <Control>108</Control>
+        <LegLength>317</LegLength>
+      </CourseControl>
+      <CourseControl type="Control">
+        <Control>105</Control>
+        <LegLength>264</LegLength>
+      </CourseControl>
+      <CourseControl type="Control">
+        <Control>109</Control>
+        <LegLength>229</LegLength>
+      </CourseControl>
+      <CourseControl type="Control">
+        <Control>106</Control>
+        <LegLength>215</LegLength>
+      </CourseControl>
+      <CourseControl type="Control">
+        <Control>110</Control>
+        <LegLength>215</LegLength>
+      </CourseControl>
+      <CourseControl type="Finish">
+        <Control>F1</Control>
+        <LegLength>78</LegLength>
+      </CourseControl>
+    </Course>
+
+    <Course>
+      <Name>Yellow</Name>
+      <Length>1750</Length>
+      <Climb>0</Climb>
+      <CourseControl type="Start">
+        <Control>S1</Control>
+      </CourseControl>
+      <CourseControl type="Control">
+        <Control>101</Control>
+        <LegLength>228</LegLength>
+      </CourseControl>
+      <CourseControl type="Control">
+        <Control>102</Control>
+        <LegLength>288</LegLength>
+      </CourseControl>
+      <CourseControl type="Control">
+        <Control>103</Control>
+        <LegLength>132</LegLength>
+      </CourseControl>
+      <CourseControl type="Control">
+        <Control>104</Control>
+        <LegLength>199</LegLength>
+      </CourseControl>
+      <CourseControl type="Control">
+        <Control>105</Control>
+        <LegLength>376</LegLength>
+      </CourseControl>
+      <CourseControl type="Control">
+        <Control>110</Control>
+        <LegLength>453</LegLength>
+      </CourseControl>
+      <CourseControl type="Finish">
+        <Control>F1</Control>
+        <LegLength>78</LegLength>
+      </CourseControl>
+    </Course>
+
+  </RaceCourseData>
+</CourseData>

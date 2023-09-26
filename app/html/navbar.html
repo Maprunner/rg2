@@ -1,0 +1,66 @@
+<nav id="rg2-header-container" class="navbar navbar-dark bg-dark navbar-expand-md fixed-top">
+  <div class="container-fluid">
+    <a class="navbar-brand" id="rg2-logo" href="#">
+      <div class="d-flex align-items-center">
+        <img
+          src="<?php echo $source_url; ?>img/rg2-logo-32x32.png"
+          alt="Logo"
+          width="30"
+          height="30"
+          class="d-inline-block align-text-top" />
+      </div>
+    </a>
+    <span id="rg2-event-title"></span>
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarCollapse"
+      aria-controls="navbarCollapse"
+      aria-expanded="false"
+      aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+      <ul class="navbar-nav me-auto mb-2 mb-md-0"></ul>
+      <button id="btn-reset" class="btn btn-rg2-navbar">
+        <i title="Reset" class="bi-arrow-repeat"></i>
+      </button>
+      <button id="btn-zoom-out" class="btn btn-rg2-navbar">
+        <i title="Zoom out" class="bi-zoom-out"></i>
+      </button>
+      <button id="btn-zoom-in" class="btn btn-rg2-navbar">
+        <i title="Zoom in" class="bi-zoom-in"></i>
+      </button>
+      <button id="btn-rotate-right" class="btn btn-rg2-navbar">
+        <i title="Rotate right" class="bi-arrow-clockwise"></i>
+      </button>
+      <button id="btn-rotate-left" class="btn btn-rg2-navbar">
+        <i title="Rotate left" class="bi-arrow-counterclockwise"></i>
+      </button>
+      <button id="btn-toggle-controls" class="btn btn-rg2-navbar">
+        <i title="Show controls" class="bi-circle"></i>
+      </button>
+      <button id="btn-splitsbrowser" class="btn btn-rg2-navbar d-none" title="Splitsbrowser">
+        <svg viewBox="0 0 30 30" class="splitsbrowser-logo">
+          <rect x="0" y="0" width="30" height="30" fill="white"></rect>
+          <polygon points="5,24 24,5 24,24" fill="red"></polygon>
+          <polyline points="5.5,5.5 5.5,23.5 23.5,23.5 23.5,5.5 5.5,5.5 5.5,23.5" stroke="black" fill="none"></polyline>
+          <polyline points="6,17 10,13 13,19 22,16" fill="none" stroke="blue" stroke-width="2"></polyline>
+        </svg>
+      </button>
+      <button id="btn-runners" class="btn btn-rg2-navbar">
+        <i class="bi-person-lines-fill"></i>
+      </button>
+      <button id="btn-measure" class="btn btn-rg2-navbar">
+        <i class="bi-rulers"></i>
+      </button>
+      <button id="btn-settings" class="btn btn-rg2-navbar">
+        <i class="bi-gear"></i>
+      </button>
+      <button id="btn-about" class="btn btn-rg2-navbar">
+        <i class="bi-question-square"></i>
+      </button>
+    </div>
+  </div>
+</nav>

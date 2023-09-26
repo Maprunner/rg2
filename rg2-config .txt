@@ -28,14 +28,6 @@
   // Only needed for RG1 installations that used a different encoding when set up
   // define('RG_INPUT_ENCODING', 'UTF-8');
 
-  // User interface colour theme: see gallery at http://jqueryui.com/themeroller/
-  define('UI_THEME', 'base');
-
-  // set these to an RGB colour definition to override default configuration of white text on blue background for the header
-  // if you change them make sure the text shows up on the background
-  define('HEADER_COLOUR', '#002bd9');
-  define('HEADER_TEXT_COLOUR', '#ffffff');
-
   // text displayed at bottom of info dialog. Use '' to leave blank.
   // OS licence text below is neeeded for installations on routegadget.co.uk site.
   define('ADDITIONAL_INFO_TEXT', 'Maps published on this web site that contain OS data by permission of Ordnance Survey® Licence Number 100046745.');
@@ -52,10 +44,6 @@
   //
   //define('EPSG_CODE', "EPSG:32722");
   //define('EPSG_PARAMS', "+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs");
-  //
   // or 
   //define('EPSG_CODE', "EPSG:12345|EPSG:67890");
   //define('EPSG_PARAMS', "+proj=x +ellps=WGS84 +datum=WGS84 +units=m +no_defs|+proj=y +ellps=WGS84 +datum=WGS84 +units=m +no_defs");
-  // or
-  //define('EPSG_CODE', "EPSG:32633");
-  //define('EPSG_PARAMS', "+proj=utm +zone=33 +ellps=WGS84 +datum=WGS84 +units=m +no_defs ");

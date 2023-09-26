@@ -1,0 +1,58 @@
+<form id="rg2-option-controls" class="d-none container">
+  <div class="mb-3" id="rg2-language-select">
+    <label for="rg2-select-language">Language</label>
+    <select id="rg2-select-language" class="form-select form-select-sm"></select>
+  </div>
+  <div class="mb-3" id="rg2-show-GPS-speed">
+    <input class="form-check-input" type="checkbox" value="" id="chk-show-GPS-speed" />
+    <label class="form-check-label" for="chk-show-GPS-speed">Show GPS speed colours</label>
+  </div>
+  <div class="mb-3">
+    <div class="mb-3">
+      <tc-range-slider
+        step="0.5"
+        min="2"
+        max="20"
+        value1="5"
+        value2="10"
+        round="1"
+        id="rg2-gps-speed-slider"></tc-range-slider>
+    </div>
+    <div class="d-flex justify-content-between">
+      <div id="rg2-max-gps-speed-label"></div>
+      <div id="rg2-min-gps-speed-label"></div>
+    </div>
+  </div>
+  <div class="mb-3" id="rg2-dim-spinner">
+    <label for="spn-map-intensity" class="form-label">Map intensity</label>
+    <input type="range" class="form-range" id="spn-map-intensity" />
+  </div>
+  <div class="mb-3" id="rg2-dim-route-spinner">
+    <label for="spn-route-intensity" class="form-label">Route intensity %</label>
+    <input type="range" min="0" max="100" class="form-range" id="spn-route-intensity" />
+  </div>
+  <div class="mb-3" id="rg2-route-width-spinner">
+    <label for="spn-route-width" class="form-label">Route width</label>
+    <input type="range" min="0" max="100" class="form-range" id="spn-route-width" />
+  </div>
+  <div class="mb-3" id="rg2-names-spinner">
+    <label for="spn-name-font-size" class="form-label">Replay label font size</label>
+    <input type="range" min="5" max="30" class="form-range" id="spn-name-font-size" />
+  </div>
+  <div class="mb-3" id="rg2-course-width-spinner">
+    <label for="spn-course-width" class="form-label">Course overprint width</label>
+    <input type="range" min="1" max="10" class="form-range" id="spn-course-width" />
+  </div>
+  <div class="mb-3" id="rg2-control-circle-spinner">
+    <label for="spn-control-circle" class="form-label">Control circle size</label>
+    <input type="range" min="3" max="50" class="form-range" id="spn-control-circle" />
+  </div>
+  <div class="mb-3" id="rg2-snap-toggle">
+    <input class="form-check-input" type="checkbox" value="" id="chk-snap-toggle" />
+    <label for="chk-snap-toggle">Snap to control when drawing</label>
+  </div>
+  <div class="mb-3" id="rg2-show-seconds">
+    <input class="form-check-input" type="checkbox" value="" id="chk-show-three-seconds" />
+    <label class="form-check-label" for="chk-show-three-seconds">Show +3 time loss for GPS routes</label>
+  </div>
+</form>

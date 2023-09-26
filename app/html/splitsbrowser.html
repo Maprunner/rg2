@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" type="text/css" href="<SPLITSBROWSER_DIRECTORY>/css/styles.css" />
+    <title><EVENT_NAME></title>
+    <script type="text/javascript" charset="utf-8" src="<SPLITSBROWSER_DIRECTORY>/modernizr-2.7.1-svg.min.js"></script>
+    <script type="text/javascript">
+      if (!Modernizr.svg) {
+        document.location = "unsupported-browser.html"
+      }
+    </script>
+    <script
+      type="text/javascript"
+      charset="utf-8"
+      src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script type="text/javascript" charset="utf-8" src="https://d3js.org/d3.v4.min.js"></script>
+    <script type="text/javascript" charset="utf-8" src="<SPLITSBROWSER_DIRECTORY>/splitsbrowser.min.js"></script>
+    <script type="text/javascript" charset="utf-8" src="<SPLITSBROWSER_DIRECTORY>/lang/messages-en_gb.js"></script>
+  </head>
+  <body>
+    <script type="text/javascript">
+      const data = <SPLITSBROWSER_DATA>
+      SplitsBrowser.readEvent(data);
+    </script>
+    <noscript>
+      <h1>SplitsBrowser &ndash; JavaScript is disabled</h1>
+
+      <p>Your browser is set to disable JavaScript.</p>
+
+      <p>SplitsBrowser cannot run if JavaScript is not enabled. Please enable JavaScript in your browser.</p>
+    </noscript>
+  </body>
+</html>

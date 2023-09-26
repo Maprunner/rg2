@@ -3,7 +3,7 @@ class splitsbrowser
 {
     public static function getSplitsbrowser($eventid)
     {
-        $page = file_get_contents("html/splitsbrowser.html");
+        $page = file_get_contents("app/html/splitsbrowser.html");
         $eventname = event::getEventName($eventid);
         $page = str_replace('<EVENT_NAME>', $eventname, $page);
         $page = str_replace('<SPLITSBROWSER_DIRECTORY>', SPLITSBROWSER_DIRECTORY, $page);

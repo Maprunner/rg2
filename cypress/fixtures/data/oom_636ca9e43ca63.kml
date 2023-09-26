@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+<Document>
+<name>oom_636ca9e43ca63_controls</name>
+<open>1</open>
+<Style id="startfinish"><IconStyle><color>ffff00ff</color><scale>1.8</scale><Icon><href>http://maps.google.com/mapfiles/kml/paddle/wht-stars.png</href></Icon><hotSpot x="0.5" y="0" xunits="fraction" yunits="fraction"/></IconStyle><LabelStyle><color>ffff00ff</color></LabelStyle><BalloonStyle></BalloonStyle><ListStyle></ListStyle></Style>
+<Style id="control"><IconStyle><color>ffff00ff</color><scale>1.0</scale><Icon><href>http://maps.google.com/mapfiles/kml/paddle/wht-blank.png</href></Icon><hotSpot x="0.5" y="0" xunits="fraction" yunits="fraction"/></IconStyle><LabelStyle><color>ffff00ff</color><scale>1.0</scale></LabelStyle><BalloonStyle></BalloonStyle><ListStyle></ListStyle></Style>
+<Folder>
+<name>Controls</name>
+<open>1</open>
+<Placemark><name>S1</name><styleUrl>#startfinish</styleUrl><Point><gx:drawOrder>1</gx:drawOrder><coordinates>-0.29864788055419916,51.74660166412059,0</coordinates></Point></Placemark>
+<Placemark><name>1</name><styleUrl>#control</styleUrl><Point><gx:drawOrder>1</gx:drawOrder><coordinates>-0.29461383819580084,51.74928521792208,0</coordinates></Point></Placemark>
+<Placemark><name>2</name><styleUrl>#control</styleUrl><Point><gx:drawOrder>1</gx:drawOrder><coordinates>-0.29311180114746094,51.744980826683786,0</coordinates></Point></Placemark>
+<Placemark><name>3</name><styleUrl>#control</styleUrl><Point><gx:drawOrder>1</gx:drawOrder><coordinates>-0.3023386001586914,51.74375851736767,0</coordinates></Point></Placemark>
+<Placemark><name>4</name><styleUrl>#control</styleUrl><Point><gx:drawOrder>1</gx:drawOrder><coordinates>-0.298004150390625,51.741101209111235,0</coordinates></Point></Placemark>
+<Placemark><name>F1</name><styleUrl>#startfinish</styleUrl><Point><gx:drawOrder>1</gx:drawOrder><coordinates>-0.29864788055419916,51.74660166412059,0</coordinates></Point></Placemark>
+</Folder>
+</Document>
+</kml>

@@ -1,0 +1,130 @@
+<style>
+  .rg2-startup {
+    background-color: ivory;
+    visibility: visible;
+    opacity: 1;
+    position: fixed;
+    z-index: 2000;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    transition: visibility 0s 1s, opacity 1s ease-in-out;
+  }
+</style>
+
+<body>
+  <noscript>
+    <h3>You have javascript disabled. Routegadget cannot run. Please update your browser configuration.</h3>
+  </noscript>
+  <div class="rg2-startup">
+    <img src="<?php echo $source_url; ?>img/rg2-logo-32x32.png" alt="Logo" width="32" height="32" />
+    <h2>RG2 is loading...</h2>
+  </div>
+  <?php include 'app/html/navbar.html'; ?>
+  <div id="rg2-container">
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="rg2-left-info-panel">
+      <div class="offcanvas-header">
+        <div class="offcanvas-title" id="rg2-left-info-panel-title"></div>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+      <div class="offcanvas-body" id="rg2-left-info-panel-body"></div>
+    </div>
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="rg2-right-info-panel">
+      <div class="offcanvas-header">
+        <div class="offcanvas-title" id="rg2-right-info-panel-title"></div>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+      <div class="offcanvas-body" id="rg2-right-info-panel-body">
+        <?php include 'app/html/settingslayout.html'; ?>
+        <?php include 'app/html/aboutlayout.html'; ?>
+        <div id="rg2-stats-dialog"></div>
+      </div>
+    </div>
+    <canvas id="rg2-map-canvas">Your browser does not support HTML5.</canvas>
+    <div id="rg2-load-progress" class="card p-3 d-none">
+      <div class="d-flex justify-content-center">
+        <div class="spinner-border p-3 mb-4"></div>
+      </div>
+      <div id="rg2-load-progress-label"></div>
+    </div>
+    <div id="rg2-map-load-progress" class="card p-3 d-none">
+      <div class="d-flex justify-content-center">
+        <div class="spinner-border p-3 mb-4"></div>
+      </div>
+      <div id="rg2-map-load-progress-label"></div>
+    </div>
+    <div id="rg2-warning-dialog"></div>
+    <div id="rg2-toast-container" class="toast-container top-0 end-0 p-3"></div>
+    <div id="rg2-modal-container"></div>
+    <div id="rg2-show-info-panel-control" class="d-none">
+      <i class="bi-arrow-right-square"></i>
+    </div>
+    <div id="rg2-track-names" class="card d-none">
+      <div class="card-header d-flex justify-content-between">
+        <div class="card-title">Runners</div>
+        <button type="button" id="btn-close-track-names" class="btn-close btn-sm"></button>
+      </div>
+      <div class="card-body track-names container"></div>
+    </div>
+    <div id="rg2-measure-dialog" class="card d-none">
+      <div class="card-header d-flex justify-content-between">
+        <div class="card-title">Measure</div>
+        <button type="button" id="btn-close-measure-dialog" class="btn-close btn-sm"></button>
+      </div>
+      <div class="card-body rg2-overlay-table"></div>
+    </div>
+  </div>
+  <div class="d-none">
+    <div id="rg2-event-body">
+      <div id="rg2-event-search"></div>
+      <div id="rg2-event-list"></div>
+    </div>
+    <div id="rg2-course-body">
+      <div id="rg2-course-table"></div>
+      <div id="rg2-course-filter-table" class="container"></div>
+    </div>
+    <div id="rg2-result-body">
+      <div id="rg2-result-search"></div>
+      <div id="rg2-result-table"></div>
+    </div>
+    <?php include 'app/html/drawbody.html'; ?>
+    <div id="rg2-login-body">
+      <div id="rg2-manage-login">
+        <form id="rg2-manager-login-form">
+          <div class="form-floating mb-3">
+            <input
+              id="rg2-user-name"
+              type="text"
+              autocomplete="username"
+              placeholder="User name"
+              class="form-control" />
+            <label for="rg2-user-name" class="form-label">User name</label>
+          </div>
+          <div class="form-floating mb-3">
+            <input
+              id="rg2-password"
+              type="password"
+              autocomplete="current-password"
+              placeholder="Password"
+              class="form-control" />
+            <label for="rg2-password" class="form-label">Password</label>
+          </div>
+          <button type="submit" class="btn btn-primary mb-3" id="btn-login">Log in</button>
+        </form>
+      </div>
+    </div>
+    <?php if ($manager) { ?>
+    <?php include 'app/html/addeventbody.html'; ?>
+    <?php include 'app/html/editeventbody.html'; ?>
+    <?php include 'app/html/addmapbody.html'; ?>
+    <?php include 'app/html/deletemapbody.html'; ?>
+    <?php } ?>
+  </div>
+  <div id="rg2-animation-controls" class="d-none">
+    <?php include 'app/html/animationlayout.html'; ?>
+  </div>
+  <?php include 'app/html/script.html'; ?>
+</body>

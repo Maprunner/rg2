@@ -1,0 +1,26 @@
+{
+  "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff2": {
+    "file": "assets/bootstrap-icons.c69bf1cc.woff2",
+    "src": "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff2"
+  },
+  "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff": {
+    "file": "assets/bootstrap-icons.13977b4a.woff",
+    "src": "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff"
+  },
+  "src/js/main.js": {
+    "file": "assets/main.4218e722.js",
+    "src": "src/js/main.js",
+    "isEntry": true,
+    "css": [
+      "assets/main.b9df4d93.css"
+    ],
+    "assets": [
+      "assets/bootstrap-icons.c69bf1cc.woff2",
+      "assets/bootstrap-icons.13977b4a.woff"
+    ]
+  },
+  "src/js/main.css": {
+    "file": "assets/main.b9df4d93.css",
+    "src": "src/js/main.css"
+  }
+}
