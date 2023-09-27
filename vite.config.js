@@ -1,7 +1,8 @@
 /* eslint-disable */
 import path from "path"
-import { defineConfig } from "vite"
+import { defineConfig, splitVendorChunkPlugin } from "vite"
 import istanbul from "vite-plugin-istanbul"
+import { visualizer } from "rollup-plugin-visualizer"
 
 export default defineConfig(({ command, mode, ssrBuild }) => {
   base = "/rg2/"
@@ -14,14 +15,20 @@ export default defineConfig(({ command, mode, ssrBuild }) => {
       manifest: true,
       sourcemap: true,
       rollupOptions: {
-        input: path.resolve(__dirname, "src/js/main.js")
-        // output: {
-        //   manualChunks: (id) => {
-        //     if (id.includes("leaflet")) return "manager"
-        //     if (id.includes("proj4")) return "manager"
-        //     if (id.includes("vanillajs-datepicker")) return "manager"
-        //   }
-        // }
+        input: path.resolve(__dirname, "src/js/main.js"),
+        output: {
+          manualChunks: (id) => {
+            if (
+              id.includes("leaflet") ||
+              id.includes("proj4") ||
+              id.includes("wkt-parser") ||
+              id.includes("mgrs") ||
+              id.includes("vanillajs-datepicker")
+            ) {
+              return "manager"
+            }
+          }
+        }
       }
     },
     resolve: {
@@ -40,8 +47,14 @@ export default defineConfig(({ command, mode, ssrBuild }) => {
         port: 5174
       }
     },
+    preview: {
+      port: 5173,
+      strictPort: true
+    },
     open: true,
     plugins: [
+      visualizer(),
+      splitVendorChunkPlugin(),
       istanbul({
         cypress: true,
         include: "src/*",
