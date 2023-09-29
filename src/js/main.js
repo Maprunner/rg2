@@ -44,7 +44,7 @@ function handleNavigation() {
   // console.log("Pop " + window.location.hash)
   // strange null popstates get generated when you toggle the left info panel via the rg2 logo
   // so just protect against it for now
-  if (Window.location.hash === "") {
+  if (window.location.hash === "") {
     return
   }
   // don't try to do anything clever in manager

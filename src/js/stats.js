@@ -1,3 +1,5 @@
+import { Grid } from "ag-grid-community"
+import Chart from "chart.js/auto"
 import { config } from "./config"
 import { getCourseDetails } from "./courses"
 import { eventHasResults, isScoreEvent } from "./events"
@@ -732,7 +734,7 @@ function generateSplitsTable() {
   wrapper.setAttribute("style", "height: " + height + "px;")
   const table = document.getElementById("rg2-results-grid")
   table.innerHTML = ""
-  new agGrid.Grid(table, gridOptions)
+  new Grid(table, gridOptions)
 }
 
 function generateSummary() {
@@ -901,7 +903,7 @@ function generateTableByLegPos() {
   }
   const table = document.getElementById("rg2-leg-table")
   table.innerHTML = ""
-  new agGrid.Grid(table, gridOptions)
+  new Grid(table, gridOptions)
 }
 
 function generateTableByRacePos() {
@@ -990,7 +992,7 @@ function generateTableByRacePos() {
 
   const table = document.getElementById("rg2-race-table")
   table.innerHTML = ""
-  new agGrid.Grid(table, gridOptions)
+  new Grid(table, gridOptions)
 }
 
 function getAverages(rawData, perCent) {
@@ -1250,68 +1252,12 @@ function iterateLostTime() {
   }
 }
 
-export function loadStats(id) {
-  // returns true if stats available, false otherwise
-  rawid = id
+export function loadStats(rawid) {
   if (!eventHasResults()) {
     showWarningDialog(t("Statistics", ""), t("No statistics available for this event format.", ""))
     return false
   }
-  document.body.style.cursor = "wait"
-  const loadScript = (src, integrity) => {
-    return new Promise((resolve, reject) => {
-      const script = document.createElement("script")
-      script.type = "text/javascript"
-      ;(script.crossOrigin = "anonymous"),
-        (script.referrerPolicy = "no-referrer"),
-        (script.integrity = integrity),
-        (script.onload = resolve)
-      script.onerror = reject
-      script.src = src
-      document.head.append(script)
-    })
-  }
-  const loadCSS = (src) => {
-    return new Promise((resolve, reject) => {
-      const link = document.createElement("link")
-      link.rel = "stylesheet"
-      ;(link.crossOrigin = "anonymous"), (link.referrerPolicy = "no-referrer"), (link.onload = resolve)
-      link.onerror = reject
-      link.href = src
-      document.head.append(link)
-    })
-  }
-  const loadChart = () => {
-    if (typeof Chart === "undefined") {
-      return Promise.all([
-        loadScript(
-          "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.2.0/chart.umd.min.js",
-          "sha512-0gS26t/01v98xlf2QF4QS1k32/YHWfFs8HfBM/j7gS97Tr8WxpJqoiDND8r1HgFwGGYRs0aRt33EY8xE91ZgJw=="
-        ),
-        loadCSS("https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css"),
-        loadCSS("https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-balham.css")
-      ])
-    } else {
-      return Promise.resolve()
-    }
-  }
-  const loadGrid = () => {
-    if (typeof agGrid === "undefined") {
-      return loadScript("https://unpkg.com/ag-grid-community@28.2.1/dist/ag-grid-community.min.noStyle.js", "")
-    } else {
-      return Promise.resolve()
-    }
-  }
-  loadGrid()
-    .then(() => loadChart())
-    .then(() => {
-      document.body.style.cursor = "auto"
-      prepareStats(rawid)
-    })
-    .catch(() => {
-      showWarningDialog(t("Statistics", ""), t("Failed to load Grid and Chart utilities.", ""))
-      document.body.style.cursor = "auto"
-    })
+  prepareStats(rawid)
   return true
 }
 

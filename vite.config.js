@@ -27,12 +27,16 @@ export default defineConfig(({ command, mode, ssrBuild }) => {
             ) {
               return "manager"
             }
+            if (id.includes("ag-grid-community")) {
+              return "grid"
+            }
           }
         }
       }
     },
     resolve: {
       alias: {
+        "~ag-grid-community": path.resolve(__dirname, "node_modules/ag-grid-community"),
         "~bootstrap": path.resolve(__dirname, "node_modules/bootstrap"),
         "~bootstrap-icons": path.resolve(__dirname, "node_modules/bootstrap-icons"),
         "~datepicker": path.resolve(__dirname, "node_modules/vanillajs-datepicker")

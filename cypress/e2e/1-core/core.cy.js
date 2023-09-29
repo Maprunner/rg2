@@ -58,7 +58,6 @@ describe("Core functionality", { testIsolation: false }, () => {
   it("allows configuration changes", () => {
     // local storage set to default values by beforeEach call
     cy.get("#btn-settings").click()
-    cy.pause()
     cy.get("#chk-show-GPS-speed").should("be.visible")
     cy.get("#chk-show-GPS-speed").check()
     cy.get("#rg2-gps-speed-slider").click()
