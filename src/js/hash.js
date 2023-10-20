@@ -105,7 +105,7 @@ function setLocationHash() {
     courses.length = 0
     routes.length = 0
     hash = generateHash(id, routes, courses)
-    console.log("Push " + hash)
+    // console.log("Push " + hash)
     window.history.pushState({ hash: hash }, "", hash)
   }
 }

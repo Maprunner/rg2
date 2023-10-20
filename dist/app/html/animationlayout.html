@@ -1,0 +1,75 @@
+<div id="rg2-clock" class="rg2-clock"></div>
+<div id="rg2-clock-slider-container"></div>
+<div id="btn-start-stop">
+  <i title="Start stop" class="bi-play-circle-fill"></i>
+</div>
+<div class="btn-group btn-group-sm dropup">
+  <button id="rg2-replay-speed" type="button" class="btn btn-outline-secondary"></button>
+  <button
+    id="rg2-replay-speed-select"
+    type="button"
+    class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split"
+    data-bs-toggle="dropdown"
+    aria-expanded="false"></button>
+  <ul id="rg2-replay-speed-list" class="dropdown-menu"></ul>
+</div>
+<div id="rg2-replay-type" class="btn-group btn-group-sm" role="group" aria-label="Replay type group">
+  <input type="radio" class="btn-check" name="btnradio" id="btn-mass-start" autocomplete="off" checked="checked" />
+  <label class="btn btn-outline-secondary" for="btn-mass-start">
+    <i class="bi-people"></i>
+  </label>
+  <input type="radio" class="btn-check" name="btnradio" id="btn-real-time" autocomplete="off" />
+  <label class="btn btn-outline-secondary" for="btn-real-time">
+    <i class="bi-clock"></i>
+  </label>
+  <input type="radio" class="btn-check" name="btnradio" id="btn-by-control" autocomplete="off" />
+  <label class="btn btn-outline-secondary" for="btn-by-control">
+    <i class="bi-circle"></i>
+  </label>
+</div>
+<div id="rg2-replay-by-control" class="btn-group btn-group-sm dropup">
+  <button id="rg2-replay-start-control" type="button" class="btn btn-outline-secondary">
+    <i class="bi-triangle"></i>
+  </button>
+  <button
+    id="rg2-replay-start-control-select"
+    type="button"
+    class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split"
+    data-bs-toggle="dropdown"
+    aria-expanded="false"></button>
+  <ul id="rg2-replay-start-control-list" class="dropdown-menu dropdown-scrollable"></ul>
+</div>
+<div id="rg2-tails" class="btn-group btn-group-sm dropup">
+  <button id="rg2-tails-value" type="button" class="btn btn-outline-secondary">
+    <i class="bi-shuffle"></i>
+  </button>
+  <button
+    id="rg2-tails-length-select"
+    type="button"
+    class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split"
+    data-bs-toggle="dropdown"
+    aria-expanded="false"></button>
+  <ul id="rg2-tails-length-list" class="dropdown-menu"></ul>
+</div>
+<div id="rg2-toggle-names" class="btn-group btn-group-sm dropup">
+  <button id="rg2-toggle-names-value" type="button" class="btn btn-outline-secondary">
+    <i class="bi-tag"></i>
+  </button>
+  <button
+    id="rg2-toggle-names-select"
+    type="button"
+    class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split"
+    data-bs-toggle="dropdown"
+    aria-expanded="false"></button>
+  <ul id="rg2-toggle-names-select-list" class="dropdown-menu">
+    <li>
+      <p class="dropdown-item" data-toggle-names="Show names"></p>
+    </li>
+    <li>
+      <p class="dropdown-item" data-toggle-names="Show initials"></p>
+    </li>
+    <li>
+      <p class="dropdown-item" data-toggle-names="Hide names"></p>
+    </li>
+  </ul>
+</div>

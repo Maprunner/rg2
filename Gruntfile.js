@@ -17,8 +17,7 @@ module.exports = function (grunt) {
           { expand: true, nonull: true, src: ["index.php"], dest: "dist/" },
           { expand: true, nonull: true, src: ["rg2api.php"], dest: "dist/" },
           { expand: true, nonull: true, src: ["lang/*"], dest: "dist/" },
-          { expand: true, nonull: true, src: ["lock/*"], dest: "dist/" },
-          { expand: true, nonull: true, src: ["log/*"], dest: "dist/" }
+          { expand: true, nonull: true, src: ["app/**"], dest: "dist/" }
         ],
         mode: true,
         timestamp: true

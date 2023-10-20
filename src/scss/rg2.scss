@@ -1,3 +1,6 @@
+@use "@ag-grid-community/styles" as ag;
+@include ag.grid-styles((theme: balham));
+
 // Toggle global options
 $enable-gradients: true;
 $enable-shadows: true;
@@ -56,8 +59,8 @@ $enable-dark-mode: false;
 @import "~bootstrap/scss/utilities/api";
 @import "~bootstrap-icons/font/bootstrap-icons.css";
 @import '~datepicker/sass/datepicker-bs5';
-@import "~ag-grid-community/styles/ag-grid.css";
-@import "~ag-grid-community/styles/ag-theme-balham.css";
+// @import "~@ag-grid-community/styles/ag-grid.css";
+// @import "~@ag-grid-community/styles/ag-theme-balham.css";
 
 //useful to see screen layout
 // * {

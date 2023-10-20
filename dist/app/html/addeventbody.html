@@ -1,0 +1,74 @@
+<div id="rg2-add-event-body">
+  <div id="rg2-manage-create">
+    <form>
+      <legend>Event details</legend>
+      <div class="form-floating mb-3">
+        <input id="rg2-event-name" type="text" placeholder="Event name" class="form-control form-control-sm" required>
+        <label for="rg2-event-name">Event name</label>
+      </div>
+      <div class="mb-3">
+        <label for="rg2-select-map" class="form-label">Map</label>
+        <select id="rg2-select-map" class="form-select form-select-sm mb-3"></select>
+      </div>
+      <div class="form-floating mb-3">
+        <input id="rg2-select-club-name" type="text" placeholder="Club name" class="form-control form-control-sm">
+        <label for="rg2-select-club-name">Club</label>
+      </div>
+      <div class="mb-3">
+        <label for="rg2-select-event-date" class="form-label">Date</label>
+        <input type="text" id="rg2-select-event-date">
+      </div>
+      <div class="mb-3">
+        <label for="rg2-select-event-level" class="form-label">Event level</label>
+        <select id="rg2-select-event-level" class="form-select form-select-sm mb-3"></select>
+      </div>
+      <div class="form-floating mb-3">
+        <textarea class="form-control" placeholder="Comments" id="rg2-enter-event-comments"
+          style="height: 100px"></textarea>
+        <label for="rg2-enter-event-comments">Comments</label>
+      </div>
+      <legend>Results</legend>
+      <div id="rg2-select-results-file" class="input-group mb-3">
+        <input type="file" accept=".csv, .xml" class="form-control form-control-sm" id="rg2-load-results-file">
+      </div>
+      <div class="mb-3">
+        <input class="form-check-input" type="checkbox" value="" id="chk-no-results">
+        <label class="form-check-label" for="chk-no-results">No results file</label>
+      </div>
+      <div class="mb-3">
+        <input class="form-check-input" type="checkbox" value="" id="chk-sort-results">
+        <label class="form-check-label" for="chk-sort-results">Sort results file</label>
+        <div class="form-text">Only select if the results file is not already properly sorted.</div>
+      </div>
+      <legend>Courses</legend>
+      <div id="rg2-select-course-file" class="input-group mb-3">
+        <input type="file" accept=".kml, .xml" class="form-control form-control-sm" id="rg2-load-course-file">
+      </div>
+      <div class="mb-3">
+        <input class="form-check-input" type="checkbox" value="" id="chk-enrich-course-names">
+        <label class="form-check-label" for="chk-enrich-course-names">Add classes to course names</label>
+      </div>
+      <div class="mb-3">
+        <input class="form-check-input" type="checkbox" value="" id="chk-score-event">
+        <label class="form-check-label" for="chk-score-event">Individual courses (butterfly/score/relay)</label>
+      </div>
+      <button type="button" class="btn btn-primary mb-3" id="btn-draw-courses">Draw course</button>
+      <div id="rg2-draw-courses" class="form-floating mb-3">
+        <input id="rg2-new-course-name" type="text" placeholder="Course name" class="form-control form-control-sm">
+        <label for="rg2-new-course-name">Course</label>
+      </div>
+      <hr class="rg2-hr" />
+      <div class="mb-3">
+        <input class="form-check-input" type="checkbox" value="" id="chk-move-map-and-controls">
+        <label class="form-check-label" for="chk-move-map-and-controls">Move map and controls together</label>
+      </div>
+      <div id="rg2-course-allocations" class="mb-3"></div>
+      <hr class="rg2-hr" />
+      <div class="mb-3">
+        <input class="form-check-input" type="checkbox" value="" id="chk-read-only">
+        <label class="form-check-label" for="chk-read-only">Read-only (enable drawing via "Edit event" tab)</label>
+      </div>
+      <button type="submit" class="btn btn-primary mb-3" id="btn-create-event">Create event</button>
+      <form>
+  </div>
+</div>

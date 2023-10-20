@@ -261,7 +261,8 @@ export function loadNewMap(mapFile) {
   document.getElementById("rg2-map-load-progress-label").textContent = t("Loading map", "")
   document.getElementById("rg2-map-load-progress").classList.remove("d-none")
   // setting src on an Image automatically triggers a request to load the map
-  map.src = mapFile
+  // adding date forces reload from server and avoids all sorts of caching problems with images
+  map.src = mapFile + "?" + Date.now()
 }
 
 function mapLoadedCallback() {

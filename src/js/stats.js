@@ -1,4 +1,5 @@
-import { Grid } from "ag-grid-community"
+import { Grid, ModuleRegistry } from "@ag-grid-community/core"
+import { ClientSideRowModelModule } from "@ag-grid-community/client-side-row-model"
 import Chart from "chart.js/auto"
 import { config } from "./config"
 import { getCourseDetails } from "./courses"
@@ -6,6 +7,8 @@ import { eventHasResults, isScoreEvent } from "./events"
 import { getAllResultsForCourse, getAllResultsForVariant, getFullResultForRawID } from "./results"
 import { t } from "./translate"
 import { formatSecsAsMMSS, showWarningDialog } from "./utils"
+
+ModuleRegistry.registerModules([ClientSideRowModelModule])
 
 const tabs = [
   { id: "rg2-stats-summary", title: "Summary", active: "true" },
@@ -610,6 +613,7 @@ function generateSplitsTable() {
     {
       headerName: t("Pos", ""),
       field: "position",
+      cellDataType: "text",
       width: 60,
       pinned: "left",
       sortable: true
@@ -617,12 +621,13 @@ function generateSplitsTable() {
     {
       headerName: t("Name", ""),
       field: "name",
+      cellDataType: "text",
       headerClass: "align-left",
       cellClass: "align-left",
       width: 150,
       pinned: "left"
     },
-    { headerName: t("Time", ""), field: "time", width: 85 }
+    { headerName: t("Time", ""), field: "time", cellDataType: "text", width: 85 }
   ]
   for (let j = 1; j < controls - 1; j += 1) {
     columnDefs.push({
@@ -638,15 +643,17 @@ function generateSplitsTable() {
     cellRenderer: renderSplits,
     width: 110
   })
-  columnDefs.push({ headerName: t("Loss", ""), field: "loss", width: 100 })
+  columnDefs.push({ headerName: t("Loss", ""), field: "loss", cellDataType: "text", width: 100 })
   columnDefs.push({
     headerName: t("Performance", ""),
     field: "performance",
+    cellDataType: "text",
     width: 100
   })
   columnDefs.push({
     headerName: t("Consistency", ""),
     field: "consistency",
+    cellDataType: "text",
     width: 100
   })
 

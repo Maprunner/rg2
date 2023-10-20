@@ -1,0 +1,50 @@
+{
+  "_grid-c64ff6e6.js": {
+    "file": "assets/grid-c64ff6e6.js"
+  },
+  "_manager-2517acb8.js": {
+    "css": [
+      "assets/manager-69420918.css"
+    ],
+    "file": "assets/manager-2517acb8.js"
+  },
+  "_vendor-e910373e.js": {
+    "file": "assets/vendor-e910373e.js",
+    "imports": [
+      "_manager-2517acb8.js"
+    ]
+  },
+  "manager.css": {
+    "file": "assets/manager-69420918.css",
+    "src": "manager.css"
+  },
+  "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff": {
+    "file": "assets/bootstrap-icons-4d4572ef.woff",
+    "src": "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff"
+  },
+  "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff2": {
+    "file": "assets/bootstrap-icons-bacd70af.woff2",
+    "src": "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff2"
+  },
+  "src/js/main.css": {
+    "file": "assets/main-1e2b5437.css",
+    "src": "src/js/main.css"
+  },
+  "src/js/main.js": {
+    "assets": [
+      "assets/bootstrap-icons-bacd70af.woff2",
+      "assets/bootstrap-icons-4d4572ef.woff"
+    ],
+    "css": [
+      "assets/main-1e2b5437.css"
+    ],
+    "file": "assets/main-f315baa9.js",
+    "imports": [
+      "_vendor-e910373e.js",
+      "_manager-2517acb8.js",
+      "_grid-c64ff6e6.js"
+    ],
+    "isEntry": true,
+    "src": "src/js/main.js"
+  }
+}

@@ -6,16 +6,13 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+rg2log.txt
 
 node_modules
-dist
-oldrg2
-dist-ssr
 *.local
 coverage
 .nyc_output
 kartat
-log
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
