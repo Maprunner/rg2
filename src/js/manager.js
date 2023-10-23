@@ -1205,8 +1205,8 @@ function processCourseFile(e) {
 }
 
 function processMap(e) {
-  // called to load a new map locally
-  loadNewMap(e.target.result)
+  // called to load a new map locally rather than from server when creating a new map
+  loadNewMap(e.target.result, true)
   document.getElementById("rg2-load-map-file").classList.add("is-valid")
   mapLoaded = true
   mapSize = getMapSize()

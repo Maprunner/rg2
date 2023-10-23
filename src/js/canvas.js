@@ -257,12 +257,14 @@ export function initialiseCanvas() {
   resizeCanvas()
 }
 
-export function loadNewMap(mapFile) {
+export function loadNewMap(mapFile, isBeingCreated = false) {
   document.getElementById("rg2-map-load-progress-label").textContent = t("Loading map", "")
   document.getElementById("rg2-map-load-progress").classList.remove("d-none")
   // setting src on an Image automatically triggers a request to load the map
+  // if this is a new map being created by the manager then just use the name we got
+  // else we are loading an existing map from the server
   // adding date forces reload from server and avoids all sorts of caching problems with images
-  map.src = mapFile + "?" + Date.now()
+  map.src = isBeingCreated ? mapFile : mapFile + "?" + Date.now()
 }
 
 function mapLoadedCallback() {
