@@ -21,6 +21,11 @@ if (defined('OVERRIDE_KARTAT_DIRECTORY')) {
   $kartat = "../kartat/";
 }
 
+// whether or not to create map files to support the other Routegadget
+if (!defined('CREATE_JPG_MAP_FILES')) {
+  define('CREATE_JPG_MAP_FILES', true);
+}
+
 // The default encoding used by Route Gadget 2
 define('RG2_ENCODING', 'UTF-8');
 
@@ -197,6 +202,10 @@ function handleGetRequest($type, $id)
         $lang = 0;
       }
       $output = language::getLanguage($lang);
+      break;
+    case 'removeRedundantJPG':
+      $result = map::removeRedundantJPG();
+      $output = json_encode($result);
       break;
     case 'fix':
       event::fixResults($id);

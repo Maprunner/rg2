@@ -21,12 +21,16 @@
   define('SPLITSBROWSER_DIRECTORY', 'https://www.routegadget.co.uk/splitsbrowser');
   
   // default language if not English: this is overridden if the query includes a language (e.g. ?lang=fi)
-  // requires a dictionary file xx.js in the lang directory
-  // define('START_LANGUAGE', 'no');
+  // requires a dictionary file xx.txt in the lang directory
+  // define('START_LANGUAGE', 'fi');
 
   // Set encoding for input data read from text files: default UTF-8
   // Only needed for RG1 installations that used a different encoding when set up
   // define('RG_INPUT_ENCODING', 'UTF-8');
+
+  // Whether or not to create JPG files as well as GIFs.
+  // Only set to true if you are running both versions of Routegadget using the same kartat directory
+  // define('CREATE_JPG_MAP_FILES', false);
 
   // text displayed at bottom of info dialog. Use '' to leave blank.
   // OS licence text below is neeeded for installations on routegadget.co.uk site.

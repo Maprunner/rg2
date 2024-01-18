@@ -69,13 +69,17 @@ class map
           }
         }
         if ($file['type'] == 'image/gif') {
-          if ($image = imagecreatefromgif($file['tmp_name'])) {
-            if (imagejpeg($image, KARTAT_DIRECTORY . 'temp.jpg')) {
-              if (move_uploaded_file($file['tmp_name'], KARTAT_DIRECTORY . 'temp.gif')) {
-                $write['ok'] = true;
-                $write['status_msg'] = "Map uploaded.";
-              }
+          $jpgOK = true;
+          if (CREATE_JPG_MAP_FILES) {
+            if ($image = imagecreatefromgif($file['tmp_name'])) {
+              $jpgOK = imagejpeg($image, KARTAT_DIRECTORY . 'temp.jpg');
             }
+          }
+          $gifMoved = (move_uploaded_file($file['tmp_name'], KARTAT_DIRECTORY . 'temp.gif'));
+
+          if ($gifMoved && $jpgOK) {
+            $write['ok'] = true;
+            $write['status_msg'] = "Map uploaded.";
           }
         }
       }
@@ -109,16 +113,18 @@ class map
       $newid = 1;
       $handle = @fopen(KARTAT_DIRECTORY . "kartat.txt", "w+");
     }
-    // may not have a GIF
+    $renamingOK = true;
+    // may not have uploaded a GIF
     if (file_exists(KARTAT_DIRECTORY . "temp.gif")) {
-      $renameGIF = rename(KARTAT_DIRECTORY . "temp.gif", KARTAT_DIRECTORY . $newid . ".gif");
-    } else {
-      $renameGIF = true;
+      $renamingOK = rename(KARTAT_DIRECTORY . "temp.gif", KARTAT_DIRECTORY . $newid . ".gif");
     }
-    // always need a JPG for original Routegadget to maintain backward compatibility
-    $renameJPG = rename(KARTAT_DIRECTORY . "temp.jpg", KARTAT_DIRECTORY . $newid . ".jpg");
 
-    if (($renameJPG && $renameGIF)) {
+    // may not have a JPG if we have a GIF and we do no need to maintain backward compatibility with Original Routegadget
+    if ($renamingOK && file_exists(KARTAT_DIRECTORY . "temp.gif")) {
+      $renamingOK = rename(KARTAT_DIRECTORY . "temp.jpg", KARTAT_DIRECTORY . $newid . ".jpg");
+    }
+
+    if (($renamingOK)) {
       $newmap = $newid . "|" . utils::encode_rg_output($data->name);
       if ($data->worldfile->valid) {
         $newmap .= "|" . $data->xpx[0] . "|" . $data->lon[0] . "|" . $data->ypx[0] . "|" . $data->lat[0];
@@ -264,6 +270,35 @@ class map
       $write["ok"] = false;
     }
 
+    return $write;
+  }
+
+  private static function removeSuffix($name)
+  {
+    // removes .jpg or .gif from file names
+    return substr($name, 0, strlen($name) - 4);
+  }
+
+  public static function removeRedundantJPG()
+  {
+    // only way to call this is as a direct API call
+    if (!CREATE_JPG_MAP_FILES) {
+      // only allow deletion if we have set the config option to say we don't want them
+      $write["status_msg"] = "";
+      $gifs = array_map('self::removeSuffiX', glob(KARTAT_DIRECTORY . "*.gif"));
+      foreach ($gifs as $filename) {
+        if (file_exists($filename . ".jpg")) {
+          @unlink($filename . ".jpg");
+        }
+        $write["ok"] = true;
+        $write["status_msg"] = "Redundant jpgs deleted";
+        utils::rg2log("JPG files deleted");
+      }
+    } else {
+      $write["ok"] = true;
+      $write["status_msg"] = "Redundant jpgs cannot be deleted";
+      utils::rg2log("JPG files not deleted");
+    }
     return $write;
   }
 }
