@@ -120,7 +120,7 @@ class map
     }
 
     // may not have a JPG if we have a GIF and we do no need to maintain backward compatibility with Original Routegadget
-    if ($renamingOK && file_exists(KARTAT_DIRECTORY . "temp.gif")) {
+    if ($renamingOK && file_exists(KARTAT_DIRECTORY . "temp.jpg")) {
       $renamingOK = rename(KARTAT_DIRECTORY . "temp.jpg", KARTAT_DIRECTORY . $newid . ".jpg");
     }
 
@@ -273,27 +273,32 @@ class map
     return $write;
   }
 
-  private static function removeSuffix($name)
+  private static function isGIF($name)
   {
-    // removes .jpg or .gif from file names
-    return substr($name, 0, strlen($name) - 4);
+    return (substr($name, -3) === "gif");
   }
 
   public static function removeRedundantJPG()
   {
     // only way to call this is as a direct API call
+    // only allow deletion if we have set the config option to say we don't want them
     if (!CREATE_JPG_MAP_FILES) {
-      // only allow deletion if we have set the config option to say we don't want them
       $write["status_msg"] = "";
-      $gifs = array_map('self::removeSuffiX', glob(KARTAT_DIRECTORY . "*.gif"));
+      // extract list of GIF files
+      $files = scandir(KARTAT_DIRECTORY);
+      $gifs = array_filter($files, "self::isGIF");
+      $deleted = "";
       foreach ($gifs as $filename) {
-        if (file_exists($filename . ".jpg")) {
-          @unlink($filename . ".jpg");
+        // replace gif with jpg in file name
+        $name = substr($filename, 0, -3) . "jpg";
+        if (file_exists(KARTAT_DIRECTORY . $name)) {
+          @unlink(KARTAT_DIRECTORY .  $name);
+          $deleted .= $name . " ";
         }
-        $write["ok"] = true;
-        $write["status_msg"] = "Redundant jpgs deleted";
-        utils::rg2log("JPG files deleted");
       }
+      $write["ok"] = true;
+      $write["status_msg"] = "Redundant jpgs deleted: " . $deleted;
+      utils::rg2log("JPG files deleted: " . $deleted);
     } else {
       $write["ok"] = true;
       $write["status_msg"] = "Redundant jpgs cannot be deleted";
