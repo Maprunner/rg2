@@ -5,9 +5,8 @@ import istanbul from "vite-plugin-istanbul"
 import { visualizer } from "rollup-plugin-visualizer"
 
 export default defineConfig(({ command, mode, ssrBuild }) => {
-  base = "/rg2/"
   return {
-    base: base,
+    base: "/rg2/",
     build: {
       outDir: "./dist",
       emptyOutDir: true,
@@ -45,10 +44,14 @@ export default defineConfig(({ command, mode, ssrBuild }) => {
     server: {
       origin: "http://localhost",
       port: 5173,
+      // needed for vite and Cypress to work together
+      // see https://stackoverflow.com/questions/72324704/cypress-cant-load-assets-from-vites-devserver
+      host: '127.0.0.1',
       strictPort: true,
       hot: true,
       hmr: {
-        port: 5174
+        port: 5174,
+        host: '127.0.0.1',
       }
     },
     preview: {

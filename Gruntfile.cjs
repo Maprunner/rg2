@@ -16,6 +16,7 @@ module.exports = function (grunt) {
         files: [
           { expand: true, nonull: true, src: ["index.php"], dest: "dist/" },
           { expand: true, nonull: true, src: ["rg2api.php"], dest: "dist/" },
+          { expand: true, nonull: true, flatten: true, src: ["dist/.vite/manifest.json"], dest: "dist/" },
           { expand: true, nonull: true, src: ["lang/*"], dest: "dist/" },
           { expand: true, nonull: true, src: ["app/**"], dest: "dist/" }
         ],
@@ -71,7 +72,7 @@ module.exports = function (grunt) {
           nonull: true,
           flatten: true,
           src: ["dist/manifest.json"],
-          dest: "website/" + club + ".routegadget.co.uk/public_html/rg2/"
+          dest: dest
         }
       ],
       mode: true,

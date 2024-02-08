@@ -38,7 +38,7 @@ npm run build does the version number update and then runs a full production bui
 
 ## Installing
 
-For a standard installation sync the dist directory to your rg2 directory. The only missing file should be the rg2-config.php file which you need to set up separately.
+For a standard installation sync the dist directory to your rg2 directory on the production server. The only missing file should be the rg2-config.php file which you need to set up separately based on rg2-config.txt.
 
 ## Siteground configuration for routegadget.co.uk
 

@@ -13,7 +13,6 @@ module.exports = {
   },
   globals: {
     rg2Config: "readonly",
-    // Chart and AgGrid loaded via Promise if required
     Chart: "readonly",
     agGrid: "readonly"
   }

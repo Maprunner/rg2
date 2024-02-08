@@ -30,6 +30,7 @@
 
   // Whether or not to create JPG files as well as GIFs.
   // Only set to true if you are running both versions of Routegadget using the same kartat directory
+  // Defaults to true for backward compatibility
   // define('CREATE_JPG_MAP_FILES', false);
 
   // text displayed at bottom of info dialog. Use '' to leave blank.
