@@ -286,7 +286,7 @@ class map
       $write["status_msg"] = "";
       // extract list of GIF files
       $files = scandir(KARTAT_DIRECTORY);
-      $gifs = array_filter($files, "self::isGIF");
+      $gifs = array_filter($files, self::class . "::isGIF");
       $deleted = "";
       foreach ($gifs as $filename) {
         // replace gif with jpg in file name

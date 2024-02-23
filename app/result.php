@@ -140,7 +140,7 @@ class result
           // event with no results so need to sort times and add positions
           // a lot easier to do this here in one place rather than when adding and deleting results
           // avoids multiple rewrites of full results file plus need to manage route deletion
-          usort($output, "self::sortResultsByCourseThenTime");
+          usort($output, self::class . "::sortResultsByCourseThenTime");
           $pos = 0;
           $ties = 0;
           $oldsecs = -1;
