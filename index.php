@@ -14,12 +14,6 @@ if (file_exists(dirname(__FILE__) . '/rg2-config.php')) {
 }
 
 $base = "/rg2/";
-// temporary bodge to get build working
-if ("//localhost" === RG_BASE_DIRECTORY) {
-  $production = false;
-} else {
-  $production = true;
-}
 
 $api_url = RG_BASE_DIRECTORY . $base . "rg2api.php";
 if (defined('OVERRIDE_SOURCE_DIRECTORY')) {
@@ -60,9 +54,15 @@ if ((defined('START_LANGUAGE'))) {
   $lang = "en";
 }
 
-// based on https://github.com/firtadokei/codeigniter-vitejs
-if ($production) {
-  $manifestfile = 'manifest.json';
+// Need to determine if we are in production, in which case we need to use the manifest to generate the relevant includes, or 
+// are in development in which case vite deals with all that.
+// Should never be a manifest file in the development root directory so this should be a valid test...
+$manifestfile = 'manifest.json';
+$production = false;
+
+if (file_exists($manifestfile)) {
+  $production = true;
+  // based on https://github.com/firtadokei/codeigniter-vitejs
   $manifest = file_get_contents($manifestfile);
   $manifest = json_decode($manifest);
   $jsfiles = "";
