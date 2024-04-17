@@ -13,7 +13,7 @@ const timeDeltas = [100, 200, 500, 1000, 2000, 3000, 5000, 7500, 10000, 15000, 2
 // value in milliseconds
 const timerInterval = 100
 let units = "px"
-let timeDelta = 1000
+let timeDelta = 3000
 let timer = null
 // current time of animation
 let animationSecs = 0
@@ -23,15 +23,15 @@ let milliSecs = 0
 let realTime = false
 let earliestStartSecs = 0
 let latestFinishSecs = 0
-let tailLength = 0
+let tailLength = 60
 let tailStartTimeSecs = 0
 let useFullTails = false
 // control to start from if this option selected
 let massStartControl = 0
 // run each leg as a mass start if true
 let massStartByControl = false
-let displayNames = true
-let displayInitials = false
+let displayNames = false
+let displayInitials = true
 let startSecs = 0
 let slowestTimeSecs = 0
 let animationPanel = null
@@ -495,19 +495,19 @@ export function removeRunner(resultid) {
 // called before a new event is loaded
 export function resetAnimation() {
   runners.length = 0
-  timeDelta = 1000
+  timeDelta = 3000
   animationSecs = 0
   milliSecs = 0
   realTime = false
   earliestStartSecs = 0
   latestFinishSecs = 0
-  tailLength = 0
+  tailLength = 60
   tailStartTimeSecs = 0
   useFullTails = false
   massStartControl = 0
   massStartByControl = false
-  displayNames = true
-  displayInitials = false
+  displayNames = false
+  displayInitials = true
   startSecs = 0
   slowestTimeSecs = 0
   clearInterval(timer)
