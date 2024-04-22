@@ -1,5 +1,6 @@
-import { ctx, redraw } from "./canvas"
+import { alignMap, ctx, redraw } from "./canvas"
 import { options, config } from "./config"
+import { getCourseDetailsByName } from "./courses"
 import { getLengthUnits } from "./events"
 import interact from "interactjs"
 import { getDisplayedTrackDetails, setResultColour } from "./results"
@@ -8,6 +9,7 @@ import { Runner } from "./runner"
 import { t } from "./translate"
 import { formatSecsAsHHMMSS, getNextTrackColour } from "./utils"
 let runners = []
+let course = {}
 // possible time increment values in milliseconds when timer expires
 const timeDeltas = [100, 200, 500, 1000, 2000, 3000, 5000, 7500, 10000, 15000, 20000, 50000, 100000]
 // value in milliseconds
@@ -100,6 +102,12 @@ export function addRunner(runner, update = true) {
       return
     }
   }
+  // if this is the first runner to be added then get course details
+  // needed fro replay by control to allow alignment of map. Don't orry that not all
+  // runners are on same course. Just assume first runner added is the relevant course
+  if (runners.length === 0) {
+    course = getCourseDetailsByName(runner.coursename)
+  }
   if (runner.userColour !== null) {
     runner.trackColour = runner.userColour
   } else {
@@ -108,6 +116,16 @@ export function addRunner(runner, update = true) {
   runners.push(runner)
   if (update) {
     updateAnimationDetails()
+  }
+}
+
+function alignMapToAngle(control) {
+  if (course.angle.length >= control) {
+    const angle = course.angle[control]
+    // course angles are based on horizontal as 0: need to reset to north
+    alignMap(angle + Math.PI / 2, course.x[control], course.y[control])
+  } else {
+    alignMap(0, course.x[control], course.y[control], false)
   }
 }
 
@@ -488,6 +506,10 @@ export function removeRunner(resultid) {
       // delete 1 runner at position i
       runners.splice(i, 1)
     }
+    // if this was the last runner then delete course details
+    if (runners.length === 0) {
+      course = {}
+    }
   }
   updateAnimationDetails()
 }
@@ -495,6 +517,7 @@ export function removeRunner(resultid) {
 // called before a new event is loaded
 export function resetAnimation() {
   runners.length = 0
+  course = {}
   timeDelta = 3000
   animationSecs = 0
   milliSecs = 0
@@ -680,6 +703,9 @@ function stopAnimation() {
 function toggleAnimation() {
   if (timer === null) {
     startAnimation()
+    if (massStartByControl) {
+      alignMapToAngle(massStartControl)
+    }
     btnStartStop.innerHTML = pauseIcon
   } else {
     stopAnimation()

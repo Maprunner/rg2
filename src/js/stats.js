@@ -827,7 +827,7 @@ function generateTableByLegPos() {
     if (i === 0) {
       row.behind = "-"
     } else {
-      if (results[resultIndex].legSplits[i] === 0) {
+      if (results[resultIndex].legSplits[i] <= 0) {
         row.behind = "-"
       } else {
         row.behind = formatSecsAsMMSS(behind)
@@ -836,7 +836,7 @@ function generateTableByLegPos() {
     if (i === 0) {
       row.percent = 0
     } else {
-      if (results[resultIndex].legSplits[i] === 0) {
+      if (results[resultIndex].legSplits[i] <= 0) {
         row.percent = "-"
       } else {
         row.percent = parseInt((behind * 100) / byLegPos[i][0].t, 10)
@@ -847,7 +847,7 @@ function generateTableByLegPos() {
     } else {
       row.predicted = formatSecsAsMMSS(results[resultIndex].predictedSplits[iterationIndex][i])
     }
-    if (results[resultIndex].legSplits[i] === 0) {
+    if (results[resultIndex].legSplits[i] <= 0) {
       row.loss = "-"
     } else {
       row.loss = formatSecsAsMMSS(results[resultIndex].loss[iterationIndex][i])

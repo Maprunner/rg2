@@ -166,6 +166,11 @@ export function getCourseDetails(courseid) {
   return courses[courseid]
 }
 
+export function getCourseDetailsByName(coursename) {
+  // courses is a sparse array so need to handle empty entries
+  return courses.find((course) => course ? course.name === coursename: false)
+}
+
 export function getCourseLegLengths(courseid) {
   return courses[courseid].getLegLengths()
 }
