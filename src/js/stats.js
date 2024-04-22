@@ -1,4 +1,4 @@
-import { Grid, ModuleRegistry } from "@ag-grid-community/core"
+import { createGrid, Grid, ModuleRegistry } from "@ag-grid-community/core"
 import { ClientSideRowModelModule } from "@ag-grid-community/client-side-row-model"
 import Chart from "chart.js/auto"
 import { config } from "./config"
@@ -633,6 +633,7 @@ function generateSplitsTable() {
     columnDefs.push({
       headerName: j + " (" + course.codes[j] + ")",
       field: "C" + j,
+      cellDataType: "text",
       cellRenderer: renderSplits,
       width: 110
     })
@@ -640,6 +641,7 @@ function generateSplitsTable() {
   columnDefs.push({
     headerName: t("F", ""),
     field: "finish",
+    cellDataType: "text",
     cellRenderer: renderSplits,
     width: 110
   })
@@ -741,7 +743,7 @@ function generateSplitsTable() {
   wrapper.setAttribute("style", "height: " + height + "px;")
   const table = document.getElementById("rg2-results-grid")
   table.innerHTML = ""
-  new Grid(table, gridOptions)
+  createGrid(table, gridOptions)
 }
 
 function generateSummary() {
@@ -837,7 +839,7 @@ function generateTableByLegPos() {
       row.percent = 0
     } else {
       if (results[resultIndex].legSplits[i] <= 0) {
-        row.percent = "-"
+        row.percent = 0
       } else {
         row.percent = parseInt((behind * 100) / byLegPos[i][0].t, 10)
       }
@@ -910,7 +912,7 @@ function generateTableByLegPos() {
   }
   const table = document.getElementById("rg2-leg-table")
   table.innerHTML = ""
-  new Grid(table, gridOptions)
+  createGrid(table, gridOptions)
 }
 
 function generateTableByRacePos() {
@@ -999,7 +1001,7 @@ function generateTableByRacePos() {
 
   const table = document.getElementById("rg2-race-table")
   table.innerHTML = ""
-  new Grid(table, gridOptions)
+  createGrid(table, gridOptions)
 }
 
 function getAverages(rawData, perCent) {
