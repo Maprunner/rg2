@@ -108,17 +108,30 @@ describe("Loads and replays a normal event", { testIsolation: false }, () => {
     cy.get("#rg2-replay-by-control").should("not.be.visible")
     cy.get("#rg2-replay-type label").eq(2).click()
     cy.get("#rg2-replay-by-control").should("be.visible")
-    // start animation
+    // start animation: align map to control 1
     cy.get("#btn-start-stop").click()
-    // wait until everyone at control 1
+    // wait until map aligned
     cy.wait(300)
-    // start animation from control 1
+    // run animation to control 1
+    cy.get("#btn-start-stop").click()
+    cy.wait(500)
+    // align map
+    cy.get("#btn-start-stop").click()
+    // wait until map aligned
+    cy.wait(300)
+    // run animation to control 2
     cy.get("#btn-start-stop").click()
     cy.wait(500)
     // select start at control 10
     cy.get("#rg2-replay-start-control-select").click()
     cy.get('#rg2-replay-start-control-list li[data-control="10"]').click()
-    cy.wait(250)
+    // start animation: align map to control 11
+    cy.get("#btn-start-stop").click()
+    // wait until map aligned
+    cy.wait(300)
+    // run animation to control 11
+    cy.get("#btn-start-stop").click()
+    cy.wait(500)
     // select start at start
     cy.get("#rg2-replay-start-control-select").click()
     cy.get('#rg2-replay-start-control-list li[data-control="0"]').click()

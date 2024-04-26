@@ -80,7 +80,10 @@ describe("drawing routes", { testIsolation: false }, () => {
     }
   })
   it("allows you to save a drawn route", () => {
+    cy.intercept("rg2api.php?type=event&id=*").as("event")
     cy.get("#btn-save-route").click()
+    // wait for updated event info with new drawn route
+    cy.wait("@event")
     cy.closeWarningDialog("Your route has been saved")
   })
   it("should load an event with no results", () => {
@@ -112,7 +115,10 @@ describe("drawing routes", { testIsolation: false }, () => {
     clickAt(400, 430)
     cy.get("#btn-three-seconds").click()
     clickAt(369, 331)
+    cy.intercept("rg2api.php?type=event&id=*").as("event")
     cy.get("#btn-save-route").click()
+    // wait for updated event info with new drawn route
+    cy.wait("@event")
     cy.closeWarningDialog("Your route has been saved")
   })
 })
