@@ -3,7 +3,7 @@ import { getMapSize } from "./canvas"
 
 export const config = {
   // version gets set automatically by grunt file during build process
-  RG2VERSION: '2.0.4',
+  RG2VERSION: '2.0.5',
   DEFAULT_SCALE_FACTOR: 1.1,
   TAB_EVENTS: "event-tab",
   TAB_COURSES: "course-tab",

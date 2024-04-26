@@ -177,7 +177,7 @@ class event
       }
       fclose($handle);
     }
-    usort($output, "self::sortEventsByDate");
+    usort($output, self::class . "::sortEventsByDate");
     return utils::addVersion("events", $output);
   }
 

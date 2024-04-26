@@ -1,46 +1,50 @@
 {
-  "_grid-FILuImag.js": {
-    "file": "assets/grid-FILuImag.js"
+  "_grid-DnPZ0k3G.js": {
+    "file": "assets/grid-DnPZ0k3G.js",
+    "name": "grid"
   },
   "_manager-!~{003}~.js": {
-    "file": "assets/manager-B7qTrBCW.css",
+    "file": "assets/manager-HupOsEJb.css",
     "src": "_manager-!~{003}~.js"
   },
-  "_manager-eBKvXMG6.js": {
+  "_manager-Cw-VX6TE.js": {
+    "file": "assets/manager-Cw-VX6TE.js",
+    "name": "manager",
     "css": [
-      "assets/manager-B7qTrBCW.css"
-    ],
-    "file": "assets/manager-eBKvXMG6.js"
+      "assets/manager-HupOsEJb.css"
+    ]
   },
-  "_vendor-cZRM5MRd.js": {
-    "file": "assets/vendor-cZRM5MRd.js",
+  "_vendor-oPMpqxxv.js": {
+    "file": "assets/vendor-oPMpqxxv.js",
+    "name": "vendor",
     "imports": [
-      "_manager-eBKvXMG6.js"
+      "_manager-Cw-VX6TE.js"
     ]
   },
   "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff": {
-    "file": "assets/bootstrap-icons-TqycWyKO.woff",
+    "file": "assets/bootstrap-icons-BOrJxbIo.woff",
     "src": "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff"
   },
   "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff2": {
-    "file": "assets/bootstrap-icons-bb42NSi8.woff2",
+    "file": "assets/bootstrap-icons-BtvjY1KL.woff2",
     "src": "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff2"
   },
   "src/js/main.js": {
-    "assets": [
-      "assets/bootstrap-icons-bb42NSi8.woff2",
-      "assets/bootstrap-icons-TqycWyKO.woff"
+    "file": "assets/main-2tT5craX.js",
+    "name": "main",
+    "src": "src/js/main.js",
+    "isEntry": true,
+    "imports": [
+      "_vendor-oPMpqxxv.js",
+      "_manager-Cw-VX6TE.js",
+      "_grid-DnPZ0k3G.js"
     ],
     "css": [
-      "assets/main-vXq97IOf.css"
+      "assets/main-BATUQMrW.css"
     ],
-    "file": "assets/main-11eD86JJ.js",
-    "imports": [
-      "_vendor-cZRM5MRd.js",
-      "_manager-eBKvXMG6.js",
-      "_grid-FILuImag.js"
-    ],
-    "isEntry": true,
-    "src": "src/js/main.js"
+    "assets": [
+      "assets/bootstrap-icons-BtvjY1KL.woff2",
+      "assets/bootstrap-icons-BOrJxbIo.woff"
+    ]
   }
 }
