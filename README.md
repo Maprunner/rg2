@@ -1,5 +1,11 @@
 # Routegadget 2
 
+## IMPORTANT
+
+This branch is an archive of the Version 1.x.x development. It was the live version before a complete front end rewrite and the move to use vite.
+
+There will be no active development of this branch and it is intended for archive purposes only. The master branch from Version 2.0.1 onwards is a complete replacement for this branch.
+
 ## Latest news
 
 Version 1.10.3 was released on 19th July 2023. It includes a Czech translation and various minor updates.
