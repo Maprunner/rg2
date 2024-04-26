@@ -1,4 +1,4 @@
-import { alignMap, ctx, redraw } from "./canvas"
+import { alignMap, ctx, getCentreBottom, redraw } from "./canvas"
 import { options, config } from "./config"
 import { getCourseDetailsByName } from "./courses"
 import { getLengthUnits } from "./events"
@@ -14,9 +14,14 @@ let course = {}
 const timeDeltas = [100, 200, 500, 1000, 2000, 3000, 5000, 7500, 10000, 15000, 20000, 50000, 100000]
 // value in milliseconds
 const timerInterval = 100
+const alignmentTimerInterval = 50
+const alignmentLoopCount = 20
+let mapIsAligned = false
 let units = "px"
 let timeDelta = 3000
 let timer = null
+let alignmentTimer = null
+let alignments = []
 // current time of animation
 let animationSecs = 0
 // animation time in millisecs to avoid rounding problems at very slow speed
@@ -44,6 +49,7 @@ let clockSlider = undefined
 const playIcon = `<i title=${t("Run", "")} class="bi-play-circle-fill"></i>`
 const startIcon = `<i title=${t("Start", "")} class="bi-triangle"></i>`
 const pauseIcon = `<i title=${t("Pause", "")} class="bi-pause-btn"></i>`
+const waitIcon = `<i title=${t("Wait", "")} class="bi-hourglass-split"></i>`
 const trackNames = document.getElementById("rg2-track-names")
 const trackNamesBody = document.querySelector("#rg2-track-names .card-body")
 const btnRunners = document.getElementById("btn-runners")
@@ -120,13 +126,53 @@ export function addRunner(runner, update = true) {
 }
 
 function alignMapToAngle(control) {
+  mapIsAligned = false
+  alignments = []
+  const x = course.x[control]
+  const y = course.y[control]
   if (course.angle.length >= control) {
-    const angle = course.angle[control]
-    // course angles are based on horizontal as 0: need to reset to north
-    alignMap(angle + Math.PI / 2, course.x[control], course.y[control])
+    // Set up array of transformations to move control to centre bottom of screen and rotate map
+    // so next control is straight up.
+    const to = getCentreBottom()
+    let angle = (ctx.displayAngle - course.angle[control] - Math.PI / 2) % (Math.PI * 2)
+    if (angle < -1 * Math.PI) {
+      angle = angle + 2 * Math.PI
+    }
+    for (let i = 1; i <= alignmentLoopCount; i = i + 1) {
+      let values = {}
+
+      // translations to move current control to centre bottom
+      values.x = to.x - ((to.x - x) * i) / alignmentLoopCount
+      values.y = to.y - ((to.y - y) * i) / alignmentLoopCount
+
+      // Rotation to get from current display angle to angle with next control straight up.
+      // Course angles are based on horizontal as 0: need to reset to north.
+      // Angle parameter is absolute angle to draw map.
+      values.angle = (ctx.displayAngle - (angle * i) / alignmentLoopCount) % (Math.PI * 2)
+      alignments.push(values)
+    }
+
+    alignmentTimer = setInterval(() => {
+      incrementAlignmentTime()
+    }, alignmentTimerInterval)
   } else {
-    alignMap(0, course.x[control], course.y[control], false)
+    // just set to north and keep going
+    alignMap(0, x, y, true)
+    alignmentTimer = null
   }
+}
+
+export function incrementAlignmentTime() {
+  if (alignments.length === 0) {
+    clearInterval(alignmentTimer)
+    alignmentTimer = null
+    mapIsAligned = true
+    btnStartStop.innerHTML = playIcon
+  } else {
+    const data = alignments.shift()
+    alignMap(data.angle, data.x, data.y)
+  }
+  redraw()
 }
 
 export function animateRunners(courseresults, doAnimate) {
@@ -178,6 +224,7 @@ function checkForStopControl(currentTime) {
   if (allAtControl) {
     //move on to next control
     massStartControl += 1
+    mapIsAligned = false
     setByControlLabel(massStartControl)
     setNextControlDetails()
   }
@@ -540,6 +587,11 @@ export function resetAnimation() {
   trackNames.classList.add("d-none")
 }
 
+// needed if you run replay by control and then switch back to something else
+function resetNextStopTime() {
+  runners.forEach((r) => (r.nextStopTime = config.VERY_HIGH_TIME_IN_SECS))
+}
+
 export function resultIsBeingAnimated(resultid) {
   // is given result in the array of animated runners?
   return runners.findIndex((runner) => runner.resultid === resultid) > -1
@@ -615,6 +667,7 @@ function setReplayByControl() {
   // default to 0 (start) until user selects another control
   massStartControl = 0
   massStartByControl = true
+  mapIsAligned = false
   setByControlLabel(massStartControl)
   setNextControlDetails()
 }
@@ -623,6 +676,7 @@ function setReplayMassStart() {
   realTime = false
   massStartByControl = false
   massStartControl = 0
+  resetNextStopTime()
   setAnimationTime(0)
   clockSlider.removeAttribute("disabled")
 }
@@ -631,6 +685,7 @@ function setReplayRealTime() {
   realTime = true
   massStartByControl = false
   massStartControl = 0
+  resetNextStopTime()
   setAnimationTime(0)
   clockSlider.removeAttribute("disabled")
 }
@@ -702,14 +757,23 @@ function stopAnimation() {
 
 function toggleAnimation() {
   if (timer === null) {
-    startAnimation()
+    // only align replay by control for now
+    // may also decide to make this user-configurable
     if (massStartByControl) {
-      alignMapToAngle(massStartControl)
+      // if timer is running then we are doing alignment already
+      if (!mapIsAligned && alignmentTimer === null) {
+        alignMapToAngle(massStartControl)
+        btnStartStop.innerHTML = waitIcon
+      }
+    } else {
+      mapIsAligned = true
     }
-    btnStartStop.innerHTML = pauseIcon
+
+    if (mapIsAligned) {
+      startAnimation()
+    }
   } else {
     stopAnimation()
-    btnStartStop.innerHTML = playIcon
   }
 }
 

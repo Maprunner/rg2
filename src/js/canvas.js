@@ -74,7 +74,7 @@ function applyMapRotation(angle, x, y, moveMap) {
   ctx.rotate(angle)
   if (moveMap) {
     // move map so that given point is centre-bottom of screen
-    const pt = ctx.transformedPoint(canvas.width / 2, canvas.height * 0.9)
+    const pt = getCentreBottom()
     ctx.translate(pt.x - x, pt.y - y)
   } else {
     // put map back where it started
@@ -82,6 +82,10 @@ function applyMapRotation(angle, x, y, moveMap) {
   }
   ctx.save()
   redraw()
+}
+
+export function getCentreBottom() {
+  return ctx.transformedPoint(canvas.width / 2, canvas.height * 0.9)
 }
 
 function drawSelectEventText() {
