@@ -1,4 +1,3 @@
-// eslint-disable-next-line no-unused-vars
 import * as bootstrap from "bootstrap"
 import { t } from "./translate"
 
@@ -139,6 +138,7 @@ export const showToast = (title, text) => {
     </div>`
   toast.appendChild(newToast)
   const toastElList = document.querySelectorAll(".toast")
+  // eslint-disable-next-line no-unused-vars
   const toastList = [...toastElList].map((toastEl) => {
     const newToast = new bootstrap.Toast(toastEl, {})
     toastEl.addEventListener("hidden.bs.toast", () => {

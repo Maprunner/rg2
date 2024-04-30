@@ -1,4 +1,4 @@
-import { createGrid, Grid, ModuleRegistry } from "@ag-grid-community/core"
+import { createGrid, ModuleRegistry } from "@ag-grid-community/core"
 import { ClientSideRowModelModule } from "@ag-grid-community/client-side-row-model"
 import Chart from "chart.js/auto"
 import { config } from "./config"

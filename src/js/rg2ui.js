@@ -1,5 +1,4 @@
 import { addRunner, animateRunners, removeRunner } from "./animation"
-// eslint-disable-next-line no-unused-vars
 import * as bootstrap from "bootstrap"
 import { redraw, resizeCanvas } from "./canvas"
 import { config, options, saveConfigOptions, setConfigOption } from "./config"
