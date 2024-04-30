@@ -11,7 +11,9 @@
     justify-content: center;
     align-items: center;
     gap: 30px;
-    transition: visibility 0s 1s, opacity 1s ease-in-out;
+    transition:
+      visibility 0s 1s,
+      opacity 1s ease-in-out;
   }
 </style>
 
@@ -38,8 +40,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
       </div>
       <div class="offcanvas-body" id="rg2-right-info-panel-body">
-        <?php include 'app/html/settingslayout.html'; ?>
-        <?php include 'app/html/aboutlayout.html'; ?>
+        <?php include 'app/html/settingslayout.html'; ?> <?php include 'app/html/aboutlayout.html'; ?>
         <div id="rg2-stats-dialog"></div>
       </div>
     </div>
@@ -64,14 +65,14 @@
     </div>
     <div id="rg2-track-names" class="card d-none">
       <div class="card-header d-flex justify-content-between">
-        <div class="card-title">Runners</div>
+        <h6 class="card-title">Runners</h6>
         <button type="button" id="btn-close-track-names" class="btn-close btn-sm"></button>
       </div>
       <div class="card-body track-names container"></div>
     </div>
     <div id="rg2-measure-dialog" class="card d-none">
       <div class="card-header d-flex justify-content-between">
-        <div class="card-title">Measure</div>
+        <h6 class="card-title">Measure</h6>
         <button type="button" id="btn-close-measure-dialog" class="btn-close btn-sm"></button>
       </div>
       <div class="card-body rg2-overlay-table"></div>
@@ -116,15 +117,9 @@
         </form>
       </div>
     </div>
-    <?php if ($manager) { ?>
-    <?php include 'app/html/addeventbody.html'; ?>
-    <?php include 'app/html/editeventbody.html'; ?>
-    <?php include 'app/html/addmapbody.html'; ?>
-    <?php include 'app/html/deletemapbody.html'; ?>
-    <?php } ?>
+    <?php if ($manager) { ?> <?php include 'app/html/addeventbody.html'; ?> <?php include 'app/html/editeventbody.html';
+    ?> <?php include 'app/html/addmapbody.html'; ?> <?php include 'app/html/deletemapbody.html'; ?> <?php } ?>
   </div>
-  <div id="rg2-animation-controls" class="d-none">
-    <?php include 'app/html/animationlayout.html'; ?>
-  </div>
+  <div id="rg2-animation-controls" class="d-none"><?php include 'app/html/animationlayout.html'; ?></div>
   <?php include 'app/html/script.html'; ?>
 </body>

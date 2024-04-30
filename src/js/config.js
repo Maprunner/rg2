@@ -27,6 +27,8 @@ export const config = {
   // screen sizes for different layouts
   BIG_SCREEN_BREAK_POINT: 800,
   SMALL_SCREEN_BREAK_POINT: 500,
+  MAX_ZOOM: 50,
+  MIN_ZOOM: 0.05,
   PURPLE: "#b300ff",
   RED: "#ff0000",
   GREEN: "#00ff00",

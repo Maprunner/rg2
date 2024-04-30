@@ -1,4 +1,4 @@
-import { alignMap, ctx, getCentreBottom, redraw } from "./canvas"
+import { alignMap, ctx, getCentreBottom, getCentreTop, redraw } from "./canvas"
 import { options, config } from "./config"
 import { getCourseDetailsByName } from "./courses"
 import { getLengthUnits } from "./events"
@@ -7,7 +7,7 @@ import { getDisplayedTrackDetails, setResultColour } from "./results"
 import { resizePanels } from "./rg2ui"
 import { Runner } from "./runner"
 import { t } from "./translate"
-import { formatSecsAsHHMMSS, getNextTrackColour } from "./utils"
+import { formatSecsAsHHMMSS, getDistanceBetweenPoints, getNextTrackColour } from "./utils"
 let runners = []
 let course = {}
 // possible time increment values in milliseconds when timer expires
@@ -130,10 +130,17 @@ function alignMapToAngle(control) {
   alignments = []
   const x = course.x[control]
   const y = course.y[control]
+  const x2 = course.x[control + 1]
+  const y2 = course.y[control + 1]
   if (course.angle.length >= control) {
     // Set up array of transformations to move control to centre bottom of screen and rotate map
-    // so next control is straight up.
-    const to = getCentreBottom()
+    // so next control is straight up and near top of screen.
+    const from = getCentreBottom()
+    const to = getCentreTop()
+    const mapDistance = getDistanceBetweenPoints(x, y, x2, y2)
+    const screenDistance = getDistanceBetweenPoints(from.x, from.y, to.x, to.y)
+    let scale = Math.min(screenDistance / mapDistance, config.MAX_ZOOM)
+    scale = Math.max(scale, config.MIN_ZOOM)
     let angle = (ctx.displayAngle - course.angle[control] - Math.PI / 2) % (Math.PI * 2)
     if (angle < -1 * Math.PI) {
       angle = angle + 2 * Math.PI
@@ -142,13 +149,17 @@ function alignMapToAngle(control) {
       let values = {}
 
       // translations to move current control to centre bottom
-      values.x = to.x - ((to.x - x) * i) / alignmentLoopCount
-      values.y = to.y - ((to.y - y) * i) / alignmentLoopCount
+      values.x = from.x - ((from.x - x) * i) / alignmentLoopCount
+      values.y = from.y - ((from.y - y) * i) / alignmentLoopCount
 
       // Rotation to get from current display angle to angle with next control straight up.
       // Course angles are based on horizontal as 0: need to reset to north.
       // Angle parameter is absolute angle to draw map.
       values.angle = (ctx.displayAngle - (angle * i) / alignmentLoopCount) % (Math.PI * 2)
+
+      // scale to stretch map: value is a multiplier so use xth root each time and apply it x times
+      values.scale = Math.pow(scale, 1 / alignmentLoopCount)
+
       alignments.push(values)
     }
 
@@ -157,7 +168,7 @@ function alignMapToAngle(control) {
     }, alignmentTimerInterval)
   } else {
     // just set to north and keep going
-    alignMap(0, x, y, true)
+    alignMap(0, x, y, true, 1)
     alignmentTimer = null
   }
 }
@@ -170,7 +181,7 @@ export function incrementAlignmentTime() {
     btnStartStop.innerHTML = playIcon
   } else {
     const data = alignments.shift()
-    alignMap(data.angle, data.x, data.y)
+    alignMap(data.angle, data.x, data.y, true, data.scale)
   }
   redraw()
 }

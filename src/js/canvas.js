@@ -60,18 +60,21 @@ function addListeners() {
   btn.addEventListener("click", () => resetMapState())
 }
 
-export function alignMap(angle, x, y, moveMap = true) {
+export function alignMap(angle, x, y, moveMap = true, scale = 1) {
   // align to an absolute angle: 0 is up/north
   // rotate around defined x, y
-  applyMapRotation((ctx.displayAngle - angle) % (Math.PI * 2), x, y, moveMap)
+  applyMapRotation((ctx.displayAngle - angle) % (Math.PI * 2), x, y, moveMap, scale)
 }
 
-function applyMapRotation(angle, x, y, moveMap) {
+function applyMapRotation(angle, x, y, moveMap, scale) {
   // save new absolute angle
   ctx.displayAngle = (ctx.displayAngle - angle) % (Math.PI * 2)
   // rotate around given co-ordinates
   ctx.translate(x, y)
   ctx.rotate(angle)
+  if (scale !== 1) {
+    ctx.scale(scale, scale)
+  }
   if (moveMap) {
     // move map so that given point is centre-bottom of screen
     const pt = getCentreBottom()
@@ -84,17 +87,24 @@ function applyMapRotation(angle, x, y, moveMap) {
   redraw()
 }
 
-export function getCentreBottom() {
-  return ctx.transformedPoint(canvas.width / 2, canvas.height * 0.9)
+function drawDefaultText() {
+  if (!config.managing() && window.innerWidth >= config.BIG_SCREEN_BREAK_POINT) {
+    ctx.font = "16pt Arial"
+    ctx.textAlign = "center"
+    ctx.fillStyle = config.BLACK
+    const pt = ctx.transformedPoint(canvas.width / 2, canvas.height / 2)
+    ctx.fillText("Routegadget 2 Version " + config.RG2VERSION, pt.x, pt.y)
+  }
 }
 
-function drawSelectEventText() {
-  if (!config.managing() && window.innerWidth >= config.BIG_SCREEN_BREAK_POINT) {
-    ctx.font = "30pt Arial"
-    ctx.textAlign = "left"
-    ctx.fillStyle = config.BLACK
-    ctx.fillText(t("Select an event", ""), 20, canvas.height / 2)
-  }
+export function getCentreBottom() {
+  const controlsHeight = document.getElementById("rg2-animation-controls").offsetHeight
+  return ctx.transformedPoint(canvas.width / 2, (canvas.height - controlsHeight) * 0.85)
+}
+
+export function getCentreTop() {
+  const controlsHeight = document.getElementById("rg2-animation-controls").offsetHeight
+  return ctx.transformedPoint(canvas.width / 2, (canvas.height - controlsHeight) * 0.15)
 }
 
 export function getMapSize() {
@@ -337,7 +347,7 @@ function doRedraw() {
       }
     }
   } else {
-    drawSelectEventText()
+    drawDefaultText()
   }
   // console.timeEnd("redraw")
 }
@@ -385,7 +395,10 @@ function rotateMap(direction) {
   // direction is -1 for left and 1 for right
   const angle = direction * (Math.PI / 36)
   // rotate around centre of map
-  applyMapRotation(angle, map.width / 2, map.height / 2, false)
+  ctx.translate(map.width / 2, map.height / 2)
+  applyMapRotation(angle, 0, 0, false)
+  ctx.translate(-map.width / 2, -map.height / 2)
+  ctx.save()
 }
 
 function saveMouseEvent(e) {
@@ -415,7 +428,7 @@ function trackTransforms(oldctx) {
   }
   let scale = oldctx.scale
   oldctx.scale = function (sx, sy) {
-    xform = xform.scaleNonUniform(sx, sy)
+    xform = xform.scale(sx, sy)
     return scale.call(oldctx, sx, sy)
   }
   let translate = oldctx.translate
@@ -455,7 +468,7 @@ function zoom(zoomDirection) {
   const tempZoom = input.zoomSize * factor
   // limit zoom to avoid things disappearing
   // chosen values seem reasonable after some quick tests
-  if (tempZoom < 50 && tempZoom > 0.05) {
+  if (tempZoom < config.MAX_ZOOM && tempZoom > config.MIN_ZOOM) {
     input.zoomSize = tempZoom
     const pt = ctx.transformedPoint(input.lastX, input.lastY)
     ctx.translate(pt.x, pt.y)

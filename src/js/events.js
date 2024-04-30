@@ -156,7 +156,7 @@ export function getEventStats() {
   const eventinfo = getEventInfoForKartatID(parseInt(id, 10))
   let stats = `<div class='fs-4 fw-bolder pb-3'>${t("Event statistics")}</div>`
   stats += `<table class='table table-sm table-striped-columns table-bordered'><tbody>`
-  stats += `<tr><td>${t("Event")}</td><td>${eventinfo.name}:${eventinfo.date}</td></tr>`
+  stats += `<tr><td>${t("Event")}</td><td>${eventinfo.name}:&nbsp;${eventinfo.date}</td></tr>`
   if (eventinfo.comment) {
     stats += `<tr><td>${t("Comments")}</td><td>${eventinfo.comment}</td></tr>`
   }

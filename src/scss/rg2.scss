@@ -13,9 +13,16 @@ $body-bg: #fff;
 $border-radius: .4rem;
 $success: #7952b3;
 
+$spacer: 0.5rem;
+
 // Required
 $enable-dark-mode: false;
 @import "~bootstrap/scss/functions";
+
+// Reset bootstrap variables as necessary: must come before rest of imports
+// See https: //getbootstrap.com/docs/5.3/customize/sass/#variable-defaults
+$navbar-padding-y: 0;
+
 @import "~bootstrap/scss/variables";
 @import "~bootstrap/scss/maps";
 @import "~bootstrap/scss/mixins";
@@ -87,7 +94,7 @@ $enable-dark-mode: false;
 ///////////////////////////////////////////////
 
 .btn-rg2-navbar {
-  font-size: clamp(0.75rem, 1.5vw, 1.5rem);
+  font-size: clamp(0.75rem, 1vw, 1.5rem);
   --bs-btn-color: #fff;
   --bs-btn-bg: #212529;
   --bs-btn-border-color: #212529;
@@ -105,7 +112,7 @@ $enable-dark-mode: false;
 }
 
 #rg2-info-panel-tab-headers button {
-  padding: ($spacer * 0.5) !important;
+  padding: ($spacer)
 }
 
 #rg2-info-panel {
@@ -258,13 +265,8 @@ $enable-dark-mode: false;
   top: 0;
   right: 0;
   max-width: 350px;
-  margin-top: 5px;
-  margin-right: 5px;
-}
-
-#rg2-track-names .card-body {
-  max-height: 500px;
-  overflow: auto;
+  margin-top: 0.5em;
+  margin-right: 0.5em;
 }
 
 #rg2-measure-dialog {
@@ -272,8 +274,8 @@ $enable-dark-mode: false;
   top: 0;
   right: 0;
   width: 200px;
-  margin-top: 5px;
-  margin-right: 5px;
+  margin-top: 0.5em;
+  margin-right: 0.5em;
 }
 
 #rg2-measure-dialog .card-body {
@@ -305,6 +307,8 @@ $enable-dark-mode: false;
   display: grid;
   grid-template-columns: 50px 2fr 1fr;
   align-items: center;
+  max-height: 500px;
+  overflow: auto;
 }
 
 .track-names .form-control-color {
