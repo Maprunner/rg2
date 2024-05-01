@@ -299,7 +299,7 @@ export function redraw() {
     redrawTimerID = setTimeout(() => {
       redrawTimerID = undefined
       doRedraw()
-    }, 75)
+    }, 50)
   } else {
     // timer is already running so redraw will happen when timer expires
     savedRedraws = savedRedraws + 1
@@ -352,7 +352,7 @@ function doRedraw() {
   // console.timeEnd("redraw")
 }
 
-function resetMapState() {
+export function resetMapState() {
   // place map in centre of canvas and scale it down to fit
   let mapscale = 1
   const heightscale = canvas.height / map.height

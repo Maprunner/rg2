@@ -109,7 +109,7 @@ export function addRunner(runner, update = true) {
     }
   }
   // if this is the first runner to be added then get course details
-  // needed fro replay by control to allow alignment of map. Don't orry that not all
+  // needed for replay by control to allow alignment of map. Don't worry that not all
   // runners are on same course. Just assume first runner added is the relevant course
   if (runners.length === 0) {
     course = getCourseDetailsByName(runner.coursename)
@@ -171,19 +171,6 @@ function alignMapToAngle(control) {
     alignMap(0, x, y, true, 1)
     alignmentTimer = null
   }
-}
-
-export function incrementAlignmentTime() {
-  if (alignments.length === 0) {
-    clearInterval(alignmentTimer)
-    alignmentTimer = null
-    mapIsAligned = true
-    btnStartStop.innerHTML = playIcon
-  } else {
-    const data = alignments.shift()
-    alignMap(data.angle, data.x, data.y, true, data.scale)
-  }
-  redraw()
 }
 
 export function animateRunners(courseresults, doAnimate) {
@@ -464,6 +451,19 @@ function getTrackNamesHTML(tracks) {
     html += ` data-resultid="${tracks[i].resultid}">${tracks[i].distance}</div>`
   }
   return html
+}
+
+function incrementAlignmentTime() {
+  if (alignments.length === 0) {
+    clearInterval(alignmentTimer)
+    alignmentTimer = null
+    mapIsAligned = true
+    btnStartStop.innerHTML = playIcon
+  } else {
+    const data = alignments.shift()
+    alignMap(data.angle, data.x, data.y, true, data.scale)
+  }
+  redraw()
 }
 
 export function incrementAnimationTime() {

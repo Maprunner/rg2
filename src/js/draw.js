@@ -1,5 +1,5 @@
 import { postApi } from "./api"
-import { alignMap, ctx, redraw } from "./canvas"
+import { alignMap, ctx, getCentreBottom, getCentreTop, redraw, resetMapState } from "./canvas"
 import { config, getOverprintDetails, options, removeDrawnRouteDetails, saveDrawnRouteDetails } from "./config"
 import { getCourseDetails, getCourseLegLengths, setCourseDisplay } from "./courses"
 import { doGetEvents, getKartatEventID, loadEventByKartatID } from "./events"
@@ -22,6 +22,12 @@ import {
   showWarningDialog
 } from "./utils"
 
+const alignmentTimerInterval = 50
+const alignmentLoopCount = 20
+let alignmentTimer = null
+let alignments = []
+let mapIsAligned = false
+
 let trackColour = "#ff0000"
 let routeToDelete = null
 let trk = new GPSTrack()
@@ -36,21 +42,26 @@ let previousValidControlIndex = 0
 let isScoreCourse = false
 
 function addNewPoint(x, y) {
-  if (closeEnough(x, y)) {
-    addRouteDataPoint(controlx[nextControl], controly[nextControl])
-    // angles will be wrong for missing splits since we don't know angles between non-consecutive controls and I
-    // don't intend to start calculating them now...
-    alignMapToAngle(nextControl)
-    previousValidControlIndex = nextControl
-    nextControl = getNextValidControl(nextControl)
-    if (nextControl === controlx.length) {
-      document.getElementById("btn-save-route").removeAttribute("disabled")
+  // ignore input if we are still aligning map
+  if (mapIsAligned) {
+    if (closeEnough(x, y)) {
+      addRouteDataPoint(controlx[nextControl], controly[nextControl])
+      // angles will be wrong for missing splits since we don't know angles between non-consecutive controls and I
+      // don't intend to start calculating them now...
+      alignMapToAngle(nextControl)
+      previousValidControlIndex = nextControl
+      nextControl = getNextValidControl(nextControl)
+      if (nextControl === controlx.length) {
+        document.getElementById("btn-save-route").removeAttribute("disabled")
+        // show full map now that we have drawn the complete route
+        resetMapState()
+      }
+    } else {
+      addRouteDataPoint(Math.round(x), Math.round(y))
     }
-  } else {
-    addRouteDataPoint(Math.round(x), Math.round(y))
+    document.getElementById("btn-undo").removeAttribute("disabled")
+    redraw()
   }
-  document.getElementById("btn-undo").removeAttribute("disabled")
-  redraw()
 }
 
 function addRouteDataPoint(x, y) {
@@ -131,22 +142,57 @@ export function adjustTrack(p1, p2, button = undefined) {
 }
 
 function alignMapToAngle(control) {
-  if (options.alignMap) {
-    // don't adjust after we have got to the finish
-    let angle
-    if (control < controlx.length - 1) {
-      if (isScoreCourse) {
-        // need to calculate this here since score courses use variants for
-        // each person, not single courses
-        angle = getAngle(controlx[control], controly[control], controlx[control + 1], controly[control + 1])
-      } else {
-        angle = angles[control]
-      }
-      // course angles are based on horizontal as 0: need to reset to north
-      alignMap(angle + Math.PI / 2, controlx[control], controly[control])
+  if (options.alignMap && control < controlx.length - 1) {
+    mapIsAligned = false
+    alignments = []
+    const x = controlx[control]
+    const y = controly[control]
+    const x2 = controlx[control + 1]
+    const y2 = controly[control + 1]
+    // Set up array of transformations to move control to centre bottom of screen and rotate map
+    // so next control is straight up and near top of screen.
+    const from = getCentreBottom()
+    const to = getCentreTop()
+    const mapDistance = getDistanceBetweenPoints(x, y, x2, y2)
+    const screenDistance = getDistanceBetweenPoints(from.x, from.y, to.x, to.y)
+    let scale = Math.min(screenDistance / mapDistance, config.MAX_ZOOM)
+    scale = Math.max(scale, config.MIN_ZOOM)
+    let controlAngle
+    if (isScoreCourse) {
+      // need to calculate this here since score courses use variants for
+      // each person, not single courses
+      controlAngle = getAngle(controlx[control], controly[control], controlx[control + 1], controly[control + 1])
+    } else {
+      controlAngle = angles[control]
     }
+    let angle = (ctx.displayAngle - controlAngle - Math.PI / 2) % (Math.PI * 2)
+    if (angle < -1 * Math.PI) {
+      angle = angle + 2 * Math.PI
+    }
+    for (let i = 1; i <= alignmentLoopCount; i = i + 1) {
+      let values = {}
+
+      // translations to move current control to centre bottom
+      values.x = from.x - ((from.x - x) * i) / alignmentLoopCount
+      values.y = from.y - ((from.y - y) * i) / alignmentLoopCount
+
+      // Rotation to get from current display angle to angle with next control straight up.
+      // Course angles are based on horizontal as 0: need to reset to north.
+      // Angle parameter is absolute angle to draw map.
+      values.angle = (ctx.displayAngle - (angle * i) / alignmentLoopCount) % (Math.PI * 2)
+
+      // scale to stretch map: value is a multiplier so use xth root each time and apply it x times
+      values.scale = Math.pow(scale, 1 / alignmentLoopCount)
+
+      alignments.push(values)
+    }
+    alignmentTimer = setInterval(() => {
+      incrementAlignmentTime()
+    }, alignmentTimerInterval)
   } else {
-    alignMap(0, controlx[control], controly[control], false)
+    alignMap(0, controlx[control], controly[control], false, 1)
+    mapIsAligned = true
+    alignmentTimer = null
   }
 }
 
@@ -357,6 +403,18 @@ const handleRouteSaved = (name) => (response) => {
   }
 }
 
+function incrementAlignmentTime() {
+  if (alignments.length === 0) {
+    clearInterval(alignmentTimer)
+    alignmentTimer = null
+    mapIsAligned = true
+  } else {
+    const data = alignments.shift()
+    alignMap(data.angle, data.x, data.y, true, data.scale)
+  }
+  redraw()
+}
+
 function initialiseCourse(courseid) {
   pendingCourseID = null
   trk.routeData = new RouteData()
@@ -463,6 +521,8 @@ export function mouseUp(x, y, button) {
 }
 
 export function readGPS(file) {
+  // show full map aligned to north
+  resetMapState()
   trk.readGPS(file)
 }
 
@@ -623,7 +683,6 @@ export function setName(resultid) {
       nextControl = getNextValidControl(0)
       previousValidControlIndex = 0
     }
-    alignMapToAngle(0)
     startDrawing()
   }
 }
@@ -664,7 +723,6 @@ export function setNameAndTime() {
     }
     trk.routeData.splits = splits
     previousValidControlIndex = 0
-    redraw()
     startDrawing()
   }
 }
@@ -686,6 +744,7 @@ export function startDrawing() {
   // TODO really???
   const file = document.getElementById("rg2-load-gps-file")
   file.removeAttribute("disabled")
+  alignMapToAngle(0)
   redraw()
 }
 
@@ -702,32 +761,35 @@ export function undoGPSAdjust() {
 }
 
 export function undoLastPoint() {
-  // remove last point if we have one
-  const points = trk.routeData.x.length
-  if (points > 1) {
-    // are we undoing from previous control?
-    if (
-      controlx[previousValidControlIndex] === trk.routeData.x[points - 1] &&
-      controly[previousValidControlIndex] === trk.routeData.y[points - 1]
-    ) {
-      // are we undoing from the finish?
-      if (nextControl === controlx.length) {
-        document.getElementById("btn-save-route").setAttribute("disabled", "")
+  // ignore if we are still aligning map
+  if (mapIsAligned) {
+    // remove last point if we have one
+    const points = trk.routeData.x.length
+    if (points > 1) {
+      // are we undoing from previous control?
+      if (
+        controlx[previousValidControlIndex] === trk.routeData.x[points - 1] &&
+        controly[previousValidControlIndex] === trk.routeData.y[points - 1]
+      ) {
+        // are we undoing from the finish?
+        if (nextControl === controlx.length) {
+          document.getElementById("btn-save-route").setAttribute("disabled", "")
+        }
+        nextControl = previousValidControlIndex
+        previousValidControlIndex = getPreviousValidControl(nextControl)
+        // don't do anything clever about realigning map: just leave it as it is
       }
-      nextControl = previousValidControlIndex
-      previousValidControlIndex = getPreviousValidControl(nextControl)
-      alignMapToAngle(nextControl - 1)
+      trk.routeData.x.pop()
+      trk.routeData.y.pop()
     }
-    trk.routeData.x.pop()
-    trk.routeData.y.pop()
+    // note that array length has changed so can't use points
+    if (trk.routeData.x.length > 1) {
+      document.getElementById("btn-undo").removeAttribute("disabled")
+    } else {
+      document.getElementById("btn-undo").setAttribute("disabled", "")
+    }
+    redraw()
   }
-  // note that array length has changed so can't use points
-  if (trk.routeData.x.length > 1) {
-    document.getElementById("btn-undo").removeAttribute("disabled")
-  } else {
-    document.getElementById("btn-undo").setAttribute("disabled", "")
-  }
-  redraw()
 }
 
 export function waitThreeSeconds() {
