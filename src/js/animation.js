@@ -272,8 +272,11 @@ export function createByControlDropdown() {
       if (isNaN(massStartControl)) {
         massStartControl = 0
       }
+      mapIsAligned = false
       setByControlLabel(massStartControl)
       setNextControlDetails()
+      alignMapToAngle(massStartControl)
+      btnStartStop.innerHTML = waitIcon
     }
   })
 }

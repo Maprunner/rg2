@@ -83,7 +83,6 @@ function applyMapRotation(angle, x, y, moveMap, scale) {
     // put map back where it started
     ctx.translate(-1 * x, -1 * y)
   }
-  ctx.save()
   redraw()
 }
 
@@ -376,7 +375,6 @@ export function resetMapState() {
   }
   // don't need to rotate here since the call to setTransform above does that for us
   ctx.displayAngle = 0
-  ctx.save()
   redraw()
 }
 
@@ -396,9 +394,8 @@ function rotateMap(direction) {
   const angle = direction * (Math.PI / 36)
   // rotate around centre of map
   ctx.translate(map.width / 2, map.height / 2)
-  applyMapRotation(angle, 0, 0, false)
+  applyMapRotation(angle, 0, 0, false, 1)
   ctx.translate(-map.width / 2, -map.height / 2)
-  ctx.save()
 }
 
 function saveMouseEvent(e) {
@@ -474,7 +471,6 @@ function zoom(zoomDirection) {
     ctx.translate(pt.x, pt.y)
     ctx.scale(factor, factor)
     ctx.translate(-pt.x, -pt.y)
-    ctx.save()
     redraw()
   }
 }
