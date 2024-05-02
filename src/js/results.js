@@ -24,7 +24,6 @@ import {
   isScoreEvent
 } from "./events"
 import { getHashRoutes, getHashCourses, getHashTab } from "./hash"
-import { eventFinishedLoading } from "./manager"
 import { Result } from "./result"
 import { getActiveTab, setResultCheckboxes, displayStatsDialog } from "./rg2ui"
 import { t } from "./translate"
@@ -829,7 +828,13 @@ export function saveRoutes(data) {
   createCourseMenu()
   createResultMenu()
   if (config.managing()) {
-    eventFinishedLoading()
+    import("./manager.js")
+      .then((module) => {
+        module.eventFinishedLoading()
+      })
+      .catch(() => {
+        console.log("Error loading manager")
+      })
   } else {
     document.getElementById(config.TAB_COURSES).removeAttribute("disabled")
     document.getElementById(config.TAB_RESULTS).removeAttribute("disabled")

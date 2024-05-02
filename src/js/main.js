@@ -8,7 +8,7 @@ import { doGetEvents, getActiveKartatID, isValidKartatID, loadEventByKartatID } 
 import { parseLocationHash } from "./hash"
 import { configureUI } from "./rg2ui"
 import { initLanguageOptions } from "./translate"
-import { initialiseManager } from "./manager"
+//import { initialiseManager } from "./manager"
 
 if (document.readyState !== "loading") {
   rg2init()
@@ -26,7 +26,13 @@ function rg2init() {
     configureUI()
     initLanguageOptions()
     if (config.managing()) {
-      initialiseManager(rg2Config.keksi)
+      import("./manager.js")
+        .then((module) => {
+          module.initialiseManager(rg2Config.keksi)
+        })
+        .catch(() => {
+          console.log("Error loading manager")
+        })
     }
     initialiseCanvas()
     window.onpopstate = handleNavigation

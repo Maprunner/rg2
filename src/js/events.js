@@ -7,7 +7,6 @@ import { initialiseDrawing } from "./draw"
 import { Event } from "./event"
 import { getHashID, setEventHash } from "./hash"
 import { decode } from "html-entities"
-import { eventListLoaded } from "./manager"
 import { deleteResultsForEvent, getCommentsForEvent, getResultsStats, saveResults, saveRoutes } from "./results"
 import { createEventMenu } from "./rg2ui"
 import { t } from "./translate"
@@ -239,7 +238,13 @@ function handleEventsResponse(response) {
     loadEventByKartatID(kartatid)
   }
   if (config.managing()) {
-    eventListLoaded(events)
+    import("./manager.js")
+      .then((module) => {
+        module.eventListLoaded(events)
+      })
+      .catch(() => {
+        console.log("Error loading manager")
+      })
   }
 }
 
