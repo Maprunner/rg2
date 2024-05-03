@@ -203,7 +203,7 @@ export function autofitGPSTrack() {
 function closeEnough(x, y) {
   // snapto: test if drawn route is close enough to control
   let range = options.snap ? 8 : 2
-  // console.log(x, y, controlx[nextControl], controly[nextControl])
+  console.log(x, y, controlx[nextControl], controly[nextControl])
   if (Math.abs(x - controlx[nextControl]) < range) {
     if (Math.abs(y - controly[nextControl]) < range) {
       return true

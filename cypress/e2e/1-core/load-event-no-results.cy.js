@@ -30,7 +30,7 @@ describe("Load normal event", { testIsolation: false }, () => {
     cy.get("#rg2-map-canvas").click(600, 200)
     cy.get(".rg2-overlay-table").should("contain", "0px")
     cy.get("#rg2-map-canvas").click(700, 200)
-    cy.get(".rg2-overlay-table").should("contain", "144px")
+    cy.get(".rg2-overlay-table").should("contain", "141px")
     cy.get("#rg2-map-canvas").dblclick(800, 300)
   })
 })

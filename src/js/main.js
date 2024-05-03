@@ -30,8 +30,8 @@ function rg2init() {
         .then((module) => {
           module.initialiseManager(rg2Config.keksi)
         })
-        .catch(() => {
-          console.log("Error loading manager")
+        .catch((err) => {
+          console.log("Error loading manager", err)
         })
     }
     initialiseCanvas()

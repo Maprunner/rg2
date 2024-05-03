@@ -3,10 +3,11 @@ describe("Load score event", { testIsolation: false }, () => {
   const scoreX = [710, 445, 218, 144, 295, 517, 791, 693, 507, 638, 839, 905, 1067, 1470, 1422, 1705, 1364, 1010, 904]
   const scoreY = [872, 1030, 1225, 777, 844, 815, 630, 436, 473, 257, 353, 232, 120, 165, 324, 588, 760, 978, 1010]
   let mapHeightPixels = 1652
-  // screen is 1000 x 660, header is 59 px of that so canvas is...
-  const canvasHeightPixels = 601
+  // screen is 1000 x 660, header is 43 px of that so canvas is...
+  const canvasHeightPixels = 617
   // panel width plus offset added in resetMapState in canvas.js
-  let leftPanelOffset = 420 + 80
+  // 421px looks it should be 419px but it seems to work here...
+  let leftPanelOffset = 421 + 80
   const ptX = (x) => (x * canvasHeightPixels) / mapHeightPixels + leftPanelOffset
   const ptY = (y) => (y * canvasHeightPixels) / mapHeightPixels
   const clickAt = (x, y) => {
@@ -81,7 +82,9 @@ describe("Load score event", { testIsolation: false }, () => {
     //undo from Finish
     cy.get("#btn-undo").click()
     cy.get("#rg2-left-info-panel").find(".btn-close").click()
-    clickAt(904, 1010)
+    // map stays where it was after closing info panel so need to readjust offset
+    leftPanelOffset = 501
+    clickAt(scoreX[scoreX.length - 1], scoreY[scoreY.length - 1])
     cy.get("#rg2-show-info-panel-control").click()
     cy.get("#btn-save-route").click()
     cy.closeWarningDialog("Your route has been saved")

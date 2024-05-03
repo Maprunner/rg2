@@ -242,8 +242,8 @@ function handleEventsResponse(response) {
       .then((module) => {
         module.eventListLoaded(events)
       })
-      .catch(() => {
-        console.log("Error loading manager")
+      .catch((err) => {
+        console.log("Error loading manager", err)
       })
   }
 }

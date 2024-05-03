@@ -116,18 +116,19 @@ function handleInputMove() {
     to.x = Math.round(to.x)
     to.y = Math.round(to.y)
     const from = { x: Math.round(input.dragStart.x), y: Math.round(input.dragStart.y) }
+    const button = input.whichButton
     // simple debounce so that very small drags are treated as clicks instead
     if (Math.abs(to.x - from.x) + Math.abs(to.y - from.y) > 5) {
       if (gpsFileLoaded()) {
-        adjustTrack(from, to, input.whichButton)
+        adjustTrack(from, to, button)
       } else {
         if (getActiveTab() === config.TAB_CREATE) {
           import("./manager.js")
             .then((module) => {
-              module.adjustManagerControls(from, to, input.whichButton)
+              module.adjustManagerControls(from, to, button)
             })
-            .catch(() => {
-              console.log("Error loading manager")
+            .catch((err) => {
+              console.log("Error loading manager", err)
             })
         } else {
           const overlayDragged = overlay.mouseDrag(from, to)
@@ -147,12 +148,14 @@ function handleInputUp(e) {
   const activeTab = getActiveTab()
   if (!input.dragged) {
     if (activeTab === config.TAB_CREATE) {
+      const x = Math.round(input.dragStart.x)
+      const y = Math.round(input.dragStart.y)
       import("./manager.js")
         .then((module) => {
-          module.managerMouseUp(Math.round(input.dragStart.x), Math.round(input.dragStart.y))
+          module.managerMouseUp(x, y)
         })
-        .catch(() => {
-          console.log("Error loading manager")
+        .catch((err) => {
+          console.log("Error loading manager", err)
         })
     } else {
       // pass button that was clicked
@@ -169,8 +172,8 @@ function handleInputUp(e) {
         .then((module) => {
           module.managerDragEnded()
         })
-        .catch(() => {
-          console.log("Error loading manager")
+        .catch((err) => {
+          console.log("Error loading manager", err)
         })
     } else {
       if (activeTab === config.TAB_DRAW) {
@@ -299,8 +302,8 @@ function mapLoadedCallback() {
       .then((module) => {
         module.managerMapLoadCallback()
       })
-      .catch(() => {
-        console.log("Error loading manager")
+      .catch((err) => {
+        console.log("Error loading manager", err)
       })
   }
 }
@@ -357,8 +360,8 @@ function doRedraw() {
           .then((module) => {
             module.drawManagerControls()
           })
-          .catch(() => {
-            console.log("Error loading manager")
+          .catch((err) => {
+            console.log("Error loading manager", err)
           })
       } else {
         drawCourses(config.DIM)

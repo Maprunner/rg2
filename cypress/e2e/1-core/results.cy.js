@@ -29,7 +29,7 @@ describe("looking at results", { testIsolation: false }, () => {
     cy.get("#rg2-result-table .showcourse[data-courseid='1'").click()
     cy.get(".showtrack[data-id='50002']").check()
     cy.get("#btn-settings").click()
-    cy.get("#chk-show-GPS-speed").check()
+    cy.get("#chk-show-GPS-speed").scrollIntoView().check()
     cy.get("#chk-show-GPS-speed").check()
     cy.get("#btn-settings").click()
   })

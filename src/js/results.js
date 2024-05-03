@@ -832,8 +832,8 @@ export function saveRoutes(data) {
       .then((module) => {
         module.eventFinishedLoading()
       })
-      .catch(() => {
-        console.log("Error loading manager")
+      .catch((err) => {
+        console.log("Error loading manager", err)
       })
   } else {
     document.getElementById(config.TAB_COURSES).removeAttribute("disabled")
