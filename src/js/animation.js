@@ -384,8 +384,10 @@ function drawName(runner, time) {
       ctx.rotate(ctx.displayAngle)
       // no real science: offsets just look OK
       ctx.lineWidth = options.replayFontSize / Math.pow(ctx.displayScale, 0.8) / 8
-      ctx.strokeText(text, 12, 6)
-      ctx.fillText(text, 12, 6)
+      const x = 2 + 8 / Math.pow(ctx.displayScale, 1)
+      const y = 2 + 4 / Math.pow(ctx.displayScale, 1)
+      ctx.strokeText(text, x, y)
+      ctx.fillText(text, x, y)
       ctx.restore()
     }
   }
