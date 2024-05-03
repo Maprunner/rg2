@@ -339,12 +339,19 @@ export function drawAnimation() {
     } else {
       time = runner.nextStopTime
     }
-    ctx.arc(runner.x[time], runner.y[time], config.RUNNER_DOT_RADIUS, 0, 2 * Math.PI, false)
+    ctx.arc(
+      runner.x[time],
+      runner.y[time],
+      config.RUNNER_DOT_RADIUS / Math.pow(ctx.displayScale, 0.5),
+      0,
+      2 * Math.PI,
+      false
+    )
     ctx.globalAlpha = config.FULL_INTENSITY
     ctx.strokeStyle = config.BLACK
     ctx.fillStyle = runner.trackColour
     ctx.fill()
-    ctx.lineWidth = config.RUNNER_DOT_RADIUS / 4
+    ctx.lineWidth = config.RUNNER_DOT_RADIUS / Math.pow(ctx.displayScale, 0.5) / 4
     ctx.stroke()
     drawName(runner, time)
   }
@@ -361,7 +368,8 @@ function drawName(runner, time) {
     if (time < runner.x.length && time >= 0) {
       ctx.fillStyle = "black"
       ctx.strokeStyle = "white"
-      ctx.font = options.replayFontSize + "pt Arial"
+      // empirically reasonable font scaling
+      ctx.font = options.replayFontSize / Math.pow(ctx.displayScale, 0.8) + "pt Arial"
       ctx.globalAlpha = config.FULL_INTENSITY
       ctx.textAlign = "left"
       if (displayInitials) {
@@ -375,7 +383,7 @@ function drawName(runner, time) {
       // rotate map so that text stays horizontal
       ctx.rotate(ctx.displayAngle)
       // no real science: offsets just look OK
-      ctx.lineWidth = options.replayFontSize / 8
+      ctx.lineWidth = options.replayFontSize / Math.pow(ctx.displayScale, 0.8) / 8
       ctx.strokeText(text, 12, 6)
       ctx.fillText(text, 12, 6)
       ctx.restore()

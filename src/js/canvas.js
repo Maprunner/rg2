@@ -19,6 +19,7 @@ import { getDistanceBetweenPoints } from "./utils"
 let canvas = document.getElementById("rg2-map-canvas")
 export let ctx = canvas.getContext("2d")
 ctx.displayAngle = 0
+ctx.displayScale = 1
 let map = new Image()
 let overlay = new Overlay(ctx)
 let input = {
@@ -74,6 +75,7 @@ function applyMapRotation(angle, x, y, moveMap, scale) {
   ctx.rotate(angle)
   if (scale !== 1) {
     ctx.scale(scale, scale)
+    ctx.displayScale = ctx.displayScale * scale
   }
   if (moveMap) {
     // move map so that given point is centre-bottom of screen
@@ -378,6 +380,7 @@ export function resetMapState() {
   }
   // don't need to rotate here since the call to setTransform above does that for us
   ctx.displayAngle = 0
+  ctx.displayScale = mapscale
   redraw()
 }
 
@@ -473,6 +476,7 @@ function zoom(zoomDirection) {
     const pt = ctx.transformedPoint(input.lastX, input.lastY)
     ctx.translate(pt.x, pt.y)
     ctx.scale(factor, factor)
+    ctx.displayScale = ctx.displayScale * factor
     ctx.translate(-pt.x, -pt.y)
     redraw()
   }
