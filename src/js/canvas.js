@@ -3,6 +3,13 @@ import { config, options } from "./config"
 import { controls, drawCourses } from "./courses"
 import { adjustTrack, dragEnded, drawNewTrack, gpsFileLoaded, mouseUp } from "./draw"
 import { getActiveEventID } from "./events"
+import {
+  adjustManagerControls,
+  drawManagerControls,
+  managerDragEnded,
+  managerMapLoadCallback,
+  managerMouseUp
+} from "./manager"
 import { Overlay } from "./overlay"
 import { drawTracks } from "./results"
 import { getActiveTab } from "./rg2ui"
@@ -123,13 +130,7 @@ function handleInputMove() {
         adjustTrack(from, to, button)
       } else {
         if (getActiveTab() === config.TAB_CREATE) {
-          import("./manager.js")
-            .then((module) => {
-              module.adjustManagerControls(from, to, button)
-            })
-            .catch((err) => {
-              console.log("Error loading manager", err)
-            })
+          adjustManagerControls(from, to, button)
         } else {
           const overlayDragged = overlay.mouseDrag(from, to)
           if (!overlayDragged) {
@@ -150,13 +151,7 @@ function handleInputUp(e) {
     if (activeTab === config.TAB_CREATE) {
       const x = Math.round(input.dragStart.x)
       const y = Math.round(input.dragStart.y)
-      import("./manager.js")
-        .then((module) => {
-          module.managerMouseUp(x, y)
-        })
-        .catch((err) => {
-          console.log("Error loading manager", err)
-        })
+      managerMouseUp(x, y)
     } else {
       // pass button that was clicked
       if (activeTab === config.TAB_DRAW) {
@@ -168,13 +163,7 @@ function handleInputUp(e) {
     }
   } else {
     if (activeTab === config.TAB_CREATE) {
-      import("./manager.js")
-        .then((module) => {
-          module.managerDragEnded()
-        })
-        .catch((err) => {
-          console.log("Error loading manager", err)
-        })
+      managerDragEnded()
     } else {
       if (activeTab === config.TAB_DRAW) {
         dragEnded()
@@ -298,13 +287,7 @@ function mapLoadedCallback() {
   document.getElementById("rg2-map-load-progress").classList.add("d-none")
   resetMapState()
   if (config.managing()) {
-    import("./manager.js")
-      .then((module) => {
-        module.managerMapLoadCallback()
-      })
-      .catch((err) => {
-        console.log("Error loading manager", err)
-      })
+    managerMapLoadCallback()
   }
 }
 
@@ -356,13 +339,7 @@ function doRedraw() {
       drawNewTrack()
     } else {
       if (tab === config.TAB_CREATE) {
-        import("./manager.js")
-          .then((module) => {
-            module.drawManagerControls()
-          })
-          .catch((err) => {
-            console.log("Error loading manager", err)
-          })
+        drawManagerControls()
       } else {
         drawCourses(config.DIM)
         drawTracks()
