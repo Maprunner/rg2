@@ -170,6 +170,7 @@ function alignMapToAngle(control) {
     // just set to north and keep going
     alignMap(0, x, y, true, 1)
     alignmentTimer = null
+    mapIsAligned = true
   }
 }
 
@@ -253,6 +254,9 @@ function createSpeedDropdown() {
 
 export function createByControlDropdown() {
   let dropdown = document.getElementById("rg2-replay-start-control-list")
+  // setting innerHTML doesn't seem to remove event handlers so need to do that here
+  // just gets ignored the first time the function is called
+  dropdown.removeEventListener("hidden.bs.dropdown", handleReplayStartDropdown)
   let html = ""
   // find shortest set of splits being animated
   let minSplitsLength = 9999
@@ -265,20 +269,9 @@ export function createByControlDropdown() {
     html += `<li class="dropdown-item" data-control="${i}">${control}</li>`
   }
   dropdown.innerHTML = html
-  document.getElementById("rg2-replay-start-control-select").addEventListener("hidden.bs.dropdown", (e) => {
-    // only need to deal with close caused by a click on a new value
-    if (e.clickEvent) {
-      massStartControl = parseInt(e.clickEvent.target.dataset.control)
-      if (isNaN(massStartControl)) {
-        massStartControl = 0
-      }
-      mapIsAligned = false
-      setByControlLabel(massStartControl)
-      setNextControlDetails()
-      alignMapToAngle(massStartControl)
-      btnStartStop.innerHTML = waitIcon
-    }
-  })
+  document
+    .getElementById("rg2-replay-start-control-select")
+    .addEventListener("hidden.bs.dropdown", handleReplayStartDropdown)
 }
 
 export function createTailsDropdown() {
@@ -454,6 +447,21 @@ function getTrackNamesHTML(tracks) {
     html += ` data-resultid="${tracks[i].resultid}">${tracks[i].distance}</div>`
   }
   return html
+}
+
+function handleReplayStartDropdown(e) {
+  // only need to deal with close caused by a click on a new value
+  if (e.clickEvent) {
+    massStartControl = parseInt(e.clickEvent.target.dataset.control)
+    if (isNaN(massStartControl)) {
+      massStartControl = 0
+    }
+    mapIsAligned = false
+    setByControlLabel(massStartControl)
+    setNextControlDetails()
+    alignMapToAngle(massStartControl)
+    btnStartStop.innerHTML = waitIcon
+  }
 }
 
 function incrementAlignmentTime() {
