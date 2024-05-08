@@ -319,8 +319,8 @@ export function drawAnimation() {
     }
     ctx.strokeStyle = runner.trackColour
     ctx.globalAlpha = options.perCentRouteIntensity / 100
-    ctx.lineWidth = options.routeWidth
-    //ctx.lineCap = "round"
+    ctx.lineWidth = options.routeWidth / Math.pow(ctx.displayScale, 0.5)
+    ctx.lineJoin = "round"
     ctx.beginPath()
     ctx.moveTo(runner.x[tailStartTimeSecs - timeOffset], runner.y[tailStartTimeSecs - timeOffset])
 
@@ -355,6 +355,7 @@ export function drawAnimation() {
     ctx.stroke()
     drawName(runner, time)
   }
+
   showDistanceRun(time)
   if (massStartByControl) {
     checkForStopControl(animationSecs)
@@ -366,8 +367,8 @@ function drawName(runner, time) {
   if (displayNames || displayInitials) {
     // make sure we have a valid position to display
     if (time < runner.x.length && time >= 0) {
-      ctx.fillStyle = "black"
-      ctx.strokeStyle = "white"
+      ctx.fillStyle = runner.trackColour
+      ctx.strokeStyle = "darkslategray"
       // empirically reasonable font scaling
       ctx.font = options.replayFontSize / Math.pow(ctx.displayScale, 0.8) + "pt Arial"
       ctx.globalAlpha = config.FULL_INTENSITY
