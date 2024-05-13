@@ -1,6 +1,6 @@
 /* eslint-disable */
 import path from "path"
-import { defineConfig, splitVendorChunkPlugin } from "vite"
+import { defineConfig } from "vite"
 import istanbul from "vite-plugin-istanbul"
 import { visualizer } from "rollup-plugin-visualizer"
 
@@ -46,12 +46,12 @@ export default defineConfig(({ command, mode, ssrBuild }) => {
       port: 5173,
       // needed for vite and Cypress to work together
       // see https://stackoverflow.com/questions/72324704/cypress-cant-load-assets-from-vites-devserver
-      host: '127.0.0.1',
+      host: "127.0.0.1",
       strictPort: true,
       hot: true,
       hmr: {
         port: 5174,
-        host: '127.0.0.1',
+        host: "127.0.0.1"
       }
     },
     preview: {
@@ -61,7 +61,6 @@ export default defineConfig(({ command, mode, ssrBuild }) => {
     open: true,
     plugins: [
       visualizer(),
-      splitVendorChunkPlugin(),
       istanbul({
         cypress: true,
         include: "src/*",

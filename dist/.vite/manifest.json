@@ -1,6 +1,6 @@
 {
-  "_grid-DnPZ0k3G.js": {
-    "file": "assets/grid-DnPZ0k3G.js",
+  "_grid-DetXoWVd.js": {
+    "file": "assets/grid-DetXoWVd.js",
     "name": "grid"
   },
   "_manager-!~{003}~.js": {
@@ -14,13 +14,6 @@
       "assets/manager-HupOsEJb.css"
     ]
   },
-  "_vendor-oPMpqxxv.js": {
-    "file": "assets/vendor-oPMpqxxv.js",
-    "name": "vendor",
-    "imports": [
-      "_manager-Cw-VX6TE.js"
-    ]
-  },
   "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff": {
     "file": "assets/bootstrap-icons-BOrJxbIo.woff",
     "src": "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff"
@@ -30,17 +23,16 @@
     "src": "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff2"
   },
   "src/js/main.js": {
-    "file": "assets/main-2tT5craX.js",
+    "file": "assets/main-DxlIWJrY.js",
     "name": "main",
     "src": "src/js/main.js",
     "isEntry": true,
     "imports": [
-      "_vendor-oPMpqxxv.js",
       "_manager-Cw-VX6TE.js",
-      "_grid-DnPZ0k3G.js"
+      "_grid-DetXoWVd.js"
     ],
     "css": [
-      "assets/main-BATUQMrW.css"
+      "assets/main-BWd4iw4U.css"
     ],
     "assets": [
       "assets/bootstrap-icons-BtvjY1KL.woff2",
