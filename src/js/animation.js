@@ -32,7 +32,6 @@ let earliestStartSecs = 0
 let latestFinishSecs = 0
 let tailLength = 60
 let tailStartTimeSecs = 0
-let useFullTails = false
 // control to start from if this option selected
 let massStartControl = 0
 // run each leg as a mass start if true
@@ -322,13 +321,23 @@ export function drawAnimation() {
     ctx.lineWidth = options.routeWidth / Math.pow(ctx.displayScale, 0.5)
     ctx.lineJoin = "round"
     ctx.beginPath()
-    ctx.moveTo(runner.x[tailStartTimeSecs - timeOffset], runner.y[tailStartTimeSecs - timeOffset])
-
-    // t runs as real time seconds or 0-based seconds depending on realTime
-    // runner.x[] is always indexed in 0-based time so needs to be adjusted for starttime offset
-    for (let t = tailStartTimeSecs; t < animationSecs; t += 1) {
-      if (t > timeOffset && t - timeOffset < runner.nextStopTime) {
-        ctx.lineTo(runner.x[t - timeOffset], runner.y[t - timeOffset])
+    if (!mapIsAligned && !alignmentTimer && massStartControl > 0) {
+      // draw tails when using replay by control and all runners have reached the next control
+      const tailEnd = runner.splits[massStartControl]
+      let tailStart = Math.max(tailEnd - tailLength, runner.splits[massStartControl - 1])
+      ctx.moveTo(runner.x[tailStart], runner.y[tailStart])
+      for (let t = tailStart + 1; t <= tailEnd; t += 1) {
+        ctx.lineTo(runner.x[t], runner.y[t])
+      }
+    } else {
+      // draws tails in all other scenarios
+      // t runs as real time seconds or 0-based seconds depending on realTime
+      // runner.x[] is always indexed in 0-based time so needs to be adjusted for starttime offset
+      ctx.moveTo(runner.x[tailStartTimeSecs - timeOffset], runner.y[tailStartTimeSecs - timeOffset])
+      for (let t = tailStartTimeSecs; t < animationSecs; t += 1) {
+        if (t > timeOffset && t - timeOffset < runner.nextStopTime) {
+          ctx.lineTo(runner.x[t - timeOffset], runner.y[t - timeOffset])
+        }
       }
     }
     ctx.stroke()
@@ -501,11 +510,7 @@ export function incrementAnimationTime() {
   }
   animationSecs = parseInt(milliSecs / 1000, 10)
   // find earliest time we need to worry about when drawing screen
-  if (useFullTails) {
-    tailStartTimeSecs = startSecs + 1
-  } else {
-    tailStartTimeSecs = Math.max(animationSecs - tailLength, startSecs + 1)
-  }
+  tailStartTimeSecs = Math.max(animationSecs - tailLength, startSecs + 1)
   redraw()
 }
 
@@ -606,7 +611,6 @@ export function resetAnimation() {
   latestFinishSecs = 0
   tailLength = 60
   tailStartTimeSecs = 0
-  useFullTails = false
   massStartControl = 0
   massStartByControl = false
   displayNames = false
@@ -745,10 +749,9 @@ function setRunnerColor(rawid, trackColour) {
 
 function setTailsLength(value) {
   if (value === "Full") {
-    useFullTails = true
+    tailLength = config.VERY_HIGH_TIME_IN_SECS
   } else {
     tailLength = parseInt(value, 10)
-    useFullTails = false
   }
   calculateAnimationRange()
   redraw()
