@@ -27,12 +27,16 @@ const content = [
      </div>
    </div>`,
   `<div id="rg2-time-loss" class="container">
-      <div class="rg2-control-slider-grid d-flex flex-column">
-        <div class="d-flex">
-          <div id="rg2-control-number"></div>
-          <div id="rg2-control-slider"></div>
+     <div class="d-flex align-items-center justify-content-between"">
+     <div class="d-flex align-items-center">
+         <div id="rg2-control-change" class="p-2">
+           <button id="rg2-stats-control-back" class="btn btn-outline-primary btn-sm p-2">&lt;</button>
+           <button id="rg2-stats-control-forward" class="btn btn-outline-primary btn-sm p-2">&gt;</button>
         </div>
-        <div id="rg2-loss-details" class="d-flex justify-content-center"></div>
+     <div id="rg2-control-number" class="fw-bold p-2"></div>
+      </div>
+      <div id="rg2-loss-details" class="d-flex justify-content-center"></div>
+        </div>
       </div>
       <canvas id="rg2-loss-chart"></canvas>
     </div>`
@@ -184,6 +188,15 @@ function calculateSplitsforIteration(iter) {
   }
 }
 
+function changeControlNumber(direction) {
+  if (direction < 0) {
+    activeLeg = activeLeg === result.splits.length - 1 ? 1 : activeLeg + 1
+  } else {
+    activeLeg = activeLeg > 1 ? activeLeg - 1 : result.splits.length - 1
+  }
+  drawLegChart()
+}
+
 function decrementIterations() {
   iterationIndex = Math.max(iterationIndex - 1, 0)
   setIterations()
@@ -221,6 +234,12 @@ function displayControlDetails(stacks) {
 function displayStats() {
   document.getElementById("rg2-stats-panel-tab-headers").addEventListener("show.bs.tab", (e) => {
     handleTabActivation(e)
+  })
+  document.getElementById("rg2-stats-control-back").addEventListener("click", () => {
+    changeControlNumber(1)
+  })
+  document.getElementById("rg2-stats-control-forward").addEventListener("click", () => {
+    changeControlNumber(-1)
   })
   // start on Summary tab
   document.getElementById("rg2-stats-summary-tab-label").click()
@@ -347,13 +366,7 @@ function drawLegChart() {
   const legChartElement = document.querySelector("#rg2-loss-chart")
   legChartElement.onwheel = (e) => {
     e.preventDefault()
-    if (e.deltaY < 0) {
-      activeLeg = activeLeg === result.splits.length - 1 ? 1 : activeLeg + 1
-    } else {
-      activeLeg = activeLeg > 1 ? activeLeg - 1 : result.splits.length - 1
-    }
-    //document.getElementById("rg2-control-slider").slider("value", activeLeg")
-    drawLegChart()
+    e.deltaY < 0 ? changeControlNumber(-1) : changeControlNumber(1)
   }
 }
 
