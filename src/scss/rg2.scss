@@ -380,16 +380,6 @@ body {
   user-select: all;
 }
 
-#rg2-stats-summary {
-  display: grid;
-  grid-template-columns: 1fr 1.5fr 1fr 1.5fr 1fr 1.5fr;
-  margin: 10px 0;
-}
-
-#rg2-stats-summary div:nth-child(even) {
-  font-weight: bold;
-}
-
 .rg2-first {
   color: darkblue;
   font-weight: bold;
@@ -435,10 +425,6 @@ body {
 
 .rg2-unused-map-table .title {
   font-weight: bold;
-}
-
-#rg2-iterations {
-  width: 100px;
 }
 
 div[data-display="true"] {

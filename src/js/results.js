@@ -210,14 +210,14 @@ export function createResultMenu() {
       // currentTarget is the <tr> element: target points to <td> within the <tr>
       const id = parseInt(e.currentTarget.dataset.id, 10)
       if (id) {
-        displayStatsDialog(id, false)
+        displayStatsDialog(id)
       }
     })
     row.addEventListener("contextmenu", (e) => {
       // currentTarget is the <tr> element: target points to <td> within the <tr>
       const id = parseInt(e.currentTarget.dataset.id, 10)
       if (id) {
-        displayStatsDialog(id, true)
+        displayStatsDialog(id)
       }
     })
   }

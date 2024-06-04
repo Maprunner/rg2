@@ -2,7 +2,7 @@ import { createGrid, ModuleRegistry } from "@ag-grid-community/core"
 import { ClientSideRowModelModule } from "@ag-grid-community/client-side-row-model"
 import Chart from "chart.js/auto"
 import { config } from "./config"
-import { getCourseDetails } from "./courses"
+import { getCourseDetails, getCourses } from "./courses"
 import { eventHasResults, isScoreEvent } from "./events"
 import { getAllResultsForCourse, getAllResultsForVariant, getFullResultForRawID } from "./results"
 import { t } from "./translate"
@@ -17,6 +17,7 @@ const tabs = [
   { id: "rg2-split-times", title: "Split times" },
   { id: "rg2-time-loss", title: "Time loss" }
 ]
+
 const content = [
   `<div id="rg2-stats-summary" class="container"></div><div style="height: 400px;"><canvas id="rg2-splits-chart"></canvas></div>`,
   `<div id="rg2-leg-table" style="width: 950px; height: 100%" class="ag-theme-balham"></div>`,
@@ -27,19 +28,18 @@ const content = [
      </div>
    </div>`,
   `<div id="rg2-time-loss" class="container">
-     <div class="d-flex align-items-center justify-content-between"">
-     <div class="d-flex align-items-center">
-         <div id="rg2-control-change" class="p-2">
+     <div class="d-flex align-items-center justify-content-between">
+       <div class="d-flex align-items-center">
+         <div id="rg2-control-change" class="pe-4">
            <button id="rg2-stats-control-back" class="btn btn-outline-primary btn-sm p-2">&lt;</button>
            <button id="rg2-stats-control-forward" class="btn btn-outline-primary btn-sm p-2">&gt;</button>
-        </div>
-     <div id="rg2-control-number" class="fw-bold p-2"></div>
-      </div>
-      <div id="rg2-loss-details" class="d-flex justify-content-center"></div>
-        </div>
-      </div>
-      <canvas id="rg2-loss-chart"></canvas>
-    </div>`
+         </div>
+         <div id="rg2-control-number" class="fw-bold pe-2"></div>
+       </div>
+       <div id="rg2-loss-details" class="d-flex justify-content-center"></div>
+     </div>
+     <canvas id="rg2-loss-chart"></canvas>
+   </div>`
 ]
 
 let result = null
@@ -57,6 +57,9 @@ let activeLeg = 1
 let maxIterationIndex = 9
 // starting iteration to use for display
 let iterationIndex = 2
+// value returned as event.target.dataset.bsTarget for click on tab header
+const startTab = "#rg2-stats-summary-tab-label"
+let activeTab = startTab
 
 function adjustSplits() {
   // adjust splits for events with excluded controls that have uploaded unadjusted splits
@@ -188,18 +191,51 @@ function calculateSplitsforIteration(iter) {
   }
 }
 
-function changeControlNumber(direction) {
-  if (direction < 0) {
-    activeLeg = activeLeg === result.splits.length - 1 ? 1 : activeLeg + 1
-  } else {
-    activeLeg = activeLeg > 1 ? activeLeg - 1 : result.splits.length - 1
-  }
+function changeControlNumberDown() {
+  activeLeg = activeLeg === result.splits.length - 1 ? 1 : activeLeg + 1
   drawLegChart()
 }
 
-function decrementIterations() {
-  iterationIndex = Math.max(iterationIndex - 1, 0)
-  setIterations()
+function changeControlNumberUp() {
+  activeLeg = activeLeg > 1 ? activeLeg - 1 : result.splits.length - 1
+  drawLegChart()
+}
+
+function changeCourse(direction) {
+  // aim is to switch course and start with first runner on that course
+  // stay where we are if anything goes wrong
+  let rawid = results[resultIndex].rawid
+  // slight concern this might be a mess for some events
+  // courses is a sparse array with no entry [0] to start with
+  try {
+    const courses = getCourses()
+    let index = courses.findIndex((row) => {
+      if (!row) return false
+      return row.courseid === course.courseid
+    })
+    if (direction < 0) {
+      index = index === courses.length - 1 ? 1 : index + 1
+    } else {
+      index = index > 1 ? index - 1 : courses.length - 1
+    }
+    const courseid = courses[index].courseid
+    const results = getAllResultsForCourse(courseid)
+    if (results.length > 0) {
+      rawid = results[0].rawid
+    }
+  } catch (err) {
+    console.log("Error switching to new course: " + err)
+  }
+  prepareStats(rawid)
+}
+
+function changeName(direction) {
+  if (direction < 0) {
+    resultIndex = resultIndex === results.length - 1 ? 0 : resultIndex + 1
+  } else {
+    resultIndex = resultIndex > 0 ? resultIndex - 1 : results.length - 1
+  }
+  prepareStats(results[resultIndex].rawid)
 }
 
 function displayControlDetails(stacks) {
@@ -233,16 +269,40 @@ function displayControlDetails(stacks) {
 
 function displayStats() {
   document.getElementById("rg2-stats-panel-tab-headers").addEventListener("show.bs.tab", (e) => {
-    handleTabActivation(e)
+    handleTabActivation(e.target)
   })
-  document.getElementById("rg2-stats-control-back").addEventListener("click", () => {
-    changeControlNumber(1)
-  })
-  document.getElementById("rg2-stats-control-forward").addEventListener("click", () => {
-    changeControlNumber(-1)
-  })
-  // start on Summary tab
-  document.getElementById("rg2-stats-summary-tab-label").click()
+
+  const nameBack = document.getElementsByClassName("rg2-stats-name-back")
+  for (let row of nameBack) {
+    row.addEventListener("click", () => {
+      changeName(1)
+    })
+  }
+  const nameForward = document.getElementsByClassName("rg2-stats-name-forward")
+  for (let row of nameForward) {
+    row.addEventListener("click", () => {
+      changeName(-1)
+    })
+  }
+
+  const courseBack = document.getElementsByClassName("rg2-stats-course-back")
+  for (let row of courseBack) {
+    row.addEventListener("click", () => {
+      changeCourse(1)
+    })
+  }
+  const courseForward = document.getElementsByClassName("rg2-stats-course-forward")
+  for (let row of courseForward) {
+    row.addEventListener("click", () => {
+      changeCourse(-1)
+    })
+  }
+
+  document.getElementById("rg2-stats-control-back").addEventListener("click", changeControlNumberUp)
+  document.getElementById("rg2-stats-control-forward").addEventListener("click", changeControlNumberDown)
+
+  // start on active tab: need to remove # which Bootstrap adds for some reason
+  document.getElementById(activeTab.replace("#", "")).click()
 }
 
 function drawLegChart() {
@@ -366,7 +426,7 @@ function drawLegChart() {
   const legChartElement = document.querySelector("#rg2-loss-chart")
   legChartElement.onwheel = (e) => {
     e.preventDefault()
-    e.deltaY < 0 ? changeControlNumber(-1) : changeControlNumber(1)
+    e.deltaY < 0 ? changeControlNumberDown() : changeControlNumberUp()
   }
 }
 
@@ -612,12 +672,7 @@ function generateSplitsChart() {
   const splitsChartElem = document.querySelector("#rg2-splits-chart")
   splitsChartElem.onwheel = (event) => {
     event.preventDefault()
-    if (event.deltaY < 0) {
-      resultIndex = resultIndex === results.length - 1 ? 0 : resultIndex + 1
-    } else {
-      resultIndex = resultIndex > 0 ? resultIndex - 1 : results.length - 1
-    }
-    prepareStats(results[resultIndex].rawid)
+    event.deltaY < 0 ? changeName(-1) : changeName(1)
   }
 }
 
@@ -764,31 +819,62 @@ function generateSummary() {
   const packRow = (elem) => {
     return `${elem}`
   }
-  let html = packRow(`<div>${t("Name")}</div><div>${result.name}</div>`)
-  html += packRow(`<div>${t("Course")}</div><div>${result.coursename}</div>`)
-  html += packRow(`<div>${t("Time")}</div><div>${result.time}</div>`)
-  html += packRow(
-    `<div>${t("Position")}</div><div>${results[resultIndex].racepos[controls - 1]} / ${results.length}</div>`
-  )
-  html += packRow(
-    `<div>${t("Average leg position")}</div><div>${info.average} (${t("Best", "")}: ${info.best}, ${t("Worst")}: ${
-      info.worst
-    })</div >`
-  )
+  const nameButtons = `<div class="rg2-stats-runner-change pe-4">
+      <button class="rg2-stats-name-back btn btn-outline-primary btn-sm p-2">
+        &lt;
+      </button>
+      <button class="rg2-stats-name-forward btn btn-outline-primary btn-sm p-2">
+        &gt;
+      </button>
+    </div >`
+
+  const courseButtons = `<div class="rg2-stats-course-change pe-4">
+      <button class="rg2-stats-course-back btn btn-outline-primary btn-sm p-2">
+        &lt;
+      </button>
+      <button class="rg2-stats-course-forward btn btn-outline-primary btn-sm p-2">
+        &gt;
+      </button>
+    </div >`
+
+  let html = packRow(`<div class="d-flex align-items-center justify-content-between pb-4">`)
+  html += packRow(`<div class="d-flex align-items-center">`)
+  html += packRow(`${nameButtons}`)
+  html += packRow(`<div class="fw-bold pe-4">${result.name}</div>`)
+  html += packRow(`<div class="fw-bold pe-4">${result.time}</div>`)
+  html += packRow(`<div class="fw-bold pe-4">(${results[resultIndex].racepos[controls - 1]}/${results.length})</div>`)
   let loss = ""
   if (isNumberOverZero(result.timeInSecs)) {
     loss = ` (${((100 * results[resultIndex].totalLoss[iterationIndex]) / result.timeInSecs).toFixed(1)}%)`
   }
   html += packRow(
-    `<div>${t("Estimated loss")}</div><div>${formatSecsAsMMSS(
-      results[resultIndex].totalLoss[iterationIndex]
-    )}${loss}</div>`
+    `<div class="fw-bold pe-4">${t("Estimated loss")}: ${formatSecsAsMMSS(results[resultIndex].totalLoss[iterationIndex])}${loss}</div>`
   )
+  html += packRow(`</div>`)
+  html += packRow(`<div class="d-flex align-items-center">`)
+  html += packRow(`<div class="fw-bold pe-4">${result.coursename}</div><div>${courseButtons}</div>`)
+  html += packRow(`</div></div>`)
+  // put title row at top of each tab
+  const titles = document.getElementsByClassName("rg2-stats-title-row")
+  for (let title of titles) {
+    title.innerHTML = html
+  }
+
+  html = `<div class="d-flex align-items-center">`
+  html += packRow(
+    `<div class="fw-bold pe-4">${t("Average leg position")}: ${info.average} (${t("Best", "")}: ${info.best}, ${t("Worst")}: ${
+      info.worst
+    })</div >`
+  )
+
   // performanceIndex[0] is based on actual splits
-  html += packRow(`<div>${t("Performance")}</div><div>${(result.performanceIndex[0] * 100).toFixed(1)}%</div>`)
+  html += packRow(
+    `<div  class="fw-bold pe-4">${t("Performance")} ${(result.performanceIndex[0] * 100).toFixed(1)}%</div>`
+  )
   // discard all 0 entries which relate to missed controls
   const ratios = results[resultIndex].refRatio[0].filter((ratio) => ratio > 0)
-  html += packRow(`<div>${t("Consistency")}</div><div>${(100 * getStandardDeviation(ratios)).toFixed(1)}%</div>`)
+  html += packRow(`<div  class="fw-bold">${t("Consistency")} ${(100 * getStandardDeviation(ratios)).toFixed(1)}%</div>`)
+  html += packRow(`</div>`)
   document.getElementById("rg2-stats-summary").innerHTML = html
 }
 
@@ -1126,12 +1212,14 @@ export function getStatsHeader() {
 }
 
 export function getStatsLayout() {
+  // class rather than id since we use this on multiple tabs and all need to be kept in sync
+  const statsTitleRow = `<div class="rg2-stats-title-row container"></div>`
   // generates HTML for a Bootstrap Tab layout
   let html = `<div id="rg2-stats-table"><div class="tab-content" id="rg2-stats-panel-tab-body">`
   for (let i = 0; i < tabs.length; i += 1) {
     const active = tabs[i].active ? " active" : ""
     html += `<div class="tab-pane fade ${active} pt-2" id="${tabs[i].id}-tab" role="tabpanel" tabindex="${i}">
-      ${content[i]}</div>`
+      ${statsTitleRow}${content[i]}</div>`
   }
   html += `</div></div></div>`
 
@@ -1147,31 +1235,8 @@ function getTimeValue(t) {
   }
 }
 
-function handleTabActivation(e) {
-  // tabs not on display yet
-  if (!e.currentTarget) {
-    return
-  }
-  // trap + and - and use them to change iteration count
-  switch (e.currentTarget.id) {
-    case "rg2-iter-plus-text":
-      incrementIterations()
-      e.preventDefault()
-      break
-    case "rg2-iter-minus-text":
-      decrementIterations()
-      e.preventDefault()
-      break
-    case "rg2-iter-text":
-      e.preventDefault()
-      break
-    default:
-  }
-}
-
-function incrementIterations() {
-  iterationIndex = Math.min(iterationIndex + 1, maxIterationIndex)
-  setIterations()
+function handleTabActivation(target) {
+  activeTab = target?.dataset?.bsTarget
 }
 
 function initialise(id) {
@@ -1279,8 +1344,8 @@ export function loadStats(rawid) {
     showWarningDialog(t("Statistics", ""), t("No statistics available for this event format.", ""))
     return false
   }
-  prepareStats(rawid)
-  return true
+  activeTab = startTab
+  return prepareStats(rawid)
 }
 
 function perfComparator(p1, p2) {
@@ -1299,6 +1364,7 @@ function prepareStats(rawid) {
     generateTableByRacePos()
     generateSplitsTable()
     displayStats()
+    return true
   } catch (err) {
     if (err instanceof rg2Exception) {
       // one we trapped ourselves
@@ -1307,8 +1373,8 @@ function prepareStats(rawid) {
       // general problem: probably an index out of bounds on an array somewhere: dodgy results files
       showWarningDialog(t("Statistics", ""), t("Data inconsistency.", ""))
     }
-    return
   }
+  return false
 }
 
 function renderSplits(params) {
@@ -1337,16 +1403,6 @@ function renderSplits(params) {
 
 function rg2Exception(msg) {
   this.message = msg
-}
-
-function setIterations() {
-  document.getElementById("rg2-iter-count-tab-label").innerText = iterationIndex + 1
-  drawLegChart()
-  generateSummary()
-  generateSplitsChart()
-  generateTableByLegPos()
-  generateTableByRacePos()
-  generateSplitsTable()
 }
 
 function setResultIndex(rawid) {

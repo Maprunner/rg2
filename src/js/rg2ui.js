@@ -252,10 +252,6 @@ function configureSettingsSlider(selector, option, text, units = "") {
   })
 }
 
-function configureStatsDialog(resultid) {
-  return loadStats(resultid)
-}
-
 export function configureUI() {
   // disable right click menu: may add our own later
   document.body.addEventListener("contextmenu", (e) => {
@@ -368,7 +364,7 @@ export function displayStatsDialog(resultid) {
   document.getElementById("rg2-about-dialog").classList.add("d-none")
   document.getElementById("rg2-option-controls").classList.add("d-none")
   document.getElementById("rg2-stats-dialog").classList.remove("d-none")
-  let statsAvailable = configureStatsDialog(resultid)
+  let statsAvailable = loadStats(resultid)
   if (statsAvailable) {
     rightInfoPanel.show()
   }
@@ -439,6 +435,10 @@ function initialiseButtons() {
   })
   document.getElementById("btn-settings").addEventListener("click", (e) => {
     displaySettingsDialog(e)
+  })
+  document.getElementById("btn-stats").addEventListener("click", () => {
+    // stats display: start with first runner in results list
+    displayStatsDialog(1)
   })
   document.getElementById("btn-splitsbrowser").addEventListener("click", () => {
     // <timestamp> mimics jQuery cache busting strategy to force reload of event data: needed to get
