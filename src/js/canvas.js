@@ -14,7 +14,7 @@ import { Overlay } from "./overlay"
 import { drawTracks } from "./results"
 import { getActiveTab } from "./rg2ui"
 import { t } from "./translate"
-import { getDistanceBetweenPoints } from "./utils"
+import { getDistanceBetweenPoints, showWarningDialog } from "./utils"
 
 let canvas = document.getElementById("rg2-map-canvas")
 export let ctx = canvas.getContext("2d")
@@ -278,6 +278,12 @@ export function initialiseCanvas() {
 export function loadNewMap(mapFile, isBeingCreated = false) {
   document.getElementById("rg2-map-load-progress-label").textContent = t("Loading map", "")
   document.getElementById("rg2-map-load-progress").classList.remove("d-none")
+  map.onerror = () => {
+    // probably a 404: should only really happen in testing
+    // clear loading indicator
+    document.getElementById("rg2-map-load-progress").classList.add("d-none")
+    showWarningDialog("Map load error", "The map for this event could not be loaded.")
+  }
   // setting src on an Image automatically triggers a request to load the map
   // if this is a new map being created by the manager then just use the name we got
   // else we are loading an existing map from the server
