@@ -182,8 +182,9 @@ function confirmCreateEvent(e) {
 }
 
 function confirmDeleteEvent() {
+  const id = document.getElementById("rg2-edit-event-selected").value
   let dlg = {}
-  dlg.body = "This event will be deleted. Are you sure?"
+  dlg.body = "Event " + id + " will be deleted. Are you sure?"
   dlg.title = "Confirm event delete"
   dlg.classes = "rg2-confirm-delete-event-dialog"
   dlg.doText = "Delete event"
@@ -425,14 +426,14 @@ function doCreateEvent() {
 function doDeleteEvent() {
   const id = document.getElementById("rg2-edit-event-selected").value
   const params = { type: "deleteevent", id: id }
-  postApi(JSON.stringify(user.encodeUser()), params, handleEventDeleted, "Event deletion failed", handleKeksi)
+  postApi(JSON.stringify(user.encodeUser()), params, handleEventDeleted(id), "Event deletion failed", handleKeksi)
 }
 
 function doDeleteRoute() {
   const id = document.getElementById("rg2-edit-event-selected").value
   const routeid = document.getElementById("rg2-route-selected").value
   const params = { type: "deleteroute", id: id, routeid: routeid }
-  postApi(JSON.stringify(user.encodeUser()), params, handleRouteDeleted, "Route delete failed", handleKeksi)
+  postApi(JSON.stringify(user.encodeUser()), params, handleRouteDeleted(routeid), "Route delete failed", handleKeksi)
 }
 
 function doDeleteUnusedMaps() {
@@ -467,7 +468,7 @@ function doUpdateEvent() {
   }
   data.exclude = exclude
   const params = { type: "editevent", id: id }
-  postApi(JSON.stringify(data), params, handleEventUpdated, "Event update failed", handleKeksi)
+  postApi(JSON.stringify(data), params, handleEventUpdated(id), "Event update failed", handleKeksi)
 }
 
 function doUploadMapFile() {
@@ -962,19 +963,19 @@ function handleEventAdded(response) {
   }
 }
 
-function handleEventDeleted(response) {
+const handleEventDeleted = (id) => (response) => {
   if (response.ok) {
-    showWarningDialog("Event deleted", "Event has been deleted.")
+    showWarningDialog("Event deleted", "Event " + id + "has been deleted.")
     doGetEvents()
     setEvent()
     // unused map data gets reset in eventListLoaded callback
     document.getElementById("rg2-edit-event-selected").replaceChildren()
   } else {
-    showWarningDialog("Delete failed", response.status_msg + ". Event delete failed. Please try again.")
+    showWarningDialog("Delete failed", response.status_msg + ". Event " + id + " delete failed. Please try again.")
   }
 }
 
-function handleEventUpdated(response, kartatid) {
+const handleEventUpdated = (kartatid) => (response) => {
   if (response.ok) {
     showWarningDialog("Event updated", "Event " + kartatid + " has been updated.")
     setActiveEventIDByKartatID(null)
@@ -1026,15 +1027,18 @@ function handleMapsLoaded(response) {
   displayUnusedMaps(unusedMaps)
 }
 
-function handleRouteDeleted(response) {
+const handleRouteDeleted = (routeid) => (response) => {
   if (response.ok) {
-    showWarningDialog("Route deleted", "Route has been deleted.")
+    showWarningDialog("Route deleted", "Route " + routeid + " has been deleted.")
     setActiveEventIDByKartatID(null)
     setEventTitleBar()
     doGetEvents()
     setEvent()
   } else {
-    showWarningDialog("Delete failed", response.status_msg + ". Delete failed. Please try again.")
+    showWarningDialog(
+      "Delete failed",
+      response.status_msg + ". Delete failed for route " + routeid + ". Please try again."
+    )
   }
 }
 

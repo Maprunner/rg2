@@ -837,8 +837,10 @@ function updateAnimationDetails() {
   updateTrackNames()
   if (runners.length > 0) {
     animationPanel.classList.remove("d-none")
+    btnRunners.classList.remove("d-none")
   } else {
     animationPanel.classList.add("d-none")
+    btnRunners.classList.add("d-none")
   }
   resizePanels()
   calculateAnimationRange()

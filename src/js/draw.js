@@ -544,11 +544,6 @@ function rotatePoint(x, y, angle) {
 }
 
 function routeSaved(data, name) {
-  // showShareDialog(
-  //   trk.routeData.name,
-  //   data.newid,
-  //   t("Your route has been saved") + "."
-  // )
   showWarningDialog(name, t("Your route has been saved"))
   saveDrawnRouteDetails({
     eventid: parseInt(data.eventid, 10),
