@@ -1,4 +1,5 @@
 import { createGrid, ModuleRegistry } from "@ag-grid-community/core"
+import * as bootstrap from "bootstrap"
 import { ClientSideRowModelModule } from "@ag-grid-community/client-side-row-model"
 import Chart from "chart.js/auto"
 import { config } from "./config"
@@ -324,15 +325,37 @@ function drawLegChart() {
 
     return stacks[context.dataIndex].activeRunner ? config.RED : config.RED_30
   }
+  const getBackgroundGainColor = (context) => {
+    if (stacks.length === 0) {
+      return config.BLUE_30
+    }
+
+    return stacks[context.dataIndex].activeRunner ? config.BLUE : config.BLUE_30
+  }
+  const getBackgroundPredictedColor = (context) => {
+    if (stacks.length === 0) {
+      return config.PURPLE_30
+    }
+
+    return stacks[context.dataIndex].activeRunner ? config.PURPLE : config.PURPLE_30
+  }
+
   const stacks = []
   if (!course.exclude[activeLeg]) {
     results.map((res) => {
       // only add runners with valid split for this control
       if (parseInt(res.legSplits[activeLeg], 10) > 0) {
         let stack = {}
-        stack.loss = parseInt(res.loss[iterationIndex][activeLeg], 10)
-        stack.total = parseInt(res.legSplits[activeLeg], 10)
-        stack.predicted = stack.total - stack.loss
+        // either plot predicted + loss (= actual) or actual + gain (= predicted)
+        const loss = parseInt(res.loss[iterationIndex][activeLeg], 10)
+        const predicted = parseInt(res.predictedSplits[iterationIndex][activeLeg], 10)
+        const actual = parseInt(res.legSplits[activeLeg], 10)
+        stack.loss = loss
+        stack.predicted = loss === 0 ? 0 : predicted
+        stack.rawPredicted = predicted
+        stack.actual = actual <= predicted ? actual : 0
+        stack.gain = actual <= predicted ? predicted - actual : 0
+        stack.realSplit = actual
         stack.pos = res.legpos[activeLeg]
         stack.name = res.name
         if (res.rawid === rawid) {
@@ -342,9 +365,11 @@ function drawLegChart() {
       }
     })
   }
-  stacks.sort((a, b) => a.total - b.total)
+  stacks.sort((a, b) => a.realSplit - b.realSplit)
   const predicted = stacks.map((res) => res.predicted)
+  const actuals = stacks.map((res) => res.actual)
   const losses = stacks.map((res) => res.loss)
+  const gains = stacks.map((res) => res.gain)
   const labels = stacks.map((res) => res.pos)
   const refTime = stacks.map(() => course.refLegTime[iterationIndex][activeLeg])
   const worst = results.reduce((worst, res) => Math.max(worst, res.legSplits[activeLeg]), 0)
@@ -356,10 +381,24 @@ function drawLegChart() {
       labels: labels,
       datasets: [
         {
+          label: "Actual",
+          type: "bar",
+          data: actuals,
+          backgroundColor: getBackgroundColor
+        },
+        {
+          label: "Gain",
+          type: "bar",
+          data: gains,
+          yAxisID: "yLoss",
+          backgroundColor: getBackgroundGainColor
+        },
+        {
           label: "Predicted",
           type: "bar",
           data: predicted,
-          backgroundColor: getBackgroundColor
+          yAxisID: "yLoss",
+          backgroundColor: getBackgroundPredictedColor
         },
         {
           label: "Loss",
@@ -409,13 +448,21 @@ function drawLegChart() {
               if (context.dataset.label === "Loss") {
                 label += formatSecsAsMMSS(stacks[context.dataIndex].loss)
               } else {
-                label += formatSecsAsMMSS(stacks[context.dataIndex].predicted)
+                if (context.dataset.label === "Gain") {
+                  label += formatSecsAsMMSS(stacks[context.dataIndex].gain)
+                } else {
+                  if (context.dataset.label === "Actual") {
+                    label += formatSecsAsMMSS(stacks[context.dataIndex].actual)
+                  } else {
+                    label += formatSecsAsMMSS(stacks[context.dataIndex].predicted)
+                  }
+                }
               }
               return label
             },
             title(context) {
               const title =
-                stacks[context[0].dataIndex].name + ": " + formatSecsAsMMSS(stacks[context[0].dataIndex].total)
+                stacks[context[0].dataIndex].name + ": " + formatSecsAsMMSS(stacks[context[0].dataIndex].realSplit)
               return title
             }
           }
@@ -432,16 +479,6 @@ function drawLegChart() {
 
 function generateLegChart() {
   activeLeg = 1
-  // document.getElementById("rg2-control-slider"").slider({
-  //   value: activeLeg,
-  //   min: 1,
-  //   max: results[resultIndex].splits.length - 1,
-  //   step: 1,
-  //   slide(event, ui) {
-  //     activeLeg = ui.value
-  //     drawLegChart()
-  //   }activeLeg
-  // })
   drawLegChart()
 }
 
@@ -555,16 +592,20 @@ function generateSplitsChart() {
   }
   const skipped = (ctx, value) => (ctx.p0.skip || ctx.p1.skip ? value : undefined)
   const ctx = document.getElementById("rg2-splits-chart")
-  const labels = results[resultIndex].legpos.map((val, idx, array) => (idx === array.length - 1 ? "F" : idx))
+  const res = results[resultIndex]
+  const labels = res.legpos.map((val, idx, array) => (idx === array.length - 1 ? "F" : idx))
   const info = getLegPosInfo()
-  const legPos = results[resultIndex].legpos.map((val) => (val === 0 ? NaN : val))
-  const losses = results[resultIndex].loss[iterationIndex].map((val, idx) =>
-    results[resultIndex].legpos[idx] === 0 ? NaN : val
+  const legPos = res.legpos.map((val) => (val === 0 ? NaN : val))
+  const losses = res.loss[iterationIndex].map((val, idx) => (res.legpos[idx] === 0 ? NaN : val))
+  const gains = res.predictedSplits[iterationIndex].map((pred, idx) =>
+    res.legpos[idx] === 0 ? NaN : pred > res.legSplits[idx] ? pred - res.legSplits[idx] : 0
   )
-  const averageLegPos = results[resultIndex].legpos.map(() => info.average)
-  const worst = results[resultIndex].loss[iterationIndex].reduce((worst, loss) => Math.max(worst, loss), 0)
-  // fit y-axis (loss) to nearest higher multiple of 5 minutes (300 seconds)
-  const lossMax = parseInt((worst + 299) / 300, 10) * 300
+  const averageLegPos = res.legpos.map(() => info.average)
+  const worst = losses.reduce((worst, loss) => Math.max(worst, isNaN(loss) ? 0 : loss), 0)
+  const best = gains.reduce((best, gain) => Math.max(best, isNaN(gain) ? 0 : gain), 0)
+  // fit y-axis (loss) to nearest higher multiple of x seconds
+  const scaleBase = 120
+  const lossGainMax = parseInt((Math.max(worst, best) + scaleBase - 1) / scaleBase, 10) * scaleBase
   splitsChart = new Chart(ctx, {
     data: {
       labels: labels,
@@ -573,8 +614,8 @@ function generateSplitsChart() {
           label: "Leg position",
           type: "line",
           data: legPos,
-          borderColor: config.RED,
-          backgroundColor: config.RED_30,
+          borderColor: config.PURPLE,
+          backgroundColor: config.PURPLE_30,
           yAxisID: "yPosition",
           segment: {
             borderColor: (ctx) => skipped(ctx, "rgb(0,0,0,0.2)"),
@@ -598,14 +639,25 @@ function generateSplitsChart() {
           label: "Time loss",
           type: "bar",
           data: losses,
-          borderColor: config.DARK_GREEN,
-          backgroundColor: config.DARK_GREEN_30,
+          borderColor: config.RED,
+          backgroundColor: config.RED_30,
           yAxisID: "yLoss",
           segment: {
             borderColor: (ctx) => skipped(ctx, "rgb(0,0,0,0.2)"),
             borderDash: (ctx) => skipped(ctx, [6, 6])
-          },
-          spanGaps: true
+          }
+        },
+        {
+          label: "Time gain",
+          type: "bar",
+          data: gains,
+          borderColor: config.BLUE,
+          backgroundColor: config.BLUE_30,
+          yAxisID: "yLoss",
+          segment: {
+            borderColor: (ctx) => skipped(ctx, "rgb(0,0,0,0.2)"),
+            borderDash: (ctx) => skipped(ctx, [6, 6])
+          }
         }
       ]
     },
@@ -618,7 +670,8 @@ function generateSplitsChart() {
           title: {
             display: true,
             text: t("Control", "")
-          }
+          },
+          stacked: true
         },
         yPosition: {
           type: "linear",
@@ -636,13 +689,13 @@ function generateSplitsChart() {
           display: true,
           position: "right",
           min: 0,
-          max: lossMax,
+          max: lossGainMax,
           grid: {
             drawOnChartArea: false
           },
           title: {
             display: true,
-            text: "Time loss"
+            text: "Time gain/loss (s)"
           }
         }
       },
@@ -652,6 +705,9 @@ function generateSplitsChart() {
             label: function (context) {
               if (context.dataset.label === "Time loss") {
                 return "Loss: " + formatSecsAsMMSS(losses[context.dataIndex])
+              }
+              if (context.dataset.label === "Time gain") {
+                return "Loss: " + formatSecsAsMMSS(gains[context.dataIndex])
               }
               if (context.dataset.label === "Leg position") {
                 return "Position: " + legPos[context.dataIndex]
@@ -882,6 +938,7 @@ function generateTableByLegPos() {
   const rowData = []
   for (let i = 0; i < results[resultIndex].splits.length; i += 1) {
     let row = {}
+    row.name = result.name
     if (i === 0) {
       row.control = "S"
     } else {
@@ -949,9 +1006,10 @@ function generateTableByLegPos() {
       row.predicted = formatSecsAsMMSS(results[resultIndex].predictedSplits[iterationIndex][i])
     }
     if (results[resultIndex].legSplits[i] <= 0) {
-      row.loss = "-"
+      row.loss = ""
     } else {
-      row.loss = formatSecsAsMMSS(results[resultIndex].loss[iterationIndex][i])
+      const loss = results[resultIndex].predictedSplits[iterationIndex][i] - results[resultIndex].legSplits[i]
+      row.loss = loss >= 0 ? formatSecsAsMMSS(loss) : "-" + formatSecsAsMMSS(loss * -1)
     }
     rowData.push(row)
   }
@@ -977,7 +1035,9 @@ function generateTableByLegPos() {
         headerName: t("Who", ""),
         field: "who",
         headerClass: "align-left",
-        cellClass: "align-left",
+        cellClass: (params) => {
+          return params.data.who.indexOf(params.data.name) > -1 ? "rg2-green-text align-left" : "align-left"
+        },
         flex: 1,
         tooltipField: "who"
       },
@@ -995,9 +1055,12 @@ function generateTableByLegPos() {
         comparator: timeComparator.bind(this)
       },
       {
-        headerName: t("Loss", ""),
+        headerName: t("+/-", ""),
         field: "loss",
         width: 75,
+        cellClass: (params) => {
+          return params.data.loss.substring(0, 1) === "-" ? "rg2-red-text align-center" : "align-center"
+        },
         comparator: timeComparator.bind(this)
       }
     ],
@@ -1019,6 +1082,7 @@ function generateTableByRacePos() {
   let loss = 0
   for (let i = 0; i < results[resultIndex].splits.length; i += 1) {
     let row = {}
+    row.name = result.name
     if (i == 0) {
       row.control = "S"
     } else {
@@ -1082,7 +1146,9 @@ function generateTableByRacePos() {
         headerName: t("Who", ""),
         field: "who",
         headerClass: "align-left",
-        cellClass: "align-left",
+        cellClass: (params) => {
+          return params.data.who.indexOf(params.data.name) > -1 ? "rg2-green-text align-left" : "align-left"
+        },
         flex: 1,
         tooltipField: "who"
       },
@@ -1373,6 +1439,7 @@ function prepareStats(rawid) {
       // general problem: probably an index out of bounds on an array somewhere: dodgy results files
       showWarningDialog(t("Statistics", ""), t("Data inconsistency.", ""))
     }
+    bootstrap.Offcanvas.getInstance(document.getElementById("rg2-right-info-panel")).hide()
   }
   return false
 }

@@ -3,7 +3,7 @@ import { getMapSize } from "./canvas"
 
 export const config = {
   // version gets set automatically by grunt file during build process
-  RG2VERSION: '2.0.6',
+  RG2VERSION: "2.0.6",
   DEFAULT_SCALE_FACTOR: 1.1,
   TAB_EVENTS: "event-tab",
   TAB_COURSES: "course-tab",
@@ -32,11 +32,14 @@ export const config = {
   PURPLE: "#b300ff",
   RED: "#ff0000",
   GREEN: "#00ff00",
+  BLUE: "#0000ff",
   DARK_GREEN: "rgb(34, 139, 34)",
   DARK_GREEN_30: "rgba(34, 139, 34, 0.3)",
   GREY: "#e0e0e0",
   RED_30: "rgba(255,0,0,0.3)",
   GREEN_30: "rgba(0,255,0,0.3)",
+  BLUE_30: "rgba(0,0,255,0.3)",
+  PURPLE_30: "rgba(180,0,255,0.3)",
   WHITE: "#ffffff",
   BLACK: "#000000",
   RUNNER_DOT_RADIUS: 6,
