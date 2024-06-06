@@ -436,6 +436,10 @@ function initialiseButtons() {
   document.getElementById("btn-settings").addEventListener("click", (e) => {
     displaySettingsDialog(e)
   })
+  document.getElementById("btn-toggle-controls").addEventListener("click", () => {
+    controls.toggleControlDisplay()
+    redraw()
+  })
   document.getElementById("btn-stats").addEventListener("click", () => {
     // stats display: start with first runner in results list
     displayStatsDialog(1)
@@ -447,13 +451,9 @@ function initialiseButtons() {
   })
   document.getElementById("btn-measure").setAttribute("disabled", "")
   document.getElementById("btn-runners").setAttribute("disabled", "")
-
-  const btn = document.getElementById("btn-toggle-controls")
-  btn.setAttribute("disabled", "")
-  btn.addEventListener("click", () => {
-    controls.toggleControlDisplay()
-    redraw()
-  })
+  document.getElementById("btn-toggle-controls").setAttribute("disabled", "")
+  document.getElementById("btn-stats").setAttribute("disabled", "")
+  document.getElementById("btn-splitsbrowser").setAttribute("disabled", "")
 }
 
 function initialiseInfoPanelDialog() {

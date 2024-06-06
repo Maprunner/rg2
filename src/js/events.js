@@ -29,13 +29,14 @@ function configureUIForNewEvent(kartatid) {
   }
   const btnSplitsbrowser = document.getElementById("btn-splitsbrowser")
   if (rg2Config.enable_splitsbrowser && eventHasResults()) {
-    btnSplitsbrowser.classList.remove("d-none")
+    btnSplitsbrowser.removeAttribute("disabled")
   } else {
-    btnSplitsbrowser.classList.add("d-none")
+    btnSplitsbrowser.setAttribute("disabled", "")
   }
   document.getElementById("btn-toggle-controls").removeAttribute("disabled")
   document.getElementById("btn-runners").removeAttribute("disabled")
   document.getElementById("btn-measure").removeAttribute("disabled")
+  document.getElementById("btn-stats").removeAttribute("disabled")
 }
 
 function doGetEvent(kartatid) {

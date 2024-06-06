@@ -257,7 +257,7 @@ function displayControlDetails(stacks) {
   } else {
     const losses = stacks.filter((stack) => stack.loss > 0).map((stack) => stack.loss)
     const averages = getAverages(losses, 100)
-    html = `<div class="px-2 fw-bold">${t("Runners")}: ${averages.count}</div >`
+    html = `<div class="px-2 fw-bold">${t("Runners with loss")}: ${averages.count}</div >`
     html += `<div class="px-2 fw-bold">${t("Average")}: ${parseInt(averages.mean, 10)}s (${
       parseInt((averages.mean * 1000) / course.refLegTime[iterationIndex][activeLeg], 10) / 10
     }%)</div>`
@@ -322,21 +322,18 @@ function drawLegChart() {
     if (stacks.length === 0) {
       return config.RED_30
     }
-
     return stacks[context.dataIndex].activeRunner ? config.RED : config.RED_30
   }
   const getBackgroundGainColor = (context) => {
     if (stacks.length === 0) {
       return config.BLUE_30
     }
-
     return stacks[context.dataIndex].activeRunner ? config.BLUE : config.BLUE_30
   }
   const getBackgroundPredictedColor = (context) => {
     if (stacks.length === 0) {
       return config.PURPLE_30
     }
-
     return stacks[context.dataIndex].activeRunner ? config.PURPLE : config.PURPLE_30
   }
 
@@ -373,8 +370,9 @@ function drawLegChart() {
   const labels = stacks.map((res) => res.pos)
   const refTime = stacks.map(() => course.refLegTime[iterationIndex][activeLeg])
   const worst = results.reduce((worst, res) => Math.max(worst, res.legSplits[activeLeg]), 0)
-  // fit y-axis (time) to nearest higher multiple of 5 minutes (300 seconds)
-  const timeMax = parseInt((worst + 299) / 300, 10) * 300
+  // fit y-axis to nearest higher multiple of x seconds
+  const scaleBase = 120
+  const timeMax = parseInt((worst + scaleBase - 1) / scaleBase, 10) * scaleBase
   displayControlDetails(stacks)
   legChart = new Chart(ctx, {
     data: {
@@ -707,7 +705,7 @@ function generateSplitsChart() {
                 return "Loss: " + formatSecsAsMMSS(losses[context.dataIndex])
               }
               if (context.dataset.label === "Time gain") {
-                return "Loss: " + formatSecsAsMMSS(gains[context.dataIndex])
+                return "Gain: " + formatSecsAsMMSS(gains[context.dataIndex])
               }
               if (context.dataset.label === "Leg position") {
                 return "Position: " + legPos[context.dataIndex]
