@@ -1,6 +1,6 @@
 {
-  "_grid-DetXoWVd.js": {
-    "file": "assets/grid-DetXoWVd.js",
+  "_grid-Bf1zjDOr.js": {
+    "file": "assets/grid-Bf1zjDOr.js",
     "name": "grid"
   },
   "_manager-!~{003}~.js": {
@@ -23,16 +23,16 @@
     "src": "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff2"
   },
   "src/js/main.js": {
-    "file": "assets/main-DxlIWJrY.js",
+    "file": "assets/main-B-DRVOxi.js",
     "name": "main",
     "src": "src/js/main.js",
     "isEntry": true,
     "imports": [
       "_manager-Cw-VX6TE.js",
-      "_grid-DetXoWVd.js"
+      "_grid-Bf1zjDOr.js"
     ],
     "css": [
-      "assets/main-BWd4iw4U.css"
+      "assets/main-DrM20F54.css"
     ],
     "assets": [
       "assets/bootstrap-icons-BtvjY1KL.woff2",
