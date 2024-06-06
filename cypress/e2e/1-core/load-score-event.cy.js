@@ -42,7 +42,7 @@ describe("Load score event", { testIsolation: false }, () => {
   })
   it("should display stats for a score event", () => {
     cy.get("#table-1 tr[data-id='2']").rightclick()
-    cy.get("#rg2-stats-summary").should("be.visible").and("contain", "1 hr Score")
+    cy.get(".rg2-stats-title-row").should("be.visible").and("contain", "1 hr Score")
     cy.get("#rg2-splits-chart").should("be.visible")
     cy.get("#rg2-stats-panel-tab-headers button[data-bs-target='#rg2-legs-tab']").click()
     cy.get("#rg2-leg-table").should("be.visible")

@@ -17,7 +17,6 @@ describe("Loads and replays a normal event", { testIsolation: false }, () => {
     cy.get("#draw-tab").should("not.be.disabled")
     cy.get("#rg2-event-title").should("contain", "2022-06-04 Highfield Park Saturday Series")
   })
-
   it("should display courses", () => {
     cy.get("#course-tab").click()
     cy.get("#rg2-course-table .showcourse[data-courseid='1']").click()
@@ -44,10 +43,8 @@ describe("Loads and replays a normal event", { testIsolation: false }, () => {
     cy.get("#rg2-course-table .allcoursetracks[data-courseid='3']").click()
   })
   it("should select runners for animation", () => {
-    // show and hide runners dialog with no runners
-    cy.get("#btn-runners").click()
-    cy.get(".track-names").should("be.visible").and("be.empty")
-    cy.get("#rg2-track-names").find(".btn-close").click()
+    // runners button not visiblw with no runners selected
+    cy.get("#btn-runners").should("not.be.visible")
     // show course tab
     cy.get("#course-tab").click()
     // show Orange
@@ -181,24 +178,24 @@ describe("Loads and replays a normal event", { testIsolation: false }, () => {
     cy.get("#result-tab").click()
     cy.get(".accordion-button").eq(0).click()
     cy.get("#table-1 tr[data-id='2']").dblclick()
-    cy.get("#rg2-stats-summary").should("contain", "Simon Errington")
+    cy.get(".rg2-stats-title-row").should("contain", "Simon Errington")
   })
   it("should scroll through results", () => {
     cy.get("#rg2-splits-chart").should("be.visible").click()
     cy.get("#rg2-splits-chart").trigger("wheel", { deltaY: -10 })
-    cy.get("#rg2-stats-summary").should("contain", "Nathan Nesbit")
+    cy.get(".rg2-stats-title-row").should("contain", "Nathan Nesbit")
     cy.get("#rg2-splits-chart").should("be.visible").click()
     cy.get("#rg2-splits-chart").trigger("wheel", { deltaY: 10 })
-    cy.get("#rg2-stats-summary").should("contain", "Simon Errington")
+    cy.get(".rg2-stats-title-row").should("contain", "Simon Errington")
     cy.get("#rg2-splits-chart").should("be.visible").click()
     cy.get("#rg2-splits-chart").trigger("wheel", { deltaY: 10 })
-    cy.get("#rg2-stats-summary").should("contain", "Daniel Gardner")
+    cy.get(".rg2-stats-title-row").should("contain", "Daniel Gardner")
     cy.get("#rg2-splits-chart").should("be.visible").click()
     cy.get("#rg2-splits-chart").trigger("wheel", { deltaY: 10 })
-    cy.get("#rg2-stats-summary").should("contain", "Adam Oldfield")
+    cy.get(".rg2-stats-title-row").should("contain", "Adam Oldfield")
     cy.get("#rg2-splits-chart").should("be.visible").click()
     cy.get("#rg2-splits-chart").trigger("wheel", { deltaY: -10 })
-    cy.get("#rg2-stats-summary").should("contain", "Daniel Gardner")
+    cy.get(".rg2-stats-title-row").should("contain", "Daniel Gardner")
   })
   it("should show leg details", () => {
     cy.get("#rg2-stats-panel-tab-headers button[data-bs-target='#rg2-legs-tab']").click()
