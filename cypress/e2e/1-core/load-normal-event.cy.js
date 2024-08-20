@@ -198,10 +198,24 @@ describe("Loads and replays a normal event", { testIsolation: false }, () => {
     cy.get(".rg2-stats-title-row").should("contain", "Daniel Gardner")
   })
   it("should show leg details", () => {
+    const resizeObserverLoopErrRe = /ResizeObserver loop/
+
+    cy.on("uncaught:exception", (err) => {
+      if (resizeObserverLoopErrRe.test(err.message)) {
+        return false
+      }
+    })
     cy.get("#rg2-stats-panel-tab-headers button[data-bs-target='#rg2-legs-tab']").click()
     cy.get("#rg2-leg-table").should("be.visible")
   })
   it("should show cumulative details", () => {
+    const resizeObserverLoopErrRe = /ResizeObserver loop/
+
+    cy.on("uncaught:exception", (err) => {
+      if (resizeObserverLoopErrRe.test(err.message)) {
+        return false
+      }
+    })
     cy.get("#rg2-stats-panel-tab-headers button[data-bs-target='#rg2-cumulative-tab']").click()
     cy.get("#rg2-race-table").should("be.visible")
   })
