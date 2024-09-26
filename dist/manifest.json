@@ -1,17 +1,29 @@
 {
-  "_grid-Bf1zjDOr.js": {
-    "file": "assets/grid-Bf1zjDOr.js",
-    "name": "grid"
+  "_grid-CgsJkZsf.js": {
+    "file": "assets/grid-CgsJkZsf.js",
+    "name": "grid",
+    "isDynamicEntry": true
   },
-  "_manager-!~{003}~.js": {
-    "file": "assets/manager-HupOsEJb.css",
-    "src": "_manager-!~{003}~.js"
+  "_manager-utils-!~{005}~.js": {
+    "file": "assets/manager-utils-HupOsEJb.css",
+    "src": "_manager-utils-!~{005}~.js"
   },
-  "_manager-Cw-VX6TE.js": {
-    "file": "assets/manager-Cw-VX6TE.js",
-    "name": "manager",
+  "_manager-utils-C8g2LUbf.js": {
+    "file": "assets/manager-utils-C8g2LUbf.js",
+    "name": "manager-utils",
+    "imports": [
+      "src/js/main.js"
+    ],
     "css": [
-      "assets/manager-HupOsEJb.css"
+      "assets/manager-utils-HupOsEJb.css"
+    ]
+  },
+  "_node-modules-CPWXqQ3f.js": {
+    "file": "assets/node-modules-CPWXqQ3f.js",
+    "name": "node-modules",
+    "isDynamicEntry": true,
+    "imports": [
+      "src/js/main.js"
     ]
   },
   "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff": {
@@ -23,20 +35,37 @@
     "src": "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff2"
   },
   "src/js/main.js": {
-    "file": "assets/main-B-DRVOxi.js",
+    "file": "assets/main-D9_pgpFN.js",
     "name": "main",
     "src": "src/js/main.js",
     "isEntry": true,
     "imports": [
-      "_manager-Cw-VX6TE.js",
-      "_grid-Bf1zjDOr.js"
+      "_node-modules-CPWXqQ3f.js",
+      "src/js/main.js"
+    ],
+    "dynamicImports": [
+      "_grid-CgsJkZsf.js",
+      "_grid-CgsJkZsf.js",
+      "_node-modules-CPWXqQ3f.js",
+      "src/js/manager.js"
     ],
     "css": [
-      "assets/main-DrM20F54.css"
+      "assets/main-7W2BOCJG.css"
     ],
     "assets": [
       "assets/bootstrap-icons-BtvjY1KL.woff2",
       "assets/bootstrap-icons-BOrJxbIo.woff"
+    ]
+  },
+  "src/js/manager.js": {
+    "file": "assets/manager-1E3re5s3.js",
+    "name": "manager",
+    "src": "src/js/manager.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_node-modules-CPWXqQ3f.js",
+      "src/js/main.js",
+      "_manager-utils-C8g2LUbf.js"
     ]
   }
 }

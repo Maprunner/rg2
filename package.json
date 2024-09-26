@@ -1,7 +1,7 @@
 {
   "name": "rg2",
   "private": false,
-  "version": "2.0.8 beta-1",
+  "version": "2.1",
   "type": "module",
   "scripts": {
     "dev": "vite",

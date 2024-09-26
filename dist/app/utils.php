@@ -5,6 +5,7 @@ class utils
     {
         $a[$name] = $data;
         $a['API version'] = RG2VERSION;
+        $a["php"] = phpversion();
         return json_encode($a);
     }
 

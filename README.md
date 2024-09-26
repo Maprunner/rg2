@@ -2,7 +2,9 @@
 
 ## Latest news
 
-This branch is Version 2.0 and will become the supported version. The functionality should be very familiar but the user interface is a lot nicer.
+26 September 2024: Version 2.1 released as the main branch. This is the latest update of what has been running on routegadget.co.uk for the past year.
+
+Version 1.x has now been archived and is on the Version-1-archive branch. It is not intended to support this any further.
 
 ## Development notes
 
@@ -62,7 +64,7 @@ For a standard installation sync the dist directory to your rg2 directory on the
 
 ## PHP versions
 
-This release runs on PHP version 8.
+This release requires PHP version 8. The routegadget.co.uk is currently running with 8.2.23.
 
 ## Siteground configuration for routegadget.co.uk
 
@@ -93,7 +95,11 @@ You also need to disable nginx direct delivery for this to work, since otherwise
 
 Sync dist/assets to www.routegadget.co.uk/rg2/assets
 
-npm run deploy will recreate the necessary directory structure for all subdomains under website. This can then be synced.
+```
+npm run deploy
+```
+
+This creates the necessary directory structure for all subdomains under website. This can then be synced to the server.
 
 ## User Guides and Introductory Videos
 
