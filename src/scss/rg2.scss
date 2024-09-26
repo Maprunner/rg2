@@ -66,8 +66,6 @@ $navbar-padding-y: 0;
 @import "~bootstrap/scss/utilities/api";
 @import "~bootstrap-icons/font/bootstrap-icons.css";
 @import '~datepicker/sass/datepicker-bs5';
-// @import "~@ag-grid-community/styles/ag-grid.css";
-// @import "~@ag-grid-community/styles/ag-theme-balham.css";
 
 //useful to see screen layout
 // * {
@@ -90,8 +88,6 @@ $navbar-padding-y: 0;
 .offcanvas-title {
   font-weight: bold;
 }
-
-///////////////////////////////////////////////
 
 .btn-rg2-navbar {
   font-size: clamp(0.75rem, 1vw, 1.5rem);

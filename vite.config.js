@@ -57,6 +57,14 @@ export default defineConfig(({ command, mode, ssrBuild }) => {
         }
       }
     },
+    // suppress Bootstrap warnings until it is updated
+    css: {
+      preprocessorOptions: {
+        scss: {
+          silenceDeprecations: ["mixed-decls", "color-functions", "legacy-js-api"]
+        }
+      }
+    },
     resolve: {
       alias: {
         "~ag-grid-community": path.resolve(__dirname, "node_modules/ag-grid-community"),

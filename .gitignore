@@ -18,5 +18,6 @@ kartat
 !.vscode/extensions.json
 cypress/videos
 cypress/screenshots
+cypress/downloads
 website
 stats.html

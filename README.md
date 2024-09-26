@@ -6,39 +6,63 @@ This branch is Version 2.0 and will become the supported version. The functional
 
 ## Development notes
 
-npm install to make sure you have all necessary dependencies installed. The project uses Vite and Rollup, with Cypress for testing.
+```
+npm install
+```
 
-npm run dev : this starts a vite development server which includes hot module reload.
+to make sure you have all necessary dependencies installed. The project uses Vite and Rollup, with Cypress for testing.
 
-You need to be running a separate server to manage the API calls. At present this is assumed to be XAMPP or similar. In future I guess there should be a way of doing this in node.
+```
+npm run dev
+```
+
+This starts a vite development server which includes hot module reload. You need to be running a separate server to manage the API calls. At present this is assumed to be XAMPP or similar. In future I guess there should be a way of doing this in node.
 
 You should now be able to access rg2 at http://localhost/rg2/
 
 ## Cypress tests
 
-npm run test starts vite with code coverage enabled
+```
+npm run test
+```
 
-You still need the XAMPP server for the API.
+Starts vite with code coverage enabled. You still need the XAMPP server for the API. In a separate terminal window:
 
-In a separate terminal window:
+```
+npm run cypress
+```
 
-npm run cypress to start the Cypress test environment and run test scripts individually
+Start the Cypress test environment and allows you to run test scripts individually.
 
-npm run test:all to run the full suite of tests automatically
+```
+npm run test:all
+```
 
-Test coverage results are in coverage/lcov-report/index.html
+Runs the full suite of tests automatically. Test coverage results are in coverage/lcov-report/index.html
 
 ## Building for a release
 
-The version number is taken from package.json.
+The version number is taken from package.json. This needs to be updated manually.
 
-npm run upver takes the package.json version number and puts it in config.js, index.php and rg2api.php.
+```
+npm run upver
+```
 
-npm run build does the version number update and then runs a full production build. Output goes to the dist directory.
+This takes the package.json version number and puts it in config.js, index.php and rg2api.php.
+
+```
+npm run build
+```
+
+Does the version number update and then runs a full production build. Output goes to the dist directory.
 
 ## Installing
 
 For a standard installation sync the dist directory to your rg2 directory on the production server. The only missing file should be the rg2-config.php file which you need to set up separately based on rg2-config.txt.
+
+## PHP versions
+
+This release runs on PHP version 8.
 
 ## Siteground configuration for routegadget.co.uk
 
@@ -113,3 +137,7 @@ Routegadget 2 allows you to view existing Routegadget information in any modern 
 ## RG2 Installations
 
 For a list of known RG2 installations see the [RG2 statistics database](http://www.maprunner.co.uk/rg2-stats). Email me if you would like your site added to this list.
+
+```
+
+```
