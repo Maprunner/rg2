@@ -1,0 +1,27 @@
+<?php if ($production) { ?>
+<?php echo $jsfiles; ?> <?php } else { ?>
+<script type="module" src="http://localhost:5173/rg2/@vite/client"></script>
+<script type="module" src="http://localhost:5173/rg2/src/js/main.js"></script>
+<?php } ?>
+<script type="text/javascript">
+  const rg2Config = {
+  asset_url: '<?php echo $source_url; ?>',
+  api_url: '<?php echo $api_url; ?>',
+  maps_url: '<?php echo $maps_url; ?>',
+  lang_url: '<?php echo $source_url.'lang/'; ?>',
+  <?php if (defined('SPLITSBROWSER_DIRECTORY')) { ?>
+  enable_splitsbrowser: true,
+  <?php } else { ?>
+  enable_splitsbrowser: false,
+  <?php } ?>
+  <?php if ($manager) { ?>
+  keksi: '<?php echo $keksi; ?>',
+  <?php if (defined('EPSG_CODE')) { ?>
+  epsg_code: '<?php echo EPSG_CODE; ?>',
+  epsg_params: '<?php echo EPSG_PARAMS; ?>',
+  <?php } ?>
+  <?php } ?>
+  languages: {},
+  start_language: '<?php echo $lang; ?>'
+  };
+</script>

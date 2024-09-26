@@ -1,0 +1,53 @@
+import manager from "../../fixtures/validmanager.json"
+describe("Event creation 3", { testIsolation: false }, () => {
+  before(() => {
+    cy.task("setUpKartat", { config: "config-01" })
+  })
+  beforeEach(() => {
+    cy.intercept("rg2api.php?type=event&id=*").as("event")
+    cy.intercept("rg2api.php?type=events*").as("events")
+    cy.intercept("rg2api.php?type=login*").as("login")
+    cy.intercept("rg2api.php?type=maps*").as("maps")
+  })
+  it("starts with an empty kartat directory", () => {
+    cy.task("setUpKartat", { config: "config-03", php: "config-03" })
+    cy.visit("http://localhost/rg2/")
+    cy.wait("@events").its("response.body.data.events").should("have.length", 0)
+    cy.get("#rg2-event-title").should("be.visible").and("contain", "Routegadget 2")
+  })
+  it("can start with a defined language", () => {
+    cy.get("#event-tab-label").should("contain", "Compétition")
+  })
+  it("lets you log in from the About dialog", () => {
+    cy.get("#btn-about").click()
+    cy.visit("http://localhost/rg2/?manage")
+    cy.wait("@events")
+    cy.get("#rg2-user-name").clear().type(manager.name)
+    cy.get("#rg2-password").clear().type(manager.password)
+    cy.get("#btn-login").click()
+    cy.wait("@login")
+  })
+  it("should add a georeferenced OOM map", () => {
+    cy.get("#manage-map-tab").click()
+    cy.get("#rg2-map-name").clear().type("Highfield Park OOM")
+    cy.get("#rg2-load-map-file").selectFile("./cypress/fixtures/data/oom_636ca9e43ca63.jpg")
+    cy.get("#rg2-load-georef-file").selectFile("./cypress/fixtures/data/oom_636ca9e43ca63.jgw")
+    cy.get("#rg2-georef-type").select("Google EPSG:900913")
+    cy.get("#btn-add-map").click()
+    cy.closeModal("Confirm new map")
+    cy.wait("@maps")
+    cy.closeWarningDialog("Map added")
+  })
+  it("should create an OOM event with KML course file", () => {
+    cy.get("#manage-create-tab").click()
+    cy.get("#rg2-event-name").clear().type("Highfield Park OOM")
+    cy.get("#rg2-select-map").select("1: Highfield Park OOM")
+    cy.get("#rg2-select-club-name").clear().type("HH")
+    cy.get("#rg2-select-event-date").clear().type("2022-11-10")
+    cy.get("#rg2-enter-event-comments").clear()
+    cy.get("#rg2-select-event-level").select("T")
+    cy.get("#chk-no-results").click()
+    cy.selectCourseFile("oom_636ca9e43ca63.kml")
+    cy.createEvent()
+  })
+})

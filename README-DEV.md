@@ -1,5 +1,7 @@
 # Instructions for running RG2 locally (linux)
 
+TODO: Not yet adapted to Vite build environment
+
 ## Install required packages
 * web server e.g. apache (`sudo apt install apache2`)
 * php (`sudo apt install php libapache2-mod-php`)

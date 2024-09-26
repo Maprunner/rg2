@@ -1,0 +1,21 @@
+<ResultList xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="IOFData.xsd">
+  <IOFVersion version="2.0.3" />
+  <Event eventForm="IndSingleDay">
+    <EventId>991a34eb-7527-4173-b8ff-a4edb2969745</EventId>
+    <Name>Milton Rigg</Name>
+    <EventClassificationId type="loc" />
+    <StartDate>
+      <Date dateFormat="YYYY-MM-DD">2014-01-18</Date>
+    </StartDate>
+    <Organiser>
+      <Club>
+        <ClubId>
+        </ClubId>
+        <ShortName>Border Liners</ShortName>
+        <CountryId value="GBR" />
+      </Club>
+    </Organiser>
+  </Event>
+  <ClassResult>
+  </ClassResult>
+</ResultList>

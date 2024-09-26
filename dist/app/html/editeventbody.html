@@ -1,0 +1,63 @@
+<div id="rg2-edit-event-body">
+  <div id="rg2-manage-edit">
+    <form>
+      <legend>Select event</legend>
+      <div class="mb-3">
+        <label for="rg2-edit-event-selected" class="form-label">Event</label>
+        <select id="rg2-edit-event-selected" class="form-select form-select-sm mb-3"></select>
+      </div>
+      <hr class="rg2-hr" />
+      <div id="manage-edit-options">
+        <legend>Edit event details</legend>
+        <div>
+          <div class="form-floating mb-3">
+            <input id="rg2-edit-event-name" type="text" placeholder="Map name" class="form-control form-control-sm" />
+            <label for="rg2-edit-event-name">Event name</label>
+          </div>
+          <div class="form-floating mb-3">
+            <input id="rg2-edit-club-name" type="text" placeholder="Club name" class="form-control form-control-sm" />
+            <label for="rg2-edit-club-name">Club</label>
+          </div>
+          <div class="mb-3">
+            <label for="rg2-edit-event-date" class="form-label">Date</label>
+            <input type="text" id="rg2-edit-event-date" />
+          </div>
+          <div class="mb-3">
+            <label for="rg2-edit-event-level" class="form-label">Event level</label>
+            <select id="rg2-edit-event-level" class="form-select form-select-sm mb-3"></select>
+          </div>
+          <div class="form-floating mb-3">
+            <textarea
+              class="form-control"
+              placeholder="Comments"
+              id="rg2-edit-event-comments"
+              style="height: 100px"></textarea>
+            <label for="rg2-edit-event-comments">Comments</label>
+          </div>
+          <div id="rg2-exclude-info" class="form-floating mb-3">
+            <textarea id="rg2-edit-exclude" placeholder="Excluded controls"></textarea>
+            <div class="form-text">Type: 1 Zero splits, 2 Actual splits</div>
+            <div class="form-text">course|type|control,time e.g. 1|1|6,60|15,60</div>
+          </div>
+          <div class="mb-3">
+            <input class="form-check-input" type="checkbox" value="" id="chk-edit-read-only" />
+            <label class="form-check-label" for="chk-edit-read-only">Read-only</label>
+          </div>
+          <button type="button" class="btn btn-primary" id="btn-update-event">Update event details</button>
+        </div>
+        <hr class="rg2-hr" />
+        <legend>Delete route</legend>
+        <div class="mb-3">
+          <label for="rg2-route-selected" class="form-label">Route</label>
+          <select id="rg2-route-selected" class="form-select form-select-sm mb-3"></select>
+        </div>
+        <button type="button" class="btn btn-primary" id="btn-delete-route">Delete</button>
+      </div>
+      <hr class="rg2-hr" />
+      <legend>Delete event</legend>
+      <div id="manage-delete-event" class="mb-3">
+        <button type="button" id="btn-delete-event" class="btn btn-primary">Delete event</button>
+      </div>
+    </form>
+  </div>
+</div>

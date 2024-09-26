@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<ResultList xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" iofVersion="3.0" xmlns="http://www.orienteering.org/datastandard/3.0" xsi:schemaLocation="http://www.orienteering.org/datastandard/3.0 http://www.orienteering.org/datastandard/iof.xsd">
+  <Event>
+    <Name>Milton Rigg</Name>
+    <StartTime>
+      <Date>2014-01-18</Date>
+    </StartTime>
+  </Event>
+  <ClassResult>
+  </ClassResult>
+</ResultList>
