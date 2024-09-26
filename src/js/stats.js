@@ -1,15 +1,10 @@
-import { createGrid, ModuleRegistry } from "@ag-grid-community/core"
 import * as bootstrap from "bootstrap"
-import { ClientSideRowModelModule } from "@ag-grid-community/client-side-row-model"
-import Chart from "chart.js/auto"
 import { config } from "./config"
 import { getCourseDetails, getCourses } from "./courses"
 import { eventHasResults, isScoreEvent } from "./events"
 import { getAllResultsForCourse, getAllResultsForVariant, getFullResultForRawID } from "./results"
 import { t } from "./translate"
 import { formatSecsAsMMSS, showWarningDialog } from "./utils"
-
-ModuleRegistry.registerModules([ClientSideRowModelModule])
 
 const tabs = [
   { id: "rg2-stats-summary", title: "Summary", active: "true" },
@@ -61,6 +56,8 @@ let iterationIndex = 2
 // value returned as event.target.dataset.bsTarget for click on tab header
 const startTab = "#rg2-stats-summary-tab-label"
 let activeTab = startTab
+// Chart functionality dynamicaly loaded when needed
+let Chart = null
 
 function adjustSplits() {
   // adjust splits for events with excluded controls that have uploaded unadjusted splits
@@ -865,7 +862,7 @@ function generateSplitsTable() {
   wrapper.setAttribute("style", "height: " + height + "px;")
   const table = document.getElementById("rg2-results-grid")
   table.innerHTML = ""
-  createGrid(table, gridOptions)
+  rg2Config.createGrid(table, gridOptions)
 }
 
 function generateSummary() {
@@ -1072,7 +1069,7 @@ function generateTableByLegPos() {
   }
   const table = document.getElementById("rg2-leg-table")
   table.innerHTML = ""
-  createGrid(table, gridOptions)
+  rg2Config.createGrid(table, gridOptions)
 }
 
 function generateTableByRacePos() {
@@ -1164,7 +1161,7 @@ function generateTableByRacePos() {
 
   const table = document.getElementById("rg2-race-table")
   table.innerHTML = ""
-  createGrid(table, gridOptions)
+  rg2Config.createGrid(table, gridOptions)
 }
 
 function getAverages(rawData, perCent) {
@@ -1303,6 +1300,16 @@ function handleTabActivation(target) {
   activeTab = target?.dataset?.bsTarget
 }
 
+// dynamic import of Grid and Chart utilities
+async function importUtils() {
+  const { createGrid, ModuleRegistry } = await import("@ag-grid-community/core")
+  rg2Config.createGrid = createGrid
+  const { ClientSideRowModelModule } = await import("@ag-grid-community/client-side-row-model")
+  let chart = await import("chart.js/auto")
+  Chart = chart.default
+  ModuleRegistry.registerModules([ClientSideRowModelModule])
+}
+
 function initialise(id) {
   rawid = id
   isScoreOrRelay = isScoreEvent()
@@ -1403,15 +1410,6 @@ function iterateLostTime() {
   }
 }
 
-export function loadStats(rawid) {
-  if (!eventHasResults()) {
-    showWarningDialog(t("Statistics", ""), t("No statistics available for this event format.", ""))
-    return false
-  }
-  activeTab = startTab
-  return prepareStats(rawid)
-}
-
 function perfComparator(p1, p2) {
   return getPerfValue(p1) - getPerfValue(p2)
 }
@@ -1480,6 +1478,28 @@ function setResultIndex(rawid) {
     }
   }
   return null
+}
+
+export function showStats(rawid, displayStats) {
+  if (!eventHasResults()) {
+    showWarningDialog(t("Statistics", ""), t("No statistics available for this event format.", ""))
+    return false
+  }
+  activeTab = startTab
+  if (!rg2Config.createGrid) {
+    importUtils()
+      .then(() => {
+        prepareStats(rawid)
+        displayStats()
+      })
+      .catch(() => {
+        console.log("Error loading Grid and Chart")
+        showWarningDialog("Error loading Grid and Chart", "Statistics functionality failed to load.")
+      })
+  } else {
+    prepareStats(rawid)
+    displayStats()
+  }
 }
 
 function sortLegTimes(a, b) {

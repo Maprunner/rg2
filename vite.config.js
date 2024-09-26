@@ -5,8 +5,25 @@ import istanbul from "vite-plugin-istanbul"
 import { visualizer } from "rollup-plugin-visualizer"
 
 export default defineConfig(({ command, mode, ssrBuild }) => {
+  const managerSource = [
+    "manager.js",
+    "courseparser.js",
+    "resultparseriofv2.js",
+    "resultparseriofv3.js",
+    "resultparsercsv.js",
+    "resultparser.js",
+    "managerui.js"
+  ]
   return {
     base: "/rg2/",
+    experimental: {
+      renderBuiltUrl(filename, { hostType }) {
+        if (hostType === "js") {
+          return { runtime: `window.assetUrl(${JSON.stringify(filename)})` }
+        }
+        return { relative: true }
+      }
+    },
     build: {
       outDir: "./dist",
       emptyOutDir: true,
@@ -17,6 +34,9 @@ export default defineConfig(({ command, mode, ssrBuild }) => {
         input: path.resolve(__dirname, "src/js/main.js"),
         output: {
           manualChunks: (id) => {
+            if (managerSource.some((module) => id.includes(module))) {
+              return "manager"
+            }
             if (
               id.includes("leaflet") ||
               id.includes("proj4") ||
@@ -24,11 +44,15 @@ export default defineConfig(({ command, mode, ssrBuild }) => {
               id.includes("mgrs") ||
               id.includes("vanillajs-datepicker")
             ) {
-              return "manager"
+              return "manager-utils"
             }
             if (id.includes("ag-grid-community")) {
               return "grid"
             }
+            if (id.includes("node_modules")) {
+              return "node-modules"
+            }
+            return "main"
           }
         }
       }

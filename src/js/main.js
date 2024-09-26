@@ -6,10 +6,13 @@ import { config, loadConfigOptions } from "./config"
 import { initialiseCourses } from "./courses"
 import { doGetEvents, getActiveKartatID, isValidKartatID, loadEventByKartatID } from "./events"
 import { parseLocationHash } from "./hash"
-import { initialiseManager } from "./manager"
 import { configureUI } from "./rg2ui"
 import { initLanguageOptions } from "./translate"
-//import { initialiseManager } from "./manager"
+import { showWarningDialog } from "./utils.js"
+
+window.assetUrl = function (filename) {
+  return rg2Config.asset_url + filename
+}
 
 if (document.readyState !== "loading") {
   rg2init()
@@ -19,6 +22,7 @@ if (document.readyState !== "loading") {
 
 function rg2init() {
   const startup = document.querySelector(".rg2-startup")
+  startup.style.opacity = 0
   startup.addEventListener("transitionend", () => {
     startup.remove()
     // TODO: looks odd but needed to avoid problems with Controls class
@@ -27,18 +31,31 @@ function rg2init() {
     configureUI()
     initLanguageOptions()
     if (config.managing()) {
-      initialiseManager(rg2Config.keksi)
+      import("./manager.js")
+        .then((module) => {
+          rg2Config.manager = module
+          rg2Config.manager.initialiseManager(rg2Config.keksi)
+          finishInit()
+        })
+        .catch(() => {
+          console.log("Error loading manager")
+          showWarningDialog("Error loading manager", "Manager functionality failed to  load.")
+        })
+    } else {
+      finishInit()
     }
-    initialiseCanvas()
-    window.onpopstate = handleNavigation
-    // check if a specific event has been requested
-    if (window.location.hash && !config.managing()) {
-      parseLocationHash(window.location.hash)
-    }
-    document.getElementById("rg2-event-title").innerHTML = "Routegadget 2"
-    doGetEvents()
   })
-  startup.style.opacity = 0
+}
+
+function finishInit() {
+  initialiseCanvas()
+  window.onpopstate = handleNavigation
+  // check if a specific event has been requested
+  if (window.location.hash && !config.managing()) {
+    parseLocationHash(window.location.hash)
+  }
+  document.getElementById("rg2-event-title").innerHTML = "Routegadget 2"
+  doGetEvents()
 }
 
 function handleNavigation() {

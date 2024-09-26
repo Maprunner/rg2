@@ -3,7 +3,7 @@ require(dirname(__FILE__) . '/app/user.php');
 require(dirname(__FILE__) . '/app/utils.php');
 
 // version replaced by Gruntfile as part of release
-define('RG2VERSION', '2.0.7');
+define('RG2VERSION', '2.0.8 beta-1');
 define("RG_LOG_FILE", dirname(__FILE__) . "/log/rg2log.txt");
 
 if (file_exists(dirname(__FILE__) . '/rg2-config.php')) {
@@ -72,11 +72,10 @@ if (file_exists($manifestfile)) {
     $fileExtension = substr($file->file, -3, 3);
     if ($fileExtension === '.js' && isset($file->isEntry) && $file->isEntry === true && (!isset($file->isDynamicEntry) || $file->isDynamicEntry !== true)) {
       $jsfiles .= '<script type="module" src="' . trim($source_url . $file->file) . '"></script>';
-    }
-
-    if (!empty($file->css)) {
-      foreach ($file->css as $cssFile) {
-        $cssfiles .= '<link rel="stylesheet" href="' . $source_url . $cssFile . '" />';
+      if (!empty($file->css)) {
+        foreach ($file->css as $cssFile) {
+          $cssfiles .= '<link rel="stylesheet" href="' . $source_url . $cssFile . '" />';
+        }
       }
     }
   }

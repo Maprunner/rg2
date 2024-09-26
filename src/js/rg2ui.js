@@ -44,7 +44,7 @@ import {
   setTrackDisplayByResult
 } from "./results"
 import { Runner } from "./runner"
-import { getStatsHeader, getStatsLayout, loadStats } from "./stats"
+import { getStatsHeader, getStatsLayout, showStats } from "./stats"
 import { t, createLanguageDropdown } from "./translate"
 
 const infoPanelControl = document.getElementById("rg2-show-info-panel-control")
@@ -364,10 +364,9 @@ export function displayStatsDialog(resultid) {
   document.getElementById("rg2-about-dialog").classList.add("d-none")
   document.getElementById("rg2-option-controls").classList.add("d-none")
   document.getElementById("rg2-stats-dialog").classList.remove("d-none")
-  let statsAvailable = loadStats(resultid)
-  if (statsAvailable) {
+  showStats(resultid, function () {
     rightInfoPanel.show()
-  }
+  })
 }
 
 export function getActiveTab() {

@@ -3,13 +3,6 @@ import { config, options } from "./config"
 import { controls, drawCourses } from "./courses"
 import { adjustTrack, dragEnded, drawNewTrack, gpsFileLoaded, mouseUp } from "./draw"
 import { getActiveEventID } from "./events"
-import {
-  adjustManagerControls,
-  drawManagerControls,
-  managerDragEnded,
-  managerMapLoadCallback,
-  managerMouseUp
-} from "./manager"
 import { Overlay } from "./overlay"
 import { drawTracks } from "./results"
 import { getActiveTab } from "./rg2ui"
@@ -132,7 +125,7 @@ function handleInputMove() {
         adjustTrack(from, to, button)
       } else {
         if (getActiveTab() === config.TAB_CREATE) {
-          adjustManagerControls(from, to, button)
+          rg2Config.manager.adjustManagerControls(from, to, button)
         } else {
           const overlayDragged = overlay.mouseDrag(from, to)
           if (!overlayDragged) {
@@ -153,7 +146,7 @@ function handleInputUp(e) {
     if (activeTab === config.TAB_CREATE) {
       const x = Math.round(input.dragStart.x)
       const y = Math.round(input.dragStart.y)
-      managerMouseUp(x, y)
+      rg2Config.manager.managerMouseUp(x, y)
     } else {
       // pass button that was clicked
       if (activeTab === config.TAB_DRAW) {
@@ -165,7 +158,7 @@ function handleInputUp(e) {
     }
   } else {
     if (activeTab === config.TAB_CREATE) {
-      managerDragEnded()
+      rg2Config.manager.managerDragEnded()
     } else {
       if (activeTab === config.TAB_DRAW) {
         dragEnded()
@@ -295,7 +288,7 @@ function mapLoadedCallback() {
   document.getElementById("rg2-map-load-progress").classList.add("d-none")
   resetMapState()
   if (config.managing()) {
-    managerMapLoadCallback()
+    rg2Config.manager.managerMapLoadCallback()
   }
 }
 
@@ -347,7 +340,7 @@ function doRedraw() {
       drawNewTrack()
     } else {
       if (tab === config.TAB_CREATE) {
-        drawManagerControls()
+        rg2Config.manager.drawManagerControls()
       } else {
         drawCourses(config.DIM)
         drawTracks()
