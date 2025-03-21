@@ -60,9 +60,7 @@ export default defineConfig(({ command, mode, ssrBuild }) => {
     // suppress Bootstrap warnings until it is updated
     css: {
       preprocessorOptions: {
-        scss: {
-          silenceDeprecations: ["mixed-decls", "color-functions", "legacy-js-api"]
-        }
+        scss: { silenceDeprecations: ["mixed-decls", "color-functions", "legacy-js-api", "import", "global-builtin"] }
       }
     },
     resolve: {
@@ -81,15 +79,9 @@ export default defineConfig(({ command, mode, ssrBuild }) => {
       host: "127.0.0.1",
       strictPort: true,
       hot: true,
-      hmr: {
-        port: 5174,
-        host: "127.0.0.1"
-      }
+      hmr: { port: 5174, host: "127.0.0.1" }
     },
-    preview: {
-      port: 5173,
-      strictPort: true
-    },
+    preview: { port: 5173, strictPort: true },
     open: true,
     plugins: [
       visualizer(),
