@@ -34,7 +34,7 @@ function rg2init() {
       import("./manager.js")
         .then((module) => {
           rg2Config.manager = module
-          rg2Config.manager.initialiseManager(rg2Config.keksi)
+          rg2Config.manager.initialiseManager()
           finishInit()
         })
         .catch(() => {

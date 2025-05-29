@@ -3,23 +3,26 @@ class user
 {
   public static function logIn($data)
   {
-    if (isset($data->x) && isset($data->y)) {
+    $ok = true;
+    if (isset($data->x)) {
       $userdetails = self::extractString($data->x);
-      $cookie = $data->y;
     } else {
       $userdetails = "anon";
-      $cookie = "none";
     }
-    $ok = true;
-    $keksi = trim(file_get_contents(KARTAT_DIRECTORY . "keksi.txt"));
+    $session_logged_in = isset($_SESSION['loggedin']) ? $_SESSION['loggedin'] : false;
+    $session_userdetails = isset($_SESSION['userdetails']) ? $_SESSION['userdetails'] : "";
+    utils::rg2log("Session: ", $session_logged_in ? "logged in" : "not logged in");
+    utils::rg2log("Session user details: " . $session_userdetails);
+    // if this user is already logged in then we don't need to do anything
+    if ($session_logged_in && ($session_userdetails === $userdetails)) {
+      return $ok;
+    }
+
+    // not logged in so we need to check the user details
     if (file_exists(KARTAT_DIRECTORY . "rg2userinfo.txt")) {
       $saved_user = trim(file_get_contents(KARTAT_DIRECTORY . "rg2userinfo.txt"));
       if (!password_verify($userdetails, $saved_user)) {
         utils::rg2log("User details incorrect.");
-        $ok = false;
-      }
-      if ($keksi != $cookie) {
-        utils::rg2log("Cookies don't match. " . $keksi . " : " . $cookie);
         $ok = false;
       }
     } else {
@@ -28,6 +31,8 @@ class user
       utils::rg2log("Creating new account.");
       file_put_contents(KARTAT_DIRECTORY . "rg2userinfo.txt", $temp . PHP_EOL);
     }
+    $_SESSION['userdetails'] = $userdetails;
+    $_SESSION['loggedin'] = $ok;
     return $ok;
   }
 
@@ -40,17 +45,5 @@ class user
       $str .= substr($data, $i, 1);
     }
     return $str;
-  }
-
-  public static function generateNewKeksi()
-  {
-    // simple cookie generator! Don't need unique, just need something vaguely random
-    $keksi = substr(str_shuffle("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"), 0, 20);
-    $result = file_put_contents(KARTAT_DIRECTORY . "keksi.txt", $keksi . PHP_EOL);
-    //utils::rg2log(KARTAT_DIRECTORY." ".$keksi." ".$result);
-    if ($result === false) {
-      utils::rg2log("Error writing keksi.txt: " . $keksi);
-    }
-    return $keksi;
   }
 }

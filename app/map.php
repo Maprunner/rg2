@@ -53,40 +53,32 @@ class map
     $data = new stdClass();
     $data->x = $_POST["x"];
     $data->y = $_POST["y"];
-    if (!user::logIn($data)) {
-      $write["status_msg"] = "Login failed.";
-    } else {
-      $filename = $_POST["name"];
-      // PHP changes . and space to _ just for fun
-      $filename = str_replace(".", "_", $filename);
-      $filename = str_replace(" ", "_", $filename);
-      if (is_uploaded_file($_FILES[$filename]['tmp_name'])) {
-        $file = $_FILES[$filename];
-        if ($file['type'] == 'image/jpeg') {
-          if (move_uploaded_file($file['tmp_name'], KARTAT_DIRECTORY . 'temp.jpg')) {
-            $write["ok"] = true;
-            $write["status_msg"] = "Map uploaded.";
+    $filename = $_POST["name"];
+    // PHP changes . and space to _ just for fun
+    $filename = str_replace(".", "_", $filename);
+    $filename = str_replace(" ", "_", $filename);
+    if (is_uploaded_file($_FILES[$filename]['tmp_name'])) {
+      $file = $_FILES[$filename];
+      if ($file['type'] == 'image/jpeg') {
+        if (move_uploaded_file($file['tmp_name'], KARTAT_DIRECTORY . 'temp.jpg')) {
+          $write["ok"] = true;
+          $write["status_msg"] = "Map uploaded.";
+        }
+      }
+      if ($file['type'] == 'image/gif') {
+        $jpgOK = true;
+        if (CREATE_JPG_MAP_FILES) {
+          if ($image = imagecreatefromgif($file['tmp_name'])) {
+            $jpgOK = imagejpeg($image, KARTAT_DIRECTORY . 'temp.jpg');
           }
         }
-        if ($file['type'] == 'image/gif') {
-          $jpgOK = true;
-          if (CREATE_JPG_MAP_FILES) {
-            if ($image = imagecreatefromgif($file['tmp_name'])) {
-              $jpgOK = imagejpeg($image, KARTAT_DIRECTORY . 'temp.jpg');
-            }
-          }
-          $gifMoved = (move_uploaded_file($file['tmp_name'], KARTAT_DIRECTORY . 'temp.gif'));
-
-          if ($gifMoved && $jpgOK) {
-            $write['ok'] = true;
-            $write['status_msg'] = "Map uploaded.";
-          }
+        $gifMoved = (move_uploaded_file($file['tmp_name'], KARTAT_DIRECTORY . 'temp.gif'));
+        if ($gifMoved && $jpgOK) {
+          $write['ok'] = true;
+          $write['status_msg'] = "Map uploaded.";
         }
       }
     }
-
-    $keksi = user::generateNewKeksi();
-    $write["keksi"] = $keksi;
 
     header("Content-type: application/json");
     echo json_encode($write);

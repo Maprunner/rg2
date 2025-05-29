@@ -60,118 +60,133 @@ if (isset($_GET['id'])) {
   $id = 0;
 }
 
-if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-  handleGetRequest($type, $id);
-} elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
-  if ($type == 'uploadmapfile') {
-    map::uploadMapFile();
-  } else {
-    handlePostRequest($type, $id);
-  }
-} else {
-  header('HTTP/1.1 405 Method Not Allowed');
-  header('Allow: GET, POST');
-}
-
-function handlePostRequest($type, $eventid)
-{
-  $data = json_decode(file_get_contents('php://input'));
-  $write = array();
-  if (utils::lockDatabase() !== false) {
-    if (($type != 'addroute') && ($type != 'deletemyroute')) {
-      $loggedIn = user::logIn($data);
-    } else {
-      // don't need to log in to add a route or delete your own
+switch($_SERVER['REQUEST_METHOD']) {
+  case "POST":
+    $data = json_decode(file_get_contents('php://input'));
+    if (($type === 'addroute') || ($type === 'deletemyroute')) {
+      // normal user function doesn't need to log in
       $loggedIn = true;
+
+    } else {
+      // manager function being called
+      session_start();
+      $loggedIn = user::logIn($data);
     }
     if ($loggedIn) {
-      //utils::rg2log($type);
-      switch ($type) {
-        case 'addroute':
-          $write = route::addNewRoute($eventid, $data);
-          @unlink(CACHE_DIRECTORY . "all_" . $eventid . ".json");
-          @unlink(CACHE_DIRECTORY . "stats.json");
-          break;
-
-        case 'addmap':
-          $write = map::addNewMap($data);
-          break;
-
-        case 'createevent':
-          $write = event::addNewEvent($data);
-          @unlink(CACHE_DIRECTORY . "events.json");
-          @unlink(CACHE_DIRECTORY . "stats.json");
-          break;
-
-        case 'editevent':
-          $write = event::editEvent($eventid, $data);
-          @unlink(CACHE_DIRECTORY . "events.json");
-          @unlink(CACHE_DIRECTORY . "stats.json");
-          break;
-
-        case 'deleteevent':
-          $write = event::deleteEvent($eventid);
-          @unlink(CACHE_DIRECTORY . "events.json");
-          @unlink(CACHE_DIRECTORY . "all_" . $eventid . ".json");
-          @unlink(CACHE_DIRECTORY . "stats.json");
-          break;
-
-        case 'deleteunusedmaps':
-          $write = map::deleteUnusedMaps($data);
-          // shouldn't impact the cache but just delete to be safe
-          @unlink(CACHE_DIRECTORY . "events.json");
-          @unlink(CACHE_DIRECTORY . "all_" . $eventid . ".json");
-          @unlink(CACHE_DIRECTORY . "stats.json");
-          break;
-
-        case 'deleteroute':
-          // this is the manager delete function
-          $write = route::deleteRoute($eventid);
-          @unlink(CACHE_DIRECTORY . "all_" . $eventid . ".json");
-          @unlink(CACHE_DIRECTORY . "stats.json");
-          break;
-
-        case 'deletemyroute':
-          // this is the user delete function
-          if (route::canDeleteMyRoute($eventid, $data)) {
-            $write = route::deleteRoute($eventid);
-            @unlink(CACHE_DIRECTORY . "all_" . $eventid . ".json");
-            @unlink(CACHE_DIRECTORY . "stats.json");
-          } else {
-            $write["status_msg"] = "Delete failed";
-            $write["ok"] = false;
-          }
-          break;
-
-        case 'login':
-          // handled by default before we got here
-          $write["ok"] = true;
-          $write["status_msg"] = "Login successful";
-          break;
-
-        default:
-          utils::rg2log("Post request not recognised: " . $type);
-          $write["status_msg"] = "Request not recognised: " . $type;
-          $write["ok"] = false;
-          break;
-      }
+      handlePostRequest($type, $id, $data);
     } else {
-      $write["ok"] = false;
-      $write["status_msg"] = "Incorrect user name or password";
+      $reply = array();
+      $reply["ok"] = false;
+      $reply["status_msg"] = "Incorrect user name or password";
+      sendPostReply($reply);
+    }
+    break;
+
+  case "GET":
+    handleGetRequest($type, $id);
+    break;
+
+  default:
+    header('HTTP/1.1 405 Method Not Allowed');
+    header('Allow: GET, POST');
+    $reply = array();
+    $reply["ok"] = false;
+    $reply["status_msg"] = "Method not allowed";
+    header("Content-type: application/json");
+    echo json_encode($reply);
+  }
+  exit;
+
+function handlePostRequest($type, $eventid, $data)
+{
+  $reply = array();
+  if (utils::lockDatabase() !== false) {
+    utils::rg2log($type);
+    switch ($type) {
+      case 'addroute':
+        $reply = route::addNewRoute($eventid, $data);
+        @unlink(CACHE_DIRECTORY . "all_" . $eventid . ".json");
+        @unlink(CACHE_DIRECTORY . "stats.json");
+        break;
+
+      case 'addmap':
+        $reply = map::addNewMap($data);
+        break;
+
+      case 'createevent':
+        $reply = event::addNewEvent($data);
+        @unlink(CACHE_DIRECTORY . "events.json");
+        @unlink(CACHE_DIRECTORY . "stats.json");
+        break;
+
+      case 'editevent':
+        $reply = event::editEvent($eventid, $data);
+        @unlink(CACHE_DIRECTORY . "events.json");
+        @unlink(CACHE_DIRECTORY . "stats.json");
+        break;
+
+      case 'deleteevent':
+        $reply = event::deleteEvent($eventid);
+        @unlink(CACHE_DIRECTORY . "events.json");
+        @unlink(CACHE_DIRECTORY . "all_" . $eventid . ".json");
+        @unlink(CACHE_DIRECTORY . "stats.json");
+        break;
+
+      case 'deleteunusedmaps':
+        $reply = map::deleteUnusedMaps($data);
+        // shouldn't impact the cache but just delete to be safe
+        @unlink(CACHE_DIRECTORY . "events.json");
+        @unlink(CACHE_DIRECTORY . "all_" . $eventid . ".json");
+        @unlink(CACHE_DIRECTORY . "stats.json");
+        break;
+
+      case 'deleteroute':
+        // this is the manager delete function
+        $reply = route::deleteRoute($eventid);
+        @unlink(CACHE_DIRECTORY . "all_" . $eventid . ".json");
+        @unlink(CACHE_DIRECTORY . "stats.json");
+        break;
+
+      case 'deletemyroute':
+        // this is the user delete function
+        if (route::canDeleteMyRoute($eventid, $data)) {
+          $reply = route::deleteRoute($eventid);
+          @unlink(CACHE_DIRECTORY . "all_" . $eventid . ".json");
+          @unlink(CACHE_DIRECTORY . "stats.json");
+        } else {
+          $reply["status_msg"] = "Delete failed";
+          $reply["ok"] = false;
+        }
+        break;
+
+      case 'login':
+        // handled by default before we got here
+        $reply["ok"] = true;
+        $reply["status_msg"] = "Login successful";
+        break;
+
+      default:
+        utils::rg2log("Post request not recognised: " . $type);
+        $reply["status_msg"] = "Request not recognised: " . $type;
+        $reply["ok"] = false;
+        break;
     }
     utils::unlockDatabase();
+
   } else {
-    $write["status_msg"] = "File lock error";
-    $write["ok"] = false;
+    
+    $reply["status_msg"] = "File lock error";
+    $reply["ok"] = false;
   }
 
-  $write["keksi"] = user::generateNewKeksi();
-  $write["POST_size"] = $_SERVER['CONTENT_LENGTH'];
+  sendPostReply($reply);
+}
 
+function sendPostReply($reply) {
+  $reply["POST_size"] = $_SERVER['CONTENT_LENGTH'];
   header("Content-type: application/json");
-
-  $write["API version"] = RG2VERSION;
-  echo json_encode($write);
+  $reply["API version"] = RG2VERSION;
+  echo json_encode($reply);
 }
 
 function handleGetRequest($type, $id)

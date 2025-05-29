@@ -165,7 +165,6 @@ function handlePostRequest($type, $eventid)
     $write["ok"] = false;
   }
 
-  $write["keksi"] = user::generateNewKeksi();
   $write["POST_size"] = $_SERVER['CONTENT_LENGTH'];
 
   header("Content-type: application/json");

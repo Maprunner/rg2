@@ -3,7 +3,7 @@ import { getMapSize } from "./canvas"
 
 export const config = {
   // version gets set automatically by grunt file during build process
-  RG2VERSION: '2.1',
+  RG2VERSION: "2.1",
   DEFAULT_SCALE_FACTOR: 1.1,
   TAB_EVENTS: "event-tab",
   TAB_COURSES: "course-tab",
@@ -83,9 +83,7 @@ export const config = {
   CLASS_NOW_ON: 1,
   CLASS_NOW_OFF: 0,
   managing: () => {
-    // presence of keksi in config means we are managing
-    // until we find a better way
-    return rg2Config.keksi !== undefined
+    return rg2Config.managing !== undefined
   }
 }
 
