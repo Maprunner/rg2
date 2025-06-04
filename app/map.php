@@ -45,16 +45,13 @@ class map
     return utils::addVersion('maps', $output);
   }
 
-  public static function uploadMapFile()
+  public static function uploadMapFile($data)
   {
     $write = array();
     $write["ok"] = false;
     $write["status_msg"] = "Map upload failed.";
-    $data = new stdClass();
-    $data->x = $_POST["x"];
-    $data->y = $_POST["y"];
-    $filename = $_POST["name"];
-    // PHP changes . and space to _ just for fun
+    $filename = $data->filename;
+  // PHP changes . and space to _ just for fun
     $filename = str_replace(".", "_", $filename);
     $filename = str_replace(" ", "_", $filename);
     if (is_uploaded_file($_FILES[$filename]['tmp_name'])) {
@@ -80,8 +77,7 @@ class map
       }
     }
 
-    header("Content-type: application/json");
-    echo json_encode($write);
+     return($write);
   }
 
   public static function addNewMap($data)

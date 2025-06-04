@@ -16,7 +16,7 @@ export class User {
   }
 
   alterString(input) {
-    const chars = "abcdefghijklmnopqrstuvwxyz0123456789!£$%^&+?><"
+    const chars = "abcdefghijklmnopqrstuvwxyz0123456789"
     let str = ""
     for (let i = 0; i < input.length; i += 1) {
       const rand = Math.floor(Math.random() * chars.length)
@@ -26,6 +26,6 @@ export class User {
   }
 
   encodeUser() {
-    return { x: this.alterString(this.name + this.password), y: this.y }
+    return { x: this.alterString(this.name + this.password), user: this.name }
   }
 }

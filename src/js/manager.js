@@ -477,7 +477,7 @@ function doUploadMapFile() {
   formData.append(mapFile.name, mapFile)
   formData.append("name", mapFile.name)
   formData.append("x", details.x)
-  formData.append("y", details.y)
+  formData.append("user", details.user)
 
   const params = {
     type: "uploadmapfile",

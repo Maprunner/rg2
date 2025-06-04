@@ -41,7 +41,7 @@ if (!file_exists($maps_dir)) {
 
 // include manager function as parameter for now until we decide the best way forward
 if (isset($_GET['manage'])) {
-  session_start();
+  user::startSession(true);
   $manager = true;
 } else {
   $manager =  false;

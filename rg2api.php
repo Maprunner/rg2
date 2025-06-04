@@ -62,14 +62,22 @@ if (isset($_GET['id'])) {
 
 switch($_SERVER['REQUEST_METHOD']) {
   case "POST":
-    $data = json_decode(file_get_contents('php://input'));
+    if ($type === "uploadmapfile") {
+      $data = new stdClass();
+      $data->x = $_POST["x"];
+      $data->user = $_POST["user"];
+      $data->filename = $_POST["name"];
+    } else {
+      $data = json_decode(file_get_contents('php://input'));
+    }
+    // utils::rg2log("Post data ". $type . " " . json_encode($data));
     if (($type === 'addroute') || ($type === 'deletemyroute')) {
       // normal user function doesn't need to log in
       $loggedIn = true;
 
     } else {
       // manager function being called
-      session_start();
+      user::startSession(false);
       $loggedIn = user::logIn($data);
     }
     if ($loggedIn) {
@@ -111,6 +119,10 @@ function handlePostRequest($type, $eventid, $data)
 
       case 'addmap':
         $reply = map::addNewMap($data);
+        break;
+
+      case 'uploadmapfile':
+        $reply = map::uploadMapFile($data);
         break;
 
       case 'createevent':
