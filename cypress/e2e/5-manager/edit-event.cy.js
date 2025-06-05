@@ -16,10 +16,19 @@ describe("Event editing", { testIsolation: false }, () => {
     cy.get("#btn-login").click()
     cy.wait("@login")
   })
+  it("should display the edit tab", () => {
+    cy.get("#manage-edit-tab").click()
+    cy.get("#btn-delete-event").should("be.disabled")
+    cy.get("#btn-update-event").should("be.disabled")
+    cy.get("#btn-delete-route").should("be.disabled")
+  })
   it("should load an event", () => {
     cy.get("#manage-edit-tab").click()
     cy.get("#rg2-edit-event-selected").select("129: 2013-06-04: Herts ARC 2013 Race 5: Jersey Farm")
     cy.wait("@event")
+    cy.get("#btn-delete-event").should("be.enabled")
+    cy.get("#btn-update-event").should("be.enabled")
+    cy.get("#btn-delete-route").should("be.enabled")
   })
   it("should update an event", () => {
     cy.get("#chk-edit-read-only").click()
@@ -30,10 +39,10 @@ describe("Event editing", { testIsolation: false }, () => {
     cy.wait("@events")
     cy.closeWarningDialog("Event updated")
   })
-  it("should delete a route", () => {
-    cy.get("#manage-edit-tab").click()
-    cy.get("#rg2-edit-event-selected").select("129: 2013-06-04: Herts ARC 2013 Race 5: Jersey Farm")
-    cy.wait("@event")
+  it("should keep same event active after update and delete a route", () => {
+    cy.get("#btn-delete-event").should("be.enabled")
+    cy.get("#btn-update-event").should("be.enabled")
+    cy.get("#btn-delete-route").should("be.enabled")
     cy.get("#rg2-route-selected").select("50001: GPS Simon Errington on 45 minute score")
     cy.get("#btn-delete-route").click()
     cy.closeModal("Confirm route delete", ".modal-footer button[data-bs-dismiss='modal'")
@@ -42,10 +51,19 @@ describe("Event editing", { testIsolation: false }, () => {
     cy.wait("@events")
     cy.closeWarningDialog("Route deleted")
   })
-  it("should delete an event", () => {
-    cy.get("#manage-edit-tab").click()
-    cy.get("#rg2-edit-event-selected").select("129: 2013-06-04: Herts ARC 2013 Race 5: Jersey Farm")
-    cy.wait("@event")
+  it("should warn if no route is selected", () => {
+    cy.get("#btn-delete-route").click()
+    cy.closeWarningDialog("No route selected.")
+    cy.contains("#rg2-route-selected", "50001: GPS Simon Errington on 45 minute score").should("not.exist")
+    cy.get("#rg2-route-selected").select("2: Peter Errington on 45 minute score")
+    cy.get("#btn-delete-route").click()
+    cy.closeModal("Confirm route delete", ".modal-footer button[data-bs-dismiss='modal'")
+    cy.get("#btn-delete-route").click()
+    cy.closeModal("Confirm route delete")
+    cy.wait("@events")
+    cy.closeWarningDialog("Route deleted")
+  })
+  it("should keep same event active and delete an event", () => {
     cy.get("#btn-delete-event").click()
     cy.closeModal("Confirm event delete", ".modal-footer button[data-bs-dismiss='modal'")
     cy.get("#btn-delete-event").click()
@@ -53,8 +71,13 @@ describe("Event editing", { testIsolation: false }, () => {
     cy.wait("@events")
     cy.closeWarningDialog("Event deleted")
   })
-  it("should select a score event to edit", () => {
+  it("should not have an event active after an event is deleted", () => {
     cy.get("#manage-edit-tab").click()
+    cy.get("#btn-delete-event").should("be.disabled")
+    cy.get("#btn-update-event").should("be.disabled")
+    cy.get("#btn-delete-route").should("be.disabled")
+  })
+  it("should select a score event to edit", () => {
     cy.get("#rg2-edit-event-selected").select("380: 2021-12-26: Trent Park Boxing Day Score")
     cy.wait("@event")
     cy.get("#rg2-edit-event-comments").clear().type("New comments")

@@ -70,6 +70,7 @@ let georefmap = null
 let unusedMaps = []
 let eventSelectDatePicker = null
 let eventEditDatePicker = null
+let activeEditEventID = null
 const defaultExcludedText = "e.g. 1|1|6,60|15,60"
 
 function addNewControl(x, y) {
@@ -193,8 +194,13 @@ function confirmDeleteEvent() {
 }
 
 function confirmDeleteRoute() {
+  const routeid = document.getElementById("rg2-route-selected").value
+  if (routeid === "undefined") {
+    showWarningDialog("Warning", "No route selected.")
+    return
+  }
   let dlg = {}
-  dlg.body = "This route will be permanently deleted. Are you sure?"
+  dlg.body = "Route " + routeid + " will be permanently deleted. Are you sure?"
   dlg.title = "Confirm route delete"
   dlg.classes = "rg2-confirm-route-delete-dialog"
   dlg.doText = "Delete route"
@@ -433,7 +439,7 @@ function doDeleteRoute() {
   const id = document.getElementById("rg2-edit-event-selected").value
   const routeid = document.getElementById("rg2-route-selected").value
   const params = { type: "deleteroute", id: id, routeid: routeid }
-  postApi(JSON.stringify(user.encodeUser()), params, handleRouteDeleted(routeid), "Route delete failed")
+  postApi(JSON.stringify(user.encodeUser()), params, handleRouteDeleted(id, routeid), "Route delete failed")
 }
 
 function doDeleteUnusedMaps() {
@@ -555,7 +561,9 @@ export function enableManager() {
     setCourseName()
   })
   document.getElementById("rg2-edit-event-selected").addEventListener("change", (e) => {
-    setEvent(parseInt(e.target.value, 10))
+    const id = parseInt(e.target.value, 10)
+    setEvent(id)
+    activeEditEventID = id
   })
   document.getElementById("rg2-georef-type").addEventListener("change", (e) => {
     setGeoref(parseInt(e.target.value, 10))
@@ -595,10 +603,9 @@ function enrichCourseNames() {
   }
 }
 
-export function eventFinishedLoading() {
-  const kartatid = parseInt(document.getElementById("rg2-edit-event-selected").value, 10)
-  const event = getEventInfoForKartatID(kartatid)
+export function eventFinishedLoading(kartatid) {
   // called once the requested event has loaded
+  const event = getEventInfoForKartatID(kartatid)
   document.getElementById("rg2-edit-event-name").value = decode(event.name)
   document.getElementById("rg2-edit-club-name").value = decode(event.club)
   eventEditDatePicker.setDate(event.date)
@@ -611,13 +618,15 @@ export function eventFinishedLoading() {
     document.getElementById("rg2-exclude-info").classList.remove("d-none")
   }
   document.getElementById("chk-edit-read-only").checked = event.locked
-  //setButtonState("enable", ["#btn-delete-event", "#btn-update-event", "#btn-delete-route"])
+  document.getElementById("btn-delete-event").removeAttribute("disabled")
+  document.getElementById("btn-delete-route").removeAttribute("disabled")
+  document.getElementById("btn-update-event").removeAttribute("disabled")
   document.getElementById("rg2-route-selected").innerHTML = getRouteDeleteDropdown(event.id)
 }
 
 export function eventListLoaded(events) {
   // called after event list has been updated
-  document.getElementById("rg2-edit-event-selected").innerHTML = getEventEditDropdown(events)
+  document.getElementById("rg2-edit-event-selected").innerHTML = getEventEditDropdown(events, activeEditEventID)
   // unused maps get set initially when maps are loaded by the manager
   // need to avoid race condition where events load before manager is initialised
   // this bit is needed to deal with maps changing state when events are created or deleted
@@ -837,13 +846,14 @@ function getCourseName(id) {
   return 0
 }
 
-function getEventEditDropdown(events) {
-  let html = generateSelectOption(null, "No event selected", true)
+function getEventEditDropdown(events, activeID) {
+  let html = activeID ? "" : generateSelectOption(null, "No event selected", true)
   // loop backwards so most recent event is first in list
   for (let i = events.length - 1; i > -1; i -= 1) {
     html += generateSelectOption(
       events[i].kartatid,
-      events[i].kartatid + ": " + events[i].date + ": " + decode(events[i].name)
+      events[i].kartatid + ": " + events[i].date + ": " + decode(events[i].name),
+      activeID === events[i].kartatid
     )
   }
   return html
@@ -965,7 +975,11 @@ function handleEventAdded(response) {
 
 const handleEventDeleted = (id) => (response) => {
   if (response.ok) {
-    showWarningDialog("Event deleted", "Event " + id + "has been deleted.")
+    showWarningDialog("Event deleted", "Event " + id + " has been deleted.")
+    activeEditEventID = null
+    document.getElementById("btn-delete-event").setAttribute("disabled", true)
+    document.getElementById("btn-delete-route").setAttribute("disabled", true)
+    document.getElementById("btn-update-event").setAttribute("disabled", true)
     doGetEvents()
     setEvent()
     // unused map data gets reset in eventListLoaded callback
@@ -978,10 +992,10 @@ const handleEventDeleted = (id) => (response) => {
 const handleEventUpdated = (kartatid) => (response) => {
   if (response.ok) {
     showWarningDialog("Event updated", "Event " + kartatid + " has been updated.")
-    setActiveEventIDByKartatID(null)
+    setActiveEventIDByKartatID(kartatid)
     setEventTitleBar()
     doGetEvents()
-    setEvent()
+    setEvent(kartatid)
   } else {
     showWarningDialog("Update failed", response.status_msg + ". Event update failed. Please try again.")
   }
@@ -1023,13 +1037,13 @@ function handleMapsLoaded(response) {
   displayUnusedMaps(unusedMaps)
 }
 
-const handleRouteDeleted = (routeid) => (response) => {
+const handleRouteDeleted = (kartatid, routeid) => (response) => {
   if (response.ok) {
     showWarningDialog("Route deleted", "Route " + routeid + " has been deleted.")
-    setActiveEventIDByKartatID(null)
+    setActiveEventIDByKartatID(kartatid)
     setEventTitleBar()
     doGetEvents()
-    setEvent()
+    setEvent(kartatid)
   } else {
     showWarningDialog(
       "Delete failed",

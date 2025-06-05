@@ -1,9 +1,8 @@
 import { resultIsBeingAnimated, updateTrackNames } from "./animation"
-import { getMapSize, redraw } from "./canvas"
+import { getMapSize } from "./canvas"
 import { config, options } from "./config"
 import {
   controls,
-  createCourseMenu,
   isValidCourseId,
   getCourseDetails,
   getCourseName,
@@ -15,17 +14,9 @@ import {
   updateScoreCourse
 } from "./courses"
 import { setName } from "./draw"
-import {
-  eventIsLocked,
-  getActiveMapID,
-  getEventInfoForKartatID,
-  getKartatEventID,
-  getWorldFile,
-  isScoreEvent
-} from "./events"
-import { getHashRoutes, getHashCourses, getHashTab } from "./hash"
+import { getActiveMapID, getEventInfoForKartatID, getKartatEventID, getWorldFile, isScoreEvent } from "./events"
 import { Result } from "./result"
-import { getActiveTab, setResultCheckboxes, displayStatsDialog } from "./rg2ui"
+import { setResultCheckboxes, displayStatsDialog } from "./rg2ui"
 import { t } from "./translate"
 import { formatSecsAsMMSS, generateOption } from "./utils"
 
@@ -806,7 +797,6 @@ function sanitiseSplits(isScoreEvent) {
 }
 
 export function saveResults(results) {
-  document.getElementById("rg2-load-progress-label").textContent = t("Saving results", "")
   // TODO remove temporary (?) fix to get round RG1 events with no courses defined: see #179
   if (getnumberOfCourses() > 0) {
     addResults(results, isScoreEvent())
@@ -819,55 +809,10 @@ export function saveResults(results) {
 }
 
 export function saveRoutes(data) {
-  // TODO: bit messy. Where does this really belong?
-  document.getElementById("rg2-load-progress-label").textContent = t("Saving routes", "")
   // TODO remove temporary (?) fix to get round RG1 events with no courses defined: see #179
   if (getnumberOfCourses() > 0) {
     addTracks(data)
   }
-  createCourseMenu()
-  createResultMenu()
-  if (config.managing()) {
-    rg2Config.manager.eventFinishedLoading()
-  } else {
-    document.getElementById(config.TAB_COURSES).removeAttribute("disabled")
-    document.getElementById(config.TAB_RESULTS).removeAttribute("disabled")
-    if (eventIsLocked()) {
-      document.getElementById(config.TAB_DRAW).setAttribute("disabled", "")
-    } else {
-      document.getElementById(config.TAB_DRAW).removeAttribute("disabled")
-    }
-    // open courses tab for new event: else stay on draw tab
-    const active = getActiveTab()
-    // don't change tab if we have come from DRAW since it means
-    // we have just reloaded following a save
-    if (active !== config.TAB_DRAW) {
-      const tab = getHashTab()
-      const target = document.getElementById(tab)
-      target.click()
-    }
-    // set up screen as requested in hash
-    const routes = getHashRoutes()
-    for (let i = 0; i < routes.length; i += 1) {
-      let e = new Event("click", { bubbles: true })
-      const target = document.querySelector(`.showtrack[data-id='${routes[i]}']`)
-      if (target) {
-        target.checked = true
-        target.dispatchEvent(e)
-      }
-    }
-    const courses = getHashCourses()
-    for (let i = 0; i < courses.length; i += 1) {
-      let e = new Event("click", { bubbles: true })
-      const target = document.querySelector(`.showcourse[data-courseid='${courses[i]}']`)
-      if (target) {
-        target.checked = true
-        target.dispatchEvent(e)
-      }
-    }
-  }
-  document.getElementById("rg2-load-progress").classList.add("d-none")
-  redraw()
 }
 
 function setDeletionInfo() {
