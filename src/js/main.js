@@ -21,30 +21,39 @@ if (document.readyState !== "loading") {
 }
 
 function rg2init() {
+  // everything now loaded: trigger CSS transitions on start-up screen
   const startup = document.querySelector(".rg2-startup")
   startup.style.opacity = 0
-  startup.addEventListener("transitionend", () => {
-    startup.remove()
-    // TODO: looks odd but needed to avoid problems with Controls class
-    initialiseCourses()
-    loadConfigOptions()
-    configureUI()
-    initLanguageOptions()
-    if (config.managing()) {
-      import("./manager.js")
-        .then((module) => {
-          rg2Config.manager = module
-          rg2Config.manager.initialiseManager()
-          finishInit()
-        })
-        .catch(() => {
-          console.log("Error loading manager")
-          showWarningDialog("Error loading manager", "Manager functionality failed to  load.")
-        })
-    } else {
-      finishInit()
-    }
-  })
+  startup.style.backgroundColor = config.GREY
+  document.querySelector(".rg2-startup-content").classList.add("startup-transform")
+  startup.addEventListener(
+    "transitionend",
+    () => {
+      document.getElementById("rg2-header-container").classList.remove("d-none")
+      startup.remove()
+      // looks odd to do this inmediateky but needed to avoid problems with Controls class
+      initialiseCourses()
+      loadConfigOptions()
+      configureUI()
+      initLanguageOptions()
+      if (config.managing()) {
+        import("./manager.js")
+          .then((module) => {
+            rg2Config.manager = module
+            rg2Config.manager.initialiseManager()
+            finishInit()
+          })
+          .catch(() => {
+            console.log("Error loading manager")
+            showWarningDialog("Error loading manager", "Manager functionality failed to  load.")
+          })
+      } else {
+        finishInit()
+      }
+    },
+    // only need to run initialistaion once even if we have multiple transitions
+    { once: true }
+  )
 }
 
 function finishInit() {
