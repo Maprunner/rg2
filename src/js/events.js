@@ -4,7 +4,7 @@ import { loadNewMap, getMapSize, redraw } from "./canvas"
 import { config } from "./config"
 import { controls, createCourseMenu, deleteAllCourses, getExcludedText, saveCourses } from "./courses"
 import { initialiseDrawing } from "./draw"
-import { Event } from "./event"
+import { RG2Event } from "./event"
 import { createResultMenu } from "./results"
 import { getHashID, getHashRoutes, getHashCourses, getHashTab, setEventHash } from "./hash"
 import { decode } from "html-entities"
@@ -275,7 +275,7 @@ function handleEventsResponse(response) {
   events.length = 0
   activeEventID = null
   for (const event of response.events) {
-    events.push(new Event(event))
+    events.push(new RG2Event(event))
   }
   createEventMenu()
   // load requested event if set
