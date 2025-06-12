@@ -171,10 +171,6 @@ export function getCourseDetailsByName(coursename) {
   return courses.find((course) => (course ? course.name === coursename : false))
 }
 
-export function getCourseLegLengths(courseid) {
-  return courses[courseid].getLegLengths()
-}
-
 export function getCourseName(courseid) {
   return courses[courseid].name
 }

@@ -1,49 +1,23 @@
 import * as bootstrap from "bootstrap"
 import { config } from "./config"
+import { Course } from "./course"
 import { getCourseDetails, getCourses } from "./courses"
-import { eventHasResults, isScoreEvent } from "./events"
-import { getAllResultsForCourse, getAllResultsForVariant, getFullResultForRawID } from "./results"
+import { eventHasResults, getMetresPerPixel, isScoreEvent } from "./events"
+import { getAllResultsForCourse, getAllResultsForVariant, getFullResultForRawID, getVariantList } from "./results"
+import { Runner } from "./runner"
+import { content, courseButtons, nameButtons, tabs } from "./statsconstants"
 import { t } from "./translate"
 import { formatSecsAsMMSS, showWarningDialog } from "./utils"
-
-const tabs = [
-  { id: "rg2-stats-summary", title: "Summary", active: "true" },
-  { id: "rg2-legs", title: "Leg times" },
-  { id: "rg2-cumulative", title: "Cumulative times" },
-  { id: "rg2-split-times", title: "Split times" },
-  { id: "rg2-time-loss", title: "Time loss" }
-]
-
-const content = [
-  `<div id="rg2-stats-summary" class="container"></div><div style="height: 400px;"><canvas id="rg2-splits-chart"></canvas></div>`,
-  `<div id="rg2-leg-table" style="width: 950px; height: 100%" class="ag-theme-balham"></div>`,
-  `<div id="rg2-race-table" style="width: 950px; height: 100%;" class="ag-theme-balham"></div>`,
-  `<div id="rg2-results-table" class="rg2-results-table-container">
-     <div id="rg2-results-grid-wrapper">
-       <div id="rg2-results-grid" style="height: 100%" class="ag-theme-balham"></div>
-     </div>
-   </div>`,
-  `<div id="rg2-time-loss" class="container">
-     <div class="d-flex align-items-center justify-content-between">
-       <div class="d-flex align-items-center">
-         <div id="rg2-control-change" class="pe-4">
-           <button id="rg2-stats-control-back" class="btn btn-outline-primary btn-sm p-2">&lt;</button>
-           <button id="rg2-stats-control-forward" class="btn btn-outline-primary btn-sm p-2">&gt;</button>
-         </div>
-         <div id="rg2-control-number" class="fw-bold pe-2"></div>
-       </div>
-       <div id="rg2-loss-details" class="d-flex justify-content-center"></div>
-     </div>
-     <canvas id="rg2-loss-chart"></canvas>
-   </div>`
-]
 
 let result = null
 let rawid = null
 let results = []
+let variants = []
 let isScoreOrRelay = false
 let course = null
 let controls = 0
+let speedUnits = ""
+let lengthUnits = "m"
 let byLegPos = []
 let byRacePos = []
 let resultIndex = null
@@ -200,26 +174,37 @@ function changeControlNumberUp() {
 }
 
 function changeCourse(direction) {
-  // aim is to switch course and start with first runner on that course
+  // aim is to switch course/variant and start with first runner on that course/variant
   // stay where we are if anything goes wrong
-  let rawid = results[resultIndex].rawid
-  // slight concern this might be a mess for some events
-  // courses is a sparse array with no entry [0] to start with
+  let rawid = result.rawid
   try {
-    const courses = getCourses()
-    let index = courses.findIndex((row) => {
-      if (!row) return false
-      return row.courseid === course.courseid
-    })
-    if (direction < 0) {
-      index = index === courses.length - 1 ? 1 : index + 1
+    let newresults = []
+    if (isScoreOrRelay) {
+      let index = variants.findIndex((variant) => {
+        return result.variant === variant
+      })
+      if (direction < 0) {
+        index = index === variants.length - 1 ? 0 : index + 1
+      } else {
+        index = index > 1 ? index - 1 : variants.length - 1
+      }
+      newresults = getAllResultsForVariant(variants[index])
     } else {
-      index = index > 1 ? index - 1 : courses.length - 1
+      const courses = getCourses()
+      let index = courses.findIndex((row) => {
+        if (!row) return false
+        return row.courseid === course.courseid
+      })
+      if (direction < 0) {
+        index = index === courses.length - 1 ? 1 : index + 1
+      } else {
+        index = index > 1 ? index - 1 : courses.length - 1
+      }
+      const courseid = courses[index].courseid
+      newresults = getAllResultsForCourse(courseid)
     }
-    const courseid = courses[index].courseid
-    const results = getAllResultsForCourse(courseid)
-    if (results.length > 0) {
-      rawid = results[0].rawid
+    if (newresults.length > 0) {
+      rawid = newresults[0].rawid
     }
   } catch (err) {
     console.log("Error switching to new course: " + err)
@@ -580,6 +565,114 @@ function generateLegPositions() {
   }
 }
 
+function getMinsPerKm(seconds, metres) {
+  const speed = seconds / 60 / (metres / 1000)
+  const mins = parseInt(speed, 10)
+  const secs = parseInt((speed - mins) * 60, 10)
+
+  return mins + ":" + (secs < 10 ? "0" + secs : secs)
+}
+
+function generateSpeedTable() {
+  const rowData = []
+  const runner = new Runner(result.routeresultid)
+  for (let i = 0; i < result.splits.length; i += 1) {
+    let row = {}
+    row.name = result.name
+    if (i === 0) {
+      row.control = "S"
+    } else {
+      if (i == result.splits.length - 1) {
+        row.control = "F"
+      } else {
+        row.control = i + " (" + course.codes[i] + ")"
+      }
+    }
+    if (i === 0) {
+      row.time = "0:00"
+    } else {
+      row.time = formatSecsAsMMSS(result.legSplits[i])
+    }
+    if (i === 0 || course.exclude[i]) {
+      row.length = "-"
+    } else {
+      row.length = course.legLengths[i]
+    }
+    if (i === 0 || course.exclude[i]) {
+      row.speed = "-"
+    } else {
+      row.speed = getMinsPerKm(result.legSplits[i], course.legLengths[i])
+    }
+    if (i === 0 || course.exclude[i] || !result.hasValidTrack) {
+      row.route = "-"
+    } else {
+      row.route = runner.legTrackDistance[i]
+    }
+    if (i === 0 || course.exclude[i] || !result.hasValidTrack) {
+      row.routespeed = "-"
+    } else {
+      row.routespeed = getMinsPerKm(result.legSplits[i], runner.legTrackDistance[i])
+    }
+    if (i === 0 || course.exclude[i] || !result.hasValidTrack) {
+      row.percent = "-"
+    } else {
+      row.percent = ((100 * runner.legTrackDistance[i]) / course.legLengths[i]).toFixed(1) + "%"
+    }
+    rowData.push(row)
+  }
+  let row = {}
+  row.name = result.name
+  row.control = "Total"
+  row.time = formatSecsAsMMSS(result.timeInSecs)
+  row.length = course.length * 1000
+  row.speed = getMinsPerKm(result.timeInSecs, course.length * 1000)
+  if (result.hasValidTrack) {
+    row.route = runner.cumulativeTrackDistance[runner.cumulativeTrackDistance.length - 1]
+    row.routespeed = getMinsPerKm(
+      result.timeInSecs,
+      runner.cumulativeTrackDistance[runner.cumulativeTrackDistance.length - 1]
+    )
+    row.percent =
+      (
+        (100 * runner.cumulativeTrackDistance[runner.cumulativeTrackDistance.length - 1]) /
+        course.cumulativeLegLengths[course.cumulativeLegLengths.length - 1]
+      ).toFixed(1) + "%"
+  } else {
+    row.route = "-"
+    row.routespeed = "-"
+    row.percent = "-"
+  }
+
+  rowData.push(row)
+
+  const gridOptions = {
+    columnDefs: [
+      { headerName: t("Control", ""), field: "control", width: 80 },
+      {
+        headerName: t("Time", ""),
+        field: "time",
+        width: 80,
+        comparator: timeComparator.bind(this)
+      },
+      { headerName: t("Length", "") + " " + lengthUnits, field: "length", width: 90 },
+      { headerName: t("Speed", "") + " " + speedUnits, field: "speed", width: 125 },
+      { headerName: t("Route", "") + " " + lengthUnits, field: "route", width: 90 },
+      { headerName: t("Speed", "") + " " + speedUnits, field: "routespeed", width: 125 },
+      { headerName: t("%", ""), field: "percent", width: 90 }
+    ],
+    rowData: rowData,
+    domLayout: "autoHeight",
+    defaultColDef: {
+      headerClass: "align-center",
+      cellClass: "align-center",
+      sortable: true
+    }
+  }
+  const table = document.getElementById("rg2-speed-stats")
+  table.innerHTML = ""
+  rg2Config.createGrid(table, gridOptions)
+}
+
 function generateSplitsChart() {
   if (splitsChart !== undefined) {
     splitsChart.destroy()
@@ -746,6 +839,7 @@ function generateSplitsTable() {
       width: 150,
       pinned: "left"
     },
+    { headerName: "rawid", field: "rawid", cellDataType: "number", hide: true },
     { headerName: t("Time", ""), field: "time", cellDataType: "text", width: 85 }
   ]
   for (let j = 1; j < controls - 1; j += 1) {
@@ -804,6 +898,7 @@ function generateSplitsTable() {
       row.position = r.racepos[controls - 1]
     }
     row.name = r.name
+    row.rawid = r.rawid
     row.time = r.time
     for (let j = 1; j < controls - 1; j += 1) {
       if (r.splits[j] === r.splits[j - 1]) {
@@ -828,6 +923,7 @@ function generateSplitsTable() {
     row.consistency = (100 * getStandardDeviation(ratios)).toFixed(1)
     rowData.push(row)
     row = {}
+    row.rawid = r.rawid
     for (let j = 1; j < controls - 1; j += 1) {
       // highlight predicted losses greater than 20 seconds
       row["C" + j] = {
@@ -851,6 +947,12 @@ function generateSplitsTable() {
     defaultColDef: {
       headerClass: "align-center",
       cellClass: "align-center"
+    },
+    rowClassRules: {
+      // apply green to 2008
+      "rg2-active-runner": (params) => {
+        return params.data.rawid === rawid
+      }
     }
   }
 
@@ -870,23 +972,6 @@ function generateSummary() {
   const packRow = (elem) => {
     return `${elem}`
   }
-  const nameButtons = `<div class="rg2-stats-runner-change pe-4">
-      <button class="rg2-stats-name-back btn btn-outline-primary btn-sm p-2">
-        &lt;
-      </button>
-      <button class="rg2-stats-name-forward btn btn-outline-primary btn-sm p-2">
-        &gt;
-      </button>
-    </div >`
-
-  const courseButtons = `<div class="rg2-stats-course-change pe-4">
-      <button class="rg2-stats-course-back btn btn-outline-primary btn-sm p-2">
-        &lt;
-      </button>
-      <button class="rg2-stats-course-forward btn btn-outline-primary btn-sm p-2">
-        &gt;
-      </button>
-    </div >`
 
   let html = packRow(`<div class="d-flex align-items-center justify-content-between pb-4">`)
   html += packRow(`<div class="d-flex align-items-center">`)
@@ -903,7 +988,8 @@ function generateSummary() {
   )
   html += packRow(`</div>`)
   html += packRow(`<div class="d-flex align-items-center">`)
-  html += packRow(`<div class="fw-bold pe-4">${result.coursename}</div><div>${courseButtons}</div>`)
+  const variant = isScoreOrRelay ? "V" + result.variant + "&nbsp;" : ""
+  html += packRow(`<div class="fw-bold pe-4">${variant}${result.coursename}</div><div>${courseButtons}</div>`)
   html += packRow(`</div></div>`)
   // put title row at top of each tab
   const titles = document.getElementsByClassName("rg2-stats-title-row")
@@ -1313,8 +1399,18 @@ async function importUtils() {
 function initialise(id) {
   rawid = id
   isScoreOrRelay = isScoreEvent()
+  const metresPerPixel = getMetresPerPixel()
+  if (metresPerPixel === undefined) {
+    speedUnits = ""
+    lengthUnits = "px"
+  } else {
+    speedUnits = "min/km"
+    lengthUnits = "m"
+  }
   result = getFullResultForRawID(rawid)
+
   if (isScoreOrRelay) {
+    variants = getVariantList()
     results = getAllResultsForVariant(result.variant)
   } else {
     results = getAllResultsForCourse(result.courseid)
@@ -1327,11 +1423,19 @@ function initialise(id) {
 
 function initialiseCourse(id) {
   if (isScoreOrRelay) {
-    course = {
-      courseid: result.variant,
-      codes: result.scorecodes,
-      exclude: false
-    }
+    course = new Course(
+      {
+        courseid: result.variant,
+        name: "V" + result.variant,
+        codes: result.scorecodes,
+        xpos: result.scorex,
+        ypos: result.scorey,
+        exclude: [],
+        allowed: [],
+        excludeType: 0
+      },
+      true
+    )
   } else {
     course = getCourseDetails(id)
   }
@@ -1425,6 +1529,7 @@ function prepareStats(rawid) {
     generateTableByLegPos()
     generateTableByRacePos()
     generateSplitsTable()
+    generateSpeedTable()
     displayStats()
     return true
   } catch (err) {
@@ -1489,16 +1594,18 @@ export function showStats(rawid, displayStats) {
   if (!rg2Config.createGrid) {
     importUtils()
       .then(() => {
-        prepareStats(rawid)
-        displayStats()
+        if (prepareStats(rawid)) {
+          displayStats()
+        }
       })
       .catch(() => {
         console.log("Error loading Grid and Chart")
         showWarningDialog("Error loading Grid and Chart", "Statistics functionality failed to load.")
       })
   } else {
-    prepareStats(rawid)
-    displayStats()
+    if (prepareStats(rawid)) {
+      displayStats()
+    }
   }
 }
 

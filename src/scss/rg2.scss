@@ -405,6 +405,10 @@ body {
   background-color: #fde;
 }
 
+.rg2-active-runner {
+  background-color: lavender;
+}
+
 .rg2-results-table-container {
   height: 100%;
 }
@@ -447,4 +451,8 @@ div[data-display="false"] {
 
 .align-center {
   text-align: center;
+}
+
+.bi-trash {
+  cursor: default;
 }

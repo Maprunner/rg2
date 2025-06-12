@@ -455,7 +455,7 @@ function getCourseHeader(result) {
   const info = getCourseDetails(result.courseid)
   // need to protect against some old events with dodgy results
   if (info) {
-    text += info.length === undefined ? "" : ": " + info.length + " km"
+    text += info.lengthValid ? ": " + info.length + " km" : ""
   }
   let html = `<div class="d-flex w-100"><div class="flex-grow-1 runners-table-course-header" data-runners="" data-courseid="${result.courseid}">${text}</div>`
   let check = `<div class="px-2"><input class='showcourse' data-courseid="${result.courseid}"`
@@ -494,12 +494,19 @@ export function getFullResultforResultID(resultid) {
 }
 
 export function getFullResultForRawID(rawid) {
-  for (let i = 0; i < results.length; i += 1) {
-    if (results[i].resultid === rawid) {
-      return results[i]
+  let routeresult = undefined
+  let result = results.find((res) => res.rawid === rawid)
+  // only looks for first GPS route for now...
+  if (result !== undefined) {
+    routeresult = results.find((res) => res.resultid - rawid === config.GPS_RESULT_OFFSET)
+    if (routeresult === undefined) {
+      result.routeresultid = rawid
+    } else {
+      result.routeresultid = routeresult.resultid
+      result.hasValidTrack = routeresult.hasValidTrack
     }
   }
-  return undefined
+  return result
 }
 
 function getNameHTML(res, i) {
@@ -608,6 +615,17 @@ export function getTracksOnDisplay() {
     }
   }
   return tracks
+}
+
+export function getVariantList() {
+  // extract a list of all variants in a set of score/relay results
+  const variants = []
+  results.forEach((res) => {
+    if (!variants.includes(res.variant) && res.variant !== undefined) {
+      variants.push(res.variant)
+    }
+  })
+  return variants
 }
 
 function handleExclusions() {
