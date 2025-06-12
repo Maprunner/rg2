@@ -192,9 +192,34 @@ export class Result {
     try {
       let oldx, oldy, stopCount
       if (this.displayTrack) {
-        if (this.isGPSTrack && options.showGPSSpeed && this.speedColour.length === 0) {
+        if (this.isGPSTrack && options.showGPSSpeed) {
           // set speed colours if we haven't done it yet
-          this.setSpeedColours()
+          if (this.speedColour.length === 0) {
+            this.setSpeedColours()
+          }
+          // add circle to show where control should be on GPS track based on split times
+          const opt = getOverprintDetails()
+          ctx.lineWidth = 2
+          ctx.strokeStyle = config.PURPLE
+          ctx.fillStyle = config.PURPLE_30
+          // get time at first control
+          let nextControlIndex = 1
+          let nextSplit = this.splits[nextControlIndex]
+          for (let i = 1; i < this.xysecs.length - 1; i += 1) {
+            if (this.xysecs[i] >= nextSplit) {
+              // draw control circle
+              ctx.beginPath()
+              ctx.arc(this.trackx[i], this.tracky[i], opt.controlRadius * 0.33, 0, 2 * Math.PI, false)
+              // fill in with transparent colour to highlight control better
+              ctx.fill()
+              ctx.stroke()
+              nextControlIndex = nextControlIndex + 1
+              if (nextControlIndex >= this.splits.length) {
+                break
+              }
+              nextSplit = this.splits[nextControlIndex]
+            }
+          }
         }
         let startIndex = 0
         let endIndex = this.xysecs.length
