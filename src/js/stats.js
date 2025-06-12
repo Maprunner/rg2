@@ -566,11 +566,17 @@ function generateLegPositions() {
 }
 
 function getMinsPerKm(seconds, metres) {
+  if (metres <= 0 || seconds <= 0) {
+    return "-"
+  }
   const speed = seconds / 60 / (metres / 1000)
   const mins = parseInt(speed, 10)
   const secs = parseInt((speed - mins) * 60, 10)
 
-  return mins + ":" + (secs < 10 ? "0" + secs : secs)
+  const value = mins + ":" + (secs < 10 ? "0" + secs : secs)
+  // put value in brackets if based on pixels as an attempt
+  // to show they are not real mins/km
+  return speedUnits === "" ? "(" + value + ")" : value
 }
 
 function generateSpeedTable() {
@@ -621,8 +627,8 @@ function generateSpeedTable() {
     rowData.push(row)
   }
   let row = {}
-  row.name = result.name
-  row.control = "Total"
+  row.name = "Total"
+  row.control = t("Total", "")
   row.time = formatSecsAsMMSS(result.timeInSecs)
   row.length = course.length * 1000
   row.speed = getMinsPerKm(result.timeInSecs, course.length * 1000)
@@ -662,6 +668,12 @@ function generateSpeedTable() {
     ],
     rowData: rowData,
     domLayout: "autoHeight",
+    rowClassRules: {
+      // apply green to 2008
+      "fw-bold": (params) => {
+        return params.data.name === "Total"
+      }
+    },
     defaultColDef: {
       headerClass: "align-center",
       cellClass: "align-center",

@@ -58,7 +58,6 @@ export function addResults(data, isScoreEvent) {
       results.push(result)
     }
   }
-  //setTrackColours()
   setDisplayOrder()
   setDeletionInfo()
   setScoreCourseInfo()
@@ -496,9 +495,14 @@ export function getFullResultforResultID(resultid) {
 export function getFullResultForRawID(rawid) {
   let routeresult = undefined
   let result = results.find((res) => res.rawid === rawid)
-  // only looks for first GPS route for now...
+  // rawid may be a GPS route: e.g. 50002
+  // if so we need to combine with the original result: e.g. 2
   if (result !== undefined) {
-    routeresult = results.find((res) => res.resultid - rawid === config.GPS_RESULT_OFFSET)
+    routeresult = results.find((res) => {
+      // % needed since you may have 100002, 150002 if they have tried multiple times and deleted some
+      // BOC Sprint 2016: http://localhost/rg2/?#22&route=100002
+      return (res.resultid - rawid) % config.GPS_RESULT_OFFSET === 0 && res.resultid !== rawid
+    })
     if (routeresult === undefined) {
       result.routeresultid = rawid
     } else {
