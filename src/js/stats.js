@@ -609,17 +609,18 @@ function generateSpeedTable() {
     } else {
       row.speed = getMinsPerKm(result.legSplits[i], course.legLengths[i])
     }
-    if (i === 0 || course.exclude[i] || !result.hasValidTrack) {
+    // GPS routes stop making sense after an excluded control since you don't know how many seconds were taken out
+    if (i === 0 || course.exclude[i] || !result.hasValidTrack || result.firstExcluded <= i) {
       row.route = "-"
     } else {
       row.route = runner.legTrackDistance[i]
     }
-    if (i === 0 || course.exclude[i] || !result.hasValidTrack) {
+    if (i === 0 || course.exclude[i] || !result.hasValidTrack || result.firstExcluded <= i) {
       row.routespeed = "-"
     } else {
       row.routespeed = getMinsPerKm(result.legSplits[i], runner.legTrackDistance[i])
     }
-    if (i === 0 || course.exclude[i] || !result.hasValidTrack) {
+    if (i === 0 || course.exclude[i] || !result.hasValidTrack || result.firstExcluded <= i) {
       row.percent = "-"
     } else {
       row.percent = ((100 * runner.legTrackDistance[i]) / course.legLengths[i]).toFixed(1) + "%"

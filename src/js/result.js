@@ -193,11 +193,10 @@ export class Result {
     try {
       let oldx, oldy, stopCount
       if (this.displayTrack) {
-        if (this.isGPSTrack && options.showGPSSpeed) {
-          // set speed colours if we haven't done it yet
-          if (this.speedColour.length === 0) {
-            this.setSpeedColours()
-          }
+        if (this.isGPSTrack && options.showGPSSpeed && this.speedColour.length === 0) {
+          this.setSpeedColours()
+        }
+        if (this.isGPSTrack) {
           // add circle to show where control should be on GPS track based on split times
           const opt = getOverprintDetails()
           ctx.lineWidth = 1

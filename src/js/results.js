@@ -453,7 +453,8 @@ function getCourseHeader(result) {
   let text = result.coursename
   const info = getCourseDetails(result.courseid)
   // need to protect against some old events with dodgy results
-  if (info) {
+  // plus don't display length if a score/relay course or only two controls (S and F)
+  if (info && !info.isScoreCourse && info.codes.length > 2) {
     text += info.lengthValid ? ": " + info.length + " km" : ""
   }
   let html = `<div class="d-flex w-100"><div class="flex-grow-1 runners-table-course-header" data-runners="" data-courseid="${result.courseid}">${text}</div>`
