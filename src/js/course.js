@@ -126,6 +126,10 @@ export class Course {
         return false
       }
     })
+    // need to know which is first excluded control for later drawing purposes
+    const firstExcluded = this.exclude.findIndex((ex) => ex === true)
+    // setting it to 0 is OK since start cannot be excluded (?!)
+    this.firstExcluded = firstExcluded === -1 ? 0 : firstExcluded
     this.allowed = data.codes.map((control, i) => {
       if (data.exclude.findIndex((ex) => ex === i) > -1) {
         return data.allowed[data.exclude.findIndex((ex) => ex === i)]
