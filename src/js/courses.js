@@ -168,11 +168,7 @@ export function getCourseDetails(courseid) {
 
 export function getCourseDetailsByName(coursename) {
   // courses is a sparse array so need to handle empty entries
-  return courses.find((course) => course ? course.name === coursename: false)
-}
-
-export function getCourseLegLengths(courseid) {
-  return courses[courseid].getLegLengths()
+  return courses.find((course) => (course ? course.name === coursename : false))
 }
 
 export function getCourseName(courseid) {
@@ -263,7 +259,6 @@ export function isValidCourseId(courseid) {
 export function saveCourses(data) {
   deleteAllCourses()
   controls.deleteAllControls()
-  document.getElementById("rg2-load-progress-label").innerHTML = t("Saving courses")
   for (const course of data) {
     addCourse(course)
   }

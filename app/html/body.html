@@ -1,7 +1,11 @@
 <style>
+  /* styles needed here to make sure they are available when HTML first displayed */
+  body {
+    margin: 0;
+  }
+
   .rg2-startup {
     background-color: ivory;
-    visibility: visible;
     opacity: 1;
     position: fixed;
     z-index: 2000;
@@ -10,10 +14,15 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 30px;
     transition:
-      visibility 0s 1s,
-      opacity 1s ease-in-out;
+      opacity 1.5s ease-out,
+      background-color 1.5s ease-in;
+  }
+  .rg2-startup-content {
+    transition: transform 1.5s ease-out;
+  }
+  .startup-transform {
+    transform: scale(0.2);
   }
 </style>
 
@@ -22,8 +31,9 @@
     <h3>You have javascript disabled. Routegadget cannot run. Please update your browser configuration.</h3>
   </noscript>
   <div class="rg2-startup">
-    <img src="<?php echo $source_url; ?>img/rg2-logo-32x32.png" alt="Logo" width="32" height="32" />
-    <h2>RG2 is loading...</h2>
+    <div class="rg2-startup-content">
+      <img src="<?php echo $source_url; ?>img/rg2-logo.svg" alt="Logo" width="200" height="200" />
+    </div>
   </div>
   <?php include 'app/html/navbar.html'; ?>
   <div id="rg2-container">

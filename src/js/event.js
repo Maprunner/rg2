@@ -1,6 +1,7 @@
 import { Worldfile } from "./worldfile"
 
-export class Event {
+// Need to avoid unfortunate name clash with DOM Event class
+export class RG2Event {
   constructor(data) {
     this.kartatid = data.id
     this.mapid = data.mapid

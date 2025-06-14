@@ -1,25 +1,26 @@
 {
-  "_grid-CgsJkZsf.js": {
-    "file": "assets/grid-CgsJkZsf.js",
+  "_grid-CJy_EU0E.js": {
+    "file": "assets/grid-CJy_EU0E.js",
     "name": "grid",
     "isDynamicEntry": true
   },
-  "_manager-utils-!~{005}~.js": {
-    "file": "assets/manager-utils-HupOsEJb.css",
-    "src": "_manager-utils-!~{005}~.js"
+  "_manager-utils-CIGW-MKW.css": {
+    "file": "assets/manager-utils-CIGW-MKW.css",
+    "src": "_manager-utils-CIGW-MKW.css"
   },
-  "_manager-utils-C8g2LUbf.js": {
-    "file": "assets/manager-utils-C8g2LUbf.js",
+  "_manager-utils-IOxTzkk2.js": {
+    "file": "assets/manager-utils-IOxTzkk2.js",
     "name": "manager-utils",
     "imports": [
+      "_node-modules-CBZj5KRR.js",
       "src/js/main.js"
     ],
     "css": [
-      "assets/manager-utils-HupOsEJb.css"
+      "assets/manager-utils-CIGW-MKW.css"
     ]
   },
-  "_node-modules-CPWXqQ3f.js": {
-    "file": "assets/node-modules-CPWXqQ3f.js",
+  "_node-modules-CBZj5KRR.js": {
+    "file": "assets/node-modules-CBZj5KRR.js",
     "name": "node-modules",
     "isDynamicEntry": true,
     "imports": [
@@ -27,45 +28,45 @@
     ]
   },
   "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff": {
-    "file": "assets/bootstrap-icons-BOrJxbIo.woff",
+    "file": "assets/bootstrap-icons-BeopsB42.woff",
     "src": "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff"
   },
   "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff2": {
-    "file": "assets/bootstrap-icons-BtvjY1KL.woff2",
+    "file": "assets/bootstrap-icons-mSm7cUeB.woff2",
     "src": "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff2"
   },
   "src/js/main.js": {
-    "file": "assets/main-D9_pgpFN.js",
+    "file": "assets/main-Cw0jfsJD.js",
     "name": "main",
     "src": "src/js/main.js",
     "isEntry": true,
     "imports": [
-      "_node-modules-CPWXqQ3f.js",
+      "_node-modules-CBZj5KRR.js",
       "src/js/main.js"
     ],
     "dynamicImports": [
-      "_grid-CgsJkZsf.js",
-      "_grid-CgsJkZsf.js",
-      "_node-modules-CPWXqQ3f.js",
+      "_grid-CJy_EU0E.js",
+      "_grid-CJy_EU0E.js",
+      "_node-modules-CBZj5KRR.js",
       "src/js/manager.js"
     ],
     "css": [
-      "assets/main-7W2BOCJG.css"
+      "assets/main-EOl06qxC.css"
     ],
     "assets": [
-      "assets/bootstrap-icons-BtvjY1KL.woff2",
-      "assets/bootstrap-icons-BOrJxbIo.woff"
+      "assets/bootstrap-icons-mSm7cUeB.woff2",
+      "assets/bootstrap-icons-BeopsB42.woff"
     ]
   },
   "src/js/manager.js": {
-    "file": "assets/manager-1E3re5s3.js",
+    "file": "assets/manager-BFTRVDTy.js",
     "name": "manager",
     "src": "src/js/manager.js",
     "isDynamicEntry": true,
     "imports": [
-      "_node-modules-CPWXqQ3f.js",
+      "_node-modules-CBZj5KRR.js",
       "src/js/main.js",
-      "_manager-utils-C8g2LUbf.js"
+      "_manager-utils-IOxTzkk2.js"
     ]
   }
 }

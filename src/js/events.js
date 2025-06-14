@@ -1,14 +1,16 @@
 import { getApi } from "./api"
 import { resetAnimation } from "./animation"
+import * as bootstrap from "bootstrap"
 import { loadNewMap, getMapSize, redraw } from "./canvas"
 import { config } from "./config"
-import { controls, deleteAllCourses, getExcludedText, saveCourses } from "./courses"
+import { controls, createCourseMenu, deleteAllCourses, getExcludedText, saveCourses } from "./courses"
 import { initialiseDrawing } from "./draw"
-import { Event } from "./event"
-import { getHashID, setEventHash } from "./hash"
+import { RG2Event } from "./event"
+import { createResultMenu } from "./results"
+import { getHashID, getHashRoutes, getHashCourses, getHashTab, setEventHash } from "./hash"
 import { decode } from "html-entities"
 import { deleteResultsForEvent, getCommentsForEvent, getResultsStats, saveResults, saveRoutes } from "./results"
-import { createEventMenu } from "./rg2ui"
+import { createEventMenu, getActiveTab } from "./rg2ui"
 import { t } from "./translate"
 import { getDistanceBetweenPoints, getLatLonDistance } from "./utils"
 
@@ -49,7 +51,7 @@ export function doGetEvents() {
   getApi(params, handleEventsResponse, "Events request failed")
 }
 
-export function eventIsLocked() {
+function eventIsLocked() {
   if (activeEventID === null) {
     return false
   }
@@ -154,14 +156,16 @@ export function getEventStats() {
   }
   const id = getKartatEventID()
   const eventinfo = getEventInfoForKartatID(parseInt(id, 10))
-  let stats = `<div class='fs-4 fw-bolder pb-3'>${t("Event statistics")}</div>`
-  stats += `<table class='table table-sm table-striped-columns table-bordered'><tbody>`
-  stats += `<tr><td>${t("Event")}</td><td>${eventinfo.name}:&nbsp;${eventinfo.date}</td></tr>`
+
+  let stats = `<div class='fs-4 fw-bolder pb-3'>${t("Event statistics") + ": " + eventinfo.name + "&nbsp" + eventinfo.date}</div>
+  <div class="d-flex flex-wrap justify-content-evenly pb-2">
+  ${getResultsStats(eventinfo)}
+  </div>`
   if (eventinfo.comment) {
+    stats += `<table class='table table-sm table-striped-columns table-bordered'><tbody>`
     stats += `<tr><td>${t("Comments")}</td><td>${eventinfo.comment}</td></tr>`
+    stats += `</tbody></table>`
   }
-  stats += getResultsStats(eventinfo.controls, eventinfo.worldfile.valid)
-  stats += `</tbody></table>`
   stats += `<hr class="border border-primary opacity-75" />`
   stats += getCommentsForEvent()
   // #177 not pretty but gets round problems of double encoding
@@ -215,12 +219,58 @@ export function getWorldFile() {
 
 function handleEventResponse(response, kartatid) {
   eventRequestInProgress = false
+  bootstrap.Offcanvas.getInstance(document.getElementById("rg2-right-info-panel")).hide()
   setEventHash(kartatid)
   setActiveEventIDByKartatID(kartatid)
   setEventTitleBar()
+  document.getElementById("rg2-load-progress-label").innerHTML = t("Saving courses")
   saveCourses(response.courses)
+  document.getElementById("rg2-load-progress-label").textContent = t("Saving results", "")
   saveResults(response.results)
+  document.getElementById("rg2-load-progress-label").textContent = t("Saving routes", "")
   saveRoutes(response.routes)
+  createCourseMenu()
+  createResultMenu()
+  if (config.managing()) {
+    rg2Config.manager.eventFinishedLoading(kartatid)
+  } else {
+    document.getElementById(config.TAB_COURSES).removeAttribute("disabled")
+    document.getElementById(config.TAB_RESULTS).removeAttribute("disabled")
+    if (eventIsLocked()) {
+      document.getElementById(config.TAB_DRAW).setAttribute("disabled", "")
+    } else {
+      document.getElementById(config.TAB_DRAW).removeAttribute("disabled")
+    }
+    // open courses tab for new event: else stay on draw tab
+    const active = getActiveTab()
+    // don't change tab if we have come from DRAW since it means
+    // we have just reloaded following a save
+    if (active !== config.TAB_DRAW) {
+      const tab = getHashTab()
+      const target = document.getElementById(tab)
+      target.click()
+    }
+    // set up screen as requested in hash
+    const routes = getHashRoutes()
+    for (let i = 0; i < routes.length; i += 1) {
+      let e = new Event("click", { bubbles: true })
+      const target = document.querySelector(`.showtrack[data-id='${routes[i]}']`)
+      if (target) {
+        target.checked = true
+        target.dispatchEvent(e)
+      }
+    }
+    const courses = getHashCourses()
+    for (let i = 0; i < courses.length; i += 1) {
+      let e = new Event("click", { bubbles: true })
+      const target = document.querySelector(`.showcourse[data-courseid='${courses[i]}']`)
+      if (target) {
+        target.checked = true
+        target.dispatchEvent(e)
+      }
+    }
+  }
+  document.getElementById("rg2-load-progress").classList.add("d-none")
   initialiseDrawing()
   configureUIForNewEvent(kartatid)
 }
@@ -229,7 +279,7 @@ function handleEventsResponse(response) {
   events.length = 0
   activeEventID = null
   for (const event of response.events) {
-    events.push(new Event(event))
+    events.push(new RG2Event(event))
   }
   createEventMenu()
   // load requested event if set

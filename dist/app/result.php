@@ -99,6 +99,10 @@ class result
                 if ($pos !== false) {
                     $extras = explode("#", substr($databaseid, $pos + 2));
                     if (count($extras) == 2) {
+                        // remove dummy 999 position sometimes used to show incomplete results
+                        if ($extras[0] == "999") {
+                          $extras[0] = "";
+                        }
                         $detail["position"] = $extras[0];
                         $detail["status"] = strtolower($extras[1]);
                     }

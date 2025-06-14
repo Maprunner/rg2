@@ -12,9 +12,9 @@ function extractItems(items, introText) {
 }
 
 function generateHash(hashID, hashRoutes, hashCourses) {
-  let hash = 0
+  let hash = "#"
   if (id !== 0) {
-    hash = "#" + hashID + extractItems(hashCourses, "&course=") + extractItems(hashRoutes, "&route=")
+    hash += hashID + extractItems(hashCourses, "&course=") + extractItems(hashRoutes, "&route=")
   }
   return hash
 }
@@ -39,13 +39,15 @@ export function getHashTab() {
 }
 
 function getIDFromLocationHash(locationHash) {
+  let hashid = 0
   // id should be numeric and between # and & or end of string whichever comes first
-  let id = locationHash.replace(/#([0-9]+)($|&).*/, "$1")
-  //console.log("hash ", locationHash, "id ", id)
-  if (id.length > 0) {
-    return parseInt(id, 10)
+  if (/#([0-9]+)($|&)/.test(locationHash)) {
+    hashid = locationHash.replace(/#([0-9]+)($|&).*/, "$1")
+    if (hashid.length > 0) {
+      return parseInt(hashid, 10)
+    }
   }
-  return id
+  return hashid
 }
 
 export function parseLocationHash(hash) {

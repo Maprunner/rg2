@@ -26,16 +26,6 @@ module.exports = function (grunt) {
     },
 
     replace: {
-      jsversion: {
-        src: ["src/js/config.js"],
-        overwrite: true,
-        replacements: [
-          {
-            from: /RG2VERSION.*,/,
-            to: "RG2VERSION: '<%= pkg.version %>',"
-          }
-        ]
-      },
       phpversion: {
         src: ["rg2api.php", "index.php"],
         overwrite: true,

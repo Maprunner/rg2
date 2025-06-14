@@ -71,6 +71,14 @@ class course
                     if (!is_numeric($xy[1])) {
                       $xy[1] = 1;
                     }
+                    // old files with "nan" found on LOC site
+                    if (strtolower($xy[0]) == "nan") {
+                      $xy[0] = 1;
+                    }
+                    if (strtolower($xy[1]) == "nan") {
+                      $xy[1] = 1;
+                    }
+
                     // some courses seem to have nulls at the end so just ignore them
                     if ($xy[0] != "") {
                         $dummycodes[$j] = self::getDummyCode($pairs[$j]);

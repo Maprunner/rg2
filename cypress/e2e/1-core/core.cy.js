@@ -80,7 +80,6 @@ describe("Core functionality", { testIsolation: false }, () => {
     cy.get("#event-tab-label").should("contain", "Compétition")
   })
   it("speaks Czech", () => {
-    cy.get("#btn-settings").click()
     cy.get("#rg2-select-language").select("cz")
     cy.get("#event-tab-label").should("contain", "Akce")
   })
@@ -89,7 +88,6 @@ describe("Core functionality", { testIsolation: false }, () => {
     cy.get("#event-tab-label").should("contain", "Wettkämpfe")
   })
   it("speaks Japanese", () => {
-    cy.get("#btn-settings").click()
     cy.get("#rg2-select-language").select("ja")
     cy.get("#event-tab-label").should("contain", "イベント")
   })
@@ -98,12 +96,10 @@ describe("Core functionality", { testIsolation: false }, () => {
     cy.get("#event-tab-label").should("contain", "Tapahtumat")
   })
   it("speaks Norwegian", () => {
-    cy.get("#btn-settings").click()
     cy.get("#rg2-select-language").select("no")
     cy.get("#event-tab-label").should("contain", "Løp")
   })
   it("speaks Italian", () => {
-    cy.get("#btn-settings").click()
     cy.get("#rg2-select-language").select("it")
     cy.get("#event-tab-label").should("contain", "Gare")
   })
@@ -112,7 +108,6 @@ describe("Core functionality", { testIsolation: false }, () => {
     cy.get("#event-tab-label").should("contain", "События")
   })
   it("speaks Portuguese", () => {
-    cy.get("#btn-settings").click()
     cy.get("#rg2-select-language").select("pt")
     cy.get("#event-tab-label").should("contain", "Eventos")
   })

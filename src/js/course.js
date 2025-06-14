@@ -23,7 +23,7 @@ export class Course {
     // save angle to show control code text
     this.textAngle = []
     this.setAngles()
-    this.length = this.setLength()
+    this.setLengths()
   }
 
   drawCourse(intensity) {
@@ -81,24 +81,6 @@ export class Course {
     }
   }
 
-  getLegLengths() {
-    // used for events with no results to allow pro rata splits
-    let distanceSoFar = []
-    if (this.isScoreCourse) {
-      // arbitrary for now...
-      distanceSoFar[1] = 1
-      return distanceSoFar
-    }
-    distanceSoFar[0] = 0
-    for (let i = 1; i < this.x.length; i += 1) {
-      distanceSoFar[i] = parseInt(
-        distanceSoFar[i - 1] + getDistanceBetweenPoints(this.x[i], this.y[i], this.x[i - 1], this.y[i - 1]),
-        0
-      )
-    }
-    return distanceSoFar
-  }
-
   incrementTracksCount() {
     this.trackcount += 1
   }
@@ -112,14 +94,18 @@ export class Course {
       } else {
         // angle of line to next control
         this.angle[i] = getAngle(this.x[i], this.y[i], this.x[i + 1], this.y[i + 1])
-        // create bisector of angle to position number
-        const c1x = Math.sin(this.angle[i - 1])
-        const c1y = Math.cos(this.angle[i - 1])
-        const c2x = Math.sin(this.angle[i]) + c1x
-        const c2y = Math.cos(this.angle[i]) + c1y
-        const c3x = c2x / 2
-        const c3y = c2y / 2
-        this.textAngle[i] = getAngle(c3x, c3y, c1x, c1y)
+        if (i > 0) {
+          // create bisector of angle to position number
+          const c1x = Math.sin(this.angle[i - 1])
+          const c1y = Math.cos(this.angle[i - 1])
+          const c2x = Math.sin(this.angle[i]) + c1x
+          const c2y = Math.cos(this.angle[i]) + c1y
+          const c3x = c2x / 2
+          const c3y = c2y / 2
+          this.textAngle[i] = getAngle(c3x, c3y, c1x, c1y)
+        } else {
+          this.textAngle[0] = 0
+        }
       }
     }
     // angle for finish aligns to north
@@ -140,6 +126,10 @@ export class Course {
         return false
       }
     })
+    // need to know which is first excluded control for later drawing purposes
+    const firstExcluded = this.exclude.findIndex((ex) => ex === true)
+    // setting it to 0 is OK since start cannot be excluded (?!)
+    this.firstExcluded = firstExcluded === -1 ? 0 : firstExcluded
     this.allowed = data.codes.map((control, i) => {
       if (data.exclude.findIndex((ex) => ex === i) > -1) {
         return data.allowed[data.exclude.findIndex((ex) => ex === i)]
@@ -149,19 +139,27 @@ export class Course {
     })
   }
 
-  setLength() {
+  setLengths() {
     let length = 0
-    const metresPerPixel = getMetresPerPixel()
-    if (metresPerPixel === undefined || this.isScoreCourse) {
-      return undefined
+    this.lengthValid = true
+    this.legLengths = []
+    this.cumulativeLegLengths = []
+    this.legLengths[0] = 0
+    this.cumulativeLegLengths[0] = 0
+    let metresPerPixel = getMetresPerPixel()
+    if (metresPerPixel === undefined) {
+      this.lengthValid = false
+      metresPerPixel = 1
     }
     for (let i = 1; i < this.x.length; i += 1) {
-      length += getDistanceBetweenPoints(this.x[i], this.y[i], this.x[i - 1], this.y[i - 1])
+      const legLength = parseInt(
+        (getDistanceBetweenPoints(this.x[i], this.y[i], this.x[i - 1], this.y[i - 1]) * metresPerPixel).toFixed(0)
+      )
+      this.legLengths[i] = legLength
+      this.cumulativeLegLengths[i] = this.cumulativeLegLengths[i - 1] + legLength
+      length += legLength
     }
-    if (length === 0) {
-      return undefined
-    } else {
-      return ((length * metresPerPixel) / 1000).toFixed(1)
-    }
+
+    this.length = (length / 1000).toFixed(1)
   }
 }

@@ -25,7 +25,7 @@ export function getApi(params, onResponse, errorMsg) {
     })
 }
 
-export function postApi(data, params, onResponse, errorMsg, handleKeksi = () => {}) {
+export function postApi(data, params, onResponse, errorMsg) {
   let config = { method: "post" }
   config.data = data
   if (params.headers) {
@@ -37,9 +37,6 @@ export function postApi(data, params, onResponse, errorMsg, handleKeksi = () => 
   document.getElementById("rg2-container").style.cursor = "wait"
   rg2Axios(config)
     .then((response) => {
-      if (response.data.keksi) {
-        handleKeksi(response.data.keksi)
-      }
       onResponse(response.data)
     })
     .catch(function (error) {

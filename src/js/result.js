@@ -48,6 +48,7 @@ export class Result {
     // colours set when track is displayed
     this.trackColour = null
     this.userColour = null
+    this.firstExcluded = getCourseDetails(this.courseid).firstExcluded
     this.initialiseTrack(data)
   }
 
@@ -193,8 +194,37 @@ export class Result {
       let oldx, oldy, stopCount
       if (this.displayTrack) {
         if (this.isGPSTrack && options.showGPSSpeed && this.speedColour.length === 0) {
-          // set speed colours if we haven't done it yet
           this.setSpeedColours()
+        }
+        if (this.isGPSTrack) {
+          // add circle to show where control should be on GPS track based on split times
+          const opt = getOverprintDetails()
+          ctx.lineWidth = 1
+          ctx.strokeStyle = config.PURPLE
+          ctx.fillStyle = config.PURPLE_30
+          // get time at first control
+          let nextControlIndex = 1
+          let nextSplit = this.splits[nextControlIndex]
+          for (let i = 1; i < this.xysecs.length - 1; i += 1) {
+            // only makes sense up to an excluded control since we don't know how much time
+            // to take out of the track after that
+            if (this.firstExcluded > 0 && nextControlIndex >= this.firstExcluded) {
+              break
+            }
+            if (this.xysecs[i] >= nextSplit) {
+              // draw control circle
+              ctx.beginPath()
+              ctx.arc(this.trackx[i], this.tracky[i], opt.controlRadius * 0.3, 0, 2 * Math.PI, false)
+              // fill in with transparent colour to highlight control better
+              ctx.fill()
+              ctx.stroke()
+              nextControlIndex = nextControlIndex + 1
+              if (nextControlIndex >= this.splits.length) {
+                break
+              }
+              nextSplit = this.splits[nextControlIndex]
+            }
+          }
         }
         let startIndex = 0
         let endIndex = this.xysecs.length

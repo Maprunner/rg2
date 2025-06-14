@@ -3,31 +3,40 @@ class user
 {
   public static function logIn($data)
   {
-    if (isset($data->x) && isset($data->y)) {
-      $userdetails = self::extractString($data->x);
-      $cookie = $data->y;
-    } else {
-      $userdetails = "anon";
-      $cookie = "none";
-    }
+    // utils::rg2log("Log in ". session_id() . " ". session_encode() . " " . json_encode($data));
+    
     $ok = true;
-    $keksi = trim(file_get_contents(KARTAT_DIRECTORY . "keksi.txt"));
+    $userdetails = isset($data->x) ? self::extractString($data->x) : "anon";
+    $user= isset($data->user) ? $data->user : "anon";
+
+    $session_logged_in = isset($_SESSION['loggedin']) ? $_SESSION['loggedin'] : false;
+    $session_user = isset($_SESSION['user']) ? $_SESSION['user'] : "";
+    
+    // if this user is already logged in then we don't need to do anything
+    if ($session_logged_in && ($session_user === $user)) {
+      // utils::rg2log("Session already logged in for ". $user);
+      return $ok;
+    }
+    // utils::rg2log("Session not yet logged in for ". $user);
+    // not logged in so we need to check the user details
     if (file_exists(KARTAT_DIRECTORY . "rg2userinfo.txt")) {
-      $saved_user = trim(file_get_contents(KARTAT_DIRECTORY . "rg2userinfo.txt"));
-      if (!password_verify($userdetails, $saved_user)) {
-        utils::rg2log("User details incorrect.");
+      $saved_userdetails = trim(file_get_contents(KARTAT_DIRECTORY . "rg2userinfo.txt"));
+      if (!password_verify($userdetails, $saved_userdetails)) {
+        // utils::rg2log("User details incorrect: " . $userdetails );
         $ok = false;
-      }
-      if ($keksi != $cookie) {
-        utils::rg2log("Cookies don't match. " . $keksi . " : " . $cookie);
-        $ok = false;
+        $_SESSION['user'] = "";
+      } else {
+        // utils::rg2log("User details correct: " . $userdetails );
+        $_SESSION['user'] = $user;  
       }
     } else {
       // new account being set up: rely on JS end to force a reasonable name/password
       $temp = password_hash($userdetails, PASSWORD_DEFAULT);
-      utils::rg2log("Creating new account.");
+      utils::rg2log("Creating new account for " . $userdetails);
       file_put_contents(KARTAT_DIRECTORY . "rg2userinfo.txt", $temp . PHP_EOL);
+      $_SESSION['user'] = $user;
     }
+    $_SESSION['loggedin'] = $ok;
     return $ok;
   }
 
@@ -42,15 +51,18 @@ class user
     return $str;
   }
 
-  public static function generateNewKeksi()
+  public static function startSession($reset)
   {
-    // simple cookie generator! Don't need unique, just need something vaguely random
-    $keksi = substr(str_shuffle("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"), 0, 20);
-    $result = file_put_contents(KARTAT_DIRECTORY . "keksi.txt", $keksi . PHP_EOL);
-    //utils::rg2log(KARTAT_DIRECTORY." ".$keksi." ".$result);
-    if ($result === false) {
-      utils::rg2log("Error writing keksi.txt: " . $keksi);
+    session_start([ 
+      'cookie_lifetime' => 3600,
+      'cookie_secure' => true,
+      'cookie_httponly' => true,
+     ]);
+    if ($reset) {
+      session_regenerate_id(true);
+      $_SESSION['user'] = "";
+      $_SESSION['loggedin'] = false;
     }
-    return $keksi;
+    // utils::rg2log("Start session ". session_id() . " ". session_encode());
   }
 }

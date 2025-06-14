@@ -1,7 +1,6 @@
 export class User {
-  constructor(keksi) {
+  constructor() {
     this.x = ""
-    this.y = keksi
     this.name = null
     this.password = null
   }
@@ -16,15 +15,17 @@ export class User {
     return nameValid && passwordValid
   }
 
-  alterString(input, pattern) {
+  alterString(input) {
+    const chars = "abcdefghijklmnopqrstuvwxyz0123456789"
     let str = ""
     for (let i = 0; i < input.length; i += 1) {
-      str += input.charAt(i) + pattern.charAt(i)
+      const rand = Math.floor(Math.random() * chars.length)
+      str += input.charAt(i) + chars.charAt(rand)
     }
     return str
   }
 
   encodeUser() {
-    return { x: this.alterString(this.name + this.password, this.y), y: this.y }
+    return { x: this.alterString(this.name + this.password), user: this.name }
   }
 }

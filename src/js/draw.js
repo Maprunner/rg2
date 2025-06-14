@@ -1,7 +1,7 @@
 import { postApi } from "./api"
 import { alignMap, ctx, getCentreBottom, getCentreTop, redraw, resetMapState } from "./canvas"
 import { config, getOverprintDetails, options, removeDrawnRouteDetails, saveDrawnRouteDetails } from "./config"
-import { getCourseDetails, getCourseLegLengths, setCourseDisplay } from "./courses"
+import { getCourseDetails, setCourseDisplay } from "./courses"
 import { doGetEvents, getKartatEventID, loadEventByKartatID } from "./events"
 import { GPSTrack, RouteData } from "./gpstrack"
 import { getActiveTab, resetDrawDialog } from "./rg2ui"
@@ -441,6 +441,7 @@ function initialiseCourse(courseid) {
     trk.routeData.y[0] = controly[0]
     trk.routeData.controlx = controlx.slice()
     trk.routeData.controly = controly.slice()
+    trk.routeData.cumulativeLegLengths = course.cumulativeLegLengths.slice()
     angles = course.angle.slice()
   }
   document.getElementById("rg2-select-course").value = trk.routeData.courseid
@@ -709,12 +710,12 @@ export function setNameAndTime() {
     trk.routeData.time[0] = getSecsFromHHMMSS(time)
     trk.routeData.totalsecs = getSecsFromHHMMSS(time)
     nextControl = 1
-    const distanceSoFar = getCourseLegLengths(trk.routeData.courseid)
-    const length = distanceSoFar[distanceSoFar.length - 1]
+    const courseLength = trk.routeData.cumulativeLegLengths[trk.routeData.cumulativeLegLengths.length - 1]
     // generate pro rata splits
+    // TODO: handle score courses or anything else that gives 0 course lengths
     let splits = []
-    for (let i = 0; i < distanceSoFar.length; i = i + 1) {
-      splits[i] = parseInt((distanceSoFar[i] / length) * trk.routeData.totalsecs, 10)
+    for (let i = 0; i < trk.routeData.cumulativeLegLengths.length; i = i + 1) {
+      splits[i] = parseInt((trk.routeData.cumulativeLegLengths[i] / courseLength) * trk.routeData.totalsecs, 10)
     }
     trk.routeData.splits = splits
     previousValidControlIndex = 0

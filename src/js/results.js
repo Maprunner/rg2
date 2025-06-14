@@ -1,9 +1,8 @@
 import { resultIsBeingAnimated, updateTrackNames } from "./animation"
-import { getMapSize, redraw } from "./canvas"
+import { getMapSize } from "./canvas"
 import { config, options } from "./config"
 import {
   controls,
-  createCourseMenu,
   isValidCourseId,
   getCourseDetails,
   getCourseName,
@@ -15,17 +14,9 @@ import {
   updateScoreCourse
 } from "./courses"
 import { setName } from "./draw"
-import {
-  eventIsLocked,
-  getActiveMapID,
-  getEventInfoForKartatID,
-  getKartatEventID,
-  getWorldFile,
-  isScoreEvent
-} from "./events"
-import { getHashRoutes, getHashCourses, getHashTab } from "./hash"
+import { getActiveMapID, getEventInfoForKartatID, getKartatEventID, getWorldFile, isScoreEvent } from "./events"
 import { Result } from "./result"
-import { getActiveTab, setResultCheckboxes, displayStatsDialog } from "./rg2ui"
+import { setResultCheckboxes, displayStatsDialog } from "./rg2ui"
 import { t } from "./translate"
 import { formatSecsAsMMSS, generateOption } from "./utils"
 
@@ -67,7 +58,6 @@ export function addResults(data, isScoreEvent) {
       results.push(result)
     }
   }
-  //setTrackColours()
   setDisplayOrder()
   setDeletionInfo()
   setScoreCourseInfo()
@@ -463,8 +453,9 @@ function getCourseHeader(result) {
   let text = result.coursename
   const info = getCourseDetails(result.courseid)
   // need to protect against some old events with dodgy results
-  if (info) {
-    text += info.length === undefined ? "" : ": " + info.length + " km"
+  // plus don't display length if a score/relay course or only two controls (S and F)
+  if (info && !info.isScoreCourse && info.codes.length > 2) {
+    text += info.lengthValid ? ": " + info.length + " km" : ""
   }
   let html = `<div class="d-flex w-100"><div class="flex-grow-1 runners-table-course-header" data-runners="" data-courseid="${result.courseid}">${text}</div>`
   let check = `<div class="px-2"><input class='showcourse' data-courseid="${result.courseid}"`
@@ -503,12 +494,24 @@ export function getFullResultforResultID(resultid) {
 }
 
 export function getFullResultForRawID(rawid) {
-  for (let i = 0; i < results.length; i += 1) {
-    if (results[i].resultid === rawid) {
-      return results[i]
+  let routeresult = undefined
+  let result = results.find((res) => res.rawid === rawid)
+  // rawid may be a GPS route: e.g. 50002
+  // if so we need to combine with the original result: e.g. 2
+  if (result !== undefined) {
+    routeresult = results.find((res) => {
+      // % needed since you may have 100002, 150002 if they have tried multiple times and deleted some
+      // BOC Sprint 2016: http://localhost/rg2/?#22&route=100002
+      return (res.resultid - rawid) % config.GPS_RESULT_OFFSET === 0 && res.resultid !== rawid
+    })
+    if (routeresult === undefined) {
+      result.routeresultid = rawid
+    } else {
+      result.routeresultid = routeresult.resultid
+      result.hasValidTrack = routeresult.hasValidTrack
     }
   }
-  return undefined
+  return result
 }
 
 function getNameHTML(res, i) {
@@ -558,28 +561,42 @@ function getResultsInfo() {
   return info
 }
 
-export function getResultsStats(controls, validWorldFile) {
+export function getResultsStats(eventinfo) {
   const resultsinfo = getResultsInfo()
   const coursearray = getCoursesForEvent()
   const mapSize = getMapSize()
   let wf = ""
-  if (validWorldFile) {
+  if (eventinfo.worldfile.valid) {
     const worldFile = getWorldFile()
     const digits = 1000000
-    wf = `. ${t("Map is georeferenced")}: ${parseInt(worldFile.F * digits) / digits}`
-    wf += `, ${parseInt(worldFile.C * digits) / digits}.`
+    const lat = parseInt(worldFile.F * digits) / digits
+    const lng = parseInt(worldFile.C * digits) / digits
+    wf = `${t("Map is georeferenced")}: <a href="https://www.openstreetmap.org/#map=15/${lat}/${lng}" target="_blank" rel="noopener noreferrer">${lat}, ${lng}</a>.`
   }
 
-  let stats = [
-    `<tr><td>${t("Courses")}</td><td>${coursearray.length}</td></tr>`,
-    `<tr><td>${t("Controls")}</td><td>${controls}</td></tr>`,
-    `<tr><td>${t("Results")}</td><td>${resultsinfo.results}</td></tr>`,
-    `<tr><td>${t("Routes")}</td><td>${resultsinfo.totalroutes} (${resultsinfo.percent}%)</td></tr>`,
-    `<tr><td>${t("Drawn routes")}</td><td>${resultsinfo.drawnroutes}</td></tr>`,
-    `<tr><td>${t("GPS routes")}</td><td>${resultsinfo.gpsroutes}</td></tr>`,
-    `<tr><td>${t("Total time")}</td><td>${resultsinfo.time}</td></tr>`,
-    `<tr><td>${t("Map")} ID ${getActiveMapID()}</td><td>${mapSize.width}  x ${mapSize.height} pixels${wf}</td></tr>`
-  ].join("")
+  function card(title, body) {
+    const html = `<div class="card m-2 text-center" style="width: auto; min-width: 15%">
+    <div class="card-header">${title}</div>
+    <div class="card-body">
+      <p class="card-text">${body}</p>
+    </div>
+  </div>`
+    return html
+  }
+  let stats =
+    card(t("Courses"), coursearray.length) +
+    card(t("Controls"), eventinfo.controls) +
+    card(t("Results"), resultsinfo.results) +
+    card(t("Routes"), resultsinfo.totalroutes + " (" + resultsinfo.percent + "%)") +
+    card(t("Drawn routes"), resultsinfo.drawnroutes) +
+    card(t("GPS routes"), resultsinfo.gpsroutes) +
+    card(t("Total time"), resultsinfo.time) +
+    card(t("Map") + " ID " + getActiveMapID(), mapSize.width + "x" + mapSize.height + " pixels" + "<br>" + wf)
+
+  if (eventinfo.comment) {
+    stats += card(t("Comments"), eventinfo.comment)
+  }
+
   return stats
 }
 
@@ -617,6 +634,17 @@ export function getTracksOnDisplay() {
     }
   }
   return tracks
+}
+
+export function getVariantList() {
+  // extract a list of all variants in a set of score/relay results
+  const variants = []
+  results.forEach((res) => {
+    if (!variants.includes(res.variant) && res.variant !== undefined) {
+      variants.push(res.variant)
+    }
+  })
+  return variants
 }
 
 function handleExclusions() {
@@ -806,7 +834,6 @@ function sanitiseSplits(isScoreEvent) {
 }
 
 export function saveResults(results) {
-  document.getElementById("rg2-load-progress-label").textContent = t("Saving results", "")
   // TODO remove temporary (?) fix to get round RG1 events with no courses defined: see #179
   if (getnumberOfCourses() > 0) {
     addResults(results, isScoreEvent())
@@ -819,55 +846,10 @@ export function saveResults(results) {
 }
 
 export function saveRoutes(data) {
-  // TODO: bit messy. Where does this really belong?
-  document.getElementById("rg2-load-progress-label").textContent = t("Saving routes", "")
   // TODO remove temporary (?) fix to get round RG1 events with no courses defined: see #179
   if (getnumberOfCourses() > 0) {
     addTracks(data)
   }
-  createCourseMenu()
-  createResultMenu()
-  if (config.managing()) {
-    rg2Config.manager.eventFinishedLoading()
-  } else {
-    document.getElementById(config.TAB_COURSES).removeAttribute("disabled")
-    document.getElementById(config.TAB_RESULTS).removeAttribute("disabled")
-    if (eventIsLocked()) {
-      document.getElementById(config.TAB_DRAW).setAttribute("disabled", "")
-    } else {
-      document.getElementById(config.TAB_DRAW).removeAttribute("disabled")
-    }
-    // open courses tab for new event: else stay on draw tab
-    const active = getActiveTab()
-    // don't change tab if we have come from DRAW since it means
-    // we have just reloaded following a save
-    if (active !== config.TAB_DRAW) {
-      const tab = getHashTab()
-      const target = document.getElementById(tab)
-      target.click()
-    }
-    // set up screen as requested in hash
-    const routes = getHashRoutes()
-    for (let i = 0; i < routes.length; i += 1) {
-      let e = new Event("click", { bubbles: true })
-      const target = document.querySelector(`.showtrack[data-id='${routes[i]}']`)
-      if (target) {
-        target.checked = true
-        target.dispatchEvent(e)
-      }
-    }
-    const courses = getHashCourses()
-    for (let i = 0; i < courses.length; i += 1) {
-      let e = new Event("click", { bubbles: true })
-      const target = document.querySelector(`.showcourse[data-courseid='${courses[i]}']`)
-      if (target) {
-        target.checked = true
-        target.dispatchEvent(e)
-      }
-    }
-  }
-  document.getElementById("rg2-load-progress").classList.add("d-none")
-  redraw()
 }
 
 function setDeletionInfo() {
