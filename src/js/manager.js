@@ -1601,7 +1601,8 @@ function validateMapUpload(upload) {
         let msg = "The uploaded map file is " + size + "MB (" + image.width
         msg += " x " + image.height + "px). It is recommended that you use maps under " + config.FILE_SIZE_WARNING
         msg += "MB with a maximum dimension of " + config.PIXEL_SIZE_WARNING + "px. Please see the "
-        msg += "<a href='https://github.com/Maprunner/rg2/wiki/Map-files'>RG2 wiki</a> for "
+        msg +=
+          "<a href='https://www.routegadget.co.uk/docs/2.x/manager-guide/maps#map-file-guidance' target='_blank' rel='noopener'>RG2 manager guide</a> for "
         msg += "guidance on how to create map files."
         showWarningDialog("Oversized map upload", msg)
       }

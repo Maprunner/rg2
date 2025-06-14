@@ -561,28 +561,42 @@ function getResultsInfo() {
   return info
 }
 
-export function getResultsStats(controls, validWorldFile) {
+export function getResultsStats(eventinfo) {
   const resultsinfo = getResultsInfo()
   const coursearray = getCoursesForEvent()
   const mapSize = getMapSize()
   let wf = ""
-  if (validWorldFile) {
+  if (eventinfo.worldfile.valid) {
     const worldFile = getWorldFile()
     const digits = 1000000
-    wf = `. ${t("Map is georeferenced")}: ${parseInt(worldFile.F * digits) / digits}`
-    wf += `, ${parseInt(worldFile.C * digits) / digits}.`
+    const lat = parseInt(worldFile.F * digits) / digits
+    const lng = parseInt(worldFile.C * digits) / digits
+    wf = `${t("Map is georeferenced")}: <a href="https://www.openstreetmap.org/#map=15/${lat}/${lng}" target="_blank" rel="noopener noreferrer">${lat}, ${lng}</a>.`
   }
 
-  let stats = [
-    `<tr><td>${t("Courses")}</td><td>${coursearray.length}</td></tr>`,
-    `<tr><td>${t("Controls")}</td><td>${controls}</td></tr>`,
-    `<tr><td>${t("Results")}</td><td>${resultsinfo.results}</td></tr>`,
-    `<tr><td>${t("Routes")}</td><td>${resultsinfo.totalroutes} (${resultsinfo.percent}%)</td></tr>`,
-    `<tr><td>${t("Drawn routes")}</td><td>${resultsinfo.drawnroutes}</td></tr>`,
-    `<tr><td>${t("GPS routes")}</td><td>${resultsinfo.gpsroutes}</td></tr>`,
-    `<tr><td>${t("Total time")}</td><td>${resultsinfo.time}</td></tr>`,
-    `<tr><td>${t("Map")} ID ${getActiveMapID()}</td><td>${mapSize.width}  x ${mapSize.height} pixels${wf}</td></tr>`
-  ].join("")
+  function card(title, body) {
+    const html = `<div class="card m-2 text-center" style="width: auto; min-width: 15%">
+    <div class="card-header">${title}</div>
+    <div class="card-body">
+      <p class="card-text">${body}</p>
+    </div>
+  </div>`
+    return html
+  }
+  let stats =
+    card(t("Courses"), coursearray.length) +
+    card(t("Controls"), eventinfo.controls) +
+    card(t("Results"), resultsinfo.results) +
+    card(t("Routes"), resultsinfo.totalroutes + " (" + resultsinfo.percent + "%)") +
+    card(t("Drawn routes"), resultsinfo.drawnroutes) +
+    card(t("GPS routes"), resultsinfo.gpsroutes) +
+    card(t("Total time"), resultsinfo.time) +
+    card(t("Map") + " ID " + getActiveMapID(), mapSize.width + "x" + mapSize.height + " pixels" + "<br>" + wf)
+
+  if (eventinfo.comment) {
+    stats += card(t("Comments"), eventinfo.comment)
+  }
+
   return stats
 }
 

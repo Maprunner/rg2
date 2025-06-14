@@ -1,5 +1,6 @@
 import { getApi } from "./api"
 import { resetAnimation } from "./animation"
+import * as bootstrap from "bootstrap"
 import { loadNewMap, getMapSize, redraw } from "./canvas"
 import { config } from "./config"
 import { controls, createCourseMenu, deleteAllCourses, getExcludedText, saveCourses } from "./courses"
@@ -155,14 +156,16 @@ export function getEventStats() {
   }
   const id = getKartatEventID()
   const eventinfo = getEventInfoForKartatID(parseInt(id, 10))
-  let stats = `<div class='fs-4 fw-bolder pb-3'>${t("Event statistics")}</div>`
-  stats += `<table class='table table-sm table-striped-columns table-bordered'><tbody>`
-  stats += `<tr><td>${t("Event")}</td><td>${eventinfo.name}:&nbsp;${eventinfo.date}</td></tr>`
+
+  let stats = `<div class='fs-4 fw-bolder pb-3'>${t("Event statistics") + ": " + eventinfo.name + "&nbsp" + eventinfo.date}</div>
+  <div class="d-flex flex-wrap justify-content-evenly pb-2">
+  ${getResultsStats(eventinfo)}
+  </div>`
   if (eventinfo.comment) {
+    stats += `<table class='table table-sm table-striped-columns table-bordered'><tbody>`
     stats += `<tr><td>${t("Comments")}</td><td>${eventinfo.comment}</td></tr>`
+    stats += `</tbody></table>`
   }
-  stats += getResultsStats(eventinfo.controls, eventinfo.worldfile.valid)
-  stats += `</tbody></table>`
   stats += `<hr class="border border-primary opacity-75" />`
   stats += getCommentsForEvent()
   // #177 not pretty but gets round problems of double encoding
@@ -216,6 +219,7 @@ export function getWorldFile() {
 
 function handleEventResponse(response, kartatid) {
   eventRequestInProgress = false
+  bootstrap.Offcanvas.getInstance(document.getElementById("rg2-right-info-panel")).hide()
   setEventHash(kartatid)
   setActiveEventIDByKartatID(kartatid)
   setEventTitleBar()
