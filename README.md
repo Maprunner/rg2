@@ -1,10 +1,16 @@
 # Routegadget 2
 
 ## Latest news
+14 June 2025: Version 2.2.0 released. The main change is the new speed analysis functionality that has been added to the performance analysis tabs.
 
 26 September 2024: Version 2.1 released as the main branch. This is the latest update of what has been running on routegadget.co.uk for the past year.
 
 Version 1.x has now been archived and is on the Version-1-archive branch. It is not intended to support this any further.
+
+## Installing
+If all you want to do is install a working version on your own server then there is no need to install a local development version.
+
+Download the zip file and sync the /dist directory to your /rg2 directory on the production server. The only missing file should be the rg2-config.php file which you need to set up separately based on rg2-config.txt. [See the wiki](https://github.com/Maprunner/rg2/wiki/Installation) for further details.
 
 ## Development notes
 
@@ -57,10 +63,6 @@ npm run build
 ```
 
 Does the version number update and then runs a full production build. Output goes to the dist directory.
-
-## Installing
-
-For a standard installation sync the dist directory to your rg2 directory on the production server. The only missing file should be the rg2-config.php file which you need to set up separately based on rg2-config.txt.
 
 ## PHP versions
 
