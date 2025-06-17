@@ -16,7 +16,7 @@ describe("Replay", { testIsolation: false }, () => {
   })
   it("changes the track colour", () => {
     cy.get("#rg2-track-names").within(() => {
-      cy.get("input[data-rawid='1']").invoke("val", "#ff0000").trigger("change")
+      cy.get("input[data-rawid='1']").invoke("val", "#ff0000").trigger("input")
     })
   })
   it("select all Orange runners to replay one at a time", () => {
@@ -28,6 +28,17 @@ describe("Replay", { testIsolation: false }, () => {
     // display Orange results
     cy.get(".accordion-button").eq(4).click()
     cy.get("#table-5 .allcoursereplay").click()
+  })
+  it("should allow the name box to be moved", () => {
+    cy.get("#rg2-track-names").then(($el) => {
+      const initialRect = $el[0].getBoundingClientRect()
+      cy.get("#rg2-track-names").move({ deltaX: -100, deltaY: 100 })
+      cy.get("#rg2-track-names").then(($el2) => {
+        const newRect = $el2[0].getBoundingClientRect()
+        expect(newRect.left).not.to.eq(initialRect.left)
+        expect(newRect.top).not.to.eq(initialRect.top)
+      })
+    })
   })
   it("should load a Trent Park score event", () => {
     cy.visit("http://localhost/rg2/#380")

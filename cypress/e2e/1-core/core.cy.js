@@ -115,6 +115,9 @@ describe("Core functionality", { testIsolation: false }, () => {
     cy.get("#rg2-select-language").select("en")
     cy.get("#event-tab-label").should("contain", "Events")
   })
+  it("can resize the screen", () => {
+    cy.viewport("iphone-x")
+  })
   it("warns about invisible maps at start-up", () => {
     const defaultLocalStorage = {
       perCentMapIntensity: 0,

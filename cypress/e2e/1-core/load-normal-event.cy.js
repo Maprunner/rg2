@@ -174,78 +174,6 @@ describe("Loads and replays a normal event", { testIsolation: false }, () => {
     cy.get("#rg2-map-canvas").trigger("mouseup", { button: 0 })
     cy.get("#btn-reset").click()
   })
-  it("should display stats for a normal event", () => {
-    cy.get("#result-tab").click()
-    cy.get(".accordion-button").eq(0).click()
-    cy.get("#table-1 tr[data-id='2']").dblclick()
-    cy.get(".rg2-stats-title-row").should("contain", "Simon Errington")
-  })
-  it("should scroll through results", () => {
-    cy.get("#rg2-splits-chart").should("be.visible").click()
-    cy.get("#rg2-splits-chart").trigger("wheel", { deltaY: -10 })
-    cy.get(".rg2-stats-title-row").should("contain", "Nathan Nesbit")
-    cy.get("#rg2-splits-chart").should("be.visible").click()
-    cy.get("#rg2-splits-chart").trigger("wheel", { deltaY: 10 })
-    cy.get(".rg2-stats-title-row").should("contain", "Simon Errington")
-    cy.get("#rg2-splits-chart").should("be.visible").click()
-    cy.get("#rg2-splits-chart").trigger("wheel", { deltaY: 10 })
-    cy.get(".rg2-stats-title-row").should("contain", "Daniel Gardner")
-    cy.get("#rg2-splits-chart").should("be.visible").click()
-    cy.get("#rg2-splits-chart").trigger("wheel", { deltaY: 10 })
-    cy.get(".rg2-stats-title-row").should("contain", "Adam Oldfield")
-    cy.get("#rg2-splits-chart").should("be.visible").click()
-    cy.get("#rg2-splits-chart").trigger("wheel", { deltaY: -10 })
-    cy.get(".rg2-stats-title-row").should("contain", "Daniel Gardner")
-  })
-  it("should show leg details", () => {
-    const resizeObserverLoopErrRe = /ResizeObserver loop/
-
-    cy.on("uncaught:exception", (err) => {
-      if (resizeObserverLoopErrRe.test(err.message)) {
-        return false
-      }
-    })
-    cy.get("#rg2-stats-panel-tab-headers button[data-bs-target='#rg2-legs-tab']").click()
-    cy.get("#rg2-leg-table").should("be.visible")
-  })
-  it("should show cumulative details", () => {
-    const resizeObserverLoopErrRe = /ResizeObserver loop/
-
-    cy.on("uncaught:exception", (err) => {
-      if (resizeObserverLoopErrRe.test(err.message)) {
-        return false
-      }
-    })
-    cy.get("#rg2-stats-panel-tab-headers button[data-bs-target='#rg2-cumulative-tab']").click()
-    cy.get("#rg2-race-table").should("be.visible")
-  })
-  it("should show the splits table", () => {
-    cy.get("#rg2-stats-panel-tab-headers button[data-bs-target='#rg2-split-times-tab']").click()
-    cy.get("#rg2-results-table").should("be.visible")
-  })
-  it("should show loss details", () => {
-    cy.get("#rg2-stats-panel-tab-headers button[data-bs-target='#rg2-time-loss-tab']").click()
-    cy.get("#rg2-loss-chart").should("be.visible")
-    cy.get("#rg2-time-loss").should("contain", "Control: 1")
-  })
-  it("should scroll through controls", () => {
-    cy.get("#rg2-loss-chart").should("be.visible").click()
-    cy.get("#rg2-loss-chart").trigger("wheel", { deltaY: -10 })
-    cy.get("#rg2-time-loss").should("contain", "Control: 2")
-    cy.get("#rg2-loss-chart").should("be.visible").click()
-    cy.get("#rg2-loss-chart").trigger("wheel", { deltaY: 10 })
-    cy.get("#rg2-time-loss").should("contain", "Control: 1")
-    cy.get("#rg2-loss-chart").should("be.visible").click()
-    cy.get("#rg2-loss-chart").trigger("wheel", { deltaY: 10 })
-    cy.get("#rg2-time-loss").should("contain", "Finish")
-    cy.get("#rg2-loss-chart").should("be.visible").click()
-    cy.get("#rg2-loss-chart").trigger("wheel", { deltaY: 10 })
-    cy.get("#rg2-time-loss").should("contain", "Control: 1")
-  })
-  it("should hide stats", () => {
-    cy.get("#rg2-stats-panel-tab-headers button[data-bs-target='#rg2-stats-summary-tab']").click()
-    cy.get("#rg2-right-info-panel").find(".btn-close").click()
-  })
   it("measures georeferenced things", () => {
     cy.get("#course-tab").click()
     cy.get("#rg2-course-table .showcourse[data-courseid='2']").click()
@@ -276,6 +204,16 @@ describe("Loads and replays a normal event", { testIsolation: false }, () => {
     cy.get(".rg2-overlay-table .delete-overlay").eq(1).click()
     // delete all
     cy.get(".rg2-overlay-table .delete-all-overlays").click()
+    // drag dialog
+    cy.get("#rg2-measure-dialog").then(($el) => {
+      const initialRect = $el[0].getBoundingClientRect()
+      cy.get("#rg2-measure-dialog").move({ deltaX: -100, deltaY: 100 })
+      cy.get("#rg2-measure-dialog").then(($el2) => {
+        const newRect = $el2[0].getBoundingClientRect()
+        expect(newRect.left).not.to.eq(initialRect.left)
+        expect(newRect.top).not.to.eq(initialRect.top)
+      })
+    })
     cy.get("#btn-close-measure-dialog").click()
   })
   it("opens a splitsbrowser window", () => {

@@ -46,6 +46,7 @@ describe("adjusting GPS routes", { testIsolation: false }, () => {
     cy.get("#chk-move-all").uncheck()
   })
   it("adds, deletes and locks a handle", () => {
+    cy.pause()
     // left click to add a handle
     clickAt(345, 739)
     // right click to delete a handle

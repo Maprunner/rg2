@@ -4,6 +4,9 @@ const path = require("path")
 
 module.exports = defineConfig({
   projectId: "vb97jp",
+  // default screen size for testing
+  viewportWidth: 1000,
+  viewportHeight: 660,
   e2e: {
     experimentalStudio: true,
     setupNodeEvents(on, config) {

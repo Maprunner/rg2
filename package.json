@@ -18,11 +18,13 @@
     "node": ">=18.18.0"
   },
   "devDependencies": {
+    "@4tw/cypress-drag-drop": "^2.3.0",
     "@cypress/code-coverage": "^3.14.4",
     "@eslint/js": "^9.29.0",
     "cross-env": "^7.0.3",
     "cypress": "^14.4.1",
     "cypress-pipe": "^2.0.1",
+    "cypress-real-events": "^1.14.0",
     "eslint": "^9.29.0",
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-cypress": "^5.1.0",
