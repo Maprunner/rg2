@@ -2,10 +2,10 @@ describe("drawing routes", { testIsolation: false }, () => {
   const whiteX = [581, 499, 542, 630, 917, 1102, 1250, 1271, 1238, 983, 975, 924, 687, 669, 603]
   const whiteY = [890, 957, 1027, 1152, 1053, 1073, 1023, 949, 922, 930, 788, 676, 745, 867, 835]
   let mapHeightPixels = 2272
-  // screen is 1000 x 660, header is 53 px of that so canvas is...
-  const canvasHeightPixels = 617
+  // screen is 1000 x 660, header is 40 px of that so canvas is...
+  const canvasHeightPixels = 620
   // panel width plus offset added in resetMapState in canvas.js
-  let leftPanelOffset = 421 + 80
+  let leftPanelOffset = 420 + 80
   const ptX = (x) => (x * canvasHeightPixels) / mapHeightPixels + leftPanelOffset
   const ptY = (y) => (y * canvasHeightPixels) / mapHeightPixels
   const clickAt = (x, y) => {
@@ -35,6 +35,7 @@ describe("drawing routes", { testIsolation: false }, () => {
     cy.get("#rg2-select-name").select("16:08 Daniel Elder")
     cy.get("#rg2-new-comments").clear()
     cy.get("#rg2-new-comments").type("Drawn route")
+    cy.pause()
     clickAt(whiteX[0], whiteY[0])
     clickAt(whiteX[2], whiteY[2])
   })

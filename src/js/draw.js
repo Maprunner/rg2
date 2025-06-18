@@ -475,22 +475,11 @@ export function mouseUp(x, y, button) {
   if (trk.fileLoaded) {
     const handle = trk.handles.getHandleClicked({ x: x, y: y })
     if (handle !== undefined) {
-      // delete or unlock if not first or last entry
-      if (button === config.RIGHT_CLICK && handle.index !== 0 && handle.index !== trk.handles.length) {
-        if (handle.locked) {
-          // unlock, don't delete
-          trk.handles.unlockHandle(handle.index)
-        } else {
-          // delete handle
-          trk.handles.deleteHandle(handle.index)
-        }
+      if (button === config.RIGHT_CLICK) {
+        trk.handles.deleteHandle(handle.index)
       } else {
         // clicked in a handle area so toggle state
-        if (handle.locked) {
-          trk.handles.unlockHandle(handle.index)
-        } else {
-          trk.handles.lockHandle(handle.index)
-        }
+        trk.handles.toggleLock(handle.index)
       }
     } else {
       // not an existing handle so read through track to look for x,y

@@ -10,6 +10,8 @@ import { configureUI } from "./rg2ui"
 import { initLanguageOptions } from "./translate"
 import { showWarningDialog } from "./utils.js"
 
+// function needed by vite to allow code and CSS assets to be picked up from
+// generic routegadget.co.uk location for all subdomains: see vite.config.js
 window.assetUrl = function (filename) {
   return rg2Config.asset_url + filename
 }

@@ -21,6 +21,14 @@ Cypress.Commands.add("closeModal", (title, selector = ".modal-footer #rg2-do-mod
       expect($el).to.not.be.visible
     })
 })
+Cypress.Commands.add("logIn", (name, password) => {
+  cy.visit("http://localhost/rg2/?manage")
+  cy.wait("@events")
+  cy.get("#rg2-user-name").clear().type(name)
+  cy.get("#rg2-password").clear().type(password)
+  cy.get("#btn-login").click()
+  cy.wait("@login")
+})
 Cypress.Commands.add("closeWarningDialog", (expectedText) => {
   cy.get(".toast").should("be.visible").and("contain", expectedText).find(".btn-close").click()
 })
