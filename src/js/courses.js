@@ -228,11 +228,6 @@ export function getFilterDetails(courseid) {
   return filter
 }
 
-export function getNumberOfControlsOnCourse(courseid) {
-  // codes list includes "S" and "F", so allow for them
-  return courses[courseid].codes.length - 2
-}
-
 export function getnumberOfCourses() {
   return numberOfCourses
 }
