@@ -146,6 +146,9 @@ describe("Displays stats", { testIsolation: false }, () => {
     cy.visit("http://localhost/rg2/#297")
     cy.wait("@event")
     cy.get("#rg2-event-title").should("contain", "2018-06-19 Jersey Farm Street-O")
+    cy.get("#btn-about").click()
+    cy.get("#rg2-event-stats").should("not.be.empty").and("contain", "Jersey Farm Street-O")
+    cy.get("#rg2-right-info-panel").find(".btn-close").click()
   })
   it("should warn of data inconsistency", () => {
     cy.get("#btn-stats").click()

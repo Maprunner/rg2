@@ -9,4 +9,4 @@
 380|394|3|Trent Park Boxing Day Score|2021-12-26|HH|L|
 383|397|1|Ace of Herts: Ashridge South and East|2022-02-27|HH|N|Road crossing times have been taken off.
 387|401|1|Welwyn Garden City Race 2022|2022-05-08|HH|R|
-388|402|1|Highfield Park Saturday Series|2022-06-04|HH|I|
+388|402|1|Highfield Park Saturday Series|2022-06-04|HH|I|Excluded leg incuded for test purposes.

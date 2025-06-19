@@ -39,6 +39,8 @@ describe("Event creation 2", { testIsolation: false }, () => {
     cy.get("#rg2-enter-event-comments").clear("JK Relay example")
     cy.get("#rg2-select-event-level").select("I")
     cy.selectCourseFile("pwlldduIOFV3relay.xml")
+    // select sort results button
+    cy.get("#chk-sort-results").check()
     cy.selectResultsFile("pwllddu.csv")
     cy.get("#chk-score-event").click()
     cy.get("#btn-create-event").click()
@@ -62,6 +64,13 @@ describe("Event creation 2", { testIsolation: false }, () => {
       .trigger("mousedown", 700, 400, { button: 2 })
       .trigger("mousemove", 750, 450)
       .trigger("mouseup", 750, 450, { button: 2 })
+    // left click to add a locked handle
+    cy.get("#rg2-map-canvas").trigger("mousedown", 500, 200).trigger("mouseup", 500, 200)
+    // scale controls around locked handle
+    cy.get("#rg2-map-canvas")
+      .trigger("mousedown", 800, 400, { button: 0 })
+      .trigger("mousemove", 700, 300)
+      .trigger("mouseup", 700, 300, { button: 0 })
     cy.createEvent()
   })
   it("should create an event with no results and a drawn course", () => {

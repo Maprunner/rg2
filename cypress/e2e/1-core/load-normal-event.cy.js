@@ -19,19 +19,32 @@ describe("Loads and replays a normal event", { testIsolation: false }, () => {
   })
   it("should display courses", () => {
     cy.get("#course-tab").click()
+    cy.get("#course-filter-1").should("not.be.visible")
     cy.get("#rg2-course-table .showcourse[data-courseid='1']").click()
     cy.get("#rg2-course-table .showcourse[data-courseid='2']").click()
+    cy.get("#course-filter-3").should("not.be.visible")
     cy.get("#rg2-course-table .showcourse[data-courseid='3']").click()
+    cy.get("#course-filter-3").should("be.visible")
     cy.get("#rg2-course-table .showcourse[data-courseid='4']").click()
     cy.get("#rg2-course-table .showallcourses[data-id='all']").should("not.be.checked")
     cy.get("#rg2-course-table .showcourse[data-courseid='5']").click()
     // selecting last course should select all course checkbox as well
     cy.get("#rg2-course-table .showallcourses[data-id='all']").should("be.checked")
     // deselect all
+    cy.get("#course-filter-3").should("be.visible")
     cy.get("#rg2-course-table .showallcourses[data-id='all']").click()
     cy.get("#rg2-course-table .showallcourses[data-id='all']").should("not.be.checked")
     cy.get("#rg2-course-table .showcourse[data-courseid='1']").should("not.be.checked")
     cy.get("#rg2-course-table .showcourse[data-courseid='5']").should("not.be.checked")
+  })
+  it("should allow you to filter course display", () => {
+    cy.get("#course-filter-3").should("not.be.visible")
+    cy.get("#rg2-course-table .showcourse[data-courseid='3']").click()
+    cy.get("[data-course-filter='3>']").should("have.attr", "value1", "0")
+    cy.get("[data-course-filter='3>']").should("have.attr", "value2", "20")
+    cy.get("#course-filter-3").should("be.visible")
+    cy.get("[data-course-filter='3>']").invoke("attr", "value1", "5").should("have.attr", "value1", "5")
+    cy.get("[data-course-filter='3>']").invoke("attr", "value2", "18").should("have.attr", "value2", "18")
   })
   it("should display tracks for courses", () => {
     cy.get("#course-tab").click()

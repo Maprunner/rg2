@@ -35,7 +35,6 @@ describe("drawing routes", { testIsolation: false }, () => {
     cy.get("#rg2-select-name").select("16:08 Daniel Elder")
     cy.get("#rg2-new-comments").clear()
     cy.get("#rg2-new-comments").type("Drawn route")
-    cy.pause()
     clickAt(whiteX[0], whiteY[0])
     clickAt(whiteX[2], whiteY[2])
   })

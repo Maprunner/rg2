@@ -36,7 +36,7 @@ describe("Miscellaneous extras", { testIsolation: false }, () => {
     cy.get("#draw-tab").should("not.be.disabled")
     cy.get("#rg2-event-title").should("contain", "2022-06-04 Highfield Park Saturday Series")
     cy.get("#btn-about").click()
-    cy.get("#rg2-event-stats").should("not.be.empty").and("contain", "Event statistics")
+    cy.get("#rg2-event-stats").should("not.be.empty").and("contain", "Highfield Park Saturday Series")
     cy.get("#rg2-right-info-panel").find(".btn-close").click()
   })
   it("should load another event and go backwards and forwards", () => {
@@ -44,6 +44,8 @@ describe("Miscellaneous extras", { testIsolation: false }, () => {
     cy.visit("http://localhost/rg2/#380")
     cy.wait("@event")
     cy.get("#rg2-event-title").should("contain", "2021-12-26 Trent Park Boxing Day Score")
+    cy.get("#btn-about").click()
+    cy.get("#rg2-event-stats").should("not.be.empty").and("contain", "Trent Park Boxing Day Score")
     cy.visit("http://localhost/rg2/#388")
     cy.wait("@event")
     cy.get("#rg2-event-title").should("contain", "2022-06-04 Highfield Park Saturday Series")

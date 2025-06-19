@@ -58,10 +58,6 @@ function eventIsLocked() {
   return events[activeEventID].locked
 }
 
-export function eventLoadFailed() {
-  eventRequestInProgress = false
-}
-
 export function formatEvents() {
   let html = "<table class='table table-striped table-hover table-sm'><tbody id='rg2-event-table'>"
   for (let i = events.length - 1; i >= 0; i -= 1) {
