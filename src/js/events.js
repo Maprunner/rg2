@@ -3,7 +3,7 @@ import { resetAnimation } from "./animation"
 import * as bootstrap from "bootstrap"
 import { loadNewMap, getMapSize, redraw } from "./canvas"
 import { config } from "./config"
-import { controls, createCourseMenu, deleteAllCourses, getExcludedText, saveCourses } from "./courses"
+import { controls, createCourseMenu, deleteAllCourses, getExcludedText, getExcludedLegs, saveCourses } from "./courses"
 import { initialiseDrawing } from "./draw"
 import { RG2Event } from "./event"
 import { createResultMenu } from "./results"
@@ -155,7 +155,7 @@ export function getEventStats() {
 
   let stats = `<div class='fs-4 fw-bolder pb-3'>${t("Event statistics") + ": " + eventinfo.name + "&nbsp" + eventinfo.date}</div>
   <div class="d-flex flex-wrap justify-content-evenly pb-2">${getResultsStats(eventinfo)}</div>`
-  stats += `<hr class="border border-primary opacity-75" />`
+  stats += getExcludedLegs()
   stats += getCommentsForEvent()
   // #177 not pretty but gets round problems of double encoding
   stats = stats.replace(/&amp;/g, "&")

@@ -418,7 +418,7 @@ function getBottomRows(tracks, courseid) {
 export function getCommentsForEvent() {
   let hasComments = false
   let html = [
-    `<table id='rg2-comments-table' class='table table-sm table-striped table-bordered'>`,
+    `<h5>${t("Comments")}</h5><table id='rg2-comments-table' class='table table-sm table-striped table-bordered'>`,
     `<thead><tr><th>${t("Name")}</th><th>${t("Course")}</th>`,
     `<th>${t("Comments")}</th></tr></thead><tbody class="table-group-divider">`
   ].join("")
@@ -432,7 +432,7 @@ export function getCommentsForEvent() {
     }
   }
   if (hasComments) {
-    html += `</tbody></table>`
+    html = `<hr class="border border-primary opacity-75 my-5" />` + html + `</tbody></table>`
   } else {
     html = ""
   }
