@@ -49,3 +49,102 @@ export const courseButtons = `<div class="rg2-stats-course-change pe-4">
         &gt;
       </button>
     </div >`
+
+export function getAverages(rawData, perCent) {
+  // avoid mutating source array
+  let data = rawData.slice()
+
+  if (data.length === 0) {
+    return { mean: 0, median: 0, count: 0 }
+  }
+  // sort incoming values
+  data.sort(function compare(a, b) {
+    return a - b
+  })
+  let total = 0
+  let count = data.length
+  // select top perCent items
+  if (perCent < 100) {
+    // arbitrary choice to keep at least three entries
+    const adjustedCount = Math.max(parseInt((count * perCent) / 100, 10), 3)
+    data.splice(adjustedCount)
+    count = data.length
+  }
+
+  for (let i = 0; i < count; i += 1) {
+    total = total + data[i]
+  }
+  let median
+  if (count === 1) {
+    median = data[0]
+  } else {
+    if (count % 2 === 0) {
+      median = (data[count / 2 - 1] + data[count / 2]) / 2
+    } else {
+      median = data[Math.floor(count / 2)]
+    }
+  }
+  return { mean: total / count, median: median, count: count }
+}
+
+function getMean(data) {
+  return data.reduce((a, b) => a + b, 0) / data.length
+}
+
+function getPerfValue(p) {
+  if (p === "-") {
+    return 0
+  } else {
+    return parseFloat(p)
+  }
+}
+
+export function getStandardDeviation(values) {
+  if (values.length === 0) {
+    return 0
+  }
+  const mean = getMean(values)
+  return Math.sqrt(values.reduce((sq, n) => sq + Math.pow(n - mean, 2), 0) / values.length)
+}
+
+function getTimeValue(t) {
+  // gets "-" or "mm:ss"
+  if (t === "-") {
+    return 0
+  } else {
+    return parseFloat(t.replace(":", "."))
+  }
+}
+
+export function isNumberOverZero(n) {
+  if (!isNaN(parseFloat(n)) && isFinite(n)) {
+    if (n > 0) {
+      return true
+    } else {
+      return false
+    }
+  }
+  return false
+}
+
+export function perfComparator(p1, p2) {
+  return getPerfValue(p1) - getPerfValue(p2)
+}
+
+export function sortLegTimes(a, b) {
+  // sort array of times in ascending order
+  // 0 splits get sorted to the bottom
+  if (a.time === 0) {
+    return 1
+  } else {
+    if (b.time === 0) {
+      return -1
+    } else {
+      return a.time - b.time
+    }
+  }
+}
+
+export function timeComparator(t1, t2) {
+  return getTimeValue(t1) - getTimeValue(t2)
+}
