@@ -50,6 +50,8 @@ describe("Loading GPS routes", { testIsolation: false }, () => {
     cy.get("#rg2-offset-value").clear()
     cy.get("#rg2-offset-value").type("15")
     cy.get("#rg2-offset-value").clear()
+    cy.get("#rg2-offset-value").clear()
+    cy.get("#rg2-offset-value").type("-15")
     cy.get("#rg2-offset-value").type("0")
     cy.get("#btn-save-gps-route").click()
     cy.wait("@event")

@@ -13,6 +13,7 @@ describe("Replay", { testIsolation: false }, () => {
     cy.get("#result-tab").click()
     cy.get(".accordion-button").eq(0).click()
     cy.get(".showreplay[data-id='1']").click()
+    cy.get("#rg2-track-names > .track-names").find("[data-resultid]").should("have.length", "1")
   })
   it("changes the track colour", () => {
     cy.get("#rg2-track-names").within(() => {
@@ -20,14 +21,18 @@ describe("Replay", { testIsolation: false }, () => {
     })
   })
   it("select all Orange runners to replay one at a time", () => {
-    // display Orange results
     cy.get(".accordion-button").eq(2).click()
     cy.get("#table-3 .showreplay").click({ multiple: true })
+    cy.get("#rg2-track-names > .track-names").find("[data-resultid]").should("have.length", "14")
   })
-  it("selects all runners on White", () => {
-    // display Orange results
+  it("selects all runners on White and Light Green", () => {
     cy.get(".accordion-button").eq(4).click()
     cy.get("#table-5 .allcoursereplay").click()
+    cy.get("#rg2-track-names > .track-names").find("[data-resultid]").should("have.length", "19")
+    cy.get(".accordion-button").eq(1).click()
+    cy.get("#table-2 .allcoursereplay").click()
+    // added 32 runners plus 3 GPS routes
+    cy.get("#rg2-track-names > .track-names").find("[data-resultid]").should("have.length", "54")
   })
   it("should allow the name box to be moved", () => {
     cy.get("#rg2-track-names").then(($el) => {
@@ -49,10 +54,17 @@ describe("Replay", { testIsolation: false }, () => {
     cy.get(".accordion-button").eq(0).click()
     // runner with a GPS route
     cy.get(".showreplay[data-id='50007']").click()
-    // runner with a drawn route
+    // add, remove, add runner with a drawn route
+    cy.get("#rg2-track-names > .track-names").find("[data-resultid]").should("have.length", "1")
     cy.get(".showreplay[data-id='38']").click()
+    cy.get("#rg2-track-names > .track-names").find("[data-resultid]").should("have.length", "2")
+    cy.get(".showreplay[data-id='38']").click()
+    cy.get("#rg2-track-names > .track-names").find("[data-resultid]").should("have.length", "1")
+    cy.get(".showreplay[data-id='38']").click()
+    cy.get("#rg2-track-names > .track-names").find("[data-resultid]").should("have.length", "2")
     // runner with no route
     cy.get(".showreplay[data-id='3']").click()
+    cy.get("#rg2-track-names > .track-names").find("[data-resultid]").should("have.length", "3")
     cy.get("#btn-start-stop").click()
     cy.wait(1000)
     cy.get("#btn-start-stop").click()

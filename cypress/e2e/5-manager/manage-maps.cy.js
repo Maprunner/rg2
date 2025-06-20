@@ -7,6 +7,7 @@ describe("Manage maps", { testIsolation: false }, () => {
     cy.intercept("rg2api.php?type=maps*").as("maps")
   })
   it("should allow login", () => {
+    cy.setLocalStorage()
     cy.intercept("rg2api.php?type=events*").as("events")
     cy.intercept("rg2api.php?type=login*").as("login")
     cy.visit("http://localhost/rg2/?manage")
@@ -15,7 +16,7 @@ describe("Manage maps", { testIsolation: false }, () => {
     cy.get("#rg2-password").clear().type(manager.password)
     cy.get("#btn-login").click()
     cy.wait("@login")
-    cy.wait("@maps").its("response.body.data.maps").should("have.length", "11")
+    cy.wait("@maps").its("response.body.data.maps").should("have.length", "12")
   })
   it("should allow map upload", () => {
     cy.get("#manage-map-tab").click()
@@ -29,7 +30,7 @@ describe("Manage maps", { testIsolation: false }, () => {
     // add map
     cy.get("#btn-add-map").click()
     cy.closeModal("Confirm new map")
-    cy.wait("@maps").its("response.body.data.maps").should("have.length", "12")
+    cy.wait("@maps").its("response.body.data.maps").should("have.length", "13")
     cy.closeWarningDialog("Map added")
   })
   it("should allow you to delete one unused map", () => {
@@ -43,7 +44,7 @@ describe("Manage maps", { testIsolation: false }, () => {
     // delete map
     cy.get("#btn-delete-unused-maps").click()
     cy.closeModal("Confirm map deletion")
-    cy.wait("@maps").its("response.body.data.maps").should("have.length", "11")
+    cy.wait("@maps").its("response.body.data.maps").should("have.length", "12")
     cy.closeWarningDialog("Maps deleted")
   })
   it("should allow you to delete all unused maps", () => {
@@ -53,7 +54,7 @@ describe("Manage maps", { testIsolation: false }, () => {
     cy.get("#btn-delete-unused-maps").click()
     cy.closeModal("Confirm map deletion")
     cy.intercept("rg2api.php?type=maps*").as("maps")
-    cy.wait("@maps").its("response.body.data.maps").should("have.length", "9")
+    cy.wait("@maps").its("response.body.data.maps").should("have.length", "10")
     cy.closeWarningDialog("Maps deleted")
   })
 })

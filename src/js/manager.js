@@ -1201,6 +1201,7 @@ function processCourseFile(e) {
   newcontrols.deleteAllControls()
   const parsedCourses = new CourseParser(e, worldfile, localworldfile)
   courses = parsedCourses.courses
+  document.getElementById("rg2-manager-courses-count").innerHTML = "Courses (" + courses.length + ")"
   if (courses.length > 0) {
     newcontrols = parsedCourses.newcontrols
     mapping = parsedCourses.mapping
@@ -1232,6 +1233,7 @@ function processMap(e) {
 function processResultFile(e) {
   const parsedResults = new ResultParser(e, resultsFileFormat)
   results = parsedResults.results
+  document.getElementById("rg2-manager-results-count").innerHTML = "Results (" + results.length + ")"
   if (results.length > 0) {
     resultCourses = parsedResults.resultCourses
     displayInfoDialog("Result details", getResultInfoAsHTML())

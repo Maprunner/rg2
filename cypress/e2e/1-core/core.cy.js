@@ -10,7 +10,7 @@ describe("Core functionality", { testIsolation: false }, () => {
   })
   it("loads RG2 and allow user interaction", () => {
     cy.visit("http://localhost/rg2/")
-    cy.wait("@events").its("response.body.data.events").should("have.length", 12)
+    cy.wait("@events").its("response.body.data.events").should("have.length", 13)
     cy.get("#rg2-event-title").should("be.visible").and("contain", "Routegadget 2")
     cy.get("#event-tab-label").should("contain", "Events")
     cy.get("#event-tab").should("be.enabled")
@@ -22,15 +22,15 @@ describe("Core functionality", { testIsolation: false }, () => {
     cy.get("#btn-zoom-in").click()
   })
   it("filters events", () => {
-    cy.get("#rg2-event-table tr:not(.d-none)").should("have.length", 12)
+    cy.get("#rg2-event-table tr:not(.d-none)").should("have.length", 13)
     cy.get("#rg2-event-search input").type("e")
-    cy.get("#rg2-event-table tr:not(.d-none)").should("have.length", 10)
+    cy.get("#rg2-event-table tr:not(.d-none)").should("have.length", 11)
     cy.get("#rg2-event-search input").type("s")
     cy.get("#rg2-event-table tr:not(.d-none)").should("have.length", 1)
     cy.get("#rg2-event-search input").type("x")
     cy.get("#rg2-event-table tr:not(.d-none)").should("have.length", 0)
     cy.get("#rg2-event-search input").clear()
-    cy.get("#rg2-event-table tr:not(.d-none)").should("have.length", 12)
+    cy.get("#rg2-event-table tr:not(.d-none)").should("have.length", 13)
   })
   it("displays and hides the about dialog", () => {
     // toggle about dialog: no event stats

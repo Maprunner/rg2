@@ -26,6 +26,7 @@ describe("drawing routes", { testIsolation: false }, () => {
   }
   before(() => {
     cy.task("setUpKartat", { config: "config-01" })
+    cy.setLocalStorage()
   })
   it("should load a georeferenced Highfield Park event", () => {
     cy.intercept("rg2api.php?type=event&id=*").as("event")
@@ -134,7 +135,67 @@ describe("drawing routes", { testIsolation: false }, () => {
     cy.closeWarningDialog("Your route has been saved")
   })
   it("should load an event with no courses and results but no splits", () => {
+    // include test of drawn route array wrapping
+    cy.setLocalStorage(
+      ["drawnRoutes"],
+      [
+        [
+          {
+            eventid: 1,
+            id: 1,
+            token: "6debaeabbfab75a27febda85586a369f"
+          },
+          {
+            eventid: 2,
+            id: 2,
+            token: "fbdae1ce79a1d03235eebe3b6e0f9c0c"
+          },
+          {
+            eventid: 3,
+            id: 3,
+            token: "95042936fb702c5de38e8015880947fc"
+          },
+          {
+            eventid: 4,
+            id: 4,
+            token: "7e83b4bb9c1cb9f20e62cbb63d3c810a"
+          },
+          {
+            eventid: 5,
+            id: 5,
+            token: "aa66a8bba0f48ab46069261f600df797"
+          },
+          {
+            eventid: 6,
+            id: 6,
+            token: "1751682c38e1eebbaf373d07ac6d3cce"
+          },
+          {
+            eventid: 7,
+            id: 7,
+            token: "08cfdb473b4b70e1e5a37f6ce81025d1"
+          },
+          {
+            eventid: 8,
+            id: 8,
+            token: "44976c8883da926c79143c2a34124fa5"
+          },
+          {
+            eventid: 9,
+            id: 9,
+            token: "da22609835de59d54c50544f3affce8a"
+          },
+          {
+            eventid: 10,
+            id: 10,
+            token: "f4731312424c29a60a3887d81d1321ae"
+          }
+        ]
+      ]
+    )
     cy.intercept("rg2api.php?type=event&id=*").as("event")
+    // force reload to trigger reread of local storage
+    cy.visit("http://localhost/rg2/")
     cy.visit("http://localhost/rg2/#74")
     cy.wait("@event")
   })
@@ -161,5 +222,16 @@ describe("drawing routes", { testIsolation: false }, () => {
     // wait for updated event info with new drawn route
     cy.wait("@event")
     cy.closeWarningDialog("Your route has been saved")
+  })
+  it("allows you to display and delete the drawn route", () => {
+    cy.get("#result-tab").click()
+    cy.get(".accordion button div[data-courseid='2']").click()
+    cy.get(".showtrack[data-id='19']").check()
+    cy.get("#rg2-track-names > .track-names").find("[data-resultid]").should("have.length", "1")
+    cy.get(".deleteroute[data-resultidx='19']").click()
+    cy.closeModal("Confirm route delete")
+    cy.intercept("rg2api.php?type=event&id=*").as("event")
+    cy.wait("@event")
+    cy.closeWarningDialog("Route deleted")
   })
 })

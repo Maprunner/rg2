@@ -90,8 +90,8 @@ Cypress.Commands.add("selectResultsFile", (resultsFile, warningMessage = "") => 
   }
 })
 
-Cypress.Commands.add("setLocalStorage", () => {
-  const defaultLocalStorage = {
+Cypress.Commands.add("setLocalStorage", (key = [], value = []) => {
+  let localStorageValues = {
     perCentMapIntensity: 100,
     perCentRouteIntensity: 100,
     replayFontSize: 12,
@@ -106,5 +106,8 @@ Cypress.Commands.add("setLocalStorage", () => {
     minSpeed: 10,
     drawnRoutes: []
   }
-  localStorage.setItem("rg2-options", JSON.stringify(defaultLocalStorage))
+  for (let i = 0; i < key.length; i = i + 1) {
+    localStorageValues[key[i]] = value[i]
+  }
+  localStorage.setItem("rg2-options", JSON.stringify(localStorageValues))
 })

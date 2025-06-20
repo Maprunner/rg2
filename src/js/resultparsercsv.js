@@ -1,4 +1,4 @@
-import { formatSecsAsMMSS, getSecsFromHHMM, getSecsFromHHMMSS } from "./utils"
+import { formatSecsAsMMSS, getSecsFromHHMM, getSecsFromHHMMSS, showWarningDialog } from "./utils"
 
 export class ResultParserCSV {
   constructor(rawCSV) {
@@ -98,24 +98,25 @@ export class ResultParserCSV {
 
   getCSVFormat(headers) {
     // not a pretty function but it should allow some non-standard CSV formats to be processed such as OEScore output
+    // define required column headers and allowable variations
     const titles = [
-      "si card",
-      "database id",
-      "surname",
-      "first name",
-      "nc",
-      "start",
-      "time",
-      "classifier",
-      "city",
-      "short",
-      "course",
-      "course controls",
-      "pl",
-      "start punch",
-      "control1",
-      "punch1",
-      "control2"
+      ["si card", "chipno", "sicard", "database id"],
+      ["database id"],
+      ["surname"],
+      ["first name"],
+      ["nc", "classifier"],
+      ["start"],
+      ["time"],
+      ["classifier"],
+      ["city", "club"],
+      ["short"],
+      ["course"],
+      ["course controls"],
+      ["pl", "place"],
+      ["start punch"],
+      ["control1"],
+      ["punch1"],
+      ["control2"]
     ]
     let values = []
     const fields = headers.split(this.separator).map(function (str) {
@@ -125,39 +126,10 @@ export class ResultParserCSV {
     for (let i = 0; i < titles.length; i += 1) {
       found = false
       for (let j = 0; j < fields.length; j += 1) {
-        if (fields[j] === titles[i]) {
+        if (titles[i].includes(fields[j])) {
           values[i] = j
           found = true
           break
-        }
-        // horrid hacks to handle semi-compliant files
-        if ("si card" === titles[i]) {
-          if ("chipno" === fields[j] || "sicard" === fields[j] || "database id" === fields[j]) {
-            values[i] = j
-            found = true
-            break
-          }
-        }
-        if ("nc" === titles[i]) {
-          if ("classifier" === fields[j]) {
-            values[i] = j
-            found = true
-            break
-          }
-        }
-        if ("city" === titles[i]) {
-          if ("club" === fields[j]) {
-            values[i] = j
-            found = true
-            break
-          }
-        }
-        if ("pl" === titles[i]) {
-          if ("place" === fields[j]) {
-            values[i] = j
-            found = true
-            break
-          }
         }
       }
       if (!found) {
@@ -166,12 +138,12 @@ export class ResultParserCSV {
       }
     }
 
-    if (!found) {
-      // default to BOF CSV format
-      //not sure of this is really a good idea but it has always been like this...
-      values = [1, 2, 3, 4, 8, 9, 11, 12, 15, 18, 39, 42, 43, 44, 46, 47, 48]
+    if (found) {
+      this.setCSVFormat(values)
+    } else {
+      this.valid = false
+      showWarningDialog("CSV fields missing", "CSV file does not include all the required header fields.")
     }
-    this.setCSVFormat(values)
   }
 
   getPosition(fields) {
@@ -224,7 +196,9 @@ export class ResultParserCSV {
       this.processSpklasseCSVResults(rows)
     } else {
       this.getCSVFormat(rows[0])
-      this.processCSVResults(rows)
+      if (this.valid) {
+        this.processCSVResults(rows)
+      }
     }
   }
 

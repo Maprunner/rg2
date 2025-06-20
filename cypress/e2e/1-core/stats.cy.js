@@ -152,7 +152,7 @@ describe("Displays stats", { testIsolation: false }, () => {
   })
   it("should warn of data inconsistency", () => {
     cy.get("#btn-stats").click()
-    cy.closeWarningDialog("Data inconsistency.")
+    cy.closeWarningDialog("No splits available.")
   })
   it("should load an event with no results", () => {
     cy.visit("http://localhost/rg2/#129")
