@@ -686,6 +686,7 @@ function generateNewEventData() {
   setControlLocations()
   mapResultsToCourses()
   enrichCourseNames()
+  removeSingleSplits(data.format)
   renumberResults()
   if (newEventIsScoreEvent) {
     extractVariants()
@@ -1228,6 +1229,24 @@ function readResults() {
     reader.readAsText(resultsOrCourseFile, encodings[encodingIndex])
   } else {
     showWarningDialog("File type error", "Results file type is not recognised. Please select a valid file.")
+  }
+}
+
+function removeSingleSplits(format) {
+  // Fiddle to allow Sprintelope type events: courses and results but no splits  which on its own is fine
+  // but also support results files which have a single control punch that is used to define what course
+  //  a runner was on. Safest way is just to delete all splits if there is only a single control punch. This mucks
+  // up real courses with a single control which is probably not a thing anyway, although they can still be set up
+  if (format === config.FORMAT_NORMAL) {
+    for (let i = 0; i < results.length; i += 1) {
+      const fields = results[i].splits.split(";")
+      // splits string contains comma-separated list of times at controls followed by finish time
+      // so the two fields are a control and a finish
+      if (fields.length === 2) {
+        results[i].splits = fields[1]
+        results.codes = []
+      }
+    }
   }
 }
 
