@@ -12,7 +12,8 @@ export default defineConfig(({ command, mode, ssrBuild }) => {
     "resultparseriofv3.js",
     "resultparsercsv.js",
     "resultparser.js",
-    "managerui.js"
+    "managerui.js",
+    "managerutils.js"
   ]
   return {
     base: "/rg2/",

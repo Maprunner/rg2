@@ -10,10 +10,14 @@ import {
   courseButtons,
   getAverages,
   getStandardDeviation,
+  getLegPosInfo,
+  gridOptionsByLegPos,
+  gridOptionsByRacePos,
+  gridOptionsSpeed,
   isNumberOverZero,
   nameButtons,
-  perfComparator,
   tabs,
+  renderSplits,
   sortLegTimes,
   timeComparator
 } from "./statsutils"
@@ -103,6 +107,7 @@ function calculatePerformanceForIteration(iter) {
   }
   let times = []
   let refTimes = []
+  // extract array of times for each leg
   for (let i = 0; i < controls; i += 1) {
     times.length = 0
     if (!course.exclude[i]) {
@@ -112,13 +117,14 @@ function calculatePerformanceForIteration(iter) {
         }
       }
     }
+    // set reference time for leg
     // using median of best 25% of times (minimum of 3) for the leg
     const averages = getAverages(times, 25)
     refTimes.push(averages.median)
   }
   course.refLegTime[iter] = refTimes.slice(0)
   course.refTime[iter] = refTimes.reduce((a, b) => a + b)
-  // find ratio to reference times
+  // for each runner and leg find ratio to reference times
   for (let i = 0; i < results.length; i += 1) {
     if (iter === 0) {
       results[i].refRatio = []
@@ -136,6 +142,7 @@ function calculatePerformanceForIteration(iter) {
       }
       ratios.push(results[i].refRatio[iter][k])
     }
+    // overall performance index is median of ratios for each leg
     const nonZeroRatios = ratios.filter((ratio) => ratio > 0)
     const averages = getAverages(nonZeroRatios, 100)
     results[i].performanceIndex[iter] = averages.median
@@ -150,11 +157,7 @@ function calculatePerformanceForIteration(iter) {
         weight = weight + course.refLegTime[iter][k]
       }
     }
-    if (sum === 0) {
-      results[i].normalPerformanceIndex[iter] = 0
-    } else {
-      results[i].normalPerformanceIndex[iter] = sum / weight
-    }
+    results[i].normalPerformanceIndex[iter] = sum / weight
   }
 }
 function calculateSplitsforIteration(iter) {
@@ -675,38 +678,25 @@ function generateSpeedTable() {
     row.routespeed = "-"
     row.percent = "-"
   }
-
   rowData.push(row)
 
-  const gridOptions = {
-    columnDefs: [
-      { headerName: t("Control", ""), field: "control", width: 80 },
-      {
-        headerName: t("Time", ""),
-        field: "time",
-        width: 80,
-        comparator: timeComparator.bind(this)
-      },
-      { headerName: t("Length", "") + " " + lengthUnits, field: "length", width: 90 },
-      { headerName: t("Speed", "") + " " + speedUnits, field: "speed", width: 125 },
-      { headerName: t("Route", "") + " " + lengthUnits, field: "route", width: 90 },
-      { headerName: t("Speed", "") + " " + speedUnits, field: "routespeed", width: 125 },
-      { headerName: t("%", ""), field: "percent", width: 90 }
-    ],
-    rowData: rowData,
-    domLayout: "autoHeight",
-    rowClassRules: {
-      // apply green to 2008
-      "fw-bold": (params) => {
-        return params.data.name === "Total"
-      }
+  gridOptionsSpeed.rowData = rowData
+  gridOptionsSpeed.columnDefs = [
+    { headerName: t("Control", ""), field: "control", width: 80 },
+    {
+      headerName: t("Time", ""),
+      field: "time",
+      width: 80,
+      comparator: timeComparator.bind(this)
     },
-    defaultColDef: {
-      headerClass: "align-center",
-      cellClass: "align-center",
-      sortable: true
-    }
-  }
+    { headerName: t("Length", "") + " " + lengthUnits, field: "length", width: 90 },
+    { headerName: t("Speed", "") + " " + speedUnits, field: "speed", width: 125 },
+    { headerName: t("Route", "") + " " + lengthUnits, field: "route", width: 90 },
+    { headerName: t("Speed", "") + " " + speedUnits, field: "routespeed", width: 125 },
+    { headerName: t("%", ""), field: "percent", width: 90 }
+  ]
+  const gridOptions = gridOptionsSpeed
+
   const table = document.getElementById("rg2-speed-stats")
   table.innerHTML = ""
   rg2Config.createGrid(table, gridOptions)
@@ -721,7 +711,7 @@ function generateSplitsChart() {
   const ctx = document.getElementById("rg2-splits-chart")
   const res = results[resultIndex]
   const labels = res.legpos.map((val, idx, array) => (idx === array.length - 1 ? "F" : idx))
-  const info = getLegPosInfo()
+  const info = getLegPosInfo(res)
   const legPos = res.legpos.map((val) => (val === 0 ? NaN : val))
   const losses = res.loss[iterationIndex].map((val, idx) => (res.legpos[idx] === 0 ? NaN : val))
   const gains = res.predictedSplits[iterationIndex].map((pred, idx) =>
@@ -988,7 +978,7 @@ function generateSplitsTable() {
       cellClass: "align-center"
     },
     rowClassRules: {
-      // apply green to 2008
+      // used to apply CSS styling to actove runner
       "rg2-active-runner": (params) => {
         return params.data.rawid === rawid
       }
@@ -1007,7 +997,7 @@ function generateSplitsTable() {
 }
 
 function generateSummary() {
-  const info = getLegPosInfo()
+  const info = getLegPosInfo(result)
   const packRow = (elem) => {
     return `${elem}`
   }
@@ -1133,65 +1123,9 @@ function generateTableByLegPos() {
     }
     rowData.push(row)
   }
+  gridOptionsByLegPos.rowData = rowData
+  const gridOptions = gridOptionsByLegPos
 
-  const gridOptions = {
-    columnDefs: [
-      { headerName: t("Control", ""), field: "control", width: 80 },
-      {
-        headerName: t("Time", ""),
-        field: "time",
-        width: 80,
-        comparator: timeComparator.bind(this)
-      },
-      { headerName: t("Position", ""), field: "position", width: 75 },
-      {
-        headerName: t("Performance", ""),
-        field: "performance",
-        width: 95,
-        comparator: perfComparator.bind(this)
-      },
-      { headerName: t("Best", ""), field: "best", width: 80 },
-      {
-        headerName: t("Who", ""),
-        field: "who",
-        headerClass: "align-left",
-        cellClass: (params) => {
-          return params.data.who.indexOf(params.data.name) > -1 ? "rg2-green-text align-left" : "align-left"
-        },
-        flex: 1,
-        tooltipField: "who"
-      },
-      {
-        headerName: t("Behind", ""),
-        field: "behind",
-        width: 80,
-        comparator: timeComparator.bind(this)
-      },
-      { headerName: "%", field: "percent", width: 60 },
-      {
-        headerName: t("Predicted", ""),
-        field: "predicted",
-        width: 100,
-        comparator: timeComparator.bind(this)
-      },
-      {
-        headerName: t("+/-", ""),
-        field: "loss",
-        width: 75,
-        cellClass: (params) => {
-          return params.data.loss.substring(0, 1) === "-" ? "rg2-red-text align-center" : "align-center"
-        },
-        comparator: timeComparator.bind(this)
-      }
-    ],
-    rowData: rowData,
-    domLayout: "autoHeight",
-    defaultColDef: {
-      headerClass: "align-center",
-      cellClass: "align-center",
-      sortable: true
-    }
-  }
   const table = document.getElementById("rg2-leg-table")
   table.innerHTML = ""
   rg2Config.createGrid(table, gridOptions)
@@ -1255,69 +1189,12 @@ function generateTableByRacePos() {
     row.loss = formatSecsAsMMSS(loss)
     rowData.push(row)
   }
-
-  const gridOptions = {
-    columnDefs: [
-      { headerName: t("Control", ""), field: "control", width: 88 },
-      { headerName: t("Time", ""), field: "time", width: 85 },
-      { headerName: t("Position", ""), field: "position", width: 100 },
-      { headerName: t("Best", ""), field: "best", width: 85 },
-      {
-        headerName: t("Who", ""),
-        field: "who",
-        headerClass: "align-left",
-        cellClass: (params) => {
-          return params.data.who.indexOf(params.data.name) > -1 ? "rg2-green-text align-left" : "align-left"
-        },
-        flex: 1,
-        tooltipField: "who"
-      },
-      { headerName: t("Behind", ""), field: "behind", width: 85 },
-      { headerName: "%", field: "percent", width: 85 },
-      { headerName: "Loss", field: "loss", width: 100 }
-    ],
-    rowData: rowData,
-    domLayout: "autoHeight",
-    defaultColDef: {
-      headerClass: "align-center",
-      cellClass: "align-center"
-    }
-  }
+  gridOptionsByRacePos.rowData = rowData
+  const gridOptions = gridOptionsByRacePos
 
   const table = document.getElementById("rg2-race-table")
   table.innerHTML = ""
   rg2Config.createGrid(table, gridOptions)
-}
-
-function getLegPosInfo() {
-  let total = 0
-  let count = 0
-  let worst = 0
-  let best = 9999
-  for (let i = 1; i < result.legpos.length; i += 1) {
-    if (result.legpos[i] === 0) {
-      continue
-    }
-    total += result.legpos[i]
-    count += 1
-    if (best > result.legpos[i]) {
-      best = result.legpos[i]
-    }
-    if (worst < result.legpos[i]) {
-      worst = result.legpos[i]
-    }
-  }
-
-  // allow for people with no valid leg times
-  let average
-  if (count > 0) {
-    average = (total / count).toFixed(1)
-  } else {
-    average = 0
-    best = 0
-    worst = 0
-  }
-  return { best: best, worst: worst, average: average }
 }
 
 export function getStatsHeader() {
@@ -1501,30 +1378,6 @@ function prepareStats(rawid) {
     bootstrap.Offcanvas.getInstance(document.getElementById("rg2-right-info-panel")).hide()
   }
   return false
-}
-
-function renderSplits(params) {
-  if (params.value.split === "0:00") {
-    return ""
-  }
-  let splitinfo = params.value.split
-  let classes = ""
-  if (params.value.pos !== 0) {
-    splitinfo += " (" + params.value.pos + ")"
-    if (params.value.pos === 1) {
-      classes = "rg2-first"
-    }
-    if (params.value.pos === 2) {
-      classes = "rg2-second"
-    }
-    if (params.value.pos === 3) {
-      classes = "rg2-third"
-    }
-  }
-  if (params.value.loss) {
-    classes += " rg2-lost-time"
-  }
-  return '<span class="' + classes + '">' + splitinfo + "</span>"
 }
 
 function rg2Exception(msg) {
