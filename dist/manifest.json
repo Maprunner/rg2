@@ -8,19 +8,18 @@
     "file": "assets/manager-utils-CIGW-MKW.css",
     "src": "_manager-utils-CIGW-MKW.css"
   },
-  "_manager-utils-IOxTzkk2.js": {
-    "file": "assets/manager-utils-IOxTzkk2.js",
+  "_manager-utils-LTpwnKd6.js": {
+    "file": "assets/manager-utils-LTpwnKd6.js",
     "name": "manager-utils",
     "imports": [
-      "_node-modules-CBZj5KRR.js",
       "src/js/main.js"
     ],
     "css": [
       "assets/manager-utils-CIGW-MKW.css"
     ]
   },
-  "_node-modules-CBZj5KRR.js": {
-    "file": "assets/node-modules-CBZj5KRR.js",
+  "_node-modules-DcNSr3-7.js": {
+    "file": "assets/node-modules-DcNSr3-7.js",
     "name": "node-modules",
     "isDynamicEntry": true,
     "imports": [
@@ -36,18 +35,18 @@
     "src": "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff2"
   },
   "src/js/main.js": {
-    "file": "assets/main-Cw0jfsJD.js",
+    "file": "assets/main-4FAEMXio.js",
     "name": "main",
     "src": "src/js/main.js",
     "isEntry": true,
     "imports": [
-      "_node-modules-CBZj5KRR.js",
+      "_node-modules-DcNSr3-7.js",
       "src/js/main.js"
     ],
     "dynamicImports": [
       "_grid-CJy_EU0E.js",
       "_grid-CJy_EU0E.js",
-      "_node-modules-CBZj5KRR.js",
+      "_node-modules-DcNSr3-7.js",
       "src/js/manager.js"
     ],
     "css": [
@@ -59,14 +58,14 @@
     ]
   },
   "src/js/manager.js": {
-    "file": "assets/manager-BFTRVDTy.js",
+    "file": "assets/manager-BMrk1T3L.js",
     "name": "manager",
     "src": "src/js/manager.js",
     "isDynamicEntry": true,
     "imports": [
-      "_node-modules-CBZj5KRR.js",
+      "_node-modules-DcNSr3-7.js",
       "src/js/main.js",
-      "_manager-utils-IOxTzkk2.js"
+      "_manager-utils-LTpwnKd6.js"
     ]
   }
 }
