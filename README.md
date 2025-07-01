@@ -69,7 +69,9 @@ Does the version number update and then runs a full production build. Output goe
 
 ## PHP versions
 
-This release requires PHP version 8. The routegadget.co.uk is currently running with 8.2.23.
+This release requires PHP version 8. The routegadget.co.uk site is currently running with 8.2.23.
+
+RG2 uses the mbstring extension to support multibyte strings. This is not a default PHP extension and [must be explicitly enabled in your configuration file](https://www.php.net/manual/en/mbstring.installation.php). 
 
 ## Siteground configuration for routegadget.co.uk
 
@@ -104,7 +106,7 @@ Sync dist/assets to www.routegadget.co.uk/rg2/assets
 npm run deploy
 ```
 
-This creates the necessary directory structure for all subdomains under website. This can then be synced to the server.
+This creates the necessary directory structure for all subdomains in the /website folder. This can then be synced to the server.
 
 ## User Guides and Introductory Videos
 
