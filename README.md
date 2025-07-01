@@ -1,6 +1,9 @@
 # Routegadget 2
 
 ## Latest news
+
+1 July 2025: Version 2.2.1 released. Minor enhancements and error corrections. Excluded leg details now shown in info dialog. Events with courses and results but no splits (Sprintelope type) now allow drawing and replay.
+
 14 June 2025: Version 2.2.0 released. The main change is the new speed analysis functionality that has been added to the performance analysis tabs.
 
 26 September 2024: Version 2.1 released as the main branch. This is the latest update of what has been running on routegadget.co.uk for the past year.
