@@ -26,4 +26,12 @@ describe("Manager login", { testIsolation: false }, () => {
     cy.get("#btn-login").click()
     cy.closeWarningDialog("at least five characters")
   })
+  it("reports network errors sending data", () => {
+    cy.intercept("rg2api.php?type=login*", { forceNetworkError: true }).as("error")
+    cy.get("#rg2-user-name").clear().type("hhhhh")
+    cy.get("#rg2-password").clear().type("00000")
+    cy.get("#btn-login").click()
+    cy.wait("@error").should("have.property", "error")
+    cy.closeWarningDialog("Configuration error")
+  })
 })

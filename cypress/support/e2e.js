@@ -18,3 +18,16 @@ import "@cypress/code-coverage/support"
 
 // needed to test modals: see https://www.cypress.io/blog/2019/01/22/when-can-the-test-click/
 import "cypress-pipe"
+
+// needed to test drag and drop for modals
+import "@4tw/cypress-drag-drop"
+
+// needed to test mouseover for hover
+import "cypress-real-events"
+
+Cypress.on("uncaught:exception", (err, runnable) => {
+  if (err.message.includes("ResizeObserver loop completed with undelivered notifications.")) {
+    // ignore the error
+    return false
+  }
+})

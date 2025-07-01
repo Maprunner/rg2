@@ -3,7 +3,7 @@ import { resetAnimation } from "./animation"
 import * as bootstrap from "bootstrap"
 import { loadNewMap, getMapSize, redraw } from "./canvas"
 import { config } from "./config"
-import { controls, createCourseMenu, deleteAllCourses, getExcludedText, saveCourses } from "./courses"
+import { controls, createCourseMenu, deleteAllCourses, getExcludedText, getExcludedLegs, saveCourses } from "./courses"
 import { initialiseDrawing } from "./draw"
 import { RG2Event } from "./event"
 import { createResultMenu } from "./results"
@@ -56,10 +56,6 @@ function eventIsLocked() {
     return false
   }
   return events[activeEventID].locked
-}
-
-export function eventLoadFailed() {
-  eventRequestInProgress = false
 }
 
 export function formatEvents() {
@@ -158,15 +154,8 @@ export function getEventStats() {
   const eventinfo = getEventInfoForKartatID(parseInt(id, 10))
 
   let stats = `<div class='fs-4 fw-bolder pb-3'>${t("Event statistics") + ": " + eventinfo.name + "&nbsp" + eventinfo.date}</div>
-  <div class="d-flex flex-wrap justify-content-evenly pb-2">
-  ${getResultsStats(eventinfo)}
-  </div>`
-  if (eventinfo.comment) {
-    stats += `<table class='table table-sm table-striped-columns table-bordered'><tbody>`
-    stats += `<tr><td>${t("Comments")}</td><td>${eventinfo.comment}</td></tr>`
-    stats += `</tbody></table>`
-  }
-  stats += `<hr class="border border-primary opacity-75" />`
+  <div class="d-flex flex-wrap justify-content-evenly pb-2">${getResultsStats(eventinfo)}</div>`
+  stats += getExcludedLegs()
   stats += getCommentsForEvent()
   // #177 not pretty but gets round problems of double encoding
   stats = stats.replace(/&amp;/g, "&")

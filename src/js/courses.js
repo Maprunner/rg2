@@ -201,6 +201,38 @@ export function getCoursesOnDisplay() {
   return displayed
 }
 
+export function getExcludedLegs() {
+  const exclusions = []
+  for (let i = 0; i < courses.length; i += 1) {
+    if (courses[i] !== undefined) {
+      for (let j = 0; j < courses[i].exclude.length; j = j + 1) {
+        if (courses[i].exclude[j]) {
+          exclusions.push({
+            courseid: i,
+            name: courses[i].name,
+            type: courses[i].excludeType,
+            control: j,
+            time: courses[i].allowed[j]
+          })
+        }
+      }
+    }
+  }
+  if (exclusions.length > 0) {
+    let html = [
+      `<h5>${t("Excluded controls")}</h5><table id='rg2-exclusions-table' class='table table-sm table-striped table-bordered'>`,
+      `<thead><tr><th>${t("Course")}</th><th>${t("Control")}</th>`,
+      `<th>${t("Time")}</th></tr></thead><tbody class="table-group-divider">`
+    ].join("")
+    for (let i = 0; i < exclusions.length; i += 1) {
+      html += `<tr><td>${exclusions[i].name}</td><td>${exclusions[i].control}</td><td>${exclusions[i].time}</td>`
+    }
+    return `<hr class="border border-primary opacity-75 my-5" />` + html + `</tbody></table>`
+  } else {
+    return ""
+  }
+}
+
 export function getExcludedText() {
   // recreates excluded_* text file contents
   // courseid|type|control,time|...
@@ -226,15 +258,6 @@ export function getFilterDetails(courseid) {
   filter.filterFrom = courses[courseid].filterFrom
   filter.filterTo = courses[courseid].filterTo
   return filter
-}
-
-export function getHighestControlNumber() {
-  return highestControlNumber
-}
-
-export function getNumberOfControlsOnCourse(courseid) {
-  // codes list includes "S" and "F", so allow for them
-  return courses[courseid].codes.length - 2
 }
 
 export function getnumberOfCourses() {

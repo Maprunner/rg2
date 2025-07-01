@@ -1,0 +1,166 @@
+/* eslint-disable cypress/no-unnecessary-waiting */
+describe("Displays stats", { testIsolation: false }, () => {
+  before(() => {
+    cy.task("setUpKartat", { config: "config-01" })
+  })
+  beforeEach(() => {
+    cy.intercept("rg2api.php?type=event&id=*").as("event")
+    cy.intercept("rg2api.php?type=events*").as("events")
+  })
+  it("should load events", () => {
+    cy.visit("http://localhost/rg2/")
+    cy.wait("@events")
+  })
+  it("should load a normal georeferenced event from the results tab", () => {
+    cy.get("#rg2-event-table  > tr[data-kartatid='388']").click()
+    cy.wait("@event")
+    cy.get("#course-tab").should("not.be.disabled")
+    cy.get("#result-tab").should("not.be.disabled")
+    cy.get("#draw-tab").should("not.be.disabled")
+    cy.get("#rg2-event-title").should("contain", "2022-06-04 Highfield Park Saturday Series")
+  })
+  it("should display stats for a normal event", () => {
+    cy.get("#result-tab").click()
+    cy.get(".accordion-button").eq(0).click()
+    cy.get("#table-1 tr[data-id='2']").dblclick()
+    cy.get(".rg2-stats-title-row").should("contain", "Simon Errington")
+  })
+  it("should scroll through results", () => {
+    cy.get("#rg2-splits-chart").should("be.visible").click()
+    cy.get("#rg2-splits-chart").trigger("wheel", { deltaY: -10 })
+    cy.get(".rg2-stats-title-row").should("contain", "Nathan Nesbit")
+    cy.get("#rg2-splits-chart").should("be.visible").click()
+    cy.get("#rg2-splits-chart").trigger("wheel", { deltaY: 10 })
+    cy.get(".rg2-stats-title-row").should("contain", "Simon Errington")
+    cy.get("#rg2-splits-chart").should("be.visible").click()
+    cy.get("#rg2-splits-chart").trigger("wheel", { deltaY: 10 })
+    cy.get(".rg2-stats-title-row").should("contain", "Daniel Gardner")
+    cy.get("#rg2-splits-chart").should("be.visible").click()
+    cy.get("#rg2-splits-chart").trigger("wheel", { deltaY: 10 })
+    cy.get(".rg2-stats-title-row").should("contain", "Adam Oldfield")
+    cy.get("#rg2-splits-chart").should("be.visible").click()
+    cy.get("#rg2-splits-chart").trigger("wheel", { deltaY: -10 })
+    cy.get(".rg2-stats-title-row").should("contain", "Daniel Gardner")
+  })
+  it("should go backwards and forwards through results", () => {
+    cy.get(".rg2-stats-name-back").first().click()
+    cy.get(".rg2-stats-title-row").should("contain", "Adam Oldfield")
+    cy.get(".rg2-stats-name-forward").first().click()
+    cy.get(".rg2-stats-title-row").should("contain", "Daniel Gardner")
+  })
+  it("should go backwards and forwards through courses", () => {
+    cy.get(".rg2-stats-course-back").first().click()
+    cy.get(".rg2-stats-title-row").should("contain", "White")
+    cy.get(".rg2-stats-course-forward").first().click()
+    cy.get(".rg2-stats-title-row").should("contain", "Short Blue")
+  })
+  it("should show leg details", () => {
+    cy.get("#rg2-stats-panel-tab-headers button[data-bs-target='#rg2-legs-tab']").click()
+    cy.get("#rg2-leg-table").should("be.visible")
+  })
+  it("should allow you to sort columns", () => {
+    cy.get("#rg2-leg-table").within(() => {
+      // sort by time
+      cy.get("[data-ref='eHeaderCompWrapper']").eq(1).click()
+      // sort by performance
+      cy.get("[data-ref='eHeaderCompWrapper']").eq(3).click()
+    })
+  })
+  it("should show cumulative details", () => {
+    cy.get("#rg2-stats-panel-tab-headers button[data-bs-target='#rg2-cumulative-tab']").click()
+    cy.get("#rg2-race-table").should("be.visible")
+  })
+  it("should show the splits table", () => {
+    cy.get("#rg2-stats-panel-tab-headers button[data-bs-target='#rg2-split-times-tab']").click()
+    cy.get("#rg2-results-table").should("be.visible")
+  })
+  it("should show time loss details", () => {
+    cy.get("#rg2-stats-panel-tab-headers button[data-bs-target='#rg2-time-loss-tab']").click()
+    cy.get("#rg2-loss-chart").should("be.visible")
+    cy.get("#rg2-time-loss").should("contain", "Control: 1")
+  })
+  it("should scroll through controls", () => {
+    cy.get("#rg2-loss-chart").should("be.visible").click()
+    cy.get("#rg2-loss-chart").trigger("wheel", { deltaY: -10 })
+    cy.get("#rg2-time-loss").should("contain", "Control: 2")
+    cy.get("#rg2-loss-chart").should("be.visible").click()
+    cy.get("#rg2-loss-chart").trigger("wheel", { deltaY: 10 })
+    cy.get("#rg2-time-loss").should("contain", "Control: 1")
+    cy.get("#rg2-loss-chart").should("be.visible").click()
+    cy.get("#rg2-loss-chart").trigger("wheel", { deltaY: 10 })
+    cy.get("#rg2-time-loss").should("contain", "Finish")
+    cy.get("#rg2-loss-chart").should("be.visible").click()
+    cy.get("#rg2-loss-chart").trigger("wheel", { deltaY: -10 })
+    cy.get("#rg2-time-loss").should("contain", "Control: 1")
+    cy.get("#rg2-stats-control-forward").first().click()
+    cy.get("#rg2-stats-control-forward").first().click()
+    cy.get("#rg2-stats-control-forward").first().click()
+    cy.get("#rg2-stats-control-forward").first().click()
+    cy.get("#rg2-stats-control-forward").first().click()
+    cy.get("#rg2-stats-control-forward").first().click()
+    cy.get("#rg2-time-loss").should("contain", "Control: 7")
+    cy.get("#rg2-time-loss").should("contain", "Control excluded")
+  })
+  it("should show speed details", () => {
+    cy.get("#rg2-stats-panel-tab-headers button[data-bs-target='#rg2-speed-stats-tab']").click()
+    cy.get(".rg2-stats-title-row").last().should("contain", "Daniel Gardner")
+    cy.get("#rg2-speed-stats").should("be.visible")
+  })
+  it("should hide stats", () => {
+    cy.get("#rg2-stats-panel-tab-headers button[data-bs-target='#rg2-stats-summary-tab']").click()
+    cy.get("#rg2-right-info-panel").find(".btn-close").click()
+  })
+
+  it("should load a georeferenced score event from the results tab", () => {
+    cy.visit("http://localhost/rg2/")
+    cy.wait("@events")
+    cy.get("#rg2-event-table  > tr[data-kartatid='380']").click()
+    cy.wait("@event")
+    cy.get("#course-tab").should("not.be.disabled")
+    cy.get("#result-tab").should("not.be.disabled")
+    cy.get("#draw-tab").should("not.be.disabled")
+    cy.get("#rg2-event-title").should("contain", "2021-12-26 Trent Park Boxing Day Score")
+  })
+  it("should display stats for a score event", () => {
+    cy.get("#result-tab").click()
+    cy.get(".accordion-button").eq(0).click()
+    cy.get("#table-1 tr[data-id='13']").dblclick()
+    cy.get(".rg2-stats-title-row").should("contain", "James Errington")
+    cy.get(".rg2-stats-title-row").should("contain", "V13")
+  })
+  it("should go backwards and forwards through variants", () => {
+    cy.get(".rg2-stats-course-back").first().click()
+    cy.get(".rg2-stats-title-row").should("contain", "V12")
+    cy.get(".rg2-stats-course-forward").first().click()
+    cy.get(".rg2-stats-title-row").should("contain", "V13")
+  })
+  it("should show time loss details", () => {
+    cy.get("#rg2-stats-panel-tab-headers button[data-bs-target='#rg2-time-loss-tab']").click()
+    cy.get("#rg2-loss-chart").should("be.visible")
+    cy.get("#rg2-time-loss").should("contain", "Control: 1")
+    // nice big block to hover over since we have very little control
+    // overe where the mouse is
+    cy.get("#rg2-loss-chart").realHover({ position: "center" })
+  })
+  it("should load an event with inconsistent data", () => {
+    cy.visit("http://localhost/rg2/#297")
+    cy.wait("@event")
+    cy.get("#rg2-event-title").should("contain", "2018-06-19 Jersey Farm Street-O")
+    cy.get("#btn-about").click()
+    cy.get("#rg2-event-stats").should("not.be.empty").and("contain", "Jersey Farm Street-O")
+    cy.get("#rg2-right-info-panel").find(".btn-close").click()
+  })
+  it("should warn of data inconsistency", () => {
+    cy.get("#btn-stats").click()
+    cy.closeWarningDialog("No splits available.")
+  })
+  it("should load an event with no results", () => {
+    cy.visit("http://localhost/rg2/#129")
+    cy.wait("@event")
+    cy.get("#rg2-event-title").should("contain", "2013-06-04 Herts ARC 2013 Race 5: Jersey Farm")
+  })
+  it("should warn of no results", () => {
+    cy.get("#btn-stats").click()
+    cy.closeWarningDialog("No statistics available for this event format.")
+  })
+})

@@ -7,7 +7,6 @@ import {
   getCourseDetails,
   getCourseName,
   getCoursesForEvent,
-  getNumberOfControlsOnCourse,
   getnumberOfCourses,
   getFilterDetails,
   setResultsCount,
@@ -419,7 +418,7 @@ function getBottomRows(tracks, courseid) {
 export function getCommentsForEvent() {
   let hasComments = false
   let html = [
-    `<table id='rg2-comments-table' class='table table-sm table-striped table-bordered'>`,
+    `<h5>${t("Comments")}</h5><table id='rg2-comments-table' class='table table-sm table-striped table-bordered'>`,
     `<thead><tr><th>${t("Name")}</th><th>${t("Course")}</th>`,
     `<th>${t("Comments")}</th></tr></thead><tbody class="table-group-divider">`
   ].join("")
@@ -433,7 +432,7 @@ export function getCommentsForEvent() {
     }
   }
   if (hasComments) {
-    html += `</tbody></table>`
+    html = `<hr class="border border-primary opacity-75 my-5" />` + html + `</tbody></table>`
   } else {
     html = ""
   }
@@ -822,12 +821,27 @@ function sanitiseSplits(isScoreEvent) {
     // handle corrupted events with missing splits
     // force all results to have the correct number of splits to make stats processing work correctly
     if (!isScoreEvent) {
-      // splits array contains "S" and "F" as well as each control
-      const expectedSplits = getNumberOfControlsOnCourse(results[i].courseid) + 2
-      while (results[i].splits.length < expectedSplits) {
-        // copy last valid split data as often as necessary to fill missing gaps
-        results[i].splits.push(results[i].splits[results[i].splits.length - 1])
-        results[i].legSplits.push(0)
+      const expectedSplits = course.codes.length
+
+      if (expectedSplits > 2 && results[i].splits.length === 2) {
+        // special case of an event with courses but no splits (ELO Sprintelope)
+        // so pro rata in split times based on leg lengths
+        const courseLength = course.cumulativeLegLengths[course.cumulativeLegLengths.length - 1]
+        results[i].splits[0]
+        results[i].legSplits[0]
+        for (let j = 1; j < expectedSplits; j = j + 1) {
+          results[i].legSplits[j] = parseInt((course.legLengths[j] / courseLength) * results[i].timeInSecs, 10)
+          results[i].splits[j] = parseInt((course.cumulativeLegLengths[j] / courseLength) * results[i].timeInSecs, 10)
+        }
+        results[i].lastValidSplit = results[i].splits.length - 1
+      } else {
+        while (results[i].splits.length < expectedSplits) {
+          // copy last valid split data as often as necessary to fill missing gaps
+          // not a great solution since it complicates drawing for this resu;t but at least
+          // it stops stats breaking
+          results[i].splits.push(results[i].splits[results[i].splits.length - 1])
+          results[i].legSplits.push(0)
+        }
       }
     }
   }

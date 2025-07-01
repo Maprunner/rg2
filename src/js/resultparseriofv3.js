@@ -18,7 +18,7 @@ export class ResultParserIOFV3 {
       result.status = extractTextContentZero(resultlist[k].getElementsByTagName("Status"), "")
       // assuming first <Time> is the total time...
       // this one is in seconds and might even have tenths...
-      result.time = this.getTotalTimeAsSeconds(resultlist[k].getElementsByTagName("Time"))
+      result.time = this.getTotalTimeAsMMSS(resultlist[k].getElementsByTagName("Time"))
       result.starttime = this.getStartFinishTimeAsSeconds(
         extractTextContentZero(resultlist[k].getElementsByTagName("StartTime"), 0)
       )
@@ -87,7 +87,7 @@ export class ResultParserIOFV3 {
     return 0
   }
 
-  getTotalTimeAsSeconds(time) {
+  getTotalTimeAsMMSS(time) {
     if (time.length > 0 && time[0].textContent) {
       const timeInt = parseInt(time[0].textContent, 10)
       return formatSecsAsMMSS(timeInt)

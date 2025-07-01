@@ -4013,12 +4013,14 @@
         <BirthDate>2013-01-01</BirthDate>
       </Person>
       <Result>
-        <Position>4</Position>
+        <Time></Time>
+        <Position></Position>
+        <Status>MissingPunch</Status>
         <SplitTime>
           <ControlCode>115</ControlCode>
         </SplitTime>
-        <SplitTime>
-          <Time>518</Time>
+        <SplitTime status="Missing">
+          <ControlCode>125</ControlCode>
         </SplitTime>
         <SplitTime>
           <ControlCode>123</ControlCode>

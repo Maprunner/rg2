@@ -36,15 +36,16 @@ describe("Miscellaneous extras", { testIsolation: false }, () => {
     cy.get("#draw-tab").should("not.be.disabled")
     cy.get("#rg2-event-title").should("contain", "2022-06-04 Highfield Park Saturday Series")
     cy.get("#btn-about").click()
-    cy.get("#rg2-event-stats").should("not.be.empty").and("contain", "Event statistics")
+    cy.get("#rg2-event-stats").should("not.be.empty").and("contain", "Highfield Park Saturday Series")
     cy.get("#rg2-right-info-panel").find(".btn-close").click()
   })
-
   it("should load another event and go backwards and forwards", () => {
     cy.task("setUpKartat", { config: "config-01" })
     cy.visit("http://localhost/rg2/#380")
     cy.wait("@event")
     cy.get("#rg2-event-title").should("contain", "2021-12-26 Trent Park Boxing Day Score")
+    cy.get("#btn-about").click()
+    cy.get("#rg2-event-stats").should("not.be.empty").and("contain", "Trent Park Boxing Day Score")
     cy.visit("http://localhost/rg2/#388")
     cy.wait("@event")
     cy.get("#rg2-event-title").should("contain", "2022-06-04 Highfield Park Saturday Series")
@@ -55,7 +56,23 @@ describe("Miscellaneous extras", { testIsolation: false }, () => {
     cy.wait("@event")
     cy.get("#rg2-event-title").should("contain", "2022-06-04 Highfield Park Saturday Series")
   })
-
+  it("reports network errors getting Grid and Chart", () => {
+    // network error on deferred load of Grid and Chart when accessing stats
+    cy.intercept("@ag-grid-community_core.js?v=*", { forceNetworkError: true }).as("statsError")
+    cy.get("#btn-stats").click()
+    cy.wait("@statsError").should("have.property", "error")
+    cy.closeWarningDialog("Error loading Grid and Chart")
+  })
+  it("reports missing map files", () => {
+    cy.visit("http://localhost/rg2/#387")
+    cy.closeWarningDialog("The map for this event could not be loaded.")
+  })
+  it("reports network errors on GET call to API", () => {
+    cy.intercept("rg2api.php?type=event&id=*", { forceNetworkError: true }).as("error")
+    cy.visit("http://localhost/rg2/#380")
+    cy.wait("@error").should("have.property", "error")
+    cy.closeWarningDialog("Configuration error")
+  })
   it("reports an invalid kartat directory", () => {
     cy.task("setUpKartat", { config: "config-02", php: "config-02" })
     cy.visit("http://localhost/rg2/")

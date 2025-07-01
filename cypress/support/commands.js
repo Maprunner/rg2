@@ -21,6 +21,14 @@ Cypress.Commands.add("closeModal", (title, selector = ".modal-footer #rg2-do-mod
       expect($el).to.not.be.visible
     })
 })
+Cypress.Commands.add("logIn", (name, password) => {
+  cy.visit("http://localhost/rg2/?manage")
+  cy.wait("@events")
+  cy.get("#rg2-user-name").clear().type(name)
+  cy.get("#rg2-password").clear().type(password)
+  cy.get("#btn-login").click()
+  cy.wait("@login")
+})
 Cypress.Commands.add("closeWarningDialog", (expectedText) => {
   cy.get(".toast").should("be.visible").and("contain", expectedText).find(".btn-close").click()
 })
@@ -82,8 +90,8 @@ Cypress.Commands.add("selectResultsFile", (resultsFile, warningMessage = "") => 
   }
 })
 
-Cypress.Commands.add("setLocalStorage", () => {
-  const defaultLocalStorage = {
+Cypress.Commands.add("setLocalStorage", (key = [], value = []) => {
+  let localStorageValues = {
     perCentMapIntensity: 100,
     perCentRouteIntensity: 100,
     replayFontSize: 12,
@@ -98,5 +106,8 @@ Cypress.Commands.add("setLocalStorage", () => {
     minSpeed: 10,
     drawnRoutes: []
   }
-  localStorage.setItem("rg2-options", JSON.stringify(defaultLocalStorage))
+  for (let i = 0; i < key.length; i = i + 1) {
+    localStorageValues[key[i]] = value[i]
+  }
+  localStorage.setItem("rg2-options", JSON.stringify(localStorageValues))
 })

@@ -212,12 +212,14 @@ export class Result {
               break
             }
             if (this.xysecs[i] >= nextSplit) {
-              // draw control circle
-              ctx.beginPath()
-              ctx.arc(this.trackx[i], this.tracky[i], opt.controlRadius * 0.3, 0, 2 * Math.PI, false)
-              // fill in with transparent colour to highlight control better
-              ctx.fill()
-              ctx.stroke()
+              if (nextControlIndex >= filter.filterFrom && nextControlIndex <= filter.filterTo) {
+                // draw control circle
+                ctx.beginPath()
+                ctx.arc(this.trackx[i], this.tracky[i], opt.controlRadius * 0.3, 0, 2 * Math.PI, false)
+                // fill in with transparent colour to highlight control better
+                ctx.fill()
+                ctx.stroke()
+              }
               nextControlIndex = nextControlIndex + 1
               if (nextControlIndex >= this.splits.length) {
                 break

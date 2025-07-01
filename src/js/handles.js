@@ -36,10 +36,11 @@ export class Handles {
 
   deleteHandle(index) {
     if (index === 0 || index === this.handles.length - 1) {
-      // can't delete start or finish
-      return
+      // can't delete start or finish so toggle instead
+      this.toggleLock(index)
+    } else {
+      this.handles.splice(index, 1)
     }
-    this.handles.splice(index, 1)
     this.renumberHandles()
   }
 
@@ -49,20 +50,12 @@ export class Handles {
     }
   }
 
-  lockHandle(index) {
-    this.handles[index].locked = true
-  }
-
   lockHandleByTime(time) {
     for (let i = 0; i < this.handles.length; i += 1) {
       if (this.handles[i].time === time) {
         this.handles[i].locked = true
       }
     }
-  }
-
-  unlockHandle(index) {
-    this.handles[index].locked = false
   }
 
   handlesLocked() {
@@ -86,6 +79,10 @@ export class Handles {
 
   saveForUndo() {
     this.copyHandleFields("base", "undo")
+  }
+
+  toggleLock(index) {
+    this.handles[index].locked = !this.handles[index].locked
   }
 
   undo() {

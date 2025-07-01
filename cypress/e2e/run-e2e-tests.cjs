@@ -5,6 +5,7 @@ const specs = [
   "cypress/e2e/1-core/load-score-event.cy.js",
   "cypress/e2e/1-core/load-event-no-results.cy.js",
   "cypress/e2e/1-core/results.cy.js",
+  "cypress/e2e/1-core/stats.cy.js",
   "cypress/e2e/1-core/touch.cy.js",
   "cypress/e2e/1-core/extras.cy.js",
   "cypress/e2e/2-draw/draw.cy.js",

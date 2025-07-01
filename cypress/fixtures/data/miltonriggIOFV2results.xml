@@ -409,8 +409,6 @@
           <Family>Bennett</Family>
           <Given>Adan</Given>
         </PersonName>
-        <PersonId type="nat">
-        </PersonId>
         <BirthDate>
           <Date>1974-01-01</Date>
         </BirthDate>

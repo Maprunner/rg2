@@ -1,0 +1,11 @@
+1|Brw
+2|Bl W
+3|Bl M
+4|Gr W
+5|Gr M
+6|Gr V
+7|Lt G
+8|Orng
+9|Red
+10|Yel
+11|Wh

@@ -16,6 +16,16 @@ import {
 } from "./events"
 import { Georefs } from "./georefs"
 import { decode } from "html-entities"
+import {
+  confirmDeleteEvent,
+  confirmDeleteRoute,
+  confirmDeleteUnusedMaps,
+  displayUnusedMaps,
+  getEventEditDropdown,
+  getEventLevelDropdown,
+  sortResultItems,
+  testForInvalidCharacters
+} from "./managerutils"
 import { MapData } from "./mapdata"
 import proj4 from "proj4"
 import { ResultParser } from "./resultparser"
@@ -182,59 +192,6 @@ function confirmCreateEvent(e) {
   createModalDialog(dlg)
 }
 
-function confirmDeleteEvent() {
-  const id = document.getElementById("rg2-edit-event-selected").value
-  let dlg = {}
-  dlg.body = "Event " + id + " will be deleted. Are you sure?"
-  dlg.title = "Confirm event delete"
-  dlg.classes = "rg2-confirm-delete-event-dialog"
-  dlg.doText = "Delete event"
-  dlg.onDo = doDeleteEvent
-  createModalDialog(dlg)
-}
-
-function confirmDeleteRoute() {
-  const routeid = document.getElementById("rg2-route-selected").value
-  if (routeid === "undefined") {
-    showWarningDialog("Warning", "No route selected.")
-    return
-  }
-  let dlg = {}
-  dlg.body = "Route " + routeid + " will be permanently deleted. Are you sure?"
-  dlg.title = "Confirm route delete"
-  dlg.classes = "rg2-confirm-route-delete-dialog"
-  dlg.doText = "Delete route"
-  dlg.onDo = doDeleteRoute
-  createModalDialog(dlg)
-}
-
-function confirmDeleteUnusedMaps() {
-  const boxes = document.querySelectorAll(".unused-map input[type=checkbox]:checked")
-  let checked = []
-  for (let box of boxes) {
-    if (box.checked) {
-      checked.push(parseInt(box.dataset.mapId, 10))
-    }
-    for (let i = 0; i < unusedMaps.length; i += 1) {
-      if (checked.indexOf(unusedMaps[i].mapid) > -1) {
-        unusedMaps[i].delete = true
-      } else {
-        unusedMaps[i].delete = false
-      }
-    }
-  }
-  if (checked.length === 0) {
-    showWarningDialog("Warning", "No maps selected.")
-    return
-  }
-  const dlg = {}
-  dlg.body = "Selected maps will be deleted. Are you sure?"
-  dlg.title = "Confirm map deletion"
-  dlg.doText = "Delete maps"
-  dlg.onDo = doDeleteUnusedMaps
-  createModalDialog(dlg)
-}
-
 function confirmUpdateEvent() {
   let dlg = {}
   dlg.body = `Are you sure you want to update ${document.getElementById("rg2-edit-event-name").value}?`
@@ -398,22 +355,6 @@ function displayInfoDialog(title, info) {
   dlg.onDo = () => {}
   // false removes cancel button
   createModalDialog(dlg, false)
-}
-
-function displayUnusedMaps(maps) {
-  let html = "<div class='title'>ID</div><div class='title'>Name</div><div><i class='bi-trash'></i></div>"
-  if (maps.length === 0) {
-    html += "<div></div><div>None found.</div><div></div>"
-    document.getElementById("btn-delete-unused-maps").setAttribute("disabled", "")
-  } else {
-    for (let i = 0; i < maps.length; i += 1) {
-      html += "<div>" + maps[i].mapid + "</div>"
-      html += "<div>" + maps[i].name + "</div>"
-      html += "<div class='unused-map'><input type='checkbox' data-map-id=" + maps[i].mapid + "></div>"
-    }
-    document.getElementById("btn-delete-unused-maps").removeAttribute("disabled")
-  }
-  document.getElementById("rg2-unused-maps").innerHTML = html
 }
 
 function doAddMap() {
@@ -745,6 +686,7 @@ function generateNewEventData() {
   setControlLocations()
   mapResultsToCourses()
   enrichCourseNames()
+  removeSingleSplits(data.format)
   renumberResults()
   if (newEventIsScoreEvent) {
     extractVariants()
@@ -844,29 +786,6 @@ function getCourseName(id) {
     }
   }
   return 0
-}
-
-function getEventEditDropdown(events, activeID) {
-  let html = activeID ? "" : generateSelectOption(null, "No event selected", true)
-  // loop backwards so most recent event is first in list
-  for (let i = events.length - 1; i > -1; i -= 1) {
-    html += generateSelectOption(
-      events[i].kartatid,
-      events[i].kartatid + ": " + events[i].date + ": " + decode(events[i].name),
-      activeID === events[i].kartatid
-    )
-  }
-  return html
-}
-
-function getEventLevelDropdown() {
-  let html = ""
-  const text = ["Select level", "Training", "Local", "Regional", "National", "International"]
-  const values = ["X", "T", "L", "R", "N", "I"]
-  for (let i = 0; i < text.length; i += 1) {
-    html += generateSelectOption(values[i], text[i], i === 0)
-  }
-  return html
 }
 
 function getMapDropdown(maps) {
@@ -1061,13 +980,6 @@ function handleUnusedMapsDeleted(response) {
   doGetMaps()
 }
 
-function hasZeroTime(time) {
-  if (time === 0 || time === "0" || time === "0:00" || time === "00:00") {
-    return true
-  }
-  return false
-}
-
 function initialiseData() {
   newcontrols = new Controls()
   mapIndex = config.INVALID_MAP_ID
@@ -1201,6 +1113,7 @@ function processCourseFile(e) {
   newcontrols.deleteAllControls()
   const parsedCourses = new CourseParser(e, worldfile, localworldfile)
   courses = parsedCourses.courses
+  document.getElementById("rg2-manager-courses-count").innerHTML = "Courses (" + courses.length + ")"
   if (courses.length > 0) {
     newcontrols = parsedCourses.newcontrols
     mapping = parsedCourses.mapping
@@ -1232,6 +1145,7 @@ function processMap(e) {
 function processResultFile(e) {
   const parsedResults = new ResultParser(e, resultsFileFormat)
   results = parsedResults.results
+  document.getElementById("rg2-manager-results-count").innerHTML = "Results (" + results.length + ")"
   if (results.length > 0) {
     resultCourses = parsedResults.resultCourses
     displayInfoDialog("Result details", getResultInfoAsHTML())
@@ -1318,6 +1232,24 @@ function readResults() {
   }
 }
 
+function removeSingleSplits(format) {
+  // Fiddle to allow Sprintelope type events: courses and results but no splits  which on its own is fine
+  // but also support results files which have a single control punch that is used to define what course
+  //  a runner was on. Safest way is just to delete all splits if there is only a single control punch. This mucks
+  // up real courses with a single control which is probably not a thing anyway, although they can still be set up
+  if (format === config.FORMAT_NORMAL) {
+    for (let i = 0; i < results.length; i += 1) {
+      const fields = results[i].splits.split(";")
+      // splits string contains comma-separated list of times at controls followed by finish time
+      // so the two fields are a control and a finish
+      if (fields.length === 2) {
+        results[i].splits = fields[1]
+        results.codes = []
+      }
+    }
+  }
+}
+
 function renumberResults() {
   // updates the course id and name when we know the mapping
   // and deletes results for courses not required
@@ -1344,16 +1276,16 @@ function setButtons() {
   })
 
   document.getElementById("btn-delete-route").addEventListener("click", (e) => {
-    confirmDeleteRoute(e)
+    confirmDeleteRoute(doDeleteRoute)
   })
   document.getElementById("btn-delete-event").addEventListener("click", (e) => {
-    confirmDeleteEvent(e)
+    confirmDeleteEvent(doDeleteEvent)
   })
   document.getElementById("btn-add-map").addEventListener("click", (e) => {
     confirmAddMap(e)
   })
   document.getElementById("btn-delete-unused-maps").addEventListener("click", (e) => {
-    confirmDeleteUnusedMaps(e)
+    unusedMaps = confirmDeleteUnusedMaps(unusedMaps.slice(0), doDeleteUnusedMaps)
   })
   document.getElementById("btn-draw-courses").addEventListener("click", (e) => {
     startDrawingCourses(e)
@@ -1455,29 +1387,6 @@ function setMapName() {
   })
 }
 
-function sortResultItems(a, b) {
-  // called after final courseids allocated so this is safe
-  if (a.courseid !== b.courseid) {
-    return a.courseid - b.courseid
-  }
-  if (a.position !== "" && b.position !== "") {
-    // sort by position, if available
-    return a.position - b.position
-  }
-  if (a.position === "" && b.position !== "") {
-    return 1
-  }
-  if (a.position !== "" && b.position === "") {
-    return -1
-  }
-  // sort by time, if available
-  if (hasZeroTime(a.time) && hasZeroTime(b.time)) {
-    // sort by name, when no time
-    return a.name - b.name
-  }
-  return a.time - b.time
-}
-
 function startDrawingCourses() {
   if (mapLoaded) {
     drawingCourses = true
@@ -1493,19 +1402,6 @@ function startDrawingCourses() {
   } else {
     showWarningDialog("No map selected", "Please load a map before drawing courses")
   }
-}
-
-function testForInvalidCharacters(rawtext) {
-  // takes in text read from a results file and checks it has converted to UTF-8 correctly
-  let count = 0
-  for (let i = 0; i < rawtext.length; i += 1) {
-    // Unicode U+FFFD (65533) is the replacement character used to replace an incoming character whose value is unknown or unrepresentable
-    // see http://www.fileformat.info/info/unicode/char/0fffd/index.htm
-    if (rawtext.charCodeAt(i) === 65533) {
-      count += 1
-    }
-  }
-  return count
 }
 
 function toggleEnrichCourseNames(checked) {

@@ -14,6 +14,10 @@ describe("Load normal event", { testIsolation: false }, () => {
     cy.get("#draw-tab").should("not.be.disabled")
     cy.get("#rg2-event-title").should("contain", "2013-06-04 Herts ARC 2013 Race 5: Jersey Farm")
   })
+  it("should warn there are no stats available", () => {
+    cy.get("#btn-stats").click()
+    cy.closeWarningDialog("No statistics available for this event format.")
+  })
   it("should show a course", () => {
     cy.get("#course-tab").click()
     cy.get("#rg2-course-table .showcourse[data-courseid='1'").click()
@@ -22,7 +26,6 @@ describe("Load normal event", { testIsolation: false }, () => {
     cy.get("#rg2-course-table .alltracks").click()
     cy.get("#rg2-course-table .allcoursetracksreplay").click()
   })
-
   it("measures non-georeferenced things", () => {
     // non-georeferenced map in pixels
     cy.get("#btn-measure").click()
