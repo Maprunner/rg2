@@ -19,6 +19,7 @@ if (defined('OVERRIDE_KARTAT_DIRECTORY')) {
   $kartat = OVERRIDE_KARTAT_DIRECTORY;
 } else {
   $kartat = "../kartat/";
+
 }
 
 // whether or not to create map files to support the other Routegadget
@@ -245,6 +246,10 @@ function handleGetRequest($type, $id)
     case 'fixsplits':
       event::fixSplits($id, true);
       $output = json_encode("Splits fixed for event " . $id);
+      break;
+    case 'listunusedmaps':
+      $reply = map::listUnusedMaps();
+      $output = json_encode($reply);
       break;
     default:
       utils::rg2log("Get request not recognised: " . $type . ", " . $id);

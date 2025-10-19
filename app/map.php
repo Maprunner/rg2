@@ -261,6 +261,61 @@ class map
     return $write;
   }
 
+public static function listUnusedMaps()
+  {
+    $write["status_msg"] = "";
+    $base = "D:/rg2-data";
+    $kartat = "D:/rg2-data/baoc.routegadget.co.uk/public_html/kartat/";
+   
+    $dirs = scandir($base);
+    $sites = array();
+    $count = 0;
+    foreach ($dirs as $key => $value) {
+      $site = array();
+      $KARTAT_DIRECTORY = $base . "/" . $value . "/public_html/kartat/";
+      if (is_dir($KARTAT_DIRECTORY)) {
+        $usedmapids = array();
+        // extract list of used map ids
+        if (($handle = @fopen($KARTAT_DIRECTORY . "kisat.txt", "r+")) !== false) {
+          while (($eventdata = fgetcsv($handle, 0, "|")) !== false) {
+            if (count($eventdata) > 2) {
+              $usedmapids[] = $eventdata[1];
+            }
+          }
+          @fclose($handle);
+        }
+
+        $unusedmapids = array();
+        $filename = $KARTAT_DIRECTORY . "kartat.txt";
+        $oldfile = file($filename);
+        foreach ($oldfile as $row) {
+          $data = explode("|", $row);
+          if (count($data) > 0) {
+            if (!in_array($data[0], $usedmapids)) {
+              $unusedmapids[] = $data[0];
+              $count = $count + 1;
+            }
+          }
+        }
+        $site["site"] = $value;
+        $site["ids"] = $unusedmapids;
+      }
+      $sites[] = $site;
+    }
+
+    if ($write["status_msg"] == "") {
+      $write["ok"] = true;
+      $write["status_msg"] = "Unused maps";
+      $write["maps"] = $sites;
+      $write["count"] = $count;
+
+    } else {
+      $write["ok"] = false;
+    }
+
+    return $write;
+  }
+
   private static function isGIF($name)
   {
     return (substr($name, -3) === "gif");
