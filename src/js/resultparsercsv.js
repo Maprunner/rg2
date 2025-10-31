@@ -10,7 +10,7 @@ export class ResultParserCSV {
     return { results: this.results, valid: this.valid }
   }
 
-  extractResult(fields, course, controls) {
+  extractSpklasseResult(fields, course, controls) {
     const FIRST_NAME_IDX = 0
     const SURNAME_IDX = 1
     const CLUB_IDX = 2
@@ -100,7 +100,7 @@ export class ResultParserCSV {
     // not a pretty function but it should allow some non-standard CSV formats to be processed such as OEScore output
     // define required column headers and allowable variations
     const titles = [
-      ["si card", "chipno", "sicard", "database id"],
+      ["chipno", "si card", "sicard", "database id"],
       ["database id"],
       ["surname"],
       ["first name"],
@@ -109,16 +109,15 @@ export class ResultParserCSV {
       ["time"],
       ["classifier"],
       ["city", "club"],
-      ["short"],
       ["course"],
       ["course controls"],
       ["pl", "place"],
-      ["start punch"],
       ["control1"],
       ["punch1"],
       ["control2"]
     ]
     let values = []
+    let missing = ""
     const fields = headers.split(this.separator).map(function (str) {
       return str.toLowerCase()
     })
@@ -134,6 +133,7 @@ export class ResultParserCSV {
       }
       if (!found) {
         // stop if we didn't find what we needed
+        missing = titles[i][0]
         break
       }
     }
@@ -142,7 +142,7 @@ export class ResultParserCSV {
       this.setCSVFormat(values)
     } else {
       this.valid = false
-      showWarningDialog("CSV fields missing", "CSV file does not include all the required header fields.")
+      showWarningDialog("CSV fields missing", "CSV file does not include all the required header fields: " + missing)
     }
   }
 
@@ -218,7 +218,7 @@ export class ResultParserCSV {
         course = fields[COURSE_IDX]
         controls = parseInt(fields[NUM_CONTROLS_IDX], 10)
       } else {
-        this.extractResult(fields, course, controls)
+        this.extractSpklasseResult(fields, course, controls)
       }
     }
   }
@@ -233,13 +233,11 @@ export class ResultParserCSV {
     this.CSVFormat.TOTAL_TIME_IDX = values[6]
     this.CSVFormat.CLASSIFIER_IDX = values[7]
     this.CSVFormat.CLUB_IDX = values[8]
-    this.CSVFormat.CLASS_IDX = values[9]
-    this.CSVFormat.COURSE_IDX = values[10]
-    this.CSVFormat.NUM_CONTROLS_IDX = values[11]
-    this.CSVFormat.POSITION_IDX = values[12]
-    this.CSVFormat.START_PUNCH_IDX = values[13]
-    this.CSVFormat.FIRST_CODE_IDX = values[14]
-    this.CSVFormat.FIRST_SPLIT_IDX = values[15]
-    this.CSVFormat.STEP = values[16] - values[14]
+    this.CSVFormat.COURSE_IDX = values[9]
+    this.CSVFormat.NUM_CONTROLS_IDX = values[10]
+    this.CSVFormat.POSITION_IDX = values[11]
+    this.CSVFormat.FIRST_CODE_IDX = values[12]
+    this.CSVFormat.FIRST_SPLIT_IDX = values[13]
+    this.CSVFormat.STEP = values[14] - values[12]
   }
 }
