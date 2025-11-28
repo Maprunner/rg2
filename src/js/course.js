@@ -57,27 +57,34 @@ export class Course {
   }
 
   drawLinesBetweenControls(pt, angle, opt, filter) {
-    let dist
+    let radius1
     for (let i = filter.from; i < filter.to; i += 1) {
       if (i === 0) {
-        dist = opt.startTriangleLength
+        radius1 = opt.startTriangleLength
       } else {
-        dist = opt.controlRadius
+        radius1 = opt.controlRadius
       }
-      const c1x = pt.x[i] + dist * Math.cos(angle[i])
-      const c1y = pt.y[i] + dist * Math.sin(angle[i])
-      //Assume the last control in the array is a finish
+      const c1x = pt.x[i] + radius1 * Math.cos(angle[i])
+      const c1y = pt.y[i] + radius1 * Math.sin(angle[i])
+
+      let radius2
+      // assume the last control in the array is a finish
       if (i === this.x.length - 2) {
-        dist = opt.finishOuterRadius
+        radius2 = opt.finishOuterRadius
       } else {
-        dist = opt.controlRadius
+        radius2 = opt.controlRadius
       }
-      const c2x = pt.x[i + 1] - dist * Math.cos(angle[i])
-      const c2y = pt.y[i + 1] - dist * Math.sin(angle[i])
-      ctx.beginPath()
-      ctx.moveTo(c1x, c1y)
-      ctx.lineTo(c2x, c2y)
-      ctx.stroke()
+
+      // if the start point of the line is closer to the centre of the second control than its radius then
+      // the circles are overlapping so we don't need to draw a line
+      if (getDistanceBetweenPoints(c1x, c1y, pt.x[i + 1], pt.y[i + 1]) > radius2) {
+        const c2x = pt.x[i + 1] - radius2 * Math.cos(angle[i])
+        const c2y = pt.y[i + 1] - radius2 * Math.sin(angle[i])
+        ctx.beginPath()
+        ctx.moveTo(c1x, c1y)
+        ctx.lineTo(c2x, c2y)
+        ctx.stroke()
+      }
     }
   }
 

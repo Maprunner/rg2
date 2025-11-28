@@ -61,7 +61,7 @@ export default defineConfig(({ command, mode, ssrBuild }) => {
     // suppress Bootstrap warnings until it is updated
     css: {
       preprocessorOptions: {
-        scss: { silenceDeprecations: ["mixed-decls", "color-functions", "legacy-js-api", "import", "global-builtin"] }
+        scss: { silenceDeprecations: ["color-functions", "legacy-js-api", "import", "global-builtin"] }
       }
     },
     resolve: {

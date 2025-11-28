@@ -8,7 +8,6 @@ module.exports = defineConfig({
   viewportWidth: 1000,
   viewportHeight: 660,
   e2e: {
-    experimentalStudio: true,
     setupNodeEvents(on, config) {
       require("@cypress/code-coverage/task")(on, config)
       on("task", {

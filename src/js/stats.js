@@ -254,12 +254,20 @@ function displayControlDetails(stacks) {
     const losses = stacks.filter((stack) => stack.loss > 0).map((stack) => stack.loss)
     const averages = getAverages(losses, 100)
     html = `<div class="px-2 fw-bold">${t("Runners with loss")}: ${averages.count}</div >`
-    html += `<div class="px-2 fw-bold">${t("Average")}: ${parseInt(averages.mean, 10)}s (${
-      parseInt((averages.mean * 1000) / course.refLegTime[iterationIndex][activeLeg], 10) / 10
-    }%)</div>`
-    html += `<div class="px-2 fw-bold">${t("Median")}: ${averages.median}s (${
-      parseInt((averages.median * 1000) / course.refLegTime[iterationIndex][activeLeg], 10) / 10
-    }%)</div>`
+    let average = parseInt((averages.mean * 1000) / course.refLegTime[iterationIndex][activeLeg], 10) / 10
+    if (isNaN(average)) {
+      average = ""
+    } else {
+      average = "(" + average + "%)"
+    }
+    html += `<div class="px-2 fw-bold">${t("Average")}: ${parseInt(averages.mean, 10)}s ${average}</div>`
+    let perCent = parseInt((averages.median * 1000) / course.refLegTime[iterationIndex][activeLeg], 10) / 10
+    if (isNaN(perCent)) {
+      perCent = ""
+    } else {
+      perCent = "(" + perCent + "%)"
+    }
+    html += `<div class="px-2 fw-bold">${t("Median")}: ${averages.median}s ${perCent}</div>`
   }
   document.getElementById("rg2-loss-details").innerHTML = html
 }
@@ -1068,17 +1076,17 @@ function generateTableByLegPos() {
     } else {
       row.position = results[resultIndex].legpos[i]
     }
-    if (i === 0 || course.exclude[i]) {
+    if (i === 0 || course.exclude[i] || row.time === "0:00") {
       row.performance = "-"
     } else {
       row.performance = (100 * results[resultIndex].refRatio[0][i]).toFixed(1)
     }
-    if (course.exclude[i]) {
+    if (course.exclude[i] || row.time === "0:00") {
       row.best = "-"
     } else {
       row.best = formatSecsAsMMSS(byLegPos[i][0].t)
     }
-    if (i === 0 || course.exclude[i]) {
+    if (i === 0 || course.exclude[i] || row.time === "0:00") {
       row.who = "-"
     } else {
       let names = byLegPos[i][0].name
@@ -1092,7 +1100,7 @@ function generateTableByLegPos() {
       row.who = names
     }
     const behind = results[resultIndex].legSplits[i] - byLegPos[i][0].t
-    if (i === 0) {
+    if (i === 0 || row.time === "0:00") {
       row.behind = "-"
     } else {
       if (results[resultIndex].legSplits[i] <= 0) {
@@ -1101,22 +1109,22 @@ function generateTableByLegPos() {
         row.behind = formatSecsAsMMSS(behind)
       }
     }
-    if (i === 0) {
-      row.percent = 0
+    if (i === 0 || row.time === "0:00") {
+      row.percent = "-"
     } else {
       if (results[resultIndex].legSplits[i] <= 0) {
-        row.percent = 0
+        row.percent = "-"
       } else {
         row.percent = parseInt((behind * 100) / byLegPos[i][0].t, 10)
       }
     }
-    if (course.exclude[i]) {
+    if (course.exclude[i] || row.time === "0:00") {
       row.predicted = "-"
     } else {
       row.predicted = formatSecsAsMMSS(results[resultIndex].predictedSplits[iterationIndex][i])
     }
-    if (results[resultIndex].legSplits[i] <= 0) {
-      row.loss = ""
+    if (results[resultIndex].legSplits[i] <= 0 || row.time === "0:00") {
+      row.loss = "-"
     } else {
       const loss = results[resultIndex].predictedSplits[iterationIndex][i] - results[resultIndex].legSplits[i]
       row.loss = loss >= 0 ? formatSecsAsMMSS(loss) : "-" + formatSecsAsMMSS(loss * -1)
@@ -1160,8 +1168,12 @@ function generateTableByRacePos() {
     } else {
       row.position = results[resultIndex].racepos[i]
     }
-    row.best = formatSecsAsMMSS(byRacePos[i][0].t)
-    if (i === 0) {
+    if (byRacePos[i].length > 0) {
+      row.best = formatSecsAsMMSS(byRacePos[i][0].t)
+    } else {
+      row.best = "-"
+    }
+    if (i === 0 || byRacePos[i].length === 0) {
       row.who = "-"
     } else {
       let names = byRacePos[i][0].name
@@ -1174,15 +1186,12 @@ function generateTableByRacePos() {
       }
       row.who = names
     }
-    const behind = results[resultIndex].splits[i] - byRacePos[i][0].t
-    if (i === 0 || results[resultIndex].racepos[i] === 0) {
+    if (i === 0 || results[resultIndex].racepos[i] === 0 || byRacePos[i].length === 0) {
       row.behind = "-"
-    } else {
-      row.behind = formatSecsAsMMSS(behind)
-    }
-    if (i === 0 || results[resultIndex].racepos[i] === 0) {
       row.percent = "-"
     } else {
+      const behind = results[resultIndex].splits[i] - byRacePos[i][0].t
+      row.behind = formatSecsAsMMSS(behind)
       row.percent = parseInt((behind * 100) / byRacePos[i][0].t, 10)
     }
     loss = loss + results[resultIndex].loss[iterationIndex][i]

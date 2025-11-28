@@ -51,6 +51,7 @@ describe("Event creation 1", { testIsolation: false }, () => {
     cy.selectResultsFile("miltonriggIOFV2results.xml")
     cy.selectResultsFile("miltonriggIOFV3results.xml")
     cy.selectResultsFile("spklasse.csv")
+    cy.selectResultsFile("highfield4RG-missing-header.csv", "CSV fields missing")
     cy.selectResultsFile("highfield4RG.csv")
   })
   it("should allow you to cancel creating an event", () => {

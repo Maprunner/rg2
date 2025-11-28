@@ -190,6 +190,9 @@ export function getMetresPerPixel() {
     return undefined
   }
   const size = getMapSize()
+  if (size.width === 0 || size.height === 0) {
+    return undefined
+  }
   const pixels = getDistanceBetweenPoints(0, 0, size.width, size.height)
   const w = events[activeEventID].worldfile
   const lon1 = w.C
