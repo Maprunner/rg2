@@ -1,15 +1,11 @@
 {
-  "_grid-CJy_EU0E.js": {
-    "file": "assets/grid-CJy_EU0E.js",
+  "_grid-yEsfZcUo.js": {
+    "file": "assets/grid-yEsfZcUo.js",
     "name": "grid",
     "isDynamicEntry": true
   },
-  "_manager-utils-CIGW-MKW.css": {
-    "file": "assets/manager-utils-CIGW-MKW.css",
-    "src": "_manager-utils-CIGW-MKW.css"
-  },
-  "_manager-utils-LTpwnKd6.js": {
-    "file": "assets/manager-utils-LTpwnKd6.js",
+  "_manager-utils-BkFsMKdq.js": {
+    "file": "assets/manager-utils-BkFsMKdq.js",
     "name": "manager-utils",
     "imports": [
       "src/js/main.js"
@@ -18,8 +14,12 @@
       "assets/manager-utils-CIGW-MKW.css"
     ]
   },
-  "_node-modules-DcNSr3-7.js": {
-    "file": "assets/node-modules-DcNSr3-7.js",
+  "_manager-utils-CIGW-MKW.css": {
+    "file": "assets/manager-utils-CIGW-MKW.css",
+    "src": "_manager-utils-CIGW-MKW.css"
+  },
+  "_node-modules-DXotVjqq.js": {
+    "file": "assets/node-modules-DXotVjqq.js",
     "name": "node-modules",
     "isDynamicEntry": true,
     "imports": [
@@ -35,22 +35,22 @@
     "src": "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff2"
   },
   "src/js/main.js": {
-    "file": "assets/main-4FAEMXio.js",
+    "file": "assets/main-g07eBxCo.js",
     "name": "main",
     "src": "src/js/main.js",
     "isEntry": true,
     "imports": [
-      "_node-modules-DcNSr3-7.js",
+      "_node-modules-DXotVjqq.js",
       "src/js/main.js"
     ],
     "dynamicImports": [
-      "_grid-CJy_EU0E.js",
-      "_grid-CJy_EU0E.js",
-      "_node-modules-DcNSr3-7.js",
+      "_grid-yEsfZcUo.js",
+      "_grid-yEsfZcUo.js",
+      "_node-modules-DXotVjqq.js",
       "src/js/manager.js"
     ],
     "css": [
-      "assets/main-EOl06qxC.css"
+      "assets/main-D8QCyKgm.css"
     ],
     "assets": [
       "assets/bootstrap-icons-mSm7cUeB.woff2",
@@ -58,14 +58,14 @@
     ]
   },
   "src/js/manager.js": {
-    "file": "assets/manager-BMrk1T3L.js",
+    "file": "assets/manager-81bxi354.js",
     "name": "manager",
     "src": "src/js/manager.js",
     "isDynamicEntry": true,
     "imports": [
-      "_node-modules-DcNSr3-7.js",
+      "_node-modules-DXotVjqq.js",
       "src/js/main.js",
-      "_manager-utils-LTpwnKd6.js"
+      "_manager-utils-BkFsMKdq.js"
     ]
   }
 }

@@ -19,6 +19,7 @@ if (defined('OVERRIDE_KARTAT_DIRECTORY')) {
   $kartat = OVERRIDE_KARTAT_DIRECTORY;
 } else {
   $kartat = "../kartat/";
+
 }
 
 // whether or not to create map files to support the other Routegadget
@@ -36,7 +37,7 @@ if (!defined('RG_INPUT_ENCODING')) {
 }
 
 // version replaced by Gruntfile as part of release
-define('RG2VERSION', '2.2.1');
+define('RG2VERSION', '2.2.2');
 define('KARTAT_DIRECTORY', $kartat);
 define('LOCK_DIRECTORY', dirname(__FILE__) . "/lock/saving/");
 define('CACHE_DIRECTORY', $kartat . "cache/");
@@ -245,6 +246,10 @@ function handleGetRequest($type, $id)
     case 'fixsplits':
       event::fixSplits($id, true);
       $output = json_encode("Splits fixed for event " . $id);
+      break;
+    case 'listunusedmaps':
+      $reply = map::listUnusedMaps();
+      $output = json_encode($reply);
       break;
     default:
       utils::rg2log("Get request not recognised: " . $type . ", " . $id);

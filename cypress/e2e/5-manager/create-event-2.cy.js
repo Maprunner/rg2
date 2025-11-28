@@ -24,7 +24,10 @@ describe("Event creation 2", { testIsolation: false }, () => {
       "ellenbrookIOFV2invalidcourses.xml",
       "File is not a valid XML course file. CourseData element missing"
     )
-    cy.selectResultsFile("ellenbrookMissingHeaders.csv", "CSV file does not include all the required header fields.")
+    cy.selectResultsFile(
+      "ellenbrookMissingHeaders.csv",
+      "CSV file does not include all the required header fields: chipno"
+    )
     cy.selectResultsFile("ellenbrook.csv")
     cy.selectCourseFile("ellenbrookIOFV2Georefcourses.xml")
     cy.createEvent()
