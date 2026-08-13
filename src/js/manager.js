@@ -34,10 +34,16 @@ import { t } from "./translate"
 import { User } from "./user"
 import { createModalDialog, generateSelectOption, showWarningDialog, validateValue } from "./utils"
 import { Datepicker } from "vanillajs-datepicker"
+import es from 'vanillajs-datepicker/locales/es';
+import fr from 'vanillajs-datepicker/locales/fr';
+import zhCN from 'vanillajs-datepicker/locales/zh-CN';
+Object.assign(Datepicker.locales, es, fr, zhCN);
 import { Worldfile } from "./worldfile"
 import L from "leaflet"
 // TODO import css somewhere else?
 import "leaflet/dist/leaflet.css"
+import { getCurrentLanguage } from "./translate"
+const lang = getCurrentLanguage()
 
 let user = null
 let newMap = new MapData()
@@ -165,10 +171,10 @@ function checkResultsFileEncoding(e) {
 
 function confirmAddMap() {
   let dlg = {}
-  dlg.body = "Are you sure you want to add this map?"
-  dlg.title = "Confirm new map"
-  dlg.classes = "rg2-confirm-add-map-dialog"
-  dlg.doText = "Add map"
+  dlg.body = t("Are you sure you want to add this map?")
+  dlg.title = t("Confirm new map")
+  dlg.classes = t("rg2-confirm-add-map-dialog")
+  dlg.doText = t("Add map")
   dlg.onDo = doUploadMapFile
   createModalDialog(dlg)
 }
@@ -178,25 +184,25 @@ function confirmCreateEvent(e) {
   const valid = validateData()
   if (valid !== "OK") {
     showWarningDialog(
-      "Event set-up incomplete",
-      valid + " Please enter all necessary information and make sure controls are aligned before creating the event."
+      t("Event set-up incomplete"),
+      valid + t(" Please enter all necessary information and make sure controls are aligned before creating the event.")
     )
     return
   }
   let dlg = {}
-  dlg.body = "Are you sure you want to create this event?"
-  dlg.title = "Confirm event creation"
+  dlg.body = t("Are you sure you want to create this event?")
+  dlg.title = t("Confirm event creation")
   dlg.classes = "rg2-confirm-create-event-dialog"
-  dlg.doText = "Create event"
+  dlg.doText = t("Create event")
   dlg.onDo = doCreateEvent
   createModalDialog(dlg)
 }
 
 function confirmUpdateEvent() {
   let dlg = {}
-  dlg.body = `Are you sure you want to update ${document.getElementById("rg2-edit-event-name").value}?`
-  dlg.title = "Confirm event update"
-  dlg.doText = "Update event"
+  dlg.body = t("Are you sure you want to update") + " " + document.getElementById("rg2-edit-event-name").value + "?"
+  dlg.title = t("Confirm event update")
+  dlg.doText = t("Update event")
   dlg.onDo = doUpdateEvent
   createModalDialog(dlg)
 }
@@ -486,13 +492,15 @@ export function enableManager() {
   eventSelectDatePicker = new Datepicker(document.getElementById("rg2-select-event-date"), {
     buttonClass: "btn",
     autohide: true,
-    format: "yyyy-mm-dd"
+    format: "yyyy-mm-dd",
+	language: lang
   })
 
   eventEditDatePicker = new Datepicker(document.getElementById("rg2-edit-event-date"), {
     buttonClass: "btn",
     autohide: true,
-    format: "yyyy-mm-dd"
+    format: "yyyy-mm-dd",
+	language: lang
   })
 
   document.getElementById("rg2-map-name").addEventListener("change", function () {
@@ -626,8 +634,8 @@ function fitControlsToMap() {
       if (box.maxX < 0 || box.minX > mapSize.width || box.minY > mapSize.height || box.maxY < 0) {
         // warn and fit to track
         showWarningDialog(
-          "Course file problem",
-          "Your course file does not match the map co-ordinates. Please check you have selected the correct file."
+          t("Course file problem"),
+          t("Your course file does not match the map co-ordinates. Please check you have selected the correct file.")
         )
       } else {
         georefOK = true
@@ -789,7 +797,7 @@ function getCourseName(id) {
 }
 
 function getMapDropdown(maps) {
-  let html = generateSelectOption(config.INVALID_MAP_ID, "Select map", true)
+  let html = generateSelectOption(config.INVALID_MAP_ID, t("Select map"), true)
   // loop backwards so most recent map is first in list
   for (let i = maps.length - 1; i > -1; i -= 1) {
     html += generateSelectOption(i, maps[i].mapid + ": " + decode(maps[i].name))
@@ -816,14 +824,14 @@ function getResultInfoAsHTML() {
     }
     html += `<div>${runners}</div></div>`
   } else {
-    html = "No valid results found."
+    html = t("No valid results found.")
   }
   return html
 }
 
 function getRouteDeleteDropdown(id) {
   const routes = getRoutesForEvent(id)
-  let html = generateSelectOption("undefined", "Select route")
+  let html = generateSelectOption(t("undefined"), t("Select route"))
   for (let i = 0; i < routes.length; i += 1) {
     html += generateSelectOption(
       routes[i].resultid,
@@ -879,8 +887,8 @@ function getVariantID(codes, courseid) {
 function handleEventAdded(response) {
   if (response.ok) {
     showWarningDialog(
-      "Event created",
-      document.getElementById("rg2-event-name").value + " has been added with id " + response.newid + "."
+      t("Event created"),
+      document.getElementById("rg2-event-name").value + t(" has been added with id ") + response.newid + "."
     )
     // open newly created event in a separate window
     window.open(rg2Config.api_url.replace("rg2api.php", "") + "#" + response.newid)
@@ -888,13 +896,13 @@ function handleEventAdded(response) {
     setEvent()
     // unused map data gets reset in eventListLoaded callback
   } else {
-    showWarningDialog("Save failed", response.status_msg + " Failed to create event. Please try again.")
+    showWarningDialog(t("Save failed"), response.status_msg + t(" Failed to create event. Please try again."))
   }
 }
 
 const handleEventDeleted = (id) => (response) => {
   if (response.ok) {
-    showWarningDialog("Event deleted", "Event " + id + " has been deleted.")
+    showWarningDialog(t("Event deleted"), t("Event ") + id + " has been deleted.")
     activeEditEventID = null
     document.getElementById("btn-delete-event").setAttribute("disabled", true)
     document.getElementById("btn-delete-route").setAttribute("disabled", true)
@@ -904,19 +912,19 @@ const handleEventDeleted = (id) => (response) => {
     // unused map data gets reset in eventListLoaded callback
     document.getElementById("rg2-edit-event-selected").replaceChildren()
   } else {
-    showWarningDialog("Delete failed", response.status_msg + ". Event " + id + " delete failed. Please try again.")
+    showWarningDialog(t("Delete failed"), response.status_msg + t(". Event ") + id + t(" delete failed. Please try again."))
   }
 }
 
 const handleEventUpdated = (kartatid) => (response) => {
   if (response.ok) {
-    showWarningDialog("Event updated", "Event " + kartatid + " has been updated.")
+    showWarningDialog(t("Event updated"), t("Event ") + kartatid + t(" has been updated."))
     setActiveEventIDByKartatID(kartatid)
     setEventTitleBar()
     doGetEvents()
     setEvent(kartatid)
   } else {
-    showWarningDialog("Update failed", response.status_msg + ". Event update failed. Please try again.")
+    showWarningDialog(t("Update failed"), response.status_msg + t(". Event update failed. Please try again."))
   }
 }
 
@@ -924,17 +932,17 @@ function handleLoginResponse(response) {
   if (response.ok) {
     enableManager()
   } else {
-    showWarningDialog("Login failed", "User name or password incorrect. Please try again.")
+    showWarningDialog(t("Login failed"), t("User name or password incorrect. Please try again."))
   }
 }
 
 function handleMapAdded(response) {
   if (response.ok) {
-    showWarningDialog("Map added", response.name + " has been added with id " + response.newid + ".")
+    showWarningDialog(t("Map added"), response.name + t(" has been added with id ") + response.newid + ".")
     // update map dropdown
     doGetMaps()
   } else {
-    showWarningDialog("Save failed", response.status_msg + ". Failed to save map. Please try again.")
+    showWarningDialog(t("Save failed"), response.status_msg + t(". Failed to save map. Please try again."))
   }
 }
 
@@ -942,7 +950,7 @@ function handleMapUploaded(response) {
   if (response.ok) {
     doAddMap()
   } else {
-    showWarningDialog("Upload failed", response.status_msg + ". Failed to upload map. Please try again.")
+    showWarningDialog(t("Upload failed"), response.status_msg + t(". Failed to upload map. Please try again."))
   }
 }
 
@@ -958,7 +966,7 @@ function handleMapsLoaded(response) {
 
 const handleRouteDeleted = (kartatid, routeid) => (response) => {
   if (response.ok) {
-    showWarningDialog("Route deleted", "Route " + routeid + " has been deleted.")
+    showWarningDialog(t("Route deleted"), t("Route ") + routeid + t(" has been deleted."))
     setActiveEventIDByKartatID(kartatid)
     setEventTitleBar()
     doGetEvents()
@@ -973,9 +981,9 @@ const handleRouteDeleted = (kartatid, routeid) => (response) => {
 
 function handleUnusedMapsDeleted(response) {
   if (response.ok) {
-    showWarningDialog("Maps deleted", "Selected maps have been deleted.")
+    showWarningDialog(t("Maps deleted"), t("Selected maps have been deleted."))
   } else {
-    showWarningDialog("Delete failed", response.status_msg + ". Delete failed. Please try again.")
+    showWarningDialog(t("Delete failed"), response.status_msg + t(". Delete failed. Please try again."))
   }
   doGetMaps()
 }
@@ -1023,7 +1031,7 @@ export function initialiseManager() {
     if (validUser) {
       doLogin()
     } else {
-      showWarningDialog("Login failed", "Please enter user name and password of at least five characters")
+      showWarningDialog(t("Login failed"), t("Please enter user name and password of at least five characters"))
     }
   })
 }
@@ -1123,7 +1131,7 @@ function processCourseFile(e) {
       document.getElementById("chk-enrich-course-names").classList.add("d-none")
     }
     coursesGeoreferenced = parsedCourses.georeferenced
-    displayInfoDialog("Course details", getCourseInfoAsHTML())
+    displayInfoDialog(t("Course details"), getCourseInfoAsHTML())
     createResultCourseMapping()
     displayCourseAllocations()
     fitControlsToMap()
@@ -1148,7 +1156,7 @@ function processResultFile(e) {
   document.getElementById("rg2-manager-results-count").innerHTML = "Results (" + results.length + ")"
   if (results.length > 0) {
     resultCourses = parsedResults.resultCourses
-    displayInfoDialog("Result details", getResultInfoAsHTML())
+    displayInfoDialog(t("Result details"), getResultInfoAsHTML())
     displayCourseAllocations()
   }
 }
@@ -1156,7 +1164,7 @@ function processResultFile(e) {
 function readCourses(e) {
   let reader = new FileReader()
   reader.onerror = function () {
-    showWarningDialog("Course file error", "The selected course file could not be read.")
+    showWarningDialog(t("Course file error"), t("The selected course file could not be read."))
   }
 
   reader.onload = function (e) {
@@ -1173,11 +1181,11 @@ function readGeorefFile(e) {
   try {
     reader.readAsText(e.target.files[0])
   } catch (err) {
-    showWarningDialog("File read error", "Failed to open selected world file.")
+    showWarningDialog(t("File read error"), t("Failed to open selected world file."))
     return
   }
   reader.onerror = function () {
-    showWarningDialog("World file error", "The selected world file could not be read.")
+    showWarningDialog(t("World file error"), t("The selected world file could not be read."))
   }
   reader.onload = function (e) {
     // see http://en.wikipedia.org/wiki/World_file
@@ -1208,8 +1216,8 @@ function readMapFile(e) {
     reader.readAsDataURL(e.target.files[0])
   } else {
     showWarningDialog(
-      "File type error",
-      e.target.files[0].name + " is not recognised. Only .jpg and .gif files are supported at present."
+      t("File type error"),
+      e.target.files[0].name + t(" is not recognised. Only .jpg and .gif files are supported at present.")
     )
   }
 }
@@ -1218,7 +1226,7 @@ function readResults() {
   let reader = new FileReader()
 
   reader.onerror = function () {
-    showWarningDialog("Results file error", "The selected results file could not be read.")
+    showWarningDialog(t("Results file error"), t("The selected results file could not be read."))
   }
   reader.onload = function (e) {
     checkResultsFileEncoding(e)
@@ -1228,7 +1236,7 @@ function readResults() {
     resultsFileFormat = format
     reader.readAsText(resultsOrCourseFile, encodings[encodingIndex])
   } else {
-    showWarningDialog("File type error", "Results file type is not recognised. Please select a valid file.")
+    showWarningDialog(t("File type error"), t("Results file type is not recognised. Please select a valid file."))
   }
 }
 
@@ -1300,7 +1308,7 @@ function setButtons() {
   const loadResults = document.getElementById("rg2-load-results-file")
   loadResults.addEventListener("click", (e) => {
     if (!mapLoaded) {
-      showWarningDialog("No map loaded", "Please load a map file before adding results.")
+      showWarningDialog(t("No map loaded"), t("Please load a map file before adding results."))
       e.preventDefault()
     }
   })
@@ -1327,7 +1335,7 @@ function setButtons() {
   const load = document.getElementById("rg2-load-course-file")
   load.addEventListener("click", (e) => {
     if (!mapLoaded) {
-      showWarningDialog("No map loaded", "Please load a map file before adding courses.")
+      showWarningDialog(t("No map loaded"), t("Please load a map file before adding courses."))
       e.preventDefault()
     }
   })
@@ -1400,7 +1408,7 @@ function startDrawingCourses() {
     document.getElementById("rg2-new-course-name").value
     document.getElementById("rg2-draw-courses").classList.remove("d-none")
   } else {
-    showWarningDialog("No map selected", "Please load a map before drawing courses")
+    showWarningDialog(t("No map selected"), t("Please load a map before drawing courses"))
   }
 }
 
@@ -1449,35 +1457,35 @@ function updateGeorefMap() {
 
 function validateData() {
   if (document.getElementById("rg2-event-name").value === "") {
-    return "Event name is not valid."
+    return t("Event name is not valid.")
   }
   if (mapIndex === config.INVALID_MAP_ID) {
-    return "No map selected."
+    return t("No map selected.")
   }
   if (document.getElementById("rg2-select-club-name").value === "") {
-    return "Club name is not valid."
+    return t("Club name is not valid.")
   }
   if (eventSelectDatePicker.getDate("yyyy-mm-dd") === undefined) {
-    return "Date is not valid."
+    return t("Date is not valid.")
   }
   if (document.getElementById("rg2-select-event-level").value === "X") {
-    return "Event level is not valid."
+    return t("Event level is not valid.")
   }
   if (!format) {
-    return "Event format is not valid."
+    return t("Event format is not valid.")
   }
   if (courses.length === 0) {
     if (!drawingCourses) {
-      return "No course information. Check your course XML file."
+      return t("No course information. Check your course XML file.")
     }
   }
   if (results.length === 0) {
     if (hasResults) {
-      return "No results information. Check your results file."
+      return t("No results information. Check your results file.")
     }
   }
   if (!controlsAdjusted) {
-    return "Controls have not been adjusted on the map."
+    return t("Controls have not been adjusted on the map.")
   }
   return "OK"
 }
@@ -1500,7 +1508,7 @@ function validateMapUpload(upload) {
         msg +=
           "<a href='https://www.routegadget.co.uk/docs/2.x/manager-guide/maps#map-file-guidance' target='_blank' rel='noopener'>RG2 manager guide</a> for "
         msg += "guidance on how to create map files."
-        showWarningDialog("Oversized map upload", msg)
+        showWarningDialog(t("Oversized map upload"), msg)
       }
     }
   }

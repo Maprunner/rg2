@@ -47,6 +47,7 @@ import { Runner } from "./runner"
 import { getStatsHeader, getStatsLayout, showStats } from "./stats"
 import { t, createLanguageDropdown } from "./translate"
 
+
 const infoPanelControl = document.getElementById("rg2-show-info-panel-control")
 const rightInfoPanelEl = document.getElementById("rg2-right-info-panel")
 const rightInfoPanelTitle = document.getElementById("rg2-right-info-panel-title")
@@ -291,8 +292,8 @@ export function configureUI() {
     displayInfoPanelDialog()
     infoPanelControl.classList.add("d-none")
   })
-
   initialiseButtons()
+
 }
 
 export function createEventMenu() {
@@ -339,7 +340,7 @@ function displayAboutDialog() {
   document.getElementById("rg2-manager-link").innerHTML = `<a href="${rg2Config.api_url.replace(
     "rg2api.php",
     "?manage"
-  )}">Manager Login</a>`
+  )}">${t("Manager Login", "")}</a>`
   rightInfoPanel.show()
 }
 
@@ -429,7 +430,9 @@ function gpsSpeedChanged(e) {
 }
 
 function initialiseButtons() {
-  document.getElementById("btn-about").addEventListener("click", (e) => {
+	
+	// click comportment
+	document.getElementById("btn-about").addEventListener("click", (e) => {
     displayAboutDialog(e)
   })
   document.getElementById("btn-settings").addEventListener("click", (e) => {
@@ -735,10 +738,19 @@ function tabActivated(e) {
       break
     default:
       break
-  }
+  } 
 
   // Set scroll bar position in tab to how it was when user was last looking at it
   const scrollPos = document.getElementById("rg2-info-panel").getAttribute(getScrollPosAttrName())
   document.getElementById("rg2-left-info-panel-body").scrollTop = scrollPos
   redraw()
+  
+   if (e.target.id === config.TAB_CREATE) {
+           requestAnimationFrame(() => {
+           })
+    }
 }
+
+
+
+
