@@ -32,6 +32,10 @@ function doGetNewLanguage(lang) {
   getApi(params, handleLanguageResponse, "Language request failed")
 }
 
+export function getCurrentLanguage() {
+  return dictionary.code
+}
+
 function getEnglishKey(str) {
   // builds an array of everything that has been translated
   // and allocates a key for use in data-rg2t attribute
@@ -49,7 +53,71 @@ function handleLanguageResponse(response) {
 }
 
 export function initLanguageOptions() {
-  // set available languages and set start language if requested
+  // set up translations for various element types
+  let elements = document.querySelectorAll("legend")
+  for (let el of elements) {
+    el.innerHTML =t(el.innerText, "legend")
+  }
+
+  for (let placeholderEl of ["text", "textarea", "input"]) {
+    elements = document.querySelectorAll(placeholderEl)
+    for (let el of elements) {
+      if (el.getAttribute("placeholder")) {
+        const [text, key] = tAttribute(el.getAttribute("placeholder"))
+        el.setAttribute("data-rg2t", key)
+        el.setAttribute("placeholder", text)
+      }
+    }
+  }
+
+  elements = document.querySelectorAll("button")
+  for (let el of elements) {
+    // only do this if button only contains text
+    if (el.childElementCount === 0) {
+      const [text, key] = tAttribute(el.innerHTML)
+      if (key !== "") {
+        el.setAttribute("data-rg2t", key)
+        el.innerHTML = text
+      }
+    }
+  }
+  elements = document.querySelectorAll("label")
+  for (let el of elements) {
+    // only do this if label only contains text
+    if (el.childElementCount === 0) {
+      const [text, key] = tAttribute(el.innerHTML)
+      if (key !== "") {
+        el.setAttribute("data-rg2t", key)
+        el.innerHTML = text
+      }
+    }
+  }
+
+  elements = document.querySelectorAll("option")
+  for (let el of elements) {
+    const [text, key] = tAttribute(el.innerHTML)
+    // only do this if option only contains text
+    if (el.childElementCount === 0) {
+      if (key !== "") {
+        el.setAttribute("data-rg2t", key)
+        el.innerHTML = text
+      }
+    }
+  }
+
+  // set up translations for tooltips on <i> elements (button icons)
+  elements = document.querySelectorAll("i")
+  for (let el of elements) {
+    if (el.title) {
+      const [text, key] = tAttribute(el.title)
+      if (key !== "") {
+        el.setAttribute("data-rg2t", key)
+        el.title = text
+      }
+    }
+  }
+
+  // set start language if requested
   if (rg2Config.start_language !== "en") {
     doGetNewLanguage(rg2Config.start_language)
   }
@@ -61,176 +129,56 @@ export function setNewLanguage(lang) {
   } else {
     dictionary = lang
   }
-  translateAllText()
-  translateButtons()
-  translateManager()
+  translate()
 }
 
+// Translation is done by adding a data-rg2t attribute to all relevant elements at start-up.
+// The attribute value is a key to the English string in the keys array.
+
+// Translation set-up function for pure text elements mostly used for
+// HTML generated in code during start-up such as table headings.
+// Returns a formatted element for insertion in the generated HTML which contains the relevant
+// text in the current language.
 export function t(str, element = "span") {
   const key = getEnglishKey(str)
   // eslint-disable-next-line no-prototype-builtins
   if (dictionary.hasOwnProperty(str)) {
     str = dictionary[str]
   }
-  // passing an empty element returns an unformatted string
+    // passing an empty element returns an unformatted string
   if (element === "") {
     return str
   }
-  // otherwise add a wrapper with data attribute to allow translation
   return `<${element} data-rg2t='${key}'>${str}</${element}>`
 }
 
-function translateAllText() {
-  // translates every element that has a data-rg2t attribute
+// Translation set-up function for more complicated scenarios such as attributes.
+// Returns the relevant text in the current language and the data attribute key to be added.
+export function tAttribute(str) {
+  const key = getEnglishKey(str)
+  // eslint-disable-next-line no-prototype-builtins
+  if (dictionary.hasOwnProperty(str)) {
+    str = dictionary[str]
+  }
+  return [str, key]
+}
+
+// To change language you extract all elements with a data-rg2t attribute and replace
+// the relevant field with the translation from the current dictionary.
+function translate() {
   const elements = document.querySelectorAll("[data-rg2t]")
   for (let el of elements) {
     const key = parseInt(el.dataset.rg2t, 10)
-    el.innerText = t(keys[key], "")
+    const english = keys[key]
+    let translation = english
+    if (Object.prototype.hasOwnProperty.call(dictionary, english)) {
+      translation = dictionary[english]
+    }
+    if (el.localName === "i") {
+      el.setAttribute("title", translation)
+    } else {
+      el.innerText = translation
+    }
   }
 }
 
-export function getCurrentLanguage() {
-  return dictionary.code
-}
-
-function translateButtons() {
-
-    const tooltips = {
-      "btn-reset": "Reset",
-      "btn-zoom-in": "Zoom in",
-      "btn-zoom-out": "Zoom out",
-      "btn-rotate-right": "Rotate right",
-      "btn-rotate-left": "Rotate left",
-      "btn-toggle-controls": "Show controls",
-      "btn-stats": "Stats",
-      "btn-splitsbrowser": "Splitsbrowser",
-      "btn-runners": "Runners",
-      "btn-measure": "Measure",
-      "btn-settings": "Options",
-      "btn-about": "Help"
-    };
-
-    Object.entries(tooltips).forEach(([id, text]) => {const el = document.getElementById(id);
-      if (el) {el.title = t(text, "");
-      }
-    });
-
-  document.querySelector("label[for=rg2-user-name]").innerHTML = t("User name")
-  document.getElementById("rg2-user-name").placeholder = t("User name")
-
-  document.querySelector("label[for=rg2-password]").innerHTML = t("Password")
-  document.getElementById("rg2-password").placeholder = t("Password")
-
-  document.getElementById("btn-login").innerHTML = t("Log in")
-}
-
-function translateManager() {
-
-  const set = (selector, text, attr = "innerHTML") => {
-    const el = document.querySelector(selector);
-    if (el) el[attr] = t(text, "");
-  };
-
-  const setById = (id, text, attr = "innerHTML") => {
-    const el = document.getElementById(id);
-    if (el) el[attr] = t(text, "");
-  };
-
-  // --- Add Event ---
-  setById("rg2-event-details", "Event details");
-
-  const results = document.getElementById("rg2-manager-results-count");
-  if (results) results.innerHTML = t("Results", "") + " (0)";
-
-  const courses = document.getElementById("rg2-manager-courses-count");
-  if (courses) courses.innerHTML = t("Courses", "") + " (0)";
-
-  set("label[for=rg2-event-name]", "Event name");
-  set("#rg2-event-name", "Event name", "placeholder");
-
-  set("label[for=rg2-select-map]", "Map");
-
-  set("label[for=rg2-select-club-name]", "Club");
-  set("#rg2-select-club-name", "Club name", "placeholder");
-
-  set("label[for=rg2-select-event-date]", "Date");
-  set("label[for=rg2-select-event-level]", "Event level");
-
-  set("label[for=rg2-enter-event-comments]", "Comments");
-  set("#rg2-enter-event-comments", "Comments", "placeholder");
-
-  set("label[for=chk-no-results]", "No results file");
-  set("label[for=chk-sort-results]", "Sort results file");
-
-  const sortInfo = document.querySelector("#chk-sort-results")?.closest(".mb-3")?.querySelector(".form-text");
-  if (sortInfo) {
-    sortInfo.innerHTML = t("Only select if the results file is not already properly sorted.", "");
-  }
-
-  set("label[for=chk-enrich-course-names]", "Add classes to course names");
-  set("label[for=chk-score-event]", "Individual courses (butterfly/score/relay)");
-
-  set("#btn-draw-courses", "Draw course");
-
-  set("label[for=rg2-new-course-name]", "Course");
-  set("#rg2-new-course-name", "Course name", "placeholder");
-
-  set("label[for=chk-move-map-and-controls]", "Move map and controls together");
-  set("label[for=chk-read-only]", "Read-only mode");
-
-  set("#btn-create-event", "Create event");
-
-  // --- Edit Event ---
-  setById("rg2-select-event", "Select event");
-  set("label[for=rg2-edit-event-selected]", "Event");
-
-  setById("rg2-edit-event", "Edit event details");
-
-  set("label[for=rg2-edit-event-name]", "Event name");
-  set("#rg2-edit-event-name", "Event name", "placeholder");
-
-  set("label[for=rg2-edit-club-name]", "Club");
-  set("#rg2-edit-club-name", "Club name", "placeholder");
-
-  set("label[for=rg2-edit-event-level]", "Event level");
-
-  set("label[for=rg2-edit-event-comments]", "Comments");
-  set("#rg2-edit-event-comments", "Comments", "placeholder");
-
-  set("label[for=rg2-edit-exclude]", "Excluded controls");
-  set("#rg2-edit-exclude", "Excluded controls", "placeholder");
-
-  set("label[for=chk-edit-read-only]", "Read-only");
-
-  set("#btn-update-event", "Update event details");
-
-  setById("rg2-delete-route", "Delete route");
-  set("label[for=rg2-route-selected]", "Route");
-  set("#btn-delete-route", "Delete route");
-
-  setById("rg2-delete-event", "Delete event");
-  set("#btn-delete-event", "Delete event");
-
-  // --- Add Map ---
-  setById("rg2-Map-details", "Map details");
-
-  set("label[for=rg2-map-name]", "Map name");
-  set("#rg2-map-name", "Map name", "placeholder");
-
-  set("label[for=rg2-load-map-file]", "Map file");
-
-  setById("rg2-Georeferencing", "Georeferencing");
-
-  set("label[for=rg2-load-georef-file]", "Georeferencing file");
-  set("label[for=rg2-georef-type]", "Co-ordinate system");
-
-  const georefSelect = document.getElementById("rg2-georef-type");
-  if (georefSelect && georefSelect.options.length > 0) {
-    georefSelect.options[0].text = t("Not georeferenced", "");
-  }
-
-  set("#btn-add-map", "Add map");
-
-  // --- Delete Map ---
-  set("#btn-delete-unused-maps", "Delete selected maps");
-}

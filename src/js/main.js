@@ -33,11 +33,10 @@ function rg2init() {
     () => {
       document.getElementById("rg2-header-container").classList.remove("d-none")
       startup.remove()
-      // looks odd to do this inmediateky but needed to avoid problems with Controls class
+      // looks odd to do this immediately but needed to avoid problems with Controls class
       initialiseCourses()
       loadConfigOptions()
       configureUI()
-      initLanguageOptions()
       if (config.managing()) {
         import("./manager.js")
           .then((module) => {
@@ -47,7 +46,7 @@ function rg2init() {
           })
           .catch(() => {
             console.log("Error loading manager")
-            showWarningDialog("Error loading manager", "Manager functionality failed to  load.")
+            showWarningDialog("Error loading manager", "Manager functionality failed to load.")
           })
       } else {
         finishInit()
@@ -59,6 +58,8 @@ function rg2init() {
 }
 
 function finishInit() {
+  // needs to be done after the manager has been initialised as it needs to translate the manager UI
+  initLanguageOptions()
   initialiseCanvas()
   window.onpopstate = handleNavigation
   // check if a specific event has been requested

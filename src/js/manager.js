@@ -475,9 +475,7 @@ export function enableManager() {
 
   doGetMaps()
   setButtons()
-  document.getElementById("rg2-select-event-level").innerHTML = getEventLevelDropdown()
-  document.getElementById("rg2-edit-event-level").innerHTML = getEventLevelDropdown()
-  document.getElementById("rg2-georef-type").innerHTML = georefsystems.getGeorefDropdown()
+
   document.getElementById("rg2-select-map").addEventListener("change", (e) => {
     mapIndex = parseInt(e.target.value, 10)
     if (mapIndex !== config.INVALID_MAP_ID) {
@@ -1024,6 +1022,9 @@ export function initialiseManager() {
   georefmap = L.map("rg2-world-file-map")
   initialiseData()
   initialiseLocationMap()
+  document.getElementById("rg2-select-event-level").innerHTML = getEventLevelDropdown()
+  document.getElementById("rg2-edit-event-level").innerHTML = getEventLevelDropdown()
+  document.getElementById("rg2-georef-type").innerHTML = georefsystems.getGeorefDropdown()
   document.getElementById("rg2-manager-login-form").addEventListener("submit", (e) => {
     // submission handled here so don't need default form handling
     e.preventDefault()
@@ -1121,7 +1122,7 @@ function processCourseFile(e) {
   newcontrols.deleteAllControls()
   const parsedCourses = new CourseParser(e, worldfile, localworldfile)
   courses = parsedCourses.courses
-  document.getElementById("rg2-manager-courses-count").innerHTML = "Courses (" + courses.length + ")"
+  document.getElementById("rg2-manager-courses-count").innerHTML = "(" + courses.length + ")"
   if (courses.length > 0) {
     newcontrols = parsedCourses.newcontrols
     mapping = parsedCourses.mapping
@@ -1153,7 +1154,7 @@ function processMap(e) {
 function processResultFile(e) {
   const parsedResults = new ResultParser(e, resultsFileFormat)
   results = parsedResults.results
-  document.getElementById("rg2-manager-results-count").innerHTML = "Results (" + results.length + ")"
+  document.getElementById("rg2-manager-results-count").innerHTML = "(" + results.length + ")"
   if (results.length > 0) {
     resultCourses = parsedResults.resultCourses
     displayInfoDialog(t("Result details"), getResultInfoAsHTML())
