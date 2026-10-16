@@ -12,23 +12,23 @@ module.exports = defineConfig({
       require("@cypress/code-coverage/task")(on, config)
       on("task", {
         setUpKartat: ({ config, php = "config-01" }) => {
-          const kartatPath = path.join(__dirname, "kartat")
-          const setupPath = path.join(__dirname, "cypress/fixtures", config)
+          const kartatPath = path.join(import.meta.dirname, "kartat")
+          const setupPath = path.join(import.meta.dirname, "cypress/fixtures", config)
           fs.rmSync(kartatPath, { recursive: true, force: true })
           fs.mkdirSync(kartatPath)
           if (fs.existsSync(setupPath)) {
             fs.copySync(setupPath, kartatPath)
           }
           // php config
-          const sourceConfig = path.join(__dirname, "cypress/fixtures/php", php + ".php")
-          const destConfig = path.join(__dirname, "rg2-config.php")
+          const sourceConfig = path.join(import.meta.dirname, "cypress/fixtures/php", php + ".php")
+          const destConfig = path.join(import.meta.dirname, "rg2-config.php")
           fs.copyFileSync(sourceConfig, destConfig)
           return null
         }
       })
       return config
     },
-    env: {
+    expose: {
       codeCoverage: {
         exclude: "cypress/**/*.*"
       }

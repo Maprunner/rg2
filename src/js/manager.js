@@ -829,11 +829,11 @@ function getResultInfoAsHTML() {
 
 function getRouteDeleteDropdown(id) {
   const routes = getRoutesForEvent(id)
-  let html = generateSelectOption(t("undefined"), t("Select route"))
+  let html = generateSelectOption("undefined", t("Select route"))
   for (let i = 0; i < routes.length; i += 1) {
     html += generateSelectOption(
       routes[i].resultid,
-      routes[i].resultid + ": " + decode(routes[i].name) + " on " + decode(routes[i].coursename)
+      routes[i].resultid + ": " + decode(routes[i].name) + ": " + decode(routes[i].coursename)
     )
   }
   return html

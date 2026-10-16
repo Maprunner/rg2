@@ -16,9 +16,14 @@ describe("Event creation 3", { testIsolation: false }, () => {
     cy.get("#rg2-event-title").should("be.visible").and("contain", "Routegadget 2")
   })
   it("can start with a defined language", () => {
-    cy.get("#event-tab-label").should("contain", "Compétition")
+    cy.get("#event-tab-label").should("contain", "Compétitions")
+    cy.get("#btn-settings").click()
+    cy.get("#rg2-select-language").select("en")
+    cy.get("#event-tab-label").should("contain", "Events")
+    cy.get("#rg2-right-info-panel .btn-close").click()
   })
   it("lets you log in from the About dialog", () => {
+    cy.task("setUpKartat", { config: "config-03", php: "config-04" })
     cy.get("#btn-about").click()
     cy.visit("http://localhost/rg2/?manage")
     cy.wait("@events")

@@ -13,11 +13,27 @@ describe("Event creation 1", { testIsolation: false }, () => {
     cy.get("#btn-login").click()
     cy.wait("@login")
   })
+  it("starts in English", () => {
+    cy.get("#manage-create-tab-label").should("contain", "Add event")
+  })
+  it("speaks French", () => {
+    cy.get("#btn-settings").click()
+    cy.get("#rg2-select-language").select("fr")
+    cy.get("#manage-create-tab-label").should("contain", "Ajouter une course")
+  })
+    it("goes back to English", () => {
+      cy.get("#rg2-select-language").select("en")
+      cy.get("#manage-create-tab-label").should("contain", "Add event")
+      cy.get("#rg2-right-info-panel .btn-close").click()
+    })
   it("should warn about incorrect details", () => {
     cy.get("#manage-create-tab").click()
     cy.get("#btn-create-event").click()
     cy.closeWarningDialog("Event name is not valid")
-    cy.get("#rg2-event-name").clear().type("Highfield Park Saturday Series")
+    cy.get("#rg2-event-name")
+      .should("be.visible")
+      .clear()
+      .type("Highfield Park Saturday Series")
     cy.get("#btn-create-event").click()
     cy.closeWarningDialog("No map selected")
     cy.get("#rg2-select-map").select("402: Highfield")
