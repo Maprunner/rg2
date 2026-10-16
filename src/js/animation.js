@@ -538,7 +538,6 @@ export function initialiseAnimationPanel() {
   })
 
   const btnRealTime = document.getElementById("btn-real-time")
-  btnRealTime.setAttribute("title", t("Real time", ""))
   btnRealTime.addEventListener("click", () => {
     replayByControl.classList.add("d-none")
     setReplayRealTime()
@@ -550,8 +549,9 @@ export function initialiseAnimationPanel() {
     createByControlDropdown()
     replayByControl.classList.remove("d-none")
   })
-
+  
   createTailsDropdown()
+
 
   let options = document.querySelectorAll("[data-toggle-names]")
   for (let opt of options) {
@@ -560,6 +560,11 @@ export function initialiseAnimationPanel() {
       toggleNameDisplay(e.currentTarget.dataset.toggleNames)
     })
   }
+  document.querySelector('label[for="btn-mass-start"]')?.setAttribute("title",t("Mass start", ""))
+  document.querySelector('label[for="btn-real-time"]')?.setAttribute("title",t("Real time", ""))
+  document.querySelector('label[for="btn-by-control"]')?.setAttribute("title",t("By control", ""))
+  document.getElementById("rg2-replay-speed").setAttribute("title", t("Replay speed", ""))
+  document.getElementById("rg2-tails-value").setAttribute("title", t("Tails length", ""))
   document.getElementById("rg2-toggle-names-value").setAttribute("title", t("Show names", ""))
 }
 

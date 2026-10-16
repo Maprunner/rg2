@@ -1,4 +1,3 @@
-/* eslint-env node */
 /** @type {import('eslint').Linter.Config} */
 import globals from "globals"
 import js from "@eslint/js"
@@ -9,7 +8,7 @@ export default [
   //extends: ["plugin:cypress/recommended"],
   js.configs.recommended,
   {
-    ignores: ["src/js/lib/**/*", "dist", "node-modules", "lang", "cypress/**/*", "coverage/**/*", "cypress.config.cjs"]
+    ignores: ["src/js/lib/**/*", "dist", "node-modules", "lang", "cypress/**/*", "coverage/**/*"]
   },
   {
     languageOptions: {
@@ -24,7 +23,8 @@ export default [
   },
   {
     rules: {
-      "no-unused-vars": "warn"
+      "no-unused-vars": "warn",
+      "no-useless-assignment": "warn",
     }
   }
   //eslintPluginPrettierRecommended

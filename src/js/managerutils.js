@@ -1,13 +1,14 @@
 import { decode } from "html-entities"
 import { generateSelectOption, createModalDialog, showWarningDialog } from "./utils"
+import { t } from "./translate"
 
 export function confirmDeleteEvent(doDeleteEvent) {
   const id = document.getElementById("rg2-edit-event-selected").value
   let dlg = {}
-  dlg.body = "Event " + id + " will be deleted. Are you sure?"
-  dlg.title = "Confirm event delete"
+  dlg.body = t("Event ") + id + t(" will be deleted. Are you sure?")
+  dlg.title = t("Confirm event delete")
   dlg.classes = "rg2-confirm-delete-event-dialog"
-  dlg.doText = "Delete event"
+  dlg.doText = t("Delete event")
   dlg.onDo = doDeleteEvent
   createModalDialog(dlg)
 }
@@ -15,14 +16,14 @@ export function confirmDeleteEvent(doDeleteEvent) {
 export function confirmDeleteRoute(doDeleteRoute) {
   const routeid = document.getElementById("rg2-route-selected").value
   if (routeid === "undefined") {
-    showWarningDialog("Warning", "No route selected.")
+    showWarningDialog(t("Warning"), t("No route selected."))
     return
   }
   let dlg = {}
-  dlg.body = "Route " + routeid + " will be permanently deleted. Are you sure?"
-  dlg.title = "Confirm route delete"
+  dlg.body = t("Route ") + routeid + t(" will be permanently deleted. Are you sure?")
+  dlg.title = t("Confirm route delete")
   dlg.classes = "rg2-confirm-route-delete-dialog"
-  dlg.doText = "Delete route"
+  dlg.doText = t("Delete route")
   dlg.onDo = doDeleteRoute
   createModalDialog(dlg)
 }
@@ -43,22 +44,24 @@ export function confirmDeleteUnusedMaps(unusedMaps, doDeleteUnusedMaps) {
     }
   }
   if (checked.length === 0) {
-    showWarningDialog("Warning", "No maps selected.")
+    showWarningDialog(t("Warning"), t("No maps selected."))
     return unusedMaps
   }
   const dlg = {}
-  dlg.body = "Selected maps will be deleted. Are you sure?"
-  dlg.title = "Confirm map deletion"
-  dlg.doText = "Delete maps"
+  dlg.body = t("Selected maps will be deleted. Are you sure?")
+  dlg.title = t("Confirm map deletion")
+  dlg.doText = t("Delete maps")
   dlg.onDo = doDeleteUnusedMaps
   createModalDialog(dlg)
   return unusedMaps
 }
 
 export function displayUnusedMaps(maps) {
-  let html = "<div class='title'>ID</div><div class='title'>Name</div><div><i class='bi-trash'></i></div>"
+  let html = "<div class='title'>ID</div><div"  
+  html += "<div class='title'>" + t("Name") + "</div>"
+  html += "<div><i class='bi-trash'></i></div>"
   if (maps.length === 0) {
-    html += "<div></div><div>None found.</div><div></div>"
+    html += "<div></div><div>" + t("None found.") + "</div><div></div>"
     document.getElementById("btn-delete-unused-maps").setAttribute("disabled", "")
   } else {
     for (let i = 0; i < maps.length; i += 1) {
@@ -72,7 +75,7 @@ export function displayUnusedMaps(maps) {
 }
 
 export function getEventEditDropdown(events, activeID) {
-  let html = activeID ? "" : generateSelectOption(null, "No event selected", true)
+  let html = activeID ? "" : generateSelectOption(null, t("No event selected", ""), true)
   // loop backwards so most recent event is first in list
   for (let i = events.length - 1; i > -1; i -= 1) {
     html += generateSelectOption(
@@ -89,7 +92,7 @@ export function getEventLevelDropdown() {
   const text = ["Select level", "Training", "Local", "Regional", "National", "International"]
   const values = ["X", "T", "L", "R", "N", "I"]
   for (let i = 0; i < text.length; i += 1) {
-    html += generateSelectOption(values[i], text[i], i === 0)
+    html += generateSelectOption(values[i], t(text[i]), i === 0)
   }
   return html
 }

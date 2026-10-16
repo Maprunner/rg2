@@ -1,21 +1,24 @@
-# Instructions for running RG2 locally (linux)
+# Instructions for running RG2 locally (Linux)
 
-TODO: Not yet adapted to Vite build environment
+** These Linux instructions have not been reviewed for a long time and may have issues **
 
 ## Install required packages
 * web server e.g. apache (`sudo apt install apache2`)
-* php (`sudo apt install php libapache2-mod-php`)
+* PHP 8 with the mbstring extension (`sudo apt install php libapache2-mod-php php-mbstring`)
 * node.js (`sudo apt install nodejs`)
-* grunt (`npm install -g grunt-cli`)
+* npm (included with Node.js)
 
 ## Fork and clone repo
 `git clone https://github.com/<your username>/rg2`
 
-## Run grunt
+## Install dependencies and start Vite
 ```bash
 cd rg2
-grunt
+npm install
+npm run dev
 ```
+
+Vite serves the JavaScript and CSS modules with hot reload. Load the application from your PHP-capable web server (for example, `http://localhost/rg2/`); API requests and the page itself are handled by Apache or XAMPP.
 
 ## Setup apache web server
 In your `apache2.conf` e.g. `sudo vi /etc/apache2/apache2.conf`
@@ -42,5 +45,6 @@ mkdir kartat/cache
 wget https://www.happyherts.routegadget.co.uk/kartat/cache/events.json -O kartat/cache/events.json
 ```
 
-## Launch browser
-Go to `http://localhost/rg2/`, and you should see your local rg2 app.
+## Build a release
+
+Run `npm run build` to create the installable files in `dist`. Run `npm run deploy` to build and also create the per-club deployment directories in `website`.

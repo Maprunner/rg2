@@ -1,71 +1,56 @@
 {
-  "_grid-yEsfZcUo.js": {
-    "file": "assets/grid-yEsfZcUo.js",
+  "_grid-ClVgaz-G.js": {
+    "file": "assets/grid-ClVgaz-G.js",
     "name": "grid",
-    "isDynamicEntry": true
+    "imports": [
+      "src/js/main.js"
+    ]
   },
-  "_manager-utils-BkFsMKdq.js": {
-    "file": "assets/manager-utils-BkFsMKdq.js",
-    "name": "manager-utils",
+  "_manager-B6N31Wbp.js": {
+    "file": "assets/manager-B6N31Wbp.js",
+    "name": "manager",
     "imports": [
       "src/js/main.js"
     ],
     "css": [
-      "assets/manager-utils-CIGW-MKW.css"
+      "assets/manager-vh-t_kPv.css"
     ]
   },
-  "_manager-utils-CIGW-MKW.css": {
-    "file": "assets/manager-utils-CIGW-MKW.css",
-    "src": "_manager-utils-CIGW-MKW.css"
+  "_manager-vh-t_kPv.css": {
+    "file": "assets/manager-vh-t_kPv.css",
+    "src": "_manager-vh-t_kPv.css"
   },
-  "_node-modules-DXotVjqq.js": {
-    "file": "assets/node-modules-DXotVjqq.js",
+  "_node-modules-CIvF3RWk.js": {
+    "file": "assets/node-modules-CIvF3RWk.js",
     "name": "node-modules",
-    "isDynamicEntry": true,
     "imports": [
       "src/js/main.js"
     ]
   },
   "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff": {
-    "file": "assets/bootstrap-icons-BeopsB42.woff",
+    "file": "assets/bootstrap-icons-BHUGvtHM.woff",
     "src": "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff"
   },
   "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff2": {
-    "file": "assets/bootstrap-icons-mSm7cUeB.woff2",
+    "file": "assets/bootstrap-icons-DJdhg9lH.woff2",
     "src": "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff2"
   },
   "src/js/main.js": {
-    "file": "assets/main-g07eBxCo.js",
+    "file": "assets/main-Ch_zree3.js",
     "name": "main",
     "src": "src/js/main.js",
     "isEntry": true,
-    "imports": [
-      "_node-modules-DXotVjqq.js",
-      "src/js/main.js"
-    ],
     "dynamicImports": [
-      "_grid-yEsfZcUo.js",
-      "_grid-yEsfZcUo.js",
-      "_node-modules-DXotVjqq.js",
-      "src/js/manager.js"
+      "_grid-ClVgaz-G.js",
+      "_node-modules-CIvF3RWk.js",
+      "_manager-B6N31Wbp.js"
     ],
     "css": [
-      "assets/main-D8QCyKgm.css"
+      "assets/main-Cv4lAHzI.css"
     ],
     "assets": [
-      "assets/bootstrap-icons-mSm7cUeB.woff2",
-      "assets/bootstrap-icons-BeopsB42.woff"
-    ]
-  },
-  "src/js/manager.js": {
-    "file": "assets/manager-81bxi354.js",
-    "name": "manager",
-    "src": "src/js/manager.js",
-    "isDynamicEntry": true,
-    "imports": [
-      "_node-modules-DXotVjqq.js",
-      "src/js/main.js",
-      "_manager-utils-BkFsMKdq.js"
+      "assets/bootstrap-icons-DJdhg9lH.woff2",
+      "assets/bootstrap-icons-BHUGvtHM.woff"
     ]
   }
 }
