@@ -28,11 +28,10 @@ export default defineConfig(({ command, mode, ssrBuild }) => {
     build: {
       outDir: "./dist",
       emptyOutDir: true,
-      minify: "esbuild",
       manifest: true,
       sourcemap: true,
       rollupOptions: {
-        input: path.resolve(__dirname, "src/js/main.js"),
+        input: path.resolve(import.meta.dirname, "src/js/main.js"),
         output: {
           manualChunks: (id) => {
             if (managerSource.some((module) => id.includes(module))) {
@@ -66,10 +65,10 @@ export default defineConfig(({ command, mode, ssrBuild }) => {
     },
     resolve: {
       alias: {
-        "~ag-grid-community": path.resolve(__dirname, "node_modules/ag-grid-community"),
-        "~bootstrap": path.resolve(__dirname, "node_modules/bootstrap"),
-        "~bootstrap-icons": path.resolve(__dirname, "node_modules/bootstrap-icons"),
-        "~datepicker": path.resolve(__dirname, "node_modules/vanillajs-datepicker")
+        "~ag-grid-community": path.resolve(import.meta.dirname, "node_modules/ag-grid-community"),
+        "~bootstrap": path.resolve(import.meta.dirname, "node_modules/bootstrap"),
+        "~bootstrap-icons": path.resolve(import.meta.dirname, "node_modules/bootstrap-icons"),
+        "~datepicker": path.resolve(import.meta.dirname, "node_modules/vanillajs-datepicker")
       }
     },
     server: {

@@ -1,4 +1,3 @@
-/* eslint-env node */
 /** @type {import('eslint').Linter.Config} */
 import globals from "globals"
 import js from "@eslint/js"
