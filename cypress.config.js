@@ -1,27 +1,31 @@
-const { defineConfig } = require("cypress")
-const fs = require("fs-extra")
-const path = require("path")
+import { defineConfig } from "cypress"
+import codeCoverageTask from "@cypress/code-coverage/task"
+import fs from "fs-extra"
+import path from "node:path"
+import { fileURLToPath } from "node:url"
 
-module.exports = defineConfig({
+const root = path.dirname(fileURLToPath(import.meta.url))
+
+export default defineConfig({
   projectId: "vb97jp",
   // default screen size for testing
   viewportWidth: 1000,
   viewportHeight: 660,
   e2e: {
     setupNodeEvents(on, config) {
-      require("@cypress/code-coverage/task")(on, config)
+      codeCoverageTask(on, config)
       on("task", {
         setUpKartat: ({ config, php = "config-01" }) => {
-          const kartatPath = path.join(import.meta.dirname, "kartat")
-          const setupPath = path.join(import.meta.dirname, "cypress/fixtures", config)
+          const kartatPath = path.join(root, "kartat")
+          const setupPath = path.join(root, "cypress/fixtures", config)
           fs.rmSync(kartatPath, { recursive: true, force: true })
           fs.mkdirSync(kartatPath)
           if (fs.existsSync(setupPath)) {
             fs.copySync(setupPath, kartatPath)
           }
           // php config
-          const sourceConfig = path.join(import.meta.dirname, "cypress/fixtures/php", php + ".php")
-          const destConfig = path.join(import.meta.dirname, "rg2-config.php")
+          const sourceConfig = path.join(root, "cypress/fixtures/php", php + ".php")
+          const destConfig = path.join(root, "rg2-config.php")
           fs.copyFileSync(sourceConfig, destConfig)
           return null
         }
@@ -38,7 +42,7 @@ module.exports = defineConfig({
         bundler: "vite"
       },
       setupNodeEvents(on, config) {
-        require("@cypress/code-coverage/task")(on, config)
+        codeCoverageTask(on, config)
 
         return config
       }

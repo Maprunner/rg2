@@ -8,7 +8,7 @@ export default [
   //extends: ["plugin:cypress/recommended"],
   js.configs.recommended,
   {
-    ignores: ["src/js/lib/**/*", "dist", "node-modules", "lang", "cypress/**/*", "coverage/**/*", "cypress.config.cjs"]
+    ignores: ["src/js/lib/**/*", "dist", "node-modules", "lang", "cypress/**/*", "coverage/**/*"]
   },
   {
     languageOptions: {
