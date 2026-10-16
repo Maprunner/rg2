@@ -36,8 +36,8 @@ if (!defined('RG_INPUT_ENCODING')) {
   define('RG_INPUT_ENCODING', RG2_ENCODING);
 }
 
-// version replaced by Gruntfile as part of release
-define('RG2VERSION', '2.2.2');
+// Version is stamped into the release copy by Vite from package.json.
+define('RG2VERSION', '2.3.0');
 define('KARTAT_DIRECTORY', $kartat);
 define('LOCK_DIRECTORY', dirname(__FILE__) . "/lock/saving/");
 define('CACHE_DIRECTORY', $kartat . "cache/");

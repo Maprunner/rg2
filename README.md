@@ -1,6 +1,7 @@
 # Routegadget 2
 
 ## Latest news
+16 October 2026: Version 2.3.0 released. Various enhancements from previous minor releases. Reworking of translation function which now also includes the Manager. Vite build process modified to allow removal of previous Grunt functionality.
 
 1 July 2025: Version 2.2.1 released. Minor enhancements and error corrections. Excluded leg details now shown in info dialog. Events with courses and results but no splits (Sprintelope type) now allow drawing and replay.
 
@@ -27,7 +28,7 @@ to make sure you have all necessary dependencies installed. The project uses Vit
 npm run dev
 ```
 
-This starts a vite development server which includes hot module reload. You need to be running a separate server to manage the API calls. At present this is assumed to be XAMPP or similar. In future I guess there should be a way of doing this in node.
+This starts a Vite development server which includes hot module reload. You need to be running a separate server to manage the API calls. At present this is assumed to be XAMPP or similar. In future I guess there should be a way of doing this in node.
 
 You should now be able to access rg2 at http://localhost/rg2/
 
@@ -37,7 +38,7 @@ You should now be able to access rg2 at http://localhost/rg2/
 npm run test
 ```
 
-Starts vite with code coverage enabled. You still need the XAMPP server for the API. In a separate terminal window:
+Starts Vite with code coverage enabled. You still need the XAMPP server for the API. In a separate terminal window:
 
 ```
 npm run cypress
@@ -53,19 +54,13 @@ Runs the full suite of tests automatically. Test coverage results are in coverag
 
 ## Building for a release
 
-The version number is taken from package.json. This needs to be updated manually.
-
-```
-npm run upver
-```
-
-This takes the package.json version number and puts it in config.js, index.php and rg2api.php.
+The version number is set in `package.json`. Vite uses it in the JavaScript bundle and stamps it into the PHP files copied to the release build.
 
 ```
 npm run build
 ```
 
-Does the version number update and then runs a full production build. Output goes to the dist directory.
+Runs a full production build. Output goes to the dist directory.
 
 ## PHP versions
 
@@ -100,13 +95,11 @@ You also need to disable nginx direct delivery for this to work, since otherwise
 
 ## Installing on routegadget.co.uk
 
-Sync dist/assets to www.routegadget.co.uk/rg2/assets
-
 ```
 npm run deploy
 ```
 
-This creates the necessary directory structure for all subdomains in the /website folder. This can then be synced to the server.
+This runs a production build and creates the necessary directory structure for all subdomains in the `website` folder. Sync `dist/assets` to `www.routegadget.co.uk/rg2/assets` and the `website` folder to the server.
 
 ## User Guides and Introductory Videos
 

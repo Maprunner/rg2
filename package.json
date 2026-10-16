@@ -1,19 +1,18 @@
 {
   "name": "rg2",
   "private": false,
-  "version": "2.3.0 beta",
+  "version": "2.3.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "test": "cross-env CYPRESS_COVERAGE=true vite",
     "test:all": "cross-env CYPRESS_COVERAGE=true node ./cypress/e2e/run-e2e-tests.cjs",
-    "build": "grunt replace && vite build && grunt copy:distfiles",
-    "build-debug": "grunt replace && vite build --debug && grunt copy:distfiles",
+    "build": "vite build",
+    "build-debug": "vite build --debug",
     "preview": "vite preview",
     "lint:js": "eslint .",
     "cypress": "cypress open --e2e --browser chrome",
-    "deploy": "grunt deploy",
-    "upver": "grunt replace"
+    "deploy": "vite build --mode deploy"
   },
   "engines": {
     "node": ">=18.18.0"
@@ -21,7 +20,7 @@
   "devDependencies": {
     "@4tw/cypress-drag-drop": "^2.3.1",
     "@cypress/code-coverage": "^4.0.3",
-    "@eslint/js": "^9.39.1",
+    "@eslint/js": "^10.0.1",
     "cross-env": "^10.1.0",
     "cypress": "^16.2.0",
     "cypress-pipe": "^2.0.1",
@@ -30,16 +29,10 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-cypress": "^7.0.2",
     "fs-extra": "^11.4.1",
-    "globals": "^16.5.0",
-    "grunt": "^1.6.3",
-    "grunt-cli": "^1.5.0",
-    "grunt-contrib-clean": "^2.0.1",
-    "grunt-contrib-copy": "^1.0.0",
-    "grunt-text-replace": "^0.4.0",
-    "load-grunt-tasks": "^5.1.0",
+    "globals": "^17.13.0",
     "prettier": "^3.9.10",
     "rollup-plugin-visualizer": "^7.1.1",
-    "sass": "^1.94.2",
+    "sass": "^1.105.2",
     "vite": "^8.3.4",
     "vite-plugin-istanbul": "^9.0.1"
   },

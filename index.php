@@ -2,7 +2,7 @@
 require(dirname(__FILE__) . '/app/user.php');
 require(dirname(__FILE__) . '/app/utils.php');
 
-// version replaced by Gruntfile as part of release
+// Version is stamped into the release copy by Vite from package.json.
 define('RG2VERSION', '2.3.0 beta');
 define("RG_LOG_FILE", dirname(__FILE__) . "/log/rg2log.txt");
 

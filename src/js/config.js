@@ -2,7 +2,7 @@ import { showWarningDialog } from "./utils"
 import { getMapSize } from "./canvas"
 
 export const config = {
-  // version gets set automatically by grunt file during build process
+  // Vite sets the version from package.json during the build.
   RG2VERSION: import.meta.env.VITE_RG2_VERSION,
   DEFAULT_SCALE_FACTOR: 1.1,
   TAB_EVENTS: "event-tab",

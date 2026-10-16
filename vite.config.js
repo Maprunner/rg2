@@ -1,8 +1,13 @@
 /* eslint-disable */
 import path from "path"
+import { readFileSync } from "node:fs"
 import { defineConfig } from "vite"
 import istanbul from "vite-plugin-istanbul"
 import { visualizer } from "rollup-plugin-visualizer"
+import { rg2BuildPlugin } from "./vite-plugin-rg2-build.js"
+
+const root = import.meta.dirname
+const packageJson = JSON.parse(readFileSync(path.resolve(root, "package.json"), "utf8"))
 
 export default defineConfig(({ command, mode, ssrBuild }) => {
   const managerSource = [
@@ -16,6 +21,9 @@ export default defineConfig(({ command, mode, ssrBuild }) => {
     "managerutils.js"
   ]
   return {
+    define: {
+      "import.meta.env.VITE_RG2_VERSION": JSON.stringify(packageJson.version)
+    },
     base: "/rg2/",
     experimental: {
       renderBuiltUrl(filename, { hostType }) {
@@ -60,7 +68,7 @@ export default defineConfig(({ command, mode, ssrBuild }) => {
     // suppress Bootstrap warnings until it is updated
     css: {
       preprocessorOptions: {
-        scss: { silenceDeprecations: ["color-functions", "legacy-js-api", "import", "global-builtin"] }
+        scss: { silenceDeprecations: ["color-functions", "legacy-js-api", "import", "global-builtin", "if-function"] }
       }
     },
     resolve: {
@@ -85,6 +93,7 @@ export default defineConfig(({ command, mode, ssrBuild }) => {
     open: true,
     plugins: [
       visualizer(),
+      rg2BuildPlugin({ root, mode, version: packageJson.version }),
       istanbul({
         cypress: true,
         include: "src/*",

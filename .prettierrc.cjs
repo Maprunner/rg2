@@ -12,7 +12,7 @@ module.exports = {
       files: "*.txt",
       options: {
         // needed to prevent spurious line breaks in language files
-        printWidth: 200
+        printWidth: 500
       }
     }
   ],
